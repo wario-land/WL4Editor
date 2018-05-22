@@ -39,6 +39,11 @@ void LevelComponents::Door::SetDoorPlace(unsigned char _X1, unsigned char _X2, u
     this->Y2 = _Y2;
 }
 
+void LevelComponents::Door::SetDoorType(LevelComponents::DoorType _DoorType)
+{
+    this->type = _DoorType;
+}
+
 bool LevelComponents::Door::IsUnused()
 {
     if((this->type != Portal) && (this->DestinationDoorID == (unsigned char)'\x00'))
