@@ -32,7 +32,7 @@ namespace LevelComponents
         void SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
         bool IsUnused();
         //the following function is provide for resetting the DestinationDoorID value when we delete a door
-        void SpriteMapIDDec();
+        void DestinationDoorIDDec();
     };
 }
 #endif // DOOR_H

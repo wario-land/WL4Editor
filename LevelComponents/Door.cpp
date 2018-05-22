@@ -46,7 +46,8 @@ bool LevelComponents::Door::IsUnused()
     return false;
 }
 
-void LevelComponents::Door::SpriteMapIDDec()
+void LevelComponents::Door::DestinationDoorIDDec()
 {
-    this->DestinationDoorID = this->DestinationDoorID - 1;
+    if(this->DestinationDoorID != 0)
+        this->DestinationDoorID = this->DestinationDoorID - 1;
 }
