@@ -1,11 +1,29 @@
 #include "Level.h"
+#include "ROMUtils.h"
+#include "WL4Constants.h"
 
-namespace LevelComponents {
-
+namespace LevelComponents
+{
     /// <summary>
-    /// Construct a new Level object from data from a pointer to the level header
+    /// This is a helper funtion that allows you to load a level based on a passage and stage number.
+    /// This constructor will chain to the other constructor.
     /// </summary>
     /// <remarks>
+    /// Passage numbers:
+    ///      0x00: Entry Passage
+    ///      0x01: Emerald Passage
+    ///      0x02: Ruby Passage
+    ///      0x03: Topaz Passage
+    ///      0x04: Sapphire Passage
+    ///      0x05: Golden Pyramid
+    ///      0x06: Sound Room
+    /// Level numbers:
+    ///      0x00: Level 1
+    ///      0x01: Level 2
+    ///      0x02: Level 3
+    ///      0x03: Level 4
+    ///      0x04: Mini-game shop
+    ///      0x05: Boss door
     /// The level header exists in a record of size 0x2B bytes.
     /// LH + 0x00 (1): Tileset ID
     ///      0x01 (1): Mapping type for layer 0 (0x00, 0x10, 0x20)
@@ -32,40 +50,6 @@ namespace LevelComponents {
     ///      0x24 (4): Pointer to super hard mode sprite data
     ///      0x28 (4): (unknown)
     /// </remarks>
-    /// <param name="levelHeader">
-    /// A pointer to the level header in ROM data.
-    /// </param>
-    Level::Level(unsigned char *levelHeader) : rooms(new Room[4])
-    {
-        // TODO Load room data
-        int LevelHeaderIndex = ROMUtils::IntFromData(levelHeader, 0);
-
-
-        // TODO Load door data
-
-    }
-
-    /// <summary>
-    /// This is a helper funtion that allows you to load a level based on a passage and stage number.
-    /// This constructor will chain to the other constructor.
-    /// </summary>
-    /// <remarks>
-    /// Passage numbers:
-    ///      0x00: Entry Passage
-    ///      0x01: Emerald Passage
-    ///      0x02: Ruby Passage
-    ///      0x03: Topaz Passage
-    ///      0x04: Sapphire Passage
-    ///      0x05: Golden Pyramid
-    ///      0x06: Sound Room
-    /// Level numbers:
-    ///      0x00: Level 1
-    ///      0x01: Level 2
-    ///      0x02: Level 3
-    ///      0x03: Level 4
-    ///      0x04: Mini-game shop
-    ///      0x05: Boss door
-    /// </remarks>
     /// <param name="passage">
     /// The passage number.
     /// </param>
@@ -74,7 +58,15 @@ namespace LevelComponents {
     /// </param>
     Level::Level(int passage, int stage)
     {
+        // Get the level header index
         int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
-        this(ROMUtils::CurrentFile + offset);
+        int LevelHeaderIndex = ROMUtils::IntFromData(ROMUtils::CurrentFile, offset);
+
+        // Load the area data
+
     }
 }
+
+
+
+

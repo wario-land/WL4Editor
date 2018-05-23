@@ -1,11 +1,13 @@
 #ifndef LAYER_H
 #define LAYER_H
 
-
-class Layer
+namespace LevelComponents
 {
-public:
-    Layer();
-};
+    class Layer
+    {
+    public:
+        Layer(unsigned char *layerData);
+    };
+}
 
 #endif // LAYER_H

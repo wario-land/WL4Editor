@@ -18,18 +18,22 @@ namespace LevelComponents
 
     class Door
     {
-    public:
-        Door(unsigned char *dataPtr);
-        Door(unsigned char _RoomID, enum LevelComponents::DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
     private:
+        // Instance variables
         enum LevelComponents::DoorType type;
         unsigned char RoomID;
         int X1, X2, Y1, Y2; //destination just be (X1, Y1)
-        std::shared_ptr<Door*> DestinationDoor;
+        std::shared_ptr<Door*> DestinationDoor = nullptr;
         unsigned char X_Displacement, Y_Displacement;
         unsigned char SpriteMapID;
         unsigned int BGM_ID;
+
     public:
+        // Constructors
+        Door(unsigned char *dataPtr);
+        Door(unsigned char _RoomID, enum LevelComponents::DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
+
+        // Methods
         Door *GetDestinationDoor();
         void SetDestinationDoor(Door *otherDoor);
         void SetDoorDisplacement(signed int _X_Displacement, signed int _Y_Displacement);

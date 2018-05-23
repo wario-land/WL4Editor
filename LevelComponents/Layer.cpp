@@ -1,10 +1,9 @@
 #include "Layer.h"
 
-namespace LevelComponents {
-
-    /// TODO
-    Layer::Layer()
+namespace LevelComponents
+{
+    Layer::Layer(unsigned char *layerData)
     {
-
+        // TODO
     }
 }

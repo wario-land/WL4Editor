@@ -1,14 +1,22 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
-class Level
+#include "Room.h"
+#include "Door.h"
+#include <string>
+#include <vector>
+
+namespace LevelComponents
 {
-public:
-    Level::Level(char *levelHeader);
-    Level::Level(int passage, int stage);
-    Room rooms[];
-    std::string LevelName;
-    std::vector<Door> doors;
-};
+    class Level
+    {
+    private:
+        std::vector<Room> rooms;
+        std::string LevelName;
+        std::vector<Door*> doors;
+    public:
+        Level(int passage, int stage);
+    };
+}
 
 #endif // LEVEL_H
