@@ -19,7 +19,7 @@ namespace LevelComponents
 
     void Door::SetDestinationDoor(Door *otherDoor)
     {
-        this->DestinationDoor = new std::shared_ptr<Door*>(otherDoor);
+        this->DestinationDoor = std::make_shared<Door*>(otherDoor);
     }
 
     void Door::SetDoorDisplacement(signed int _X_Displacement, signed int _Y_Displacement)

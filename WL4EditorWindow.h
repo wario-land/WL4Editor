@@ -15,6 +15,9 @@ public:
     explicit WL4EditorWindow(QWidget *parent = 0);
     ~WL4EditorWindow();
 
+private slots:
+    void on_actionOpen_ROM_triggered();
+
 private:
     Ui::WL4EditorWindow *ui;
 };

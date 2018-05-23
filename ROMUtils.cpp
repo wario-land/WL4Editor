@@ -14,12 +14,12 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the integer from.
     /// </param>
-    int IntFromData(char *data, int address)
+    int IntFromData(unsigned char *data, int address)
     {
-        int a = 0xFF & data[addr];
-        int b = 0xFF & data[addr + 1];
-        int c = 0xFF & data[addr + 2];
-        int d = 0xFF & data[addr + 3];
+        int a = 0xFF & data[address];
+        int b = 0xFF & data[address + 1];
+        int c = 0xFF & data[address + 2];
+        int d = 0xFF & data[address + 3];
         return a | (b << 8) | (c << 16) | (d << 24);
     }
 
@@ -36,11 +36,11 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the pointer from.
     /// </param>
-    int PointerFromData(char *data, int address)
+    int PointerFromData(unsigned char *data, int address)
     {
-        int a = 0xFF & data[addr];
-        int b = 0xFF & data[addr + 1];
-        int c = 0xFF & data[addr + 2];
+        int a = 0xFF & data[address];
+        int b = 0xFF & data[address + 1];
+        int c = 0xFF & data[address + 2];
         return a | (b << 8) | (c << 16);
     }
 }

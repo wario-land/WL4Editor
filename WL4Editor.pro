@@ -29,7 +29,6 @@ SOURCES += \
     LevelComponents/Level.cpp \
     LevelComponents/Room.cpp \
     LevelComponents/Layer.cpp \
-    WL4Constants.cpp \
     ROMUtils.cpp \
     LevelComponents/Door.cpp
 
@@ -38,7 +37,9 @@ HEADERS += \
     LevelComponents/Level.h \
     LevelComponents/Room.h \
     LevelComponents/Layer.h \
-    LevelComponents/Door.h
+    LevelComponents/Door.h \
+    ROMUtils.h \
+    WL4Constants.h
 
 FORMS += \
         WL4EditorWindow.ui
