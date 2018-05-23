@@ -5,8 +5,6 @@
 #include <iostream>
 #include <fstream>
 
-#include <cstdio>
-
 #include "ROMUtils.h"
 
 WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
