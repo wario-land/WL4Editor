@@ -2,6 +2,8 @@
 #include "ROMUtils.h"
 #include "WL4Constants.h"
 
+#include <cstring>
+
 namespace LevelComponents
 {
     /// <summary>
@@ -60,35 +62,73 @@ namespace LevelComponents
     {
         // Get the level header index
         int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
-        int LevelHeaderIndex = ROMUtils::IntFromData(ROMUtils::CurrentFile, offset);
+        int levelHeaderIndex = ROMUtils::IntFromData(ROMUtils::CurrentFile, offset);
 
-        // Load the area data
+        // Load the level information
+        int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
+        int levelIndex = ROMUtils::CurrentFile[levelHeaderPointer] & 0xFF; // 0x3000023
 
+        memcpy(&this->LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
+
+        // Load the door data
+        std::vector<Door*> newDoors;
+        std::vector<int> destinations;
+        int doorStartAddress = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::DoorTable + levelIndex * 4);
+        struct __DoorEntry *doorPtr = (struct __DoorEntry*) (ROMUtils::CurrentFile + doorStartAddress);
+        unsigned char *firstByte;
+        while(*(firstByte = (unsigned char*) doorPtr))
+        {
+            enum DoorType type = static_cast<DoorType>(doorPtr->DoorTypeByte);
+            Door *newDoor = new Door(doorPtr->RoomID, type, doorPtr->x1, doorPtr->x2, doorPtr->y1, doorPtr->y2);
+            newDoor->SetSpriteMapID(doorPtr->SpriteMapID);
+            newDoor->SetBGM(doorPtr->BGM_ID_LowByte | ((unsigned int) (doorPtr->BGM_ID_HighByte)) << 8);
+            newDoor->SetDoorDisplacementROM(doorPtr->HorizontalDisplacement, doorPtr->VerticalDisplacement);
+            newDoors.push_back(newDoor);
+            destinations.push_back(doorPtr->LinkerDestination);
+            ++doorPtr;
+        }
+        // Assign the destinations for the doors
+        for(unsigned int i = 0; i < newDoors.size(); ++i)
+        {
+            newDoors[i]->SetDestinationDoor(newDoors[destinations[i]]);
+        }
+        this->doors = newDoors;
+
+        // Load the room data
+        int roomTableIndex = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::RoomDataTable + levelIndex * 4);
+        int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1] & 0xFF;
+
+        // TODO
     }
 
-    Level::SetTimeCountdownCounter(__LevelDifficulty LevelDifficulty, unsigned char _MinuteNum, unsigned char _SecondTenPlaceNum, unsigned char _OnePlaceNum)
+    /// <summary>
+    /// Set the countdown timer for a specific difficulty class.
+    /// </summary>
+    /// <param name="LevelDifficulty">An enumeration representing the level's difficulty</param>
+    /// <param name="minutes">The number of minutes to set the timer for this difficulty level</param>
+    /// <param name="seconds">The number of seconds to set the timer for this difficulty level</param>
+    void Level::SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int minutes, unsigned int seconds)
     {
-        if(LevelDifficulty == LevelComponents::Hard)
+        unsigned char a = (unsigned char) (minutes & 0xFF);
+        unsigned char b = (unsigned char) ((seconds / 10) & 0xFF);
+        unsigned char c = (unsigned char) ((seconds % 10) & 0xFF);
+        if(LevelDifficulty == HardDifficulty)
         {
-            this->LevelHeader.HardModeMinuteNum = _MinuteNum;
-            this->LevelHeader.HardModeSecondTenPlaceNum = _SecondTenPlaceNum;
-            this->LevelHeader.HardModeSecondOnePlaceNum = _OnePlaceNum;
+            this->LevelHeader.HardModeMinuteNum = a;
+            this->LevelHeader.HardModeSecondTenPlaceNum = b;
+            this->LevelHeader.HardModeSecondOnePlaceNum = c;
         }
-        if(LevelDifficulty == LevelComponents::Normal)
+        else if(LevelDifficulty == NormalDifficulty)
         {
-            this->LevelHeader.NormalModeMinuteNum = _MinuteNum;
-            this->LevelHeader.NormalModeSecondTenPlaceNum = _SecondTenPlaceNum;
-            this->LevelHeader.NormalModeSecondOnePlaceNum = _OnePlaceNum;
+            this->LevelHeader.NormalModeMinuteNum = a;
+            this->LevelHeader.NormalModeSecondTenPlaceNum = b;
+            this->LevelHeader.NormalModeSecondOnePlaceNum = c;
         }
-        if(LevelDifficulty == LevelComponents::SHard)
+        else if(LevelDifficulty == SHardDifficulty)
         {
-            this->LevelHeader.SHardModeMinuteNum = _MinuteNum;
-            this->LevelHeader.SHardModeSecondTenPlaceNum = _SecondTenPlaceNum;
-            this->LevelHeader.SHardModeSecondOnePlaceNum = _OnePlaceNum;
+            this->LevelHeader.SHardModeMinuteNum = a;
+            this->LevelHeader.SHardModeSecondTenPlaceNum = b;
+            this->LevelHeader.SHardModeSecondOnePlaceNum = c;
         }
     }
 }
-
-
-
-

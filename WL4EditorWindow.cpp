@@ -7,6 +7,11 @@
 
 #include "ROMUtils.h"
 
+//--------[testing headers]--------
+#include "LevelComponents/Level.h"
+#include <iostream>
+//---------------------------------
+
 WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::WL4EditorWindow)
@@ -38,4 +43,8 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
     ifs.seekg(0, std::ios::beg);
     ifs.read((char*) ROMUtils::CurrentFile, length);
     ifs.close();
+
+    // Perform tests here
+    LevelComponents::Level level(0, 0);
+    std::cout << level.GetDoors().size() << std::endl;
 }
