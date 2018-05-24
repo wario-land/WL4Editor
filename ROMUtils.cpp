@@ -44,4 +44,12 @@ namespace ROMUtils
         int d = 0xFF & data[address + 3];
         return ((a | (b << 8) | (c << 16) | (d << 24)) & 0x7FFFFFF);
     }
+
+    void GetUnit8sFromData(unsigned char *data, int address, int _ByteLength, std::vector<unsigned char> &_result)
+    {
+        int i;
+        for(i = 0; i < _ByteLength; i++)
+            _result.push_back(0xFF & data[address + i]);
+    }
+
 }
