@@ -41,6 +41,7 @@ namespace ROMUtils
         int a = 0xFF & data[address];
         int b = 0xFF & data[address + 1];
         int c = 0xFF & data[address + 2];
-        return a | (b << 8) | (c << 16);
+        int d = 0xFF & data[address + 3];
+        return ((a | (b << 8) | (c << 16) | (d << 24)) - 0x08000000);
     }
 }

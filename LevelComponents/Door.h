@@ -30,7 +30,7 @@ namespace LevelComponents
 
     public:
         // Constructors
-        Door(unsigned char *dataPtr);
+        Door(unsigned char *dataPtr);  //TODO: unimplement yet, I don't think I can manage the DestinationDoor, I don't think it is a good thing to use another door Instance inside the first one (spp)
         Door(unsigned char _RoomID, enum LevelComponents::DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
 
         // Methods
@@ -42,8 +42,7 @@ namespace LevelComponents
         void SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
         void SetDoorType(enum LevelComponents::DoorType _DoorType);
         bool IsUnused();
-        //the following function is provide for resetting the DestinationDoorID value when we delete a door
-        void DestinationDoorIDDec();
+        //TODO: GenerateDoorSavingData()  (ssp)
     };
 }
 

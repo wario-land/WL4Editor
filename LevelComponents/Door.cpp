@@ -24,8 +24,14 @@ namespace LevelComponents
 
     void Door::SetDoorDisplacement(signed int _X_Displacement, signed int _Y_Displacement)
     {
-        this->X_Displacement = (unsigned char)(255-16 * _X_Displacement);
-        this->Y_Displacement = (unsigned char)(255-16 * _Y_Displacement);
+        if(_X_Displacement < 0)
+            this->X_Displacement = (unsigned char)(255-16 * _X_Displacement);
+        if(_X_Displacement >= 0)
+            this->X_Displacement = (unsigned char)(16 * _X_Displacement);
+        if(_Y_Displacement < 0)
+            this->Y_Displacement = (unsigned char)(255-16 * _Y_Displacement);
+        if(_Y_Displacement >= 0)
+            this->Y_Displacement = (unsigned char)(16 * _Y_Displacement);
     }
 
     void Door::SetSpriteMapID(unsigned char _SpriteMapID)
@@ -53,7 +59,7 @@ namespace LevelComponents
 
     bool Door::IsUnused()
     {
-        if((this->type != Portal) && (this->DestinationDoor != (unsigned char)'\x00'))
+        if((this->type != Portal) && (this->DestinationDoor == nullptr))
             return true;
         return false;
     }

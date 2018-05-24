@@ -65,6 +65,28 @@ namespace LevelComponents
         // Load the area data
 
     }
+
+    Level::SetTimeCountdownCounter(__LevelDifficulty LevelDifficulty, unsigned char _MinuteNum, unsigned char _SecondTenPlaceNum, unsigned char _OnePlaceNum)
+    {
+        if(LevelDifficulty == LevelComponents::Hard)
+        {
+            this->LevelHeader.HardModeMinuteNum = _MinuteNum;
+            this->LevelHeader.HardModeSecondTenPlaceNum = _SecondTenPlaceNum;
+            this->LevelHeader.HardModeSecondOnePlaceNum = _OnePlaceNum;
+        }
+        if(LevelDifficulty == LevelComponents::Normal)
+        {
+            this->LevelHeader.NormalModeMinuteNum = _MinuteNum;
+            this->LevelHeader.NormalModeSecondTenPlaceNum = _SecondTenPlaceNum;
+            this->LevelHeader.NormalModeSecondOnePlaceNum = _OnePlaceNum;
+        }
+        if(LevelDifficulty == LevelComponents::SHard)
+        {
+            this->LevelHeader.SHardModeMinuteNum = _MinuteNum;
+            this->LevelHeader.SHardModeSecondTenPlaceNum = _SecondTenPlaceNum;
+            this->LevelHeader.SHardModeSecondOnePlaceNum = _OnePlaceNum;
+        }
+    }
 }
 
 
