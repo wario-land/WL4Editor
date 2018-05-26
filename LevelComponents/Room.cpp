@@ -15,7 +15,7 @@ namespace LevelComponents
         case '\x02':
             this->CameraControlType = LevelComponents::noLimit;
             break;
-        case '\x02':
+        case '\x03':
             this->CameraControlType = LevelComponents::HasControlAttrs;
         default: //don't know if there are some other types
             this->CameraControlType = LevelComponents::FixedY;
@@ -25,7 +25,7 @@ namespace LevelComponents
             int pLevelCameraCoontrolPointerTable = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::CameraControlPointerTable + _LevelID * 4);
             int i, RecordNum, j;
             __CameraControlRecord tmpRecord;
-            for(i = 0; i < 16; I++)
+            for(i = 0; i < 16; i++)
             {
                 int CurrentPointer = ROMUtils::PointerFromData(ROMUtils::CurrentFile, pLevelCameraCoontrolPointerTable + 4 * i);
                 if(CurrentPointer == 0x3F9D58)
