@@ -95,8 +95,11 @@ namespace LevelComponents
         this->doors = newDoors;
 
         // Load the room data
-        int roomTableIndex = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::RoomDataTable + levelIndex * 4);
+        int roomTableAddress = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::RoomDataTable + levelIndex * 4);
         int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1] & 0xFF;
+        int i;
+        for(i = 0; i < roomCount; i++) //roomCount is just the room number count from 1
+            this->rooms.push_back(); // don't know how to write, can we just transmit the parameters directly or we need another instance to push_back()? (ssp)
 
         // TODO
     }

@@ -39,22 +39,31 @@ namespace LevelComponents
         unsigned char x3;
         unsigned char y3;
         unsigned char OffsetofChangeVlaue;
-        unsigned char ChangeVlaue;
+        unsigned char ChangedVlaue;
+    };
+
+    enum __CameraControlType
+    {
+        FixedY          = 1,
+        noLimit         = 2,
+        HasControlAttrs = 3
+
     };
 
     class Room
     {
     private:
-        unsigned int CameraControlType;
+        enum __CameraControlType CameraControlType;
         unsigned int Layer3Scrolling;
         unsigned int LayerEffects;
+        unsigned int RoomID;
         unsigned int TilesetID;
         unsigned int Width, Height;
         bool Layer0Unchange;
         std::vector<__CameraControlRecord> CameraControlRecords;
         Layer *layers[4];
     public:
-        Room(unsigned char *roomData);
+        Room(unsigned char *roomData, unsigned char _RoomID, unsigned int _LevelID);
 
     };
 }
