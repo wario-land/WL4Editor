@@ -1,6 +1,8 @@
 #ifndef ROMUTILS_H
 #define ROMUTILS_H
 
+#include <vector>
+
 namespace ROMUtils
 {
     // Global variables

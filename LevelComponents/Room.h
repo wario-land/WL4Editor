@@ -3,6 +3,8 @@
 
 #include "Layer.h"
 
+#include <vector>
+
 namespace LevelComponents
 {
     struct __RoomHeader
@@ -27,17 +29,41 @@ namespace LevelComponents
         unsigned char DATA_28[4];
     };
 
+    struct __CameraControlRecord
+    {
+        unsigned char TransboundaryControl; //just set it to be x02
+        unsigned char x1;
+        unsigned char x2;
+        unsigned char y1;
+        unsigned char y2;
+        unsigned char x3;
+        unsigned char y3;
+        unsigned char OffsetofChangeVlaue;
+        unsigned char ChangedVlaue;
+    };
+
+    enum __CameraControlType
+    {
+        FixedY          = 1,
+        noLimit         = 2,
+        HasControlAttrs = 3
+
+    };
+
     class Room
     {
     private:
-    unsigned int CameraControlType;
-    unsigned int Layer3Scrolling;
-    unsigned int LayerEffects;
-    unsigned int TilesetID;
-    unsigned int Width, Height;
+        enum __CameraControlType CameraControlType;
+        unsigned int Layer3Scrolling;
+        unsigned int LayerEffects;
+        unsigned int RoomID;
+        unsigned int TilesetID;
+        unsigned int Width, Height;
+        bool Layer0Unchange;
+        std::vector<__CameraControlRecord> CameraControlRecords;
         Layer *layers[4];
     public:
-        Room(unsigned char *roomData);
+        Room(unsigned char *roomData, unsigned char _RoomID, unsigned int _LevelID);
 
     };
 }
