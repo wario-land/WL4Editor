@@ -45,9 +45,8 @@ namespace LevelComponents
     enum __CameraControlType
     {
         FixedY          = 1,
-        noLimit         = 2,
+        NoLimit         = 2,
         HasControlAttrs = 3
-
     };
 
     class Room
@@ -60,7 +59,7 @@ namespace LevelComponents
         unsigned int TilesetID;
         unsigned int Width, Height;
         bool Layer0Unchange;
-        std::vector<__CameraControlRecord> CameraControlRecords;
+        std::vector<struct __CameraControlRecord*> CameraControlRecords;
         Layer *layers[4];
     public:
         Room(unsigned char *roomData, unsigned char _RoomID, unsigned int _LevelID);
