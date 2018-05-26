@@ -38,8 +38,8 @@ namespace LevelComponents
         unsigned char y2;
         unsigned char x3;
         unsigned char y3;
-        unsigned char OffsetofChangeVlaue;
-        unsigned char ChangedVlaue;
+        unsigned char ChangeValueOffset;
+        unsigned char ChangedValue;
     };
 
     enum __CameraControlType
@@ -60,9 +60,10 @@ namespace LevelComponents
         unsigned int Width, Height;
         bool Layer0Unchange;
         std::vector<struct __CameraControlRecord*> CameraControlRecords;
+        struct __RoomHeader RoomHeader;
         Layer *layers[4];
     public:
-        Room(unsigned char *roomData, unsigned char _RoomID, unsigned int _LevelID);
+        Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
 
     };
 }
