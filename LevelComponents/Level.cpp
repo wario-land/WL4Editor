@@ -66,7 +66,7 @@ namespace LevelComponents
 
         // Load the level information
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-        int levelIndex = ROMUtils::CurrentFile[levelHeaderPointer] & 0xFF; // 0x3000023
+        int levelIndex = ROMUtils::CurrentFile[levelHeaderPointer]; // 0x3000023
 
         memcpy(&this->LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
 
@@ -96,12 +96,13 @@ namespace LevelComponents
 
         // Load the room data
         int roomTableAddress = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::RoomDataTable + levelIndex * 4);
-        int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1] & 0xFF;
-        int i;
-        //for(i = 0; i < roomCount; i++) //roomCount is just the room number count from 1
-        //    this->rooms.push_back(); // don't know how to write, can we just transmit the parameters directly or we need another instance to push_back()? (ssp)
+        int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
+        for(int i = 0; i < roomCount; i++)
+        {
+            rooms.push_back(new Room(roomTableAddress + i * 0x2C, i, levelIndex));
+        }
 
-        // TODO
+        // TODO load the level name
     }
 
     /// <summary>

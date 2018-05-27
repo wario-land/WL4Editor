@@ -2,7 +2,7 @@
 
 namespace LevelComponents
 {
-    Layer::Layer(unsigned char *layerData)
+    Layer::Layer(int layerDataPtr)
     {
         // TODO
     }
