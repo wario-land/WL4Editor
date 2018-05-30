@@ -12,6 +12,7 @@ namespace ROMUtils
     // Global functions
     int IntFromData(unsigned char *data, int address);
     int PointerFromData(unsigned char *data, int address);
+    // TODO RLE decompress
 }
 
 #endif // ROMUTILS_H

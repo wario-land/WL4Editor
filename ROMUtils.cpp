@@ -44,4 +44,22 @@ namespace ROMUtils
         int d = 0xFF & data[address + 3];
         return ((a | (b << 8) | (c << 16) | (d << 24)) & 0x7FFFFFF);
     }
+
+    /// <summary>
+    /// Decompress ROM data that was compressed with run-length encoding.
+    /// </summary>
+    /// <remarks>
+    /// The <paramref name="outputSize"/> parameter specifies the predicted output size in bytes.
+    /// </remarks>
+    /// <param name="data">
+    /// A pointer into the ROM data to start reading from.
+    /// </param>
+    /// <param name="outputSize">
+    /// The predicted size of the output data.
+    /// </param>
+    /// <return>A pointer to decompressed data.</return>
+    unsigned char *RLEDecompress(unsigned char *data, int outputSize)
+    {
+        // TODO
+    }
 }

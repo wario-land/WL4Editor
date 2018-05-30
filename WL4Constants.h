@@ -4,6 +4,7 @@
 namespace WL4Constants
 {
     // Definitions for the beginning of tables
+    const int TilesetDataTable          = 0x3F2298;
     const int LevelHeaderTable          = 0x639068;
     const int LevelHeaderIndexTable     = 0x6391C4;
     const int LevelNamePointerTable     = 0x63A3AC;
