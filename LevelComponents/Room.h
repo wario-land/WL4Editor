@@ -2,6 +2,7 @@
 #define ROOM_H
 
 #include "Layer.h"
+#include "Tileset.h"
 
 #include <vector>
 
@@ -58,10 +59,11 @@ namespace LevelComponents
         unsigned int RoomID;
         unsigned int TilesetID;
         unsigned int Width, Height;
-        bool Layer0Unchange;
+        bool Layer0Locked = false;
         std::vector<struct __CameraControlRecord*> CameraControlRecords;
         struct __RoomHeader RoomHeader;
         Layer *layers[4];
+        Tileset *tileset;
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
 

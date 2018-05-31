@@ -14,9 +14,13 @@ namespace LevelComponents
     {
         this->RoomID = _RoomID;
 
-        // TODO set up tile sets
+        // Copy the room header information
+        memcpy(&this->RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
 
-        // TODO set up the palette
+        // Set up tileset
+        int tilesetIndex = ROMUtils::CurrentFile[roomDataPtr];
+        int tilesetPtr = WL4Constants::TilesetDataTable + tilesetIndex * 36;
+        tileset = new Tileset(tilesetPtr);
 
         // Set up the layer data
         int dimensionPointer = ROMUtils::PointerFromData(ROMUtils::CurrentFile, roomDataPtr + 12);
@@ -27,6 +31,7 @@ namespace LevelComponents
             enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1]);
             int layerPtr = ROMUtils::PointerFromData(ROMUtils::CurrentFile, roomDataPtr + i * 4 + 8);
             layers[i] = new Layer(layerPtr);
+            // TODO use mappingtype?
         }
 
         // Set up camera control data

@@ -1,6 +1,8 @@
 #ifndef LAYER_H
 #define LAYER_H
 
+#include "Tile.h"
+
 namespace LevelComponents
 {
     enum LayerMappingType
@@ -15,6 +17,7 @@ namespace LevelComponents
     private:
         bool Enabled; // so we can disable a back ground of type 0x00
         bool Visible; // so we can show or hide in the editor
+        std::vector<Tile> tiles;
     public:
         Layer(int layerDataPtr);
     };
