@@ -93,7 +93,7 @@ namespace ROMUtils
                         src += nn;
                     }
                     dst += 2*nn;
-                    if(dst > (address + outputSize))
+                    if((int)(dst - OutputLayerData) > outputSize)
                     {
                         delete[] OutputLayerData;
                         return nullptr;
@@ -126,7 +126,7 @@ namespace ROMUtils
                         src += nn;
                     }
                     dst += 2*nn;
-                    if(dst > (address + outputSize))
+                    if((int)(dst - OutputLayerData) > outputSize)
                     {
                         delete[] OutputLayerData;
                         return nullptr;
