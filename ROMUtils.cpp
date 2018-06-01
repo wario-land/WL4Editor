@@ -50,6 +50,7 @@ namespace ROMUtils
     /// </summary>
     /// <remarks>
     /// The <paramref name="outputSize"/> parameter specifies the predicted output size in bytes.
+    /// The return unsigned char * is on the heap, delete it after using.
     /// </remarks>
     /// <param name="data">
     /// A pointer into the ROM data to start reading from.
@@ -92,6 +93,11 @@ namespace ROMUtils
                         src += nn;
                     }
                     dst += 2*nn;
+                    if(dst > (address + outputSize))
+                    {
+                        delete[] OutputLayerData;
+                        return nullptr;
+                    }
                 }
             }
             else		// RLE16
@@ -120,6 +126,11 @@ namespace ROMUtils
                         src += nn;
                     }
                     dst += 2*nn;
+                    if(dst > (address + outputSize))
+                    {
+                        delete[] OutputLayerData;
+                        return nullptr;
+                    }
                 }
             }
         }
