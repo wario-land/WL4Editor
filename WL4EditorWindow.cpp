@@ -2,15 +2,9 @@
 #include "ui_WL4EditorWindow.h"
 
 #include <QFileDialog>
-#include <iostream>
-#include <fstream>
 
-#include "ROMUtils.h"
-
-//--------[testing headers]--------
-#include "LevelComponents/Level.h"
-#include <iostream>
-//---------------------------------
+// Prototype for main.cpp function
+void LoadROMFile(std::string);
 
 WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -35,16 +29,5 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
     );
     std::string filePath = qFilePath.toStdString();
 
-    // Read ROM file into current file array
-    std::ifstream ifs(filePath, std::ios::binary|std::ios::ate);
-    std::ifstream::pos_type pos = ifs.tellg();
-    int length = pos;
-    ROMUtils::CurrentFile = new unsigned char[length];
-    ifs.seekg(0, std::ios::beg);
-    ifs.read((char*) ROMUtils::CurrentFile, length);
-    ifs.close();
-
-    // Perform tests here
-    LevelComponents::Level level(0, 0);
-    std::cout << level.GetDoors().size() << std::endl;
+    LoadROMFile(filePath);
 }
