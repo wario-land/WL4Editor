@@ -102,7 +102,12 @@ namespace LevelComponents
             rooms.push_back(new Room(roomTableAddress + i * 0x2C, i, levelIndex));
         }
 
-        // TODO load the level name
+        // Load the level name
+        int LevelNameAddress = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::LevelNamePointerTable + 24 * passage + stage);
+        ROMUtils::LevelNameFromData(ROMUtils::CurrentFile, LevelNameAddress, this->LevelName);
+
+        // TODO
+
     }
 
     /// <summary>
