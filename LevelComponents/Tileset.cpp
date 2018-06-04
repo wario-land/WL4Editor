@@ -10,11 +10,11 @@ namespace LevelComponents
         for(int i = 0; i < 16; ++i)
         {
             // First color is transparent
-            palettes[i][0] = 0;
+            palettes[i].push_back(0);
             int subPalettePtr = palettePtr + i * 32;
             for(int j = 1; j < 16; ++j)
             {
-                unsigned short color555 = *(unsigned short*) (ROMUtils::CurrentFile + subPalettePtr + i * 2);
+                unsigned short color555 = *(unsigned short*) (ROMUtils::CurrentFile + subPalettePtr + j * 2);
                 int r = (color555 & 0x1F) << 3;
                 int g = (color555 & 0x3E0) >> 2;
                 int b = (color555 & 0x7C00) >> 7;
@@ -32,22 +32,22 @@ namespace LevelComponents
         int bgGFXptr = ROMUtils::PointerFromData(ROMUtils::CurrentFile, tilesetPtr + 12);
         int bgGFXlen = ROMUtils::IntFromData(ROMUtils::CurrentFile, tilesetPtr + 16);
         // Foreground
-        tile8x8data[0x40] = Tile8x8::CreateBlankTile();
+        tile8x8data[0x40] = Tile8x8::CreateBlankTile(palettes);
         for(int i = 0; i < fgGFXlen / 32; ++i)
         {
-            tile8x8data[i + 0x41] = new Tile8x8(fgGFXptr + i * 32);
+            tile8x8data[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes);
         }
         // Background
         int bgGFXcount = bgGFXlen / 32;
         for(int i = 0; i < bgGFXcount; ++i)
         {
-            tile8x8data[bgGFXlen - 1 + i - bgGFXcount] = new Tile8x8(bgGFXptr + i * 32);
+            tile8x8data[bgGFXlen - 1 + i - bgGFXcount] = new Tile8x8(bgGFXptr + i * 32, palettes);
         }
 
         // Load the map16 data
         int map16ptr = ROMUtils::PointerFromData(ROMUtils::CurrentFile, tilesetPtr + 0x14);
         int map16size = sizeof(map16data) / sizeof(map16data[0]);
-        for(int i = 0; i < map16size; ++i)
+        for(int i = 0; i < map16size; ++i) // TODO crashes on i = 6
         {
             unsigned short *map16tilePtr = (unsigned short*) (ROMUtils::CurrentFile + map16ptr + i * 8);
             Tile8x8 *tiles[4];

@@ -1,4 +1,5 @@
 #include "ROMUtils.h"
+#include <cassert>
 
 namespace ROMUtils
 {
@@ -16,11 +17,7 @@ namespace ROMUtils
     /// </param>
     int IntFromData(unsigned char *data, int address)
     {
-        int a = 0xFF & data[address];
-        int b = 0xFF & data[address + 1];
-        int c = 0xFF & data[address + 2];
-        int d = 0xFF & data[address + 3];
-        return a | (b << 8) | (c << 16) | (d << 24);
+        return *(int*) (data + address); // This program is almost certainly executing on a little-endian architecture
     }
 
     /// <summary>
@@ -38,11 +35,9 @@ namespace ROMUtils
     /// </param>
     int PointerFromData(unsigned char *data, int address)
     {
-        int a = 0xFF & data[address];
-        int b = 0xFF & data[address + 1];
-        int c = 0xFF & data[address + 2];
-        int d = 0xFF & data[address + 3];
-        return ((a | (b << 8) | (c << 16) | (d << 24)) & 0x7FFFFFF);
+        int ret = IntFromData(data, address) & 0x7FFFFFF;
+        assert(ret >= CurrentFileSize); // Fail if the pointer is out of range. TODO proper error handling
+        return ret;
     }
 
     /// <summary>
@@ -62,37 +57,42 @@ namespace ROMUtils
     unsigned char *RLEDecompress(unsigned char *data, int address, int outputSize)
     {
         unsigned char *OutputLayerData = new unsigned char[outputSize];
-        unsigned char *dst;
-        int src = address;
-        int ctrl;
-        int nn;
+        int runData;
 
-        for(int ii=0; ii<2; ii++)
+        for(int i = 0; i < 2; i++)
         {
-            dst = &OutputLayerData[ii];
-            if(data[src++] == 1)
+            unsigned char *dst = &OutputLayerData[i];
+            if(data[address++] == 1)
             {
                 while(1)
                 {
-                    ctrl = (int) data[src++];
+                    int ctrl = data[address++];
                     if(ctrl == 0)
+                    {
                         break;
+                    }
                     else if(ctrl & 0x80)
                     {
-                        nn = ctrl & 0x7F;
-                        if(data[src])
-                            for(int jj=0; jj<nn; jj++)
-                                dst[2*jj]= data[src];
-                            src++;
+                        runData = ctrl & 0x7F;
+                        if(data[address])
+                        {
+                            for(int j = 0; j < runData; j++)
+                            {
+                                dst[2 * j] = data[address];
+                            }
+                            address++;
+                        }
                     }
                     else
                     {
-                        nn = ctrl;
-                        for(int jj=0; jj<nn; jj++)
-                            dst[2*jj]= data[src+jj];
-                        src += nn;
+                        runData = ctrl;
+                        for(int jj = 0; jj < runData; jj++)
+                        {
+                            dst[2 * jj] = data[address + jj];
+                        }
+                        address += runData;
                     }
-                    dst += 2*nn;
+                    dst += 2*runData;
                     if((int)(dst - OutputLayerData) > outputSize)
                     {
                         delete[] OutputLayerData;
@@ -100,33 +100,39 @@ namespace ROMUtils
                     }
                 }
             }
-            else		// RLE16
+            else // RLE16
             {
                 while(1)
                 {
-                    ctrl = data[src]<<8 | data[src+1];
-                    src += 2;                     //offset + 2
+                    int ctrl = ((int) data[address] << 8) | data[address + 1];
+                    address += 2; //offset + 2
                     if(ctrl == 0)
+                    {
                         break;
+                    }
                     if(ctrl & 0x8000)
                     {
-                        nn = ctrl & 0x7FFF;
-                        if(data[src])
-                            for(int jj=0; jj<nn; jj++)
-                                dst[2*jj] = data[src];
-                            src++;
+                        runData = ctrl & 0x7FFF;
+                        if(data[address])
+                        {
+                            for(int j = 0; j < runData; j++)
+                            {
+                                dst[2 * j] = data[address];
+                            }
+                            address++;
+                        }
                     }
                     else
                     {
-                        nn = ctrl;
-                        for(int jj=0; jj<nn; jj++)
-                            {
-                            dst[2*jj] = data[src+jj];
-                            }
-                        src += nn;
+                        runData = ctrl;
+                        for(int j = 0; j < runData; j++)
+                        {
+                            dst[2 * j] = data[address + j];
+                        }
+                        address += runData;
                     }
-                    dst += 2*nn;
-                    if((int)(dst - OutputLayerData) > outputSize)
+                    dst += 2 * runData;
+                    if((int) (dst - OutputLayerData) > outputSize)
                     {
                         delete[] OutputLayerData;
                         return nullptr;
@@ -134,7 +140,6 @@ namespace ROMUtils
                 }
             }
         }
-
         return OutputLayerData;
     }
 }
