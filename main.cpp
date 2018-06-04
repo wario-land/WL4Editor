@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         }
         username[i] = (char) (usernameTC[i] & 0xFF);
     }
-    if(!strncmp(username, "Andrew", UNLEN))
+    if(!strncmp(username, "Andrew", UNLEN)) // Goldensunboy
     {
         // Andrew's tests
         std::string filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
         LevelComponents::Level level(0, 0);
         std::cout << level.GetDoors().size() << std::endl;
     }
-    else if(!strncmp(username, "Yifeng", UNLEN))
+    else if(!strncmp(username, "Administrator", UNLEN)) // SSP
     {
         // TODO
     }

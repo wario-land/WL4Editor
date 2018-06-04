@@ -15,6 +15,8 @@ namespace LevelComponents
     {
     private:
         enum TileType Type;
+    protected:
+        Tile(enum TileType _type) : Type(_type) { }
     public:
         virtual void DrawTile(int x, int y) = 0;
     };
@@ -23,15 +25,22 @@ namespace LevelComponents
     {
     private:
         QImage *ImageData;
+        QVector<QRgb> *palettes;
         int paletteIndex = 0;
         bool FlipX = false;
         bool FlipY = false;
     public:
-        Tile8x8() : ImageData(new QImage(8, 8, QImage::Format_Indexed8)) { }
-        Tile8x8(int dataPtr);
-        Tile8x8(Tile8x8 &other) : ImageData(other.ImageData) { }
+        Tile8x8(QVector<QRgb> *_palettes) : Tile(TileType8x8),
+            ImageData(new QImage(8, 8, QImage::Format_Indexed8)),
+            palettes(_palettes)
+        {
+            ImageData->setColorTable(palettes[paletteIndex]);
+        }
+        Tile8x8(int dataPtr, QVector<QRgb> *_palettes);
+        Tile8x8(Tile8x8 &other) : Tile(TileType8x8),
+            ImageData(other.ImageData) { }
         void DrawTile(int x, int y);
-        static Tile8x8 *CreateBlankTile();
+        static Tile8x8 *CreateBlankTile(QVector<QRgb> *_palettes);
         void SetFlipX(bool _flipX) { FlipX = _flipX; }
         void SetFlipY(bool _flipY) { FlipY = _flipY; }
         void SetPaletteIndex(int index) { paletteIndex = index; }
@@ -42,8 +51,8 @@ namespace LevelComponents
     private:
         Tile8x8 *TileData[4];
     public:
-        TileMap16() { }
-        TileMap16(Tile8x8 *t0, Tile8x8 *t1, Tile8x8 *t2, Tile8x8 *t3)
+        TileMap16() : Tile(TileTypeMap16) { }
+        TileMap16(Tile8x8 *t0, Tile8x8 *t1, Tile8x8 *t2, Tile8x8 *t3) : Tile(TileTypeMap16)
         {
             TileData[0] = t0;
             TileData[1] = t1;

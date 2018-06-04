@@ -2,14 +2,14 @@
 
 namespace LevelComponents
 {
-    Tile8x8::Tile8x8(int dataPtr) : Tile8x8()
+    Tile8x8::Tile8x8(int dataPtr, QVector<QRgb> *_palettes) : Tile(TileType8x8)
     {
         // TODO
     }
 
-    Tile8x8 *Tile8x8::CreateBlankTile()
+    Tile8x8 *Tile8x8::CreateBlankTile(QVector<QRgb> *_palettes)
     {
-        Tile8x8 *t = new Tile8x8();
+        Tile8x8 *t = new Tile8x8(_palettes);
         for(int i = 0; i < 8; ++i)
         {
             for(int j = 0; j < 8; ++j)
