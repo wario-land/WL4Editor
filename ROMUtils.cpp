@@ -36,7 +36,7 @@ namespace ROMUtils
     int PointerFromData(unsigned char *data, int address)
     {
         int ret = IntFromData(data, address) & 0x7FFFFFF;
-        assert(ret < CurrentFileSize); // Fail if the pointer is out of range. TODO proper error handling
+        assert(ret >= CurrentFileSize); // Fail if the pointer is out of range. TODO proper error handling
         return ret;
     }
 
