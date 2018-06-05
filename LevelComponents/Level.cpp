@@ -58,7 +58,7 @@ namespace LevelComponents
     /// <param name="stage">
     /// The stage number.
     /// </param>
-    Level::Level(int passage, int stage)
+    Level::Level(enum __passage passage, enum __stage stage)
     {
         // Get the level header index
         int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;

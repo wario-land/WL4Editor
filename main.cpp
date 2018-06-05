@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
         std::string filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
         LoadROMFile(filePath);
 
-        LevelComponents::Level level(0, 0);
+        LevelComponents::Level level(LevelComponents::EntryPassage, LevelComponents::FirstLevel);
         std::cout << level.GetDoors().size() << std::endl;
     }
     else if(!strncmp(username, "Administrator", UNLEN)) // SSP

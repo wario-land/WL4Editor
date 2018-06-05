@@ -17,6 +17,25 @@ namespace LevelComponents
         SHardDifficulty  = 2
     };
 
+    enum __passage
+    {
+        EntryPassage = 0,
+        EmeraldPassage = 1,
+        RubyPassage = 2,
+        TopazPassage = 3,
+        SapphirePassage = 4,
+        GoldenPassage = 5
+    };
+
+    enum __stage
+    {
+        FirstLevel = 0,
+        SecondLevel = 1,
+        ThirdLevel = 2,
+        FourthLevel = 3,
+        BossLevel = 4
+    };
+
     // This structure is set up the same way the level header is organized in the ROM.
     struct __LevelHeader
     {
@@ -42,7 +61,7 @@ namespace LevelComponents
         std::vector<Door*> doors;
         __LevelHeader LevelHeader;
     public:
-        Level(int passage, int stage); //TODO: need another construction function ? one for load a level and the other for create a level (ssp)
+        Level(enum __passage passage, enum __stage stage); //TODO: need another construction function ? one for load a level and the other for create a level (ssp)
         void SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int minutes, unsigned int seconds);
         std::vector<Door*> GetDoors() { return doors; }
         std::vector<Room*> GetRooms() { return rooms; }
