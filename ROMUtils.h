@@ -2,6 +2,7 @@
 #define ROMUTILS_H
 
 #include <vector>
+#include <string>
 
 namespace ROMUtils
 {
@@ -14,6 +15,7 @@ namespace ROMUtils
     int PointerFromData(unsigned char *data, int address);
     // TODO RLE decompress
     unsigned char *RLEDecompress(unsigned char *data, int address, int outputSize);
+    void LevelNameFromData(unsigned char *data, int address, std::string &_levelname);
 }
 
 #endif // ROMUTILS_H

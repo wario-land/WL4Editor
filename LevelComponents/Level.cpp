@@ -58,7 +58,7 @@ namespace LevelComponents
     /// <param name="stage">
     /// The stage number.
     /// </param>
-    Level::Level(int passage, int stage)
+    Level::Level(enum __passage passage, enum __stage stage)
     {
         // Get the level header index
         int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
@@ -102,7 +102,12 @@ namespace LevelComponents
             rooms.push_back(new Room(roomTableAddress + i * 0x2C, i, levelIndex));
         }
 
-        // TODO load the level name
+        // Load the level name
+        int LevelNameAddress = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::LevelNamePointerTable + 24 * passage + stage);
+        ROMUtils::LevelNameFromData(ROMUtils::CurrentFile, LevelNameAddress, this->LevelName);
+
+        // TODO
+
     }
 
     /// <summary>

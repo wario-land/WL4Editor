@@ -142,4 +142,22 @@ namespace ROMUtils
         }
         return OutputLayerData;
     }
+
+    void LevelNameFromData(unsigned char *data, int address, std::string &_levelname)
+    {
+        unsigned char chr;
+        for(int ii = 0; ii < 26; ii++)
+        {
+            chr = data[address];
+            if(('/x00' <= chr) && (chr <= '\x09'))
+                _levelname.append(1, chr + (unsigned char)48);
+            else if(('/x0A' <= chr) && (chr <= '\x23'))
+                _levelname.append(1, chr + (unsigned char)55);
+            else if(('/x24' <= chr) && (chr <= '\x3D'))
+                _levelname.append(1, chr + (unsigned char)61);
+            else
+                _levelname.append(1, (unsigned char)32);
+        }
+    }
+
 }
