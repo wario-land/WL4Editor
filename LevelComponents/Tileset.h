@@ -16,6 +16,9 @@ namespace LevelComponents
         QVector<QRgb> palettes[16];
     public:
         Tileset(int tilesetPtr);
+        Tile8x8 **GetTile8x8Data() { return tile8x8data; }
+        TileMap16 **GetMap16Data() { return map16data; }
+        QVector<QRgb> *GetPalettes() { return palettes; }
     };
 }
 

@@ -12,6 +12,8 @@
 #include <cstring>
 //---------------------------------
 
+LevelComponents::Level *CurrentLevel;
+
 void LoadROMFile(std::string filePath)
 {
     // Read ROM file into current file array
@@ -51,8 +53,14 @@ int main(int argc, char *argv[])
         std::string filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
         LoadROMFile(filePath);
 
-        LevelComponents::Level level(LevelComponents::EntryPassage, LevelComponents::FirstLevel);
-        std::cout << level.GetDoors().size() << std::endl;
+        // Load level (0, 0)
+        CurrentLevel = new LevelComponents::Level(LevelComponents::EntryPassage, LevelComponents::FirstLevel);
+
+        // Render the screen
+        w.RenderScreen(CurrentLevel->GetRooms()[0]);
+
+        std::cout << CurrentLevel->GetDoors().size() << std::endl;
+        std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
     }
     else if(!strncmp(username, "Administrator", UNLEN)) // SSP
     {

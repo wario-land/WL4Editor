@@ -15,9 +15,9 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the integer from.
     /// </param>
-    int IntFromData(unsigned char *data, int address)
+    int IntFromData(int address)
     {
-        return *(int*) (data + address); // This program is almost certainly executing on a little-endian architecture
+        return *(int*) (CurrentFile + address); // This program is almost certainly executing on a little-endian architecture
     }
 
     /// <summary>
@@ -33,9 +33,9 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the pointer from.
     /// </param>
-    int PointerFromData(unsigned char *data, int address)
+    int PointerFromData(int address)
     {
-        int ret = IntFromData(data, address) & 0x7FFFFFF;
+        int ret = IntFromData(address) & 0x7FFFFFF;
         assert(ret >= CurrentFileSize); // Fail if the pointer is out of range. TODO proper error handling
         return ret;
     }
@@ -142,22 +142,4 @@ namespace ROMUtils
         }
         return OutputLayerData;
     }
-
-    void LevelNameFromData(unsigned char *data, int address, std::string &_levelname)
-    {
-        unsigned char chr;
-        for(int ii = 0; ii < 26; ii++)
-        {
-            chr = data[address];
-            if(('/x00' <= chr) && (chr <= '\x09'))
-                _levelname.append(1, chr + (unsigned char)48);
-            else if(('/x0A' <= chr) && (chr <= '\x23'))
-                _levelname.append(1, chr + (unsigned char)55);
-            else if(('/x24' <= chr) && (chr <= '\x3D'))
-                _levelname.append(1, chr + (unsigned char)61);
-            else
-                _levelname.append(1, (unsigned char)32);
-        }
-    }
-
 }

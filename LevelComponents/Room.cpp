@@ -23,13 +23,13 @@ namespace LevelComponents
         tileset = new Tileset(tilesetPtr);
 
         // Set up the layer data
-        int dimensionPointer = ROMUtils::PointerFromData(ROMUtils::CurrentFile, roomDataPtr + 12);
+        int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
         Width = ROMUtils::CurrentFile[dimensionPointer];
         Height = ROMUtils::CurrentFile[dimensionPointer + 1];
         for(int i = 0; i < 4; ++i)
         {
             enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1]);
-            int layerPtr = ROMUtils::PointerFromData(ROMUtils::CurrentFile, roomDataPtr + i * 4 + 8);
+            int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
             layers[i] = new Layer(layerPtr);
             // TODO use mappingtype?
         }
@@ -38,10 +38,10 @@ namespace LevelComponents
         // TODO are there more types than 1, 2 and 3?
         if((CameraControlType = static_cast<enum __CameraControlType>(ROMUtils::CurrentFile[roomDataPtr + 24])) == HasControlAttrs)
         {
-            int pLevelCameraControlPointerTable = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::CameraControlPointerTable + _LevelID * 4);
+            int pLevelCameraControlPointerTable = ROMUtils::PointerFromData(WL4Constants::CameraControlPointerTable + _LevelID * 4);
             for(int i = 0; i < 16; i++)
             {
-                int CurrentPointer = ROMUtils::PointerFromData(ROMUtils::CurrentFile, pLevelCameraControlPointerTable + i * 4);
+                int CurrentPointer = ROMUtils::PointerFromData(pLevelCameraControlPointerTable + i * 4);
                 if(CurrentPointer == WL4Constants::CameraRecordSentinel)
                     break;
                 if(ROMUtils::CurrentFile[CurrentPointer] == _RoomID)
