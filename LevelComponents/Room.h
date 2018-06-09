@@ -66,7 +66,7 @@ namespace LevelComponents
         Tileset *tileset;
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
-
+        Tileset *GetTileset() { return tileset; }
     };
 }
 

@@ -6,7 +6,7 @@ namespace LevelComponents
     Tileset::Tileset(int tilesetPtr)
     {
         // Create all 16 color palettes
-        int palettePtr = ROMUtils::PointerFromData(ROMUtils::CurrentFile, tilesetPtr + 8);
+        int palettePtr = ROMUtils::PointerFromData(tilesetPtr + 8);
         for(int i = 0; i < 16; ++i)
         {
             // First color is transparent
@@ -23,29 +23,39 @@ namespace LevelComponents
             }
         }
 
+        // Set all the tiles to blank tiles
+        int tile8x8size = sizeof(tile8x8data) / sizeof(tile8x8data[0]);
+        Tile8x8 *blankTile = Tile8x8::CreateBlankTile(palettes);
+        for(int i = 0; i < tile8x8size; ++i)
+        {
+            tile8x8data[i] = blankTile;
+        }
+
         // TODO Load the animated tiles
 
 
         // Load the 8x8 tile graphics
-        int fgGFXptr = ROMUtils::PointerFromData(ROMUtils::CurrentFile, tilesetPtr);
-        int fgGFXlen = ROMUtils::IntFromData(ROMUtils::CurrentFile, tilesetPtr + 4);
-        int bgGFXptr = ROMUtils::PointerFromData(ROMUtils::CurrentFile, tilesetPtr + 12);
-        int bgGFXlen = ROMUtils::IntFromData(ROMUtils::CurrentFile, tilesetPtr + 16);
+        int fgGFXptr = ROMUtils::PointerFromData(tilesetPtr);
+        int fgGFXlen = ROMUtils::IntFromData(tilesetPtr + 4);
+        int bgGFXptr = ROMUtils::PointerFromData(tilesetPtr + 12);
+        int bgGFXlen = ROMUtils::IntFromData(tilesetPtr + 16);
+
         // Foreground
-        tile8x8data[0x40] = Tile8x8::CreateBlankTile(palettes);
-        for(int i = 0; i < fgGFXlen / 32; ++i)
+        int fgGFXcount = fgGFXlen / 32;
+        for(int i = 0; i < fgGFXcount; ++i)
         {
             tile8x8data[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes);
         }
+
         // Background
         int bgGFXcount = bgGFXlen / 32;
         for(int i = 0; i < bgGFXcount; ++i)
         {
-            tile8x8data[bgGFXlen - 1 + i - bgGFXcount] = new Tile8x8(bgGFXptr + i * 32, palettes);
+            tile8x8data[tile8x8size - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes);
         }
 
         // Load the map16 data
-        int map16ptr = ROMUtils::PointerFromData(ROMUtils::CurrentFile, tilesetPtr + 0x14);
+        int map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
         int map16size = sizeof(map16data) / sizeof(map16data[0]);
         for(int i = 0; i < map16size; ++i) // TODO crashes on i = 6
         {
@@ -57,7 +67,7 @@ namespace LevelComponents
                 bool FlipX = (map16tilePtr[j] & (1 << 10)) != 0;
                 bool FlipY = (map16tilePtr[j] & (1 << 11)) != 0;
                 int paletteIndex = map16tilePtr[j] >> 12;
-                tiles[j] = new Tile8x8(*tile8x8data[index]);
+                tiles[j] = new Tile8x8(tile8x8data[index]);
                 tiles[j]->SetFlipX(FlipX);
                 tiles[j]->SetFlipY(FlipY);
                 tiles[j]->SetPaletteIndex(paletteIndex);

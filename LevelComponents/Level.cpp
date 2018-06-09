@@ -62,7 +62,7 @@ namespace LevelComponents
     {
         // Get the level header index
         int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
-        int levelHeaderIndex = ROMUtils::IntFromData(ROMUtils::CurrentFile, offset);
+        int levelHeaderIndex = ROMUtils::IntFromData(offset);
 
         // Load the level information
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
@@ -73,7 +73,7 @@ namespace LevelComponents
         // Load the door data
         std::vector<Door*> newDoors;
         std::vector<int> destinations;
-        int doorStartAddress = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::DoorTable + levelIndex * 4);
+        int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + levelIndex * 4);
         struct __DoorEntry *doorPtr = (struct __DoorEntry*) (ROMUtils::CurrentFile + doorStartAddress);
         unsigned char *firstByte;
         while(*(firstByte = (unsigned char*) doorPtr))
@@ -95,7 +95,7 @@ namespace LevelComponents
         this->doors = newDoors;
 
         // Load the room data
-        int roomTableAddress = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::RoomDataTable + levelIndex * 4);
+        int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + levelIndex * 4);
         int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
         for(int i = 0; i < roomCount; i++)
         {
@@ -103,8 +103,8 @@ namespace LevelComponents
         }
 
         // Load the level name
-        int LevelNameAddress = ROMUtils::PointerFromData(ROMUtils::CurrentFile, WL4Constants::LevelNamePointerTable + 24 * passage + stage);
-        ROMUtils::LevelNameFromData(ROMUtils::CurrentFile, LevelNameAddress, this->LevelName);
+        int LevelNameAddress = ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4);
+        LoadLevelName(LevelNameAddress);
 
         // TODO
 
@@ -138,6 +138,30 @@ namespace LevelComponents
             this->LevelHeader.SHardModeMinuteNum = a;
             this->LevelHeader.SHardModeSecondTenPlaceNum = b;
             this->LevelHeader.SHardModeSecondOnePlaceNum = c;
+        }
+    }
+
+    void Level::LoadLevelName(int address)
+    {
+        for(int i = 0; i < 26; i++)
+        {
+            unsigned char chr = ROMUtils::CurrentFile[address + i];
+            if(chr >= 0x00 && chr <= 0x09)
+            {
+                LevelName.append(1, chr + (unsigned char) 48);
+            }
+            else if(chr >= 0x0A && chr <= 0x23)
+            {
+                LevelName.append(1, chr + (unsigned char) 55);
+            }
+            else if(chr >= 0x24 && chr <= 0x3D)
+            {
+                LevelName.append(1, chr + (unsigned char) 61);
+            }
+            else
+            {
+                LevelName.append(1, (unsigned char) 32);
+            }
         }
     }
 }

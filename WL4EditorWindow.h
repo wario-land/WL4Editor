@@ -2,9 +2,10 @@
 #define WL4EDITORWINDOW_H
 
 #include <QMainWindow>
+#include "LevelComponents/Room.h"
 
 namespace Ui {
-class WL4EditorWindow;
+    class WL4EditorWindow;
 }
 
 class WL4EditorWindow : public QMainWindow
@@ -14,6 +15,7 @@ class WL4EditorWindow : public QMainWindow
 public:
     explicit WL4EditorWindow(QWidget *parent = 0);
     ~WL4EditorWindow();
+    void RenderScreen(LevelComponents::Room *room);
 
 private slots:
     void on_actionOpen_ROM_triggered();
