@@ -49,7 +49,7 @@ void WL4EditorWindow::RenderScreen(LevelComponents::Room *room)
             t->GetTile8x8Data()[i * 32 + j]->DrawTile(scene, x, y);
         }
     }
-    *
+    */
     for(int i = 0; i < 48 * 2; ++i)
     {
         for(int j = 0; j < 8; ++j)
@@ -58,6 +58,5 @@ void WL4EditorWindow::RenderScreen(LevelComponents::Room *room)
             t->GetMap16Data()[i * 8 + j]->DrawTile(scene, x, y);
         }
     }
-    */
-    t->GetMap16Data()[8]->DrawTile(scene, 0, 0);
+
 }

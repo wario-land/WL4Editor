@@ -31,7 +31,8 @@ namespace LevelComponents
 
     void Tile8x8::DrawTile(QGraphicsScene *scene, int x, int y)
     {
-        QPixmap item = QPixmap::fromImage(*ImageData);
+        QImage tmpImage = ImageData->mirrored(this->FlipX, this->FlipY);
+        QPixmap item = QPixmap::fromImage(tmpImage);
         scene->addPixmap(item)->setPos(x, y);
     }
 }

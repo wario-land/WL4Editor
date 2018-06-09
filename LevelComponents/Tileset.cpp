@@ -15,9 +15,9 @@ namespace LevelComponents
             for(int j = 1; j < 16; ++j)
             {
                 unsigned short color555 = *(unsigned short*) (ROMUtils::CurrentFile + subPalettePtr + j * 2);
-                int r = (color555 & 0x1F) << 3;
-                int g = (color555 & 0x3E0) >> 2;
-                int b = (color555 & 0x7C00) >> 7;
+                int r = ((color555 & 0x1F) << 3) + ((color555 & 0x1F) >> 2);
+                int g = ((color555 & 0x3E0) >> 2) + ((color555 & 0x3E0) >> 7);
+                int b = ((color555 & 0x7C00) >> 7) + ((color555 & 0x7C00) >> 13);
                 int a = 0xFF;
                 palettes[i].push_back(QColor(r, g, b, a).rgba());
             }

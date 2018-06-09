@@ -64,7 +64,17 @@ int main(int argc, char *argv[])
     }
     else if(!strncmp(username, "Administrator", UNLEN)) // SSP
     {
-        // TODO
+        std::string filePath = "E:\\Wario Harker\\0169 - Wario Land 4.gba";
+        LoadROMFile(filePath);
+
+        // Load level (0, 0)
+        CurrentLevel = new LevelComponents::Level(LevelComponents::EntryPassage, LevelComponents::FirstLevel);
+
+        // Render the screen
+        w.RenderScreen(CurrentLevel->GetRooms()[0]);
+
+        std::cout << CurrentLevel->GetDoors().size() << std::endl;
+        std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
     }
     //-------------------------------------------------------------------
 
