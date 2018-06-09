@@ -37,8 +37,8 @@ namespace LevelComponents
             ImageData->setColorTable(palettes[paletteIndex]);
         }
         Tile8x8(int dataPtr, QVector<QRgb> *_palettes);
-        Tile8x8(Tile8x8 &other) : Tile(TileType8x8),
-            ImageData(other.ImageData) { }
+        Tile8x8(Tile8x8 *other) : Tile(TileType8x8),
+            ImageData(other->ImageData) { }
         void DrawTile(int x, int y);
         static Tile8x8 *CreateBlankTile(QVector<QRgb> *_palettes);
         void SetFlipX(bool _flipX) { FlipX = _flipX; }

@@ -57,7 +57,7 @@ namespace LevelComponents
                 bool FlipX = (map16tilePtr[j] & (1 << 10)) != 0;
                 bool FlipY = (map16tilePtr[j] & (1 << 11)) != 0;
                 int paletteIndex = map16tilePtr[j] >> 12;
-                tiles[j] = new Tile8x8(*tile8x8data[index]);
+                tiles[j] = new Tile8x8(tile8x8data[index]);
                 tiles[j]->SetFlipX(FlipX);
                 tiles[j]->SetFlipY(FlipY);
                 tiles[j]->SetPaletteIndex(paletteIndex);
