@@ -2,6 +2,7 @@
 #include "ROMUtils.h"
 
 #include <QGraphicsPixmapItem>
+#include <QTransform>
 
 namespace LevelComponents
 {
@@ -31,8 +32,15 @@ namespace LevelComponents
 
     void Tile8x8::DrawTile(QGraphicsScene *scene, int x, int y)
     {
-        QImage tmpImage = ImageData->mirrored(this->FlipX, this->FlipY);
-        QPixmap item = QPixmap::fromImage(tmpImage);
-        scene->addPixmap(item)->setPos(x, y);
+        QPixmap pixmap = QPixmap::fromImage(ImageData->mirrored(FlipX, FlipY));
+        scene->addPixmap(pixmap)->setPos(x, y);
+        /*
+        // affine transform version TODO memory and speed benchmarks vs QImage::mirrored
+        QPixmap pixmap = QPixmap::fromImage(*ImageData);
+        int Xscale = FlipX ? -1 : 1, Xtranslation = FlipX ? 1 : 0;
+        int Yscale = FlipY ? -1 : 1, Ytranslation = FlipY ? 1 : 0;
+        QTransform affineTransform(Xscale, 0, 0, Yscale, Xtranslation, Ytranslation);
+        scene->addPixmap(pixmap.transformed(affineTransform))->setPos(x, y);
+        */
     }
 }
