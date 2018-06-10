@@ -39,7 +39,7 @@ namespace LevelComponents
         }
         Tile8x8(int dataPtr, QVector<QRgb> *_palettes);
         Tile8x8(Tile8x8 *other) : Tile(TileType8x8),
-            ImageData(other->ImageData),
+            ImageData(new QImage(*other->ImageData)),
             palettes(other->palettes) { }
         void DrawTile(QGraphicsScene *scene, int x, int y);
         static Tile8x8 *CreateBlankTile(QVector<QRgb> *_palettes);
