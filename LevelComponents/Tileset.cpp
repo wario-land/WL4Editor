@@ -37,8 +37,11 @@ namespace LevelComponents
         int tmpAnimatedTilesdataPtr;
         for(int v1 = 0; v1 < 16; v1++)
         {
-            //TODO implement code for another case
-            tmpAnimatedTilesHeaderPtr =0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
+            //[0300002E..03000032] are all set to zero at 6B8FA and the arrange just contains all the values the table start from 0x3F8C18 have
+            if(ROMUtils::CurrentFile[0x3F8C18 + __TilesetID * 16 + v1] & 1)
+                tmpAnimatedTilesHeaderPtr =0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F91D8)));
+            else
+                tmpAnimatedTilesHeaderPtr =0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
             tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
             tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
             if((ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x03') || (ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x06'))
