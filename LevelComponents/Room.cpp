@@ -20,7 +20,7 @@ namespace LevelComponents
         // Set up tileset
         int tilesetIndex = ROMUtils::CurrentFile[roomDataPtr];
         int tilesetPtr = WL4Constants::TilesetDataTable + tilesetIndex * 36;
-        tileset = new Tileset(tilesetPtr);
+        tileset = new Tileset(tilesetPtr, tilesetIndex);
 
         // Set up the layer data
         int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);

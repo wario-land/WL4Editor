@@ -3,7 +3,7 @@
 
 namespace LevelComponents
 {
-    Tileset::Tileset(int tilesetPtr)
+    Tileset::Tileset(int tilesetPtr, int __TilesetID)
     {
         // Create all 16 color palettes
         int palettePtr = ROMUtils::PointerFromData(tilesetPtr + 8);
@@ -31,8 +31,24 @@ namespace LevelComponents
             tile8x8data[i] = blankTile;
         }
 
-        // TODO Load the animated tiles
-
+        // Load the animated tiles
+        int tmpAnimatedTilesHeaderPtr;
+        int tmpoffset;
+        int tmpAnimatedTilesdataPtr;
+        for(int v1 = 0; v1 < 16; v1++)
+        {
+            //TODO implement code for another case
+            tmpAnimatedTilesHeaderPtr =0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
+            tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
+            tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
+            if((ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x03') || (ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x06'))
+                tmpoffset -= 1;
+            else
+                tmpoffset = 0;
+            tmpoffset *= 128;
+            for(int i = 0; i < 4; i++)
+                tile8x8data[i + 4 * v1] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes);
+        }
 
         // Load the 8x8 tile graphics
         int fgGFXptr = ROMUtils::PointerFromData(tilesetPtr);

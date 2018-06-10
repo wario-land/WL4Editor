@@ -52,6 +52,7 @@ void WL4EditorWindow::RenderScreen(LevelComponents::Room *room)
     }
     */
     // Draw map16
+    // /*
     LevelComponents::TileMap16 **map16data = t->GetMap16Data();
     for(int i = 0; i < 3; ++i)
     {
@@ -64,4 +65,5 @@ void WL4EditorWindow::RenderScreen(LevelComponents::Room *room)
             }
         }
     }
+    // */
 }
