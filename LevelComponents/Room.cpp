@@ -30,8 +30,7 @@ namespace LevelComponents
         {
             enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1]);
             int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
-            layers[i] = new Layer(layerPtr);
-            // TODO use mappingtype?
+            layers[i] = new Layer(layerPtr, mappingType, tileset);
         }
 
         // Set up camera control data

@@ -146,7 +146,7 @@ namespace LevelComponents
         for(int i = 0; i < 26; i++)
         {
             unsigned char chr = ROMUtils::CurrentFile[address + i];
-            if(chr >= 0x00 && chr <= 0x09)
+            if(chr <= 0x09)
             {
                 LevelName.append(1, chr + (unsigned char) 48);
             }

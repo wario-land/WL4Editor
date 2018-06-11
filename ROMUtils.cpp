@@ -54,7 +54,7 @@ namespace ROMUtils
     /// The predicted size of the output data.(unit: Byte)
     /// </param>
     /// <return>A pointer to decompressed data.</return>
-    unsigned char *RLEDecompress(unsigned char *data, int address, int outputSize)
+    unsigned char *RLEDecompress(int address, int outputSize)
     {
         unsigned char *OutputLayerData = new unsigned char[outputSize];
         int runData;
@@ -62,11 +62,11 @@ namespace ROMUtils
         for(int i = 0; i < 2; i++)
         {
             unsigned char *dst = &OutputLayerData[i];
-            if(data[address++] == 1)
+            if(CurrentFile[address++] == 1)
             {
                 while(1)
                 {
-                    int ctrl = data[address++];
+                    int ctrl = CurrentFile[address++];
                     if(ctrl == 0)
                     {
                         break;
@@ -74,11 +74,11 @@ namespace ROMUtils
                     else if(ctrl & 0x80)
                     {
                         runData = ctrl & 0x7F;
-                        if(data[address])
+                        if(CurrentFile[address])
                         {
                             for(int j = 0; j < runData; j++)
                             {
-                                dst[2 * j] = data[address];
+                                dst[2 * j] = CurrentFile[address];
                             }
                             address++;
                         }
@@ -88,12 +88,12 @@ namespace ROMUtils
                         runData = ctrl;
                         for(int jj = 0; jj < runData; jj++)
                         {
-                            dst[2 * jj] = data[address + jj];
+                            dst[2 * jj] = CurrentFile[address + jj];
                         }
                         address += runData;
                     }
-                    dst += 2*runData;
-                    if((int)(dst - OutputLayerData) > outputSize)
+                    dst += 2 * runData;
+                    if((int) (dst - OutputLayerData) > outputSize)
                     {
                         delete[] OutputLayerData;
                         return nullptr;
@@ -104,7 +104,7 @@ namespace ROMUtils
             {
                 while(1)
                 {
-                    int ctrl = ((int) data[address] << 8) | data[address + 1];
+                    int ctrl = ((int) CurrentFile[address] << 8) | CurrentFile[address + 1];
                     address += 2; //offset + 2
                     if(ctrl == 0)
                     {
@@ -113,11 +113,11 @@ namespace ROMUtils
                     if(ctrl & 0x8000)
                     {
                         runData = ctrl & 0x7FFF;
-                        if(data[address])
+                        if(CurrentFile[address])
                         {
                             for(int j = 0; j < runData; j++)
                             {
-                                dst[2 * j] = data[address];
+                                dst[2 * j] = CurrentFile[address];
                             }
                             address++;
                         }
@@ -127,7 +127,7 @@ namespace ROMUtils
                         runData = ctrl;
                         for(int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = data[address + j];
+                            dst[2 * j] = CurrentFile[address + j];
                         }
                         address += runData;
                     }

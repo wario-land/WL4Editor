@@ -2,6 +2,9 @@
 #define LAYER_H
 
 #include "Tile.h"
+#include "Tileset.h"
+
+#include <QPixmap>
 
 namespace LevelComponents
 {
@@ -15,11 +18,13 @@ namespace LevelComponents
     class Layer
     {
     private:
-        bool Enabled; // so we can disable a back ground of type 0x00
-        bool Visible; // so we can show or hide in the editor
-        std::vector<Tile> tiles;
+        bool Enabled; // Set false to disable backgrounds of type 0x00
+        bool Visible; // Set false to hide this layer in the editor
+        std::vector<Tile*> tiles;
+        int width, height;
     public:
-        Layer(int layerDataPtr);
+        Layer(int layerDataPtr, enum LayerMappingType mappingType, Tileset *tileset);
+        QPixmap RenderLayer();
     };
 }
 
