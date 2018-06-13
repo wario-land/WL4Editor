@@ -134,6 +134,7 @@ namespace ROMUtils
                 }
             }
         }
+        //TODO rearrangement data for mapping type 20
         return OutputLayerData;
     }
 }
