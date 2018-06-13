@@ -12,10 +12,12 @@ namespace LevelComponents
         }
 
         // Get the layer dimensions
+        int outputSizeMultiplier = 1;
         if(mappingType == LayerMap16)
         {
             width = ROMUtils::CurrentFile[layerDataPtr];
             height = ROMUtils::CurrentFile[layerDataPtr + 1];
+            outputSizeMultiplier = 2;
         }
         else if(mappingType == LayerTile8x8)
         {
@@ -39,7 +41,8 @@ namespace LevelComponents
         }
 
         // Get the layer data
-        unsigned short *layerData = (unsigned short *) ROMUtils::RLEDecompress(layerDataPtr + 2, width * height);
+        unsigned short *layerData = (unsigned short *)
+            ROMUtils::RLEDecompress(layerDataPtr + 2, width * height * outputSizeMultiplier);
 
         // Create tiles
         tiles = std::vector<Tile*>(width * height);

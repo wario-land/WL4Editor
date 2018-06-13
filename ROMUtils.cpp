@@ -61,7 +61,7 @@ namespace ROMUtils
 
         for(int i = 0; i < 2; i++)
         {
-            unsigned char *dst = &OutputLayerData[i];
+            unsigned char *dst = OutputLayerData + i;
             if(CurrentFile[address++] == 1)
             {
                 while(1)
@@ -86,9 +86,9 @@ namespace ROMUtils
                     else
                     {
                         runData = ctrl;
-                        for(int jj = 0; jj < runData; jj++)
+                        for(int j = 0; j < runData; j++)
                         {
-                            dst[2 * jj] = CurrentFile[address + jj];
+                            dst[2 * j] = CurrentFile[address + j];
                         }
                         address += runData;
                     }
