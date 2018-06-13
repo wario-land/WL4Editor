@@ -62,11 +62,11 @@ namespace ROMUtils
         for(int i = 0; i < 2; i++)
         {
             unsigned char *dst = OutputLayerData + i;
-            if(CurrentFile[address++] == 1)
+            if(ROMUtils::CurrentFile[address++] == 1)
             {
                 while(1)
                 {
-                    int ctrl = CurrentFile[address++];
+                    int ctrl = ROMUtils::CurrentFile[address++];
                     if(ctrl == 0)
                     {
                         break;
@@ -74,21 +74,18 @@ namespace ROMUtils
                     else if(ctrl & 0x80)
                     {
                         runData = ctrl & 0x7F;
-                        if(CurrentFile[address])
+                        for(int j = 0; j < runData; j++)
                         {
-                            for(int j = 0; j < runData; j++)
-                            {
-                                dst[2 * j] = CurrentFile[address];
-                            }
-                            address++;
+                            dst[2 * j] = ROMUtils::CurrentFile[address];
                         }
+                        address++;
                     }
                     else
                     {
                         runData = ctrl;
                         for(int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = CurrentFile[address + j];
+                            dst[2 * j] = ROMUtils::CurrentFile[address + j];
                         }
                         address += runData;
                     }
@@ -104,7 +101,7 @@ namespace ROMUtils
             {
                 while(1)
                 {
-                    int ctrl = ((int) CurrentFile[address] << 8) | CurrentFile[address + 1];
+                    int ctrl = ((int) ROMUtils::CurrentFile[address] << 8) | ROMUtils::CurrentFile[address + 1];
                     address += 2; //offset + 2
                     if(ctrl == 0)
                     {
@@ -113,21 +110,18 @@ namespace ROMUtils
                     if(ctrl & 0x8000)
                     {
                         runData = ctrl & 0x7FFF;
-                        if(CurrentFile[address])
+                        for(int j = 0; j < runData; j++)
                         {
-                            for(int j = 0; j < runData; j++)
-                            {
-                                dst[2 * j] = CurrentFile[address];
-                            }
-                            address++;
+                            dst[2 * j] = ROMUtils::CurrentFile[address];
                         }
+                        address++;
                     }
                     else
                     {
                         runData = ctrl;
                         for(int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = CurrentFile[address + j];
+                            dst[2 * j] = ROMUtils::CurrentFile[address + j];
                         }
                         address += runData;
                     }
