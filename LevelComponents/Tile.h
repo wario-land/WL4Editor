@@ -22,7 +22,7 @@ namespace LevelComponents
         virtual void DrawTile(QGraphicsScene *scene, int x, int y) = 0;
     };
 
-    class Tile8x8 : Tile
+    class Tile8x8 : public Tile
     {
     private:
         QImage *ImageData;
@@ -52,7 +52,7 @@ namespace LevelComponents
         }
     };
 
-    class TileMap16 : Tile
+    class TileMap16 : public Tile
     {
     private:
         Tile8x8 *TileData[4];
