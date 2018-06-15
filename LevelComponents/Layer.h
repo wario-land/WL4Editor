@@ -22,9 +22,13 @@ namespace LevelComponents
         bool Visible; // Set false to hide this layer in the editor
         std::vector<Tile*> tiles;
         int width, height;
+        unsigned short * LayerMappingCode;
     public:
         Layer(int layerDataPtr, enum LayerMappingType mappingType, Tileset *tileset);
         QPixmap RenderLayer();
+        int GetLayerwidth() {return width;}
+        int GetLayerheight() {return height;}
+        unsigned short *GetLayerMappingCode() {return this->LayerMappingCode;}
     };
 }
 

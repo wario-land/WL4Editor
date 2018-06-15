@@ -1,5 +1,6 @@
 #include "Layer.h"
 #include "ROMUtils.h"
+#include <iostream>
 
 namespace LevelComponents
 {
@@ -12,12 +13,16 @@ namespace LevelComponents
         }
 
         // Get the layer dimensions
-        int outputSizeMultiplier = 1;
+        int outputSizeMultiplier = 2;
+        unsigned short *layerData;
         if(mappingType == LayerMap16)
         {
             width = ROMUtils::CurrentFile[layerDataPtr];
             height = ROMUtils::CurrentFile[layerDataPtr + 1];
             outputSizeMultiplier = 2;
+
+            // Get the layer data
+            layerData = (unsigned short *) ROMUtils::RLEDecompress(layerDataPtr + 2, width * height * outputSizeMultiplier);
         }
         else if(mappingType == LayerTile8x8)
         {
@@ -38,11 +43,13 @@ namespace LevelComponents
                 // TODO error handling. This line should not be reached for valid layer data!
                 return;
             }
+
+            // Get the layer data
+            layerData = (unsigned short *) ROMUtils::RLEDecompress(layerDataPtr + 1, width * height * outputSizeMultiplier);
         }
 
-        // Get the layer data
-        unsigned short *layerData = (unsigned short *)
-            ROMUtils::RLEDecompress(layerDataPtr + 2, width * height * outputSizeMultiplier);
+        if(layerData = nullptr)
+            std::cout<<"cannot decompress layer data"<<std::endl;
 
         // Create tiles
         tiles = std::vector<Tile*>(width * height);
@@ -64,8 +71,7 @@ namespace LevelComponents
             }
         }
 
-        // Clean up
-        delete[] layerData;
+        this->LayerMappingCode = layerData;
     }
 
     QPixmap Layer::RenderLayer()

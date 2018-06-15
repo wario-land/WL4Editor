@@ -51,18 +51,17 @@ void WL4EditorWindow::RenderScreen(LevelComponents::Room *room)
         }
     }
     */
-    // Draw map16
+    // Draw layer
     // /*
     LevelComponents::TileMap16 **map16data = t->GetMap16Data();
-    for(int i = 0; i < 3; ++i)
+    int x = room->GetLayer(0)->GetLayerwidth();
+    int y = room->GetLayer(0)->GetLayerheight();
+    unsigned short *tmpcodeptr = room->GetLayer(0)->GetLayerMappingCode();
+    for(int j = 0; j < y; ++j)
     {
-        for(int j = 0; j < 32; ++j)
+        for(int k = 0; k < x; ++k)
         {
-            for(int k = 0; k < 8; ++k)
-            {
-                int x = i * 128 + k * 16, y = j * 16;
-                map16data[i * 256 + j * 8 + k]->DrawTile(scene, x, y);
-            }
+            map16data[tmpcodeptr[k + j * x]]->DrawTile(scene, k, j); //crash here (ssp)
         }
     }
     // */
