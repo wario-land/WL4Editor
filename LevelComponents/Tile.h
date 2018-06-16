@@ -2,7 +2,6 @@
 #define TILE_H
 
 #include <QImage>
-#include <QGraphicsScene>
 
 namespace LevelComponents
 {
@@ -19,7 +18,7 @@ namespace LevelComponents
     protected:
         Tile(enum TileType _type) : Type(_type) { }
     public:
-        virtual void DrawTile(QGraphicsScene *scene, int x, int y) = 0;
+        virtual void DrawTile(QPixmap *layerPixmap, int x, int y) = 0;
     };
 
     class Tile8x8 : public Tile
@@ -41,7 +40,7 @@ namespace LevelComponents
         Tile8x8(Tile8x8 *other) : Tile(TileType8x8),
             ImageData(new QImage(*other->ImageData)),
             palettes(other->palettes) { }
-        void DrawTile(QGraphicsScene *scene, int x, int y);
+        void DrawTile(QPixmap *layerPixmap, int x, int y);
         static Tile8x8 *CreateBlankTile(QVector<QRgb> *_palettes);
         void SetFlipX(bool _flipX) { FlipX = _flipX; }
         void SetFlipY(bool _flipY) { FlipY = _flipY; }
@@ -65,12 +64,12 @@ namespace LevelComponents
             TileData[2] = t2;
             TileData[3] = t3;
         }
-        void DrawTile(QGraphicsScene *scene, int x, int y)
+        void DrawTile(QPixmap *layerPixmap, int x, int y)
         {
-            TileData[0]->DrawTile(scene, x, y);
-            TileData[1]->DrawTile(scene, x + 8, y);
-            TileData[2]->DrawTile(scene, x, y + 8);
-            TileData[3]->DrawTile(scene, x + 8, y + 8);
+            TileData[0]->DrawTile(layerPixmap, x, y);
+            TileData[1]->DrawTile(layerPixmap, x + 8, y);
+            TileData[2]->DrawTile(layerPixmap, x, y + 8);
+            TileData[3]->DrawTile(layerPixmap, x + 8, y + 8);
         }
     };
 }

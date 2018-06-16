@@ -5,6 +5,7 @@
 #include "Tileset.h"
 
 #include <vector>
+#include <QGraphicsScene>
 
 namespace LevelComponents
 {
@@ -67,7 +68,8 @@ namespace LevelComponents
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
         Tileset *GetTileset() { return tileset; }
-        Layer *GetLayer(int LayerID) {return layers[LayerID];}
+        Layer *GetLayer(int LayerID) { return layers[LayerID]; }
+        QGraphicsScene *GetGraphicsScene();
     };
 }
 

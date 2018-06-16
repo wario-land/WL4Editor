@@ -3,6 +3,8 @@
 
 #include <QGraphicsPixmapItem>
 #include <QTransform>
+#include <QPainter>
+#include <QPoint>
 
 namespace LevelComponents
 {
@@ -30,17 +32,11 @@ namespace LevelComponents
         return t;
     }
 
-    void Tile8x8::DrawTile(QGraphicsScene *scene, int x, int y)
+    void Tile8x8::DrawTile(QPixmap *layerPixmap, int x, int y)
     {
-        QPixmap pixmap = QPixmap::fromImage(ImageData->mirrored(FlipX, FlipY));
-        scene->addPixmap(pixmap)->setPos(x, y);
-        /*
-        // affine transform version TODO memory and speed benchmarks vs QImage::mirrored
-        QPixmap pixmap = QPixmap::fromImage(*ImageData);
-        int Xscale = FlipX ? -1 : 1, Xtranslation = FlipX ? 1 : 0;
-        int Yscale = FlipY ? -1 : 1, Ytranslation = FlipY ? 1 : 0;
-        QTransform affineTransform(Xscale, 0, 0, Yscale, Xtranslation, Ytranslation);
-        scene->addPixmap(pixmap.transformed(affineTransform))->setPos(x, y);
-        */
+        QPainter painter(layerPixmap);
+        QPixmap tilePixmap = QPixmap::fromImage(ImageData->mirrored(FlipX, FlipY));
+        QPoint drawDestination(x, y);
+        painter.drawImage(drawDestination, tilePixmap.toImage());
     }
 }

@@ -54,10 +54,10 @@ int main(int argc, char *argv[])
         LoadROMFile(filePath);
 
         // Load level (0, 0)
-        CurrentLevel = new LevelComponents::Level(LevelComponents::EntryPassage, LevelComponents::FirstLevel);
+        CurrentLevel = new LevelComponents::Level(LevelComponents::EmeraldPassage, LevelComponents::FirstLevel);
 
         // Render the screen
-        w.RenderScreen(CurrentLevel->GetRooms()[0]);
+        w.RenderScreen(CurrentLevel->GetRooms()[1]);
 
         std::cout << CurrentLevel->GetDoors().size() << std::endl;
         std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
