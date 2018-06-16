@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#include "WL4Constants.h"
+
 namespace ROMUtils
 {
     // Global variables
@@ -14,6 +16,8 @@ namespace ROMUtils
     int IntFromData(int address);
     int PointerFromData(int address);
     unsigned char *RLEDecompress(int address, int outputSize);
+    int FindSpaceInROM(int NewDataLength);
+    int SaveTemp(int PointerAddress, unsigned char *tmpdata, int datalength);
 }
 
 #endif // ROMUTILS_H
