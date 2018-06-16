@@ -236,4 +236,11 @@ namespace ROMUtils
         return 1; //just return some random value which not equal to the one stand for error.
     }
 
+    void SaveFile()
+    {
+        FILE *outfile = fopen(ROMUtils::ROMFilePath, "wb");
+        fwrite(ROMUtils::CurrentFile, sizeof(unsigned char) * ROMUtils::CurrentFileSize, 1, outfile);
+        fclose(outfile);
+    }
+
 }
