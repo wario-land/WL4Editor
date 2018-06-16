@@ -18,17 +18,23 @@ namespace LevelComponents
     class Layer
     {
     private:
+        enum LayerMappingType MappingType;
         bool Enabled; // Set false to disable backgrounds of type 0x00
         bool Visible; // Set false to hide this layer in the editor
         std::vector<Tile*> tiles;
-        int width, height;
-        unsigned short * LayerMappingCode;
+        int Width, Height;
+        unsigned short *LayerData;
+        int LayerPriority;
     public:
         Layer(int layerDataPtr, enum LayerMappingType mappingType, Tileset *tileset);
         QPixmap RenderLayer();
-        int GetLayerwidth() {return width;}
-        int GetLayerheight() {return height;}
-        unsigned short *GetLayerMappingCode() {return this->LayerMappingCode;}
+        int GetLayerwidth() { return Width; }
+        int GetLayerheight() { return Height; }
+        enum LayerMappingType GetMappingType() { return MappingType; }
+        unsigned short *GetLayerData() { return LayerData; }
+        int GetLayerPriority() { return LayerPriority; }
+        void SetLayerPriority(int priority) { LayerPriority = priority; }
+        bool IsVisible() { return Visible; }
     };
 }
 

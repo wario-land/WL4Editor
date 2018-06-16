@@ -39,7 +39,7 @@ namespace ROMUtils
         assert(ret >= CurrentFileSize); // Fail if the pointer is out of range. TODO proper error handling
         return ret;
     }
-
+#include <cstdio>
     /// <summary>
     /// Decompress ROM data that was compressed with run-length encoding.
     /// </summary>
@@ -71,6 +71,14 @@ namespace ROMUtils
                     {
                         break;
                     }
+
+                    int temp = (int) (dst - OutputLayerData);
+                    if(temp > outputSize)
+                    {
+                        delete[] OutputLayerData;
+                        return nullptr;
+                    }
+
                     else if(ctrl & 0x80)
                     {
                         runData = ctrl & 0x7F;
@@ -89,12 +97,8 @@ namespace ROMUtils
                         }
                         address += runData;
                     }
+
                     dst += 2 * runData;
-                    if((int) (dst - OutputLayerData) > outputSize)
-                    {
-                        delete[] OutputLayerData;
-                        return nullptr;
-                    }
                 }
             }
             else // RLE16
@@ -107,6 +111,14 @@ namespace ROMUtils
                     {
                         break;
                     }
+
+                    int temp = (int) (dst - OutputLayerData);
+                    if(temp > outputSize)
+                    {
+                        delete[] OutputLayerData;
+                        return nullptr;
+                    }
+
                     if(ctrl & 0x8000)
                     {
                         runData = ctrl & 0x7FFF;
@@ -125,12 +137,8 @@ namespace ROMUtils
                         }
                         address += runData;
                     }
+
                     dst += 2 * runData;
-                    if((int) (dst - OutputLayerData) > outputSize)
-                    {
-                        delete[] OutputLayerData;
-                        return nullptr;
-                    }
                 }
             }
         }
