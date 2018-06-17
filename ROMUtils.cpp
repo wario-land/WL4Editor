@@ -36,7 +36,7 @@ namespace ROMUtils
     int PointerFromData(int address)
     {
         int ret = IntFromData(address) & 0x7FFFFFF;
-        assert(ret >= CurrentFileSize); // Fail if the pointer is out of range. TODO proper error handling
+        assert(ret >= ROMUtils::CurrentFileSize); // Fail if the pointer is out of range. TODO proper error handling
         return ret;
     }
 #include <cstdio>
@@ -142,7 +142,105 @@ namespace ROMUtils
                 }
             }
         }
-        //TODO rearrangement data for mapping type 20
         return OutputLayerData;
     }
+
+    /// <summary>
+    /// a sub routine for ROMUtils::SaveTemp(...), we had better not use it elsewhere
+    /// </summary>
+    int FindSpaceInROM(int NewDataLength)
+    {
+        if(NewDataLength > 0xFFFF)
+            return 0;
+
+        int dst = WL4Constants::AvailableSpaceInROM;
+        int runData = 0;
+        int ss, II;
+        while(1)
+        {
+            if((ROMUtils::CurrentFile[dst] == '\xFF') && (dst < 0x800000) && (runData < (NewDataLength + 8)))
+            {
+                dst++; runData++; continue;
+            }else if(dst = 0x800000){
+                return 0;
+            }else if(runData == (NewDataLength + 8)){
+                return (dst - runData);
+            }else if(ROMUtils::CurrentFile[dst] != '\xFF'){
+                if((ROMUtils::CurrentFile[dst] == 'S') && (ROMUtils::CurrentFile[dst+1] == 'T') && \
+                        (ROMUtils::CurrentFile[dst+2] == 'A') && (ROMUtils::CurrentFile[dst+3] == 'R'))
+                {
+                    ss = ROMUtils::CurrentFile[dst+4] | (ROMUtils::CurrentFile[dst+5] << 8);
+                    II = ROMUtils::CurrentFile[dst+6] | (ROMUtils::CurrentFile[dst+7] << 8);
+                    if((ss + II) == 0xFFFF)
+                    {
+                        dst += (8 + ss); runData = 0; continue;
+                    }else{
+                        return 0; //TODO: error handling: the ROM is patch by unknown program.
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Save change into ROMUtils::CurrentFile (NOT THE SOURCE ROM FILE)
+    /// </summary>
+    /// <param name="PointerAddress">
+    /// An address points to a pointer which points to the offset that save data.
+    /// </param>
+    /// <param name="tmpdata">
+    /// a C-type pointer points to the new data array we want to save.
+    /// </param>
+    /// <param name="datalength">
+    /// the length of the new data array.
+    /// </param>
+    /// <return>A pointer to decompressed data.</return>
+    int SaveTemp(int PointerAddress, unsigned char *tmpdata, int datalength)
+    {
+        int OriginalPtr = ROMUtils::PointerFromData(PointerAddress);
+        int tmpPtr = OriginalPtr - 8;
+
+        //Recover the block in ROM if it is posible
+        if((tmpPtr > WL4Constants::AvailableSpaceInROM) && (ROMUtils::CurrentFile[tmpPtr] == 'S') && \
+                (ROMUtils::CurrentFile[tmpPtr+1] == 'T') && (ROMUtils::CurrentFile[tmpPtr+2] == 'A') && \
+                (ROMUtils::CurrentFile[tmpPtr+3] == 'R'))
+        {
+            int tmpLength = ROMUtils::CurrentFile[tmpPtr+4] | (ROMUtils::CurrentFile[tmpPtr+5] << 8);
+            for(int i = tmpPtr; i < (tmpPtr + 8 + tmpLength); i++)
+                ROMUtils::CurrentFile[i] = '\xFF';
+        }
+
+        //Save New Data
+        int newPtr = ROMUtils::FindSpaceInROM(datalength);
+        if (newPtr == 0)
+            return 0;  //TODO: error handling: the ROM cannot be patched due to some rreasons.
+        ROMUtils::CurrentFile[newPtr] = 'S';
+        ROMUtils::CurrentFile[newPtr+1] = 'T';
+        ROMUtils::CurrentFile[newPtr+2] = 'A';
+        ROMUtils::CurrentFile[newPtr+3] = 'R';  //set "STAR" Tag
+        ROMUtils::CurrentFile[newPtr+4] = (unsigned char) (datalength & 0xFF);
+        ROMUtils::CurrentFile[newPtr+5] = (unsigned char) ((datalength & 0xFF00) >> 8);  //write ss
+        ROMUtils::CurrentFile[newPtr+6] = (unsigned char) ((0xFFFF - datalength) & 0xFF);
+        ROMUtils::CurrentFile[newPtr+7] = (unsigned char) (((0xFFFF - datalength) & 0xFF00) >> 8);  //write II
+        ROMUtils::CurrentFile[PointerAddress] = (unsigned char) ((newPtr + 0x8000000) & 0xFF);
+        ROMUtils::CurrentFile[PointerAddress+1] = (unsigned char) (((newPtr + 0x8000000)>>8) & 0xFF);
+        ROMUtils::CurrentFile[PointerAddress+2] = (unsigned char) (((newPtr + 0x8000000)>>16) & 0xFF);
+        ROMUtils::CurrentFile[PointerAddress+3] = (unsigned char) (((newPtr + 0x8000000)>>24) & 0xFF);  //write pointer
+        int j = 0;
+        for(int i = (newPtr + 8); i < (newPtr + 8 + datalength); i++)
+        {
+            ROMUtils::CurrentFile[i] = tmpdata[j];
+            j++;
+        }  //write new data
+
+        return 1; //just return some random value which not equal to the one stand for error.
+    }
+
+    void SaveFile()
+    {
+        FILE *outfile = fopen(ROMUtils::ROMFilePath, "wb");
+        fwrite(ROMUtils::CurrentFile, sizeof(unsigned char) * ROMUtils::CurrentFileSize, 1, outfile);
+        fclose(outfile);
+    }
+
 }

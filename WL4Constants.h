@@ -14,6 +14,9 @@ namespace WL4Constants
 
     // Miscellaneous definitions
     const int CameraRecordSentinel      = 0x3F9D58;
+
+    // Other
+    const int AvailableSpaceInROM       = 0x78F970;
 }
 
 #endif // WL4CONSTANTS_H

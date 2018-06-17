@@ -20,7 +20,9 @@ void LoadROMFile(std::string filePath)
     std::ifstream ifs(filePath, std::ios::binary|std::ios::ate);
     std::ifstream::pos_type pos = ifs.tellg();
     int length = pos;
+    ROMUtils::CurrentFileSize = length;
     ROMUtils::CurrentFile = new unsigned char[length];
+    strcpy(ROMUtils::ROMFilePath, filePath.c_str());
     ifs.seekg(0, std::ios::beg);
     ifs.read((char*) ROMUtils::CurrentFile, length);
     ifs.close();

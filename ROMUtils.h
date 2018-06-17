@@ -3,17 +3,25 @@
 
 #include <vector>
 #include <string>
+#include <cstdio>  //include definition for FILE
+#include <cstring>
+
+#include "WL4Constants.h"
 
 namespace ROMUtils
 {
     // Global variables
     extern unsigned char *CurrentFile;
     extern int CurrentFileSize;
+    extern char ROMFilePath[260]; //the MAX_PATH in Windows is 260, perhaps we should use a bigger number
 
     // Global functions
     int IntFromData(int address);
     int PointerFromData(int address);
     unsigned char *RLEDecompress(int address, int outputSize);
+    int FindSpaceInROM(int NewDataLength);
+    int SaveTemp(int PointerAddress, unsigned char *tmpdata, int datalength);
+    void SaveFile();
 }
 
 #endif // ROMUTILS_H
