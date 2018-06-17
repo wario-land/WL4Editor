@@ -12,12 +12,12 @@
 #include <cstring>
 //---------------------------------
 
-LevelComponents::Level *CurrentLevel;
+extern LevelComponents::Level *CurrentLevel;
 
 void LoadROMFile(std::string filePath)
 {
     // Read ROM file into current file array
-    std::ifstream ifs(filePath, std::ios::binary|std::ios::ate);
+    std::ifstream ifs(filePath, std::ios::binary | std::ios::ate);
     std::ifstream::pos_type pos = ifs.tellg();
     int length = pos;
     ROMUtils::CurrentFileSize = length;
@@ -51,18 +51,18 @@ int main(int argc, char *argv[])
     }
     if(!strncmp(username, "Andrew", UNLEN)) // Goldensunboy
     {
-        // Andrew's tests
-        std::string filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
-        LoadROMFile(filePath);
+//        // Andrew's tests
+//        std::string filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
+//        LoadROMFile(filePath);
 
-        // Load level (0, 0)
-        CurrentLevel = new LevelComponents::Level(LevelComponents::EmeraldPassage, LevelComponents::FirstLevel);
+//        // Load level (0, 0)
+//        CurrentLevel = new LevelComponents::Level(LevelComponents::EntryPassage, LevelComponents::FirstLevel);
 
-        // Render the screen
-        w.RenderScreen(CurrentLevel->GetRooms()[1]);
+//        // Render the screen
+//        w.RenderScreen(CurrentLevel->GetRooms()[0]);
 
-        std::cout << CurrentLevel->GetDoors().size() << std::endl;
-        std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
+//        std::cout << CurrentLevel->GetDoors().size() << std::endl;
+//        std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
     }
     else if(!strncmp(username, "Administrator", UNLEN)) // SSP
     {
