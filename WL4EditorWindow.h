@@ -2,7 +2,9 @@
 #define WL4EDITORWINDOW_H
 
 #include <QMainWindow>
+#include <QLabel>
 #include "LevelComponents/Room.h"
+#include "Dialog/ChooseLevelDialog.h"
 
 namespace Ui {
     class WL4EditorWindow;
@@ -22,6 +24,7 @@ private slots:
 
 private:
     Ui::WL4EditorWindow *ui;
+    QLabel *statusBarLabel1;
 };
 
 #endif // WL4EDITORWINDOW_H
