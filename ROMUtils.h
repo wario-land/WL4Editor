@@ -20,7 +20,7 @@ namespace ROMUtils
     int PointerFromData(int address);
     unsigned char *RLEDecompress(int address, int outputSize);
     int FindSpaceInROM(int NewDataLength);
-    int SaveTemp(int PointerAddress, unsigned char *tmpdata, int datalength);
+    int SaveTemp(unsigned char *tmpData, int pointerAddress, int dataLength);
     void SaveFile();
 }
 
