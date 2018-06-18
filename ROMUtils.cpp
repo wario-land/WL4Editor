@@ -55,7 +55,7 @@ namespace ROMUtils
     /// The predicted size of the output data.(unit: Byte)
     /// </param>
     /// <return>A pointer to decompressed data.</return>
-    unsigned char *RLEDecompress(int address, int outputSize)
+    unsigned char *LayerRLEDecompress(int address, int outputSize)
     {
         unsigned char *OutputLayerData = new unsigned char[outputSize];
         int runData;
@@ -144,6 +144,71 @@ namespace ROMUtils
             }
         }
         return OutputLayerData;
+    }
+
+    /// <summary>
+    /// compress Layer data by run-length encoding.
+    /// </summary>
+    /// <remarks>
+    /// the first and second byte as the layer width and height information will not be generated in the function
+    /// you have to add them by yourself when saving compressed data.
+    /// </remarks>
+    /// <param name="_layersize">
+    /// the size of the layer, the value equal to (layerwidth * layerheight).
+    /// </param>
+    /// <param name="LayerData">
+    /// unsigned char pointer to the uncompressed layer data.
+    /// </param>
+    /// <param name="OutputCompressedData">
+    /// unsigned char pointer to the compressed layer data.
+    /// </param>
+    /// <return>the length of compressed data.</return>
+    long LayerRLECompress(int _layersize, unsigned char *LayerData, unsigned char *OutputCompressedData)
+    {
+        OutputCompressedData = new unsigned char[_layersize];
+        int cmpptr=0;
+        int sizeptr=0;
+        int dataptr=0;
+        unsigned short rl=0;
+
+        for(int j=0; j<2; j++)
+        {
+            OutputCompressedData[cmpptr++]=1;
+            while(_layersize>dataptr)
+            {
+                rl = 2;
+                while(LayerData[dataptr]==LayerData[dataptr+2] && LayerData[dataptr+2]==LayerData[dataptr+4] && rl<0x7F && _layersize>dataptr)
+                {
+
+                    dataptr+=2;
+                    rl++;
+                }
+                if(rl > 2)
+                {
+                    OutputCompressedData[cmpptr++]=(unsigned char) ((rl | 0x80) & 0xFF);
+                    OutputCompressedData[cmpptr++]=LayerData[dataptr];
+                    dataptr+=4;
+                }
+                sizeptr=cmpptr;
+                cmpptr++;
+                rl = 0;
+                while((LayerData[dataptr]!=LayerData[dataptr+2] || LayerData[dataptr+2]!=LayerData[dataptr+4]) && rl<0x7F && _layersize>dataptr)
+                {
+
+                    OutputCompressedData[cmpptr++]=LayerData[dataptr];
+                    dataptr+=2;
+                    rl++;
+                }
+                if(rl != 0)
+                    OutputCompressedData[sizeptr]=(unsigned char) rl;
+                else
+                    cmpptr--;
+            }
+            OutputCompressedData[cmpptr++]=0;
+            dataptr=1;
+        }
+
+        return cmpptr;
     }
 
     /// <summary>
@@ -239,4 +304,5 @@ namespace ROMUtils
         fwrite(CurrentFile, sizeof(unsigned char) * CurrentFileSize, 1, outfile);
         fclose(outfile);
     }
+
 }
