@@ -1,4 +1,3 @@
-
 namespace WL4Constants
 {
     const int LevelHeaderIndexTable = 0x6391C4;

@@ -33,3 +33,7 @@
 
 # QT Creator files
 *.user
+
+Makefile
+moc*
+ui_*

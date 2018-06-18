@@ -33,42 +33,58 @@
        <number>6</number>
       </property>
       <item>
-       <widget class="QPushButton" name="load">
+       <widget class="QPushButton" name="loadLevelButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
-         <string>PushButton</string>
+         <string>Load Level</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_2">
-        <property name="text">
-         <string>PushButton</string>
+       <widget class="QPushButton" name="roomDecreaseButton">
+        <property name="enabled">
+         <bool>false</bool>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pushButton">
-        <property name="text">
-         <string>PushButton</string>
+        <property name="maximumSize">
+         <size>
+          <width>30</width>
+          <height>16777215</height>
+         </size>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pushButton_3">
         <property name="text">
          <string>&lt;</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="selectedRoomLabel">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="text">
-         <string>0</string>
+         <string>Room 0</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_4">
+       <widget class="QPushButton" name="roomIncreaseButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>30</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>&gt;</string>
         </property>
