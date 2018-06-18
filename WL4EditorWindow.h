@@ -18,13 +18,18 @@ public:
     explicit WL4EditorWindow(QWidget *parent = 0);
     ~WL4EditorWindow();
     void RenderScreen(LevelComponents::Room *room);
+    void SetStatusBarText(char *str);
+    void LoadRoom();
 
 private slots:
     void on_actionOpen_ROM_triggered();
+    void on_loadLevelButton_clicked();
+    void on_roomDecreaseButton_clicked();
+    void on_roomIncreaseButton_clicked();
 
 private:
     Ui::WL4EditorWindow *ui;
-    QLabel *statusBarLabel1;
+    QLabel *statusBarLabel;
 };
 
 #endif // WL4EDITORWINDOW_H

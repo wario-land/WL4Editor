@@ -13,6 +13,7 @@
 //---------------------------------
 
 extern LevelComponents::Level *CurrentLevel;
+extern int selectedRoom;
 
 void LoadROMFile(std::string filePath)
 {
@@ -55,11 +56,11 @@ int main(int argc, char *argv[])
 //        std::string filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
 //        LoadROMFile(filePath);
 
-//        // Load level (0, 0)
-//        CurrentLevel = new LevelComponents::Level(LevelComponents::EntryPassage, LevelComponents::FirstLevel);
+//        // Load a level
+//        CurrentLevel = new LevelComponents::Level(LevelComponents::EmeraldPassage, LevelComponents::SecondLevel);
 
 //        // Render the screen
-//        w.RenderScreen(CurrentLevel->GetRooms()[0]);
+//        w.LoadRoom();
 
 //        std::cout << CurrentLevel->GetDoors().size() << std::endl;
 //        std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
