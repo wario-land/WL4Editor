@@ -33,7 +33,7 @@ namespace LevelComponents
         enum LayerMappingType mappingType;
         for(int i = 0; i < 4; ++i)
         {
-            mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1]);
+            mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1] & 0x30);
             int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
             layers[i] = new Layer(layerPtr, mappingType, tileset);
         }

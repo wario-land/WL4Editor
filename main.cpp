@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
     }
     else if(!strncmp(username, "Administrator", UNLEN)) // SSP
     {
+        /*
         std::string filePath = "E:\\Wario Harker\\0169 - Wario Land 4.gba";
         LoadROMFile(filePath);
 
@@ -78,7 +79,7 @@ int main(int argc, char *argv[])
 
         std::cout << CurrentLevel->GetDoors().size() << std::endl;
         std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
-
+        */
     }
     //-------------------------------------------------------------------
 
