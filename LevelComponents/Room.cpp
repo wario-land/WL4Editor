@@ -30,9 +30,10 @@ namespace LevelComponents
         int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
         Width = ROMUtils::CurrentFile[dimensionPointer];
         Height = ROMUtils::CurrentFile[dimensionPointer + 1];
+        enum LayerMappingType mappingType;
         for(int i = 0; i < 4; ++i)
         {
-            enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1]);
+            mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1]);
             int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
             layers[i] = new Layer(layerPtr, mappingType, tileset);
         }
