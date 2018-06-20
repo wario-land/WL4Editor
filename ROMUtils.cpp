@@ -163,9 +163,10 @@ namespace ROMUtils
     /// unsigned char pointer to the compressed layer data.
     /// </param>
     /// <return>the length of compressed data.</return>
-    long LayerRLECompress(int _layersize, unsigned char *LayerData, unsigned char *OutputCompressedData)
+    long LayerRLECompress(int _layersize, unsigned char *LayerData, unsigned char **OutputCompressedData)
     {
-        OutputCompressedData = new unsigned char[_layersize];
+        unsigned char *cmp = new unsigned char[_layersize];
+        *OutputCompressedData = cmp;
         int cmpptr=0;
         int sizeptr=0;
         int dataptr=0;
@@ -173,7 +174,7 @@ namespace ROMUtils
 
         for(int j=0; j<2; j++)
         {
-            OutputCompressedData[cmpptr++]=1;
+            cmp[cmpptr++]=1;
             while(_layersize>dataptr)
             {
                 rl = 2;
@@ -185,8 +186,8 @@ namespace ROMUtils
                 }
                 if(rl > 2)
                 {
-                    OutputCompressedData[cmpptr++]=(unsigned char) ((rl | 0x80) & 0xFF);
-                    OutputCompressedData[cmpptr++]=LayerData[dataptr];
+                    cmp[cmpptr++]=(unsigned char) ((rl | 0x80) & 0xFF);
+                    cmp[cmpptr++]=LayerData[dataptr];
                     dataptr+=4;
                 }
                 sizeptr=cmpptr;
@@ -195,16 +196,16 @@ namespace ROMUtils
                 while((LayerData[dataptr]!=LayerData[dataptr+2] || LayerData[dataptr+2]!=LayerData[dataptr+4]) && rl<0x7F && _layersize>dataptr)
                 {
 
-                    OutputCompressedData[cmpptr++]=LayerData[dataptr];
+                    cmp[cmpptr++]=LayerData[dataptr];
                     dataptr+=2;
                     rl++;
                 }
                 if(rl != 0)
-                    OutputCompressedData[sizeptr]=(unsigned char) rl;
+                    cmp[sizeptr]=(unsigned char) rl;
                 else
                     cmpptr--;
             }
-            OutputCompressedData[cmpptr++]=0;
+            cmp[cmpptr++]=0;
             dataptr=1;
         }
 

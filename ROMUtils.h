@@ -19,7 +19,7 @@ namespace ROMUtils
     int IntFromData(int address);
     int PointerFromData(int address);
     unsigned char *LayerRLEDecompress(int address, int outputSize);
-    long LayerRLECompress(int _layersize, unsigned char *LayerData, unsigned char *OutputCompressedData);
+    long LayerRLECompress(int _layersize, unsigned char *LayerData, unsigned char **OutputCompressedData);
     int FindSpaceInROM(int NewDataLength);
     int SaveTemp(unsigned char *tmpData, int pointerAddress, int dataLength);
     void SaveFile();
