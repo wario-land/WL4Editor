@@ -46,6 +46,8 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
     ui->graphicsView->scale(2, 2);
     statusBarLabel = new QLabel("Open a ROM file");
     ui->statusBar->addWidget(statusBarLabel);
+    Tile16DockWidget *tmpdocker = new Tile16DockWidget;
+    Tile16SelecterDockWidget = tmpdocker;
 }
 
 WL4EditorWindow::~WL4EditorWindow()
@@ -85,6 +87,10 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
 
     // Enable UI that requires a ROM file to be loaded
     ui->loadLevelButton->setEnabled(true);
+
+    // Load Dock widget
+    this->addDockWidget(Qt::RightDockWidgetArea, Tile16SelecterDockWidget);
+    Tile16SelecterDockWidget->SetTileset(80);
 }
 
 void WL4EditorWindow::RenderScreen(LevelComponents::Room *room)
