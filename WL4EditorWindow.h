@@ -20,7 +20,7 @@ public:
     ~WL4EditorWindow();
     void RenderScreen(LevelComponents::Room *room);
     void SetStatusBarText(char *str);
-    void LoadRoom();
+    int LoadRoom(); //return TilesetID
 
 private slots:
     void on_actionOpen_ROM_triggered();

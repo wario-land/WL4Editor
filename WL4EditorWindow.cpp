@@ -26,7 +26,7 @@ void WL4EditorWindow::SetStatusBarText(char *str)
     delete old;
 }
 
-void WL4EditorWindow::LoadRoom()
+int WL4EditorWindow::LoadRoom()
 {
     char tmpStr[30];
     sprintf(tmpStr, "Room %d", selectedRoom);
@@ -36,6 +36,7 @@ void WL4EditorWindow::LoadRoom()
     ui->roomDecreaseButton->setEnabled(selectedRoom);
     ui->roomIncreaseButton->setEnabled(CurrentLevel->GetRooms().size() > selectedRoom + 1);
     RenderScreen(CurrentLevel->GetRooms()[selectedRoom]);
+    return CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
 }
 
 WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
@@ -83,14 +84,14 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
         static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
     );
     selectedRoom = 0;
-    LoadRoom();
+    int tmpTilesetID = LoadRoom();
 
     // Enable UI that requires a ROM file to be loaded
     ui->loadLevelButton->setEnabled(true);
 
     // Load Dock widget
     this->addDockWidget(Qt::RightDockWidgetArea, Tile16SelecterDockWidget);
-    Tile16SelecterDockWidget->SetTileset(80);
+    Tile16SelecterDockWidget->SetTileset(tmpTilesetID);
 }
 
 void WL4EditorWindow::RenderScreen(LevelComponents::Room *room)
@@ -117,18 +118,21 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
             static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
         );
         selectedRoom = 0;
-        LoadRoom();
+        int tmpTilesetID = LoadRoom();
+        Tile16SelecterDockWidget->SetTileset(tmpTilesetID);
     }
 }
 
 void WL4EditorWindow::on_roomDecreaseButton_clicked()
 {
     --selectedRoom;
-    LoadRoom();
+    int tmpTilesetID = LoadRoom();
+    Tile16SelecterDockWidget->SetTileset(tmpTilesetID);
 }
 
 void WL4EditorWindow::on_roomIncreaseButton_clicked()
 {
     ++selectedRoom;
-    LoadRoom();
+    int tmpTilesetID = LoadRoom();
+    Tile16SelecterDockWidget->SetTileset(tmpTilesetID);
 }

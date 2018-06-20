@@ -58,7 +58,7 @@ namespace LevelComponents
         unsigned int Layer3Scrolling;
         unsigned int LayerEffects;
         unsigned int RoomID;
-        unsigned int TilesetID;
+        int TilesetID;
         unsigned int Width, Height;
         bool Layer0Locked = false;
         std::vector<struct __CameraControlRecord*> CameraControlRecords;
@@ -67,6 +67,7 @@ namespace LevelComponents
         Tileset *tileset;
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
+        int GetTilesetID() {return TilesetID;}
         Tileset *GetTileset() { return tileset; }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         QGraphicsScene *GetGraphicsScene();

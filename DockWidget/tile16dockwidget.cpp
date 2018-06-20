@@ -6,6 +6,7 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
     ui(new Ui::Tile16DockWidget)
 {
     ui->setupUi(this);
+    ui->graphicsView->scale(2, 2);
 }
 
 Tile16DockWidget::~Tile16DockWidget()
@@ -35,7 +36,6 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
     }
     Tile16MAPScene->addPixmap(layerPixmap);
     ui->graphicsView->show();
-    ui->graphicsView->scale(2, 2);
     ui->label_TIlesetID->setText("Tileset ID: 0x" + QString::number(_tilesetIndex, 16).toUpper());
 
     return 0;
