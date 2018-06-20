@@ -5,6 +5,7 @@
 #include <QLabel>
 #include "LevelComponents/Room.h"
 #include "Dialog/ChooseLevelDialog.h"
+#include <DockWidget/tile16dockwidget.h>
 
 namespace Ui {
     class WL4EditorWindow;
@@ -19,7 +20,7 @@ public:
     ~WL4EditorWindow();
     void RenderScreen(LevelComponents::Room *room);
     void SetStatusBarText(char *str);
-    void LoadRoom();
+    int LoadRoom(); //return TilesetID
 
 private slots:
     void on_actionOpen_ROM_triggered();
@@ -30,6 +31,7 @@ private slots:
 private:
     Ui::WL4EditorWindow *ui;
     QLabel *statusBarLabel;
+    Tile16DockWidget *Tile16SelecterDockWidget;
 };
 
 #endif // WL4EDITORWINDOW_H

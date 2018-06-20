@@ -19,7 +19,7 @@ namespace LevelComponents
             Height = ROMUtils::CurrentFile[layerDataPtr + 1];
 
             // Get the layer data
-            LayerData = (unsigned short *) ROMUtils::RLEDecompress(layerDataPtr + 2, Width * Height * 2);
+            LayerData = (unsigned short *) ROMUtils::LayerRLEDecompress(layerDataPtr + 2, Width * Height * 2);
         }
         else if(mappingType == LayerTile8x8)
         {
@@ -43,7 +43,7 @@ namespace LevelComponents
             }
 
             // Get the layer data
-            LayerData = (unsigned short *) ROMUtils::RLEDecompress(layerDataPtr + 1, Width * Height * 2);
+            LayerData = (unsigned short *) ROMUtils::LayerRLEDecompress(layerDataPtr + 1, Width * Height * 2);
 
             // Rearrange tile data for dimension type 1
             //   1 2 3 4 5 6    1 2 3 A B C

@@ -23,6 +23,7 @@ namespace LevelComponents
 
         // Set up tileset
         int tilesetIndex = ROMUtils::CurrentFile[roomDataPtr];
+        this->TilesetID = tilesetIndex;
         int tilesetPtr = WL4Constants::TilesetDataTable + tilesetIndex * 36;
         tileset = new Tileset(tilesetPtr, tilesetIndex);
 
@@ -30,9 +31,10 @@ namespace LevelComponents
         int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
         Width = ROMUtils::CurrentFile[dimensionPointer];
         Height = ROMUtils::CurrentFile[dimensionPointer + 1];
+        enum LayerMappingType mappingType;
         for(int i = 0; i < 4; ++i)
         {
-            enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1]);
+            mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1] & 0x30);
             int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
             layers[i] = new Layer(layerPtr, mappingType, tileset);
         }
