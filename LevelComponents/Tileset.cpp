@@ -37,12 +37,17 @@ namespace LevelComponents
         int tmpAnimatedTilesdataPtr;
         for(int v1 = 0; v1 < 16; v1++)
         {
+            /*
+             * the reason why not using this is that it will cause problem and worse in some situation,
+             * so before we know what the first case really used for, we should just use the simple one.
+             * TODO: find the usage of the first case
             //[0300002E..03000032] are all set to zero at 6B8FA and the arrange just contains all the values the table start from 0x3F8C18 have
             if(ROMUtils::CurrentFile[0x3F8C18 + __TilesetID * 16 + v1] & 1)
                 tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F91D8)));
             else
                 tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
-
+            */
+            tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
             tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
             tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
             if((ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x03') || (ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x06'))
