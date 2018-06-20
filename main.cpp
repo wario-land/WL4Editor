@@ -4,13 +4,18 @@
 #include <fstream>
 #include "ROMUtils.h"
 
-//--------[testing headers]--------
 #include "LevelComponents/Level.h"
 #include <iostream>
+#include <cstring>
+
+#ifdef _WIN32
 #include <windows.h>
 #include <lmcons.h>
-#include <cstring>
-//---------------------------------
+#endif
+
+#ifdef linux
+#include <unistd.h>
+#endif
 
 extern LevelComponents::Level *CurrentLevel;
 extern int selectedRoom;
@@ -37,10 +42,12 @@ int main(int argc, char *argv[])
 
     // Quickly test or debug by automatically loading the ROM without UI
     //-------------------------------------------------------------------
+    char *username;
+#ifdef _WIN32
     TCHAR usernameTC[UNLEN + 1];
     DWORD size = UNLEN + 1;
     GetUserName((TCHAR*)usernameTC, &size);
-    char username[UNLEN + 1];
+    username = new char[UNLEN + 1];
     for(int i = 0; i < UNLEN; ++i)
     {
         if(!usernameTC[i])
@@ -48,24 +55,35 @@ int main(int argc, char *argv[])
             username[i] = '\0';
             break;
         }
-        username[i] = (char) (usernameTC[i] & 0xFF);
+        username[i] = (char) (usernameTC[i] & 0xDF); // Makes username uppercase
     }
-    if(!strncmp(username, "Andrew", UNLEN)) // Goldensunboy
+#endif
+#ifdef linux
+    username = new char[33]; // Maximum length is 32 (plus 1 for null termination)
+    getlogin_r(username, 33);
+    for(int i = 0; i < 32; ++i)
     {
-//        // Andrew's tests
-//        std::string filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
-//        LoadROMFile(filePath);
-
-//        // Load a level
-//        CurrentLevel = new LevelComponents::Level(LevelComponents::EmeraldPassage, LevelComponents::SecondLevel);
-
-//        // Render the screen
-//        w.LoadRoom();
-
-//        std::cout << CurrentLevel->GetDoors().size() << std::endl;
-//        std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
+        username[i] &= '\xDF'; // Make username uppercase
     }
-    else if(!strncmp(username, "Administrator", UNLEN)) // SSP
+#endif
+    if(!strncmp(username, "ANDREW", strlen(username))) // Goldensunboy
+    {
+	/*
+        // Andrew's tests
+        std::string filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
+        LoadROMFile(filePath);
+
+        // Load a level
+        CurrentLevel = new LevelComponents::Level(LevelComponents::EmeraldPassage, LevelComponents::SecondLevel);
+
+        // Render the screen
+        w.LoadRoom();
+
+        std::cout << CurrentLevel->GetDoors().size() << std::endl;
+        std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
+	*/
+    }
+    else if(!strncmp(username, "ADMINISTRATOR", strlen(username))) // SSP
     {
         /*
         std::string filePath = "E:\\Wario Harker\\0169 - Wario Land 4.gba";
@@ -81,6 +99,7 @@ int main(int argc, char *argv[])
         std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
         */
     }
+    delete username;
     //-------------------------------------------------------------------
 
     return a.exec();
