@@ -7,6 +7,7 @@
 #include <LevelComponents/Tileset.h>
 #include <QGraphicsScene>
 #include <QPixmap>
+#include <QGraphicsPixmapItem>
 
 namespace Ui {
 class Tile16DockWidget;
@@ -22,9 +23,17 @@ public:
 
 private:
     Ui::Tile16DockWidget *ui;
+    LevelComponents::Tileset *SelectedTileset = nullptr;
+    QGraphicsScene *Tile16MAPScene = nullptr;
+    QGraphicsPixmapItem *SelectionBox;
+    int SelectedTile;
 
 public:
+    void SetTileInfoText(QString str);
     int SetTileset(int _tilesetIndex);
+    LevelComponents::Tileset *GetSelectedTileset() { return SelectedTileset; }
+    void SetSelectedTile(int tile);
+    int GetSelectedTile() { return SelectedTile; }
 };
 
 #endif // TILE16DOCKWIDGET_H

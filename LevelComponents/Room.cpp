@@ -87,47 +87,60 @@ namespace LevelComponents
         // TODO
     }
 
-    QGraphicsScene *Room::GetGraphicsScene()
+    QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
-        // Order the layers by their priority
-        Layer *drawLayers[4];
-        memcpy(drawLayers, layers, 4 * sizeof(Layer*));
-        qsort(drawLayers, 4, sizeof(Layer*), [](const void *data1, const void *data2){
-            Layer *layer1 = *(Layer**) data1;
-            Layer *layer2 = *(Layer**) data2;
-            return layer2->GetLayerPriority() - layer1->GetLayerPriority();
-        });
-
-        // Create a graphics scene with the layers added in order of priority
-        int sceneWidth = Width * 16;
-        int sceneHeight = Height * 16;
-        QGraphicsScene *scene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
-        for(int i = 0; i < 4; ++i)
+        switch(renderParams->type)
         {
-            if(drawLayers[i]->IsVisible())
+        case FullRender:
             {
-                QPixmap pixmap = drawLayers[i]->RenderLayer();
-                if(drawLayers[i]->GetMappingType() == LayerTile8x8)
+                // Order the layers by their priority
+                Layer *drawLayers[4];
+                memcpy(drawLayers, layers, 4 * sizeof(Layer*));
+                qsort(drawLayers, 4, sizeof(Layer*), [](const void *data1, const void *data2){
+                    Layer *layer1 = *(Layer**) data1;
+                    Layer *layer2 = *(Layer**) data2;
+                    return layer2->GetLayerPriority() - layer1->GetLayerPriority();
+                });
+
+                // Create a graphics scene with the layers added in order of priority
+                int sceneWidth = Width * 16;
+                int sceneHeight = Height * 16;
+                if(scene) { delete scene; }
+                scene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
+                for(int i = 0; i < 4; ++i)
                 {
-                    QPixmap pixmap2(sceneWidth, sceneHeight);
-                    QPainter painter(&pixmap2);
-                    for(int y = 0; y < sceneHeight; y += drawLayers[i]->GetLayerheight() * 8)
+                    if(drawLayers[i]->IsVisible())
                     {
-                        for(int x = 0; x < sceneWidth; x += drawLayers[i]->GetLayerwidth() * 8)
+                        QPixmap pixmap = drawLayers[i]->RenderLayer();
+                        if(drawLayers[i]->GetMappingType() == LayerTile8x8)
                         {
-                            QPoint drawDestination(x, y);
-                            painter.drawImage(drawDestination, pixmap.toImage());
+                            QPixmap pixmap2(sceneWidth, sceneHeight);
+                            QPainter painter(&pixmap2);
+                            for(int y = 0; y < sceneHeight; y += drawLayers[i]->GetLayerheight() * 8)
+                            {
+                                for(int x = 0; x < sceneWidth; x += drawLayers[i]->GetLayerwidth() * 8)
+                                {
+                                    QPoint drawDestination(x, y);
+                                    painter.drawImage(drawDestination, pixmap.toImage());
+                                }
+                            }
+                            scene->addPixmap(pixmap2);
+                        }
+                        else
+                        {
+                            scene->addPixmap(pixmap);
                         }
                     }
-                    scene->addPixmap(pixmap2);
-                }
-                else
-                {
-                    scene->addPixmap(pixmap);
                 }
             }
+            return scene;
+        case SingleTile:
+            // TODO
+            return scene;
+        case LayerEnable:
+            // TODO
+            return scene;
         }
 
-        return scene;
     }
 }

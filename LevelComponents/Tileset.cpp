@@ -99,5 +99,8 @@ namespace LevelComponents
             }
             map16data[i] = new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]);
         }
+
+        // Get pointer to the map16 event table
+        Map16EventTable = (unsigned short*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28));
     }
 }

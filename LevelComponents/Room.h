@@ -51,6 +51,21 @@ namespace LevelComponents
         HasControlAttrs = 3
     };
 
+    enum RenderUpdateType
+    {
+        FullRender,
+        SingleTile,
+        LayerEnable
+    };
+
+    struct RenderUpdateParams
+    {
+        enum RenderUpdateType type;
+        int tileX;
+        int tileY;
+        bool enabled[4];
+    };
+
     class Room
     {
     private:
@@ -70,7 +85,7 @@ namespace LevelComponents
         int GetTilesetID() {return TilesetID;}
         Tileset *GetTileset() { return tileset; }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
-        QGraphicsScene *GetGraphicsScene();
+        QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
     };
 }
 
