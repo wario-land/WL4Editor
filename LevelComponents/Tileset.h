@@ -19,6 +19,7 @@ namespace LevelComponents
         Tile8x8 **GetTile8x8Data() { return tile8x8data; }
         TileMap16 **GetMap16Data() { return map16data; }
         QVector<QRgb> *GetPalettes() { return palettes; }
+        unsigned short *Map16EventTable;
     };
 }
 

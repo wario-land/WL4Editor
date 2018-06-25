@@ -17,6 +17,18 @@ QString statusBarText("Open a ROM file");
 struct DialogParams::PassageAndLevelIndex selectedLevel = { 0, 0 };
 int selectedRoom;
 
+WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::WL4EditorWindow)
+{
+    ui->setupUi(this);
+    ui->graphicsView->scale(2, 2);
+    statusBarLabel = new QLabel("Open a ROM file");
+    ui->statusBar->addWidget(statusBarLabel);
+    Tile16DockWidget *tmpdocker = new Tile16DockWidget;
+    Tile16SelecterDockWidget = tmpdocker;
+}
+
 void WL4EditorWindow::SetStatusBarText(char *str)
 {
     QLabel *old = (QLabel*) ui->statusBar->children()[0];
@@ -37,18 +49,6 @@ int WL4EditorWindow::LoadRoom()
     ui->roomIncreaseButton->setEnabled(CurrentLevel->GetRooms().size() > selectedRoom + 1);
     RenderScreen(CurrentLevel->GetRooms()[selectedRoom]);
     return CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
-}
-
-WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::WL4EditorWindow)
-{
-    ui->setupUi(this);
-    ui->graphicsView->scale(2, 2);
-    statusBarLabel = new QLabel("Open a ROM file");
-    ui->statusBar->addWidget(statusBarLabel);
-    Tile16DockWidget *tmpdocker = new Tile16DockWidget;
-    Tile16SelecterDockWidget = tmpdocker;
 }
 
 WL4EditorWindow::~WL4EditorWindow()
@@ -102,7 +102,11 @@ void WL4EditorWindow::RenderScreen(LevelComponents::Room *room)
         delete oldScene;
     }
 
-    QGraphicsScene *scene = room->GetGraphicsScene();
+    struct LevelComponents::RenderUpdateParams renderParams =
+    {
+        .type = LevelComponents::RenderUpdateType::FullRender
+    };
+    QGraphicsScene *scene = room->RenderGraphicsScene(nullptr, &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
