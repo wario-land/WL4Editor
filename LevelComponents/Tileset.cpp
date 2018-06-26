@@ -102,5 +102,8 @@ namespace LevelComponents
 
         // Get pointer to the map16 event table
         Map16EventTable = (unsigned short*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28));
+
+        // Get pointer to the Map16 Wario Animation Slot ID Table
+        Map16WarioAnimationSlotIDTable = (unsigned char*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24));
     }
 }

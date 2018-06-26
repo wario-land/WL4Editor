@@ -16,9 +16,10 @@ void TileGraphicsView::mousePressEvent(QMouseEvent *event)
     // Get the event information about the selected tile
     LevelComponents::Tileset *Selectedtileset = DockWidget->GetSelectedTileset();
     unsigned short eventIndex = Selectedtileset->Map16EventTable[tileID];
+    int tmpWarioAnimationSlotID = (int) Selectedtileset->Map16WarioAnimationSlotIDTable[tileID];
 
     // Print information about the tile to the user
-    QString infoText = QString::asprintf("Tile ID: %d\nEvent ID: 0x%04X", tileID, eventIndex);
+    QString infoText = QString::asprintf("Tile ID: %d\nEvent ID: 0x%04X\nWario Animation Slot ID: %d", tileID, eventIndex, tmpWarioAnimationSlotID);
     DockWidget->SetTileInfoText(infoText);
 
     // Set the selected tile location for the graphics view
