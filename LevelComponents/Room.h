@@ -76,6 +76,9 @@ namespace LevelComponents
         int TilesetID;
         unsigned int Width, Height;
         bool Layer0Locked = false;
+        bool Layer0ColorBlending = false;
+        int Layer0ColorBLendCoefficient_EVA;
+        int Layer0ColorBLendCoefficient_EVB;
         std::vector<struct __CameraControlRecord*> CameraControlRecords;
         struct __RoomHeader RoomHeader;
         Layer *layers[4];
@@ -86,6 +89,9 @@ namespace LevelComponents
         Tileset *GetTileset() { return tileset; }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
+        bool IsLayer0ColorBlendingEnable() {return Layer0ColorBlending; }
+        int GetEVA() {return Layer0ColorBLendCoefficient_EVA; }
+        int GetEVB() {return Layer0ColorBLendCoefficient_EVB; }
     };
 }
 
