@@ -80,7 +80,7 @@ namespace LevelComponents
         {
             enum DoorType type = static_cast<DoorType>(doorPtr->DoorTypeByte);
             Door *newDoor = new Door(doorPtr->RoomID, type, doorPtr->x1, doorPtr->x2, doorPtr->y1, doorPtr->y2);
-            newDoor->SetSpriteMapID(doorPtr->SpriteMapID);
+            newDoor->SetEntitySetID(doorPtr->EntitySetID);
             newDoor->SetBGM(doorPtr->BGM_ID_LowByte | ((unsigned int) (doorPtr->BGM_ID_HighByte)) << 8);
             newDoor->SetDoorDisplacementROM(doorPtr->HorizontalDisplacement, doorPtr->VerticalDisplacement);
             newDoors.push_back(newDoor);
