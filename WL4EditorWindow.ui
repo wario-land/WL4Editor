@@ -116,7 +116,7 @@
      <x>0</x>
      <y>0</y>
      <width>900</width>
-     <height>17</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -131,6 +131,7 @@
     <property name="title">
      <string>Edit</string>
     </property>
+    <addaction name="actionLevel_Config"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -150,6 +151,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionLevel_Config">
+   <property name="text">
+    <string>Level Config</string>
    </property>
   </action>
  </widget>

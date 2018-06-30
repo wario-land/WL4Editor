@@ -61,6 +61,26 @@ namespace LevelComponents
         }
         layers[3]->SetLayerPriority(3);
 
+        // Get the information about Layer 0 color blending, using priorityFlag
+        if(priorityFlag > 7)
+        {
+            this->Layer0ColorBlending = true;
+            switch((priorityFlag - 8) >> 2)
+            {
+            case 0: this->Layer0ColorBLendCoefficient_EVA = 7; this->Layer0ColorBLendCoefficient_EVB = 16; break;
+            case 1: this->Layer0ColorBLendCoefficient_EVA = 10; this->Layer0ColorBLendCoefficient_EVB = 16; break;
+            case 2: this->Layer0ColorBLendCoefficient_EVA = 13; this->Layer0ColorBLendCoefficient_EVB = 16; break;
+            case 3: this->Layer0ColorBLendCoefficient_EVA = 16; this->Layer0ColorBLendCoefficient_EVB = 16; break;
+            case 4: this->Layer0ColorBLendCoefficient_EVA = 16; this->Layer0ColorBLendCoefficient_EVB = 0; break;
+            case 5: this->Layer0ColorBLendCoefficient_EVA = 13; this->Layer0ColorBLendCoefficient_EVB = 3; break;
+            case 6: this->Layer0ColorBLendCoefficient_EVA = 10; this->Layer0ColorBLendCoefficient_EVB = 6; break;
+            case 7: this->Layer0ColorBLendCoefficient_EVA = 7; this->Layer0ColorBLendCoefficient_EVB = 9; break;
+            case 8: this->Layer0ColorBLendCoefficient_EVA = 5; this->Layer0ColorBLendCoefficient_EVB = 11; break;
+            case 9: this->Layer0ColorBLendCoefficient_EVA = 3; this->Layer0ColorBLendCoefficient_EVB = 13; break;
+            case 10: this->Layer0ColorBLendCoefficient_EVA = 0; this->Layer0ColorBLendCoefficient_EVB = 16;
+            }
+        }
+
         // Set up camera control data
         // TODO are there more types than 1, 2 and 3?
         if((CameraControlType = static_cast<enum __CameraControlType>(ROMUtils::CurrentFile[roomDataPtr + 24])) == HasControlAttrs)

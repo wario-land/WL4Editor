@@ -27,7 +27,7 @@ namespace LevelComponents
         unsigned char LinkerDestination;
         unsigned char HorizontalDisplacement;
         unsigned char VerticalDisplacement;
-        unsigned char SpriteMapID;
+        unsigned char EntitySetID;
         unsigned char BGM_ID_LowByte;
         unsigned char BGM_ID_HighByte;
     };
@@ -41,7 +41,7 @@ namespace LevelComponents
         int X1, X2, Y1, Y2; //destination just be (X1, Y1)
         std::shared_ptr<Door*> DestinationDoor = nullptr;
         unsigned char X_Displacement, Y_Displacement;
-        unsigned char SpriteMapID;
+        unsigned char EntitySetID;
         unsigned int BGM_ID;
 
     public:
@@ -53,7 +53,8 @@ namespace LevelComponents
         void SetDestinationDoor(Door *otherDoor) { DestinationDoor = std::make_shared<Door*>(otherDoor); }
         void SetDoorDisplacement(signed int _X_Displacement, signed int _Y_Displacement);
         void SetDoorDisplacementROM(unsigned char _X_Displacement, unsigned char _Y_Displacement);
-        void SetSpriteMapID(unsigned char _SpriteMapID) { SpriteMapID = _SpriteMapID; }
+        void SetEntitySetID(unsigned char _EntitySetID) { EntitySetID = _EntitySetID; }
+        int GetEntitySetID() {return (int) EntitySetID; }
         void SetBGM(unsigned int _BGM_ID) { BGM_ID = _BGM_ID; }
         void SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
         void SetDoorType(enum DoorType _DoorType) { type = _DoorType; }

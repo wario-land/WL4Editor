@@ -80,7 +80,7 @@ namespace LevelComponents
         {
             enum DoorType type = static_cast<DoorType>(doorPtr->DoorTypeByte);
             Door *newDoor = new Door(doorPtr->RoomID, type, doorPtr->x1, doorPtr->x2, doorPtr->y1, doorPtr->y2);
-            newDoor->SetSpriteMapID(doorPtr->SpriteMapID);
+            newDoor->SetEntitySetID(doorPtr->EntitySetID);
             newDoor->SetBGM(doorPtr->BGM_ID_LowByte | ((unsigned int) (doorPtr->BGM_ID_HighByte)) << 8);
             newDoor->SetDoorDisplacementROM(doorPtr->HorizontalDisplacement, doorPtr->VerticalDisplacement);
             newDoors.push_back(newDoor);
@@ -139,6 +139,36 @@ namespace LevelComponents
             this->LevelHeader.SHardModeSecondTenPlaceNum = b;
             this->LevelHeader.SHardModeSecondOnePlaceNum = c;
         }
+    }
+
+    /// <summary>
+    /// Get the countdown timer for a specific difficulty class.
+    /// </summary>
+    /// <remarks>
+    /// Return value is total time in seconds
+    /// </remarks>
+    int Level::GetTimeCountdownCounter(__LevelDifficulty LevelDifficulty)
+    {
+        int a, b, c;
+        if(LevelDifficulty == HardDifficulty)
+        {
+            a = (int)this->LevelHeader.HardModeMinuteNum;
+            b = (int)this->LevelHeader.HardModeSecondTenPlaceNum;
+            c = (int)this->LevelHeader.HardModeSecondOnePlaceNum;
+        }
+        else if(LevelDifficulty == NormalDifficulty)
+        {
+            a = (int)this->LevelHeader.NormalModeMinuteNum;
+            b = (int)this->LevelHeader.NormalModeSecondTenPlaceNum;
+            c = (int)this->LevelHeader.NormalModeSecondOnePlaceNum;
+        }
+        else if(LevelDifficulty == SHardDifficulty)
+        {
+            a = (int)this->LevelHeader.SHardModeMinuteNum;
+            b = (int)this->LevelHeader.SHardModeSecondTenPlaceNum;
+            c = (int)this->LevelHeader.SHardModeSecondOnePlaceNum;
+        }
+        return (a * 60 + b * 10 + c);
     }
 
     void Level::LoadLevelName(int address)

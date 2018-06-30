@@ -36,7 +36,9 @@ SOURCES += \
     Dialog/ChooseLevelDialog.cpp \
     DockWidget/Tile16DockWidget.cpp \
     DockWidget/TileGraphicsView.cpp \
-    EditorWindow/MainGraphicsView.cpp
+    EditorWindow/MainGraphicsView.cpp \
+    LevelComponents/EntitySet.cpp \
+    Dialog/LevelConfigDialog.cpp
 
 HEADERS += \
         WL4EditorWindow.h \
@@ -51,9 +53,12 @@ HEADERS += \
     Dialog/ChooseLevelDialog.h \
     DockWidget/Tile16DockWidget.h \
     DockWidget/TileGraphicsView.h \
-    EditorWindow/MainGraphicsView.h
+    EditorWindow/MainGraphicsView.h \
+    LevelComponents/EntitySet.h \
+    Dialog/LevelConfigDialog.h
 
 FORMS += \
         WL4EditorWindow.ui \
     Dialog/ChooseLevelDialog.ui \
-    DockWidget/Tile16DockWidget.ui
+    DockWidget/Tile16DockWidget.ui \
+    Dialog/LevelConfigDialog.ui
