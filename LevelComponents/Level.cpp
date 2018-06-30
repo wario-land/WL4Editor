@@ -141,6 +141,36 @@ namespace LevelComponents
         }
     }
 
+    /// <summary>
+    /// Get the countdown timer for a specific difficulty class.
+    /// </summary>
+    /// <remarks>
+    /// Return value is total time in seconds
+    /// </remarks>
+    int Level::GetTimeCountdownCounter(__LevelDifficulty LevelDifficulty)
+    {
+        int a, b, c;
+        if(LevelDifficulty == HardDifficulty)
+        {
+            a = (int)this->LevelHeader.HardModeMinuteNum;
+            b = (int)this->LevelHeader.HardModeSecondTenPlaceNum;
+            c = (int)this->LevelHeader.HardModeSecondOnePlaceNum;
+        }
+        else if(LevelDifficulty == NormalDifficulty)
+        {
+            a = (int)this->LevelHeader.NormalModeMinuteNum;
+            b = (int)this->LevelHeader.NormalModeSecondTenPlaceNum;
+            c = (int)this->LevelHeader.NormalModeSecondOnePlaceNum;
+        }
+        else if(LevelDifficulty == SHardDifficulty)
+        {
+            a = (int)this->LevelHeader.SHardModeMinuteNum;
+            b = (int)this->LevelHeader.SHardModeSecondTenPlaceNum;
+            c = (int)this->LevelHeader.SHardModeSecondOnePlaceNum;
+        }
+        return (a * 60 + b * 10 + c);
+    }
+
     void Level::LoadLevelName(int address)
     {
         for(int i = 0; i < 26; i++)
