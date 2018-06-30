@@ -140,3 +140,15 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     int tmpTilesetID = LoadRoom();
     Tile16SelecterDockWidget->SetTileset(tmpTilesetID);
 }
+
+void WL4EditorWindow::on_actionLevel_Config_triggered()
+{
+    LevelConfigDialog tmpdialog;
+    tmpdialog.InitTextBoxes(CurrentLevel->GetLevelName(), CurrentLevel->GetTimeCountdownCounter(LevelComponents::HardDifficulty), \
+                            CurrentLevel->GetTimeCountdownCounter(LevelComponents::NormalDifficulty), \
+                            CurrentLevel->GetTimeCountdownCounter(LevelComponents::SHardDifficulty));
+    if(tmpdialog.exec() == QDialog::Accepted)
+    {
+        // TODO
+    }
+}

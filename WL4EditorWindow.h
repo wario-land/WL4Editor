@@ -6,6 +6,7 @@
 #include "LevelComponents/Room.h"
 #include "Dialog/ChooseLevelDialog.h"
 #include <DockWidget/tile16dockwidget.h>
+#include "Dialog/LevelConfigDialog.h"
 
 namespace Ui {
     class WL4EditorWindow;
@@ -27,6 +28,7 @@ private slots:
     void on_loadLevelButton_clicked();
     void on_roomDecreaseButton_clicked();
     void on_roomIncreaseButton_clicked();
+    void on_actionLevel_Config_triggered();
 
 private:
     Ui::WL4EditorWindow *ui;

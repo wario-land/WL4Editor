@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <string>
 #include <QString>
+#include <QValidator> // include <QRegExp> and <QRegExpValidator>
 
 namespace Ui {
 class LevelConfigDialog;
@@ -20,6 +21,9 @@ public:
 
 private:
     Ui::LevelConfigDialog *ui;
+    QRegExp *LevelnameRegx;
+    QRegExp *TimerRegx;
+
 };
 
 #endif // LEVELCONFIGDIALOG_H
