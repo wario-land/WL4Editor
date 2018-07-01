@@ -63,11 +63,12 @@ namespace LevelComponents
         void LoadLevelName(int address);
     public:
         Level(enum __passage passage, enum __stage stage); //TODO: need another construction function ? one for load a level and the other for create a level (ssp)
-        void SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int minutes, unsigned int seconds);
+        void SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int seconds);
         int GetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty);
         std::vector<Door*> GetDoors() { return doors; }
         std::vector<Room*> GetRooms() { return rooms; }
         std::string GetLevelName() { return LevelName; }
+        void SetLevelName(std::string newlevelname) {this->LevelName = newlevelname; }
     };
 }
 

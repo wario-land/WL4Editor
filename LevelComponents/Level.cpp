@@ -116,28 +116,28 @@ namespace LevelComponents
     /// <param name="LevelDifficulty">An enumeration representing the level's difficulty</param>
     /// <param name="minutes">The number of minutes to set the timer for this difficulty level</param>
     /// <param name="seconds">The number of seconds to set the timer for this difficulty level</param>
-    void Level::SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int minutes, unsigned int seconds)
+    void Level::SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int seconds)
     {
-        unsigned char a = (unsigned char) (minutes & 0xFF);
-        unsigned char b = (unsigned char) ((seconds / 10) & 0xFF);
-        unsigned char c = (unsigned char) ((seconds % 10) & 0xFF);
+        int a = seconds / 60;
+        int b = (seconds - 60 * a) / 10;
+        int c = seconds - 60 * a - 10 * b;
         if(LevelDifficulty == HardDifficulty)
         {
-            this->LevelHeader.HardModeMinuteNum = a;
-            this->LevelHeader.HardModeSecondTenPlaceNum = b;
-            this->LevelHeader.HardModeSecondOnePlaceNum = c;
+            this->LevelHeader.HardModeMinuteNum = (unsigned char) a;
+            this->LevelHeader.HardModeSecondTenPlaceNum = (unsigned char) b;
+            this->LevelHeader.HardModeSecondOnePlaceNum = (unsigned char) c;
         }
         else if(LevelDifficulty == NormalDifficulty)
         {
-            this->LevelHeader.NormalModeMinuteNum = a;
-            this->LevelHeader.NormalModeSecondTenPlaceNum = b;
-            this->LevelHeader.NormalModeSecondOnePlaceNum = c;
+            this->LevelHeader.NormalModeMinuteNum = (unsigned char) a;
+            this->LevelHeader.NormalModeSecondTenPlaceNum = (unsigned char) b;
+            this->LevelHeader.NormalModeSecondOnePlaceNum = (unsigned char) c;
         }
         else if(LevelDifficulty == SHardDifficulty)
         {
-            this->LevelHeader.SHardModeMinuteNum = a;
-            this->LevelHeader.SHardModeSecondTenPlaceNum = b;
-            this->LevelHeader.SHardModeSecondOnePlaceNum = c;
+            this->LevelHeader.SHardModeMinuteNum = (unsigned char) a;
+            this->LevelHeader.SHardModeSecondTenPlaceNum = (unsigned char) b;
+            this->LevelHeader.SHardModeSecondOnePlaceNum = (unsigned char) c;
         }
     }
 

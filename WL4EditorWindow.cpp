@@ -149,6 +149,9 @@ void WL4EditorWindow::on_actionLevel_Config_triggered()
                             CurrentLevel->GetTimeCountdownCounter(LevelComponents::SHardDifficulty));
     if(tmpdialog.exec() == QDialog::Accepted)
     {
-        // TODO
+        CurrentLevel->SetLevelName(tmpdialog.GetNewLevelName());
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int)tmpdialog.GetHModeTimer());
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int)tmpdialog.GetNModeTimer());
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int)tmpdialog.GetSHModeTimer());
     }
 }

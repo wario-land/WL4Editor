@@ -18,6 +18,10 @@ public:
     explicit LevelConfigDialog(QWidget *parent = 0);
     ~LevelConfigDialog();
     void InitTextBoxes(std::string _levelname, int HModeTimer, int NModeTimer, int SHModeTimer);
+    std::string GetNewLevelName();
+    int GetHModeTimer();
+    int GetNModeTimer();
+    int GetSHModeTimer();
 
 private:
     Ui::LevelConfigDialog *ui;
