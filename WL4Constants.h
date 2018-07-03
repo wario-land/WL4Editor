@@ -11,6 +11,9 @@ namespace WL4Constants
     const int DoorTable                 = 0x78F21C;
     const int RoomDataTable             = 0x78F280;
     const int CameraControlPointerTable = 0x78F540;
+    const int EntitySetInfoPointerTable = 0x78EF78;
+    const int EntityTilesetPointerTable = 0x78EBF0;
+    const int EntityPalettePointerTable = 0x78EDB4;
 
     // Miscellaneous definitions
     const int CameraRecordSentinel      = 0x3F9D58;
