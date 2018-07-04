@@ -3,9 +3,10 @@
 
 #include <QMainWindow>
 #include <QLabel>
+
 #include "LevelComponents/Room.h"
 #include "Dialog/ChooseLevelDialog.h"
-#include <DockWidget/tile16dockwidget.h>
+#include "DockWidget/Tile16DockWidget.h"
 #include "Dialog/LevelConfigDialog.h"
 
 namespace Ui {

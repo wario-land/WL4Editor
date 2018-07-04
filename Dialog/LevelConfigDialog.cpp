@@ -1,25 +1,25 @@
 #include "LevelConfigDialog.h"
 #include "ui_LevelConfigDialog.h"
 
+#include <QPushButton>
+
+QRegExp LevelnameRegx("^[A-Za-z0-9\\s]+$");
+QRegExp TimerRegx("^[0-9]:[0-5][0-9]$");
+
 LevelConfigDialog::LevelConfigDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::LevelConfigDialog)
 {
     ui->setupUi(this);
-    this->setFixedSize(this->width(), this->height());
-    QRegExp regx1("^[A-Za-z0-9\\s]+$");
-    this->LevelnameRegx = new QRegExp(regx1);
-    QRegExp regx2("[0-9][:][0-5][0-9]");
-    this->TimerRegx = new QRegExp(regx2);
-    ui->LevelName_TextBox->setMaxLength(26);
+
     ui->LevelName_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
-    ui->LevelName_TextBox->setValidator(new QRegExpValidator(*(this->LevelnameRegx), ui->LevelName_TextBox));
+    ui->LevelName_TextBox->setValidator(new QRegExpValidator(LevelnameRegx, ui->LevelName_TextBox));
     ui->HModeTimer_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
-    ui->HModeTimer_TextBox->setValidator(new QRegExpValidator(*(this->TimerRegx), ui->HModeTimer_TextBox));
+    ui->HModeTimer_TextBox->setValidator(new QRegExpValidator(TimerRegx, ui->HModeTimer_TextBox));
     ui->NModeTimer_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
-    ui->NModeTimer_TextBox->setValidator(new QRegExpValidator(*(this->TimerRegx), ui->NModeTimer_TextBox));
+    ui->NModeTimer_TextBox->setValidator(new QRegExpValidator(TimerRegx, ui->NModeTimer_TextBox));
     ui->SHModeTimer_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
-    ui->SHModeTimer_TextBox->setValidator(new QRegExpValidator(*(this->TimerRegx), ui->SHModeTimer_TextBox));
+    ui->SHModeTimer_TextBox->setValidator(new QRegExpValidator(TimerRegx, ui->SHModeTimer_TextBox));
 }
 
 LevelConfigDialog::~LevelConfigDialog()
@@ -84,4 +84,61 @@ int LevelConfigDialog::GetSHModeTimer()
     b = (int)(ui->SHModeTimer_TextBox->text().at(2).unicode()) - 48;
     c = (int)(ui->SHModeTimer_TextBox->text().at(3).unicode()) - 48;
     return (60 * a + 10 * b + c);
+}
+
+void SetOKButtonEnable(QVector<QLineEdit*> textBoxes, QPushButton *okButton)
+{
+    bool allValid = true;
+    for(auto iter = textBoxes.begin(); iter != textBoxes.end(); ++iter)
+    {
+        QLineEdit *line = *iter;
+        auto variable = line->text();
+        int pos = 0;
+        if(line->validator()->validate(variable, pos) != QValidator::State::Acceptable)
+        {
+            allValid = false;
+            break;
+        }
+    }
+    okButton->setEnabled(allValid);
+}
+
+void LevelConfigDialog::on_SHModeTimer_TextBox_textChanged(const QString &arg1)
+{
+    QVector<QLineEdit*> textBoxes;
+    textBoxes.append(ui->LevelName_TextBox);
+    textBoxes.append(ui->NModeTimer_TextBox);
+    textBoxes.append(ui->HModeTimer_TextBox);
+    textBoxes.append(ui->SHModeTimer_TextBox);
+    SetOKButtonEnable(textBoxes, ui->buttonBox->button(QDialogButtonBox::Ok));
+}
+
+void LevelConfigDialog::on_NModeTimer_TextBox_textChanged(const QString &arg1)
+{
+    QVector<QLineEdit*> textBoxes;
+    textBoxes.append(ui->LevelName_TextBox);
+    textBoxes.append(ui->NModeTimer_TextBox);
+    textBoxes.append(ui->HModeTimer_TextBox);
+    textBoxes.append(ui->SHModeTimer_TextBox);
+    SetOKButtonEnable(textBoxes, ui->buttonBox->button(QDialogButtonBox::Ok));
+}
+
+void LevelConfigDialog::on_HModeTimer_TextBox_textChanged(const QString &arg1)
+{
+    QVector<QLineEdit*> textBoxes;
+    textBoxes.append(ui->LevelName_TextBox);
+    textBoxes.append(ui->NModeTimer_TextBox);
+    textBoxes.append(ui->HModeTimer_TextBox);
+    textBoxes.append(ui->SHModeTimer_TextBox);
+    SetOKButtonEnable(textBoxes, ui->buttonBox->button(QDialogButtonBox::Ok));
+}
+
+void LevelConfigDialog::on_LevelName_TextBox_textChanged(const QString &arg1)
+{
+    QVector<QLineEdit*> textBoxes;
+    textBoxes.append(ui->LevelName_TextBox);
+    textBoxes.append(ui->NModeTimer_TextBox);
+    textBoxes.append(ui->HModeTimer_TextBox);
+    textBoxes.append(ui->SHModeTimer_TextBox);
+    SetOKButtonEnable(textBoxes, ui->buttonBox->button(QDialogButtonBox::Ok));
 }

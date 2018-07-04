@@ -1,5 +1,5 @@
 #include "Tile16DockWidget.h"
-#include "ui_tile16dockwidget.h"
+#include "ui_Tile16DockWidget.h"
 
 #include <QMouseEvent>
 
@@ -10,6 +10,11 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
     ui->setupUi(this);
     ui->graphicsView->scale(2, 2);
     ui->graphicsView->SetDockWidget(this);
+
+    // Set the fixed height of the info box
+    QFontMetrics fontMetrics(ui->tileInfoTextBox->font());
+    int rowHeight = fontMetrics.lineSpacing();
+    ui->tileInfoGroupBox->setFixedHeight(6 * rowHeight); // TODO: Make this exact, calculate using margins
 }
 
 Tile16DockWidget::~Tile16DockWidget()
@@ -43,7 +48,7 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
         }
     }
     Tile16MAPScene->addPixmap(layerPixmap);
-    ui->label_TIlesetID->setText("Tileset ID: 0x" + QString::number(_tilesetIndex, 16).toUpper());
+    ui->tileSetIDLabel->setText("Tileset ID: 0x" + QString::number(_tilesetIndex, 16).toUpper());
 
     // Add the highlighted tile rectangle
     QPixmap selectionPixmap(16, 16);

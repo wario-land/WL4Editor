@@ -3,6 +3,7 @@
 
 #include <QScrollBar>
 #include <QMouseEvent>
+#include <QTextStream>
 
 void TileGraphicsView::mousePressEvent(QMouseEvent *event)
 {
@@ -19,7 +20,8 @@ void TileGraphicsView::mousePressEvent(QMouseEvent *event)
     int tmpWarioAnimationSlotID = (int) Selectedtileset->Map16WarioAnimationSlotIDTable[tileID];
 
     // Print information about the tile to the user
-    QString infoText = QString::asprintf("Tile ID: %d\nEvent ID: 0x%04X\nWario Animation Slot ID: %d", tileID, eventIndex, tmpWarioAnimationSlotID);
+    QString infoText;
+    infoText.sprintf("Tile ID: %d\nEvent ID: 0x%04X\nWario Animation Slot ID: %d", tileID, eventIndex, tmpWarioAnimationSlotID);
     DockWidget->SetTileInfoText(infoText);
 
     // Set the selected tile location for the graphics view

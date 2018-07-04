@@ -14,6 +14,9 @@ class LevelConfigDialog : public QDialog
 {
     Q_OBJECT
 
+private:
+    Ui::LevelConfigDialog *ui;
+
 public:
     explicit LevelConfigDialog(QWidget *parent = 0);
     ~LevelConfigDialog();
@@ -22,12 +25,11 @@ public:
     int GetHModeTimer();
     int GetNModeTimer();
     int GetSHModeTimer();
-
-private:
-    Ui::LevelConfigDialog *ui;
-    QRegExp *LevelnameRegx;
-    QRegExp *TimerRegx;
-
+private slots:
+    void on_NModeTimer_TextBox_textChanged(const QString &arg1);
+    void on_SHModeTimer_TextBox_textChanged(const QString &arg1);
+    void on_HModeTimer_TextBox_textChanged(const QString &arg1);
+    void on_LevelName_TextBox_textChanged(const QString &arg1);
 };
 
 #endif // LEVELCONFIGDIALOG_H

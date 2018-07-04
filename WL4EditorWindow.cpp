@@ -9,9 +9,7 @@
 #include <QFileDialog>
 #include <QGraphicsScene>
 
-// Prototype for main.cpp function
-void LoadROMFile(std::string);
-
+void LoadROMFile(std::string); // Prototype for main.cpp function
 LevelComponents::Level *CurrentLevel;
 QString statusBarText("Open a ROM file");
 struct DialogParams::PassageAndLevelIndex selectedLevel = { 0, 0 };
@@ -88,6 +86,7 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
 
     // Enable UI that requires a ROM file to be loaded
     ui->loadLevelButton->setEnabled(true);
+    ui->actionLevel_Config->setEnabled(true);
 
     // Load Dock widget
     this->addDockWidget(Qt::RightDockWidgetArea, Tile16SelecterDockWidget);
@@ -144,9 +143,12 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
 void WL4EditorWindow::on_actionLevel_Config_triggered()
 {
     LevelConfigDialog tmpdialog;
-    tmpdialog.InitTextBoxes(CurrentLevel->GetLevelName(), CurrentLevel->GetTimeCountdownCounter(LevelComponents::HardDifficulty), \
-                            CurrentLevel->GetTimeCountdownCounter(LevelComponents::NormalDifficulty), \
-                            CurrentLevel->GetTimeCountdownCounter(LevelComponents::SHardDifficulty));
+    tmpdialog.InitTextBoxes(
+        CurrentLevel->GetLevelName(),
+        CurrentLevel->GetTimeCountdownCounter(LevelComponents::HardDifficulty),
+        CurrentLevel->GetTimeCountdownCounter(LevelComponents::NormalDifficulty),
+        CurrentLevel->GetTimeCountdownCounter(LevelComponents::SHardDifficulty)
+    );
     if(tmpdialog.exec() == QDialog::Accepted)
     {
         CurrentLevel->SetLevelName(tmpdialog.GetNewLevelName());
