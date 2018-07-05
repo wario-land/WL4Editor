@@ -11,6 +11,9 @@ class TileGraphicsView : public QGraphicsView
 private:
     Tile16DockWidget *DockWidget;
 
+protected:
+    void showEvent(QShowEvent *event);
+
 public:
     TileGraphicsView(QWidget *param) : QGraphicsView(param) {}
     void mousePressEvent(QMouseEvent *event);

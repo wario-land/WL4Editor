@@ -10,7 +10,7 @@
 #include <QGraphicsPixmapItem>
 
 namespace Ui {
-class Tile16DockWidget;
+    class Tile16DockWidget;
 }
 
 class Tile16DockWidget : public QDockWidget

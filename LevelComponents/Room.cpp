@@ -161,6 +161,7 @@ namespace LevelComponents
             // TODO
             return scene;
         }
-
+        // ERROR
+        return nullptr;
     }
 }
