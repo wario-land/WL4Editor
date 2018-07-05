@@ -26,6 +26,14 @@ EditModeDockWidget::EditModeDockWidget(QWidget *parent) :
     layerIndices[ui->RadioButton_EditOnLayer1] = 1;
     layerIndices[ui->RadioButton_EditOnLayer2] = 2;
     layerIndices[ui->RadioButton_EditOnLayer3] = 3;
+    difficultyIndices[ui->RadioButton_NMode] = 0;
+    difficultyIndices[ui->RadioButton_HMode] = 1;
+    difficultyIndices[ui->RadioButton_SHMode] = 2;
+
+    //Set the widget height
+    QFontMetrics fontMetrics(ui->CheckBox_AlphaView->font());
+    int rowHeight = fontMetrics.lineSpacing();
+    ui->dockWidgetContents->setFixedHeight(16 * rowHeight); // TODO: Make this exact, calculate using margins
 }
 
 /// <summary>
@@ -46,6 +54,7 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
 {
     QAbstractButton *selectedModeButton = ui->RadioButton_LayerMode->group()->checkedButton();
     QAbstractButton *selectedLayerButton = ui->RadioButton_EditOnLayer0->group()->checkedButton();
+    QAbstractButton *selectedDifficultyButton = ui->RadioButton_NMode->group()->checkedButton();
     struct Ui::EditModeParams params;
     params.editMode = modeEnums[selectedModeButton];
     params.selectedLayer = layerIndices[selectedLayerButton];
@@ -57,5 +66,6 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
     params.doorsEnabled = ui->CheckBox_DoorView->isChecked();
     params.alphaBlendingEnabled = ui->CheckBox_AlphaView->isChecked();
     params.cameraAreasEnabled = ui->CheckBox_CameraView->isChecked();
+    params.seleteddifficulty = difficultyIndices[selectedDifficultyButton];
     return params;
 }

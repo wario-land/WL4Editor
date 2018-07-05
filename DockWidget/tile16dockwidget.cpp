@@ -18,7 +18,8 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
     ui(new Ui::Tile16DockWidget)
 {
     ui->setupUi(this);
-    ui->graphicsView->scale(2, 2);
+    int scalerate = ui->graphicsView->width() / (16 * 8 * 2);
+    ui->graphicsView->scale(scalerate, scalerate);
     ui->graphicsView->SetDockWidget(this);
 
     // Set the fixed height of the info box
