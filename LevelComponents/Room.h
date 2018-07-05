@@ -100,6 +100,7 @@ namespace LevelComponents
         bool IsLayer0ColorBlendingEnable() {return Layer0ColorBlending; }
         int GetEVA() {return Layer0ColorBlendCoefficient_EVA; }
         int GetEVB() {return Layer0ColorBlendCoefficient_EVB; }
+        void ChangeTile(int layerID, int xpos, int ypos, unsigned short TileID);
     };
 }
 

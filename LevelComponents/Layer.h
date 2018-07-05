@@ -35,6 +35,7 @@ namespace LevelComponents
         int GetLayerPriority() { return LayerPriority; }
         void SetLayerPriority(int priority) { LayerPriority = priority; }
         bool IsVisible() { return Visible; }
+        void ChangeTile(int xpos, int ypos, unsigned short TileID);
     };
 }
 
