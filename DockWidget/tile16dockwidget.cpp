@@ -2,7 +2,17 @@
 #include "ui_Tile16DockWidget.h"
 
 #include <QMouseEvent>
+#include <QScrollBar>
 
+/// <summary>
+/// Construct the instance of the Tile16DockWidget.
+/// </summary>
+/// <remarks>
+/// The graphics view is hardcoded to scale at 2x size.
+/// </remarks>
+/// <param name="parent">
+/// The parent QWidget.
+/// </param>
 Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
     QDockWidget(parent),
     ui(new Ui::Tile16DockWidget)
@@ -17,11 +27,25 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
     ui->tileInfoGroupBox->setFixedHeight(6 * rowHeight); // TODO: Make this exact, calculate using margins
 }
 
+/// <summary>
+/// Deconstruct the WL4EditorWindow and clean up its instance objects on the heap.
+/// </summary>
 Tile16DockWidget::~Tile16DockWidget()
 {
     delete ui;
 }
 
+/// <summary>
+/// Set the tileset for the dock widget.
+/// </summary>
+/// <remarks>
+/// Clean up heap objects from last time this funcction was called.
+/// Set up and draw the graphics for the selectable map16 tiles.
+/// Add the semi-transparent square used to highlight the selected tile (initialized to an invisible position)
+/// </remarks>
+/// <param name="_tilesetIndex">
+/// The index of the tileset to display.
+/// </param>
 int Tile16DockWidget::SetTileset(int _tilesetIndex)
 {
     // Clean up heap objects from previous invocations
@@ -34,8 +58,6 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
 
     // Set up scene
     Tile16MAPScene = new QGraphicsScene(0, 0, 8 * 16, (48 * 2) * 16);
-    ui->graphicsView->setScene(Tile16MAPScene);
-    ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     QPixmap layerPixmap(8 * 16, (48 * 2) * 16);
     layerPixmap.fill(Qt::transparent);
 
@@ -55,24 +77,43 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
     const QColor highlightColor(0xFF, 0, 0, 0x7F);
     selectionPixmap.fill(highlightColor);
     SelectionBox = Tile16MAPScene->addPixmap(selectionPixmap);
-    ui->graphicsView->show();
+    SelectionBox->setVisible(false);
+
+    ui->graphicsView->setScene(Tile16MAPScene);
+    ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
     // Re-initialize other settings
     SelectedTile = -1;
-    ui->tileInfoTextBox->clear();
+    SetTileInfoText(QString()); // clear tile info text
 
     return 0;
 }
 
+/// <summary>
+/// Set the text of the tile info box.
+/// </summary>
+/// <param name="str">
+/// The string to display in the text box.
+/// </param>
 void Tile16DockWidget::SetTileInfoText(QString str)
 {
     ui->tileInfoTextBox->setText(str);
 }
 
+/// <summary>
+/// Set the selected tile index for the dock widget, and update the position of the highlight square.
+/// </summary>
+/// <remarks>
+/// The SelectedTile instance variable must be set so it can be obtained when writing tiles to the main graphics view.
+/// </remarks>
+/// <param name="tile">
+/// The map16 tile index that was selected in the graphics view.
+/// </param>
 void Tile16DockWidget::SetSelectedTile(int tile)
 {
     int X = tile & 7;
     int Y = tile >> 3;
     SelectionBox->setPos(X * 16, Y * 16);
+    SelectionBox->setVisible(true);
     SelectedTile = tile;
 }

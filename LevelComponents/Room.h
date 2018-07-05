@@ -3,12 +3,14 @@
 
 #include "Layer.h"
 #include "Tileset.h"
+#include <DockWidget/EditModeDockWidget.h>
 
 #include <vector>
 #include <QGraphicsScene>
 
 namespace LevelComponents
 {
+    // This struct defines the header attributes for a Room. It is arranged similar to its format in the ROM file.
     struct __RoomHeader
     {
         unsigned char TilesetID;
@@ -31,6 +33,7 @@ namespace LevelComponents
         unsigned char DATA_28[4];
     };
 
+    // This struct defines the attributes for a single camera control record in rooms with camera boxes.
     struct __CameraControlRecord
     {
         unsigned char TransboundaryControl; //just set it to be x02
@@ -44,6 +47,7 @@ namespace LevelComponents
         unsigned char ChangedValue;
     };
 
+    // Enumeration of the types of camera control that a room may have
     enum __CameraControlType
     {
         FixedY          = 1,
@@ -51,21 +55,25 @@ namespace LevelComponents
         HasControlAttrs = 3
     };
 
+    // Enumeration of the ways in which we can re-render the main graphics view
     enum RenderUpdateType
     {
-        FullRender,
-        SingleTile,
-        LayerEnable
+        FullRender  = 0,
+        SingleTile  = 1,
+        LayerEnable = 2
     };
 
+    // This struct defines the parameters necessary to perform a rendering update to the main graphics view
     struct RenderUpdateParams
     {
         enum RenderUpdateType type;
-        int tileX;
-        int tileY;
-        bool enabled[4];
+        int tileX = 0;
+        int tileY = 0;
+        struct Ui::EditModeParams mode = {};
+        RenderUpdateParams(enum RenderUpdateType _type) : type(_type) {}
     };
 
+    // The Room class defines a room within the game. Levels consist of multiple rooms interconnected by doors.
     class Room
     {
     private:
