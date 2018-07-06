@@ -20,7 +20,6 @@ namespace LevelComponents
     private:
         enum LayerMappingType MappingType;
         bool Enabled; // Set false to disable backgrounds of type 0x00
-        bool Visible; // Set false to hide this layer in the editor
         std::vector<Tile*> tiles;
         int Width, Height;
         unsigned short *LayerData;
@@ -34,7 +33,6 @@ namespace LevelComponents
         unsigned short *GetLayerData() { return LayerData; }
         int GetLayerPriority() { return LayerPriority; }
         void SetLayerPriority(int priority) { LayerPriority = priority; }
-        bool IsVisible() { return Visible; }
         void ChangeTile(int xpos, int ypos, unsigned short TileID);
     };
 }

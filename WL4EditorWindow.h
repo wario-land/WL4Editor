@@ -30,7 +30,8 @@ protected:
 public:
     explicit WL4EditorWindow(QWidget *parent = 0);
     ~WL4EditorWindow();
-    void RenderScreen();
+    void RenderScreenFull();
+    void RenderScreenVisibilityChange();
     void SetStatusBarText(char *str);
     void LoadRoomUIUpdate();
 

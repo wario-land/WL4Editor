@@ -9,7 +9,7 @@ class TileGraphicsView : public QGraphicsView
     Q_OBJECT
 
 private:
-    Tile16DockWidget *DockWidget;
+    Tile16DockWidget *Map16DockWidget;
 
 protected:
     void showEvent(QShowEvent *event);
@@ -17,7 +17,7 @@ protected:
 public:
     TileGraphicsView(QWidget *param) : QGraphicsView(param) {}
     void mousePressEvent(QMouseEvent *event);
-    void SetDockWidget(Tile16DockWidget *_dockWidget) { DockWidget = _dockWidget; }
+    void SetDockWidget(Tile16DockWidget *_dockWidget) { Map16DockWidget = _dockWidget; }
 };
 
 #endif // TILEGRAPHICSVIEW_H

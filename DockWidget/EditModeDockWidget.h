@@ -37,14 +37,27 @@ class EditModeDockWidget : public QDockWidget
 private:
     Ui::EditModeDockWidget *ui;
 
+    // Internal structures used to quickly obtain the selected options as a struct
     std::map<QAbstractButton*, enum Ui::EditMode> modeEnums;
     std::map<QAbstractButton*, int> layerIndices;
     std::map<QAbstractButton*, int> difficultyIndices;
+    QButtonGroup *modeGroup;
+    QButtonGroup *layerGroup;
+    QButtonGroup *difficultyGroup;
 
 public:
-    explicit EditModeDockWidget(QWidget *parent = 0);
-    ~EditModeDockWidget();
+    explicit EditModeDockWidget(QWidget *parent = 0);    
     struct Ui::EditModeParams GetEditModeParams();
+    ~EditModeDockWidget();
+private slots:
+    void on_CheckBox_Layer0View_stateChanged(int arg1);
+    void on_CheckBox_Layer1View_stateChanged(int arg1);
+    void on_CheckBox_Layer2View_stateChanged(int arg1);
+    void on_CheckBox_Layer3View_stateChanged(int arg1);
+    void on_CheckBox_EntityView_stateChanged(int arg1);
+    void on_CheckBox_DoorView_stateChanged(int arg1);
+    void on_CheckBox_CameraView_stateChanged(int arg1);
+    void on_CheckBox_AlphaView_stateChanged(int arg1);
 };
 
 #endif // EDITMODEDOCKWIDGET_H
