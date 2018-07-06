@@ -14,9 +14,11 @@ namespace WL4Constants
     const int EntitySetInfoPointerTable = 0x78EF78;
     const int EntityTilesetPointerTable = 0x78EBF0;
     const int EntityPalettePointerTable = 0x78EDB4;
+    const int EntityTilesetLengthTable  = 0x3B2C90;
 
     // Miscellaneous definitions
     const int CameraRecordSentinel      = 0x3F9D58;
+    const int SpritesBasicElementTiles  = 0x400AE8; //0x3000 bytes in length
 
     // Other
     const int AvailableSpaceBeginningInROM       = 0x78F970;

@@ -2,7 +2,7 @@
 
 namespace LevelComponents
 {
-void EntitySet::SetPalettes(int startPaletteId, int paletteNum, int paletteSetPtr)
+void EntitySet::LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr)
 {
     for(int i = 0; i < paletteNum; ++i)
     {
@@ -21,12 +21,20 @@ void EntitySet::SetPalettes(int startPaletteId, int paletteNum, int paletteSetPt
     }
 }
 
+void EntitySet::LoadSpritesTiles(int tileaddress, int datalength, int startrow)
+{
+    for(int i = 0; i < (datalength / 32); ++i)
+    {
+        tile8x8data[i + startrow * 32] = new Tile8x8(tileaddress + i * 32, palettes);
+    }
+}
+
 EntitySet::EntitySet(int _EntitySetID, int basicElementPalettePtr)
     {
         this->EntitySetID = _EntitySetID;
         int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + _EntitySetID * 4);
 
-        // Create all 16 color palettes
+        // Load 16 color palettes, ignore the first 3 rows, they are only for wario tiles
         int palettePtr;
         int tmpEntityId;
         int EntityPaletteNum;
@@ -39,7 +47,7 @@ EntitySet::EntitySet(int _EntitySetID, int basicElementPalettePtr)
             if((tmpEntityId > 0x10) && (EntityPaletteNum != currentpaletteID))
             {
                 palettePtr = ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable + 4 * (tmpEntityId - 0x10));
-                SetPalettes(8, EntityPaletteNum - currentpaletteID, palettePtr);
+                LoadSubPalettes(8, EntityPaletteNum - currentpaletteID, palettePtr);
                 currentpaletteID = EntityPaletteNum;
             }
             k++;
@@ -54,8 +62,8 @@ EntitySet::EntitySet(int _EntitySetID, int basicElementPalettePtr)
                 }
             }
         }
-        SetPalettes(3, 5, basicElementPalettePtr); // Load palette 3 - 7 for Basic Element used in the room
-        SetPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable)); // Load palette 15 for treasure boxes
+        LoadSubPalettes(3, 5, basicElementPalettePtr); // Load palette 3 - 7 for Basic Element used in the room
+        LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable)); // Load palette 15 for treasure boxes
         for(int i = 0; i < 2; ++i) // Set palette 0 - 2 all to 0 for Wario Sprites only
         {
             for(int j = 1; j < 16; ++j)
@@ -63,6 +71,36 @@ EntitySet::EntitySet(int _EntitySetID, int basicElementPalettePtr)
                 palettes[i].push_back(0);
             }
         }
+
+        // Load 1024 sprites tiles, ignore first 4 rows, they are wario tiles
+        Tile8x8 *blankTile = Tile8x8::CreateBlankTile(palettes);
+        for(int i = 0; i < (4 * 32); ++i)
+        {
+            tile8x8data[i] = blankTile;
+        }
+        int tiledataptr, tiledatalength;
+        tiledataptr = WL4Constants::SpritesBasicElementTiles; tiledatalength = 0x3000;
+        LoadSpritesTiles(tiledataptr, tiledatalength, 4);
+        k = 0; int currentrow = 16;
+        do
+        {
+            tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
+            if(tmpEntityId == 0) break;
+            tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable + 4 * (tmpEntityId - 0x10));
+            tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (tmpEntityId - 0x10));
+            LoadSpritesTiles(tiledataptr, tiledatalength, currentrow);
+            currentrow += tiledatalength / (32 * 32); k++;
+        }while(1);
+        if(currentrow < 30)
+        {
+            for(int i = currentrow * 32; i < (30 * 32); ++i)
+            {
+                tile8x8data[i] = blankTile;
+            }
+        }
+        tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable);
+        tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable);
+        LoadSpritesTiles(tiledataptr, tiledatalength, 30);
 
         // TODO
     }
