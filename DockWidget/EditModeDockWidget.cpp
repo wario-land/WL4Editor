@@ -87,7 +87,7 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
 }
 
 /// <summary>
-/// Redraw the screen when .
+/// Redraw the screen when the checkbox is toggled.
 /// </summary>
 /// <param name="arg1">
 /// Unused.
@@ -98,42 +98,84 @@ void EditModeDockWidget::on_CheckBox_Layer0View_stateChanged(int arg1)
     singleton->RenderScreenVisibilityChange();
 }
 
+/// <summary>
+/// Redraw the screen when the checkbox is toggled.
+/// </summary>
+/// <param name="arg1">
+/// Unused.
+/// </param>
 void EditModeDockWidget::on_CheckBox_Layer1View_stateChanged(int arg1)
 {
     (void) arg1;
     singleton->RenderScreenVisibilityChange();
 }
 
+/// <summary>
+/// Redraw the screen when the checkbox is toggled.
+/// </summary>
+/// <param name="arg1">
+/// Unused.
+/// </param>
 void EditModeDockWidget::on_CheckBox_Layer2View_stateChanged(int arg1)
 {
     (void) arg1;
     singleton->RenderScreenVisibilityChange();
 }
 
+/// <summary>
+/// Redraw the screen when the checkbox is toggled.
+/// </summary>
+/// <param name="arg1">
+/// Unused.
+/// </param>
 void EditModeDockWidget::on_CheckBox_Layer3View_stateChanged(int arg1)
 {
     (void) arg1;
     singleton->RenderScreenVisibilityChange();
 }
 
+/// <summary>
+/// Redraw the screen when the checkbox is toggled.
+/// </summary>
+/// <param name="arg1">
+/// Unused.
+/// </param>
 void EditModeDockWidget::on_CheckBox_EntityView_stateChanged(int arg1)
 {
     (void) arg1;
     singleton->RenderScreenVisibilityChange();
 }
 
+/// <summary>
+/// Redraw the screen when the checkbox is toggled.
+/// </summary>
+/// <param name="arg1">
+/// Unused.
+/// </param>
 void EditModeDockWidget::on_CheckBox_DoorView_stateChanged(int arg1)
 {
     (void) arg1;
     singleton->RenderScreenVisibilityChange();
 }
 
+/// <summary>
+/// Redraw the screen when the checkbox is toggled.
+/// </summary>
+/// <param name="arg1">
+/// Unused.
+/// </param>
 void EditModeDockWidget::on_CheckBox_CameraView_stateChanged(int arg1)
 {
     (void) arg1;
     singleton->RenderScreenVisibilityChange();
 }
 
+/// <summary>
+/// Redraw the screen when the checkbox is toggled.
+/// </summary>
+/// <param name="arg1">
+/// Unused.
+/// </param>
 void EditModeDockWidget::on_CheckBox_AlphaView_stateChanged(int arg1)
 {
     (void) arg1;
