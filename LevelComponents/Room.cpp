@@ -164,4 +164,9 @@ namespace LevelComponents
         // ERROR
         return nullptr;
     }
+
+    void Room::ChangeTile(int layerID, int xpos, int ypos, unsigned short TileID)
+    {
+        this->layers[layerID]->ChangeTile(xpos, ypos, TileID);
+    }
 }

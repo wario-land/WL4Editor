@@ -125,4 +125,9 @@ namespace LevelComponents
 
         return layerPixmap;
     }
+
+    void Layer::ChangeTile(int xpos, int ypos, unsigned short TileID)
+    {
+        this->LayerData[ypos * this->Height + xpos] = TileID;
+    }
 }

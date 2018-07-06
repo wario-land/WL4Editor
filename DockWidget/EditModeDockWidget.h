@@ -26,6 +26,7 @@ namespace Ui {
         bool doorsEnabled = true;
         bool cameraAreasEnabled = true;
         bool alphaBlendingEnabled = true;
+        int seleteddifficulty = 0;
     };
 }
 
@@ -38,6 +39,7 @@ private:
 
     std::map<QAbstractButton*, enum Ui::EditMode> modeEnums;
     std::map<QAbstractButton*, int> layerIndices;
+    std::map<QAbstractButton*, int> difficultyIndices;
 
 public:
     explicit EditModeDockWidget(QWidget *parent = 0);
