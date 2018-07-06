@@ -5,7 +5,7 @@
 namespace LevelComponents
 {
     Layer::Layer(int layerDataPtr, enum LayerMappingType mappingType, Tileset *tileset) :
-        Enabled(mappingType != LayerDisabled), Visible(true), MappingType(mappingType)
+        Enabled(mappingType != LayerDisabled), MappingType(mappingType)
     {
         if(mappingType == LayerDisabled)
         {

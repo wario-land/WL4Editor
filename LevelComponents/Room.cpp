@@ -17,6 +17,7 @@ namespace LevelComponents
     Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID)
     {
         this->RoomID = _RoomID;
+        memset(RenderedLayers, 0, sizeof(RenderedLayers));
 
         // Copy the room header information
         memcpy(&this->RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
@@ -114,12 +115,22 @@ namespace LevelComponents
         case FullRender:
             {
                 // Order the layers by their priority
-                Layer *drawLayers[4];
-                memcpy(drawLayers, layers, 4 * sizeof(Layer*));
-                qsort(drawLayers, 4, sizeof(Layer*), [](const void *data1, const void *data2){
-                    Layer *layer1 = *(Layer**) data1;
-                    Layer *layer2 = *(Layer**) data2;
-                    return layer2->GetLayerPriority() - layer1->GetLayerPriority();
+                struct DLS
+                {
+                    Layer *layer;
+                    int index;
+                } *drawLayers[4];
+                for(int i = 0; i < 4; ++i)
+                {
+                    struct DLS *newDLS = new struct DLS;
+                    newDLS->layer = layers[i];
+                    newDLS->index = i;
+                    drawLayers[i] = newDLS;
+                }
+                qsort(drawLayers, 4, sizeof(void*), [](const void *data1, const void *data2){
+                    struct DLS *layer1 = *(struct DLS**) data1;
+                    struct DLS *layer2 = *(struct DLS**) data2;
+                    return layer2->layer->GetLayerPriority() - layer1->layer->GetLayerPriority();
                 });
 
                 // Create a graphics scene with the layers added in order of priority
@@ -129,35 +140,39 @@ namespace LevelComponents
                 scene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
                 for(int i = 0; i < 4; ++i)
                 {
-                    if(drawLayers[i]->IsVisible())
+                    QPixmap pixmap = drawLayers[i]->layer->RenderLayer();
+                    if(drawLayers[i]->layer->GetMappingType() == LayerTile8x8)
                     {
-                        QPixmap pixmap = drawLayers[i]->RenderLayer();
-                        if(drawLayers[i]->GetMappingType() == LayerTile8x8)
+                        QPixmap pixmap2(sceneWidth, sceneHeight);
+                        QPainter painter(&pixmap2);
+                        for(int y = 0; y < sceneHeight; y += drawLayers[i]->layer->GetLayerheight() * 8)
                         {
-                            QPixmap pixmap2(sceneWidth, sceneHeight);
-                            QPainter painter(&pixmap2);
-                            for(int y = 0; y < sceneHeight; y += drawLayers[i]->GetLayerheight() * 8)
+                            for(int x = 0; x < sceneWidth; x += drawLayers[i]->layer->GetLayerwidth() * 8)
                             {
-                                for(int x = 0; x < sceneWidth; x += drawLayers[i]->GetLayerwidth() * 8)
-                                {
-                                    QPoint drawDestination(x, y);
-                                    painter.drawImage(drawDestination, pixmap.toImage());
-                                }
+                                QPoint drawDestination(x, y);
+                                painter.drawImage(drawDestination, pixmap.toImage());
                             }
-                            scene->addPixmap(pixmap2);
                         }
-                        else
-                        {
-                            scene->addPixmap(pixmap);
-                        }
+                        pixmap = pixmap2;
                     }
+                    QGraphicsPixmapItem *pixmapItem = scene->addPixmap(pixmap);
+                    RenderedLayers[drawLayers[i]->index] = pixmapItem;
                 }
+            }
+        case LayerEnable:
+            {
+                Ui::EditModeParams *layerVisibility = &(renderParams->mode);
+                for(int i = 0; i < 4; ++i)
+                {
+                    RenderedLayers[i]->setVisible(layerVisibility->layersEnabled[i]);
+                }
+                if(RenderedLayers[4]) RenderedLayers[4]->setVisible(layerVisibility->entitiesEnabled);
+                if(RenderedLayers[5]) RenderedLayers[5]->setVisible(layerVisibility->doorsEnabled);
+                if(RenderedLayers[6]) RenderedLayers[6]->setVisible(layerVisibility->cameraAreasEnabled);
+                if(RenderedLayers[7]) RenderedLayers[7]->setVisible(layerVisibility->alphaBlendingEnabled);
             }
             return scene;
         case SingleTile:
-            // TODO
-            return scene;
-        case LayerEnable:
             // TODO
             return scene;
         }

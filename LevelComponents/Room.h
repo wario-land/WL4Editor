@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
 
 namespace LevelComponents
 {
@@ -91,9 +92,10 @@ namespace LevelComponents
         struct __RoomHeader RoomHeader;
         Layer *layers[4];
         Tileset *tileset;
+        QGraphicsPixmapItem *RenderedLayers[8]; // L0 - 3, E, D, C, A (may not exist)
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
-        int GetTilesetID() {return TilesetID;}
+        int GetTilesetID() { return TilesetID; }
         Tileset *GetTileset() { return tileset; }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);

@@ -15,6 +15,7 @@ struct DialogParams::PassageAndLevelIndex selectedLevel = { 0, 0 };
 int selectedRoom;
 bool firstROMLoaded = false;
 bool editModeWidgetInitialized = false;
+WL4EditorWindow *singleton;
 
 /// <summary>
 /// Construct the instance of the WL4EditorWindow.
@@ -30,12 +31,13 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
     ui(new Ui::WL4EditorWindow)
 {
     ui->setupUi(this);
+    singleton = this;
     ui->graphicsView->scale(2, 2);
     statusBarLabel = new QLabel("Open a ROM file");
     statusBarLabel->setMargin(3);
     ui->statusBar->addWidget(statusBarLabel);
     EditModeWidget = new EditModeDockWidget();
-    Tile16SelecterWidget = new Tile16DockWidget;
+    Tile16SelecterWidget = new Tile16DockWidget();
 }
 
 /// <summary>
@@ -89,7 +91,7 @@ void WL4EditorWindow::LoadRoomUIUpdate()
     ui->roomIncreaseButton->setEnabled((int) CurrentLevel->GetRooms().size() > selectedRoom + 1);
 
     // Render the screen
-    RenderScreen();
+    RenderScreenFull();
 }
 
 /// <summary>
@@ -131,7 +133,6 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
         static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
     );
     selectedRoom = 0;
-    LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
 
     // Only modify UI on the first time a ROM is loaded
@@ -148,15 +149,14 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
         addDockWidget(Qt::RightDockWidgetArea, Tile16SelecterWidget);
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
     }
+
+    LoadRoomUIUpdate();
 }
 
 /// <summary>
 /// Perform a full render of the currently selected room.
 /// </summary>
-/// <param name="str">
-/// The string contents to put in the status bar.
-/// </param>
-void WL4EditorWindow::RenderScreen()
+void WL4EditorWindow::RenderScreenFull()
 {
     // Delete the old scene, if it exists
     QGraphicsScene *oldScene = ui->graphicsView->scene();
@@ -167,7 +167,20 @@ void WL4EditorWindow::RenderScreen()
 
     // Perform a full render of the screen
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::FullRender);
-    QGraphicsScene *scene = CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(nullptr, &renderParams);
+    renderParams.mode = EditModeWidget->GetEditModeParams();
+    QGraphicsScene *scene = CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+    ui->graphicsView->setScene(scene);
+    ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+}
+
+/// <summary>
+/// Perform a re-render of the currently selected room, if only layer visibility has been toggled.
+/// </summary>
+void WL4EditorWindow::RenderScreenVisibilityChange()
+{
+    struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::LayerEnable);
+    renderParams.mode = EditModeWidget->GetEditModeParams();
+    QGraphicsScene *scene = CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
