@@ -34,6 +34,8 @@ public:
     void RenderScreenVisibilityChange();
     void SetStatusBarText(char *str);
     void LoadRoomUIUpdate();
+    Tile16DockWidget *GetTile16DockWidgetPtr() {return Tile16SelecterWidget; }
+    EditModeDockWidget *GetEditModeWidgetPtr() {return EditModeWidget; }
 
 private slots:
     void on_actionOpen_ROM_triggered();

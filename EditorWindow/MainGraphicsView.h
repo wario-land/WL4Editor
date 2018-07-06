@@ -2,6 +2,8 @@
 #define MAINGRAPHICSVIEW_H
 
 #include <QGraphicsView>
+#include "WL4EditorWindow.h"
+#include "LevelComponents/Level.h"
 
 class MainGraphicsView : public QGraphicsView
 {
