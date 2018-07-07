@@ -70,6 +70,7 @@ namespace LevelComponents
         enum RenderUpdateType type;
         int tileX = 0;
         int tileY = 0;
+        unsigned short tileID = 0;
         struct Ui::EditModeParams mode = {};
         RenderUpdateParams(enum RenderUpdateType _type) : type(_type) {}
     };
@@ -104,7 +105,6 @@ namespace LevelComponents
         int GetEVB() {return Layer0ColorBlendCoefficient_EVB; }
         int GetWidth() {return (int)Width; }
         int GetHeight() {return (int)Height; }
-        void ChangeTile(int layerID, int xpos, int ypos, unsigned short TileID);
     };
 }
 

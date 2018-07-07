@@ -84,7 +84,7 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
     // Re-initialize other settings
-    SelectedTile = -1;
+    SelectedTile = (unsigned short) 0xFFFF;
     SetTileInfoText(QString()); // clear tile info text
 
     return 0;
@@ -110,7 +110,7 @@ void Tile16DockWidget::SetTileInfoText(QString str)
 /// <param name="tile">
 /// The map16 tile index that was selected in the graphics view.
 /// </param>
-void Tile16DockWidget::SetSelectedTile(int tile)
+void Tile16DockWidget::SetSelectedTile(unsigned short tile)
 {
     int X = tile & 7;
     int Y = tile >> 3;

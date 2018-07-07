@@ -17,7 +17,6 @@
 #include <unistd.h>
 #endif
 
-extern LevelComponents::Level *CurrentLevel;
 extern int selectedRoom;
 
 void LoadROMFile(std::string filePath)

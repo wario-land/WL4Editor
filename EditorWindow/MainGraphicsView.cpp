@@ -1,12 +1,13 @@
 #include "MainGraphicsView.h"
+#include "Operation.h"
+#include "LevelComponents/Tile.h"
 
 #include <QScrollBar>
 #include <QMouseEvent>
 
 #include <iostream>
+
 extern WL4EditorWindow *singleton;
-extern int selectedRoom;
-extern LevelComponents::Level *CurrentLevel;
 
 // TODO why is this event not getting called?
 void MainGraphicsView::mousePressEvent(QMouseEvent *event)
@@ -18,17 +19,29 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
     int tileY = Y / 32;
     std::cout << "(" << tileX << ", " << tileY << ")" << std::endl;
 
-    // TEST: change the tile (unfinished)
-    if((CurrentLevel->GetRooms()[selectedRoom]->GetWidth() > tileX) && (CurrentLevel->GetRooms()[selectedRoom]->GetHeight() > tileY))
+    // Change the tile
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    if(tileX < room->GetWidth() && tileY < room->GetHeight())
     {
-        if(singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode == Ui::LayerEditMode)
+        enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
+        if(editMode == Ui::LayerEditMode)
         {
-            CurrentLevel->GetRooms()[selectedRoom]->ChangeTile(singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer,
-                                                          tileX, tileY, (unsigned short)singleton->GetTile16DockWidgetPtr()->GetSelectedTile());
-            singleton->RenderScreenVisibilityChange();
+            unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
+            if(selectedTile == 0xFFFF) return;
+            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+            LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
+            int selectedTileIndex = tileX + tileY * room->GetWidth();
+            struct OperationParams params;
+            params.type = ChangeTileOperation;
+            params.tileChangeParams.push_back(TileChangeParams::Create(
+                tileX,
+                tileY,
+                selectedLayer,
+                selectedTile,
+                layer->GetLayerData()[selectedTileIndex]
+            ));
+            ExecuteOperation(&params);
         }
+        // TODO add more cases for other edit mode types
     }
-
-    // TODO
-
 }

@@ -1,20 +1,23 @@
 #include "WL4EditorWindow.h"
 #include "ui_WL4EditorWindow.h"
-#include "LevelComponents/Level.h"
 #include "ROMUtils.h"
+#include "Operation.h"
 
 #include <cstdio>
+#include <deque>
 
 #include <QFileDialog>
 #include <QGraphicsScene>
 
 void LoadROMFile(std::string); // Prototype for main.cpp function
-LevelComponents::Level *CurrentLevel;
+
+// Variables used by WL4EditorWindow
 QString statusBarText("Open a ROM file");
-struct DialogParams::PassageAndLevelIndex selectedLevel = { 0, 0 };
-int selectedRoom;
 bool firstROMLoaded = false;
 bool editModeWidgetInitialized = false;
+
+// Global variables
+struct DialogParams::PassageAndLevelIndex selectedLevel = { 0, 0 };
 WL4EditorWindow *singleton;
 
 /// <summary>
@@ -186,6 +189,19 @@ void WL4EditorWindow::RenderScreenVisibilityChange()
 }
 
 /// <summary>
+/// Perform a re-render of a single changed tile.
+/// </summary>
+void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned short tileID)
+{
+    struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::SingleTile);
+    renderParams.mode = EditModeWidget->GetEditModeParams();
+    renderParams.tileX = tileX;
+    renderParams.tileY = tileY;
+    renderParams.tileID = tileID;
+    CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+}
+
+/// <summary>
 /// Present the user with an "open level" dialog, in which a level can be selected to load.
 /// </summary>
 /// <remarks>
@@ -282,4 +298,14 @@ void WL4EditorWindow::resizeEvent(QResizeEvent *event)
     {
         resizeDocks({EditModeWidget}, {1}, Qt::Vertical);
     }
+}
+
+void WL4EditorWindow::on_actionUndo_triggered()
+{
+    UndoOperation();
+}
+
+void WL4EditorWindow::on_actionRedo_triggered()
+{
+    RedoOperation();
 }
