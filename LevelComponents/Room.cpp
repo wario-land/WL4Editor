@@ -113,7 +113,7 @@ namespace LevelComponents
         {
             Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
             k = 0;
-            while(ROMUtils::CurrentFile[Listaddress + 3 * k] != '\xFF') // maximun for entities number 46
+            while(ROMUtils::CurrentFile[Listaddress + 3 * k] != (unsigned char)'\xFF') // maximun for entities number 46
             {
                 tmpEntityroomattribute.YPos = (int)ROMUtils::CurrentFile[Listaddress + 3 * k];
                 tmpEntityroomattribute.XPos = (int)ROMUtils::CurrentFile[Listaddress + 3 * k + 1];
