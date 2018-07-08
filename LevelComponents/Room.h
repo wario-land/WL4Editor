@@ -6,6 +6,7 @@
 #include <DockWidget/EditModeDockWidget.h>
 
 #include <vector>
+#include <list>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 
@@ -56,6 +57,14 @@ namespace LevelComponents
         HasControlAttrs = 3
     };
 
+    // This struct defines the attributes for a single entity record in RoomHeader EntityTable
+    struct EntityRoomAttribute
+    {
+        int YPos;
+        int XPos;
+        int EntityID;
+    };
+
     // Enumeration of the ways in which we can re-render the main graphics view
     enum RenderUpdateType
     {
@@ -91,6 +100,7 @@ namespace LevelComponents
         int Layer0ColorBlendCoefficient_EVB;
         std::vector<struct __CameraControlRecord*> CameraControlRecords;
         struct __RoomHeader RoomHeader;
+        std::list<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
         Layer *layers[4];
         Tileset *tileset;
         QGraphicsPixmapItem *RenderedLayers[8]; // L0 - 3, E, D, C, A (may not exist)
