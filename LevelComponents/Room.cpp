@@ -37,7 +37,7 @@ namespace LevelComponents
         {
             mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1] & 0x30);
             int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
-            layers[i] = new Layer(layerPtr, mappingType, tileset);
+            layers[i] = new Layer(layerPtr, mappingType);
         }
 
         // Prioritize the layers
@@ -110,29 +110,29 @@ namespace LevelComponents
 
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
+        // Order the layers by their priority
+        struct DLS
+        {
+            Layer *layer;
+            int index;
+        } *drawLayers[4];
+        for(int i = 0; i < 4; ++i)
+        {
+            struct DLS *newDLS = new struct DLS;
+            newDLS->layer = layers[i];
+            newDLS->index = i;
+            drawLayers[i] = newDLS;
+        }
+        qsort(drawLayers, 4, sizeof(void*), [](const void *data1, const void *data2){
+            struct DLS *layer1 = *(struct DLS**) data1;
+            struct DLS *layer2 = *(struct DLS**) data2;
+            return layer2->layer->GetLayerPriority() - layer1->layer->GetLayerPriority();
+        });
+
         switch(renderParams->type)
         {
         case FullRender:
             {
-                // Order the layers by their priority
-                struct DLS
-                {
-                    Layer *layer;
-                    int index;
-                } *drawLayers[4];
-                for(int i = 0; i < 4; ++i)
-                {
-                    struct DLS *newDLS = new struct DLS;
-                    newDLS->layer = layers[i];
-                    newDLS->index = i;
-                    drawLayers[i] = newDLS;
-                }
-                qsort(drawLayers, 4, sizeof(void*), [](const void *data1, const void *data2){
-                    struct DLS *layer1 = *(struct DLS**) data1;
-                    struct DLS *layer2 = *(struct DLS**) data2;
-                    return layer2->layer->GetLayerPriority() - layer1->layer->GetLayerPriority();
-                });
-
                 // Create a graphics scene with the layers added in order of priority
                 int sceneWidth = Width * 16;
                 int sceneHeight = Height * 16;
@@ -140,14 +140,14 @@ namespace LevelComponents
                 scene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
                 for(int i = 0; i < 4; ++i)
                 {
-                    QPixmap pixmap = drawLayers[i]->layer->RenderLayer();
+                    QPixmap pixmap = drawLayers[i]->layer->RenderLayer(tileset);
                     if(drawLayers[i]->layer->GetMappingType() == LayerTile8x8)
                     {
                         QPixmap pixmap2(sceneWidth, sceneHeight);
                         QPainter painter(&pixmap2);
-                        for(int y = 0; y < sceneHeight; y += drawLayers[i]->layer->GetLayerheight() * 8)
+                        for(int y = 0; y < sceneHeight; y += drawLayers[i]->layer->GetLayerHeight() * 8)
                         {
-                            for(int x = 0; x < sceneWidth; x += drawLayers[i]->layer->GetLayerwidth() * 8)
+                            for(int x = 0; x < sceneWidth; x += drawLayers[i]->layer->GetLayerWidth() * 8)
                             {
                                 QPoint drawDestination(x, y);
                                 painter.drawImage(drawDestination, pixmap.toImage());
@@ -158,6 +158,7 @@ namespace LevelComponents
                     QGraphicsPixmapItem *pixmapItem = scene->addPixmap(pixmap);
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
                 }
+                // TODO render other layers
             }
         case LayerEnable:
             {
@@ -173,15 +174,20 @@ namespace LevelComponents
             }
             return scene;
         case SingleTile:
-            // TODO
+            {
+                // TODO this is broken
+                Layer *layer = layers[renderParams->mode.selectedLayer];
+                layer->ReRenderTile(renderParams->tileX, renderParams->tileY, renderParams->tileID, tileset);
+                QGraphicsPixmapItem *item = RenderedLayers[renderParams->mode.selectedLayer];
+                int units = layer->GetMappingType() == LayerMap16 ? 16 : 8;
+                int X = renderParams->tileX * units;
+                int Y = renderParams->tileY * units;
+                QPixmap pm = item->pixmap();
+                layer->GetTiles()[renderParams->tileID]->DrawTile(&pm, X, Y);
+            }
             return scene;
         }
         // ERROR
         return nullptr;
-    }
-
-    void Room::ChangeTile(int layerID, int xpos, int ypos, unsigned short TileID)
-    {
-        this->layers[layerID]->ChangeTile(xpos, ypos, TileID);
     }
 }

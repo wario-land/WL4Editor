@@ -39,7 +39,7 @@ void TileGraphicsView::mousePressEvent(QMouseEvent *event)
     Map16DockWidget->SetTileInfoText(infoText);
 
     // Set the selected tile location for the graphics view
-    Map16DockWidget->SetSelectedTile(tileID);
+    Map16DockWidget->SetSelectedTile((unsigned short) tileID);
 }
 
 /// <summary>

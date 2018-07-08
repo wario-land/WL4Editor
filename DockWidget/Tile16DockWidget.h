@@ -26,14 +26,14 @@ private:
     LevelComponents::Tileset *SelectedTileset = nullptr;
     QGraphicsScene *Tile16MAPScene = nullptr;
     QGraphicsPixmapItem *SelectionBox;
-    int SelectedTile;
+    unsigned short SelectedTile;
 
 public:
     void SetTileInfoText(QString str);
     int SetTileset(int _tilesetIndex);
     LevelComponents::Tileset *GetSelectedTileset() { return SelectedTileset; }
-    void SetSelectedTile(int tile);
-    int GetSelectedTile() { return SelectedTile; }
+    void SetSelectedTile(unsigned short tile);
+    unsigned short GetSelectedTile() { return SelectedTile; }
 };
 
 #endif // TILE16DOCKWIDGET_H

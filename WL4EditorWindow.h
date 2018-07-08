@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QLabel>
 
+#include "LevelComponents/Level.h"
 #include "LevelComponents/Room.h"
 #include "Dialog/ChooseLevelDialog.h"
 #include "DockWidget/Tile16DockWidget.h"
@@ -23,6 +24,8 @@ private:
     QLabel *statusBarLabel;
     Tile16DockWidget *Tile16SelecterWidget;
     EditModeDockWidget *EditModeWidget;
+    LevelComponents::Level *CurrentLevel = nullptr;
+    int selectedRoom = 0;
 
 protected:
     void resizeEvent(QResizeEvent *event);
@@ -32,10 +35,12 @@ public:
     ~WL4EditorWindow();
     void RenderScreenFull();
     void RenderScreenVisibilityChange();
+    void RenderScreenTileChange(int tileX, int tileY, unsigned short tileID);
     void SetStatusBarText(char *str);
     void LoadRoomUIUpdate();
-    Tile16DockWidget *GetTile16DockWidgetPtr() {return Tile16SelecterWidget; }
-    EditModeDockWidget *GetEditModeWidgetPtr() {return EditModeWidget; }
+    Tile16DockWidget *GetTile16DockWidgetPtr() { return Tile16SelecterWidget; }
+    EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
+    LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
 
 private slots:
     void on_actionOpen_ROM_triggered();
@@ -43,6 +48,8 @@ private slots:
     void on_roomDecreaseButton_clicked();
     void on_roomIncreaseButton_clicked();
     void on_actionLevel_Config_triggered();
+    void on_actionUndo_triggered();
+    void on_actionRedo_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

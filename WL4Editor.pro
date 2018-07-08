@@ -34,6 +34,7 @@ SOURCES += \
     LevelComponents/Tile.cpp \
     LevelComponents/Tileset.cpp \
     ROMUtils.cpp \
+    Operation.cpp \
     Dialog/ChooseLevelDialog.cpp \
     DockWidget/Tile16DockWidget.cpp \
     DockWidget/TileGraphicsView.cpp \
@@ -58,7 +59,8 @@ HEADERS += \
     EditorWindow/MainGraphicsView.h \
     LevelComponents/EntitySet.h \
     Dialog/LevelConfigDialog.h \
-    DockWidget/EditModeDockWidget.h
+    DockWidget/EditModeDockWidget.h \
+    Operation.h
 
 FORMS += \
         WL4EditorWindow.ui \

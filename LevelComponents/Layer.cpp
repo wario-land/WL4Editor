@@ -4,7 +4,7 @@
 
 namespace LevelComponents
 {
-    Layer::Layer(int layerDataPtr, enum LayerMappingType mappingType, Tileset *tileset) :
+    Layer::Layer(int layerDataPtr, enum LayerMappingType mappingType) :
         Enabled(mappingType != LayerDisabled), MappingType(mappingType)
     {
         if(mappingType == LayerDisabled)
@@ -67,10 +67,13 @@ namespace LevelComponents
         // Was layer decompression successful?
         if(LayerData == nullptr)
             std::cout << "Failed to decomporess layer data: " << (layerDataPtr + 1) << std::endl;
+    }
 
+    QPixmap Layer::RenderLayer(Tileset *tileset)
+    {
         // Create tiles
         tiles = std::vector<Tile*>(Width * Height);
-        if(mappingType == LayerMap16)
+        if(MappingType == LayerMap16)
         {
             // For 16x16 tiles, just copy the tiles from the map16
             TileMap16 **map16 = tileset->GetMap16Data();
@@ -79,7 +82,7 @@ namespace LevelComponents
                 tiles[i] = map16[LayerData[i]];
             }
         }
-        else if(mappingType == LayerTile8x8)
+        else if(MappingType == LayerTile8x8)
         {
             // For 8x8 tiles, we must use the copy constructor and set each tile's properties
             Tile8x8 **tile8x8 = tileset->GetTile8x8Data();
@@ -93,10 +96,7 @@ namespace LevelComponents
                 tiles[i] = newTile;
             }
         }
-    }
 
-    QPixmap Layer::RenderLayer()
-    {
         // Set the units we are drawing in (depending on the Tile type)
         int units;
         switch(MappingType)
@@ -126,10 +126,23 @@ namespace LevelComponents
         return layerPixmap;
     }
 
-    void Layer::ChangeTile(int xpos, int ypos, unsigned short TileID)
+    void Layer::ReRenderTile(int X, int Y, unsigned short TileID, Tileset *tileset)
     {
-        this->LayerData[ypos * this->Height + xpos] = TileID;
-
-        // TODO
+        int index = X + Y * Width;
+        LayerData[index] = TileID;
+        if(MappingType == LayerMap16)
+        {
+            tiles[index] = tileset->GetMap16Data()[TileID];
+        }
+        else if(MappingType == LayerTile8x8)
+        {
+            Tile8x8 *newTile = new Tile8x8(tileset->GetTile8x8Data()[0x200 + (TileID & 0x3FF)]);
+            newTile->SetFlipX((TileID & (1 << 10)) != 0);
+            newTile->SetFlipY((TileID & (1 << 11)) != 0);
+            newTile->SetPaletteIndex((TileID >> 12) & 0xF);
+            delete tiles[index];
+            tiles[index] = newTile;
+        }
+        else std::cout << "WARNING: Invalid mapping type ecountered in Layer::ChangeTile" << std::endl;
     }
 }
