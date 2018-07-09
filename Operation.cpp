@@ -31,9 +31,8 @@ static void PerformOperation(struct OperationParams *operation)
             int index = tcp->tileX + tcp->tileY * room->GetWidth();
             layer->GetLayerData()[index] = tcp->newTile;
             // Re-render the tile
-            //singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile); // TODO fix
+            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile);
         }
-        singleton->RenderScreenFull(); // TODO call a tile change render function
         break;
     }
 }
@@ -60,9 +59,8 @@ static void BackTrackOperation(struct OperationParams *operation)
             int index = tcp->tileX + tcp->tileY * room->GetWidth();
             layer->GetLayerData()[index] = tcp->oldTile;
             // Re-render the tile
-            //singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile); // TODO fix
+            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile);
         }
-        singleton->RenderScreenFull(); // TODO call a tile change render function
         break;
     }
 }
@@ -83,6 +81,7 @@ void ExecuteOperation(struct OperationParams *operation)
         operationHistory.pop_front();
     }
     operationHistory.push_front(operation);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -98,8 +97,12 @@ void UndoOperation()
     // We cannot undo past the end of the deque
     if(operationIndex < operationHistory.size())
     {
-        // TODO not working
         BackTrackOperation(operationHistory[operationIndex++]);
+        // If the entire operation history is undone, then there are no unsaved changes
+        if(operationIndex == operationHistory.size())
+        {
+            singleton->SetUnsavedChanges(false);
+        }
     }
 }
 
@@ -116,7 +119,20 @@ void RedoOperation()
     // We cannot redo past the front of the deque
     if(operationIndex)
     {
-        // TODO not working
-        PerformOperation(operationHistory[operationIndex--]);
+        PerformOperation(operationHistory[--operationIndex]);
+        // Performing a "redo" will make unsaved changes
+        singleton->SetUnsavedChanges(true);
     }
+}
+
+/// <summary>
+/// Reset the undo deque.
+/// </summary>
+/// <remarks>
+/// This is necessary to ensure that undo history does not persist between multiple levels.
+/// </remarks>
+void ResetUndoHistory()
+{
+    operationHistory.clear();
+    operationIndex = 0;
 }

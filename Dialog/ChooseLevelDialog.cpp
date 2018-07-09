@@ -41,6 +41,7 @@ void ChooseLevelDialog::ConfigureLevelComboBox(int level)
 
 void ChooseLevelDialog::on_comboBox_Passage_currentTextChanged(const QString &arg1)
 {
+    (void) arg1;
     ConfigureLevelComboBox(0);
 }
 

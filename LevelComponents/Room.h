@@ -104,17 +104,18 @@ namespace LevelComponents
         Layer *layers[4];
         Tileset *tileset;
         QGraphicsPixmapItem *RenderedLayers[8]; // L0 - 3, E, D, C, A (may not exist)
+
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
         int GetTilesetID() { return TilesetID; }
         Tileset *GetTileset() { return tileset; }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
-        bool IsLayer0ColorBlendingEnable() {return Layer0ColorBlending; }
-        int GetEVA() {return Layer0ColorBlendCoefficient_EVA; }
-        int GetEVB() {return Layer0ColorBlendCoefficient_EVB; }
-        int GetWidth() {return (int)Width; }
-        int GetHeight() {return (int)Height; }
+        bool IsLayer0ColorBlendingEnable() { return Layer0ColorBlending; }
+        int GetEVA() { return Layer0ColorBlendCoefficient_EVA; }
+        int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
+        int GetWidth() { return (int) Width; }
+        int GetHeight() { return (int) Height; }
     };
 }
 

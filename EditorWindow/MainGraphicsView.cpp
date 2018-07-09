@@ -12,6 +12,8 @@ extern WL4EditorWindow *singleton;
 // TODO why is this event not getting called?
 void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 {
+    if(!singleton->FirstROMIsLoaded()) return;
+
     // Get the ID of the tile that was clicked
     int X = event->x() + horizontalScrollBar()->sliderPosition();
     int Y = event->y() + verticalScrollBar()->sliderPosition();
@@ -31,16 +33,16 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
             LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
             int selectedTileIndex = tileX + tileY * room->GetWidth();
-            struct OperationParams params;
-            params.type = ChangeTileOperation;
-            params.tileChangeParams.push_back(TileChangeParams::Create(
+            struct OperationParams *params = new struct OperationParams();
+            params->type = ChangeTileOperation;
+            params->tileChangeParams.push_back(TileChangeParams::Create(
                 tileX,
                 tileY,
                 selectedLayer,
                 selectedTile,
                 layer->GetLayerData()[selectedTileIndex]
             ));
-            ExecuteOperation(&params);
+            ExecuteOperation(params);
         }
         // TODO add more cases for other edit mode types
     }

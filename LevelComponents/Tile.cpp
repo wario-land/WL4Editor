@@ -6,6 +6,8 @@
 #include <QPainter>
 #include <QPoint>
 
+#include <iostream>
+
 namespace LevelComponents
 {
     Tile8x8::Tile8x8(int dataPtr, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
@@ -35,6 +37,7 @@ namespace LevelComponents
     void Tile8x8::DrawTile(QPixmap *layerPixmap, int x, int y)
     {
         QPainter painter(layerPixmap);
+        painter.setCompositionMode(QPainter::CompositionMode_Source);
         QPixmap tilePixmap = QPixmap::fromImage(ImageData->mirrored(FlipX, FlipY));
         QPoint drawDestination(x, y);
         painter.drawImage(drawDestination, tilePixmap.toImage());

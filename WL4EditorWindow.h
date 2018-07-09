@@ -26,6 +26,10 @@ private:
     EditModeDockWidget *EditModeWidget;
     LevelComponents::Level *CurrentLevel = nullptr;
     int selectedRoom = 0;
+    bool UnsavedChanges = false;
+    bool firstROMLoaded = false;
+
+    bool UnsavedChangesWarning();
 
 protected:
     void resizeEvent(QResizeEvent *event);
@@ -41,6 +45,8 @@ public:
     Tile16DockWidget *GetTile16DockWidgetPtr() { return Tile16SelecterWidget; }
     EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
+    void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
+    bool FirstROMIsLoaded() { return firstROMLoaded; }
 
 private slots:
     void on_actionOpen_ROM_triggered();

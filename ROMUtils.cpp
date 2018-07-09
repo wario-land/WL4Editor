@@ -224,13 +224,13 @@ namespace ROMUtils
         int runData = 0;
         while(1)
         {
-            if((CurrentFile[dst] == '\xFF') && (dst < 0x800000) && (runData < (NewDataLength + 8)))
+            if((CurrentFile[dst] == (unsigned char) '\xFF') && (dst < 0x800000) && (runData < (NewDataLength + 8)))
             {
                 dst++;
                 runData++;
                 continue;
             }
-            else if(dst = 0x800000)
+            else if(dst == 0x800000)
             {
                 return -2;
             }
@@ -238,7 +238,7 @@ namespace ROMUtils
             {
                 return (dst - runData);
             }
-            else if(CurrentFile[dst] != '\xFF')
+            else if(CurrentFile[dst] != (unsigned char) '\xFF')
             {
                 if(!strncmp((const char*) (CurrentFile + dst), "STAR", 4))
                 {

@@ -8,12 +8,12 @@
 
 #include <QFileDialog>
 #include <QGraphicsScene>
+#include <QMessageBox>
 
 void LoadROMFile(std::string); // Prototype for main.cpp function
 
 // Variables used by WL4EditorWindow
 QString statusBarText("Open a ROM file");
-bool firstROMLoaded = false;
 bool editModeWidgetInitialized = false;
 
 // Global variables
@@ -163,7 +163,7 @@ void WL4EditorWindow::RenderScreenFull()
 {
     // Delete the old scene, if it exists
     QGraphicsScene *oldScene = ui->graphicsView->scene();
-    if(oldScene == nullptr)
+    if(oldScene)
     {
         delete oldScene;
     }
@@ -202,6 +202,23 @@ void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned shor
 }
 
 /// <summary>
+/// Present the user with a warning if there are unsaved changes.
+/// </summary>
+/// <return>
+/// True if there are no unsaved changes, or the user clicks OK on the dialog.
+/// </return>
+bool WL4EditorWindow::UnsavedChangesWarning()
+{
+    return UnsavedChanges ? QMessageBox::warning(
+        singleton,
+        "Unsaved Changes",
+        "There are unsaved changes. If you load another level, these will be lost. Load level anyway?",
+        QMessageBox::Ok | QMessageBox::Cancel,
+        QMessageBox::Cancel
+    ) == QMessageBox::Ok : true;
+}
+
+/// <summary>
 /// Present the user with an "open level" dialog, in which a level can be selected to load.
 /// </summary>
 /// <remarks>
@@ -209,6 +226,12 @@ void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned shor
 /// </remarks>
 void WL4EditorWindow::on_loadLevelButton_clicked()
 {
+    // Check for unsaved operations
+    if(!UnsavedChangesWarning())
+    {
+        return;
+    }
+
     // Load the first level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
     if(tmpdialog.exec() == QDialog::Accepted) {
@@ -221,6 +244,10 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         LoadRoomUIUpdate();
         int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
+
+        // Set program control changes
+        UnsavedChanges = false;
+        ResetUndoHistory();
     }
 }
 
@@ -233,10 +260,20 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
 /// </remarks>
 void WL4EditorWindow::on_roomDecreaseButton_clicked()
 {
+    // Check for unsaved operations
+    if(!UnsavedChangesWarning())
+    {
+        return;
+    }
+
     --selectedRoom;
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
+
+    // Set program control changes
+    UnsavedChanges = false;
+    ResetUndoHistory();
 }
 
 /// <summary>
@@ -248,10 +285,20 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
 /// </remarks>
 void WL4EditorWindow::on_roomIncreaseButton_clicked()
 {
+    // Check for unsaved operations
+    if(!UnsavedChangesWarning())
+    {
+        return;
+    }
+
     ++selectedRoom;
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
+
+    // Set program control changes
+    UnsavedChanges = false;
+    ResetUndoHistory();
 }
 
 /// <summary>
@@ -262,6 +309,9 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
 /// </remarks>
 void WL4EditorWindow::on_actionLevel_Config_triggered()
 {
+    // TODO updates to the level config should go through the undo history queue in Operations.cpp
+    // TODO we should probably differentiate between room and level changes
+
     // Show a level config dialog to the user
     LevelConfigDialog dialog;
     dialog.InitTextBoxes(

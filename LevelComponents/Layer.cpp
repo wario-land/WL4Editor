@@ -5,7 +5,7 @@
 namespace LevelComponents
 {
     Layer::Layer(int layerDataPtr, enum LayerMappingType mappingType) :
-        Enabled(mappingType != LayerDisabled), MappingType(mappingType)
+        MappingType(mappingType), Enabled(mappingType != LayerDisabled)
     {
         if(mappingType == LayerDisabled)
         {
@@ -58,7 +58,7 @@ namespace LevelComponents
                         rearranged[(j << 6) + k + 32] = LayerData[(j << 5) + k + 1024];
                     }
                 }
-                void *tmp = LayerData;
+                unsigned short *tmp = LayerData;
                 LayerData = rearranged;
                 delete[] tmp;
             }
@@ -66,11 +66,24 @@ namespace LevelComponents
 
         // Was layer decompression successful?
         if(LayerData == nullptr)
-            std::cout << "Failed to decomporess layer data: " << (layerDataPtr + 1) << std::endl;
+            std::cout << "Failed to decompress layer data: " << (layerDataPtr + 1) << std::endl;
     }
 
     QPixmap Layer::RenderLayer(Tileset *tileset)
     {
+        // Set the units we are drawing in (depending on the Tile type)
+        int units;
+        switch(MappingType)
+        {
+            case LayerDisabled:
+                return QPixmap();
+            case LayerMap16:
+                units = 16;
+                break;
+            case LayerTile8x8:
+                units = 8;
+        }
+
         // Create tiles
         tiles = std::vector<Tile*>(Width * Height);
         if(MappingType == LayerMap16)
@@ -97,19 +110,6 @@ namespace LevelComponents
             }
         }
 
-        // Set the units we are drawing in (depending on the Tile type)
-        int units;
-        switch(MappingType)
-        {
-            case LayerDisabled:
-                return QPixmap();
-            case LayerMap16:
-                units = 16;
-                break;
-            case LayerTile8x8:
-                units = 8;
-        }
-
         // Initialize the QPixmap with transparency
         QPixmap layerPixmap(Width * units, Height * units);
         layerPixmap.fill(Qt::transparent);
@@ -129,7 +129,6 @@ namespace LevelComponents
     void Layer::ReRenderTile(int X, int Y, unsigned short TileID, Tileset *tileset)
     {
         int index = X + Y * Width;
-        LayerData[index] = TileID;
         if(MappingType == LayerMap16)
         {
             tiles[index] = tileset->GetMap16Data()[TileID];
