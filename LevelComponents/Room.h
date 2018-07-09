@@ -3,6 +3,7 @@
 
 #include "Layer.h"
 #include "Tileset.h"
+#include "Door.h"
 #include <DockWidget/EditModeDockWidget.h>
 
 #include <vector>
@@ -103,12 +104,14 @@ namespace LevelComponents
         std::list<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
         Layer *layers[4];
         Tileset *tileset;
+        std::vector<Door*> doors;
         QGraphicsPixmapItem *RenderedLayers[8]; // L0 - 3, E, D, C, A (may not exist)
 
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
         int GetTilesetID() { return TilesetID; }
         Tileset *GetTileset() { return tileset; }
+        void PushBack_Door(Door* newdoor) { doors.push_back(newdoor); }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
         bool IsLayer0ColorBlendingEnable() { return Layer0ColorBlending; }

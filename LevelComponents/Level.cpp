@@ -102,6 +102,12 @@ namespace LevelComponents
             rooms.push_back(new Room(roomTableAddress + i * 0x2C, i, levelIndex));
         }
 
+        // Distribute door data to every room
+        for(unsigned int i = 0; i < this->doors.size(); ++i)
+        {
+            rooms[this->doors[i]->GetRoomID()]->PushBack_Door(this->doors[i]);
+        }
+
         // Load the level name
         int LevelNameAddress = ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4);
         LoadLevelName(LevelNameAddress);

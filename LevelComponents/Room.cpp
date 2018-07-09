@@ -184,6 +184,22 @@ namespace LevelComponents
                 // TODO render entity layer
 
                 // TODO render door layer
+                QPixmap *doorPixmap = new QPixmap(this->GetWidth() * 16, this->GetHeight() * 16);
+                QPainter doorPainter(doorPixmap);
+                doorPainter.setBrush(Qt::red);
+                doorPainter.setPen(Qt::darkRed);
+                for(unsigned int i = 0; i < this->doors.size(); i++)
+                {
+                    int x1 = this->doors[i]->GetX1() * 16;
+                    int y1 = this->doors[i]->GetY1() * 16;
+                    int width1 = (qAbs(this->doors[i]->GetX1() - this->doors[i]->GetX2())+1) * 16;
+                    int height1 = (qAbs(this->doors[i]->GetY1() - this->doors[i]->GetY2())+1) * 16;
+                    doorPainter.drawRect(x1, y1, width1, height1);
+                }
+                QGraphicsPixmapItem *doorpixmapItem = scene->addPixmap(*doorPixmap);
+                doorpixmapItem->setZValue(Z++);
+                RenderedLayers[5] = doorpixmapItem;
+                RenderedLayers[5]->setOpacity(0.5);
 
                 // TODO render camera box layer
 
