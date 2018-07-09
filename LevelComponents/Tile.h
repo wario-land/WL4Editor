@@ -19,6 +19,7 @@ namespace LevelComponents
         Tile(enum TileType _type) : Type(_type) { }
     public:
         virtual void DrawTile(QPixmap *layerPixmap, int x, int y) = 0;
+        virtual ~Tile() {}
     };
 
     class Tile8x8 : public Tile
@@ -29,6 +30,7 @@ namespace LevelComponents
         int paletteIndex = 0;
         bool FlipX = false;
         bool FlipY = false;
+
     public:
         Tile8x8(QVector<QRgb> *_palettes) : Tile(TileType8x8),
             ImageData(new QImage(8, 8, QImage::Format_Indexed8)),
@@ -49,12 +51,14 @@ namespace LevelComponents
             paletteIndex = index;
             ImageData->setColorTable(palettes[paletteIndex]);
         }
+        ~Tile8x8() {}
     };
 
     class TileMap16 : public Tile
     {
     private:
         Tile8x8 *TileData[4];
+
     public:
         TileMap16() : Tile(TileTypeMap16) { }
         TileMap16(Tile8x8 *t0, Tile8x8 *t1, Tile8x8 *t2, Tile8x8 *t3) : Tile(TileTypeMap16)
@@ -71,6 +75,7 @@ namespace LevelComponents
             TileData[2]->DrawTile(layerPixmap, x, y + 8);
             TileData[3]->DrawTile(layerPixmap, x + 8, y + 8);
         }
+        ~TileMap16() {}
     };
 }
 

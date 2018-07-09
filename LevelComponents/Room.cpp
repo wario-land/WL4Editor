@@ -6,6 +6,8 @@
 #include <cstring>
 #include <QPainter>
 
+#include <iostream>
+
 namespace LevelComponents
 {
     /// <summary>
@@ -128,34 +130,35 @@ namespace LevelComponents
 
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
-        // Order the layers by their priority
-        struct DLS
-        {
-            Layer *layer;
-            int index;
-        } *drawLayers[4];
-        for(int i = 0; i < 4; ++i)
-        {
-            struct DLS *newDLS = new struct DLS;
-            newDLS->layer = layers[i];
-            newDLS->index = i;
-            drawLayers[i] = newDLS;
-        }
-        qsort(drawLayers, 4, sizeof(void*), [](const void *data1, const void *data2){
-            struct DLS *layer1 = *(struct DLS**) data1;
-            struct DLS *layer2 = *(struct DLS**) data2;
-            return layer2->layer->GetLayerPriority() - layer1->layer->GetLayerPriority();
-        });
-
         switch(renderParams->type)
         {
         case FullRender:
             {
+                // Order the layers by their priority
+                struct DLS
+                {
+                    Layer *layer;
+                    int index;
+                } *drawLayers[4];
+                for(int i = 0; i < 4; ++i)
+                {
+                    struct DLS *newDLS = new struct DLS;
+                    newDLS->layer = layers[i];
+                    newDLS->index = i;
+                    drawLayers[i] = newDLS;
+                }
+                qsort(drawLayers, 4, sizeof(void*), [](const void *data1, const void *data2){
+                    struct DLS *layer1 = *(struct DLS**) data1;
+                    struct DLS *layer2 = *(struct DLS**) data2;
+                    return layer2->layer->GetLayerPriority() - layer1->layer->GetLayerPriority();
+                });
+
                 // Create a graphics scene with the layers added in order of priority
                 int sceneWidth = Width * 16;
                 int sceneHeight = Height * 16;
                 if(scene) { delete scene; }
                 scene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
+                int Z = 0;
                 for(int i = 0; i < 4; ++i)
                 {
                     QPixmap pixmap = drawLayers[i]->layer->RenderLayer(tileset);
@@ -174,17 +177,27 @@ namespace LevelComponents
                         pixmap = pixmap2;
                     }
                     QGraphicsPixmapItem *pixmapItem = scene->addPixmap(pixmap);
+                    pixmapItem->setZValue(Z++);
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
                 }
-                // TODO render other layers
+
+                // TODO render entity layer
+
+                // TODO render door layer
+
+                // TODO render camera box layer
+
             }
         case LayerEnable:
             {
+                // Enable visibility of the foreground and background layers
                 Ui::EditModeParams *layerVisibility = &(renderParams->mode);
                 for(int i = 0; i < 4; ++i)
                 {
                     RenderedLayers[i]->setVisible(layerVisibility->layersEnabled[i]);
                 }
+
+                // Enable the visibility of the sprite and editor overlay layers
                 if(RenderedLayers[4]) RenderedLayers[4]->setVisible(layerVisibility->entitiesEnabled);
                 if(RenderedLayers[5]) RenderedLayers[5]->setVisible(layerVisibility->doorsEnabled);
                 if(RenderedLayers[6]) RenderedLayers[6]->setVisible(layerVisibility->cameraAreasEnabled);
@@ -193,15 +206,23 @@ namespace LevelComponents
             return scene;
         case SingleTile:
             {
-                // TODO this is broken
+                // Re-render the QImage for the changed tile
                 Layer *layer = layers[renderParams->mode.selectedLayer];
                 layer->ReRenderTile(renderParams->tileX, renderParams->tileY, renderParams->tileID, tileset);
+
+                // Obtain the old QPixmap from the previously-rendered graphic layers
                 QGraphicsPixmapItem *item = RenderedLayers[renderParams->mode.selectedLayer];
+
+                // Draw the new tile graphics over the position of the old tile in the QPixmap
+                QPixmap pm(item->pixmap());
                 int units = layer->GetMappingType() == LayerMap16 ? 16 : 8;
                 int X = renderParams->tileX * units;
                 int Y = renderParams->tileY * units;
-                QPixmap pm = item->pixmap();
-                layer->GetTiles()[renderParams->tileID]->DrawTile(&pm, X, Y);
+                int tileDataIndex = renderParams->tileX + renderParams->tileY * layer->GetLayerWidth();
+                layer->GetTiles()[tileDataIndex]->DrawTile(&pm, X, Y);
+
+                // Set the new QPixmap for the graphics item on the QGraphicsScene
+                item->setPixmap(pm);
             }
             return scene;
         }

@@ -55,5 +55,6 @@ struct OperationParams
 void ExecuteOperation(struct OperationParams *operation);
 void UndoOperation();
 void RedoOperation();
+void ResetUndoHistory();
 
 #endif // OPERATION_H
