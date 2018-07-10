@@ -50,6 +50,7 @@ namespace LevelComponents
 
         // Methods
         Door *GetDestinationDoor() { return *DestinationDoor; }
+        int GetRoomID() {return (int) this->RoomID; }
         void SetDestinationDoor(Door *otherDoor) { DestinationDoor = std::make_shared<Door*>(otherDoor); }
         void SetDoorDisplacement(signed int _X_Displacement, signed int _Y_Displacement);
         void SetDoorDisplacementROM(unsigned char _X_Displacement, unsigned char _Y_Displacement);
@@ -59,6 +60,10 @@ namespace LevelComponents
         void SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
         void SetDoorType(enum DoorType _DoorType) { type = _DoorType; }
         bool IsUnused();
+        int GetX1() {return this->X1; }
+        int GetY1() {return this->Y1; }
+        int GetX2() {return this->X2; }
+        int GetY2() {return this->Y2; }
         //TODO: GenerateDoorSavingData()  (ssp)
     };
 }
