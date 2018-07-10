@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#define MIN(x,y) ((x)<(y)?(x):(y))
+
 namespace LevelComponents
 {
     /// <summary>
@@ -65,22 +67,21 @@ namespace LevelComponents
         layers[3]->SetLayerPriority(3);
 
         // Get the information about Layer 0 color blending, using priorityFlag
-        if(priorityFlag > 7)
+        if((Layer0ColorBlending = priorityFlag > 7))
         {
-            this->Layer0ColorBlending = true;
             switch((priorityFlag - 8) >> 2)
             {
-            case 0: this->Layer0ColorBlendCoefficient_EVA = 7; this->Layer0ColorBlendCoefficient_EVB = 16; break;
-            case 1: this->Layer0ColorBlendCoefficient_EVA = 10; this->Layer0ColorBlendCoefficient_EVB = 16; break;
-            case 2: this->Layer0ColorBlendCoefficient_EVA = 13; this->Layer0ColorBlendCoefficient_EVB = 16; break;
-            case 3: this->Layer0ColorBlendCoefficient_EVA = 16; this->Layer0ColorBlendCoefficient_EVB = 16; break;
-            case 4: this->Layer0ColorBlendCoefficient_EVA = 16; this->Layer0ColorBlendCoefficient_EVB = 0; break;
-            case 5: this->Layer0ColorBlendCoefficient_EVA = 13; this->Layer0ColorBlendCoefficient_EVB = 3; break;
-            case 6: this->Layer0ColorBlendCoefficient_EVA = 10; this->Layer0ColorBlendCoefficient_EVB = 6; break;
-            case 7: this->Layer0ColorBlendCoefficient_EVA = 7; this->Layer0ColorBlendCoefficient_EVB = 9; break;
-            case 8: this->Layer0ColorBlendCoefficient_EVA = 5; this->Layer0ColorBlendCoefficient_EVB = 11; break;
-            case 9: this->Layer0ColorBlendCoefficient_EVA = 3; this->Layer0ColorBlendCoefficient_EVB = 13; break;
-            case 10: this->Layer0ColorBlendCoefficient_EVA = 0; this->Layer0ColorBlendCoefficient_EVB = 16;
+            case  0: Layer0ColorBlendCoefficient_EVA =  7; Layer0ColorBlendCoefficient_EVB = 16; break;
+            case  1: Layer0ColorBlendCoefficient_EVA = 10; Layer0ColorBlendCoefficient_EVB = 16; break;
+            case  2: Layer0ColorBlendCoefficient_EVA = 13; Layer0ColorBlendCoefficient_EVB = 16; break;
+            case  3: Layer0ColorBlendCoefficient_EVA = 16; Layer0ColorBlendCoefficient_EVB = 16; break;
+            case  4: Layer0ColorBlendCoefficient_EVA = 16; Layer0ColorBlendCoefficient_EVB =  0; break;
+            case  5: Layer0ColorBlendCoefficient_EVA = 13; Layer0ColorBlendCoefficient_EVB =  3; break;
+            case  6: Layer0ColorBlendCoefficient_EVA = 10; Layer0ColorBlendCoefficient_EVB =  6; break;
+            case  7: Layer0ColorBlendCoefficient_EVA =  7; Layer0ColorBlendCoefficient_EVB =  9; break;
+            case  8: Layer0ColorBlendCoefficient_EVA =  5; Layer0ColorBlendCoefficient_EVB = 11; break;
+            case  9: Layer0ColorBlendCoefficient_EVA =  3; Layer0ColorBlendCoefficient_EVB = 13; break;
+            case 10: Layer0ColorBlendCoefficient_EVA =  0; Layer0ColorBlendCoefficient_EVB = 16;
             }
         }
 
@@ -107,7 +108,7 @@ namespace LevelComponents
             }
         }
 
-        // Load Entity list for 3 difficulty level
+        // Load Entity list for each difficulty level
         int Listaddress;
         EntityRoomAttribute tmpEntityroomattribute;
         int k;
@@ -115,12 +116,12 @@ namespace LevelComponents
         {
             Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
             k = 0;
-            while(ROMUtils::CurrentFile[Listaddress + 3 * k] != (unsigned char)'\xFF') // maximun for entities number 46
+            while(ROMUtils::CurrentFile[Listaddress + 3 * k] != (unsigned char) '\xFF') // maximum entity count is 46
             {
-                tmpEntityroomattribute.YPos = (int)ROMUtils::CurrentFile[Listaddress + 3 * k];
-                tmpEntityroomattribute.XPos = (int)ROMUtils::CurrentFile[Listaddress + 3 * k + 1];
-                tmpEntityroomattribute.EntityID = (int)ROMUtils::CurrentFile[Listaddress + 3 * k + 2];
-                this->EntityList[i].push_back(tmpEntityroomattribute);
+                tmpEntityroomattribute.YPos     = (int) ROMUtils::CurrentFile[Listaddress + 3 * k];
+                tmpEntityroomattribute.XPos     = (int) ROMUtils::CurrentFile[Listaddress + 3 * k + 1];
+                tmpEntityroomattribute.EntityID = (int) ROMUtils::CurrentFile[Listaddress + 3 * k + 2];
+                EntityList[i].push_back(tmpEntityroomattribute);
                 k++;
             }
         }
@@ -147,7 +148,8 @@ namespace LevelComponents
                     newDLS->index = i;
                     drawLayers[i] = newDLS;
                 }
-                qsort(drawLayers, 4, sizeof(void*), [](const void *data1, const void *data2){
+                qsort(drawLayers, 4, sizeof(void*), [](const void *data1, const void *data2)
+                {
                     struct DLS *layer1 = *(struct DLS**) data1;
                     struct DLS *layer2 = *(struct DLS**) data2;
                     return layer2->layer->GetLayerPriority() - layer1->layer->GetLayerPriority();
@@ -179,27 +181,67 @@ namespace LevelComponents
                     QGraphicsPixmapItem *pixmapItem = scene->addPixmap(pixmap);
                     pixmapItem->setZValue(Z++);
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
+
+                    // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
+                    if(!drawLayers[i]->index & 0) // TODO this is still broken (remove "& 0")
+                    {
+                        if(Layer0ColorBlending)
+                        {
+                            // Overlay the EVA layers
+                            QPixmap alphaPixmap(sceneWidth, sceneHeight);
+                            alphaPixmap.fill(Qt::transparent);
+                            QPainter alphaPainter(&alphaPixmap);
+                            for(int j = 0; j < 3; ++j)
+                            {
+                                if(!drawLayers[j]->index) break;
+                                alphaPainter.drawImage(0, 0, RenderedLayers[drawLayers[j]->index]->pixmap().toImage());
+                            }
+
+                            // Blend the EVA and EVB pixels for the new layer
+                            QImage imageA = alphaPixmap.toImage();
+                            QImage imageB = RenderedLayers[0]->pixmap().toImage();
+                            for(int j = 0; j < sceneHeight; ++j)
+                            {
+                                for(int k = 0; k < sceneWidth; ++k)
+                                {
+                                    QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
+                                    int R = MIN(PXA.red() + PXB.red(), 255);
+                                    int G = MIN(PXA.green() + PXB.green(), 255);
+                                    int B = MIN(PXA.blue() + PXB.blue(), 255);
+                                    imageA.setPixel(k, j, QColor(R, G, B).rgb());
+                                }
+                            }
+
+                            // Add the alpha pixmap above the non-blended layer 0, but below the next one to be rendered
+                            QGraphicsPixmapItem *alphaItem = scene->addPixmap(alphaPixmap);
+                            alphaItem->setZValue(Z++);
+                            RenderedLayers[7] = alphaItem;
+                        }
+                        else RenderedLayers[7] = nullptr;
+                    }
                 }
 
                 // TODO render entity layer
 
-                // TODO render door layer
-                QPixmap *doorPixmap = new QPixmap(this->GetWidth() * 16, this->GetHeight() * 16);
-                QPainter doorPainter(doorPixmap);
-                doorPainter.setBrush(Qt::red);
-                doorPainter.setPen(Qt::darkRed);
-                for(unsigned int i = 0; i < this->doors.size(); i++)
+                // Render door layer
+                QPixmap doorPixmap(sceneWidth, sceneHeight);
+                doorPixmap.fill(Qt::transparent);
+                QPainter doorPainter(&doorPixmap);
+                QPen redPen = QPen(QBrush(Qt::blue), 2);
+                redPen.setJoinStyle(Qt::MiterJoin);
+                doorPainter.setPen(redPen);
+                for(unsigned int i = 0; i < doors.size(); i++)
                 {
-                    int x1 = this->doors[i]->GetX1() * 16;
-                    int y1 = this->doors[i]->GetY1() * 16;
-                    int width1 = (qAbs(this->doors[i]->GetX1() - this->doors[i]->GetX2())+1) * 16;
-                    int height1 = (qAbs(this->doors[i]->GetY1() - this->doors[i]->GetY2())+1) * 16;
-                    doorPainter.drawRect(x1, y1, width1, height1);
+                    int doorX = doors[i]->GetX1() * 16;
+                    int doorY = doors[i]->GetY1() * 16;
+                    int doorWidth = (qAbs(doors[i]->GetX1() - doors[i]->GetX2()) + 1) * 16;
+                    int doorHeight = (qAbs(doors[i]->GetY1() - doors[i]->GetY2()) + 1) * 16;
+                    doorPainter.drawRect(doorX, doorY, doorWidth, doorHeight);
+                    doorPainter.fillRect(doorX + 1, doorY + 1, doorWidth - 2, doorHeight - 2, QColor(0, 0, 0xFF, 0x5F));
                 }
-                QGraphicsPixmapItem *doorpixmapItem = scene->addPixmap(*doorPixmap);
+                QGraphicsPixmapItem *doorpixmapItem = scene->addPixmap(doorPixmap);
                 doorpixmapItem->setZValue(Z++);
                 RenderedLayers[5] = doorpixmapItem;
-                RenderedLayers[5]->setOpacity(0.5);
 
                 // TODO render camera box layer
 
