@@ -3,6 +3,14 @@
 
 #include <QDialog>
 
+#include <QGraphicsScene>
+#include <QPixmap>
+#include <QGraphicsPixmapItem>
+
+#include "WL4Constants.h"
+#include "ROMUtils.h"
+#include "LevelComponents/Tileset.h"
+
 namespace Ui {
 class RoomConfigDialog;
 }
@@ -17,6 +25,9 @@ public:
 
 private:
     Ui::RoomConfigDialog *ui;
+    int CurrentTilesetIndex;  // TODO: put this into a struct
+    void ShowTilesetDetails(int _tilesetIndex);
+    void ShowMappingType20LayerDetails(int _layerdataAddr);
 };
 
 #endif // ROOMCONFIGDIALOG_H

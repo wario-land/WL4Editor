@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>807</width>
-    <height>530</height>
+    <height>574</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -97,6 +97,16 @@
        </item>
        <item>
         <widget class="QComboBox" name="ComboBox_Layer0MappingType"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Use existing Layer 0: (only when Layer Mapping type is 0x20)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="ComboBox_Layer0Picker"/>
        </item>
        <item>
         <widget class="QCheckBox" name="CheckBox_Layer0Scrolling">
