@@ -161,6 +161,9 @@ namespace LevelComponents
                 if(scene) { delete scene; }
                 scene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
                 int Z = 0;
+                QPixmap alphaPixmap(sceneWidth, sceneHeight);
+                //alphaPixmap.fill(Qt::transparent);
+                QPainter alphaPainter(&alphaPixmap);
                 for(int i = 0; i < 4; ++i)
                 {
                     QPixmap pixmap = drawLayers[i]->layer->RenderLayer(tileset);
@@ -183,42 +186,35 @@ namespace LevelComponents
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
 
                     // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
-                    if(!drawLayers[i]->index & 0) // TODO this is still broken (remove "& 0")
+                    if(Layer0ColorBlending)
                     {
-                        if(Layer0ColorBlending)
+                        if((3 - i) > this->layers[0]->GetLayerPriority())
+                            alphaPainter.drawImage(0, 0, RenderedLayers[drawLayers[i]->index]->pixmap().toImage());
+                        else if((3 - i) == this->layers[0]->GetLayerPriority())
                         {
-                            // Overlay the EVA layers
-                            QPixmap alphaPixmap(sceneWidth, sceneHeight);
-                            alphaPixmap.fill(Qt::transparent);
-                            QPainter alphaPainter(&alphaPixmap);
-                            for(int j = 0; j < 3; ++j)
-                            {
-                                if(!drawLayers[j]->index) break;
-                                alphaPainter.drawImage(0, 0, RenderedLayers[drawLayers[j]->index]->pixmap().toImage());
-                            }
-
                             // Blend the EVA and EVB pixels for the new layer
-                            QImage imageA = alphaPixmap.toImage();
-                            QImage imageB = RenderedLayers[0]->pixmap().toImage();
+                            QImage imageA = RenderedLayers[0]->pixmap().toImage();
+                            QImage imageB = alphaPixmap.toImage();
                             for(int j = 0; j < sceneHeight; ++j)
                             {
                                 for(int k = 0; k < sceneWidth; ++k)
                                 {
                                     QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                    int R = MIN(PXA.red() + PXB.red(), 255);
-                                    int G = MIN(PXA.green() + PXB.green(), 255);
-                                    int B = MIN(PXA.blue() + PXB.blue(), 255);
-                                    imageA.setPixel(k, j, QColor(R, G, B).rgb());
+                                    int R = MIN((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16, 255);
+                                    int G = MIN((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16, 255);
+                                    int B = MIN((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16, 255);
+                                    if(QColor(imageB.pixel(k, j)) != QColor(R, G, B))
+                                        imageA.setPixel(k, j, QColor(R, G, B).rgb());
                                 }
                             }
 
                             // Add the alpha pixmap above the non-blended layer 0, but below the next one to be rendered
-                            QGraphicsPixmapItem *alphaItem = scene->addPixmap(alphaPixmap);
+                            QGraphicsPixmapItem *alphaItem = scene->addPixmap(QPixmap::fromImage(imageA));
                             alphaItem->setZValue(Z++);
                             RenderedLayers[7] = alphaItem;
-                        }
-                        else RenderedLayers[7] = nullptr;
+                        };
                     }
+                    else RenderedLayers[7] = nullptr;
                 }
 
                 // TODO render entity layer
