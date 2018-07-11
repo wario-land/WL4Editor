@@ -24,7 +24,7 @@ namespace LevelComponents
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
 
         // Copy the room header information
-        memcpy(&this->RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
+        memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
 
         // Set up tileset
         int tilesetIndex = ROMUtils::CurrentFile[roomDataPtr];
@@ -158,15 +158,19 @@ namespace LevelComponents
                 // Create a graphics scene with the layers added in order of priority
                 int sceneWidth = Width * 16;
                 int sceneHeight = Height * 16;
-                if(scene) { delete scene; }
+                if(scene) { delete scene; } // Make a new graphics scene to draw to
                 scene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
                 int Z = 0;
+
+                // This represents the EVA alpha layer, which will be rendered in passes before the alpha layer is finalized
                 QPixmap alphaPixmap(sceneWidth, sceneHeight);
-                //alphaPixmap.fill(Qt::transparent);
                 QPainter alphaPainter(&alphaPixmap);
+
+                // Render the 4 layers in the order of their priority
                 for(int i = 0; i < 4; ++i)
                 {
                     QPixmap pixmap = drawLayers[i]->layer->RenderLayer(tileset);
+                    // If this is a layer composed of 8x8 tiles, then repeat the layer in X and Y to the size of the other layers
                     if(drawLayers[i]->layer->GetMappingType() == LayerTile8x8)
                     {
                         QPixmap pixmap2(sceneWidth, sceneHeight);
@@ -181,6 +185,8 @@ namespace LevelComponents
                         }
                         pixmap = pixmap2;
                     }
+
+                    // Add the rendered layer to the graphics scene
                     QGraphicsPixmapItem *pixmapItem = scene->addPixmap(pixmap);
                     pixmapItem->setZValue(Z++);
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
@@ -188,9 +194,10 @@ namespace LevelComponents
                     // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
                     if(Layer0ColorBlending)
                     {
-                        if((3 - i) > this->layers[0]->GetLayerPriority())
+                        // If this is a pass for a layer under the alpha layer, draw the rendered layer to the EVA component image
+                        if((3 - i) > layers[0]->GetLayerPriority())
                             alphaPainter.drawImage(0, 0, RenderedLayers[drawLayers[i]->index]->pixmap().toImage());
-                        else if((3 - i) == this->layers[0]->GetLayerPriority())
+                        else if((3 - i) == layers[0]->GetLayerPriority())
                         {
                             // Blend the EVA and EVB pixels for the new layer
                             QImage imageA = RenderedLayers[0]->pixmap().toImage();
@@ -203,8 +210,7 @@ namespace LevelComponents
                                     int R = MIN((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16, 255);
                                     int G = MIN((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16, 255);
                                     int B = MIN((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16, 255);
-                                    if(QColor(imageB.pixel(k, j)) != QColor(R, G, B))
-                                        imageA.setPixel(k, j, QColor(R, G, B).rgb());
+                                    imageA.setPixel(k, j, QColor(R, G, B).rgb());
                                 }
                             }
 
