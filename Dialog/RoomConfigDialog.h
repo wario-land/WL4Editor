@@ -9,7 +9,17 @@
 
 #include "WL4Constants.h"
 #include "ROMUtils.h"
-#include "LevelComponents/Tileset.h"
+#include "LevelComponents/Layer.h"  //include Tileset.h
+
+namespace DialogParams
+{
+    struct RoomConfigParams
+    {
+        int CurrentTilesetIndex;
+        // TODO
+    };
+
+}
 
 namespace Ui {
 class RoomConfigDialog;
@@ -25,9 +35,9 @@ public:
 
 private:
     Ui::RoomConfigDialog *ui;
-    int CurrentTilesetIndex;  // TODO: put this into a struct
-    void ShowTilesetDetails(int _tilesetIndex);
-    void ShowMappingType20LayerDetails(int _layerdataAddr);
+    DialogParams::RoomConfigParams currentParams;
+    void ShowTilesetDetails();
+    void ShowMappingType20LayerDetails(int _layerdataAddr, LevelComponents::Layer *_tmpLayer);
 };
 
 #endif // ROOMCONFIGDIALOG_H

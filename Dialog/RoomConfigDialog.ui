@@ -55,10 +55,20 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="ComboBox_BGLayerPicker"/>
+        <widget class="QComboBox" name="ComboBox_BGLayerPicker">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="editable">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QCheckBox" name="CheckBox_BGLayerScrolling">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="text">
           <string>Background Scrolling Enable</string>
          </property>
@@ -73,6 +83,9 @@
        </item>
        <item>
         <widget class="QCheckBox" name="CheckBox_Layer0Alpha">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="text">
           <string>Layer 0 Alpha Enable:</string>
          </property>
@@ -86,7 +99,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="ComboBox_AlphaBlendAttribute"/>
+        <widget class="QComboBox" name="ComboBox_AlphaBlendAttribute">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="label_7">
@@ -96,7 +113,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="ComboBox_Layer0MappingType"/>
+        <widget class="QComboBox" name="ComboBox_Layer0MappingType">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="label_9">
@@ -106,10 +127,17 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="ComboBox_Layer0Picker"/>
+        <widget class="QComboBox" name="ComboBox_Layer0Picker">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QCheckBox" name="CheckBox_Layer0Scrolling">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="text">
           <string>Layer 0 Scrolling Enable</string>
          </property>
