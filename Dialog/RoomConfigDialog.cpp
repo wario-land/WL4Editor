@@ -29,6 +29,25 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent) :
     QStringList LayerPrioritySet;
     LayerPrioritySet << "layer 0 > layer 1 > layer 2 > Layer 3" << "layer 1 > layer 0 > layer 2 > Layer 3" << "layer 1 > layer 2 > layer 0 > Layer 3";
     ui->ComboBox_LayerPriority->addItems(LayerPrioritySet);
+    QStringList AlphaBlendAttrsSet;
+    AlphaBlendAttrsSet << "No Alpha Blending    "
+                          "EVA =  7;  EVB = 16; " <<
+                          "EVA = 10;  EVB = 16; " <<
+                          "EVA = 13;  EVB = 16; " <<
+                          "EVA = 16;  EVB = 16; " <<
+                          "EVA = 16;  EVB =  0; " <<
+                          "EVA = 13;  EVB =  3; " <<
+                          "EVA = 10;  EVB =  6; " <<
+                          "EVA =  7;  EVB =  9; " <<
+                          "EVA =  5;  EVB = 11; " <<
+                          "EVA =  3;  EVB = 13; " <<
+                          "EVA =  0;  EVB = 16; ";
+    ui->ComboBox_AlphaBlendAttribute->addItems(AlphaBlendAttrsSet);
+    ui->ComboBox_AlphaBlendAttribute->setCurrentIndex(0); // TODO
+    QStringList Layer0MappingTypeParamSet;
+    Layer0MappingTypeParamSet << "LayerMap16" << "LayerTile8x8";
+    ui->ComboBox_Layer0MappingType->addItems(Layer0MappingTypeParamSet);
+    ui->ComboBox_Layer0MappingType->setCurrentIndex(0); // TODO
 }
 
 RoomConfigDialog::~RoomConfigDialog()
@@ -80,4 +99,99 @@ void RoomConfigDialog::ShowMappingType20LayerDetails(int _layerdataAddr, LevelCo
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     delete tmpTileset; delete scene; // TODO: Can I delete scene also?
+}
+
+void RoomConfigDialog::on_CheckBox_Layer0Enable_stateChanged(int arg1)
+{
+    (void) arg1;
+    if(ui->CheckBox_Layer0Enable->isChecked())
+    {
+        ui->CheckBox_Layer0Alpha->setEnabled(true);
+        ui->ComboBox_Layer0MappingType->setEnabled(true);
+    }else{
+        ui->CheckBox_Layer0Alpha->setChecked(false);
+        ui->CheckBox_Layer0Alpha->setEnabled(false);
+        ui->ComboBox_Layer0MappingType->setEnabled(false);
+        currentParams.Layer0MappingTypeParam = 0;
+    }
+}
+
+void RoomConfigDialog::on_CheckBox_Layer0Alpha_stateChanged(int arg1)
+{
+    (void) arg1;
+    currentParams.Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();
+    ui->ComboBox_AlphaBlendAttribute->setEnabled(ui->CheckBox_Layer0Alpha->isChecked());
+    if(!ui->CheckBox_Layer0Alpha->isChecked())
+    {
+        ui->ComboBox_AlphaBlendAttribute->setCurrentIndex(0);
+    }
+}
+
+void RoomConfigDialog::on_ComboBox_Layer0MappingType_currentIndexChanged(int index)
+{
+    currentParams.Layer0MappingTypeParam = index << 4;
+    if(index == 0)
+    {
+        ui->CheckBox_Layer0Scrolling->setChecked(false);
+        ui->CheckBox_Layer0Scrolling->setEnabled(false);
+        ui->ComboBox_Layer0Picker->setEnabled(false);
+        currentParams.Layer0MappingTypeParam = LevelComponents::LayerMap16;
+    }else{
+        ui->CheckBox_Layer0Scrolling->setEnabled(true);
+        ui->ComboBox_Layer0Picker->setEnabled(true);
+        currentParams.Layer0MappingTypeParam = LevelComponents::LayerTile8x8;
+    }
+}
+
+void RoomConfigDialog::on_CheckBox_Layer0Scrolling_stateChanged(int arg1)
+{
+    (void) arg1;
+    if(ui->CheckBox_Layer0Scrolling->isChecked()) currentParams.Layer0MappingTypeParam = 0x22;
+}
+
+void RoomConfigDialog::on_ComboBox_AlphaBlendAttribute_currentIndexChanged(int index)
+{
+    currentParams.LayerPriorityAndAlphaAttr = (currentParams.LayerPriorityAndAlphaAttr & 3) | (index << 3);
+}
+
+void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
+{
+    currentParams.CurrentTilesetIndex = index;
+    ShowTilesetDetails();
+}
+
+void RoomConfigDialog::on_SpinBox_RoomWidth_valueChanged(int arg1)
+{
+    currentParams.RoomWidth = arg1;
+}
+
+void RoomConfigDialog::on_SpinBox_RoomHeight_valueChanged(int arg1)
+{
+    currentParams.RoomHeight = arg1;
+}
+
+void RoomConfigDialog::on_CheckBox_Layer2Enable_stateChanged(int arg1)
+{
+    (void) arg1;
+    currentParams.Layer2Enable = ui->CheckBox_Layer2Enable->isChecked();
+}
+
+void RoomConfigDialog::on_CheckBox_BGLayerScrolling_stateChanged(int arg1)
+{
+    (void) arg1;
+    currentParams.BackgroundLayerScrollingEnable = ui->CheckBox_BGLayerScrolling->isChecked();
+}
+
+void RoomConfigDialog::on_CheckBox_BGLayerEnable_stateChanged(int arg1)
+{
+    (void) arg1;
+    currentParams.BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
+    ui->ComboBox_BGLayerPicker->setEnabled(ui->CheckBox_BGLayerEnable->isChecked());
+    ui->CheckBox_BGLayerScrolling->setEnabled(ui->CheckBox_BGLayerEnable->isChecked());
+}
+
+void RoomConfigDialog::on_ComboBox_LayerPriority_currentIndexChanged(int index)
+{
+    if(index >= 0)
+        currentParams.LayerPriorityAndAlphaAttr = (currentParams.LayerPriorityAndAlphaAttr & 0x78) | ((index<2) ? index: 3);
 }

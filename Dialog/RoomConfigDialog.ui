@@ -50,7 +50,7 @@
        <item>
         <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>Background Layer:</string>
+          <string>Use existing Background Layer:</string>
          </property>
         </widget>
        </item>
