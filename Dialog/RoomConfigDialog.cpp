@@ -6,53 +6,40 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent) :
     ui(new Ui::RoomConfigDialog)
 {
     ui->setupUi(this);
-
-    QStringList TilesetNamesSet;
-    TilesetNamesSet << "00  Debug room" << "01  Palm Tree Paradise" << "02  Caves" << "03  The Big Board" << "04  The Big Board" <<
-                       "05  The Big Board (indoor)" << "06  Wildflower Fields" << "07  Toy Block Tower" << "08  Factory" << "09  Wildflower Underground" <<
-                       "0A  Wildflower WaterPlace" << "0B  Underwater" << "0C  Toy Block Tower" << "0D  Toy Block Tower" << "0E  Toy Block Tower" <<
-                       "0F  Doodle woods" << "10  Dominoes" << "11  Hall of Hieroglyphs" << "12  Haunte House" <<
-                       "13  Crescent Moon Village outside" << "14  Drain" << "15  Arabian outside" << "16  Arabian inside" << "17  Arabian" <<
-                       "18  Arabian" << "19  Arabian" << "1A  Dominoes (blue)" << "1B  Dominoes (purple)" << "1C  Dominoes (teal)" << "1D  Factory" <<
-                       "1E  Factory" << "1F  Jungle" << "20  Factory" << "21  Toxic Landfill" << "22  Toxic Landfill" << "23  Pinball" <<
-                       "24  Pinball" << "25  Pinball (with Gorilla)" << "26  Jungle" << "27  40 Below Fridge" << "28  Jungle" <<
-                       "29  Jungle caves" << "2A  Hotel" << "2B  Hotel" << "2C  Hotel" << "2D  Hotel" << "2E  Hotel" << "2F  Hotel (outside)" <<
-                       "30  Unused in-game (Haunted House)" << "31  Unused in-game (Haunted House)" << "32  Unused in-game (Cardboard)" <<
-                       "33  Cardboard" << "34  Caves" << "35  Jungle" << "36  Caves" << "37  Lava level" << "38  Caves" << "39  Golden Passage" <<
-                       "3A  Hotel" << "3B  Hotel" << "3C  Hotel" << "3D  Hotel" << "3E  40 Below Fridge" << "3F  Factory" << "40  Factory" <<
-                       "41  Arabian" << "42  Boss room" << "43  Boss corridor" << "44  Boss room" << "45  Frozen lava level" << "46  Lava level" <<
-                       "47  Hall of Hieroglyphs" << "48  Boss room" << "49  Boss room" << "4A  Boss corridor" << "4B  Boss corridor" <<
-                       "4C  Boss corridor" << "4D  Boss corridor" << "4E  Boss corridor" << "4F  Boss room (Diva)" << "50  Hall of Hieroglyphs" <<
-                       "51  Jungle" << "52  Wildflower" << "53  Crescent Moon Village" << "54  Crescent Moon Village" << "55  Crescent Moon Village" <<
-                       "56  Toy Block Tower" << "57  Pinball" << "58  Bonus room" << "59  Bonus room" << "5A  Final level" << "5B  The Big Board end";
-    ui->ComboBox_TilesetID->addItems(TilesetNamesSet);
-    QStringList LayerPrioritySet;
-    LayerPrioritySet << "layer 0 > layer 1 > layer 2 > Layer 3" << "layer 1 > layer 0 > layer 2 > Layer 3" << "layer 1 > layer 2 > layer 0 > Layer 3";
-    ui->ComboBox_LayerPriority->addItems(LayerPrioritySet);
-    QStringList AlphaBlendAttrsSet;
-    AlphaBlendAttrsSet << "No Alpha Blending    "
-                          "EVA =  7;  EVB = 16; " <<
-                          "EVA = 10;  EVB = 16; " <<
-                          "EVA = 13;  EVB = 16; " <<
-                          "EVA = 16;  EVB = 16; " <<
-                          "EVA = 16;  EVB =  0; " <<
-                          "EVA = 13;  EVB =  3; " <<
-                          "EVA = 10;  EVB =  6; " <<
-                          "EVA =  7;  EVB =  9; " <<
-                          "EVA =  5;  EVB = 11; " <<
-                          "EVA =  3;  EVB = 13; " <<
-                          "EVA =  0;  EVB = 16; ";
-    ui->ComboBox_AlphaBlendAttribute->addItems(AlphaBlendAttrsSet);
-    ui->ComboBox_AlphaBlendAttribute->setCurrentIndex(0); // TODO
-    QStringList Layer0MappingTypeParamSet;
-    Layer0MappingTypeParamSet << "LayerMap16" << "LayerTile8x8";
-    ui->ComboBox_Layer0MappingType->addItems(Layer0MappingTypeParamSet);
-    ui->ComboBox_Layer0MappingType->setCurrentIndex(0); // TODO
 }
 
 RoomConfigDialog::~RoomConfigDialog()
 {
     delete ui;
+}
+
+RoomConfigDialog::InitDialog()
+{
+    InitComboBoxItems();
+    ui->ComboBox_AlphaBlendAttribute->setCurrentIndex(0);
+    ui->ComboBox_Layer0MappingType->setCurrentIndex(0);
+    // TODO
+
+}
+
+RoomConfigDialog::InitDialog(DialogParams::RoomConfigParams CurrentRoomParams)
+{
+    InitComboBoxItems();
+    ui->ComboBox_TilesetID->setCurrentIndex(CurrentRoomParams.CurrentTilesetIndex);
+    ui->CheckBox_Layer0Enable->setChecked(CurrentRoomParams.Layer0Enable);
+    ui->CheckBox_Layer0Alpha->setChecked(CurrentRoomParams.Layer0Alpha);
+    int LayerPriorityID = CurrentRoomParams.LayerPriorityAndAlphaAttr & 3;
+    ui->ComboBox_LayerPriority->setCurrentIndex((LayerPriorityID < 2) ? LayerPriorityID : (LayerPriorityID - 1));
+    int AlphaBlendID = (CurrentRoomParams.LayerPriorityAndAlphaAttr & 0x78) >> 3;
+    ui->ComboBox_AlphaBlendAttribute->setCurrentIndex(AlphaBlendID);
+    if(CurrentRoomParams.Layer0Enable) ui->ComboBox_Layer0MappingType->setCurrentIndex(((CurrentRoomParams.Layer0MappingTypeParam) & 0x30) >> 4);
+    if(CurrentRoomParams.Layer0MappingTypeParam == 0x22) ui->CheckBox_Layer0Scrolling->setChecked(true);
+    ui->SpinBox_RoomWidth->setValue(CurrentRoomParams.RoomWidth);
+    ui->SpinBox_RoomHeight->setValue(CurrentRoomParams.RoomHeight);
+    ui->CheckBox_Layer2Enable->setChecked(CurrentRoomParams.Layer2Enable);
+    ui->CheckBox_BGLayerEnable->setChecked(CurrentRoomParams.BackgroundLayerEnable);
+    ui->CheckBox_BGLayerScrolling->setChecked(CurrentRoomParams.BackgroundLayerScrollingEnable);
+    // TODO
 }
 
 void RoomConfigDialog::ShowTilesetDetails()
@@ -194,4 +181,47 @@ void RoomConfigDialog::on_ComboBox_LayerPriority_currentIndexChanged(int index)
 {
     if(index >= 0)
         currentParams.LayerPriorityAndAlphaAttr = (currentParams.LayerPriorityAndAlphaAttr & 0x78) | ((index<2) ? index: 3);
+}
+
+void RoomConfigDialog::InitComboBoxItems()
+{
+    QStringList TilesetNamesSet;
+    TilesetNamesSet << "00  Debug room" << "01  Palm Tree Paradise" << "02  Caves" << "03  The Big Board" << "04  The Big Board" <<
+                       "05  The Big Board (indoor)" << "06  Wildflower Fields" << "07  Toy Block Tower" << "08  Factory" << "09  Wildflower Underground" <<
+                       "0A  Wildflower WaterPlace" << "0B  Underwater" << "0C  Toy Block Tower" << "0D  Toy Block Tower" << "0E  Toy Block Tower" <<
+                       "0F  Doodle woods" << "10  Dominoes" << "11  Hall of Hieroglyphs" << "12  Haunte House" <<
+                       "13  Crescent Moon Village outside" << "14  Drain" << "15  Arabian outside" << "16  Arabian inside" << "17  Arabian" <<
+                       "18  Arabian" << "19  Arabian" << "1A  Dominoes (blue)" << "1B  Dominoes (purple)" << "1C  Dominoes (teal)" << "1D  Factory" <<
+                       "1E  Factory" << "1F  Jungle" << "20  Factory" << "21  Toxic Landfill" << "22  Toxic Landfill" << "23  Pinball" <<
+                       "24  Pinball" << "25  Pinball (with Gorilla)" << "26  Jungle" << "27  40 Below Fridge" << "28  Jungle" <<
+                       "29  Jungle caves" << "2A  Hotel" << "2B  Hotel" << "2C  Hotel" << "2D  Hotel" << "2E  Hotel" << "2F  Hotel (outside)" <<
+                       "30  Unused in-game (Haunted House)" << "31  Unused in-game (Haunted House)" << "32  Unused in-game (Cardboard)" <<
+                       "33  Cardboard" << "34  Caves" << "35  Jungle" << "36  Caves" << "37  Lava level" << "38  Caves" << "39  Golden Passage" <<
+                       "3A  Hotel" << "3B  Hotel" << "3C  Hotel" << "3D  Hotel" << "3E  40 Below Fridge" << "3F  Factory" << "40  Factory" <<
+                       "41  Arabian" << "42  Boss room" << "43  Boss corridor" << "44  Boss room" << "45  Frozen lava level" << "46  Lava level" <<
+                       "47  Hall of Hieroglyphs" << "48  Boss room" << "49  Boss room" << "4A  Boss corridor" << "4B  Boss corridor" <<
+                       "4C  Boss corridor" << "4D  Boss corridor" << "4E  Boss corridor" << "4F  Boss room (Diva)" << "50  Hall of Hieroglyphs" <<
+                       "51  Jungle" << "52  Wildflower" << "53  Crescent Moon Village" << "54  Crescent Moon Village" << "55  Crescent Moon Village" <<
+                       "56  Toy Block Tower" << "57  Pinball" << "58  Bonus room" << "59  Bonus room" << "5A  Final level" << "5B  The Big Board end";
+    ui->ComboBox_TilesetID->addItems(TilesetNamesSet);
+    QStringList LayerPrioritySet;
+    LayerPrioritySet << "layer 0 > layer 1 > layer 2 > Layer 3" << "layer 1 > layer 0 > layer 2 > Layer 3" << "layer 1 > layer 2 > layer 0 > Layer 3";
+    ui->ComboBox_LayerPriority->addItems(LayerPrioritySet);
+    QStringList AlphaBlendAttrsSet;
+    AlphaBlendAttrsSet << "No Alpha Blending    "
+                          "EVA =  7;  EVB = 16; " <<
+                          "EVA = 10;  EVB = 16; " <<
+                          "EVA = 13;  EVB = 16; " <<
+                          "EVA = 16;  EVB = 16; " <<
+                          "EVA = 16;  EVB =  0; " <<
+                          "EVA = 13;  EVB =  3; " <<
+                          "EVA = 10;  EVB =  6; " <<
+                          "EVA =  7;  EVB =  9; " <<
+                          "EVA =  5;  EVB = 11; " <<
+                          "EVA =  3;  EVB = 13; " <<
+                          "EVA =  0;  EVB = 16; ";
+    ui->ComboBox_AlphaBlendAttribute->addItems(AlphaBlendAttrsSet);
+    QStringList Layer0MappingTypeParamSet;
+    Layer0MappingTypeParamSet << "LayerMap16" << "LayerTile8x8";
+    ui->ComboBox_Layer0MappingType->addItems(Layer0MappingTypeParamSet);
 }

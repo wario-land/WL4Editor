@@ -67,6 +67,8 @@ class RoomConfigDialog : public QDialog
 public:
     explicit RoomConfigDialog(QWidget *parent = 0);
     ~RoomConfigDialog();
+    InitDialog();
+    InitDialog(DialogParams::RoomConfigParams CurrentRoomParams);
 
 private slots:
     void on_CheckBox_Layer0Enable_stateChanged(int arg1);
@@ -85,6 +87,7 @@ private slots:
 private:
     Ui::RoomConfigDialog *ui;
     DialogParams::RoomConfigParams currentParams;
+    void InitComboBoxItems();
     void ShowTilesetDetails();
     void ShowMappingType20LayerDetails(int _layerdataAddr, LevelComponents::Layer *_tmpLayer);
 };
