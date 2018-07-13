@@ -22,34 +22,35 @@ RoomConfigDialog::InitDialog()
 
 }
 
-RoomConfigDialog::InitDialog(DialogParams::RoomConfigParams CurrentRoomParams)
+RoomConfigDialog::InitDialog(DialogParams::RoomConfigParams *CurrentRoomParams)
 {
     InitComboBoxItems();
-    ui->ComboBox_TilesetID->setCurrentIndex(CurrentRoomParams.CurrentTilesetIndex);
-    ui->CheckBox_Layer0Enable->setChecked(CurrentRoomParams.Layer0Enable);
-    ui->CheckBox_Layer0Alpha->setChecked(CurrentRoomParams.Layer0Alpha);
-    int LayerPriorityID = CurrentRoomParams.LayerPriorityAndAlphaAttr & 3;
+    ui->ComboBox_TilesetID->setCurrentIndex(CurrentRoomParams->CurrentTilesetIndex);
+    ui->CheckBox_Layer0Enable->setChecked(CurrentRoomParams->Layer0Enable);
+    ui->CheckBox_Layer0Alpha->setChecked(CurrentRoomParams->Layer0Alpha);
+    int LayerPriorityID = CurrentRoomParams->LayerPriorityAndAlphaAttr & 3;
     ui->ComboBox_LayerPriority->setCurrentIndex((LayerPriorityID < 2) ? LayerPriorityID : (LayerPriorityID - 1));
-    int AlphaBlendID = (CurrentRoomParams.LayerPriorityAndAlphaAttr & 0x78) >> 3;
+    int AlphaBlendID = (CurrentRoomParams->LayerPriorityAndAlphaAttr & 0x78) >> 3;
     ui->ComboBox_AlphaBlendAttribute->setCurrentIndex(AlphaBlendID);
-    if(CurrentRoomParams.Layer0Enable) ui->ComboBox_Layer0MappingType->setCurrentIndex(((CurrentRoomParams.Layer0MappingTypeParam) & 0x30) >> 4);
-    if(CurrentRoomParams.Layer0MappingTypeParam == 0x22) ui->CheckBox_Layer0Scrolling->setChecked(true);
-    ui->SpinBox_RoomWidth->setValue(CurrentRoomParams.RoomWidth);
-    ui->SpinBox_RoomHeight->setValue(CurrentRoomParams.RoomHeight);
-    ui->CheckBox_Layer2Enable->setChecked(CurrentRoomParams.Layer2Enable);
-    ui->CheckBox_BGLayerEnable->setChecked(CurrentRoomParams.BackgroundLayerEnable);
-    ui->CheckBox_BGLayerScrolling->setChecked(CurrentRoomParams.BackgroundLayerScrollingEnable);
+    if(CurrentRoomParams->Layer0Enable) ui->ComboBox_Layer0MappingType->setCurrentIndex(((CurrentRoomParams->Layer0MappingTypeParam) & 0x30) >> 4);
+    if(CurrentRoomParams->Layer0MappingTypeParam == 0x22) ui->CheckBox_Layer0AutoScroll->setChecked(true);
+    ui->SpinBox_RoomWidth->setValue(CurrentRoomParams->RoomWidth);
+    ui->SpinBox_RoomHeight->setValue(CurrentRoomParams->RoomHeight);
+    ui->CheckBox_Layer2Enable->setChecked(CurrentRoomParams->Layer2Enable);
+    ui->CheckBox_BGLayerEnable->setChecked(CurrentRoomParams->BackgroundLayerEnable);
+    ui->CheckBox_BGLayerAutoScroll->setChecked(CurrentRoomParams->BackgroundLayerAutoScrollEnable);
     // TODO
 }
 
 void RoomConfigDialog::ShowTilesetDetails()
 {
     // Set up tileset
-    int _tilesetPtr = WL4Constants::TilesetDataTable + currentParams.CurrentTilesetIndex * 36;
-    LevelComponents::Tileset *tmpTileset = new LevelComponents::Tileset(_tilesetPtr, currentParams.CurrentTilesetIndex);
+    int _tilesetPtr = WL4Constants::TilesetDataTable + currentParams->CurrentTilesetIndex * 36;
+    LevelComponents::Tileset *tmpTileset = new LevelComponents::Tileset(_tilesetPtr, currentParams->CurrentTilesetIndex);
 
     // Set up scene
-    QGraphicsScene *tmpTile16MAPScene = new QGraphicsScene(0, 0, 8 * 16, (48 * 2) * 16);
+    if(tmpGraphicviewScene != nullptr) delete tmpGraphicviewScene;
+    tmpGraphicviewScene = new QGraphicsScene(0, 0, 8 * 16, (48 * 2) * 16);
     QPixmap layerPixmap(8 * 16, (48 * 2) * 16);
     layerPixmap.fill(Qt::transparent);
 
@@ -61,12 +62,12 @@ void RoomConfigDialog::ShowTilesetDetails()
             tmpTileset->GetMap16Data()[i * 8 + j]->DrawTile(&layerPixmap, j * 16, i * 16);
         }
     }
-    tmpTile16MAPScene->addPixmap(layerPixmap);
+    tmpGraphicviewScene->addPixmap(layerPixmap);
 
     ui->graphicsView->repaint();
-    ui->graphicsView->setScene(tmpTile16MAPScene);
+    ui->graphicsView->setScene(tmpGraphicviewScene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    delete tmpTileset; delete tmpTile16MAPScene; // TODO: Can I delete tmpTile16MAPScene also?
+    delete tmpTileset;
 }
 
 void RoomConfigDialog::ShowMappingType20LayerDetails(int _layerdataAddr, LevelComponents::Layer *_tmpLayer)
@@ -75,17 +76,18 @@ void RoomConfigDialog::ShowMappingType20LayerDetails(int _layerdataAddr, LevelCo
     if(_tmpLayer != nullptr) delete _tmpLayer;
     _tmpLayer = new LevelComponents::Layer(_layerdataAddr, LevelComponents::LayerTile8x8);
 
-    int _tilesetPtr = WL4Constants::TilesetDataTable + currentParams.CurrentTilesetIndex * 36;
-    LevelComponents::Tileset *tmpTileset = new LevelComponents::Tileset(_tilesetPtr, currentParams.CurrentTilesetIndex);
+    int _tilesetPtr = WL4Constants::TilesetDataTable + currentParams->CurrentTilesetIndex * 36;
+    LevelComponents::Tileset *tmpTileset = new LevelComponents::Tileset(_tilesetPtr, currentParams->CurrentTilesetIndex);
     QPixmap tmplayerpixmap = _tmpLayer->RenderLayer(tmpTileset);
     int sceneWidth = 64 * 16;
     int sceneHeight = 64 * 16;
-    QGraphicsScene *scene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
-    scene->addPixmap(tmplayerpixmap);
+    if(tmpGraphicviewScene != nullptr) delete tmpGraphicviewScene;
+    tmpGraphicviewScene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
+    tmpGraphicviewScene->addPixmap(tmplayerpixmap);
     ui->graphicsView->repaint();
-    ui->graphicsView->setScene(scene);
+    ui->graphicsView->setScene(tmpGraphicviewScene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    delete tmpTileset; delete scene; // TODO: Can I delete scene also?
+    delete tmpTileset;
 }
 
 void RoomConfigDialog::on_CheckBox_Layer0Enable_stateChanged(int arg1)
@@ -99,14 +101,14 @@ void RoomConfigDialog::on_CheckBox_Layer0Enable_stateChanged(int arg1)
         ui->CheckBox_Layer0Alpha->setChecked(false);
         ui->CheckBox_Layer0Alpha->setEnabled(false);
         ui->ComboBox_Layer0MappingType->setEnabled(false);
-        currentParams.Layer0MappingTypeParam = 0;
+        currentParams->Layer0MappingTypeParam = 0;
     }
 }
 
 void RoomConfigDialog::on_CheckBox_Layer0Alpha_stateChanged(int arg1)
 {
     (void) arg1;
-    currentParams.Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();
+    currentParams->Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();
     ui->ComboBox_AlphaBlendAttribute->setEnabled(ui->CheckBox_Layer0Alpha->isChecked());
     if(!ui->CheckBox_Layer0Alpha->isChecked())
     {
@@ -116,71 +118,101 @@ void RoomConfigDialog::on_CheckBox_Layer0Alpha_stateChanged(int arg1)
 
 void RoomConfigDialog::on_ComboBox_Layer0MappingType_currentIndexChanged(int index)
 {
-    currentParams.Layer0MappingTypeParam = index << 4;
+    currentParams->Layer0MappingTypeParam = index << 4;
     if(index == 0)
     {
-        ui->CheckBox_Layer0Scrolling->setChecked(false);
-        ui->CheckBox_Layer0Scrolling->setEnabled(false);
+        ui->CheckBox_Layer0AutoScroll->setChecked(false);
+        ui->CheckBox_Layer0AutoScroll->setEnabled(false);
         ui->ComboBox_Layer0Picker->setEnabled(false);
-        currentParams.Layer0MappingTypeParam = LevelComponents::LayerMap16;
+        currentParams->Layer0MappingTypeParam = LevelComponents::LayerMap16;
     }else{
-        ui->CheckBox_Layer0Scrolling->setEnabled(true);
+        ui->CheckBox_Layer0AutoScroll->setEnabled(true);
         ui->ComboBox_Layer0Picker->setEnabled(true);
-        currentParams.Layer0MappingTypeParam = LevelComponents::LayerTile8x8;
+        currentParams->Layer0MappingTypeParam = LevelComponents::LayerTile8x8;
     }
 }
 
-void RoomConfigDialog::on_CheckBox_Layer0Scrolling_stateChanged(int arg1)
+void RoomConfigDialog::on_CheckBox_Layer0AutoScroll_stateChanged(int arg1)
 {
     (void) arg1;
-    if(ui->CheckBox_Layer0Scrolling->isChecked()) currentParams.Layer0MappingTypeParam = 0x22;
+    if(ui->CheckBox_Layer0AutoScroll->isChecked()) currentParams->Layer0MappingTypeParam = 0x22;
 }
 
 void RoomConfigDialog::on_ComboBox_AlphaBlendAttribute_currentIndexChanged(int index)
 {
-    currentParams.LayerPriorityAndAlphaAttr = (currentParams.LayerPriorityAndAlphaAttr & 3) | (index << 3);
+    currentParams->LayerPriorityAndAlphaAttr = (currentParams->LayerPriorityAndAlphaAttr & 3) | (index << 3);
 }
 
 void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
 {
-    currentParams.CurrentTilesetIndex = index;
+    currentParams->CurrentTilesetIndex = index;
     ShowTilesetDetails();
 }
 
 void RoomConfigDialog::on_SpinBox_RoomWidth_valueChanged(int arg1)
 {
-    currentParams.RoomWidth = arg1;
+    currentParams->RoomWidth = arg1;
 }
 
 void RoomConfigDialog::on_SpinBox_RoomHeight_valueChanged(int arg1)
 {
-    currentParams.RoomHeight = arg1;
+    currentParams->RoomHeight = arg1;
 }
 
 void RoomConfigDialog::on_CheckBox_Layer2Enable_stateChanged(int arg1)
 {
     (void) arg1;
-    currentParams.Layer2Enable = ui->CheckBox_Layer2Enable->isChecked();
+    currentParams->Layer2Enable = ui->CheckBox_Layer2Enable->isChecked();
 }
 
-void RoomConfigDialog::on_CheckBox_BGLayerScrolling_stateChanged(int arg1)
+void RoomConfigDialog::on_CheckBox_BGLayerAutoScroll_stateChanged(int arg1)
 {
     (void) arg1;
-    currentParams.BackgroundLayerScrollingEnable = ui->CheckBox_BGLayerScrolling->isChecked();
+    currentParams->BackgroundLayerAutoScrollEnable = ui->CheckBox_BGLayerAutoScroll->isChecked();
 }
 
 void RoomConfigDialog::on_CheckBox_BGLayerEnable_stateChanged(int arg1)
 {
     (void) arg1;
-    currentParams.BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
+    currentParams->BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
     ui->ComboBox_BGLayerPicker->setEnabled(ui->CheckBox_BGLayerEnable->isChecked());
-    ui->CheckBox_BGLayerScrolling->setEnabled(ui->CheckBox_BGLayerEnable->isChecked());
+    ui->CheckBox_BGLayerAutoScroll->setEnabled(ui->CheckBox_BGLayerEnable->isChecked());
 }
 
 void RoomConfigDialog::on_ComboBox_LayerPriority_currentIndexChanged(int index)
 {
     if(index >= 0)
-        currentParams.LayerPriorityAndAlphaAttr = (currentParams.LayerPriorityAndAlphaAttr & 0x78) | ((index<2) ? index: 3);
+        currentParams->LayerPriorityAndAlphaAttr = (currentParams->LayerPriorityAndAlphaAttr & 0x78) | ((index<2) ? index: 3);
+}
+
+void RoomConfigDialog::SetBGLayerdataPtrs()
+{
+    BGLayerdataPtrs[0x50][0] = BGLayerdataPtrs[0x11][0] = BGLayerdataPtrs[0x47][0] = 0x5FA6D0;
+    BGLayerdataPtrs[1][0] = 0x5FB2CC; BGLayerdataPtrs[2][0] = 0x5FB8DC;
+    BGLayerdataPtrs[6][0] = 0x5FC9A0; BGLayerdataPtrs[6][1] = 0x5FC2D0;
+    BGLayerdataPtrs[0xB][0] = 0x5FD484; BGLayerdataPtrs[0xA][0] = 0x5FD078; BGLayerdataPtrs[0x52][0] = 0x5FD484;
+    BGLayerdataPtrs[0x1F][0] = 0x5FD680; BGLayerdataPtrs[0x1F][1] = 0x5FD9BC;
+    BGLayerdataPtrs[0x28][0] = 0x5FE540; BGLayerdataPtrs[0x34][0] = 0x5FB8DC; BGLayerdataPtrs[0x51][0] = 0x5FE008;
+    BGLayerdataPtrs[0x26][0] = 0x5FE918; BGLayerdataPtrs[0x26][1] = 0x5FEED8;
+    BGLayerdataPtrs[0x35][0] = 0x5FF264; BGLayerdataPtrs[0x36][0] = 0x5FF960; BGLayerdataPtrs[0x38][0] = 0x5FF684;
+    BGLayerdataPtrs[8][0] = BGLayerdataPtrs[0x3F][0] = 0x5FFD94;
+    BGLayerdataPtrs[0x1E][0] = BGLayerdataPtrs[0x40][0] = 0x600EF8;
+    BGLayerdataPtrs[0x20][0] = 0x6006C4; BGLayerdataPtrs[0x1D][0] = 0x600388;
+    BGLayerdataPtrs[0x21][0] = 0x6013D4; BGLayerdataPtrs[0x22][0] = 0x601A0C;
+    BGLayerdataPtrs[0x27][0] = 0x60221C; BGLayerdataPtrs[0x3E][0] = 0x602858;
+    BGLayerdataPtrs[0xC][0] = 0x603E98; BGLayerdataPtrs[0x56][0] = 0x605270; BGLayerdataPtrs[7][0] = 0x6045C4; BGLayerdataPtrs[0xE][0] = 0x604ACC;
+    BGLayerdataPtrs[3][0] = BGLayerdataPtrs[4][0] = 0x603064; BGLayerdataPtrs[5][0] = 0x60368C;
+    BGLayerdataPtrs[0xF][0] = 0x605A7C; BGLayerdataPtrs[0xF][1] = 0x6063B0; BGLayerdataPtrs[0xF][2] = 0x606CF4;
+    BGLayerdataPtrs[0x10][0] = 0x6074C4; BGLayerdataPtrs[0x1A][0] = 0x607CD0; BGLayerdataPtrs[0x1B][0] = 0x6084DC; BGLayerdataPtrs[0x1C][0] = 0x608CE8;
+    BGLayerdataPtrs[0x13][0] = BGLayerdataPtrs[0x54][0] = BGLayerdataPtrs[0x55][0] = 0x60A1E8;
+    BGLayerdataPtrs[0x53][0] = 0x60A350; BGLayerdataPtrs[0x12][0] = 0x60A1D8; BGLayerdataPtrs[0x14][0] = 0x60A4B4;
+    BGLayerdataPtrs[0x15][0] = BGLayerdataPtrs[0x17][0] = BGLayerdataPtrs[0x18][0] = BGLayerdataPtrs[0x19][0] = 0x6094F4;
+    BGLayerdataPtrs[0x41][0] = 0x609A84; BGLayerdataPtrs[0x2F][0] = 0x60AD10; BGLayerdataPtrs[0x46][0] = 0x60E044;
+    BGLayerdataPtrs[0x37][0] = 0x60BC54; BGLayerdataPtrs[0x37][1] = 0x60B29C;
+    BGLayerdataPtrs[0x45][0] = 0x60CF98; BGLayerdataPtrs[0x45][1] = 0x60C5FC;
+    BGLayerdataPtrs[0x4A][0] = BGLayerdataPtrs[0x4B][0] = BGLayerdataPtrs[0x4C][0] = BGLayerdataPtrs[0x4D][0] = BGLayerdataPtrs[0x4E][0] = BGLayerdataPtrs[0x43][0] = 0x60E96C;
+    BGLayerdataPtrs[0x29][0] = BGLayerdataPtrs[0x49][0] = BGLayerdataPtrs[0x44][0] = BGLayerdataPtrs[0x48][0] = BGLayerdataPtrs[0x42][0] = 0x60E860;
+    BGLayerdataPtrs[0x4F][0] = 0x60E870; BGLayerdataPtrs[0x39][0] = 0x60ED78;
 }
 
 void RoomConfigDialog::InitComboBoxItems()
@@ -205,21 +237,23 @@ void RoomConfigDialog::InitComboBoxItems()
                        "56  Toy Block Tower" << "57  Pinball" << "58  Bonus room" << "59  Bonus room" << "5A  Final level" << "5B  The Big Board end";
     ui->ComboBox_TilesetID->addItems(TilesetNamesSet);
     QStringList LayerPrioritySet;
-    LayerPrioritySet << "layer 0 > layer 1 > layer 2 > Layer 3" << "layer 1 > layer 0 > layer 2 > Layer 3" << "layer 1 > layer 2 > layer 0 > Layer 3";
+    LayerPrioritySet << "layer 0 (Top) > layer 1 > layer 2 > Layer 3 (Bottom)" <<
+                        "layer 1 (Top) > layer 0 > layer 2 > Layer 3 (Bottom)" <<
+                        "layer 1 (Top) > layer 2 > layer 0 > Layer 3 (Bottom)";
     ui->ComboBox_LayerPriority->addItems(LayerPrioritySet);
     QStringList AlphaBlendAttrsSet;
     AlphaBlendAttrsSet << "No Alpha Blending    "
-                          "EVA =  7;  EVB = 16; " <<
-                          "EVA = 10;  EVB = 16; " <<
-                          "EVA = 13;  EVB = 16; " <<
-                          "EVA = 16;  EVB = 16; " <<
-                          "EVA = 16;  EVB =  0; " <<
-                          "EVA = 13;  EVB =  3; " <<
-                          "EVA = 10;  EVB =  6; " <<
-                          "EVA =  7;  EVB =  9; " <<
-                          "EVA =  5;  EVB = 11; " <<
-                          "EVA =  3;  EVB = 13; " <<
-                          "EVA =  0;  EVB = 16; ";
+                          "EVA = 0.44;  EVB = 1.00; " <<
+                          "EVA = 0.63;  EVB = 1.00; " <<
+                          "EVA = 0.81;  EVB = 1.00; " <<
+                          "EVA = 1.00;  EVB = 1.00; " <<
+                          "EVA = 1.00;  EVB = 0.00; " <<
+                          "EVA = 0.81;  EVB = 0.19; " <<
+                          "EVA = 0.63;  EVB = 0.37; " <<
+                          "EVA = 0.44;  EVB = 0.56; " <<
+                          "EVA = 0.31;  EVB = 0.68; " <<
+                          "EVA = 0.19;  EVB = 0.81; " <<
+                          "EVA = 0.00;  EVB = 1.00; ";
     ui->ComboBox_AlphaBlendAttribute->addItems(AlphaBlendAttrsSet);
     QStringList Layer0MappingTypeParamSet;
     Layer0MappingTypeParamSet << "LayerMap16" << "LayerTile8x8";

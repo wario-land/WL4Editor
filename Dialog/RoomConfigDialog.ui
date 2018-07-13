@@ -65,12 +65,12 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="CheckBox_BGLayerScrolling">
+        <widget class="QCheckBox" name="CheckBox_BGLayerAutoScroll">
          <property name="enabled">
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>Background Scrolling Enable</string>
+          <string>Background AutoScroll Enable</string>
          </property>
         </widget>
        </item>
@@ -134,12 +134,12 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="CheckBox_Layer0Scrolling">
+        <widget class="QCheckBox" name="CheckBox_Layer0AutoScroll">
          <property name="enabled">
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>Layer 0 Scrolling Enable</string>
+          <string>Layer 0 AutoScroll Enable</string>
          </property>
         </widget>
        </item>
