@@ -25,6 +25,8 @@ namespace DialogParams
         bool Layer2Enable;
         bool BackgroundLayerEnable;
         bool BackgroundLayerAutoScrollEnable;
+        int BackgroundLayerDataPtr;
+        int Layer0DataPtr;
         // TODO
     };
 
@@ -83,12 +85,14 @@ private slots:
     void on_CheckBox_BGLayerAutoScroll_stateChanged(int arg1);
     void on_CheckBox_BGLayerEnable_stateChanged(int arg1);
     void on_ComboBox_LayerPriority_currentIndexChanged(int index);
+    void on_ComboBox_BGLayerPicker_currentIndexChanged(int index);
+    void on_ComboBox_Layer0Picker_currentIndexChanged(int index);
 
 private:
     Ui::RoomConfigDialog *ui;
     DialogParams::RoomConfigParams *currentParams;
     QGraphicsScene *tmpGraphicviewScene = nullptr;
-    int BGLayerdataPtrs[0x5C][3] = {0};
+    int BGLayerdataPtrs[0x5C][3];
     void SetBGLayerdataPtrs();
     void InitComboBoxItems();
     void ShowTilesetDetails();
