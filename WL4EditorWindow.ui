@@ -116,7 +116,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>17</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -135,6 +135,7 @@
     <addaction name="actionRedo"/>
     <addaction name="separator"/>
     <addaction name="actionLevel_Config"/>
+    <addaction name="actionRoom_Config"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -178,6 +179,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="actionRoom_Config">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Room Config</string>
    </property>
   </action>
  </widget>

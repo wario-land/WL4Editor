@@ -41,7 +41,8 @@ SOURCES += \
     EditorWindow/MainGraphicsView.cpp \
     LevelComponents/EntitySet.cpp \
     Dialog/LevelConfigDialog.cpp \
-    DockWidget/EditModeDockWidget.cpp
+    DockWidget/EditModeDockWidget.cpp \
+    Dialog/RoomConfigDialog.cpp
 
 HEADERS += \
         WL4EditorWindow.h \
@@ -60,11 +61,13 @@ HEADERS += \
     LevelComponents/EntitySet.h \
     Dialog/LevelConfigDialog.h \
     DockWidget/EditModeDockWidget.h \
-    Operation.h
+    Operation.h \
+    Dialog/RoomConfigDialog.h
 
 FORMS += \
         WL4EditorWindow.ui \
     Dialog/ChooseLevelDialog.ui \
     DockWidget/Tile16DockWidget.ui \
     Dialog/LevelConfigDialog.ui \
-    DockWidget/EditModeDockWidget.ui
+    DockWidget/EditModeDockWidget.ui \
+    Dialog/RoomConfigDialog.ui

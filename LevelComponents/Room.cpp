@@ -289,4 +289,16 @@ namespace LevelComponents
         // ERROR
         return nullptr;
     }
+
+    int Room::GetLayersDataPtr(int LayerNum)
+    {
+        if(LayerNum == 0)
+            return (this->RoomHeader.Layer0Data - 0x8000000);
+        else if(LayerNum == 1)
+            return (this->RoomHeader.Layer1Data - 0x8000000);
+        else if(LayerNum == 2)
+            return (this->RoomHeader.Layer2Data - 0x8000000);
+        else if(LayerNum == 3)
+            return (this->RoomHeader.Layer3Data - 0x8000000);
+    }
 }

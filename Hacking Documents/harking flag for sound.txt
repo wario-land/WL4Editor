@@ -1,0 +1,12 @@
+The last 4 Bytes in the Pointer and flag String for rooms
+rename the four bytes from B1 to B4
+break on read: 
+715A4   and   6C184
+---------------------------------------------
+715A4: only for B1, change [03000037]£¬which is for waving background //only ??
+
+6C184: only for B3 B4, one halfword to control wave
+
+6C1E8£ºread when change music in game, in the same procedure with 6C184
+
+71AFA and 71B42£ºin 71AE8, only for B1, which is for waving background, the proc will use 2 different data segment for waving BG in some situation like Tiles in water£ºseg. 3F9F38-3F9F47 small wave and short cycle£¬seg. 3F9F48-3F9F67 big wave and longer cycle. only when B1==2 the proc. will use seg. 3F9F38-3F9F47.
