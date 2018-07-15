@@ -12,9 +12,17 @@ ChooseLevelDialog::ChooseLevelDialog(struct DialogParams::PassageAndLevelIndex c
         "Entry Passage" << "Emerald Passage" << "Ruby Passage" <<
         "Topaz Passage" << "Sapphire Passage" << "Golden Passage";
     ui->comboBox_Passage->addItems(PassageNameSet);
-
     ui->comboBox_Passage->setCurrentIndex(currentSelection._PassageIndex);
-    ConfigureLevelComboBox(currentSelection._LevelIndex);
+    int SelectItemID;
+    if(currentSelection._PassageIndex == 0 || currentSelection._PassageIndex == 5)
+    {
+        SelectItemID = (currentSelection._LevelIndex == 0)? 0: 1;
+    }
+    else
+    {
+        SelectItemID = currentSelection._LevelIndex;
+    }
+    ConfigureLevelComboBox(SelectItemID);
 }
 
 ChooseLevelDialog::~ChooseLevelDialog()

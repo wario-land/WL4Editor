@@ -146,6 +146,7 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
         // Enable UI that requires a ROM file to be loaded
         ui->loadLevelButton->setEnabled(true);
         ui->actionLevel_Config->setEnabled(true);
+        ui->actionRoom_Config->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -358,4 +359,33 @@ void WL4EditorWindow::on_actionUndo_triggered()
 void WL4EditorWindow::on_actionRedo_triggered()
 {
     RedoOperation();
+}
+
+void WL4EditorWindow::on_actionRoom_Config_triggered()
+{
+    DialogParams::RoomConfigParams *_currentRoomConfigParams;
+    _currentRoomConfigParams->CurrentTilesetIndex = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();  // Sometimes the program stop here with a segmentation fault
+    _currentRoomConfigParams->Layer0Alpha = CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnable();
+    _currentRoomConfigParams->Layer0MappingTypeParam = CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam();
+    _currentRoomConfigParams->Layer0Enable = ((CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam() == 0) ? false: true);
+    _currentRoomConfigParams->Layer0DataPtr = ((CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam() >= 20) ? CurrentLevel->GetRooms()[selectedRoom]->GetLayersDataPtr(0) : 0);
+    _currentRoomConfigParams->Layer2Enable = CurrentLevel->GetRooms()[selectedRoom]->IsLayer2Enabled();
+    _currentRoomConfigParams->LayerPriorityAndAlphaAttr = CurrentLevel->GetRooms()[selectedRoom]->GetLayerEffectsParam();
+    _currentRoomConfigParams->RoomHeight = CurrentLevel->GetRooms()[selectedRoom]->GetHeight();
+    _currentRoomConfigParams->RoomWidth = CurrentLevel->GetRooms()[selectedRoom]->GetWidth();
+    _currentRoomConfigParams->BackgroundLayerEnable = CurrentLevel->GetRooms()[selectedRoom]->IsBGLayerEnabled();
+    if(_currentRoomConfigParams->BackgroundLayerEnable)
+    {
+        _currentRoomConfigParams->BackgroundLayerDataPtr = CurrentLevel->GetRooms()[selectedRoom]->GetLayersDataPtr(3);
+        _currentRoomConfigParams->BackgroundLayerAutoScrollEnable = CurrentLevel->GetRooms()[selectedRoom]->IsBGLayerAutoScrollEnabled();
+    }else{
+        _currentRoomConfigParams->BackgroundLayerDataPtr = WL4Constants::BGLayerDisableDefaultPtr;
+        _currentRoomConfigParams->BackgroundLayerAutoScrollEnable = false;
+    }
+    RoomConfigDialog tmpdialog;
+    tmpdialog.InitDialog(_currentRoomConfigParams);
+    if(tmpdialog.exec() == QDialog::Accepted)
+    {
+        // TODO
+    }
 }

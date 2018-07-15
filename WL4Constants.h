@@ -17,8 +17,10 @@ namespace WL4Constants
     const int EntityTilesetLengthTable  = 0x3B2C90;
 
     // Miscellaneous definitions
-    const int CameraRecordSentinel      = 0x3F9D58;
-    const int SpritesBasicElementTiles  = 0x400AE8; //0x3000 bytes in length
+    const int CameraRecordSentinel        = 0x3F9D58;
+    const int SpritesBasicElementTiles    = 0x400AE8; //0x3000 bytes in length
+    const int BGLayerDisableDefaultPtr    = 0x58DA7C;
+    const int ToxicLandfillDustyLayer0Ptr = 0x601854;
 
     // Other
     const int AvailableSpaceBeginningInROM       = 0x78F970;
