@@ -364,7 +364,7 @@ void WL4EditorWindow::on_actionRedo_triggered()
 void WL4EditorWindow::on_actionRoom_Config_triggered()
 {
     DialogParams::RoomConfigParams *_currentRoomConfigParams;
-    _currentRoomConfigParams->CurrentTilesetIndex = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
+    _currentRoomConfigParams->CurrentTilesetIndex = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();  // Sometimes the program stop here with a segmentation fault
     _currentRoomConfigParams->Layer0Alpha = CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnable();
     _currentRoomConfigParams->Layer0MappingTypeParam = CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam();
     _currentRoomConfigParams->Layer0Enable = ((CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam() == 0) ? false: true);

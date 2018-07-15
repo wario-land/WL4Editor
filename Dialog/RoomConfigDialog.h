@@ -6,6 +6,7 @@
 #include <QGraphicsScene>
 #include <QPixmap>
 #include <QGraphicsPixmapItem>
+#include <QScrollBar>
 
 #include "WL4Constants.h"
 #include "ROMUtils.h"
@@ -92,6 +93,8 @@ private:
     Ui::RoomConfigDialog *ui;
     DialogParams::RoomConfigParams *currentParams;
     QGraphicsScene *tmpGraphicviewScene = nullptr;
+    LevelComponents::Layer *tmpLayer0 = nullptr;
+    LevelComponents::Layer *tmpBGLayer = nullptr;
     int BGLayerdataPtrs[0x5C][3];
     void SetBGLayerdataPtrs();
     void InitComboBoxItems();

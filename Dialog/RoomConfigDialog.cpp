@@ -16,17 +16,25 @@ RoomConfigDialog::~RoomConfigDialog()
     delete ui;
 }
 
+/// <summary>
+/// Initialize the dialog widgets, use it when create or reset a room.
+/// </summary>
 RoomConfigDialog::InitDialog()
 {
     currentParams = (struct DialogParams::RoomConfigParams *) malloc(sizeof(struct DialogParams::RoomConfigParams));
-    memcpy(currentParams, CurrentRoomParams, sizeof(struct DialogParams::RoomConfigParams));
     InitComboBoxItems();
     ui->ComboBox_AlphaBlendAttribute->setCurrentIndex(0);
     ui->ComboBox_Layer0MappingType->setCurrentIndex(0);
-    // TODO
+    // TODO: more logic
 
 }
 
+/// <summary>
+/// Initialize the dialog widgets, use it when configure an existing room.
+/// </summary>
+/// <param name="CurrentRoomParams">
+/// Use it to get current room params.
+/// </param>
 RoomConfigDialog::InitDialog(DialogParams::RoomConfigParams *CurrentRoomParams)
 {
     currentParams = (struct DialogParams::RoomConfigParams *) malloc(sizeof(struct DialogParams::RoomConfigParams));
@@ -40,17 +48,42 @@ RoomConfigDialog::InitDialog(DialogParams::RoomConfigParams *CurrentRoomParams)
     ui->ComboBox_LayerPriority->setCurrentIndex((LayerPriorityID < 2) ? LayerPriorityID : (LayerPriorityID - 1));
     int AlphaBlendID = (CurrentRoomParams->LayerPriorityAndAlphaAttr & 0x78) >> 3;
     ui->ComboBox_AlphaBlendAttribute->setCurrentIndex(AlphaBlendID);
-    if(CurrentRoomParams->Layer0Enable) ui->ComboBox_Layer0MappingType->setCurrentIndex(((CurrentRoomParams->Layer0MappingTypeParam) & 0x30) >> 4);
-    if(CurrentRoomParams->Layer0MappingTypeParam == 0x22) ui->CheckBox_Layer0AutoScroll->setChecked(true);
+    if(CurrentRoomParams->Layer0Enable)
+    {
+        ui->ComboBox_Layer0MappingType->setCurrentIndex((((CurrentRoomParams->Layer0MappingTypeParam) & 0x30) >> 4) - 1);
+    }
+    if(CurrentRoomParams->Layer0MappingTypeParam == 0x22)
+    {
+        ui->CheckBox_Layer0AutoScroll->setChecked(true);
+    }
     ui->ComboBox_Layer0Picker->setEnabled((CurrentRoomParams->Layer0MappingTypeParam >= 0x20) ? true : false);
     ui->SpinBox_RoomWidth->setValue(CurrentRoomParams->RoomWidth);
     ui->SpinBox_RoomHeight->setValue(CurrentRoomParams->RoomHeight);
     ui->CheckBox_Layer2Enable->setChecked(CurrentRoomParams->Layer2Enable);
     ui->CheckBox_BGLayerEnable->setChecked(CurrentRoomParams->BackgroundLayerEnable);
     ui->CheckBox_BGLayerAutoScroll->setChecked(CurrentRoomParams->BackgroundLayerAutoScrollEnable);
+    if(CurrentRoomParams->BackgroundLayerDataPtr == BGLayerdataPtrs[CurrentRoomParams->CurrentTilesetIndex][0])
+        ui->ComboBox_BGLayerPicker->setCurrentIndex(0);
+    else if(CurrentRoomParams->BackgroundLayerDataPtr == BGLayerdataPtrs[CurrentRoomParams->CurrentTilesetIndex][1])
+        ui->ComboBox_BGLayerPicker->setCurrentIndex(1);
+    else if(CurrentRoomParams->BackgroundLayerDataPtr == BGLayerdataPtrs[CurrentRoomParams->CurrentTilesetIndex][2])
+        ui->ComboBox_BGLayerPicker->setCurrentIndex(2);
+    else
+    {
+        ui->ComboBox_BGLayerPicker->addItem(QString::number(CurrentRoomParams->BackgroundLayerDataPtr, 16).toUpper());
+        ui->ComboBox_BGLayerPicker->setCurrentIndex(ui->ComboBox_BGLayerPicker->count() - 1);
+    }
     // TODO
+    ui->graphicsView->verticalScrollBar()->setValue(0);  //Does not work
+    ui->graphicsView->horizontalScrollBar()->setValue(0);
 }
 
+/// <summary>
+/// Render the current MAP16 Tileset.
+/// </summary>
+/// <remarks>
+/// The tileset ID is directly get from DialogParams::RoomConfigParams *currentParams.
+/// </remarks>
 void RoomConfigDialog::ShowTilesetDetails()
 {
     // Set up tileset
@@ -79,9 +112,20 @@ void RoomConfigDialog::ShowTilesetDetails()
     delete tmpTileset;
 }
 
+/// <summary>
+/// Render a Layer with mapping type 0x20.
+/// </summary>
+/// <remarks>
+/// use it to render either Layer 0 or background Layer when the mapping type is 0x20.
+/// </remarks>
+/// <param name="_layerdataAddr">
+/// Layer RLE data.
+/// </param>
+/// /// <param name="_tmpLayer">
+/// choose a Layer ptr in the class, I don't think it is a must.
+/// </param>
 void RoomConfigDialog::ShowMappingType20LayerDetails(int _layerdataAddr, LevelComponents::Layer *_tmpLayer)
 {
-    // TODO: Put these 2 lines somewhere else
     if(_tmpLayer != nullptr) delete _tmpLayer;
     _tmpLayer = new LevelComponents::Layer(_layerdataAddr, LevelComponents::LayerTile8x8);
 
@@ -99,6 +143,9 @@ void RoomConfigDialog::ShowMappingType20LayerDetails(int _layerdataAddr, LevelCo
     delete tmpTileset;
 }
 
+/// <summary>
+/// Slot function for CheckBox_Layer0Enable_stateChanged.
+/// </summary>
 void RoomConfigDialog::on_CheckBox_Layer0Enable_stateChanged(int arg1)
 {
     (void) arg1;
@@ -114,6 +161,9 @@ void RoomConfigDialog::on_CheckBox_Layer0Enable_stateChanged(int arg1)
     }
 }
 
+/// <summary>
+/// Slot function for CheckBox_Layer0Alpha_stateChanged.
+/// </summary>
 void RoomConfigDialog::on_CheckBox_Layer0Alpha_stateChanged(int arg1)
 {
     (void) arg1;
@@ -125,6 +175,9 @@ void RoomConfigDialog::on_CheckBox_Layer0Alpha_stateChanged(int arg1)
     }
 }
 
+/// <summary>
+/// Slot function for ComboBox_Layer0MappingType_currentIndexChanged.
+/// </summary>
 void RoomConfigDialog::on_ComboBox_Layer0MappingType_currentIndexChanged(int index)
 {
     (void) index;
@@ -143,18 +196,27 @@ void RoomConfigDialog::on_ComboBox_Layer0MappingType_currentIndexChanged(int ind
     }
 }
 
+/// <summary>
+/// Slot function for CheckBox_Layer0AutoScroll_stateChanged.
+/// </summary>
 void RoomConfigDialog::on_CheckBox_Layer0AutoScroll_stateChanged(int arg1)
 {
     (void) arg1;
     if(ui->CheckBox_Layer0AutoScroll->isChecked()) currentParams->Layer0MappingTypeParam = 0x22;
 }
 
+/// <summary>
+/// Slot function for ComboBox_AlphaBlendAttribute_currentIndexChanged.
+/// </summary>
 void RoomConfigDialog::on_ComboBox_AlphaBlendAttribute_currentIndexChanged(int index)
 {
     (void) index;
     currentParams->LayerPriorityAndAlphaAttr = (currentParams->LayerPriorityAndAlphaAttr & 3) | (ui->ComboBox_AlphaBlendAttribute->currentIndex() << 3);
 }
 
+/// <summary>
+/// Slot function for ComboBox_TilesetID_currentIndexChanged.
+/// </summary>
 void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
 {
     (void) index;
@@ -162,28 +224,43 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
     ShowTilesetDetails();
 }
 
+/// <summary>
+/// Slot function for SpinBox_RoomWidth_valueChanged.
+/// </summary>
 void RoomConfigDialog::on_SpinBox_RoomWidth_valueChanged(int arg1)
 {
     currentParams->RoomWidth = arg1;
 }
 
+/// <summary>
+/// Slot function for SpinBox_RoomHeight_valueChanged.
+/// </summary>
 void RoomConfigDialog::on_SpinBox_RoomHeight_valueChanged(int arg1)
 {
     currentParams->RoomHeight = arg1;
 }
 
+/// <summary>
+/// Slot function for CheckBox_Layer2Enable_stateChanged.
+/// </summary>
 void RoomConfigDialog::on_CheckBox_Layer2Enable_stateChanged(int arg1)
 {
     (void) arg1;
     currentParams->Layer2Enable = ui->CheckBox_Layer2Enable->isChecked();
 }
 
+/// <summary>
+/// Slot function for CheckBox_BGLayerAutoScroll_stateChanged.
+/// </summary>
 void RoomConfigDialog::on_CheckBox_BGLayerAutoScroll_stateChanged(int arg1)
 {
     (void) arg1;
     currentParams->BackgroundLayerAutoScrollEnable = ui->CheckBox_BGLayerAutoScroll->isChecked();
 }
 
+/// <summary>
+/// Slot function for CheckBox_BGLayerEnable_stateChanged.
+/// </summary>
 void RoomConfigDialog::on_CheckBox_BGLayerEnable_stateChanged(int arg1)
 {
     (void) arg1;
@@ -204,6 +281,9 @@ void RoomConfigDialog::on_CheckBox_BGLayerEnable_stateChanged(int arg1)
     }
 }
 
+/// <summary>
+/// Slot function for ComboBox_LayerPriority_currentIndexChanged.
+/// </summary>
 void RoomConfigDialog::on_ComboBox_LayerPriority_currentIndexChanged(int index)
 {
     (void) index;
@@ -211,6 +291,9 @@ void RoomConfigDialog::on_ComboBox_LayerPriority_currentIndexChanged(int index)
         currentParams->LayerPriorityAndAlphaAttr = (currentParams->LayerPriorityAndAlphaAttr & 0x78) | ((ui->ComboBox_LayerPriority->currentIndex() < 2) ? ui->ComboBox_LayerPriority->currentIndex(): 3);
 }
 
+/// <summary>
+/// Initialize class member BGLayerdataPtrs[0x5C][3].
+/// </summary>
 void RoomConfigDialog::SetBGLayerdataPtrs()
 {
     for(int i = 0; i < 0x5C; i++)
@@ -244,6 +327,9 @@ void RoomConfigDialog::SetBGLayerdataPtrs()
     BGLayerdataPtrs[0x4F][0] = 0x60E870; BGLayerdataPtrs[0x39][0] = 0x60ED78;
 }
 
+/// <summary>
+/// Set item for all the ComboBox except ComboBox_BGLayerPicker and ComboBox_Layer0Picker.
+/// </summary>
 void RoomConfigDialog::InitComboBoxItems()
 {
     QStringList TilesetNamesSet;
@@ -289,15 +375,23 @@ void RoomConfigDialog::InitComboBoxItems()
     ui->ComboBox_Layer0MappingType->addItems(Layer0MappingTypeParamSet);
 }
 
+/// <summary>
+/// Slot function for ComboBox_BGLayerPicker_currentIndexChanged.
+/// </summary>
 void RoomConfigDialog::on_ComboBox_BGLayerPicker_currentIndexChanged(int index)
 {
     (void) index;
     currentParams->BackgroundLayerDataPtr = ui->ComboBox_BGLayerPicker->currentText().toInt();
+    //ShowMappingType20LayerDetails(currentParams->BackgroundLayerDataPtr, tmpBGLayer);  //crash after this function is added
 }
 
+/// <summary>
+/// Slot function for ComboBox_Layer0Picker_currentIndexChanged.
+/// </summary>
 void RoomConfigDialog::on_ComboBox_Layer0Picker_currentIndexChanged(int index)
 {
     (void) index;
     currentParams->Layer0DataPtr = WL4Constants::ToxicLandfillDustyLayer0Ptr;
     ui->CheckBox_Layer0AutoScroll->setEnabled(true);
+    ShowMappingType20LayerDetails(currentParams->Layer0DataPtr, tmpLayer0);  //crash after this function is added
 }
