@@ -27,6 +27,7 @@ bool LoadROMFile(std::string filePath)
     int length = pos;
     if(length<=0xB0)
     {
+		ifs.close();
         return false;
     }
     unsigned char * ROMAddr = new unsigned char[length];
