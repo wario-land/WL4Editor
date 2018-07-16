@@ -28,7 +28,7 @@ namespace LevelComponents
 
         // Set up tileset
         int tilesetIndex = ROMUtils::CurrentFile[roomDataPtr];
-        this->TilesetID = tilesetIndex;
+        TilesetID = tilesetIndex;
         int tilesetPtr = WL4Constants::TilesetDataTable + tilesetIndex * 36;
         tileset = new Tileset(tilesetPtr, tilesetIndex);
 
@@ -300,5 +300,7 @@ namespace LevelComponents
             return (this->RoomHeader.Layer2Data - 0x8000000);
         else if(LayerNum == 3)
             return (this->RoomHeader.Layer3Data - 0x8000000);
+        // ERROR
+        return 0;
     }
 }
