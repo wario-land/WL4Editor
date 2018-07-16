@@ -12,7 +12,7 @@ namespace LevelComponents
         this->Y2 = _Y2;
     }
 
-    void SetDoorDisplacement(char _X_Displacement, char _Y_Displacement)
+    void Door::SetDoorDisplacement(char _X_Displacement, char _Y_Displacement)
     {
         X_Displacement = (unsigned char) _X_Displacement;
         Y_Displacement = (unsigned char) _Y_Displacement;
@@ -45,19 +45,19 @@ namespace LevelComponents
     /// <remarks>
     /// it return a QPoint(xpos, ypos).
     /// </remarks>
-    QPoint Door::GetWarioOriginalPosition()
+    QPoint Door::GetWarioOriginalPosition_x4()
     {
         int ypos, xpos;
         if(this->type == NormalDoor)
         {
-            ypos = (Y2 + 1) << 4;
-            xpos = (X1 + 1) << 4;
+            ypos = (Y2 + 1) << 6;
+            xpos = ((X1 + 1) << 6) - 1;
             // The ypos is related to current Wario animations, we only generate case for standing Wario
         }
         else
         {
-            xpos = X1 << 4 + (char) X_Displacement + 7;
-            ypos = Y2 << 4 + (char) Y_Displacement;
+            xpos = ((X1 + 1) << 6) + 4 * ((char) X_Displacement + 8);
+            ypos = ((Y2 + 1) << 6) + 4 * ((char) Y_Displacement) - 1;
         }
         QPoint WarioLeftTopPosition;
         WarioLeftTopPosition.setX(xpos);

@@ -65,7 +65,7 @@ namespace LevelComponents
         int GetY1() {return this->Y1; }
         int GetX2() {return this->X2; }
         int GetY2() {return this->Y2; }
-        QPoint GetWarioOriginalPosition();
+        QPoint GetWarioOriginalPosition_x4();
         //TODO: GenerateDoorSavingData()  (ssp)
     };
 }
