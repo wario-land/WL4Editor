@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QLabel>
+#include <QButtonGroup>
 
 #include "LevelComponents/Level.h"
 #include "LevelComponents/Room.h"
