@@ -2,6 +2,7 @@
 #define DOOR_H
 
 #include <memory>
+#include <QPoint>
 
 namespace LevelComponents
 {
@@ -52,8 +53,8 @@ namespace LevelComponents
         Door *GetDestinationDoor() { return *DestinationDoor; }
         int GetRoomID() {return (int) this->RoomID; }
         void SetDestinationDoor(Door *otherDoor) { DestinationDoor = std::make_shared<Door*>(otherDoor); }
-        void SetDoorDisplacement(signed int _X_Displacement, signed int _Y_Displacement);
-        void SetDoorDisplacementROM(unsigned char _X_Displacement, unsigned char _Y_Displacement);
+        void SetDoorDisplacement(char _X_Displacement, char _Y_Displacement);
+        void GetDoorDisplacement(unsigned char _X_Displacement, unsigned char _Y_Displacement);
         void SetEntitySetID(unsigned char _EntitySetID) { EntitySetID = _EntitySetID; }
         int GetEntitySetID() {return (int) EntitySetID; }
         void SetBGM(unsigned int _BGM_ID) { BGM_ID = _BGM_ID; }
@@ -64,6 +65,7 @@ namespace LevelComponents
         int GetY1() {return this->Y1; }
         int GetX2() {return this->X2; }
         int GetY2() {return this->Y2; }
+        QPoint GetWarioOriginalPosition();
         //TODO: GenerateDoorSavingData()  (ssp)
     };
 }

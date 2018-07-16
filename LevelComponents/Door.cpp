@@ -12,19 +12,13 @@ namespace LevelComponents
         this->Y2 = _Y2;
     }
 
-    void Door::SetDoorDisplacement(int _X_Displacement, int _Y_Displacement)
+    void SetDoorDisplacement(char _X_Displacement, char _Y_Displacement)
     {
-        if(_X_Displacement < 0)
-            this->X_Displacement = (unsigned char)(255 + 16 * _X_Displacement);
-        else
-            this->X_Displacement = (unsigned char)(16 * _X_Displacement);
-        if(_Y_Displacement < 0)
-            this->Y_Displacement = (unsigned char)(255 + 16 * _Y_Displacement);
-        else
-            this->Y_Displacement = (unsigned char)(16 * _Y_Displacement);
+        X_Displacement = (unsigned char) _X_Displacement;
+        Y_Displacement = (unsigned char) _Y_Displacement;
     }
 
-    void Door::SetDoorDisplacementROM(unsigned char _X_Displacement, unsigned char _Y_Displacement)
+    void Door::GetDoorDisplacement(unsigned char _X_Displacement, unsigned char _Y_Displacement)
     {
         this->X_Displacement = _X_Displacement;
         this->Y_Displacement = _Y_Displacement;
@@ -43,5 +37,31 @@ namespace LevelComponents
         if((this->type != Portal) && (this->DestinationDoor == nullptr))
             return true;
         return false;
+    }
+
+    /// <summary>
+    /// Generate Wario's original position (unit: pixel) when appear from the door.
+    /// </summary>
+    /// <remarks>
+    /// it return a QPoint(xpos, ypos).
+    /// </remarks>
+    QPoint Door::GetWarioOriginalPosition()
+    {
+        int ypos, xpos;
+        if(this->type == NormalDoor)
+        {
+            ypos = (Y2 + 1) << 4;
+            xpos = (X1 + 1) << 4;
+            // The ypos is related to current Wario animations, we only generate case for standing Wario
+        }
+        else
+        {
+            xpos = X1 << 4 + (char) X_Displacement + 7;
+            ypos = Y2 << 4 + (char) Y_Displacement;
+        }
+        QPoint WarioLeftTopPosition;
+        WarioLeftTopPosition.setX(xpos);
+        WarioLeftTopPosition.setY(ypos);
+        return WarioLeftTopPosition;
     }
 }
