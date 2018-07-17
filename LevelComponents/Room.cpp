@@ -249,11 +249,13 @@ namespace LevelComponents
                 QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
                 CameraLimitationPixmap.fill(Qt::transparent);
                 QPainter CameraLimitationPainter(&CameraLimitationPixmap);
+                CameraLimitationPainter.setRenderHint(QPainter::Antialiasing);
                 QPen CameraLimitationPen = QPen(QBrush(Qt::red), 2);
                 QPen CameraLimitationPen2 = QPen(QBrush(Qt::green), 2);
                 CameraLimitationPen.setJoinStyle(Qt::MiterJoin);
+                CameraLimitationPen2.setJoinStyle(Qt::MiterJoin);
                 CameraLimitationPainter.setPen(CameraLimitationPen);
-                int SetNum[4] = {0, 0, 0, 0};
+                int SetNum[4] = {0, 0, 0, 0}; int k;
                 if(CameraControlType == LevelComponents::FixedY)
                 {
                     // Use Wario original position when getting out of a door to figure out the Camera Limitator Y position
@@ -290,21 +292,25 @@ namespace LevelComponents
                                              16 * (MIN((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2);
                         if(CameraControlRecords[i]->x3 != (unsigned char) '\xFF')
                         {
-                            CameraLimitationPainter.fillRect(16 * ((int) CameraControlRecords[i]->x3) + 2,
+                            CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecords[i]->x3) + 2,
                                                              16 * ((int) CameraControlRecords[i]->y3) + 2,
                                                              12,
-                                                             12,
-                                                             QColor(0xFF, 0, 0, 0x5F));
+                                                             12);
+                            CameraLimitationPainter.drawLine(16 * ((int) CameraControlRecords[i]->x1) + 1,
+                                                             16 * ((int) CameraControlRecords[i]->y1) + 1,
+                                                             16 * ((int) CameraControlRecords[i]->x3) + 2,
+                                                             16 * ((int) CameraControlRecords[i]->y3) + 2);
                             CameraLimitationPainter.setPen(CameraLimitationPen2);
                             SetNum[0] = (int) CameraControlRecords[i]->x1;
-                            SetNum[1] = (int) CameraControlRecords[i]->y1;
-                            SetNum[2] = (int) CameraControlRecords[i]->x2;
+                            SetNum[1] = (int) CameraControlRecords[i]->x2;
+                            SetNum[2] = (int) CameraControlRecords[i]->y1;
                             SetNum[3] = (int) CameraControlRecords[i]->y2;
-                            SetNum[(int) CameraControlRecords[i]->ChangeValueOffset] = (int) CameraControlRecords[i]->ChangedValue;
+                            k = (int) CameraControlRecords[i]->ChangeValueOffset;
+                            SetNum[k] = (int) CameraControlRecords[i]->ChangedValue;
                             CameraLimitationPainter.drawRect(16 * SetNum[0],
-                                                             16 * SetNum[1],
-                                                             16 * (MIN(SetNum[2], (int) Width - 3) - SetNum[0] + 1),
-                                                             16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[1] + 1));
+                                                             16 * SetNum[2],
+                                                             16 * (MIN(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
+                                                             16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[2] + 1));
                             CameraLimitationPainter.setPen(CameraLimitationPen);
                         }
                     }
