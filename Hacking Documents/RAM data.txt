@@ -159,8 +159,8 @@ And there is a small list of memory addresses with a short description which can
 030019f4 - Wario position y (2 byte) [read only]
 030019f6 - Disable enemies and wario(2 byte) (until reach 0) - 00-ff
 030019f8 - Hide wario - 00(show) 01(hide)  (?)
-0300320e - Camera DestX (2 bytes)
-03003210 - Camera DestY (2 bytes)
+0300320e - Camera DestX (2 bytes) //Wrong this is not my record
+03003210 - Camera DestY (2 bytes) //Wrong this is not my record
 03003213 - Camera panning style (1 byte) - 00(default) 05(don't limit camera on y axis)
 03003214 - Scroll background (1 byte) - 00(no) 01(yes)
 03003215 - A counter 
