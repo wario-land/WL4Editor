@@ -1,9 +1,8 @@
 #include "WL4EditorWindow.h"
 #include <QApplication>
-
+#include <QMessageBox>
 #include <fstream>
 #include "ROMUtils.h"
-
 #include "LevelComponents/Level.h"
 #include <iostream>
 #include <cstring>
@@ -19,18 +18,36 @@
 
 extern int selectedRoom;
 
-void LoadROMFile(std::string filePath)
+bool LoadROMFile(std::string filePath)
 {
     // Read ROM file into current file array
     std::ifstream ifs(filePath, std::ios::binary | std::ios::ate);
     std::ifstream::pos_type pos = ifs.tellg();
+    // To check ROM size
     int length = pos;
-    ROMUtils::CurrentFileSize = length;
-    ROMUtils::CurrentFile = new unsigned char[length];
-    strcpy(ROMUtils::ROMFilePath, filePath.c_str());
+    if(length<=0xB0)
+    {
+		ifs.close();
+        return false;
+    }
+    unsigned char * ROMAddr = new unsigned char[length];
     ifs.seekg(0, std::ios::beg);
-    ifs.read((char*) ROMUtils::CurrentFile, length);
+    ifs.read((char*) ROMAddr, length);
     ifs.close();
+    // To check ROM correct
+    if(strncmp((const char*)(ROMAddr + 0xA0), "WARIOLANDE", 10)!=0)
+    {//if loaded a wrong ROM
+        delete[] ROMAddr;
+        return false;
+    }
+    else
+    {
+        ROMUtils::CurrentFileSize = length;
+        strcpy(ROMUtils::ROMFilePath, filePath.c_str());
+        ROMUtils::CurrentFile=(unsigned char*)ROMAddr;
+        return true;
+    }
+
 }
 
 int main(int argc, char *argv[])

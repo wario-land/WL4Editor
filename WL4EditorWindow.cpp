@@ -10,7 +10,7 @@
 #include <QGraphicsScene>
 #include <QMessageBox>
 
-void LoadROMFile(std::string); // Prototype for main.cpp function
+bool LoadROMFile(std::string); // Prototype for main.cpp function
 
 // Variables used by WL4EditorWindow
 QString statusBarText("Open a ROM file");
@@ -123,7 +123,11 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
 
     // Load the ROM file
     std::string filePath = qFilePath.toStdString();
-    LoadROMFile(filePath);
+    if(!LoadROMFile(filePath))
+    {
+        QMessageBox::critical(nullptr,QString("Load Error"),QString("You may load a wrong ROM!"));
+        return;
+    }
 
     // Set the program title
     std::string fileName = filePath.substr(filePath.rfind('/') + 1);
