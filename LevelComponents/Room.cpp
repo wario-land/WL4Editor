@@ -229,9 +229,9 @@ namespace LevelComponents
                 QPixmap doorPixmap(sceneWidth, sceneHeight);
                 doorPixmap.fill(Qt::transparent);
                 QPainter doorPainter(&doorPixmap);
-                QPen redPen = QPen(QBrush(Qt::blue), 2);
-                redPen.setJoinStyle(Qt::MiterJoin);
-                doorPainter.setPen(redPen);
+                QPen DoorPen = QPen(QBrush(Qt::blue), 2);
+                DoorPen.setJoinStyle(Qt::MiterJoin);
+                doorPainter.setPen(DoorPen);
                 for(unsigned int i = 0; i < doors.size(); i++)
                 {
                     int doorX = doors[i]->GetX1() * 16;
@@ -246,6 +246,77 @@ namespace LevelComponents
                 RenderedLayers[5] = doorpixmapItem;
 
                 // TODO render camera box layer
+                QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
+                CameraLimitationPixmap.fill(Qt::transparent);
+                QPainter CameraLimitationPainter(&CameraLimitationPixmap);
+                QPen CameraLimitationPen = QPen(QBrush(Qt::red), 2);
+                QPen CameraLimitationPen2 = QPen(QBrush(Qt::green), 2);
+                CameraLimitationPen.setJoinStyle(Qt::MiterJoin);
+                CameraLimitationPainter.setPen(CameraLimitationPen);
+                int SetNum[4] = {0, 0, 0, 0};
+                if(CameraControlType == LevelComponents::FixedY)
+                {
+                    // Use Wario original position when getting out of a door to figure out the Camera Limitator Y position
+                    // CameraY and WarioYPos here are 4 times the real values
+                    int CameraY = 0x80 - 32;
+                    int WarioYPos = doors[0]->GetWarioOriginalPosition_x4().y(); // Use the first door in the data
+                    if(WarioYPos > 0x260)
+                    {
+                        do
+                            CameraY += 0x240;
+                        while(WarioYPos > (CameraY + 0x280));
+                    }
+                    // Force the value to be normal
+                    CameraY = CameraY / 4;
+                    // Get the first Camera limitator Y value
+                    while (CameraY > 0xA0)
+                        CameraY -= 0x90;
+                    // Draw Camera Limitation
+                    while ((CameraY + 0xA0) < (int) (Height * 16))
+                    {
+                        CameraLimitationPainter.drawRect(0x20, CameraY, (int) Width * 16 - 0x40, 0xA0);
+                        CameraY += 0x90;
+                    }
+                }
+                else if(CameraControlType == LevelComponents::NoLimit)
+                    CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0x40);
+                else if(CameraControlType == LevelComponents::HasControlAttrs)
+                {
+                    for(unsigned int i = 0; i < CameraControlRecords.size(); i++)
+                    {
+                        CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecords[i]->x1) + 1,
+                                             16 * ((int) CameraControlRecords[i]->y1) + 1,
+                                             16 * (MIN((int) CameraControlRecords[i]->x2, (int) Width - 3) - (int) CameraControlRecords[i]->x1 + 1) - 2,
+                                             16 * (MIN((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2);
+                        if(CameraControlRecords[i]->x3 != (unsigned char) '\xFF')
+                        {
+                            CameraLimitationPainter.fillRect(16 * ((int) CameraControlRecords[i]->x3) + 2,
+                                                             16 * ((int) CameraControlRecords[i]->y3) + 2,
+                                                             12,
+                                                             12,
+                                                             QColor(0xFF, 0, 0, 0x5F));
+                            CameraLimitationPainter.setPen(CameraLimitationPen2);
+                            SetNum[0] = (int) CameraControlRecords[i]->x1;
+                            SetNum[1] = (int) CameraControlRecords[i]->y1;
+                            SetNum[2] = (int) CameraControlRecords[i]->x2;
+                            SetNum[3] = (int) CameraControlRecords[i]->y2;
+                            SetNum[(int) CameraControlRecords[i]->ChangeValueOffset] = (int) CameraControlRecords[i]->ChangedValue;
+                            CameraLimitationPainter.drawRect(16 * SetNum[0],
+                                                             16 * SetNum[1],
+                                                             16 * (MIN(SetNum[2], (int) Width - 3) - SetNum[0] + 1),
+                                                             16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[1] + 1));
+                            CameraLimitationPainter.setPen(CameraLimitationPen);
+                        }
+                    }
+                }
+                else
+                {
+                    // TODO (I don't know yet.)
+                }
+
+                QGraphicsPixmapItem *CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
+                CameraLimitationpixmapItem->setZValue(Z++);
+                RenderedLayers[6] = CameraLimitationpixmapItem;
 
             }
         case LayerEnable:
