@@ -192,7 +192,7 @@ namespace LevelComponents
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
 
                     // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
-                    if(Layer0ColorBlending)
+                    if(Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
                     {
                         // If this is a pass for a layer under the alpha layer, draw the rendered layer to the EVA component image
                         if((3 - i) > layers[0]->GetLayerPriority())
@@ -249,9 +249,11 @@ namespace LevelComponents
                 QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
                 CameraLimitationPixmap.fill(Qt::transparent);
                 QPainter CameraLimitationPainter(&CameraLimitationPixmap);
+                CameraLimitationPainter.setRenderHint(QPainter::Antialiasing);
                 QPen CameraLimitationPen = QPen(QBrush(Qt::red), 2);
                 QPen CameraLimitationPen2 = QPen(QBrush(Qt::green), 2);
                 CameraLimitationPen.setJoinStyle(Qt::MiterJoin);
+                CameraLimitationPen2.setJoinStyle(Qt::MiterJoin);
                 CameraLimitationPainter.setPen(CameraLimitationPen);
                 int SetNum[4] = {0, 0, 0, 0};
                 if(CameraControlType == LevelComponents::FixedY)
@@ -290,21 +292,25 @@ namespace LevelComponents
                                              16 * (MIN((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2);
                         if(CameraControlRecords[i]->x3 != (unsigned char) '\xFF')
                         {
-                            CameraLimitationPainter.fillRect(16 * ((int) CameraControlRecords[i]->x3) + 2,
+                            CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecords[i]->x3) + 2,
                                                              16 * ((int) CameraControlRecords[i]->y3) + 2,
                                                              12,
-                                                             12,
-                                                             QColor(0xFF, 0, 0, 0x5F));
+                                                             12);
+                            CameraLimitationPainter.drawLine(16 * ((int) CameraControlRecords[i]->x1) + 1,
+                                                             16 * ((int) CameraControlRecords[i]->y1) + 1,
+                                                             16 * ((int) CameraControlRecords[i]->x3) + 2,
+                                                             16 * ((int) CameraControlRecords[i]->y3) + 2);
                             CameraLimitationPainter.setPen(CameraLimitationPen2);
                             SetNum[0] = (int) CameraControlRecords[i]->x1;
-                            SetNum[1] = (int) CameraControlRecords[i]->y1;
-                            SetNum[2] = (int) CameraControlRecords[i]->x2;
+                            SetNum[1] = (int) CameraControlRecords[i]->x2;
+                            SetNum[2] = (int) CameraControlRecords[i]->y1;
                             SetNum[3] = (int) CameraControlRecords[i]->y2;
-                            SetNum[(int) CameraControlRecords[i]->ChangeValueOffset] = (int) CameraControlRecords[i]->ChangedValue;
+                            int k = (int) CameraControlRecords[i]->ChangeValueOffset;
+                            SetNum[k] = (int) CameraControlRecords[i]->ChangedValue;
                             CameraLimitationPainter.drawRect(16 * SetNum[0],
-                                                             16 * SetNum[1],
-                                                             16 * (MIN(SetNum[2], (int) Width - 3) - SetNum[0] + 1),
-                                                             16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[1] + 1));
+                                                             16 * SetNum[2],
+                                                             16 * (MIN(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
+                                                             16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[2] + 1));
                             CameraLimitationPainter.setPen(CameraLimitationPen);
                         }
                     }
@@ -371,5 +377,6 @@ namespace LevelComponents
             return (this->RoomHeader.Layer2Data - 0x8000000);
         else if(LayerNum == 3)
             return (this->RoomHeader.Layer3Data - 0x8000000);
+    return 0;
     }
 }
