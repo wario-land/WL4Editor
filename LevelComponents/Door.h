@@ -40,7 +40,7 @@ namespace LevelComponents
         enum DoorType type;
         unsigned char RoomID;
         int X1, X2, Y1, Y2; //destination just be (X1, Y1)
-        std::shared_ptr<Door*> DestinationDoor = nullptr;
+        Door *DestinationDoor = nullptr;
         unsigned char X_Displacement, Y_Displacement;
         unsigned char EntitySetID;
         unsigned int BGM_ID;
@@ -50,11 +50,10 @@ namespace LevelComponents
         Door(unsigned char _RoomID, enum DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
 
         // Methods
-        Door *GetDestinationDoor() { return *DestinationDoor; }
+        Door *GetDestinationDoor() { return DestinationDoor; }
         int GetRoomID() {return (int) this->RoomID; }
-        void SetDestinationDoor(Door *otherDoor) { DestinationDoor = std::make_shared<Door*>(otherDoor); }
-        void SetDoorDisplacement(char _X_Displacement, char _Y_Displacement);
-        void GetDoorDisplacement(unsigned char _X_Displacement, unsigned char _Y_Displacement);
+        void SetDestinationDoor(Door *otherDoor) { DestinationDoor = otherDoor; }
+        void SetDoorDisplacement(unsigned char _X_Displacement, unsigned char _Y_Displacement);
         void SetEntitySetID(unsigned char _EntitySetID) { EntitySetID = _EntitySetID; }
         int GetEntitySetID() {return (int) EntitySetID; }
         void SetBGM(unsigned int _BGM_ID) { BGM_ID = _BGM_ID; }

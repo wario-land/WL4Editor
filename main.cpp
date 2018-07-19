@@ -4,6 +4,7 @@
 #include <fstream>
 #include "ROMUtils.h"
 #include "LevelComponents/Level.h"
+#include "Dialog/RoomConfigDialog.h"
 #include <iostream>
 #include <cstring>
 
@@ -50,8 +51,20 @@ bool LoadROMFile(std::string filePath)
 
 }
 
+static void AllStaticInitialization()
+{
+    RoomConfigDialog::StaticInitialization();
+}
+
+/// <summary>
+/// Perform static initializations, and then create the main window for the application.
+/// </summary>
+/// <param name="argc">Number of command line arguments.</param>
+/// <param name="argv">Array of command line arguments.</param>
 int main(int argc, char *argv[])
 {
+    AllStaticInitialization();
+
     QApplication a(argc, argv);
     WL4EditorWindow w;
     w.show();
@@ -115,7 +128,7 @@ int main(int argc, char *argv[])
         std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
         */
     }
-    delete username;
+    delete[] username;
     //-------------------------------------------------------------------
 
     return a.exec();
