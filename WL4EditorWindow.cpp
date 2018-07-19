@@ -52,6 +52,11 @@ WL4EditorWindow::~WL4EditorWindow()
     delete ui;
     delete Tile16SelecterWidget;
     delete EditModeWidget;
+    delete statusBarLabel;
+    if(CurrentLevel)
+    {
+        delete CurrentLevel;
+    }
 }
 
 /// <summary>
@@ -271,6 +276,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
         return;
     }
 
+    // Load the previous room
     --selectedRoom;
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
@@ -296,6 +302,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
         return;
     }
 
+    // Load the next room
     ++selectedRoom;
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
@@ -355,41 +362,34 @@ void WL4EditorWindow::resizeEvent(QResizeEvent *event)
     }
 }
 
+/// <summary>
+/// Undo the previous operation, if an action has been performed.
+/// </summary>
 void WL4EditorWindow::on_actionUndo_triggered()
 {
     UndoOperation();
 }
 
+/// <summary>
+/// Redo a previously undone operation.
+/// </summary>
 void WL4EditorWindow::on_actionRedo_triggered()
 {
     RedoOperation();
 }
 
+/// <summary>
+/// Show the user a dialog for configuring the current room. If the user clicks OK, apply selected parameters to the room.
+/// </summary>
 void WL4EditorWindow::on_actionRoom_Config_triggered()
 {
-    DialogParams::RoomConfigParams *_currentRoomConfigParams;
-    _currentRoomConfigParams->CurrentTilesetIndex = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();  // Sometimes the program stop here with a segmentation fault
-    _currentRoomConfigParams->Layer0Alpha = CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnable();
-    _currentRoomConfigParams->Layer0MappingTypeParam = CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam();
-    _currentRoomConfigParams->Layer0Enable = ((CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam() == 0) ? false: true);
-    _currentRoomConfigParams->Layer0DataPtr = ((CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam() >= 20) ? CurrentLevel->GetRooms()[selectedRoom]->GetLayersDataPtr(0) : 0);
-    _currentRoomConfigParams->Layer2Enable = CurrentLevel->GetRooms()[selectedRoom]->IsLayer2Enabled();
-    _currentRoomConfigParams->LayerPriorityAndAlphaAttr = CurrentLevel->GetRooms()[selectedRoom]->GetLayerEffectsParam();
-    _currentRoomConfigParams->RoomHeight = CurrentLevel->GetRooms()[selectedRoom]->GetHeight();
-    _currentRoomConfigParams->RoomWidth = CurrentLevel->GetRooms()[selectedRoom]->GetWidth();
-    _currentRoomConfigParams->BackgroundLayerEnable = CurrentLevel->GetRooms()[selectedRoom]->IsBGLayerEnabled();
-    if(_currentRoomConfigParams->BackgroundLayerEnable)
-    {
-        _currentRoomConfigParams->BackgroundLayerDataPtr = CurrentLevel->GetRooms()[selectedRoom]->GetLayersDataPtr(3);
-        _currentRoomConfigParams->BackgroundLayerAutoScrollEnable = CurrentLevel->GetRooms()[selectedRoom]->IsBGLayerAutoScrollEnabled();
-    }else{
-        _currentRoomConfigParams->BackgroundLayerDataPtr = WL4Constants::BGLayerDisableDefaultPtr;
-        _currentRoomConfigParams->BackgroundLayerAutoScrollEnable = false;
-    }
-    RoomConfigDialog tmpdialog;
-    tmpdialog.InitDialog(_currentRoomConfigParams);
+    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
+    DialogParams::RoomConfigParams *_currentRoomConfigParams = new DialogParams::RoomConfigParams(CurrentLevel->GetRooms()[selectedRoom]);
+
+    // Show the dialog
+    RoomConfigDialog tmpdialog(this, _currentRoomConfigParams);
     if(tmpdialog.exec() == QDialog::Accepted)
     {
-        // TODO
+        // TODO Apply the selected parameters to the current room
     }
 }

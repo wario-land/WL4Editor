@@ -30,7 +30,6 @@ private:
     int selectedRoom = 0;
     bool UnsavedChanges = false;
     bool firstROMLoaded = false;
-
     bool UnsavedChangesWarning();
 
 protected:

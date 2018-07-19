@@ -18,28 +18,26 @@ namespace LevelComponents
     /// <param name="roomDataPtr">Pointer to the start of the room data header.</param>
     /// <param name="_RoomID">Zero-based ID for the room in the level.</param>
     /// <param name="_LevelID">0x03000023 level index value.</param>
-    Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID)
+    Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) :
+        RoomID(_RoomID),
+        TilesetID(ROMUtils::CurrentFile[roomDataPtr])
     {
-        this->RoomID = _RoomID;
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
 
         // Copy the room header information
         memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
 
         // Set up tileset
-        int tilesetIndex = ROMUtils::CurrentFile[roomDataPtr];
-        this->TilesetID = tilesetIndex;
-        int tilesetPtr = WL4Constants::TilesetDataTable + tilesetIndex * 36;
-        tileset = new Tileset(tilesetPtr, tilesetIndex);
+        int tilesetPtr = WL4Constants::TilesetDataTable + TilesetID * 36;
+        tileset = new Tileset(tilesetPtr, TilesetID);
 
         // Set up the layer data
         int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
         Width = ROMUtils::CurrentFile[dimensionPointer];
         Height = ROMUtils::CurrentFile[dimensionPointer + 1];
-        enum LayerMappingType mappingType;
         for(int i = 0; i < 4; ++i)
         {
-            mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1] & 0x30);
+            enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1] & 0x30);
             int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
             layers[i] = new Layer(layerPtr, mappingType);
         }
@@ -109,15 +107,13 @@ namespace LevelComponents
         }
 
         // Load Entity list for each difficulty level
-        int Listaddress;
-        EntityRoomAttribute tmpEntityroomattribute;
-        int k;
         for(int i = 0; i < 3; i++)
         {
-            Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
-            k = 0;
+            int Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
+            int k = 0;
             while(ROMUtils::CurrentFile[Listaddress + 3 * k] != (unsigned char) '\xFF') // maximum entity count is 46
             {
+                EntityRoomAttribute tmpEntityroomattribute;
                 tmpEntityroomattribute.YPos     = (int) ROMUtils::CurrentFile[Listaddress + 3 * k];
                 tmpEntityroomattribute.XPos     = (int) ROMUtils::CurrentFile[Listaddress + 3 * k + 1];
                 tmpEntityroomattribute.EntityID = (int) ROMUtils::CurrentFile[Listaddress + 3 * k + 2];
@@ -255,7 +251,7 @@ namespace LevelComponents
                 CameraLimitationPen.setJoinStyle(Qt::MiterJoin);
                 CameraLimitationPen2.setJoinStyle(Qt::MiterJoin);
                 CameraLimitationPainter.setPen(CameraLimitationPen);
-                int SetNum[4] = {0, 0, 0, 0};
+
                 if(CameraControlType == LevelComponents::FixedY)
                 {
                     // Use Wario original position when getting out of a door to figure out the Camera Limitator Y position
@@ -281,50 +277,66 @@ namespace LevelComponents
                     }
                 }
                 else if(CameraControlType == LevelComponents::NoLimit)
+                {
                     CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0x40);
+                }
                 else if(CameraControlType == LevelComponents::HasControlAttrs)
                 {
                     for(unsigned int i = 0; i < CameraControlRecords.size(); i++)
                     {
-                        CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecords[i]->x1) + 1,
-                                             16 * ((int) CameraControlRecords[i]->y1) + 1,
-                                             16 * (MIN((int) CameraControlRecords[i]->x2, (int) Width - 3) - (int) CameraControlRecords[i]->x1 + 1) - 2,
-                                             16 * (MIN((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2);
+                        CameraLimitationPainter.drawRect(
+                            16 * ((int) CameraControlRecords[i]->x1) + 1,
+                            16 * ((int) CameraControlRecords[i]->y1) + 1,
+                            16 * (MIN((int) CameraControlRecords[i]->x2, (int) Width - 3) - (int) CameraControlRecords[i]->x1 + 1) - 2,
+                            16 * (MIN((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2
+                        );
                         if(CameraControlRecords[i]->x3 != (unsigned char) '\xFF')
                         {
-                            CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecords[i]->x3) + 2,
-                                                             16 * ((int) CameraControlRecords[i]->y3) + 2,
-                                                             12,
-                                                             12);
-                            CameraLimitationPainter.drawLine(16 * ((int) CameraControlRecords[i]->x1) + 1,
-                                                             16 * ((int) CameraControlRecords[i]->y1) + 1,
-                                                             16 * ((int) CameraControlRecords[i]->x3) + 2,
-                                                             16 * ((int) CameraControlRecords[i]->y3) + 2);
+                            // Draw a box around the block which triggers the camera box, and a line connecting it
+                            CameraLimitationPainter.drawRect(
+                                16 * ((int) CameraControlRecords[i]->x3) + 2,
+                                16 * ((int) CameraControlRecords[i]->y3) + 2,
+                                12,
+                                12
+                            );
+                            CameraLimitationPainter.drawLine(
+                                16 * ((int) CameraControlRecords[i]->x1) + 1,
+                                16 * ((int) CameraControlRecords[i]->y1) + 1,
+                                16 * ((int) CameraControlRecords[i]->x3) + 2,
+                                16 * ((int) CameraControlRecords[i]->y3) + 2
+                            );
+
+
                             CameraLimitationPainter.setPen(CameraLimitationPen2);
-                            SetNum[0] = (int) CameraControlRecords[i]->x1;
-                            SetNum[1] = (int) CameraControlRecords[i]->x2;
-                            SetNum[2] = (int) CameraControlRecords[i]->y1;
-                            SetNum[3] = (int) CameraControlRecords[i]->y2;
+                            int SetNum[4] =
+                            {
+                                (int) CameraControlRecords[i]->x1,
+                                (int) CameraControlRecords[i]->x2,
+                                (int) CameraControlRecords[i]->y1,
+                                (int) CameraControlRecords[i]->y2
+                            };
                             int k = (int) CameraControlRecords[i]->ChangeValueOffset;
                             SetNum[k] = (int) CameraControlRecords[i]->ChangedValue;
-                            CameraLimitationPainter.drawRect(16 * SetNum[0],
-                                                             16 * SetNum[2],
-                                                             16 * (MIN(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
-                                                             16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[2] + 1));
+                            CameraLimitationPainter.drawRect(
+                                16 * SetNum[0],
+                                16 * SetNum[2],
+                                16 * (MIN(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
+                                16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[2] + 1)
+                            );
                             CameraLimitationPainter.setPen(CameraLimitationPen);
                         }
                     }
                 }
                 else
                 {
-                    // TODO (I don't know yet.)
+                    // TODO other camera control type
                 }
 
                 QGraphicsPixmapItem *CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
                 CameraLimitationpixmapItem->setZValue(Z++);
                 RenderedLayers[6] = CameraLimitationpixmapItem;
-
             }
+            // Fall through to layer enable section
         case LayerEnable:
             {
                 // Enable visibility of the foreground and background layers
@@ -367,16 +379,33 @@ namespace LevelComponents
         return nullptr;
     }
 
+    /// <summary>
+    /// Get the layer data pointer for a layer.
+    /// </summary>
+    /// <remarks>
+    /// The pointer starts in the 0x8000000 range, so the 28th bit is set to 0 to normalize the address.
+    /// </remarks>
+    /// <param name="LayerNum">
+    /// The number of the layer to retrieve the data pointer for.
+    /// </param>
+    /// <return>
+    /// The normalized data pointer for the requested layer.
+    /// </return>
     int Room::GetLayersDataPtr(int LayerNum)
     {
-        if(LayerNum == 0)
-            return (this->RoomHeader.Layer0Data - 0x8000000);
-        else if(LayerNum == 1)
-            return (this->RoomHeader.Layer1Data - 0x8000000);
-        else if(LayerNum == 2)
-            return (this->RoomHeader.Layer2Data - 0x8000000);
-        else if(LayerNum == 3)
-            return (this->RoomHeader.Layer3Data - 0x8000000);
-    return 0;
+        switch(LayerNum)
+        {
+            case 0:
+                return RoomHeader.Layer0Data & 0x7FFFFFF;
+            case 1:
+                return RoomHeader.Layer1Data & 0x7FFFFFF;
+            case 2:
+                return RoomHeader.Layer2Data & 0x7FFFFFF;
+            case 3:
+                return RoomHeader.Layer3Data & 0x7FFFFFF;
+            default:
+                // ERROR
+                return 0;
+        }
     }
 }

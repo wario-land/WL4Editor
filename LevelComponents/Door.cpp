@@ -2,49 +2,48 @@
 
 namespace LevelComponents
 {
-    Door::Door(unsigned char _RoomID, LevelComponents::DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2)
+    Door::Door(unsigned char _RoomID, LevelComponents::DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2) :
+        type(_DoorType),
+        RoomID(_RoomID),
+        X1(_X1),
+        X2(_X2),
+        Y1(_Y1),
+        Y2(_Y2)
     {
-        this->RoomID = _RoomID;
-        this->type = _DoorType;
-        this->X1 = _X1;
-        this->X2 = _X2;
-        this->Y1 = _Y1;
-        this->Y2 = _Y2;
+        // nothing here (yet)
     }
 
-    void Door::SetDoorDisplacement(char _X_Displacement, char _Y_Displacement)
+    void Door::SetDoorDisplacement(unsigned char _X_Displacement, unsigned char _Y_Displacement)
     {
-        X_Displacement = (unsigned char) _X_Displacement;
-        Y_Displacement = (unsigned char) _Y_Displacement;
-    }
-
-    void Door::GetDoorDisplacement(unsigned char _X_Displacement, unsigned char _Y_Displacement)
-    {
-        this->X_Displacement = _X_Displacement;
-        this->Y_Displacement = _Y_Displacement;
+        X_Displacement = _X_Displacement;
+        Y_Displacement = _Y_Displacement;
     }
 
     void Door::SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2)
     {
-        this->X1 = _X1;
-        this->X2 = _X2;
-        this->Y1 = _Y1;
-        this->Y2 = _Y2;
+        X1 = _X1;
+        X2 = _X2;
+        Y1 = _Y1;
+        Y2 = _Y2;
     }
 
+    /// <summary>
+    /// Determine if a door is unused.
+    /// </summary>
+    /// <return>
+    /// it return a QPoint(xpos, ypos).
+    /// </return>
     bool Door::IsUnused()
     {
-        if((this->type != Portal) && (this->DestinationDoor == nullptr))
-            return true;
-        return false;
+        return type != Portal && DestinationDoor == nullptr;
     }
 
     /// <summary>
     /// Generate Wario's original position (unit: pixel) when appear from the door.
     /// </summary>
-    /// <remarks>
-    /// it return a QPoint(xpos, ypos).
-    /// </remarks>
+    /// <return>
+    /// true if the door is unused.
+    /// </return>
     QPoint Door::GetWarioOriginalPosition_x4()
     {
         int ypos, xpos;

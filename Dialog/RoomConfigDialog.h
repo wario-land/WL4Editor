@@ -10,7 +10,9 @@
 
 #include "WL4Constants.h"
 #include "ROMUtils.h"
-#include "LevelComponents/Layer.h"  //include Tileset.h
+#include "LevelComponents/Layer.h"
+#include "LevelComponents/Tileset.h"
+#include "LevelComponents/Room.h"
 
 namespace DialogParams
 {
@@ -24,39 +26,36 @@ namespace DialogParams
         int RoomWidth;
         int RoomHeight;
         bool Layer2Enable;
+        int Layer0DataPtr;
         bool BackgroundLayerEnable;
         bool BackgroundLayerAutoScrollEnable;
         int BackgroundLayerDataPtr;
-        int Layer0DataPtr;
-        // TODO
-    };
 
-    // Unuse
-    /*
-    enum LayerPriorityCases
-    {
-        L0L1L2L3 = 0,
-        L1L0L2L3 = 1, // or 2
-        L1L2L0L3 = 3,
+        // Construct this param struct using a Room object
+        RoomConfigParams(LevelComponents::Room *room) :
+            CurrentTilesetIndex(room->GetTilesetID()),
+            Layer0Enable(room->GetLayer0MappingParam() != 0),
+            Layer0Alpha(room->IsLayer0ColorBlendingEnable()),
+            LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
+            Layer0MappingTypeParam(room->GetLayer0MappingParam()),
+            RoomWidth(room->GetWidth()),
+            RoomHeight(room->GetHeight()),
+            Layer2Enable(room->IsLayer2Enabled()),
+            Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayersDataPtr(0) : 0),
+            BackgroundLayerEnable(room->IsBGLayerEnabled())
+        {
+            if(BackgroundLayerEnable)
+            {
+                BackgroundLayerDataPtr = room->GetLayersDataPtr(3);
+                BackgroundLayerAutoScrollEnable = room->IsBGLayerAutoScrollEnabled();
+            }
+            else
+            {
+                BackgroundLayerDataPtr = WL4Constants::BGLayerDisableDefaultPtr;
+                BackgroundLayerAutoScrollEnable = false;
+            }
+        }
     };
-
-    enum AlphaBlendAttrCases
-    {
-        NoAlpha = 0,
-        EVA_7_EVB_16 = 8,
-        EVA_10_EVB_16 = 16,
-        EVA_13_EVB_16 = 24,
-        EVA_16_EVB_16 = 32,
-        EVA_16_EVB_0 = 40,
-        EVA_13_EVB_3 = 48,
-        EVA_10_EVB_6 = 56,
-        EVA_7_EVB_9 = 64,
-        EVA_5_EVB_11 = 72,
-        EVA_3_EVB_13 = 80,
-        EVA_0_EVB_16 = 88
-    };
-    */
-
 }
 
 namespace Ui {
@@ -68,10 +67,9 @@ class RoomConfigDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit RoomConfigDialog(QWidget *parent = 0);
+    explicit RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigParams *CurrentRoomParams);
     ~RoomConfigDialog();
-    InitDialog();
-    InitDialog(DialogParams::RoomConfigParams *CurrentRoomParams);
+    static void StaticInitialization();
 
 private slots:
     void on_CheckBox_Layer0Enable_stateChanged(int arg1);
@@ -95,11 +93,234 @@ private:
     QGraphicsScene *tmpGraphicviewScene = nullptr;
     LevelComponents::Layer *tmpLayer0 = nullptr;
     LevelComponents::Layer *tmpBGLayer = nullptr;
-    int BGLayerdataPtrs[0x5C][3];
-    void SetBGLayerdataPtrs();
-    void InitComboBoxItems();
     void ShowTilesetDetails();
     void ShowMappingType20LayerDetails(int _layerdataAddr, LevelComponents::Layer *_tmpLayer);
+
+    // Enumeration of the available tilesets
+    static constexpr const char *TilesetNamesSetData[0x5C] =
+    {
+        "00  Debug room",
+        "01  Palm Tree Paradise",
+        "02  Caves",
+        "03  The Big Board",
+        "04  The Big Board",
+        "05  The Big Board (indoor)",
+        "06  Wildflower Fields",
+        "07  Toy Block Tower",
+        "08  Factory",
+        "09  Wildflower Underground",
+        "0A  Wildflower WaterPlace",
+        "0B  Underwater",
+        "0C  Toy Block Tower",
+        "0D  Toy Block Tower",
+        "0E  Toy Block Tower",
+        "0F  Doodle woods",
+        "10  Dominoes",
+        "11  Hall of Hieroglyphs",
+        "12  Haunte House",
+        "13  Crescent Moon Village outside",
+        "14  Drain",
+        "15  Arabian outside",
+        "16  Arabian inside",
+        "17  Arabian",
+        "18  Arabian",
+        "19  Arabian",
+        "1A  Dominoes (blue)",
+        "1B  Dominoes (purple)",
+        "1C  Dominoes (teal)",
+        "1D  Factory",
+        "1E  Factory",
+        "1F  Jungle",
+        "20  Factory",
+        "21  Toxic Landfill",
+        "22  Toxic Landfill",
+        "23  Pinball",
+        "24  Pinball",
+        "25  Pinball (with Gorilla)",
+        "26  Jungle",
+        "27  40 Below Fridge",
+        "28  Jungle",
+        "29  Jungle caves",
+        "2A  Hotel",
+        "2B  Hotel",
+        "2C  Hotel",
+        "2D  Hotel",
+        "2E  Hotel",
+        "2F  Hotel (outside)",
+        "30  Unused in-game (Haunted House)",
+        "31  Unused in-game (Haunted House)",
+        "32  Unused in-game (Cardboard)",
+        "33  Cardboard",
+        "34  Caves",
+        "35  Jungle",
+        "36  Caves",
+        "37  Lava level",
+        "38  Caves",
+        "39  Golden Passage",
+        "3A  Hotel",
+        "3B  Hotel",
+        "3C  Hotel",
+        "3D  Hotel",
+        "3E  40 Below Fridge",
+        "3F  Factory",
+        "40  Factory",
+        "41  Arabian",
+        "42  Boss room",
+        "43  Boss corridor",
+        "44  Boss room",
+        "45  Frozen lava level",
+        "46  Lava level",
+        "47  Hall of Hieroglyphs",
+        "48  Boss room",
+        "49  Boss room",
+        "4A  Boss corridor",
+        "4B  Boss corridor",
+        "4C  Boss corridor",
+        "4D  Boss corridor",
+        "4E  Boss corridor",
+        "4F  Boss room (Diva)",
+        "50  Hall of Hieroglyphs",
+        "51  Jungle",
+        "52  Wildflower",
+        "53  Crescent Moon Village",
+        "54  Crescent Moon Village",
+        "55  Crescent Moon Village",
+        "56  Toy Block Tower",
+        "57  Pinball",
+        "58  Bonus room",
+        "59  Bonus room",
+        "5A  Final level",
+        "5B  The Big Board end"
+    };
+
+    // Enumeration of the available layer priority settings
+    static constexpr const char *LayerPrioritySetData[3] =
+    {
+        "L0 (Top) > L1 > L2 > L3 (Bottom)",
+        "L1 (Top) > L0 > L2 > L3 (Bottom)",
+        "L1 (Top) > L2 > L0 > L3 (Bottom)"
+    };
+
+    // Enumerations of the available alpha blend settings
+    static constexpr const char *AlphaBlendAttrsSetData[12] =
+    {
+        "No Alpha Blending",
+        "EVA 44%,  EVB 100%",
+        "EVA 63%,  EVB 100%",
+        "EVA 81%,  EVB 100%",
+        "EVA 100%, EVB 100%",
+        "EVA 100%, EVB 0%",
+        "EVA 81%,  EVB 19%",
+        "EVA 63%,  EVB 37%",
+        "EVA 44%,  EVB 56%",
+        "EVA 31%,  EVB 68%",
+        "EVA 19%,  EVB 81%",
+        "EVA 00%,  EVB 100%"
+    };
+
+    // Enumeration of the available layer mapping types
+    static constexpr const char *Layer0MappingTypeParamSetData[2] =
+    {
+        "Map16",
+        "Tile8x8"
+    };
+
+    // Enumeration of the available BGs per tileset (RLE format)
+    static constexpr const int BGLayerdataPtrsData[166] =
+    {
+        0,                            // Tileset 0x00
+        1, WL4Constants::BG_0x5FB2CC,
+        1, WL4Constants::BG_0x5FB8DC,
+        1, WL4Constants::BG_0x603064,
+        1, WL4Constants::BG_0x603064, // 0x04
+        1, WL4Constants::BG_0x60368C,
+        2, WL4Constants::BG_0x5FC9A0, WL4Constants::BG_0x5FC2D0,
+        1, WL4Constants::BG_0x6045C4,
+        1, WL4Constants::BG_0x5FFD94, // 0x08
+        0,
+        1, WL4Constants::BG_0x5FD078,
+        1, WL4Constants::BG_0x5FD484,
+        1, WL4Constants::BG_0x603E98, // 0x0C
+        0,
+        1, WL4Constants::BG_0x604ACC,
+        3, WL4Constants::BG_0x605A7C, WL4Constants::BG_0x6063B0, WL4Constants::BG_0x606CF4,
+        1, WL4Constants::BG_0x6074C4, // 0x10
+        1, WL4Constants::BG_0x5FA6D0,
+        1, WL4Constants::BG_0x60A1D8,
+        1, WL4Constants::BG_0x60A1E8,
+        1, WL4Constants::BG_0x60A4B4, // 0x14
+        1, WL4Constants::BG_0x6094F4,
+        0,
+        1, WL4Constants::BG_0x6094F4,
+        1, WL4Constants::BG_0x6094F4, // 0x18
+        1, WL4Constants::BG_0x6094F4,
+        1, WL4Constants::BG_0x607CD0,
+        1, WL4Constants::BG_0x6084DC,
+        1, WL4Constants::BG_0x608CE8, // 0x1C
+        1, WL4Constants::BG_0x600388,
+        1, WL4Constants::BG_0x600EF8,
+        2, WL4Constants::BG_0x5FD680, WL4Constants::BG_0x5FD9BC,
+        1, WL4Constants::BG_0x6006C4, // 0x20
+        1, WL4Constants::BG_0x6013D4,
+        1, WL4Constants::BG_0x601A0C,
+        0,
+        0,                            // 0x24
+        0,
+        2, WL4Constants::BG_0x5FE918, WL4Constants::BG_0x5FEED8,
+        1, WL4Constants::BG_0x60221C,
+        1, WL4Constants::BG_0x5FE540, // 0x28
+        1, WL4Constants::BG_0x60E860,
+        0,
+        0,
+        0,                            // 0x2C
+        0,
+        0,
+        1, WL4Constants::BG_0x60AD10,
+        0,                            // 0x30
+        0,
+        0,
+        0,
+        1, WL4Constants::BG_0x5FB8DC, // 0x34
+        1, WL4Constants::BG_0x5FF264,
+        1, WL4Constants::BG_0x5FF960,
+        2, WL4Constants::BG_0x60BC54, WL4Constants::BG_0x60B29C,
+        1, WL4Constants::BG_0x5FF684, // 0x38
+        1, WL4Constants::BG_0x60ED78,
+        0,
+        0,
+        0,                            // 0x3C
+        0,
+        1, WL4Constants::BG_0x602858,
+        1, WL4Constants::BG_0x5FFD94,
+        1, WL4Constants::BG_0x600EF8, // 0x40
+        1, WL4Constants::BG_0x609A84,
+        1, WL4Constants::BG_0x60E860,
+        1, WL4Constants::BG_0x60E96C,
+        1, WL4Constants::BG_0x60E860, // 0x44
+        2, WL4Constants::BG_0x60CF98, WL4Constants::BG_0x60C5FC,
+        1, WL4Constants::BG_0x60E044,
+        1, WL4Constants::BG_0x5FA6D0,
+        1, WL4Constants::BG_0x60E860, // 0x48
+        1, WL4Constants::BG_0x60E860,
+        1, WL4Constants::BG_0x60E96C,
+        1, WL4Constants::BG_0x60E96C,
+        1, WL4Constants::BG_0x60E96C, // 0x4C
+        1, WL4Constants::BG_0x60E96C,
+        1, WL4Constants::BG_0x60E96C,
+        1, WL4Constants::BG_0x60E870,
+        1, WL4Constants::BG_0x5FA6D0, // 0x50
+        1, WL4Constants::BG_0x5FE008,
+        1, WL4Constants::BG_0x5FD484,
+        1, WL4Constants::BG_0x60A350,
+        1, WL4Constants::BG_0x60A1E8, // 0x54
+        1, WL4Constants::BG_0x60A1E8,
+        1, WL4Constants::BG_0x605270,
+        0,
+        0,                            // 0x58
+        0,
+        0,
+        0
+    };
 };
 
 #endif // ROOMCONFIGDIALOG_H
