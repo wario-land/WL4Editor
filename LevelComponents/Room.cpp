@@ -192,7 +192,7 @@ namespace LevelComponents
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
 
                     // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
-                    if(Layer0ColorBlending)
+                    if(Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
                     {
                         // If this is a pass for a layer under the alpha layer, draw the rendered layer to the EVA component image
                         if((3 - i) > layers[0]->GetLayerPriority())
@@ -255,7 +255,7 @@ namespace LevelComponents
                 CameraLimitationPen.setJoinStyle(Qt::MiterJoin);
                 CameraLimitationPen2.setJoinStyle(Qt::MiterJoin);
                 CameraLimitationPainter.setPen(CameraLimitationPen);
-                int SetNum[4] = {0, 0, 0, 0}; int k;
+                int SetNum[4] = {0, 0, 0, 0};
                 if(CameraControlType == LevelComponents::FixedY)
                 {
                     // Use Wario original position when getting out of a door to figure out the Camera Limitator Y position
@@ -305,7 +305,7 @@ namespace LevelComponents
                             SetNum[1] = (int) CameraControlRecords[i]->x2;
                             SetNum[2] = (int) CameraControlRecords[i]->y1;
                             SetNum[3] = (int) CameraControlRecords[i]->y2;
-                            k = (int) CameraControlRecords[i]->ChangeValueOffset;
+                            int k = (int) CameraControlRecords[i]->ChangeValueOffset;
                             SetNum[k] = (int) CameraControlRecords[i]->ChangedValue;
                             CameraLimitationPainter.drawRect(16 * SetNum[0],
                                                              16 * SetNum[2],
@@ -377,5 +377,6 @@ namespace LevelComponents
             return (this->RoomHeader.Layer2Data - 0x8000000);
         else if(LayerNum == 3)
             return (this->RoomHeader.Layer3Data - 0x8000000);
+    return 0;
     }
 }
