@@ -188,7 +188,7 @@ namespace LevelComponents
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
 
                     // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
-                    if(Layer0ColorBlending)
+                    if(Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
                     {
                         // If this is a pass for a layer under the alpha layer, draw the rendered layer to the EVA component image
                         if((3 - i) > layers[0]->GetLayerPriority())
@@ -245,11 +245,13 @@ namespace LevelComponents
                 QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
                 CameraLimitationPixmap.fill(Qt::transparent);
                 QPainter CameraLimitationPainter(&CameraLimitationPixmap);
+                CameraLimitationPainter.setRenderHint(QPainter::Antialiasing);
                 QPen CameraLimitationPen = QPen(QBrush(Qt::red), 2);
                 QPen CameraLimitationPen2 = QPen(QBrush(Qt::green), 2);
                 CameraLimitationPen.setJoinStyle(Qt::MiterJoin);
+                CameraLimitationPen2.setJoinStyle(Qt::MiterJoin);
                 CameraLimitationPainter.setPen(CameraLimitationPen);
-                int SetNum[4] = {0, 0, 0, 0};
+
                 if(CameraControlType == LevelComponents::FixedY)
                 {
                     // Use Wario original position when getting out of a door to figure out the Camera Limitator Y position
@@ -275,7 +277,9 @@ namespace LevelComponents
                     }
                 }
                 else if(CameraControlType == LevelComponents::NoLimit)
+                {
                     CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0x40);
+                }
                 else if(CameraControlType == LevelComponents::HasControlAttrs)
                 {
                     for(unsigned int i = 0; i < CameraControlRecords.size(); i++)
@@ -288,24 +292,36 @@ namespace LevelComponents
                         );
                         if(CameraControlRecords[i]->x3 != (unsigned char) '\xFF')
                         {
-                            CameraLimitationPainter.fillRect(
+                            // Draw a box around the block which triggers the camera box, and a line connecting it
+                            CameraLimitationPainter.drawRect(
                                 16 * ((int) CameraControlRecords[i]->x3) + 2,
                                 16 * ((int) CameraControlRecords[i]->y3) + 2,
                                 12,
-                                12,
-                                QColor(0xFF, 0, 0, 0x5F)
+                                12
                             );
+                            CameraLimitationPainter.drawLine(
+                                16 * ((int) CameraControlRecords[i]->x1) + 1,
+                                16 * ((int) CameraControlRecords[i]->y1) + 1,
+                                16 * ((int) CameraControlRecords[i]->x3) + 2,
+                                16 * ((int) CameraControlRecords[i]->y3) + 2
+                            );
+
+
                             CameraLimitationPainter.setPen(CameraLimitationPen2);
-                            SetNum[0] = (int) CameraControlRecords[i]->x1;
-                            SetNum[1] = (int) CameraControlRecords[i]->y1;
-                            SetNum[2] = (int) CameraControlRecords[i]->x2;
-                            SetNum[3] = (int) CameraControlRecords[i]->y2;
-                            SetNum[(int) CameraControlRecords[i]->ChangeValueOffset] = (int) CameraControlRecords[i]->ChangedValue;
+                            int SetNum[4] =
+                            {
+                                (int) CameraControlRecords[i]->x1,
+                                (int) CameraControlRecords[i]->x2,
+                                (int) CameraControlRecords[i]->y1,
+                                (int) CameraControlRecords[i]->y2
+                            };
+                            int k = (int) CameraControlRecords[i]->ChangeValueOffset;
+                            SetNum[k] = (int) CameraControlRecords[i]->ChangedValue;
                             CameraLimitationPainter.drawRect(
                                 16 * SetNum[0],
-                                16 * SetNum[1],
-                                16 * (MIN(SetNum[2], (int) Width - 3) - SetNum[0] + 1),
-                                16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[1] + 1)
+                                16 * SetNum[2],
+                                16 * (MIN(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
+                                16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[2] + 1)
                             );
                             CameraLimitationPainter.setPen(CameraLimitationPen);
                         }
@@ -319,8 +335,8 @@ namespace LevelComponents
                 QGraphicsPixmapItem *CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
                 CameraLimitationpixmapItem->setZValue(Z++);
                 RenderedLayers[6] = CameraLimitationpixmapItem;
-
             }
+            // Fall through to layer enable section
         case LayerEnable:
             {
                 // Enable visibility of the foreground and background layers
@@ -363,17 +379,33 @@ namespace LevelComponents
         return nullptr;
     }
 
+    /// <summary>
+    /// Get the layer data pointer for a layer.
+    /// </summary>
+    /// <remarks>
+    /// The pointer starts in the 0x8000000 range, so the 28th bit is set to 0 to normalize the address.
+    /// </remarks>
+    /// <param name="LayerNum">
+    /// The number of the layer to retrieve the data pointer for.
+    /// </param>
+    /// <return>
+    /// The normalized data pointer for the requested layer.
+    /// </return>
     int Room::GetLayersDataPtr(int LayerNum)
     {
-        if(LayerNum == 0)
-            return (this->RoomHeader.Layer0Data - 0x8000000);
-        else if(LayerNum == 1)
-            return (this->RoomHeader.Layer1Data - 0x8000000);
-        else if(LayerNum == 2)
-            return (this->RoomHeader.Layer2Data - 0x8000000);
-        else if(LayerNum == 3)
-            return (this->RoomHeader.Layer3Data - 0x8000000);
-        // ERROR
-        return 0;
+        switch(LayerNum)
+        {
+            case 0:
+                return RoomHeader.Layer0Data & 0x7FFFFFF;
+            case 1:
+                return RoomHeader.Layer1Data & 0x7FFFFFF;
+            case 2:
+                return RoomHeader.Layer2Data & 0x7FFFFFF;
+            case 3:
+                return RoomHeader.Layer3Data & 0x7FFFFFF;
+            default:
+                // ERROR
+                return 0;
+        }
     }
 }
