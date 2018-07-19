@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
         std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
         */
     }
-    delete username;
+    delete[] username;
     //-------------------------------------------------------------------
 
     return a.exec();

@@ -18,28 +18,26 @@ namespace LevelComponents
     /// <param name="roomDataPtr">Pointer to the start of the room data header.</param>
     /// <param name="_RoomID">Zero-based ID for the room in the level.</param>
     /// <param name="_LevelID">0x03000023 level index value.</param>
-    Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID)
+    Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) :
+        RoomID(_RoomID),
+        TilesetID(ROMUtils::CurrentFile[roomDataPtr])
     {
-        this->RoomID = _RoomID;
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
 
         // Copy the room header information
         memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
 
         // Set up tileset
-        int tilesetIndex = ROMUtils::CurrentFile[roomDataPtr];
-        TilesetID = tilesetIndex;
-        int tilesetPtr = WL4Constants::TilesetDataTable + tilesetIndex * 36;
-        tileset = new Tileset(tilesetPtr, tilesetIndex);
+        int tilesetPtr = WL4Constants::TilesetDataTable + TilesetID * 36;
+        tileset = new Tileset(tilesetPtr, TilesetID);
 
         // Set up the layer data
         int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
         Width = ROMUtils::CurrentFile[dimensionPointer];
         Height = ROMUtils::CurrentFile[dimensionPointer + 1];
-        enum LayerMappingType mappingType;
         for(int i = 0; i < 4; ++i)
         {
-            mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1] & 0x30);
+            enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1] & 0x30);
             int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
             layers[i] = new Layer(layerPtr, mappingType);
         }
@@ -109,15 +107,13 @@ namespace LevelComponents
         }
 
         // Load Entity list for each difficulty level
-        int Listaddress;
-        EntityRoomAttribute tmpEntityroomattribute;
-        int k;
         for(int i = 0; i < 3; i++)
         {
-            Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
-            k = 0;
+            int Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
+            int k = 0;
             while(ROMUtils::CurrentFile[Listaddress + 3 * k] != (unsigned char) '\xFF') // maximum entity count is 46
             {
+                EntityRoomAttribute tmpEntityroomattribute;
                 tmpEntityroomattribute.YPos     = (int) ROMUtils::CurrentFile[Listaddress + 3 * k];
                 tmpEntityroomattribute.XPos     = (int) ROMUtils::CurrentFile[Listaddress + 3 * k + 1];
                 tmpEntityroomattribute.EntityID = (int) ROMUtils::CurrentFile[Listaddress + 3 * k + 2];
@@ -284,34 +280,40 @@ namespace LevelComponents
                 {
                     for(unsigned int i = 0; i < CameraControlRecords.size(); i++)
                     {
-                        CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecords[i]->x1) + 1,
-                                             16 * ((int) CameraControlRecords[i]->y1) + 1,
-                                             16 * (MIN((int) CameraControlRecords[i]->x2, (int) Width - 3) - (int) CameraControlRecords[i]->x1 + 1) - 2,
-                                             16 * (MIN((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2);
+                        CameraLimitationPainter.drawRect(
+                            16 * ((int) CameraControlRecords[i]->x1) + 1,
+                            16 * ((int) CameraControlRecords[i]->y1) + 1,
+                            16 * (MIN((int) CameraControlRecords[i]->x2, (int) Width - 3) - (int) CameraControlRecords[i]->x1 + 1) - 2,
+                            16 * (MIN((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2
+                        );
                         if(CameraControlRecords[i]->x3 != (unsigned char) '\xFF')
                         {
-                            CameraLimitationPainter.fillRect(16 * ((int) CameraControlRecords[i]->x3) + 2,
-                                                             16 * ((int) CameraControlRecords[i]->y3) + 2,
-                                                             12,
-                                                             12,
-                                                             QColor(0xFF, 0, 0, 0x5F));
+                            CameraLimitationPainter.fillRect(
+                                16 * ((int) CameraControlRecords[i]->x3) + 2,
+                                16 * ((int) CameraControlRecords[i]->y3) + 2,
+                                12,
+                                12,
+                                QColor(0xFF, 0, 0, 0x5F)
+                            );
                             CameraLimitationPainter.setPen(CameraLimitationPen2);
                             SetNum[0] = (int) CameraControlRecords[i]->x1;
                             SetNum[1] = (int) CameraControlRecords[i]->y1;
                             SetNum[2] = (int) CameraControlRecords[i]->x2;
                             SetNum[3] = (int) CameraControlRecords[i]->y2;
                             SetNum[(int) CameraControlRecords[i]->ChangeValueOffset] = (int) CameraControlRecords[i]->ChangedValue;
-                            CameraLimitationPainter.drawRect(16 * SetNum[0],
-                                                             16 * SetNum[1],
-                                                             16 * (MIN(SetNum[2], (int) Width - 3) - SetNum[0] + 1),
-                                                             16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[1] + 1));
+                            CameraLimitationPainter.drawRect(
+                                16 * SetNum[0],
+                                16 * SetNum[1],
+                                16 * (MIN(SetNum[2], (int) Width - 3) - SetNum[0] + 1),
+                                16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[1] + 1)
+                            );
                             CameraLimitationPainter.setPen(CameraLimitationPen);
                         }
                     }
                 }
                 else
                 {
-                    // TODO (I don't know yet.)
+                    // TODO other camera control type
                 }
 
                 QGraphicsPixmapItem *CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);

@@ -90,12 +90,9 @@ namespace LevelComponents
     {
     private:
         enum __CameraControlType CameraControlType;
-        unsigned int Layer3Scrolling;
-        unsigned int LayerEffects;
         unsigned int RoomID;
         int TilesetID;
         unsigned int Width, Height;
-        bool Layer0Locked = false;
         bool Layer0ColorBlending = false;
         int Layer0ColorBlendCoefficient_EVA;
         int Layer0ColorBlendCoefficient_EVB;
@@ -104,7 +101,7 @@ namespace LevelComponents
         std::list<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
         Layer *layers[4];
         Tileset *tileset;
-        std::vector<Door*> doors;
+        std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem *RenderedLayers[8]; // L0 - 3, E, D, C, A (may not exist)
 
     public:

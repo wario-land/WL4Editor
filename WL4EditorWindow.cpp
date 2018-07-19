@@ -52,6 +52,11 @@ WL4EditorWindow::~WL4EditorWindow()
     delete ui;
     delete Tile16SelecterWidget;
     delete EditModeWidget;
+    delete statusBarLabel;
+    if(CurrentLevel)
+    {
+        delete CurrentLevel;
+    }
 }
 
 /// <summary>
