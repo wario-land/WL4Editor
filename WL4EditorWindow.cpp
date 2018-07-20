@@ -52,6 +52,11 @@ WL4EditorWindow::~WL4EditorWindow()
     delete ui;
     delete Tile16SelecterWidget;
     delete EditModeWidget;
+    delete statusBarLabel;
+    if(CurrentLevel)
+    {
+        delete CurrentLevel;
+    }
 }
 
 /// <summary>
@@ -150,6 +155,7 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
         // Enable UI that requires a ROM file to be loaded
         ui->loadLevelButton->setEnabled(true);
         ui->actionLevel_Config->setEnabled(true);
+        ui->actionRoom_Config->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -270,6 +276,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
         return;
     }
 
+    // Load the previous room
     --selectedRoom;
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
@@ -295,6 +302,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
         return;
     }
 
+    // Load the next room
     ++selectedRoom;
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
@@ -354,12 +362,34 @@ void WL4EditorWindow::resizeEvent(QResizeEvent *event)
     }
 }
 
+/// <summary>
+/// Undo the previous operation, if an action has been performed.
+/// </summary>
 void WL4EditorWindow::on_actionUndo_triggered()
 {
     UndoOperation();
 }
 
+/// <summary>
+/// Redo a previously undone operation.
+/// </summary>
 void WL4EditorWindow::on_actionRedo_triggered()
 {
     RedoOperation();
+}
+
+/// <summary>
+/// Show the user a dialog for configuring the current room. If the user clicks OK, apply selected parameters to the room.
+/// </summary>
+void WL4EditorWindow::on_actionRoom_Config_triggered()
+{
+    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
+    DialogParams::RoomConfigParams *_currentRoomConfigParams = new DialogParams::RoomConfigParams(CurrentLevel->GetRooms()[selectedRoom]);
+
+    // Show the dialog
+    RoomConfigDialog tmpdialog(this, _currentRoomConfigParams);
+    if(tmpdialog.exec() == QDialog::Accepted)
+    {
+        // TODO Apply the selected parameters to the current room
+    }
 }

@@ -68,10 +68,10 @@ namespace LevelComponents
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
         int levelIndex = ROMUtils::CurrentFile[levelHeaderPointer]; // 0x3000023
 
-        memcpy(&this->LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
+        memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
 
         // Load the door data
-        std::vector<Door*> newDoors;
+        std::vector<Door*> doors;
         std::vector<int> destinations;
         int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + levelIndex * 4);
         struct __DoorEntry *doorPtr = (struct __DoorEntry*) (ROMUtils::CurrentFile + doorStartAddress);
@@ -82,17 +82,16 @@ namespace LevelComponents
             Door *newDoor = new Door(doorPtr->RoomID, type, doorPtr->x1, doorPtr->x2, doorPtr->y1, doorPtr->y2);
             newDoor->SetEntitySetID(doorPtr->EntitySetID);
             newDoor->SetBGM(doorPtr->BGM_ID_LowByte | ((unsigned int) (doorPtr->BGM_ID_HighByte)) << 8);
-            newDoor->SetDoorDisplacementROM(doorPtr->HorizontalDisplacement, doorPtr->VerticalDisplacement);
-            newDoors.push_back(newDoor);
+            newDoor->SetDoorDisplacement(doorPtr->HorizontalDisplacement, doorPtr->VerticalDisplacement);
+            doors.push_back(newDoor);
             destinations.push_back(doorPtr->LinkerDestination);
             ++doorPtr;
         }
         // Assign the destinations for the doors
-        for(unsigned int i = 0; i < newDoors.size(); ++i)
+        for(unsigned int i = 0; i < doors.size(); ++i)
         {
-            newDoors[i]->SetDestinationDoor(newDoors[destinations[i]]);
+            doors[i]->SetDestinationDoor(doors[destinations[i]]);
         }
-        this->doors = newDoors;
 
         // Load the room data
         int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + levelIndex * 4);
@@ -103,9 +102,9 @@ namespace LevelComponents
         }
 
         // Distribute door data to every room
-        for(unsigned int i = 0; i < this->doors.size(); ++i)
+        for(unsigned int i = 0; i < doors.size(); ++i)
         {
-            rooms[this->doors[i]->GetRoomID()]->PushBack_Door(this->doors[i]);
+            rooms[doors[i]->GetRoomID()]->PushBack_Door(doors[i]);
         }
 
         // Load the level name
@@ -114,6 +113,21 @@ namespace LevelComponents
 
         // TODO
 
+    }
+
+    /// <summary>
+    /// Deconstruct the Level and clean up its instance objects on the heap.
+    /// </summary>
+    Level::~Level()
+    {
+        for(auto iter = doors.begin(); iter != doors.end(); ++iter)
+        {
+            delete *iter; // Delete doors
+        }
+        for(auto iter = rooms.begin(); iter != rooms.end(); ++iter)
+        {
+            delete *iter; // Delete rooms
+        }
     }
 
     /// <summary>
@@ -129,21 +143,21 @@ namespace LevelComponents
         int c = seconds - 60 * a - 10 * b;
         if(LevelDifficulty == HardDifficulty)
         {
-            this->LevelHeader.HardModeMinuteNum = (unsigned char) a;
-            this->LevelHeader.HardModeSecondTenPlaceNum = (unsigned char) b;
-            this->LevelHeader.HardModeSecondOnePlaceNum = (unsigned char) c;
+            LevelHeader.HardModeMinuteNum = (unsigned char) a;
+            LevelHeader.HardModeSecondTenPlaceNum = (unsigned char) b;
+            LevelHeader.HardModeSecondOnePlaceNum = (unsigned char) c;
         }
         else if(LevelDifficulty == NormalDifficulty)
         {
-            this->LevelHeader.NormalModeMinuteNum = (unsigned char) a;
-            this->LevelHeader.NormalModeSecondTenPlaceNum = (unsigned char) b;
-            this->LevelHeader.NormalModeSecondOnePlaceNum = (unsigned char) c;
+            LevelHeader.NormalModeMinuteNum = (unsigned char) a;
+            LevelHeader.NormalModeSecondTenPlaceNum = (unsigned char) b;
+            LevelHeader.NormalModeSecondOnePlaceNum = (unsigned char) c;
         }
         else if(LevelDifficulty == SHardDifficulty)
         {
-            this->LevelHeader.SHardModeMinuteNum = (unsigned char) a;
-            this->LevelHeader.SHardModeSecondTenPlaceNum = (unsigned char) b;
-            this->LevelHeader.SHardModeSecondOnePlaceNum = (unsigned char) c;
+            LevelHeader.SHardModeMinuteNum = (unsigned char) a;
+            LevelHeader.SHardModeSecondTenPlaceNum = (unsigned char) b;
+            LevelHeader.SHardModeSecondOnePlaceNum = (unsigned char) c;
         }
     }
 
@@ -158,21 +172,21 @@ namespace LevelComponents
         int a, b, c;
         if(LevelDifficulty == HardDifficulty)
         {
-            a = (int)this->LevelHeader.HardModeMinuteNum;
-            b = (int)this->LevelHeader.HardModeSecondTenPlaceNum;
-            c = (int)this->LevelHeader.HardModeSecondOnePlaceNum;
+            a = (int) LevelHeader.HardModeMinuteNum;
+            b = (int) LevelHeader.HardModeSecondTenPlaceNum;
+            c = (int) LevelHeader.HardModeSecondOnePlaceNum;
         }
         else if(LevelDifficulty == NormalDifficulty)
         {
-            a = (int)this->LevelHeader.NormalModeMinuteNum;
-            b = (int)this->LevelHeader.NormalModeSecondTenPlaceNum;
-            c = (int)this->LevelHeader.NormalModeSecondOnePlaceNum;
+            a = (int) LevelHeader.NormalModeMinuteNum;
+            b = (int) LevelHeader.NormalModeSecondTenPlaceNum;
+            c = (int) LevelHeader.NormalModeSecondOnePlaceNum;
         }
         else if(LevelDifficulty == SHardDifficulty)
         {
-            a = (int)this->LevelHeader.SHardModeMinuteNum;
-            b = (int)this->LevelHeader.SHardModeSecondTenPlaceNum;
-            c = (int)this->LevelHeader.SHardModeSecondOnePlaceNum;
+            a = (int) LevelHeader.SHardModeMinuteNum;
+            b = (int) LevelHeader.SHardModeSecondTenPlaceNum;
+            c = (int) LevelHeader.SHardModeSecondOnePlaceNum;
         }
         return (a * 60 + b * 10 + c);
     }

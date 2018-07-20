@@ -90,12 +90,9 @@ namespace LevelComponents
     {
     private:
         enum __CameraControlType CameraControlType;
-        unsigned int Layer3Scrolling;
-        unsigned int LayerEffects;
         unsigned int RoomID;
         int TilesetID;
         unsigned int Width, Height;
-        bool Layer0Locked = false;
         bool Layer0ColorBlending = false;
         int Layer0ColorBlendCoefficient_EVA;
         int Layer0ColorBlendCoefficient_EVB;
@@ -104,7 +101,7 @@ namespace LevelComponents
         std::list<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
         Layer *layers[4];
         Tileset *tileset;
-        std::vector<Door*> doors;
+        std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem *RenderedLayers[8]; // L0 - 3, E, D, C, A (may not exist)
 
     public:
@@ -119,6 +116,12 @@ namespace LevelComponents
         int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
         int GetWidth() { return (int) Width; }
         int GetHeight() { return (int) Height; }
+        int GetLayer0MappingParam() {return (int) RoomHeader.Layer0MappingType; }
+        int GetLayersDataPtr(int LayerNum);
+        bool IsLayer2Enabled() {return ((RoomHeader.Layer2MappingType == (unsigned char) 0) ? false: true); }
+        bool IsBGLayerEnabled() {return ((RoomHeader.Layer3MappingType == (unsigned char) 0) ? false: true); }
+        bool IsBGLayerAutoScrollEnabled() {return ((RoomHeader.Layer3Scrolling == (unsigned char) 7) ? true: false); }
+        int GetLayerEffectsParam() {return (int) RoomHeader.LayerEffects; }
     };
 }
 

@@ -11,6 +11,7 @@
 #include "DockWidget/Tile16DockWidget.h"
 #include "DockWidget/EditModeDockWidget.h"
 #include "Dialog/LevelConfigDialog.h"
+#include "Dialog/RoomConfigDialog.h"
 
 namespace Ui {
     class WL4EditorWindow;
@@ -29,7 +30,6 @@ private:
     int selectedRoom = 0;
     bool UnsavedChanges = false;
     bool firstROMLoaded = false;
-
     bool UnsavedChangesWarning();
 
 protected:
@@ -57,6 +57,7 @@ private slots:
     void on_actionLevel_Config_triggered();
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
+    void on_actionRoom_Config_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H
