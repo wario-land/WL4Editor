@@ -1,3 +1,6 @@
+# Game ROM
+*.gba
+
 # Prerequisites
 *.d
 
