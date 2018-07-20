@@ -3,8 +3,22 @@
 
 namespace LevelComponents
 {
+    /// <summary>
+    /// Construct an instance of Tileset.
+    /// </summary>
+    /// <remarks>
+    /// Mapping type is a parameter because that information is not contained in the layer data itself.
+    /// </remarks>
+    /// <param name="tilesetPtr">
+    /// Pointer to the beginning of the tileset data.
+    /// </param>
+    /// <param name="__TilesetID">
+    /// The index for the tileset in the ROM.
+    /// </param>
     Tileset::Tileset(int tilesetPtr, int __TilesetID)
     {
+        memset(tile8x8data, 0, sizeof(tile8x8data) / sizeof(tile8x8data[0]));
+
         // Create all 16 color palettes
         int palettePtr = ROMUtils::PointerFromData(tilesetPtr + 8);
         for(int i = 0; i < 16; ++i)
@@ -23,9 +37,9 @@ namespace LevelComponents
             }
         }
 
-        // Set all the tiles to blank tiles
+        // Initialize the 8x8 tiles by setting all the tiles to blank tiles
+        blankTile = Tile8x8::CreateBlankTile(palettes);
         int tile8x8size = sizeof(tile8x8data) / sizeof(tile8x8data[0]);
-        Tile8x8 *blankTile = Tile8x8::CreateBlankTile(palettes);
         for(int i = 0; i < tile8x8size; ++i)
         {
             tile8x8data[i] = blankTile;
@@ -105,5 +119,26 @@ namespace LevelComponents
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
         Map16WarioAnimationSlotIDTable = (unsigned char*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24));
+    }
+
+    /// <summary>
+    /// Deconstruct the Tileset and clean up its instance objects on the heap.
+    /// </summary>
+    Tileset::~Tileset()
+    {
+        // Deconstruct tile8x8 data
+        for(unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
+        {
+            // The blank tile entry must be deleted separately
+            if(tile8x8data[i] != blankTile)
+            {
+                delete tile8x8data[i];
+            }
+        }
+        delete blankTile;
+        for(unsigned int i = 0; i <  sizeof(map16data) / sizeof(map16data[0]); ++i)
+        {
+            delete map16data[i];
+        }
     }
 }

@@ -15,9 +15,15 @@ namespace LevelComponents
     /// <summary>
     /// Construct a new Room object.
     /// </summary>
-    /// <param name="roomDataPtr">Pointer to the start of the room data header.</param>
-    /// <param name="_RoomID">Zero-based ID for the room in the level.</param>
-    /// <param name="_LevelID">0x03000023 level index value.</param>
+    /// <param name="roomDataPtr">
+    /// Pointer to the start of the room data header.
+    /// </param>
+    /// <param name="_RoomID">
+    /// Zero-based ID for the room in the level.
+    /// </param>
+    /// <param name="_LevelID">
+    /// Level index value from 0x03000023 at run-time.
+    /// </param>
     Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) :
         RoomID(_RoomID),
         TilesetID(ROMUtils::CurrentFile[roomDataPtr])
@@ -125,6 +131,22 @@ namespace LevelComponents
         // TODO
     }
 
+    /// <summary>
+    /// Render an entire graphics scene for the Room.
+    /// </summary>
+    /// <remarks>
+    /// There are different ways to render the graphics for the room; these ways are defined in
+    /// the LevelComponents::RenderUpdateType enum, and the parameters for it are stored in <paramref name="renderParams"/>.
+    /// </remarks>
+    /// <param name="scene">
+    /// The graphics scene object which will be fully rendered, or contain pre-rendered graphics to re-render.
+    /// </param>
+    /// <param name="renderParams">
+    /// A struct containing the parameters for how the scene should be rendered or re-rendered.
+    /// </param>
+    /// <return>
+    /// A graphics scene containing fully rendered pixmap layers in proper Z order.
+    /// </return>
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
         switch(renderParams->type)
