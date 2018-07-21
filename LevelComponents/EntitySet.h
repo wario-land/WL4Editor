@@ -15,6 +15,7 @@ namespace LevelComponents
         int EntitySetID;  //maximun 89 (from 0 to 89)
         QVector<QRgb> palettes[16];
         Tile8x8 *tile8x8data[0x400];
+        QVector<int> EntityIDs;
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
     public:
