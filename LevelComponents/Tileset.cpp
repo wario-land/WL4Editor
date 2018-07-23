@@ -1,6 +1,8 @@
 #include "Tileset.h"
 #include "ROMUtils.h"
 
+#include <QPixmap>
+
 namespace LevelComponents
 {
     /// <summary>
@@ -140,5 +142,35 @@ namespace LevelComponents
         {
             delete map16data[i];
         }
+    }
+
+    /// <summary>
+    /// Render the tileset as a pixmap.
+    /// </summary>
+    /// <param name="columns">
+    /// The number of columns to divide the graphics into.
+    /// </param>
+    /// <returns>
+    /// The tileset rendered at a pixmap.
+    /// </returns>
+    QPixmap Tileset::Render(int columns)
+    {
+        // Initialize the pixmap with transparency
+        int tileCountY = 96 / columns;
+        QPixmap pixmap(8 * 16 * columns, 16 * tileCountY);
+        pixmap.fill(Qt::transparent);
+
+        // Iterate by 8-tile wide column, then row, then tile horizontally within column
+        for(int c = 0; c < columns; ++c)
+        {
+            for(int i = 0; i < tileCountY; ++i)
+            {
+                for(int j = 0; j < 8; ++j)
+                {
+                    map16data[(c * tileCountY + i) * 8 + j]->DrawTile(&pixmap, (c * 8 + j) * 16, i * 16);
+                }
+            }
+        }
+        return pixmap;
     }
 }

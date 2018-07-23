@@ -263,7 +263,7 @@ namespace LevelComponents
                 doorpixmapItem->setZValue(Z++);
                 RenderedLayers[5] = doorpixmapItem;
 
-                // TODO render camera box layer
+                // Render camera box layer
                 QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
                 CameraLimitationPixmap.fill(Qt::transparent);
                 QPainter CameraLimitationPainter(&CameraLimitationPixmap);
@@ -327,8 +327,6 @@ namespace LevelComponents
                                 16 * ((int) CameraControlRecords[i]->x3) + 2,
                                 16 * ((int) CameraControlRecords[i]->y3) + 2
                             );
-
-
                             CameraLimitationPainter.setPen(CameraLimitationPen2);
                             int SetNum[4] =
                             {

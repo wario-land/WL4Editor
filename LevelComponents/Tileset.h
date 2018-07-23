@@ -24,6 +24,7 @@ namespace LevelComponents
         unsigned short *Map16EventTable;
         unsigned char *Map16WarioAnimationSlotIDTable;
         ~Tileset();
+        QPixmap Render(int columns);
     };
 }
 
