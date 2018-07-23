@@ -155,7 +155,7 @@ namespace LevelComponents
                 int sceneWidth = Width * 16;
                 int sceneHeight = Height * 16;
                 if(scene) { delete scene; } // Make a new graphics scene to draw to
-                scene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
+                scene = new QGraphicsScene(0, 0, qMax(sceneWidth, 16 * this->GetLayer(0)->GetLayerWidth()), sceneHeight);
                 int Z = 0;
 
                 // This represents the EVA alpha layer, which will be rendered in passes before the alpha layer is finalized

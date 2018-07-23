@@ -258,6 +258,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         // Set program control changes
         UnsavedChanges = false;
         ResetUndoHistory();
+        ui->graphicsView->UnSelectDoor();
     }
 }
 
@@ -285,6 +286,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     // Set program control changes
     UnsavedChanges = false;
     ResetUndoHistory();
+    ui->graphicsView->UnSelectDoor();
 }
 
 /// <summary>
@@ -311,6 +313,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     // Set program control changes
     UnsavedChanges = false;
     ResetUndoHistory();
+    ui->graphicsView->UnSelectDoor();
 }
 
 /// <summary>
