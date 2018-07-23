@@ -48,6 +48,7 @@ public:
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
     bool FirstROMIsLoaded() { return firstROMLoaded; }
+    void OpenROM();
 
 private slots:
     void on_actionOpen_ROM_triggered();

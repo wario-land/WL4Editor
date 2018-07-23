@@ -19,6 +19,7 @@ bool editModeWidgetInitialized = false;
 // Global variables
 struct DialogParams::PassageAndLevelIndex selectedLevel = { 0, 0 };
 WL4EditorWindow *singleton;
+const char *dialogInitialPath = "";
 
 /// <summary>
 /// Construct the instance of the WL4EditorWindow.
@@ -112,13 +113,13 @@ void WL4EditorWindow::LoadRoomUIUpdate()
 /// Render room 0 of the level.
 /// On first successful ROM load, add and update UI that requires a ROM to have been loaded.
 /// </remarks>
-void WL4EditorWindow::on_actionOpen_ROM_triggered()
+void WL4EditorWindow::OpenROM()
 {
     // Select a ROM file to open
     QString qFilePath = QFileDialog::getOpenFileName(
         this,
         tr("Open ROM file"),
-        "C:\\",
+        dialogInitialPath,
         tr("GBA ROM files (*.gba)")
     );
     if(!qFilePath.compare(""))
@@ -164,6 +165,14 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
     }
 
     LoadRoomUIUpdate();
+}
+
+/// <summary>
+/// Call the OpenROM function when the action for it is triggered in the main window.
+/// </summary>
+void WL4EditorWindow::on_actionOpen_ROM_triggered()
+{
+    OpenROM();
 }
 
 /// <summary>
@@ -390,9 +399,11 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     DialogParams::RoomConfigParams *_currentRoomConfigParams = new DialogParams::RoomConfigParams(CurrentLevel->GetRooms()[selectedRoom]);
 
     // Show the dialog
-    RoomConfigDialog tmpdialog(this, _currentRoomConfigParams);
-    if(tmpdialog.exec() == QDialog::Accepted)
+    RoomConfigDialog dialog(this, _currentRoomConfigParams);
+    if(dialog.exec() == QDialog::Accepted)
     {
+        DialogParams::RoomConfigParams configParams = dialog.GetConfigParams();
         // TODO Apply the selected parameters to the current room
+        // this should probably be done with the operation history
     }
 }

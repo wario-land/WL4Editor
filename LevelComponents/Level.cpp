@@ -164,9 +164,9 @@ namespace LevelComponents
     /// <summary>
     /// Get the countdown timer for a specific difficulty class.
     /// </summary>
-    /// <remarks>
-    /// Return value is total time in seconds
-    /// </remarks>
+    /// <returns>
+    /// Total time in seconds
+    /// </returns>
     int Level::GetTimeCountdownCounter(__LevelDifficulty LevelDifficulty)
     {
         int a, b, c;
@@ -191,6 +191,12 @@ namespace LevelComponents
         return (a * 60 + b * 10 + c);
     }
 
+    /// <summary>
+    /// Helper function to populate LevelName with the name string from the ROM.
+    /// </summary>
+    /// <param name="address">
+    /// Starting address of the level name string.
+    /// </param>
     void Level::LoadLevelName(int address)
     {
         for(int i = 0; i < 26; i++)

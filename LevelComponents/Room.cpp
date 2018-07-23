@@ -8,16 +8,20 @@
 
 #include <iostream>
 
-#define MIN(x,y) ((x)<(y)?(x):(y))
-
 namespace LevelComponents
 {
     /// <summary>
     /// Construct a new Room object.
     /// </summary>
-    /// <param name="roomDataPtr">Pointer to the start of the room data header.</param>
-    /// <param name="_RoomID">Zero-based ID for the room in the level.</param>
-    /// <param name="_LevelID">0x03000023 level index value.</param>
+    /// <param name="roomDataPtr">
+    /// Pointer to the start of the room data header.
+    /// </param>
+    /// <param name="_RoomID">
+    /// Zero-based ID for the room in the level.
+    /// </param>
+    /// <param name="_LevelID">
+    /// Level index value from 0x03000023 at run-time.
+    /// </param>
     Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) :
         RoomID(_RoomID),
         TilesetID(ROMUtils::CurrentFile[roomDataPtr])
@@ -125,6 +129,22 @@ namespace LevelComponents
         // TODO
     }
 
+    /// <summary>
+    /// Render an entire graphics scene for the Room.
+    /// </summary>
+    /// <remarks>
+    /// There are different ways to render the graphics for the room; these ways are defined in
+    /// the LevelComponents::RenderUpdateType enum, and the parameters for it are stored in <paramref name="renderParams"/>.
+    /// </remarks>
+    /// <param name="scene">
+    /// The graphics scene object which will be fully rendered, or contain pre-rendered graphics to re-render.
+    /// </param>
+    /// <param name="renderParams">
+    /// A struct containing the parameters for how the scene should be rendered or re-rendered.
+    /// </param>
+    /// <return>
+    /// A graphics scene containing fully rendered pixmap layers in proper Z order.
+    /// </return>
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
         switch(renderParams->type)
@@ -203,9 +223,9 @@ namespace LevelComponents
                                 for(int k = 0; k < sceneWidth; ++k)
                                 {
                                     QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                    int R = MIN((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16, 255);
-                                    int G = MIN((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16, 255);
-                                    int B = MIN((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16, 255);
+                                    int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16, 255);
+                                    int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16, 255);
+                                    int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16, 255);
                                     imageA.setPixel(k, j, QColor(R, G, B).rgb());
                                 }
                             }
@@ -241,7 +261,7 @@ namespace LevelComponents
                 doorpixmapItem->setZValue(Z++);
                 RenderedLayers[5] = doorpixmapItem;
 
-                // TODO render camera box layer
+                // Render camera box layer
                 QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
                 CameraLimitationPixmap.fill(Qt::transparent);
                 QPainter CameraLimitationPainter(&CameraLimitationPixmap);
@@ -287,8 +307,8 @@ namespace LevelComponents
                         CameraLimitationPainter.drawRect(
                             16 * ((int) CameraControlRecords[i]->x1) + 1,
                             16 * ((int) CameraControlRecords[i]->y1) + 1,
-                            16 * (MIN((int) CameraControlRecords[i]->x2, (int) Width - 3) - (int) CameraControlRecords[i]->x1 + 1) - 2,
-                            16 * (MIN((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2
+                            16 * (qMin((int) CameraControlRecords[i]->x2, (int) Width - 3) - (int) CameraControlRecords[i]->x1 + 1) - 2,
+                            16 * (qMin((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2
                         );
                         if(CameraControlRecords[i]->x3 != (unsigned char) '\xFF')
                         {
@@ -305,8 +325,6 @@ namespace LevelComponents
                                 16 * ((int) CameraControlRecords[i]->x3) + 2,
                                 16 * ((int) CameraControlRecords[i]->y3) + 2
                             );
-
-
                             CameraLimitationPainter.setPen(CameraLimitationPen2);
                             int SetNum[4] =
                             {
@@ -320,8 +338,8 @@ namespace LevelComponents
                             CameraLimitationPainter.drawRect(
                                 16 * SetNum[0],
                                 16 * SetNum[2],
-                                16 * (MIN(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
-                                16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[2] + 1)
+                                16 * (qMin(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
+                                16 * (qMin(SetNum[3], (int) Height - 3) - SetNum[2] + 1)
                             );
                             CameraLimitationPainter.setPen(CameraLimitationPen);
                         }
