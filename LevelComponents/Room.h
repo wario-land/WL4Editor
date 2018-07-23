@@ -122,6 +122,8 @@ namespace LevelComponents
         bool IsBGLayerEnabled() {return ((RoomHeader.Layer3MappingType == (unsigned char) 0) ? false: true); }
         bool IsBGLayerAutoScrollEnabled() {return ((RoomHeader.Layer3Scrolling == (unsigned char) 7) ? true: false); }
         int GetLayerEffectsParam() {return (int) RoomHeader.LayerEffects; }
+        Door *Door(int _doorID) {return doors[_doorID]; }
+        int CountDoors() {return doors.size(); }
     };
 }
 
