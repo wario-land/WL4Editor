@@ -92,11 +92,38 @@ RoomConfigDialog::~RoomConfigDialog()
 /// <returns>
 /// A RoomConfigParams struct containing the selected parameters from the dialog.
 /// </returns>
-DialogParams::RoomConfigParams *RoomConfigDialog::GetConfigParams()
+DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
 {
-    DialogParams::RoomConfigParams *configParams;
+    DialogParams::RoomConfigParams configParams;
 
-    // TODO
+    // Get all the Room Configuration data
+    configParams.CurrentTilesetIndex = ui->ComboBox_TilesetID->currentIndex();
+    configParams.Layer0Enable = ui->CheckBox_Layer0Enable->isChecked();
+    configParams.Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();
+    if(configParams.Layer0Enable)
+    {
+        configParams.Layer0MappingTypeParam = (ui->ComboBox_Layer0MappingType->currentIndex() + 1) << 4;
+        if(ui->CheckBox_Layer0AutoScroll->isChecked()) configParams.Layer0MappingTypeParam = 22;
+        configParams.Layer0DataPtr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+    }
+    configParams.Layer2Enable = ui->CheckBox_Layer2Enable->isChecked();
+    switch(ui->ComboBox_LayerPriority->currentIndex())
+    {
+        case 0: configParams.LayerPriorityAndAlphaAttr = 4; break;
+        case 1: configParams.LayerPriorityAndAlphaAttr = 5; break;
+        case 2: configParams.LayerPriorityAndAlphaAttr = 7; break;
+    }
+    configParams.LayerPriorityAndAlphaAttr += (ui->ComboBox_AlphaBlendAttribute->currentIndex() << 3);
+    configParams.BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
+    configParams.BackgroundLayerAutoScrollEnable = ui->CheckBox_BGLayerAutoScroll;
+    if(configParams.BackgroundLayerEnable)
+    {
+        configParams.BackgroundLayerDataPtr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
+    }else{
+        configParams.BackgroundLayerDataPtr = WL4Constants::NormalLayerDefaultPtr;
+    }
+    configParams.RoomHeight = ui->SpinBox_RoomHeight->value();
+    configParams.RoomWidth = ui->SpinBox_RoomWidth->value();
 
     return configParams;
 }

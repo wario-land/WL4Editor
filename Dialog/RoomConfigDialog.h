@@ -33,6 +33,12 @@ namespace DialogParams
         bool BackgroundLayerAutoScrollEnable;
         int BackgroundLayerDataPtr;
 
+        // Default constructor
+        RoomConfigParams()
+        {
+            memset(this,0,sizeof(RoomConfigParams));
+        }
+
         // Construct this param struct using a Room object
         RoomConfigParams(LevelComponents::Room *room) :
             CurrentTilesetIndex(room->GetTilesetID()),
@@ -72,7 +78,7 @@ public:
     explicit RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigParams *CurrentRoomParams);
     ~RoomConfigDialog();
     static void StaticInitialization();
-    DialogParams::RoomConfigParams *GetConfigParams();
+    DialogParams::RoomConfigParams GetConfigParams();
 
 private slots:
     void on_CheckBox_Layer0Enable_stateChanged(int state);
