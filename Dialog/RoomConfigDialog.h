@@ -53,7 +53,7 @@ namespace DialogParams
             }
             else
             {
-                BackgroundLayerDataPtr = WL4Constants::BGLayerDisableDefaultPtr;
+                BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
                 BackgroundLayerAutoScrollEnable = false;
             }
         }
@@ -72,7 +72,7 @@ public:
     explicit RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigParams *CurrentRoomParams);
     ~RoomConfigDialog();
     static void StaticInitialization();
-    DialogParams::RoomConfigParams GetConfigParams();
+    DialogParams::RoomConfigParams *GetConfigParams();
 
 private slots:
     void on_CheckBox_Layer0Enable_stateChanged(int state);
