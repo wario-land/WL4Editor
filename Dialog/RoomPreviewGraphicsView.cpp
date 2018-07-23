@@ -137,7 +137,7 @@ void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tile
     // Update BG layer preview
     if(BGptr != (long) dataPointers[1])
     {
-        if(dataPointers[1] = (void*) BGptr)
+        if((dataPointers[1] = (void*) BGptr))
         {
             LevelComponents::Layer BGlayer(BGptr, LevelComponents::LayerTile8x8);
             QPixmap layerPixmap = BGlayer.RenderLayer(tileset);
@@ -148,7 +148,7 @@ void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tile
     // Update layer 0 preview
     if(L0ptr != (long) dataPointers[2])
     {
-        if(dataPointers[2] = (void*) L0ptr)
+        if((dataPointers[2] = (void*) L0ptr))
         {
             LevelComponents::Layer L0layer(L0ptr, LevelComponents::LayerTile8x8);
             QPixmap layerPixmap = L0layer.RenderLayer(tileset);

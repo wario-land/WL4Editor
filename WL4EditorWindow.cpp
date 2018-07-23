@@ -402,6 +402,8 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     RoomConfigDialog dialog(this, _currentRoomConfigParams);
     if(dialog.exec() == QDialog::Accepted)
     {
+        DialogParams::RoomConfigParams configParams = dialog.GetConfigParams();
         // TODO Apply the selected parameters to the current room
+        // this should probably be done with the operation history
     }
 }

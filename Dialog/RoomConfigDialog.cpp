@@ -85,6 +85,21 @@ RoomConfigDialog::~RoomConfigDialog()
 }
 
 /// <summary>
+/// Get the selected config parameters based on the UI selections.
+/// </summary>
+/// <returns>
+/// A RoomConfigParams struct containing the selected parameters from the dialog.
+/// </returns>
+DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
+{
+    DialogParams::RoomConfigParams configParams;
+
+    // TODO
+
+    return configParams;
+}
+
+/// <summary>
 /// Perform static initializtion of constant data structures for the dialog.
 /// </summary>
 void RoomConfigDialog::StaticInitialization()

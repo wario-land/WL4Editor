@@ -8,8 +8,6 @@
 
 #include <iostream>
 
-#define MIN(x,y) ((x)<(y)?(x):(y))
-
 namespace LevelComponents
 {
     /// <summary>
@@ -225,9 +223,9 @@ namespace LevelComponents
                                 for(int k = 0; k < sceneWidth; ++k)
                                 {
                                     QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                    int R = MIN((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16, 255);
-                                    int G = MIN((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16, 255);
-                                    int B = MIN((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16, 255);
+                                    int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16, 255);
+                                    int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16, 255);
+                                    int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16, 255);
                                     imageA.setPixel(k, j, QColor(R, G, B).rgb());
                                 }
                             }
@@ -309,8 +307,8 @@ namespace LevelComponents
                         CameraLimitationPainter.drawRect(
                             16 * ((int) CameraControlRecords[i]->x1) + 1,
                             16 * ((int) CameraControlRecords[i]->y1) + 1,
-                            16 * (MIN((int) CameraControlRecords[i]->x2, (int) Width - 3) - (int) CameraControlRecords[i]->x1 + 1) - 2,
-                            16 * (MIN((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2
+                            16 * (qMin((int) CameraControlRecords[i]->x2, (int) Width - 3) - (int) CameraControlRecords[i]->x1 + 1) - 2,
+                            16 * (qMin((int) CameraControlRecords[i]->y2, (int) Height - 3) - (int) CameraControlRecords[i]->y1 + 1) - 2
                         );
                         if(CameraControlRecords[i]->x3 != (unsigned char) '\xFF')
                         {
@@ -340,8 +338,8 @@ namespace LevelComponents
                             CameraLimitationPainter.drawRect(
                                 16 * SetNum[0],
                                 16 * SetNum[2],
-                                16 * (MIN(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
-                                16 * (MIN(SetNum[3], (int) Height - 3) - SetNum[2] + 1)
+                                16 * (qMin(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
+                                16 * (qMin(SetNum[3], (int) Height - 3) - SetNum[2] + 1)
                             );
                             CameraLimitationPainter.setPen(CameraLimitationPen);
                         }
