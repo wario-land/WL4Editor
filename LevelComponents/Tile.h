@@ -51,7 +51,7 @@ namespace LevelComponents
             paletteIndex = index;
             ImageData->setColorTable(palettes[paletteIndex]);
         }
-        ~Tile8x8() {}
+        ~Tile8x8();
     };
 
     class TileMap16 : public Tile
@@ -61,21 +61,9 @@ namespace LevelComponents
 
     public:
         TileMap16() : Tile(TileTypeMap16) { }
-        TileMap16(Tile8x8 *t0, Tile8x8 *t1, Tile8x8 *t2, Tile8x8 *t3) : Tile(TileTypeMap16)
-        {
-            TileData[0] = t0;
-            TileData[1] = t1;
-            TileData[2] = t2;
-            TileData[3] = t3;
-        }
-        void DrawTile(QPixmap *layerPixmap, int x, int y)
-        {
-            TileData[0]->DrawTile(layerPixmap, x, y);
-            TileData[1]->DrawTile(layerPixmap, x + 8, y);
-            TileData[2]->DrawTile(layerPixmap, x, y + 8);
-            TileData[3]->DrawTile(layerPixmap, x + 8, y + 8);
-        }
-        ~TileMap16() {}
+        TileMap16(Tile8x8 *t0, Tile8x8 *t1, Tile8x8 *t2, Tile8x8 *t3);
+        void DrawTile(QPixmap *layerPixmap, int x, int y);
+        ~TileMap16();
     };
 }
 

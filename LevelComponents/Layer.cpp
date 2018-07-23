@@ -4,6 +4,18 @@
 
 namespace LevelComponents
 {
+    /// <summary>
+    /// Construct an instance of Layer.
+    /// </summary>
+    /// <remarks>
+    /// Mapping type is a parameter because that information is not contained in the layer data itself.
+    /// </remarks>
+    /// <param name="layerDataPtr">
+    /// Pointer to the beginning of the layer data.
+    /// </param>
+    /// <param name="mappingType">
+    /// The mapping type for the layer.
+    /// </param>
     Layer::Layer(int layerDataPtr, enum LayerMappingType mappingType) :
         MappingType(mappingType), Enabled(mappingType != LayerDisabled)
     {
@@ -60,7 +72,7 @@ namespace LevelComponents
                 }
                 unsigned short *tmp = LayerData;
                 LayerData = rearranged;
-                delete[] tmp;
+                delete tmp;
             }
         }
 
@@ -69,6 +81,35 @@ namespace LevelComponents
             std::cout << "Failed to decompress layer data: " << (layerDataPtr + 1) << std::endl;
     }
 
+    /// <summary>
+    /// Deconstruct the Layer and clean up its instance objects on the heap.
+    /// </summary>
+    Layer::~Layer()
+    {
+        // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
+        // If it is map16 type, then they are just pointer copies and should be deconstructed in ~Tileset() only
+        if(MappingType == LayerTile8x8)
+        {
+            for(auto iter = tiles.begin(); iter != tiles.end(); ++iter)
+            {
+                delete(*iter);
+            }
+        }
+        delete LayerData;
+    }
+
+    /// <summary>
+    /// Render a layer as a QPixmap.
+    /// </summary>
+    /// <remarks>
+    /// The tileset parameter is necessary because tileset information is in the Room object, not layer.
+    /// </remarks>
+    /// <param name="tileset">
+    /// The tileset defining the tiles that will be drawn on the layer graphics.
+    /// </param>
+    /// <return>
+    /// A QPixmap of the fully rendered layer, including transparency.
+    /// </return>
     QPixmap Layer::RenderLayer(Tileset *tileset)
     {
         // Set the units we are drawing in (depending on the Tile type)
@@ -126,15 +167,35 @@ namespace LevelComponents
         return layerPixmap;
     }
 
+    /// <summary>
+    /// Re-render a single tile's graphics in the tiles instance variable.
+    /// </summary>
+    /// <remarks>
+    /// This is used as a counterpart to Layer::RenderLayer, which only re-renders one tile.
+    /// </remarks>
+    /// <param name="X">
+    /// The X position of the tile to change.
+    /// </param>
+    /// <param name="Y">
+    /// The Y position of the tile to change.
+    /// </param>
+    /// <param name="TileID">
+    /// The tile ID that the destination tile will be changed to.
+    /// </param>
+    /// <param name="tileset">
+    /// The tileset defining the tiles that will be drawn on the layer graphics.
+    /// </param>
     void Layer::ReRenderTile(int X, int Y, unsigned short TileID, Tileset *tileset)
     {
         int index = X + Y * Width;
         if(MappingType == LayerMap16)
         {
+            // If map16 type, then just copy the map16 tile object from the tileset
             tiles[index] = tileset->GetMap16Data()[TileID];
         }
         else if(MappingType == LayerTile8x8)
         {
+            // If tile8x8 type, then new Tile8x8 objects must be constructed from data
             Tile8x8 *newTile = new Tile8x8(tileset->GetTile8x8Data()[0x200 + (TileID & 0x3FF)]);
             newTile->SetFlipX((TileID & (1 << 10)) != 0);
             newTile->SetFlipY((TileID & (1 << 11)) != 0);

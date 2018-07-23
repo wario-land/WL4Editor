@@ -24,6 +24,7 @@ namespace LevelComponents
         int Width, Height;
         unsigned short *LayerData;
         int LayerPriority;
+
     public:
         Layer(int layerDataPtr, enum LayerMappingType mappingType);
         QPixmap RenderLayer(Tileset *tileset);
@@ -35,6 +36,7 @@ namespace LevelComponents
         void SetLayerPriority(int priority) { LayerPriority = priority; }
         void ReRenderTile(int xpos, int ypos, unsigned short TileID, Tileset *tileset);
         std::vector<Tile*> GetTiles() { return tiles; }
+        ~Layer();
     };
 }
 
