@@ -71,8 +71,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->graphicsView->infoLabel = ui->graphicViewDetailsLabel;
     int _tilesetPtr = WL4Constants::TilesetDataTable + CurrentRoomParams->CurrentTilesetIndex * 36;
     currentTileset = new LevelComponents::Tileset(_tilesetPtr, CurrentRoomParams->CurrentTilesetIndex);
-    int L0ptr = 0;
-    if(ui->ComboBox_Layer0MappingType->currentIndex() == 1) L0ptr = CurrentRoomParams->Layer0DataPtr;
+    int L0ptr = (ui->ComboBox_Layer0MappingType->currentIndex() == 1) ? CurrentRoomParams->Layer0DataPtr : 0;;
     ui->graphicsView->UpdateGraphicsItems(currentTileset, CurrentRoomParams->BackgroundLayerDataPtr, L0ptr);
 
     ComboBoxInitialized = true;
@@ -178,6 +177,7 @@ void RoomConfigDialog::on_CheckBox_Layer0Enable_stateChanged(int state)
     if(state == Qt::Checked)
     {
         ui->CheckBox_Layer0Alpha->setEnabled(true);
+        // Extra UI changes for Toxic Landfill dust Layer0
         if(ui->ComboBox_TilesetID->currentIndex() == 0x21) ui->ComboBox_Layer0MappingType->setEnabled(true);
     }
     else
@@ -259,6 +259,8 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         ui->CheckBox_BGLayerEnable->setChecked(true);
         ui->CheckBox_Layer0Enable->setChecked(false); ui->CheckBox_Layer0Enable->setChecked(true);
         ui->CheckBox_Layer2Enable->setChecked(true);
+
+        // Extra UI changes for Toxic Landfill dust Layer0
         if(ui->ComboBox_TilesetID->currentIndex() == 0x21)
         {
             ui->ComboBox_Layer0Picker->addItem(QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());

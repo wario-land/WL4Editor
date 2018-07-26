@@ -375,6 +375,7 @@ namespace LevelComponents
             {
                 // Re-render the QImage for the changed tile
                 Layer *layer = layers[renderParams->mode.selectedLayer];
+                if(layer->IsEnabled() == false) return scene;
                 layer->ReRenderTile(renderParams->tileX, renderParams->tileY, renderParams->tileID, tileset);
 
                 // Obtain the old QPixmap from the previously-rendered graphic layers

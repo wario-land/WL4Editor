@@ -72,7 +72,7 @@ namespace LevelComponents
                 }
                 unsigned short *tmp = LayerData;
                 LayerData = rearranged;
-                delete tmp;
+                delete[] tmp;
             }
         }
 
@@ -86,8 +86,9 @@ namespace LevelComponents
     /// </summary>
     Layer::~Layer()
     {
+        if(LayerData == nullptr) return;
+
         // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
-        // If it is map16 type, then they are just pointer copies and should be deconstructed in ~Tileset() only
         if(MappingType == LayerTile8x8)
         {
             for(auto iter = tiles.begin(); iter != tiles.end(); ++iter)
@@ -95,7 +96,9 @@ namespace LevelComponents
                 delete(*iter);
             }
         }
-        delete LayerData;
+
+        // If it is map16 type, then they are just pointer copies and should be deconstructed in ~Tileset() only
+        delete[] LayerData;
     }
 
     /// <summary>
@@ -126,6 +129,7 @@ namespace LevelComponents
         }
 
         // Create tiles
+        if(tiles.size() != 0) tiles.clear();
         tiles = std::vector<Tile*>(Width * Height);
         if(MappingType == LayerMap16)
         {
@@ -204,5 +208,115 @@ namespace LevelComponents
             tiles[index] = newTile;
         }
         else std::cout << "WARNING: Invalid mapping type ecountered in Layer::ChangeTile" << std::endl;
+    }
+
+    void Layer::SetDisabled()
+    {
+        if(LayerData == nullptr) return;
+        if(MappingType == LayerTile8x8) // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
+        {
+            for(auto iter = tiles.begin(); iter != tiles.end(); ++iter)
+            {
+                delete(*iter);
+            }
+        }else{ // If it is map16 type, then they are just pointer copies so only free the vector
+            tiles.clear();
+        }
+
+        delete[] LayerData; LayerData = nullptr;
+        MappingType = LayerDisabled;
+        Enabled = false; Width = 0; Height = 0;
+        NewLayer = false;
+    }
+
+    void Layer::CreateNewLayer_type0x10(int layerWidth, int layerHeight)
+    {
+        Width = layerWidth;
+        Height = layerHeight;
+        NewLayer = true; Enabled = true;
+        MappingType = LayerMap16;
+        LayerData = new unsigned short[layerWidth * layerHeight];
+        memset(LayerData, '\0', sizeof(char) * 2 * layerWidth * layerHeight);
+    }
+
+    void Layer::AddRows(int NumberOfNewRows, int StartFrom)
+    {
+        Height += NumberOfNewRows;
+        unsigned short *tmpLayerData = new unsigned short[Width * Height];
+        int k = 0;
+        for(int j = 0; j < Height; j++)
+        {
+            for(int i = 0; i < Width; i++)
+            {
+                if((StartFrom >= j) && (k < NumberOfNewRows))
+                    tmpLayerData[i + j * Width] = (unsigned short) 0;
+                else
+                    tmpLayerData[i + j * Width] = LayerData[i + (j - k) * Width];
+            }
+            if((StartFrom >= j) && (k < NumberOfNewRows)) k++;
+        }
+        delete[] LayerData;
+        LayerData = tmpLayerData;
+    }
+
+    void Layer::AddColumns(int NumberOfNewColumns, int StartFrom)
+    {
+        Width += NumberOfNewColumns;
+        unsigned short *tmpLayerData = new unsigned short[Width * Height];
+        int k = 0;
+        for(int j = 0; j < Height; j++)
+        {
+            for(int i = 0; i < Width; i++)
+            {
+                if((StartFrom >= i) && (k < NumberOfNewColumns))
+                {
+                    tmpLayerData[i + j * Width] = (unsigned short) 0;
+                    k++;
+                }
+                else
+                {
+                    tmpLayerData[i + j * Width] = LayerData[i - k + j * (Width - NumberOfNewColumns)];
+                }
+            }
+            k = 0;
+        }
+        delete[] LayerData;
+        LayerData = tmpLayerData;
+    }
+
+    void Layer::DeleteRows(int NumberOfWillBeDeletedRows, int StartFrom)
+    {
+        Height -= NumberOfWillBeDeletedRows;
+        unsigned short *tmpLayerData = new unsigned short[Width * Height];
+        for(int j = 0; j < Height; j++)
+        {
+            for(int i = 0; i < Width; i++)
+            {
+                if(StartFrom >= j)
+                    tmpLayerData[i + j * Width] = LayerData[i + (j + NumberOfWillBeDeletedRows) * Width];
+                else
+                    tmpLayerData[i + j * Width] = LayerData[i + j * Width];
+            }
+        }
+        delete[] LayerData;
+        LayerData = tmpLayerData;
+    }
+
+    void Layer::DeleteColumns(int NumberOfWillBeDeletedColumns, int StartFrom)
+    {
+        Width -= NumberOfWillBeDeletedColumns;
+        unsigned short *tmpLayerData = new unsigned short[Width * Height];
+        for(int j = 0; j < Height; j++)
+        {
+            for(int i = 0; i < Width; i++)
+            {
+                if(StartFrom >= i)
+                    tmpLayerData[i + j * Width] = LayerData[i + j * (Width + NumberOfWillBeDeletedColumns) + NumberOfWillBeDeletedColumns];
+                else
+                    tmpLayerData[i + j * Width] = LayerData[i + j * (Width + NumberOfWillBeDeletedColumns)];
+            }
+        }
+        delete[] LayerData;
+        LayerData = tmpLayerData;
     }
 }
