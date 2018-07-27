@@ -81,6 +81,7 @@ namespace LevelComponents
         int tileX = 0;
         int tileY = 0;
         unsigned short tileID = 0;
+        unsigned int SelectedDoorID = (unsigned int) -1;
         struct Ui::EditModeParams mode = {};
         RenderUpdateParams(enum RenderUpdateType _type) : type(_type) {}
     };
@@ -116,14 +117,14 @@ namespace LevelComponents
         int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
         int GetWidth() { return (int) Width; }
         int GetHeight() { return (int) Height; }
-        int GetLayer0MappingParam() {return (int) RoomHeader.Layer0MappingType; }
+        int GetLayer0MappingParam() { return (int) RoomHeader.Layer0MappingType; }
         int GetLayersDataPtr(int LayerNum);
-        bool IsLayer2Enabled() {return ((RoomHeader.Layer2MappingType == (unsigned char) 0) ? false: true); }
-        bool IsBGLayerEnabled() {return ((RoomHeader.Layer3MappingType == (unsigned char) 0) ? false: true); }
-        bool IsBGLayerAutoScrollEnabled() {return ((RoomHeader.Layer3Scrolling == (unsigned char) 7) ? true: false); }
-        int GetLayerEffectsParam() {return (int) RoomHeader.LayerEffects; }
-        Door *Door(int _doorID) {return doors[_doorID]; }
-        int CountDoors() {return doors.size(); }
+        bool IsLayer2Enabled() { return RoomHeader.Layer2MappingType; }
+        bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
+        bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == (unsigned char) 7; }
+        int GetLayerEffectsParam() { return (int) RoomHeader.LayerEffects; }
+        LevelComponents::Door *Door(int _doorID) { return doors[_doorID]; }
+        int CountDoors() { return doors.size(); }
     };
 }
 
