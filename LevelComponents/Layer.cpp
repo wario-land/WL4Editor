@@ -210,6 +210,9 @@ namespace LevelComponents
         else std::cout << "WARNING: Invalid mapping type ecountered in Layer::ChangeTile" << std::endl;
     }
 
+    /// <summary>
+    /// Disable a Layer and free all of the memory it use but the instance is still exist
+    /// </summary>
     void Layer::SetDisabled()
     {
         if(LayerData == nullptr) return;
@@ -229,6 +232,15 @@ namespace LevelComponents
         NewLayer = false;
     }
 
+    /// <summary>
+    /// Use this function to take the place of one existing layer in a room.
+    /// </summary>
+    /// <param name="layerWidth">
+    /// New layer width.
+    /// </param>
+    /// <param name="layerHeight">
+    /// New layer height.
+    /// </param>
     void Layer::CreateNewLayer_type0x10(int layerWidth, int layerHeight)
     {
         Width = layerWidth;
@@ -239,6 +251,15 @@ namespace LevelComponents
         memset(LayerData, '\0', sizeof(char) * 2 * layerWidth * layerHeight);
     }
 
+    /// <summary>
+    /// Use this function to add rows to the existing layer.
+    /// </summary>
+    /// <param name="NumberOfNewRows">
+    /// Number of new rows you wan to add to the layer.
+    /// </param>
+    /// <param name="StartFrom">
+    /// the id of the specific row which we add new blank rows before it.
+    /// </param>
     void Layer::AddRows(int NumberOfNewRows, int StartFrom)
     {
         Height += NumberOfNewRows;
@@ -259,6 +280,15 @@ namespace LevelComponents
         LayerData = tmpLayerData;
     }
 
+    /// <summary>
+    /// Use this function to add columns to the existing layer.
+    /// </summary>
+    /// <param name="NumberOfNewColumns">
+    /// Number of new columns you wan to add to the layer.
+    /// </param>
+    /// <param name="StartFrom">
+    /// the id of the specific column which we add new blank columns before it.
+    /// </param>
     void Layer::AddColumns(int NumberOfNewColumns, int StartFrom)
     {
         Width += NumberOfNewColumns;
@@ -284,6 +314,15 @@ namespace LevelComponents
         LayerData = tmpLayerData;
     }
 
+    /// <summary>
+    /// Use this function to delete rows from the existing layer.
+    /// </summary>
+    /// <param name="NumberOfWillBeDeletedRows">
+    /// Number of rows you wan to delete form the layer.
+    /// </param>
+    /// <param name="StartFrom">
+    /// the id of the specific row which we start delet rows.
+    /// </param>
     void Layer::DeleteRows(int NumberOfWillBeDeletedRows, int StartFrom)
     {
         Height -= NumberOfWillBeDeletedRows;
@@ -302,6 +341,15 @@ namespace LevelComponents
         LayerData = tmpLayerData;
     }
 
+    /// <summary>
+    /// Use this function to delete columns from the existing layer.
+    /// </summary>
+    /// <param name="NumberOfWillBeDeletedColumns">
+    /// Number of columns you wan to delete form the layer.
+    /// </param>
+    /// <param name="StartFrom">
+    /// the id of the specific column which we start delet columns.
+    /// </param>
     void Layer::DeleteColumns(int NumberOfWillBeDeletedColumns, int StartFrom)
     {
         Width -= NumberOfWillBeDeletedColumns;
