@@ -71,7 +71,8 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->graphicsView->infoLabel = ui->graphicViewDetailsLabel;
     int _tilesetPtr = WL4Constants::TilesetDataTable + CurrentRoomParams->CurrentTilesetIndex * 36;
     currentTileset = new LevelComponents::Tileset(_tilesetPtr, CurrentRoomParams->CurrentTilesetIndex);
-    ui->graphicsView->UpdateGraphicsItems(currentTileset, CurrentRoomParams->BackgroundLayerDataPtr, CurrentRoomParams->Layer0DataPtr);
+    int L0ptr = (ui->ComboBox_Layer0MappingType->currentIndex() == 1) ? CurrentRoomParams->Layer0DataPtr : 0;;
+    ui->graphicsView->UpdateGraphicsItems(currentTileset, CurrentRoomParams->BackgroundLayerDataPtr, L0ptr);
 
     ComboBoxInitialized = true;
 }
@@ -94,7 +95,34 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
 {
     DialogParams::RoomConfigParams configParams;
 
-    // TODO
+    // Get all the Room Configuration data
+    configParams.CurrentTilesetIndex = ui->ComboBox_TilesetID->currentIndex();
+    configParams.Layer0Enable = ui->CheckBox_Layer0Enable->isChecked();
+    configParams.Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();
+    if(configParams.Layer0Enable)
+    {
+        configParams.Layer0MappingTypeParam = (ui->ComboBox_Layer0MappingType->currentIndex() + 1) << 4;
+        if(ui->CheckBox_Layer0AutoScroll->isChecked()) configParams.Layer0MappingTypeParam = 22;
+        configParams.Layer0DataPtr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+    }
+    configParams.Layer2Enable = ui->CheckBox_Layer2Enable->isChecked();
+    switch(ui->ComboBox_LayerPriority->currentIndex())
+    {
+        case 0: configParams.LayerPriorityAndAlphaAttr = 4; break;
+        case 1: configParams.LayerPriorityAndAlphaAttr = 5; break;
+        case 2: configParams.LayerPriorityAndAlphaAttr = 7; break;
+    }
+    configParams.LayerPriorityAndAlphaAttr += (ui->ComboBox_AlphaBlendAttribute->currentIndex() << 3);
+    configParams.BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
+    configParams.BackgroundLayerAutoScrollEnable = ui->CheckBox_BGLayerAutoScroll;
+    if(configParams.BackgroundLayerEnable)
+    {
+        configParams.BackgroundLayerDataPtr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
+    }else{
+        configParams.BackgroundLayerDataPtr = WL4Constants::NormalLayerDefaultPtr;
+    }
+    configParams.RoomHeight = ui->SpinBox_RoomHeight->value();
+    configParams.RoomWidth = ui->SpinBox_RoomWidth->value();
 
     return configParams;
 }
@@ -149,12 +177,14 @@ void RoomConfigDialog::on_CheckBox_Layer0Enable_stateChanged(int state)
     if(state == Qt::Checked)
     {
         ui->CheckBox_Layer0Alpha->setEnabled(true);
-        ui->ComboBox_Layer0MappingType->setEnabled(true);
+        // Extra UI changes for Toxic Landfill dust Layer0
+        if(ui->ComboBox_TilesetID->currentIndex() == 0x21) ui->ComboBox_Layer0MappingType->setEnabled(true);
     }
     else
     {
         ui->CheckBox_Layer0Alpha->setChecked(false);
         ui->CheckBox_Layer0Alpha->setEnabled(false);
+        ui->ComboBox_Layer0MappingType->setCurrentIndex(0);
         ui->ComboBox_Layer0MappingType->setEnabled(false);
     }
 }
@@ -176,18 +206,22 @@ void RoomConfigDialog::on_CheckBox_Layer0Alpha_stateChanged(int state)
 /// </summary>
 void RoomConfigDialog::on_ComboBox_Layer0MappingType_currentIndexChanged(int index)
 {
+    (void) index;
     if(ComboBoxInitialized)
     {
-        if(!index)
+        int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
+        int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+        if(ui->ComboBox_Layer0MappingType->currentIndex() == 0)
         {
             ui->CheckBox_Layer0AutoScroll->setChecked(false);
             ui->CheckBox_Layer0AutoScroll->setEnabled(false);
             ui->ComboBox_Layer0Picker->setEnabled(false);
+            ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, 0);
         }
         else
         {
-            ui->CheckBox_Layer0AutoScroll->setEnabled(true);
             ui->ComboBox_Layer0Picker->setEnabled(true);
+            ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
         }
     }
 }
@@ -218,12 +252,26 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         }
         else
         {
-            elements << QString::number(WL4Constants::BGLayerDisableDefaultPtr, 16).toUpper();
+            elements << QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper();
         }
         ui->ComboBox_BGLayerPicker->addItems(elements);
 
+        ui->CheckBox_BGLayerEnable->setChecked(true);
+        ui->CheckBox_Layer0Enable->setChecked(false); ui->CheckBox_Layer0Enable->setChecked(true);
+        ui->CheckBox_Layer2Enable->setChecked(true);
+
+        // Extra UI changes for Toxic Landfill dust Layer0
+        if(ui->ComboBox_TilesetID->currentIndex() == 0x21)
+        {
+            ui->ComboBox_Layer0Picker->addItem(QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
+        }
+        else
+        {
+            ui->ComboBox_Layer0Picker->clear();
+        }
         int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
         int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+        if(ui->ComboBox_Layer0MappingType->currentIndex() == 0) L0ptr = 0;
         ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
     }
 }
@@ -235,10 +283,11 @@ void RoomConfigDialog::on_CheckBox_BGLayerEnable_stateChanged(int state)
 {
     int tilesetIndex = ui->ComboBox_TilesetID->currentIndex();
     ui->ComboBox_BGLayerPicker->setEnabled(state == Qt::Checked && BGLayerdataPtrs[tilesetIndex].size());
+    ui->CheckBox_BGLayerAutoScroll->setChecked(false);
     ui->CheckBox_BGLayerAutoScroll->setEnabled(state == Qt::Checked);
     if(ui->ComboBox_BGLayerPicker->count() > 0)
     {
-        for(int i = ui->ComboBox_BGLayerPicker->count() - 1; i >= 0 ; ++i)
+        for(int i = ui->ComboBox_BGLayerPicker->count() - 1; i >= 0 ; i--)
         {
             ui->ComboBox_BGLayerPicker->removeItem(i);
         }
@@ -262,6 +311,7 @@ void RoomConfigDialog::on_ComboBox_BGLayerPicker_currentIndexChanged(int index)
     {
         int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
         int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+        if(ui->ComboBox_Layer0MappingType->currentIndex() == 0) L0ptr = 0;
         ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
     }
 }
@@ -277,6 +327,7 @@ void RoomConfigDialog::on_ComboBox_Layer0Picker_currentIndexChanged(int index)
         ui->CheckBox_Layer0AutoScroll->setEnabled(true);
         int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
         int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+        if(ui->ComboBox_Layer0MappingType->currentIndex() == 0) L0ptr = 0;
         ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
     }
 }

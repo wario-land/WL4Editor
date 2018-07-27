@@ -33,6 +33,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             if(selectedTile == 0xFFFF) return;
             int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
             LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
+            if(layer->IsEnabled() == false) return;
             int selectedTileIndex = tileX + tileY * room->GetWidth();
             struct OperationParams *params = new struct OperationParams();
             params->type = ChangeTileOperation;

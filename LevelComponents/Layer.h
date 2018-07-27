@@ -19,11 +19,12 @@ namespace LevelComponents
     {
     private:
         enum LayerMappingType MappingType;
-        bool Enabled; // Set false to disable backgrounds of type 0x00
+        bool Enabled = false;
         std::vector<Tile*> tiles;
-        int Width, Height;
-        unsigned short *LayerData;
-        int LayerPriority;
+        int Width = 0;int Height = 0;
+        unsigned short *LayerData = nullptr;
+        int LayerPriority = 0;
+        bool NewLayer = false;
 
     public:
         Layer(int layerDataPtr, enum LayerMappingType mappingType);
@@ -36,6 +37,14 @@ namespace LevelComponents
         void SetLayerPriority(int priority) { LayerPriority = priority; }
         void ReRenderTile(int xpos, int ypos, unsigned short TileID, Tileset *tileset);
         std::vector<Tile*> GetTiles() { return tiles; }
+        bool IsEnabled() { return Enabled; }
+        void SetDisabled();
+        void CreateNewLayer_type0x10(int layerWidth, int layerHeight);
+        bool IsNewLayer() { return NewLayer; }
+        void AddRows(int NumberOfNewRows, int StartFrom);
+        void AddColumns(int NumberOfNewColumns, int StartFrom);
+        void DeleteRows(int NumberOfWillBeDeletedRows, int StartFrom);
+        void DeleteColumns(int NumberOfWillBeDeletedColumns, int StartFrom);
         ~Layer();
     };
 }

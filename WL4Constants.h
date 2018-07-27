@@ -19,7 +19,8 @@ namespace WL4Constants
     // Miscellaneous definitions
     const int CameraRecordSentinel        = 0x3F9D58;
     const int SpritesBasicElementTiles    = 0x400AE8; //0x3000 bytes in length
-    const int BGLayerDisableDefaultPtr    = 0x58DA7C;
+    const int BGLayerDefaultPtr           = 0x58DA7C;
+    const int NormalLayerDefaultPtr       = 0x3F2263;
     const int ToxicLandfillDustyLayer0Ptr = 0x601854;
 
     // Other

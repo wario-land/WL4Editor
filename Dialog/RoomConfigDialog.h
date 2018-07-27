@@ -33,6 +33,12 @@ namespace DialogParams
         bool BackgroundLayerAutoScrollEnable;
         int BackgroundLayerDataPtr;
 
+        // Default constructor
+        RoomConfigParams()
+        {
+            memset(this,0,sizeof(RoomConfigParams));
+        }
+
         // Construct this param struct using a Room object
         RoomConfigParams(LevelComponents::Room *room) :
             CurrentTilesetIndex(room->GetTilesetID()),
@@ -53,7 +59,7 @@ namespace DialogParams
             }
             else
             {
-                BackgroundLayerDataPtr = WL4Constants::BGLayerDisableDefaultPtr;
+                BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
                 BackgroundLayerAutoScrollEnable = false;
             }
         }
