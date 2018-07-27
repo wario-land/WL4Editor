@@ -36,7 +36,7 @@ namespace DialogParams
         // Default constructor
         RoomConfigParams()
         {
-            memset(this,0,sizeof(RoomConfigParams));
+            memset(this, 0, sizeof(struct RoomConfigParams));
         }
 
         // Construct this param struct using a Room object

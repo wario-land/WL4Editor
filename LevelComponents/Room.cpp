@@ -254,8 +254,20 @@ namespace LevelComponents
                     int doorY = doors[i]->GetY1() * 16;
                     int doorWidth = (qAbs(doors[i]->GetX1() - doors[i]->GetX2()) + 1) * 16;
                     int doorHeight = (qAbs(doors[i]->GetY1() - doors[i]->GetY2()) + 1) * 16;
-                    doorPainter.drawRect(doorX, doorY, doorWidth, doorHeight);
-                    doorPainter.fillRect(doorX + 1, doorY + 1, doorWidth - 2, doorHeight - 2, QColor(0, 0, 0xFF, 0x5F));
+                    if(i == renderParams->SelectedDoorID)
+                    {
+                        QPen DoorPen2 = QPen(QBrush(Qt::cyan), 2);
+                        DoorPen2.setJoinStyle(Qt::MiterJoin);
+                        doorPainter.setPen(DoorPen2);
+                        doorPainter.drawRect(doorX, doorY, doorWidth, doorHeight);
+                        doorPainter.fillRect(doorX + 1, doorY + 1, doorWidth - 2, doorHeight - 2, QColor(0, 0xFF, 0xFF, 0x5F));
+                        doorPainter.setPen(DoorPen);
+                    }
+                    else
+                    {
+                        doorPainter.drawRect(doorX, doorY, doorWidth, doorHeight);
+                        doorPainter.fillRect(doorX + 1, doorY + 1, doorWidth - 2, doorHeight - 2, QColor(0, 0, 0xFF, 0x5F));
+                    }
                 }
                 QGraphicsPixmapItem *doorpixmapItem = scene->addPixmap(doorPixmap);
                 doorpixmapItem->setZValue(Z++);
