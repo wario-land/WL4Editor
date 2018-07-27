@@ -49,20 +49,28 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         }
         else if(editMode == Ui::DoorEditMode) // select a door
         {
-            if(room->CountDoors() > 0)
+            if(room->CountDoors())
             {
+                SelectedDoorID = -1;
                 for(int i = 0; i < room->CountDoors(); i++)
                 {
-                    if((room->Door(i)->GetX1() <= tileX) &&
-                            (room->Door(i)->GetX2() >= tileX) &&
-                            (room->Door(i)->GetY1() <= tileY) &&
-                            (room->Door(i)->GetY2() >= tileY))
+                    LevelComponents::Door *door = room->Door(i);
+                    bool b1 = door->GetX1() <= tileX;
+                    bool b2 = door->GetX2() >= tileX;
+                    bool b3 = door->GetY1() <= tileY;
+                    bool b4 = door->GetY2() >= tileY;
+                    if(b1 && b2 && b3 && b4)
                     {
+                        if(i == SelectedDoorID)
+                        {
+                            // TODO show dialog
+                        }
                         SelectedDoorID = i;
                         break;
                     }
                 }
             }
+            singleton->RenderScreenFull(); // TODO use a function here that can just re-render the doors
         }
         // TODO add more cases for other edit mode types
     }

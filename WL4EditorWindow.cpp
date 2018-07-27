@@ -190,6 +190,7 @@ void WL4EditorWindow::RenderScreenFull()
     // Perform a full render of the screen
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::FullRender);
     renderParams.mode = EditModeWidget->GetEditModeParams();
+    renderParams.SelectedDoorID = (unsigned int) ui->graphicsView->GetSelectedDoorID();
     QGraphicsScene *scene = CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);

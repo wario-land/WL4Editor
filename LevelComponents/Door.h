@@ -60,10 +60,10 @@ namespace LevelComponents
         void SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
         void SetDoorType(enum DoorType _DoorType) { type = _DoorType; }
         bool IsUnused();
-        int GetX1() {return this->X1; }
-        int GetY1() {return this->Y1; }
-        int GetX2() {return this->X2; }
-        int GetY2() {return this->Y2; }
+        int GetX1() { return this->X1; }
+        int GetY1() { return this->Y1; }
+        int GetX2() { return this->X2; }
+        int GetY2() { return this->Y2; }
         QPoint GetWarioOriginalPosition_x4();
         //TODO: GenerateDoorSavingData()  (ssp)
     };
