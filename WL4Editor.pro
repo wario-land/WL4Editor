@@ -43,7 +43,8 @@ SOURCES += \
     Dialog/LevelConfigDialog.cpp \
     DockWidget/EditModeDockWidget.cpp \
     Dialog/RoomConfigDialog.cpp \
-    Dialog/RoomPreviewGraphicsView.cpp
+    Dialog/RoomPreviewGraphicsView.cpp \
+    Dialog/DoorConfigDialog.cpp
 
 HEADERS += \
         WL4EditorWindow.h \
@@ -64,7 +65,8 @@ HEADERS += \
     DockWidget/EditModeDockWidget.h \
     Operation.h \
     Dialog/RoomConfigDialog.h \
-    Dialog/RoomPreviewGraphicsView.h
+    Dialog/RoomPreviewGraphicsView.h \
+    Dialog/DoorConfigDialog.h
 
 FORMS += \
         WL4EditorWindow.ui \
@@ -72,4 +74,5 @@ FORMS += \
     DockWidget/Tile16DockWidget.ui \
     Dialog/LevelConfigDialog.ui \
     DockWidget/EditModeDockWidget.ui \
-    Dialog/RoomConfigDialog.ui
+    Dialog/RoomConfigDialog.ui \
+    Dialog/DoorConfigDialog.ui
