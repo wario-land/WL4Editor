@@ -11,9 +11,10 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <lmcons.h>
+#pragma comment(lib,"Advapi32.lib")
 #endif
 
-#ifdef linux
+#if defined(linux) || defined(__linux__) || defined(__LYNX)
 #include <unistd.h>
 #endif
 
