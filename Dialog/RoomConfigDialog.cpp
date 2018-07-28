@@ -222,6 +222,7 @@ void RoomConfigDialog::on_ComboBox_Layer0MappingType_currentIndexChanged(int ind
         {
             ui->ComboBox_Layer0Picker->setEnabled(true);
             ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
+            ui->ComboBox_LayerPriority->setCurrentIndex(0);
         }
     }
 }
@@ -330,4 +331,10 @@ void RoomConfigDialog::on_ComboBox_Layer0Picker_currentIndexChanged(int index)
         if(ui->ComboBox_Layer0MappingType->currentIndex() == 0) L0ptr = 0;
         ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
     }
+}
+
+void RoomConfigDialog::on_ComboBox_LayerPriority_currentIndexChanged(int index)
+{
+    (void) index;
+    if(ui->ComboBox_Layer0MappingType->currentIndex() == 1) ui->ComboBox_LayerPriority->setCurrentIndex(0);
 }

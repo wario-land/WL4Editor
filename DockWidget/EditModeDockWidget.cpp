@@ -60,6 +60,16 @@ EditModeDockWidget::~EditModeDockWidget()
     delete ui;
 }
 
+void EditModeDockWidget::SetLayersCheckBoxEnabled(int index, bool usable)
+{
+    switch(index)
+    {
+        case 0: ui->CheckBox_Layer0View->setEnabled(usable); ui->CheckBox_Layer0View->setChecked(usable); break;
+        case 2: ui->CheckBox_Layer2View->setEnabled(usable); ui->CheckBox_Layer2View->setChecked(usable); break;
+        case 3: ui->CheckBox_Layer3View->setEnabled(usable); ui->CheckBox_Layer3View->setChecked(usable); break;
+    }
+}
+
 /// <summary>
 /// Retrieve the selected edit mode options as a structure.
 /// </summary>

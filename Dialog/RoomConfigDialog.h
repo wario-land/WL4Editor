@@ -88,6 +88,7 @@ private slots:
     void on_CheckBox_BGLayerEnable_stateChanged(int state);
     void on_ComboBox_BGLayerPicker_currentIndexChanged(int index);
     void on_ComboBox_Layer0Picker_currentIndexChanged(int index);
+    void on_ComboBox_LayerPriority_currentIndexChanged(int index);
 
 private:
     bool ComboBoxInitialized = false;

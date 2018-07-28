@@ -49,6 +49,7 @@ public:
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
     bool FirstROMIsLoaded() { return firstROMLoaded; }
     void OpenROM();
+    void SetEditModeDockWidgetLayerEditability();
 
 private slots:
     void on_actionOpen_ROM_triggered();
