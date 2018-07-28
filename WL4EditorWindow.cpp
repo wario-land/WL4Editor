@@ -101,6 +101,7 @@ void WL4EditorWindow::LoadRoomUIUpdate()
 
     // Render the screen
     RenderScreenFull();
+    SetEditModeDockWidgetLayerEditability();
 }
 
 /// <summary>
@@ -165,7 +166,6 @@ void WL4EditorWindow::OpenROM()
     }
 
     LoadRoomUIUpdate();
-    SetEditModeDockWidgetLayerEditability();
 }
 
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
@@ -271,7 +271,6 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         selectedRoom = 0;
         ui->graphicsView->UnSelectDoor();
         LoadRoomUIUpdate();
-        SetEditModeDockWidgetLayerEditability();
         int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
 
@@ -300,7 +299,6 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     --selectedRoom;
     ui->graphicsView->UnSelectDoor();
     LoadRoomUIUpdate();
-    SetEditModeDockWidgetLayerEditability();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
 
@@ -328,7 +326,6 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     ++selectedRoom;
     ui->graphicsView->UnSelectDoor();
     LoadRoomUIUpdate();
-    SetEditModeDockWidgetLayerEditability();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
 
