@@ -12,6 +12,7 @@
 #include "DockWidget/EditModeDockWidget.h"
 #include "Dialog/LevelConfigDialog.h"
 #include "Dialog/RoomConfigDialog.h"
+#include "Dialog/DoorConfigDialog.h"
 
 namespace Ui {
     class WL4EditorWindow;

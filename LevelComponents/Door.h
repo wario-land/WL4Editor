@@ -26,8 +26,8 @@ namespace LevelComponents
         unsigned char y1;
         unsigned char y2;
         unsigned char LinkerDestination;
-        unsigned char HorizontalDisplacement;
-        unsigned char VerticalDisplacement;
+        unsigned char HorizontalDelta;
+        unsigned char VerticalDelta;
         unsigned char EntitySetID;
         unsigned char BGM_ID_LowByte;
         unsigned char BGM_ID_HighByte;
@@ -41,7 +41,7 @@ namespace LevelComponents
         unsigned char RoomID;
         int X1, X2, Y1, Y2; //destination just be (X1, Y1)
         Door *DestinationDoor = nullptr;
-        unsigned char X_Displacement, Y_Displacement;
+        signed char DeltaX, DeltaY;
         unsigned char EntitySetID;
         unsigned int BGM_ID;
 
@@ -53,17 +53,21 @@ namespace LevelComponents
         Door *GetDestinationDoor() { return DestinationDoor; }
         int GetRoomID() {return (int) this->RoomID; }
         void SetDestinationDoor(Door *otherDoor) { DestinationDoor = otherDoor; }
-        void SetDoorDisplacement(unsigned char _X_Displacement, unsigned char _Y_Displacement);
+        void SetDelta(unsigned char _DeltaX, unsigned char _DeltaY);
+        int GetDeltaX() { return (int) DeltaX; }
+        int GetDeltaY() { return (int) DeltaY; }
         void SetEntitySetID(unsigned char _EntitySetID) { EntitySetID = _EntitySetID; }
         int GetEntitySetID() {return (int) EntitySetID; }
         void SetBGM(unsigned int _BGM_ID) { BGM_ID = _BGM_ID; }
         void SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
         void SetDoorType(enum DoorType _DoorType) { type = _DoorType; }
+        int GetDoortypeNum() { return static_cast<int>(type); }
         bool IsUnused();
         int GetX1() { return this->X1; }
         int GetY1() { return this->Y1; }
         int GetX2() { return this->X2; }
         int GetY2() { return this->Y2; }
+        int GetBGM_ID() { return (int) BGM_ID; }
         QPoint GetWarioOriginalPosition_x4();
         //TODO: GenerateDoorSavingData()  (ssp)
     };
