@@ -54,7 +54,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 SelectedDoorID = -1;
                 for(int i = 0; i < room->CountDoors(); i++)
                 {
-                    LevelComponents::Door *door = room->Door(i);
+                    LevelComponents::Door *door = room->GetDoor(i);
                     bool b1 = door->GetX1() <= tileX;
                     bool b2 = door->GetX2() >= tileX;
                     bool b3 = door->GetY1() <= tileY;

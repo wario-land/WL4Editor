@@ -101,6 +101,7 @@ void WL4EditorWindow::LoadRoomUIUpdate()
 
     // Render the screen
     RenderScreenFull();
+    SetEditModeDockWidgetLayerEditability();
 }
 
 /// <summary>
@@ -165,6 +166,13 @@ void WL4EditorWindow::OpenROM()
     }
 
     LoadRoomUIUpdate();
+}
+
+void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
+{
+    EditModeWidget->SetLayersCheckBoxEnabled(0, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(2, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(3, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3)->IsEnabled());
 }
 
 /// <summary>
@@ -261,6 +269,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
             static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
         );
         selectedRoom = 0;
+        ui->graphicsView->UnSelectDoor();
         LoadRoomUIUpdate();
         int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
@@ -268,7 +277,6 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         // Set program control changes
         UnsavedChanges = false;
         ResetUndoHistory();
-        ui->graphicsView->UnSelectDoor();
     }
 }
 
@@ -289,6 +297,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
 
     // Load the previous room
     --selectedRoom;
+    ui->graphicsView->UnSelectDoor();
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
@@ -296,7 +305,6 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     // Set program control changes
     UnsavedChanges = false;
     ResetUndoHistory();
-    ui->graphicsView->UnSelectDoor();
 }
 
 /// <summary>
@@ -316,6 +324,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
 
     // Load the next room
     ++selectedRoom;
+    ui->graphicsView->UnSelectDoor();
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
@@ -323,7 +332,6 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     // Set program control changes
     UnsavedChanges = false;
     ResetUndoHistory();
-    ui->graphicsView->UnSelectDoor();
 }
 
 /// <summary>

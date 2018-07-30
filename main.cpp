@@ -5,12 +5,14 @@
 #include "ROMUtils.h"
 #include "LevelComponents/Level.h"
 #include "Dialog/RoomConfigDialog.h"
+#include "Dialog/DoorConfigDialog.h"
 #include <iostream>
 #include <cstring>
 
 #ifdef _WIN32
 #include <windows.h>
 #include <lmcons.h>
+#pragma comment(lib,"Advapi32.lib")
 #endif
 
 #ifdef linux
@@ -54,6 +56,7 @@ bool LoadROMFile(std::string filePath)
 static void AllStaticInitialization()
 {
     RoomConfigDialog::StaticInitialization();
+    DoorConfigDialog::StaticInitialization();
 }
 
 /// <summary>

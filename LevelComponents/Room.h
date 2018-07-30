@@ -123,7 +123,7 @@ namespace LevelComponents
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
         bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == (unsigned char) 7; }
         int GetLayerEffectsParam() { return (int) RoomHeader.LayerEffects; }
-        LevelComponents::Door *Door(int _doorID) { return doors[_doorID]; }
+        LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
         int CountDoors() { return doors.size(); }
     };
 }
