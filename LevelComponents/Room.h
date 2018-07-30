@@ -2,7 +2,7 @@
 #define ROOM_H
 
 #include "Layer.h"
-#include "Tileset.h"
+#include "Entity.h"
 #include "Door.h"
 #include <DockWidget/EditModeDockWidget.h>
 
