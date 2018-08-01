@@ -18,7 +18,7 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x15 "Rock"                            -98 -66 0x3C4B18 2 0 +p
 0x16 "Skeleton Bird"                   -98 -66 0x3B75E8 1 0 +p
 0x17 "Kaentsubo"                       -98 -66 0x3B8118 2 0 +p
-0x18 "Boss: Cuckoo Condor"             -98 -66 0x3B9AD0 130 0 0
+0x18 "Boss: Cuckoo Condor"             -98 -66 (incorrect delta value) 0x3B9AD0 130 0 0
 0x19 "Totsumen"                        -98 -66 0x3BB0E8 2 0 +p
 0x1A "Pig Head Statue"                 -98 -66 0x3BB63C 2 0 +p
 0x1B "Moguramen"                       -98 -66 0x3BBD6C 1 0 +p
@@ -29,10 +29,22 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x1D "Harimenzetto"                    -98 -66 0x3BC570 2 1 +p
 0x1E "Bobble"                          -98 -66 0x3BC8E4 2 0 +p
 0x1F "Togerobo"                        -98 -66 0x3BCEFC 2 0 +p
-0x24 "vertical moving platform go down first" -98 -98 0x3BDFF0 2 0 +p
-0x25 "horizontal moving platform go right first" -98 -98 0x3BDFF0 2 0 +p
+0x20 "falling snow"                    -98 -66 0x3BD42C 1 0 +p
+0x21 "Spiked Head"                     -98 -98 0x3BD660 2 0 +p
+0x22 "ball lightning"                  -98 -66 0x3BDAF0 2 0 +p
+0x23 "drive-by-wire Platform"          -98 -98 0x3BDD54 2 0 +p
+0x24 "vertical moving platform go down first"      -98 -98 0x3BDFF0 2 0 +p
+0x25 "horizontal moving platform go right first"   -98 -98 0x3BDFF0 2 0 +p
+0x26 "Magic Carpets"                   -98 -78 0x3BE1D4 2 0 +p
+0x27 "Bow Balloon"                     -98 -66 0x3BEBF4 2 0 +p
+0x28 "chance wheel"                    -67 -130 0x3BFB8C 130 0 +p
+0x29 "Vortex"                          -98 -98 0x3B505C 130 0 +p
 0x2A "purple Marumen"                  -100 -66 0x3C1270 2 0 +p
 0x2B "red Marumen"                     -100 -66 0x3C1270 2 1 +p
+0x2C "Boss: Spoiled Rotten"            -98 -66 (incorrect delta value) 0x3C302C 130 0 0
+0x3A "Domino terminal point"           -130 -66 0x3C47D4 3 0 +p
+0x3C "Mayu Bird"                       -98 -66 0x3C4984 2 0 +p
+0x48 "Menhanm¨¡"                        -100 -66 0x3C7DB0 2 0 +p
 0x49 "Men'ono"                         -101 -66 0x3C8278 2 0 +p
 0x4A "Goggley-Blade 100 points"        -98 -66 0x3C89F0 2 0 +p
 0x4B "Goggley-Blade 200 points"        -98 -66 0x3C89F0 2 0 +p
@@ -40,5 +52,20 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x4E "Ringosuk¨©"                       -98 -66 0x3CA178 2 0 +p
 0x4F "Steam Hammer"                    -98 -66 0x3CA898 2 0 +p
 0x50 "Steam Hammer 2rd"                -98 -66 0x3CA898 2 0 +p
-0x55 "Auto-rotate Platform clockwise"  -98 -98 (incorrect delta value) 0x3B4534 2 0 +p
-0x56 "Auto-rotate Platform counterclockwise" -98 -98 (incorrect delta value) 0x3B4534 2 0 +p
+0x55 "Auto-rotate Platform CW"         -98 -98 (incorrect delta value) 0x3B4534 2 0 +p
+0x56 "Auto-rotate Platform CCW"        -98 -98 (incorrect delta value) 0x3B4534 2 0 +p
+0x57 "Pinball"                         -98 -66 0x3D0B08 2 0 +p
+0x58 "Pinball block upside open"       -67 -130 0x3D0938 1 0 +p
+0x59 "Pinball block downside open"     -67 -130 0x3D0988 1 0 +p
+0x5A "Pinball block leftside open"     -67 -130 0x3D0A00 1 0 +p
+0x5B "Pinball block rightside open"    -67 -130 0x3D0A28 1 0 +p
+0x5C "Existing Pinball counter"        -67 -130 0x3D0B58 2 0 +p
+0x5E "Spikes emitter (without body)"   -98 -66 0x3D0DB4 1 0 +p
+0x60 "Yeti"                            -98 -66 0x3D155C 2 0 +p
+0x72 "Robo Bird"                       -98 -66 0x3DDB14 2 0 +p
+0x75 "falling icicle"                  -98 -66 0x3DE498 1 0 +p
+0x77 "Dice"                            -100 -66 0x3E0D68 2 0 +p
+0x78 "Toy Car 10 points"               -100 -66 0x3E1650 2 0 +p
+0x7B "PET Bottom"                      -100 -66 0x3E3878 2 0 +p
+0x7E "falling Chandelier"              -67 -66 0x3F0F04 1 0 +p
+0x7F "unsteady step"                   -98 -98 0x3F122C 2 0 +p
