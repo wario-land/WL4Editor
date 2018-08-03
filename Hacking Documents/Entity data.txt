@@ -78,6 +78,8 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x4E "Ringosuk¨©"                       -98 -66 0x3CA178 2 0 +p
 0x4F "Steam Hammer"                    -98 -66 0x3CA898 2 0 +p
 0x50 "Steam Hammer 2rd"                -98 -66 0x3CA898 2 0 +p
+0x51 "Boss: Catbat"                    -98 -3 0x3CE468 130 0 0
+0x52 "Vortex, duplicated"              -98 -98 0x3B505C 130 0 +p
 0x53 "Swinging Platform"               -98 -66 (incorrect delta value) 0x3CFB58 2 0 +p
 0x54 "Swinging Platform 2rd"           -98 -66 (incorrect delta value) 0x3CFB48 2 0 +p
 0x55 "Auto-rotate Platform CW"         -98 -98 (incorrect delta value) 0x3B4534 2 0 +p
@@ -88,14 +90,38 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x5A "Pinball block leftside open"     -67 -130 0x3D0A00 1 0 +p
 0x5B "Pinball block rightside open"    -67 -130 0x3D0A28 1 0 +p
 0x5C "Existing Pinball counter"        -67 -130 0x3D0B58 2 0 +p
+0x5D "final chance wheel"              -67 -130 0x3C0A28 130 0 +p
 0x5E "Spikes emitter (without body)"   -98 -66 0x3D0DB4 1 0 +p
 0x5F "money sunflower disk"          -35 -130 0x3D0E94 2 0 +p
 0x60 "Yeti"                            -98 -66 0x3D155C 2 0 +p
+0x61 "Iwao"                            -100 -66 0x3D21E4 130 0 +p
+0x62 "spouting lava"                   -67 -380 0x3D2570 (0x3D2598 try which one is better) 2 0 +p
+0x63 "boss door 1"                     -98 -66 (incorrect) 0x3D27C8 3 0 +p
+0x64 "boss door 2"                     -98 -66 (incorrect) 0x3D2A0C 3 0 +p
+0x65 "boss door 3"                     -98 -66 (incorrect) 0x3D2BF0 3 0 +p
+0x66 "boss door 4"                     -98 -66 (incorrect) 0x3D2E1C 3 0 +p
+0x67 "boss door 5"                     -98 -66 (incorrect) 0x3D3048 3 0 +p
+0x68 "boss door 6"                     -98 -66 (incorrect) 0x3D3274 3 0 +p
+0x69 "Boss: Aerodent"                  -194 -321 0x3DABA0 130 0 0
+0x6A "Hoggus"                          -98 -66 0x3DC264 2 0 +p
+0x6B "Denden"                          -98 -66 0x3DC770 2 0 +p
+0x6C "Butatabi"                        -98 -66 0x3DCCBC 0 0 +p
+0x6E "folding door"                    -98 -66 0x3DD720 1 0 +7
+0x6F "perple pencil"                   -98 -66 0x3DD658 2 0 +p
+0x70 "blue pencil"                     -98 -66 0x3DD668 2 0 +p
+0x71 "red pencil"                      -98 -66 0x3DD678 2 0 +p
 0x72 "Robo Bird"                       -98 -66 0x3DDB14 2 0 +p
+0x73 "Utsuboank¨­"                      -98 -66 0x3DE0E0 2 0 +p
+0x74 "Togenobi"                        -98 -66 (incorrect delta value) 0x3DE320 2 0 +p
 0x75 "falling icicle"                  -98 -66 0x3DE498 1 0 +p
+0x76 "Cractus"                         -98 -66 (incorrect) 0x3DF2D0 2 0 0
 0x77 "Dice"                            -100 -66 0x3E0D68 2 0 +p
 0x78 "Toy Car 10 points"               -100 -66 0x3E1650 2 0 +p
+0x79 "Onom¨©"                           -101 -66 0x3E269C 2 0 +p
+0x7A "cat in bass corrider"            -98 -66 0x3E2A2C 2 0 +p
 0x7B "PET Bottom"                      -100 -66 0x3E3878 2 0 +p
 0x7C "Pearl Bird"                      -98 -66 0x3E45F0 2 0 +p
+0x7D "Golden Diva"                     ? ? 0x3B59EC 130 0 0
 0x7E "falling Chandelier"              -67 -66 0x3F0F04 1 0 +p
 0x7F "unsteady step"                   -98 -98 0x3F122C 2 0 +p
+0x80 "Arewo Shitain-hakase"            -98 -66 0x3F1AA0 2 0 +p
