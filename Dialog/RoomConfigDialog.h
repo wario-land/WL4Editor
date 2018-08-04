@@ -49,12 +49,12 @@ namespace DialogParams
             RoomWidth(room->GetWidth()),
             RoomHeight(room->GetHeight()),
             Layer2Enable(room->IsLayer2Enabled()),
-            Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayersDataPtr(0) : 0),
+            Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayerDataPtr(0) : 0),
             BackgroundLayerEnable(room->IsBGLayerEnabled())
         {
             if(BackgroundLayerEnable)
             {
-                BackgroundLayerDataPtr = room->GetLayersDataPtr(3);
+                BackgroundLayerDataPtr = room->GetLayerDataPtr(3);
                 BackgroundLayerAutoScrollEnable = room->IsBGLayerAutoScrollEnabled();
             }
             else
