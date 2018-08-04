@@ -86,6 +86,7 @@ EntitySet::EntitySet(int _EntitySetID, int basicElementPalettePtr)
         {
             tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
             if(tmpEntityId == 0) break;
+            EntityIDs.push_front(tmpEntityId);
             tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable + 4 * (tmpEntityId - 0x10));
             tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (tmpEntityId - 0x10));
             LoadSpritesTiles(tiledataptr, tiledatalength, currentrow);

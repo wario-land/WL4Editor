@@ -19,6 +19,7 @@ bool editModeWidgetInitialized = false;
 // Global variables
 struct DialogParams::PassageAndLevelIndex selectedLevel = { 0, 0 };
 WL4EditorWindow *singleton;
+const char *dialogInitialPath = "";
 
 /// <summary>
 /// Construct the instance of the WL4EditorWindow.
@@ -100,6 +101,7 @@ void WL4EditorWindow::LoadRoomUIUpdate()
 
     // Render the screen
     RenderScreenFull();
+    SetEditModeDockWidgetLayerEditability();
 }
 
 /// <summary>
@@ -112,13 +114,13 @@ void WL4EditorWindow::LoadRoomUIUpdate()
 /// Render room 0 of the level.
 /// On first successful ROM load, add and update UI that requires a ROM to have been loaded.
 /// </remarks>
-void WL4EditorWindow::on_actionOpen_ROM_triggered()
+void WL4EditorWindow::OpenROM()
 {
     // Select a ROM file to open
     QString qFilePath = QFileDialog::getOpenFileName(
         this,
         tr("Open ROM file"),
-        "C:\\",
+        dialogInitialPath,
         tr("GBA ROM files (*.gba)")
     );
     if(!qFilePath.compare(""))
@@ -166,6 +168,21 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
     LoadRoomUIUpdate();
 }
 
+void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
+{
+    EditModeWidget->SetLayersCheckBoxEnabled(0, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(2, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(3, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3)->IsEnabled());
+}
+
+/// <summary>
+/// Call the OpenROM function when the action for it is triggered in the main window.
+/// </summary>
+void WL4EditorWindow::on_actionOpen_ROM_triggered()
+{
+    OpenROM();
+}
+
 /// <summary>
 /// Perform a full render of the currently selected room.
 /// </summary>
@@ -181,6 +198,7 @@ void WL4EditorWindow::RenderScreenFull()
     // Perform a full render of the screen
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::FullRender);
     renderParams.mode = EditModeWidget->GetEditModeParams();
+    renderParams.SelectedDoorID = (unsigned int) ui->graphicsView->GetSelectedDoorID();
     QGraphicsScene *scene = CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -251,6 +269,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
             static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
         );
         selectedRoom = 0;
+        ui->graphicsView->UnSelectDoor();
         LoadRoomUIUpdate();
         int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
@@ -278,6 +297,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
 
     // Load the previous room
     --selectedRoom;
+    ui->graphicsView->UnSelectDoor();
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
@@ -304,6 +324,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
 
     // Load the next room
     ++selectedRoom;
+    ui->graphicsView->UnSelectDoor();
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
@@ -387,9 +408,13 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     DialogParams::RoomConfigParams *_currentRoomConfigParams = new DialogParams::RoomConfigParams(CurrentLevel->GetRooms()[selectedRoom]);
 
     // Show the dialog
-    RoomConfigDialog tmpdialog(this, _currentRoomConfigParams);
-    if(tmpdialog.exec() == QDialog::Accepted)
+    RoomConfigDialog dialog(this, _currentRoomConfigParams);
+    if(dialog.exec() == QDialog::Accepted)
     {
-        // TODO Apply the selected parameters to the current room
+        DialogParams::RoomConfigParams configParams = dialog.GetConfigParams();
+
+        // Apply the selected parameters to the current room
+
+        // TODO: this should be done with the operation history
     }
 }

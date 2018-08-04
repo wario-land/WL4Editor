@@ -82,7 +82,7 @@ namespace LevelComponents
             Door *newDoor = new Door(doorPtr->RoomID, type, doorPtr->x1, doorPtr->x2, doorPtr->y1, doorPtr->y2);
             newDoor->SetEntitySetID(doorPtr->EntitySetID);
             newDoor->SetBGM(doorPtr->BGM_ID_LowByte | ((unsigned int) (doorPtr->BGM_ID_HighByte)) << 8);
-            newDoor->SetDoorDisplacement(doorPtr->HorizontalDisplacement, doorPtr->VerticalDisplacement);
+            newDoor->SetDelta(doorPtr->HorizontalDelta, doorPtr->VerticalDelta);
             doors.push_back(newDoor);
             destinations.push_back(doorPtr->LinkerDestination);
             ++doorPtr;
@@ -164,9 +164,9 @@ namespace LevelComponents
     /// <summary>
     /// Get the countdown timer for a specific difficulty class.
     /// </summary>
-    /// <remarks>
-    /// Return value is total time in seconds
-    /// </remarks>
+    /// <returns>
+    /// Total time in seconds
+    /// </returns>
     int Level::GetTimeCountdownCounter(__LevelDifficulty LevelDifficulty)
     {
         int a, b, c;
@@ -191,6 +191,12 @@ namespace LevelComponents
         return (a * 60 + b * 10 + c);
     }
 
+    /// <summary>
+    /// Helper function to populate LevelName with the name string from the ROM.
+    /// </summary>
+    /// <param name="address">
+    /// Starting address of the level name string.
+    /// </param>
     void Level::LoadLevelName(int address)
     {
         for(int i = 0; i < 26; i++)

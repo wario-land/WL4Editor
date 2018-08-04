@@ -5,12 +5,14 @@
 #include "ROMUtils.h"
 #include "LevelComponents/Level.h"
 #include "Dialog/RoomConfigDialog.h"
+#include "Dialog/DoorConfigDialog.h"
 #include <iostream>
 #include <cstring>
 
 #ifdef _WIN32
 #include <windows.h>
 #include <lmcons.h>
+#pragma comment(lib,"Advapi32.lib")
 #endif
 
 #ifdef linux
@@ -54,6 +56,7 @@ bool LoadROMFile(std::string filePath)
 static void AllStaticInitialization()
 {
     RoomConfigDialog::StaticInitialization();
+    DoorConfigDialog::StaticInitialization();
 }
 
 /// <summary>
@@ -97,20 +100,10 @@ int main(int argc, char *argv[])
 #endif
     if(!strncmp(username, "ANDREW", strlen(username))) // Goldensunboy
     {
-	/*
         // Andrew's tests
-        std::string filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
-        LoadROMFile(filePath);
-
-        // Load a level
-        CurrentLevel = new LevelComponents::Level(LevelComponents::EmeraldPassage, LevelComponents::SecondLevel);
-
-        // Render the screen
-        w.LoadRoom();
-
-        std::cout << CurrentLevel->GetDoors().size() << std::endl;
-        std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
-	*/
+        extern const char *dialogInitialPath;
+        dialogInitialPath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
+        w.OpenROM();
     }
     else if(!strncmp(username, "ADMINISTRATOR", strlen(username))) // SSP
     {

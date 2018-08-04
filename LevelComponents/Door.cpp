@@ -13,10 +13,10 @@ namespace LevelComponents
         // nothing here (yet)
     }
 
-    void Door::SetDoorDisplacement(unsigned char _X_Displacement, unsigned char _Y_Displacement)
+    void Door::SetDelta(unsigned char _DeltaX, unsigned char _DeltaY)
     {
-        X_Displacement = _X_Displacement;
-        Y_Displacement = _Y_Displacement;
+        DeltaX = (signed char) _DeltaX;
+        DeltaY = (signed char) _DeltaY;
     }
 
     void Door::SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2)
@@ -55,8 +55,8 @@ namespace LevelComponents
         }
         else
         {
-            xpos = ((X1 + 1) << 6) + 4 * ((char) X_Displacement + 8);
-            ypos = ((Y2 + 1) << 6) + 4 * ((char) Y_Displacement) - 1;
+            xpos = ((X1 + 1) << 6) + 4 * (DeltaX + 8);
+            ypos = ((Y2 + 1) << 6) + 4 * DeltaY - 1;
         }
         QPoint WarioLeftTopPosition;
         WarioLeftTopPosition.setX(xpos);

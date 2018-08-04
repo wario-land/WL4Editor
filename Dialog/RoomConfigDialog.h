@@ -7,12 +7,14 @@
 #include <QPixmap>
 #include <QGraphicsPixmapItem>
 #include <QScrollBar>
+#include <QLabel>
 
 #include "WL4Constants.h"
 #include "ROMUtils.h"
 #include "LevelComponents/Layer.h"
 #include "LevelComponents/Tileset.h"
 #include "LevelComponents/Room.h"
+#include "RoomPreviewGraphicsView.h"
 
 namespace DialogParams
 {
@@ -30,6 +32,12 @@ namespace DialogParams
         bool BackgroundLayerEnable;
         bool BackgroundLayerAutoScrollEnable;
         int BackgroundLayerDataPtr;
+
+        // Default constructor
+        RoomConfigParams()
+        {
+            memset(this, 0, sizeof(struct RoomConfigParams));
+        }
 
         // Construct this param struct using a Room object
         RoomConfigParams(LevelComponents::Room *room) :
@@ -51,7 +59,7 @@ namespace DialogParams
             }
             else
             {
-                BackgroundLayerDataPtr = WL4Constants::BGLayerDisableDefaultPtr;
+                BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
                 BackgroundLayerAutoScrollEnable = false;
             }
         }
@@ -70,31 +78,25 @@ public:
     explicit RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigParams *CurrentRoomParams);
     ~RoomConfigDialog();
     static void StaticInitialization();
+    DialogParams::RoomConfigParams GetConfigParams();
 
 private slots:
-    void on_CheckBox_Layer0Enable_stateChanged(int arg1);
-    void on_CheckBox_Layer0Alpha_stateChanged(int arg1);
+    void on_CheckBox_Layer0Enable_stateChanged(int state);
+    void on_CheckBox_Layer0Alpha_stateChanged(int state);
     void on_ComboBox_Layer0MappingType_currentIndexChanged(int index);
-    void on_CheckBox_Layer0AutoScroll_stateChanged(int arg1);
-    void on_ComboBox_AlphaBlendAttribute_currentIndexChanged(int index);
     void on_ComboBox_TilesetID_currentIndexChanged(int index);
-    void on_SpinBox_RoomWidth_valueChanged(int arg1);
-    void on_SpinBox_RoomHeight_valueChanged(int arg1);
-    void on_CheckBox_Layer2Enable_stateChanged(int arg1);
-    void on_CheckBox_BGLayerAutoScroll_stateChanged(int arg1);
-    void on_CheckBox_BGLayerEnable_stateChanged(int arg1);
-    void on_ComboBox_LayerPriority_currentIndexChanged(int index);
+    void on_CheckBox_BGLayerEnable_stateChanged(int state);
     void on_ComboBox_BGLayerPicker_currentIndexChanged(int index);
     void on_ComboBox_Layer0Picker_currentIndexChanged(int index);
+    void on_ComboBox_LayerPriority_currentIndexChanged(int index);
 
 private:
+    bool ComboBoxInitialized = false;
     Ui::RoomConfigDialog *ui;
-    DialogParams::RoomConfigParams *currentParams;
-    QGraphicsScene *tmpGraphicviewScene = nullptr;
-    LevelComponents::Layer *tmpLayer0 = nullptr;
-    LevelComponents::Layer *tmpBGLayer = nullptr;
-    void ShowTilesetDetails();
+    void ShowTilesetDetails(int tilesetIndex);
     void ShowMappingType20LayerDetails(int _layerdataAddr, LevelComponents::Layer *_tmpLayer);
+
+    LevelComponents::Tileset *currentTileset = nullptr;
 
     // Enumeration of the available tilesets
     static constexpr const char *TilesetNamesSetData[0x5C] =

@@ -14,6 +14,8 @@ namespace LevelComponents
         Tile8x8 *tile8x8data[0x600];
         TileMap16 *map16data[0x300];
         QVector<QRgb> palettes[16];
+        Tile8x8 *blankTile;
+
     public:
         Tileset(int tilesetPtr, int __TilesetID);
         Tile8x8 **GetTile8x8Data() { return tile8x8data; }
@@ -21,6 +23,8 @@ namespace LevelComponents
         QVector<QRgb> *GetPalettes() { return palettes; }
         unsigned short *Map16EventTable;
         unsigned char *Map16WarioAnimationSlotIDTable;
+        ~Tileset();
+        QPixmap Render(int columns);
     };
 }
 

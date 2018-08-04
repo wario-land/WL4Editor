@@ -6,21 +6,27 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>807</width>
+    <width>900</width>
     <height>574</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Room Config</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QGridLayout" name="gridLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <property name="rightMargin">
       <number>0</number>
      </property>
-     <item row="0" column="0">
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_UI">
        <property name="leftMargin">
         <number>6</number>
        </property>
@@ -31,7 +37,7 @@
         <number>20</number>
        </property>
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="tilesetLabel">
          <property name="text">
           <string>Tileset:</string>
          </property>
@@ -48,7 +54,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_3">
+        <widget class="QLabel" name="backgroundLabel">
          <property name="text">
           <string>Use existing Background Layer:</string>
          </property>
@@ -92,7 +98,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_8">
+        <widget class="QLabel" name="alphaBlendingLabel">
          <property name="text">
           <string>Alhpa Blend Attributes:</string>
          </property>
@@ -106,7 +112,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_7">
+        <widget class="QLabel" name="L0MappingTypeLabel">
          <property name="text">
           <string>Layer 0 Mapping Type:</string>
          </property>
@@ -120,9 +126,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_9">
+        <widget class="QLabel" name="L0Label">
          <property name="text">
-          <string>Use existing Layer 0: (only when Layer Mapping type is 0x20)</string>
+          <string>Use existing Layer 0:</string>
          </property>
         </widget>
        </item>
@@ -151,7 +157,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_4">
+        <widget class="QLabel" name="layerPriorityLabel">
          <property name="text">
           <string>Layer Priority:</string>
          </property>
@@ -161,7 +167,7 @@
         <widget class="QComboBox" name="ComboBox_LayerPriority"/>
        </item>
        <item>
-        <widget class="QLabel" name="label_5">
+        <widget class="QLabel" name="roomWidthLabel">
          <property name="text">
           <string>Room Width:</string>
          </property>
@@ -178,7 +184,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_6">
+        <widget class="QLabel" name="roomHeightLabel">
          <property name="text">
           <string>Room Height:</string>
          </property>
@@ -209,8 +215,8 @@
        </item>
       </layout>
      </item>
-     <item row="0" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_View">
        <property name="spacing">
         <number>6</number>
        </property>
@@ -224,19 +230,28 @@
         <number>20</number>
        </property>
        <item>
-        <widget class="QLabel" name="label_2">
+        <widget class="QLabel" name="graphicViewDetailsLabel">
          <property name="text">
-          <string>Details: </string>
+          <string>Tileset: </string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QGraphicsView" name="graphicsView">
+        <widget class="RoomPreviewGraphicsView" name="graphicsView">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
-           <width>0</width>
+           <width>256</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Click to see other detail(s)</string>
          </property>
         </widget>
        </item>
@@ -256,6 +271,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>RoomPreviewGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header>Dialog/RoomPreviewGraphicsView.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

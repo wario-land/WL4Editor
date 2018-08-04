@@ -12,6 +12,7 @@
 #include "DockWidget/EditModeDockWidget.h"
 #include "Dialog/LevelConfigDialog.h"
 #include "Dialog/RoomConfigDialog.h"
+#include "Dialog/DoorConfigDialog.h"
 
 namespace Ui {
     class WL4EditorWindow;
@@ -48,6 +49,8 @@ public:
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
     bool FirstROMIsLoaded() { return firstROMLoaded; }
+    void OpenROM();
+    void SetEditModeDockWidgetLayerEditability();
 
 private slots:
     void on_actionOpen_ROM_triggered();

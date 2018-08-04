@@ -49,6 +49,7 @@ public:
     explicit EditModeDockWidget(QWidget *parent = 0);    
     struct Ui::EditModeParams GetEditModeParams();
     ~EditModeDockWidget();
+    void SetLayersCheckBoxEnabled(int index, bool usable);
 private slots:
     void on_CheckBox_Layer0View_stateChanged(int arg1);
     void on_CheckBox_Layer1View_stateChanged(int arg1);

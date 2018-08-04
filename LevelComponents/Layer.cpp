@@ -4,6 +4,18 @@
 
 namespace LevelComponents
 {
+    /// <summary>
+    /// Construct an instance of Layer.
+    /// </summary>
+    /// <remarks>
+    /// Mapping type is a parameter because that information is not contained in the layer data itself.
+    /// </remarks>
+    /// <param name="layerDataPtr">
+    /// Pointer to the beginning of the layer data.
+    /// </param>
+    /// <param name="mappingType">
+    /// The mapping type for the layer.
+    /// </param>
     Layer::Layer(int layerDataPtr, enum LayerMappingType mappingType) :
         MappingType(mappingType), Enabled(mappingType != LayerDisabled)
     {
@@ -69,6 +81,38 @@ namespace LevelComponents
             std::cout << "Failed to decompress layer data: " << (layerDataPtr + 1) << std::endl;
     }
 
+    /// <summary>
+    /// Deconstruct the Layer and clean up its instance objects on the heap.
+    /// </summary>
+    Layer::~Layer()
+    {
+        if(LayerData == nullptr) return;
+
+        // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
+        if(MappingType == LayerTile8x8)
+        {
+            for(auto iter = tiles.begin(); iter != tiles.end(); ++iter)
+            {
+                delete(*iter);
+            }
+        }
+
+        // If it is map16 type, then they are just pointer copies and should be deconstructed in ~Tileset() only
+        delete[] LayerData;
+    }
+
+    /// <summary>
+    /// Render a layer as a QPixmap.
+    /// </summary>
+    /// <remarks>
+    /// The tileset parameter is necessary because tileset information is in the Room object, not layer.
+    /// </remarks>
+    /// <param name="tileset">
+    /// The tileset defining the tiles that will be drawn on the layer graphics.
+    /// </param>
+    /// <return>
+    /// A QPixmap of the fully rendered layer, including transparency.
+    /// </return>
     QPixmap Layer::RenderLayer(Tileset *tileset)
     {
         // Set the units we are drawing in (depending on the Tile type)
@@ -85,6 +129,7 @@ namespace LevelComponents
         }
 
         // Create tiles
+        if(tiles.size() != 0) tiles.clear();
         tiles = std::vector<Tile*>(Width * Height);
         if(MappingType == LayerMap16)
         {
@@ -126,15 +171,35 @@ namespace LevelComponents
         return layerPixmap;
     }
 
+    /// <summary>
+    /// Re-render a single tile's graphics in the tiles instance variable.
+    /// </summary>
+    /// <remarks>
+    /// This is used as a counterpart to Layer::RenderLayer, which only re-renders one tile.
+    /// </remarks>
+    /// <param name="X">
+    /// The X position of the tile to change.
+    /// </param>
+    /// <param name="Y">
+    /// The Y position of the tile to change.
+    /// </param>
+    /// <param name="TileID">
+    /// The tile ID that the destination tile will be changed to.
+    /// </param>
+    /// <param name="tileset">
+    /// The tileset defining the tiles that will be drawn on the layer graphics.
+    /// </param>
     void Layer::ReRenderTile(int X, int Y, unsigned short TileID, Tileset *tileset)
     {
         int index = X + Y * Width;
         if(MappingType == LayerMap16)
         {
+            // If map16 type, then just copy the map16 tile object from the tileset
             tiles[index] = tileset->GetMap16Data()[TileID];
         }
         else if(MappingType == LayerTile8x8)
         {
+            // If tile8x8 type, then new Tile8x8 objects must be constructed from data
             Tile8x8 *newTile = new Tile8x8(tileset->GetTile8x8Data()[0x200 + (TileID & 0x3FF)]);
             newTile->SetFlipX((TileID & (1 << 10)) != 0);
             newTile->SetFlipY((TileID & (1 << 11)) != 0);
@@ -143,5 +208,163 @@ namespace LevelComponents
             tiles[index] = newTile;
         }
         else std::cout << "WARNING: Invalid mapping type ecountered in Layer::ChangeTile" << std::endl;
+    }
+
+    /// <summary>
+    /// Disable a Layer and free all of the memory it use but the instance is still exist
+    /// </summary>
+    void Layer::SetDisabled()
+    {
+        if(LayerData == nullptr) return;
+        if(MappingType == LayerTile8x8) // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
+        {
+            for(auto iter = tiles.begin(); iter != tiles.end(); ++iter)
+            {
+                delete(*iter);
+            }
+        }else{ // If it is map16 type, then they are just pointer copies so only free the vector
+            tiles.clear();
+        }
+
+        delete[] LayerData; LayerData = nullptr;
+        MappingType = LayerDisabled;
+        Enabled = false; Width = 0; Height = 0;
+        NewLayer = false;
+    }
+
+    /// <summary>
+    /// Use this function to take the place of one existing layer in a room.
+    /// </summary>
+    /// <param name="layerWidth">
+    /// New layer width.
+    /// </param>
+    /// <param name="layerHeight">
+    /// New layer height.
+    /// </param>
+    void Layer::CreateNewLayer_type0x10(int layerWidth, int layerHeight)
+    {
+        Width = layerWidth;
+        Height = layerHeight;
+        NewLayer = true; Enabled = true;
+        MappingType = LayerMap16;
+        LayerData = new unsigned short[layerWidth * layerHeight];
+        memset(LayerData, '\0', sizeof(char) * 2 * layerWidth * layerHeight);
+    }
+
+    /// <summary>
+    /// Use this function to add rows to the existing layer.
+    /// </summary>
+    /// <param name="NumberOfNewRows">
+    /// Number of new rows you wan to add to the layer.
+    /// </param>
+    /// <param name="StartFrom">
+    /// the id of the specific row which we add new blank rows before it.
+    /// </param>
+    void Layer::AddRows(int NumberOfNewRows, int StartFrom)
+    {
+        Height += NumberOfNewRows;
+        unsigned short *tmpLayerData = new unsigned short[Width * Height];
+        int k = 0;
+        for(int j = 0; j < Height; j++)
+        {
+            for(int i = 0; i < Width; i++)
+            {
+                if((StartFrom >= j) && (k < NumberOfNewRows))
+                    tmpLayerData[i + j * Width] = (unsigned short) 0;
+                else
+                    tmpLayerData[i + j * Width] = LayerData[i + (j - k) * Width];
+            }
+            if((StartFrom >= j) && (k < NumberOfNewRows)) k++;
+        }
+        delete[] LayerData;
+        LayerData = tmpLayerData;
+    }
+
+    /// <summary>
+    /// Use this function to add columns to the existing layer.
+    /// </summary>
+    /// <param name="NumberOfNewColumns">
+    /// Number of new columns you wan to add to the layer.
+    /// </param>
+    /// <param name="StartFrom">
+    /// the id of the specific column which we add new blank columns before it.
+    /// </param>
+    void Layer::AddColumns(int NumberOfNewColumns, int StartFrom)
+    {
+        Width += NumberOfNewColumns;
+        unsigned short *tmpLayerData = new unsigned short[Width * Height];
+        int k = 0;
+        for(int j = 0; j < Height; j++)
+        {
+            for(int i = 0; i < Width; i++)
+            {
+                if((StartFrom >= i) && (k < NumberOfNewColumns))
+                {
+                    tmpLayerData[i + j * Width] = (unsigned short) 0;
+                    k++;
+                }
+                else
+                {
+                    tmpLayerData[i + j * Width] = LayerData[i - k + j * (Width - NumberOfNewColumns)];
+                }
+            }
+            k = 0;
+        }
+        delete[] LayerData;
+        LayerData = tmpLayerData;
+    }
+
+    /// <summary>
+    /// Use this function to delete rows from the existing layer.
+    /// </summary>
+    /// <param name="NumberOfWillBeDeletedRows">
+    /// Number of rows you wan to delete form the layer.
+    /// </param>
+    /// <param name="StartFrom">
+    /// the id of the specific row which we start delet rows.
+    /// </param>
+    void Layer::DeleteRows(int NumberOfWillBeDeletedRows, int StartFrom)
+    {
+        Height -= NumberOfWillBeDeletedRows;
+        unsigned short *tmpLayerData = new unsigned short[Width * Height];
+        for(int j = 0; j < Height; j++)
+        {
+            for(int i = 0; i < Width; i++)
+            {
+                if(StartFrom >= j)
+                    tmpLayerData[i + j * Width] = LayerData[i + (j + NumberOfWillBeDeletedRows) * Width];
+                else
+                    tmpLayerData[i + j * Width] = LayerData[i + j * Width];
+            }
+        }
+        delete[] LayerData;
+        LayerData = tmpLayerData;
+    }
+
+    /// <summary>
+    /// Use this function to delete columns from the existing layer.
+    /// </summary>
+    /// <param name="NumberOfWillBeDeletedColumns">
+    /// Number of columns you wan to delete form the layer.
+    /// </param>
+    /// <param name="StartFrom">
+    /// the id of the specific column which we start delet columns.
+    /// </param>
+    void Layer::DeleteColumns(int NumberOfWillBeDeletedColumns, int StartFrom)
+    {
+        Width -= NumberOfWillBeDeletedColumns;
+        unsigned short *tmpLayerData = new unsigned short[Width * Height];
+        for(int j = 0; j < Height; j++)
+        {
+            for(int i = 0; i < Width; i++)
+            {
+                if(StartFrom >= i)
+                    tmpLayerData[i + j * Width] = LayerData[i + j * (Width + NumberOfWillBeDeletedColumns) + NumberOfWillBeDeletedColumns];
+                else
+                    tmpLayerData[i + j * Width] = LayerData[i + j * (Width + NumberOfWillBeDeletedColumns)];
+            }
+        }
+        delete[] LayerData;
+        LayerData = tmpLayerData;
     }
 }
