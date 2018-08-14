@@ -90,6 +90,11 @@ namespace LevelComponents
     class Room
     {
     private:
+        struct DLS
+        {
+            Layer *layer;
+            int index;
+        } *drawLayers[4];
         enum __CameraControlType CameraControlType;
         unsigned int RoomID;
         int TilesetID;
@@ -107,6 +112,7 @@ namespace LevelComponents
 
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
+        ~Room();
         int GetTilesetID() { return TilesetID; }
         Tileset *GetTileset() { return tileset; }
         void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; TilesetID = tilesetID; RoomHeader.TilesetID = (unsigned int)tilesetID; }

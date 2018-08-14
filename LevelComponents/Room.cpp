@@ -94,6 +94,12 @@ namespace LevelComponents
         // TODO
     }
 
+    Room::~Room()
+    {
+        //TODO: clear nested heap
+        delete[] drawLayers;
+    }
+
     /// <summary>
     /// Render an entire graphics scene for the Room.
     /// </summary>
@@ -117,11 +123,7 @@ namespace LevelComponents
         case FullRender:
             {
                 // Order the layers by their priority
-                struct DLS
-                {
-                    Layer *layer;
-                    int index;
-                } *drawLayers[4];
+
                 for(int i = 0; i < 4; ++i)
                 {
                     struct DLS *newDLS = new struct DLS;
@@ -371,6 +373,56 @@ namespace LevelComponents
 
                 // Set the new QPixmap for the graphics item on the QGraphicsScene
                 item->setPixmap(pm);
+
+                // Redraw alpha layer
+                if(Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
+                {
+                    QGraphicsPixmapItem *alphalayeritem = RenderedLayers[7];
+                    QPixmap alphapm(alphalayeritem->pixmap());
+                    Layer *layerqueue[4];
+                    QList<Layer*> layerlist;
+                    layerlist.push_back(&layer[0]); layerlist.push_back(&layer[1]); layerlist.push_back(&layer[2]); layerlist.push_back(&layer[3]);
+
+                    qSort(layerlist.begin(), layerlist.end(), [](Layer *layera, Layer *layerb){
+                        return layera->GetLayerPriority() < layerb->GetLayerPriority();
+                    });
+                    for(int i = 0; i < 4; i++)
+                    {
+                        layerqueue[i] = layerlist.at(3 - i);
+                    }
+
+                    QPixmap alphaPixmapTemp = alphalayeritem->pixmap();
+                    QPainter alphaPainterTemp(&alphaPixmapTemp);
+                    bool *LayersCurrentVisibilityTemp = singleton->GetLayersVisibilityArray();
+                    QImage imageA = RenderedLayers[0]->pixmap().toImage();
+                    QImage imageB = alphaPixmapTemp.toImage();
+                    for(int i = 0; i < 4; i++)
+                    {
+                        // If this is a pass for a layer under the alpha layer, draw the rendered layer to the EVA component image
+                        if((layerqueue[i] != &layer[0]) && LayersCurrentVisibilityTemp[drawLayers[i]->index])
+                            alphaPainterTemp.drawImage(0, 0, RenderedLayers[drawLayers[i]->index]->pixmap().toImage());
+                        else if(layerqueue[i] == &layer[0])
+                        {
+                            // Blend the EVA and EVB pixels for the new layer
+
+                            for(int j = renderParams->tileY; j < (renderParams->tileY + 16); ++j)
+                            {
+                                for(int k = renderParams->tileX; k < (renderParams->tileX + 16); ++k)
+                                {
+                                    QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
+                                    int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16, 255);
+                                    int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16, 255);
+                                    int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16, 255);
+                                    imageA.setPixel(k, j, QColor(R, G, B).rgb());
+                                }
+                            }
+                        };
+
+                    }
+                    delete[] LayersCurrentVisibilityTemp;
+                    alphalayeritem->setPixmap(alphapm);
+
+                }
             }
             return scene;
         }
