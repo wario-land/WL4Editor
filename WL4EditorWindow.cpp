@@ -175,6 +175,11 @@ void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
     EditModeWidget->SetLayersCheckBoxEnabled(3, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3)->IsEnabled());
 }
 
+bool *WL4EditorWindow::GetLayersVisibilityArray()
+{
+   return EditModeWidget->GetLayersVisibilityArray();
+}
+
 /// <summary>
 /// Call the OpenROM function when the action for it is triggered in the main window.
 /// </summary>

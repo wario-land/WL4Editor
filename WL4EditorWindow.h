@@ -51,6 +51,7 @@ public:
     bool FirstROMIsLoaded() { return firstROMLoaded; }
     void OpenROM();
     void SetEditModeDockWidgetLayerEditability();
+    bool *GetLayersVisibilityArray();
 
 private slots:
     void on_actionOpen_ROM_triggered();
