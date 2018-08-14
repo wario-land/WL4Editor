@@ -46,46 +46,7 @@ namespace LevelComponents
             layers[i] = new Layer(layerPtr, mappingType);
         }
 
-        // Prioritize the layers
-        int priorityFlag = ROMUtils::CurrentFile[roomDataPtr + 26];
-        switch(priorityFlag & 3)
-        {
-        case 0:
-            layers[0]->SetLayerPriority(0);
-            layers[1]->SetLayerPriority(1);
-            layers[2]->SetLayerPriority(2);
-            break;
-        case 1:
-        case 2:
-            layers[0]->SetLayerPriority(1);
-            layers[1]->SetLayerPriority(0);
-            layers[2]->SetLayerPriority(2);
-            break;
-        case 3:
-            layers[0]->SetLayerPriority(2);
-            layers[1]->SetLayerPriority(0);
-            layers[2]->SetLayerPriority(1);
-        }
-        layers[3]->SetLayerPriority(3);
-
-        // Get the information about Layer 0 color blending, using priorityFlag
-        if((Layer0ColorBlending = priorityFlag > 7))
-        {
-            switch((priorityFlag - 8) >> 2)
-            {
-            case  0: Layer0ColorBlendCoefficient_EVA =  7; Layer0ColorBlendCoefficient_EVB = 16; break;
-            case  1: Layer0ColorBlendCoefficient_EVA = 10; Layer0ColorBlendCoefficient_EVB = 16; break;
-            case  2: Layer0ColorBlendCoefficient_EVA = 13; Layer0ColorBlendCoefficient_EVB = 16; break;
-            case  3: Layer0ColorBlendCoefficient_EVA = 16; Layer0ColorBlendCoefficient_EVB = 16; break;
-            case  4: Layer0ColorBlendCoefficient_EVA = 16; Layer0ColorBlendCoefficient_EVB =  0; break;
-            case  5: Layer0ColorBlendCoefficient_EVA = 13; Layer0ColorBlendCoefficient_EVB =  3; break;
-            case  6: Layer0ColorBlendCoefficient_EVA = 10; Layer0ColorBlendCoefficient_EVB =  6; break;
-            case  7: Layer0ColorBlendCoefficient_EVA =  7; Layer0ColorBlendCoefficient_EVB =  9; break;
-            case  8: Layer0ColorBlendCoefficient_EVA =  5; Layer0ColorBlendCoefficient_EVB = 11; break;
-            case  9: Layer0ColorBlendCoefficient_EVA =  3; Layer0ColorBlendCoefficient_EVB = 13; break;
-            case 10: Layer0ColorBlendCoefficient_EVA =  0; Layer0ColorBlendCoefficient_EVB = 16;
-            }
-        }
+        SetLayerPriorityAndAlphaAttributes((int) ROMUtils::CurrentFile[roomDataPtr + 26]);
 
         // Set up camera control data
         // TODO are there more types than 1, 2 and 3?
@@ -410,6 +371,50 @@ namespace LevelComponents
         return nullptr;
     }
 
+    void Room::SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr)
+    {
+        // Prioritize the layers
+        int priorityFlag = layerPriorityAndAlphaAttr;
+        switch(priorityFlag & 3)
+        {
+        case 0:
+            layers[0]->SetLayerPriority(0);
+            layers[1]->SetLayerPriority(1);
+            layers[2]->SetLayerPriority(2);
+            break;
+        case 1:
+        case 2:
+            layers[0]->SetLayerPriority(1);
+            layers[1]->SetLayerPriority(0);
+            layers[2]->SetLayerPriority(2);
+            break;
+        case 3:
+            layers[0]->SetLayerPriority(2);
+            layers[1]->SetLayerPriority(0);
+            layers[2]->SetLayerPriority(1);
+        }
+        layers[3]->SetLayerPriority(3);
+
+        // Get the information about Layer 0 color blending, using priorityFlag
+        if((Layer0ColorBlending = priorityFlag > 7))
+        {
+            switch((priorityFlag - 8) >> 2)
+            {
+            case  0: Layer0ColorBlendCoefficient_EVA =  7; Layer0ColorBlendCoefficient_EVB = 16; break;
+            case  1: Layer0ColorBlendCoefficient_EVA = 10; Layer0ColorBlendCoefficient_EVB = 16; break;
+            case  2: Layer0ColorBlendCoefficient_EVA = 13; Layer0ColorBlendCoefficient_EVB = 16; break;
+            case  3: Layer0ColorBlendCoefficient_EVA = 16; Layer0ColorBlendCoefficient_EVB = 16; break;
+            case  4: Layer0ColorBlendCoefficient_EVA = 16; Layer0ColorBlendCoefficient_EVB =  0; break;
+            case  5: Layer0ColorBlendCoefficient_EVA = 13; Layer0ColorBlendCoefficient_EVB =  3; break;
+            case  6: Layer0ColorBlendCoefficient_EVA = 10; Layer0ColorBlendCoefficient_EVB =  6; break;
+            case  7: Layer0ColorBlendCoefficient_EVA =  7; Layer0ColorBlendCoefficient_EVB =  9; break;
+            case  8: Layer0ColorBlendCoefficient_EVA =  5; Layer0ColorBlendCoefficient_EVB = 11; break;
+            case  9: Layer0ColorBlendCoefficient_EVA =  3; Layer0ColorBlendCoefficient_EVB = 13; break;
+            case 10: Layer0ColorBlendCoefficient_EVA =  0; Layer0ColorBlendCoefficient_EVB = 16;
+            }
+        }
+    }
+
     /// <summary>
     /// Get the layer data pointer for a layer.
     /// </summary>
@@ -422,7 +427,7 @@ namespace LevelComponents
     /// <return>
     /// The normalized data pointer for the requested layer.
     /// </return>
-    int Room::GetLayersDataPtr(int LayerNum)
+    int Room::GetLayerDataPtr(int LayerNum)
     {
         switch(LayerNum)
         {
@@ -437,6 +442,36 @@ namespace LevelComponents
             default:
                 // ERROR
                 return 0;
+        }
+    }
+
+    void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
+    {
+        switch(LayerNum)
+        {
+            case 0:
+                RoomHeader.Layer0Data = dataPtr; break;
+            case 1:
+                RoomHeader.Layer1Data = dataPtr; break;
+            case 2:
+                RoomHeader.Layer2Data = dataPtr; break;
+            case 3:
+                RoomHeader.Layer3Data = dataPtr; break;
+            default:
+                // ERROR
+                return;
+        }
+    }
+
+    void Room::SetBGLayerAutoScrollEnabled(bool enability)
+    {
+        if(enability){
+            RoomHeader.Layer3Scrolling = (unsigned char) 7;
+        }else{
+            if(RoomHeader.Layer3MappingType == (unsigned char) 0)
+                RoomHeader.Layer3Scrolling = (unsigned char) 3;
+            else
+                RoomHeader.Layer3Scrolling = (unsigned char) 1;
         }
     }
 }
