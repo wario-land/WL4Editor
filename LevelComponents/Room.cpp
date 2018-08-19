@@ -380,7 +380,7 @@ namespace LevelComponents
                     QGraphicsPixmapItem *alphalayeritem = RenderedLayers[7];
                     Layer *layerqueue[4];
                     QList<Layer*> layerlist;
-                    layerlist.push_back(&layer[0]); layerlist.push_back(&layer[1]); layerlist.push_back(&layer[2]); layerlist.push_back(&layer[3]);
+                    layerlist.push_back(layers[0]); layerlist.push_back(layers[1]); layerlist.push_back(layers[2]); layerlist.push_back(layers[3]);
 
                     qSort(layerlist.begin(), layerlist.end(), [](Layer *layera, Layer *layerb){
                         return layera->GetLayerPriority() < layerb->GetLayerPriority();
@@ -397,14 +397,14 @@ namespace LevelComponents
                     for(int i = 0; i < 4; i++)
                     {
                         // If this is a pass for a layer under the alpha layer, draw the rendered layer to the EVA component image
-                        if((layerqueue[i] != &layer[0]) && LayersCurrentVisibilityTemp[drawLayers[i]->index])
+                        if((layerqueue[i] != layers[0]) && LayersCurrentVisibilityTemp[drawLayers[i]->index])
                         {
                             QPixmap pm_tmp = RenderedLayers[drawLayers[i]->index]->pixmap().copy(renderParams->tileX * 16, renderParams->tileY * 16, 16, 16);
                             alphaPainterTemp.drawImage(renderParams->tileX * 16,
                                                        renderParams->tileY * 16,
                                                        pm_tmp.toImage());
                         }
-                        else if(layerqueue[i] == &layer[0])
+                        else if(layerqueue[i] == layers[0])
                         {
                             // Blend the EVA and EVB pixels for the new layer
                             QImage imageA = RenderedLayers[0]->pixmap().toImage();
