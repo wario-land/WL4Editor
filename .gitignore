@@ -46,3 +46,4 @@ ui_*
 # Miscellanious
 *.swp
 WL4Editor
+TEST/LoadROMFileTEST.cpp

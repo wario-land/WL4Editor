@@ -71,6 +71,20 @@ void EditModeDockWidget::SetLayersCheckBoxEnabled(int index, bool usable)
     ui->RadioButton_EditOnLayer1->setChecked(true);
 }
 
+bool *EditModeDockWidget::GetLayersVisibilityArray()
+{
+    bool *LayersVisibilityArray = new bool[8];
+    LayersVisibilityArray[0] = ui->CheckBox_Layer0View->isChecked();
+    LayersVisibilityArray[1] = ui->CheckBox_Layer1View->isChecked();
+    LayersVisibilityArray[2] = ui->CheckBox_Layer2View->isChecked();
+    LayersVisibilityArray[3] = ui->CheckBox_Layer3View->isChecked();
+    LayersVisibilityArray[4] = ui->CheckBox_EntityView->isChecked();
+    LayersVisibilityArray[5] = ui->CheckBox_DoorView->isChecked();
+    LayersVisibilityArray[6] = ui->CheckBox_CameraView->isChecked();
+    LayersVisibilityArray[7] = ui->CheckBox_AlphaView->isChecked();
+    return LayersVisibilityArray;
+}
+
 /// <summary>
 /// Retrieve the selected edit mode options as a structure.
 /// </summary>
@@ -106,7 +120,19 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
 void EditModeDockWidget::on_CheckBox_Layer0View_stateChanged(int arg1)
 {
     (void) arg1;
+    if(ui->CheckBox_Layer0View->isChecked() && singleton->GetCurrentRoom()->IsLayer0ColorBlendingEnable())
+    {
+
+        ui->CheckBox_AlphaView->setChecked(true);
+        ui->CheckBox_AlphaView->setEnabled(true);
+    }
+    else
+    {
+        ui->CheckBox_AlphaView->setChecked(false);
+        ui->CheckBox_AlphaView->setEnabled(false);
+    }
     singleton->RenderScreenVisibilityChange();
+
 }
 
 /// <summary>
@@ -118,7 +144,7 @@ void EditModeDockWidget::on_CheckBox_Layer0View_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_Layer1View_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenVisibilityChange();
+    singleton->RenderScreenFull();
 }
 
 /// <summary>
@@ -130,7 +156,7 @@ void EditModeDockWidget::on_CheckBox_Layer1View_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_Layer2View_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenVisibilityChange();
+    singleton->RenderScreenFull();
 }
 
 /// <summary>
@@ -142,7 +168,7 @@ void EditModeDockWidget::on_CheckBox_Layer2View_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_Layer3View_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenVisibilityChange();
+    singleton->RenderScreenFull();
 }
 
 /// <summary>
@@ -192,3 +218,5 @@ void EditModeDockWidget::on_CheckBox_AlphaView_stateChanged(int arg1)
     (void) arg1;
     singleton->RenderScreenVisibilityChange(); // TODO this should probably be a full re-render
 }
+
+
