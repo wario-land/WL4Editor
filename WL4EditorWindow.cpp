@@ -224,10 +224,11 @@ void WL4EditorWindow::RenderScreenVisibilityChange()
 /// <summary>
 /// Perform a re-render of a single changed tile.
 /// </summary>
-void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned short tileID)
+void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned short tileID, int LayerID)
 {
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::SingleTile);
     renderParams.mode = EditModeWidget->GetEditModeParams();
+    renderParams.mode.selectedLayer = LayerID;
     renderParams.tileX = tileX;
     renderParams.tileY = tileY;
     renderParams.tileID = tileID;
