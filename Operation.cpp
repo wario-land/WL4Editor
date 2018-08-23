@@ -31,7 +31,7 @@ static void PerformOperation(struct OperationParams *operation)
             int index = tcp->tileX + tcp->tileY * room->GetWidth();
             layer->GetLayerData()[index] = tcp->newTile;
             // Re-render the tile
-            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile);
+            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile, tcp->targetLayer);
         }
         break;
     }
@@ -59,7 +59,7 @@ static void BackTrackOperation(struct OperationParams *operation)
             int index = tcp->tileX + tcp->tileY * room->GetWidth();
             layer->GetLayerData()[index] = tcp->oldTile;
             // Re-render the tile
-            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile);
+            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile, tcp->targetLayer);
         }
         break;
     }

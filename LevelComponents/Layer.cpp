@@ -247,6 +247,8 @@ namespace LevelComponents
         Height = layerHeight;
         NewLayer = true; Enabled = true;
         MappingType = LayerMap16;
+        if(LayerData != nullptr)
+            delete[] LayerData;
         LayerData = new unsigned short[layerWidth * layerHeight];
         memset(LayerData, '\0', sizeof(char) * 2 * layerWidth * layerHeight);
     }

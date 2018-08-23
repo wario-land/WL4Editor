@@ -11,24 +11,36 @@ namespace LevelComponents
     {
         int deltaX;
         int deltaY;
-        Tile *objTile;
+        Tile8x8 *objTile;
+
+        // Deconstructor for the struct
+        ~EntityTile()
+        {
+            delete objTile;
+        }
     };
 
     class Entity
     {
     private:
-        int EntityID;
+        int EntityID = 0;
+        int ENtityGlobalID = 0;
         int OAMDataPtr = 0;
-        int EntityDeltaX, EntityDeltaY;
+        int EntityDeltaX = 0, EntityDeltaY = 0;
         int Priority;
         int PaletteOffset;
         int PaletteOffsetChange = 0;
         bool SemiTransparent = false;
         QVector<EntityTile*> entityTiles;
+        EntitySet *currentEntityset;
+        ~Entity();
 
     public:
-        Entity(int entityID, EntitySet *currentEntityset);
+        Entity(int entityID, EntitySet *_currentEntityset);
 
+    private:
+        void OAMtoTiles(unsigned short *singleOAM);
+        void ExtractSpritesTiles(int spritesFrameDataPtr);
     };
 }
 
