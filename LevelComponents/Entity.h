@@ -33,10 +33,10 @@ namespace LevelComponents
         bool SemiTransparent = false;
         QVector<EntityTile*> entityTiles;
         EntitySet *currentEntityset;
+        ~Entity();
 
     public:
         Entity(int entityID, EntitySet *_currentEntityset);
-        ~Entity();
 
     private:
         void OAMtoTiles(unsigned short *singleOAM);

@@ -45,10 +45,10 @@ namespace LevelComponents
         unsigned short attr2 = singleOAM[2];
 
         // Obtain the tile parameters for the OAM tile
-        int X = attr1 & 0xFF;
-        int Y = attr0 & 0x1FF;
-        bool xFlip = (attr1 & (1 << 0xC) != 0);
-        bool yFlip = (attr1 & (1 << 0xD) != 0);
+        int OAM_X = attr1 & 0xFF; // Offset of OAM tile from entity origin
+        int OAM_Y = attr0 & 0x1FF;
+        bool xFlip = (attr1 & (1 << 0xC)) != 0;
+        bool yFlip = (attr1 & (1 << 0xD)) != 0;
         int SZ = (attr1 >> 0xD) & 3;
         int SH = (attr0 >> 0xD) & 3;
         int tileID = attr2 & 0x3FF;
@@ -56,17 +56,17 @@ namespace LevelComponents
 
         // Create the tiles
         int OAMindex = SH * 4 + SZ;
-        int OAMwidth = OAMDimensions[OAMindex * 2];
+        int OAMwidth = OAMDimensions[OAMindex * 2]; // unit: 8x8 tiles
         int OAMheight = OAMDimensions[OAMindex * 2 + 1];
         for(int y = 0; y < OAMheight; ++y)
         {
-            int fy = yFlip ? OAMheight - y - 1 : y;
+            int dy = yFlip ? OAMheight - y - 1 : y; // 8x8 tile offset within OAM tile
             for(int x = 0; x < OAMwidth; ++x)
             {
-                int fx = xFlip ? OAMheight - x - 1 : x;
+                int dx = xFlip ? OAMheight - x - 1 : x; // 8x8 tile offset within OAM tile
                 struct EntityTile* et = new struct EntityTile();
-                et->deltaX = fx * 8;
-                et->deltaY = fy * 8;
+                et->deltaX = OAM_X + dx * 8;
+                et->deltaY = OAM_Y + dy * 8;
                 int offsetID = tileID; // TODO
                 int offsetPal = palNum; // TODO
                 Tile8x8 *newTile = new Tile8x8(currentEntityset->GetTileData()[offsetID]);

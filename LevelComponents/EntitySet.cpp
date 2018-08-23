@@ -116,7 +116,7 @@ namespace LevelComponents
     {
         // Delete Tile8x8 information
         // BlankTile may be disjoint in the array, so we skip over those and delete it afterward
-        for(int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
+        for(unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
         {
             if(tile8x8data[i] != BlankTile)
             {

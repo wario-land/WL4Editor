@@ -109,6 +109,7 @@ namespace LevelComponents
         Tileset *tileset;
         std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem *RenderedLayers[8]; // L0 - 3, E, D, C, A (may not exist)
+        void FreeDrawLayers();
 
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
