@@ -12,6 +12,12 @@ namespace LevelComponents
         int deltaX;
         int deltaY;
         Tile8x8 *objTile;
+
+        // Deconstructor for the struct
+        ~EntityTile()
+        {
+            delete objTile;
+        }
     };
 
     class Entity
@@ -26,9 +32,11 @@ namespace LevelComponents
         int PaletteOffsetChange = 0;
         bool SemiTransparent = false;
         QVector<EntityTile*> entityTiles;
+        EntitySet *currentEntityset;
+        ~Entity();
 
     public:
-        Entity(int entityID, EntitySet *currentEntityset);
+        Entity(int entityID, EntitySet *_currentEntityset);
 
     private:
         void OAMtoTiles(unsigned short *singleOAM);

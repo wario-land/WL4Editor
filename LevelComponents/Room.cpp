@@ -11,7 +11,6 @@
 #include <WL4EditorWindow.h>
 extern WL4EditorWindow *singleton;
 
-
 namespace LevelComponents
 {
     /// <summary>
@@ -31,6 +30,7 @@ namespace LevelComponents
         TilesetID(ROMUtils::CurrentFile[roomDataPtr])
     {
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
+        memset(drawLayers, 0, sizeof(drawLayers));
 
         // Copy the room header information
         memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
@@ -91,13 +91,26 @@ namespace LevelComponents
             }
         }
 
-        // TODO
+        // TODO what goes here?
     }
 
+    // TODO documentation
+    void Room::FreeDrawLayers()
+    {
+        for(unsigned int i = 0; i < sizeof(drawLayers) / sizeof(drawLayers[0]); ++i)
+        {
+            if(drawLayers[i])
+            {
+                delete drawLayers[i];
+            }
+        }
+    }
+
+    // TODO documentation
     Room::~Room()
     {
-        //TODO: clear nested heap
-        delete[] drawLayers;
+        // Free drawlayer elements
+        FreeDrawLayers();
     }
 
     /// <summary>
@@ -123,7 +136,7 @@ namespace LevelComponents
         case FullRender:
             {
                 // Order the layers by their priority
-
+                FreeDrawLayers();
                 for(int i = 0; i < 4; ++i)
                 {
                     struct DLS *newDLS = new struct DLS;
@@ -174,7 +187,6 @@ namespace LevelComponents
                     QGraphicsPixmapItem *pixmapItem = scene->addPixmap(pixmap);
                     pixmapItem->setZValue(Z++);
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
-
 
                     // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
                     if(Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
@@ -263,14 +275,20 @@ namespace LevelComponents
                     if(WarioYPos > 0x260)
                     {
                         do
+                        {
                             CameraY += 0x240;
-                        while(WarioYPos > (CameraY + 0x280));
+                        } while(WarioYPos > (CameraY + 0x280));
                     }
+
                     // Force the value to be normal
                     CameraY = CameraY / 4;
+
                     // Get the first Camera limitator Y value
                     while (CameraY > 0xA0)
+                    {
                         CameraY -= 0x90;
+                    }
+
                     // Draw Camera Limitation
                     while ((CameraY + 0xA0) < (int) (Height * 16))
                     {
@@ -382,7 +400,8 @@ namespace LevelComponents
                     QList<Layer*> layerlist;
                     layerlist.push_back(layers[0]); layerlist.push_back(layers[1]); layerlist.push_back(layers[2]); layerlist.push_back(layers[3]);
 
-                    qSort(layerlist.begin(), layerlist.end(), [](Layer *layera, Layer *layerb){
+                    qSort(layerlist.begin(), layerlist.end(), [](Layer *layera, Layer *layerb)
+                    {
                         return layera->GetLayerPriority() < layerb->GetLayerPriority();
                     });
                     for(int i = 0; i < 4; i++)
@@ -434,6 +453,7 @@ namespace LevelComponents
         return nullptr;
     }
 
+    // TODO documentation
     void Room::SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr)
     {
         // Prioritize the layers
@@ -508,6 +528,7 @@ namespace LevelComponents
         }
     }
 
+    // TODO documentation
     void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
     {
         switch(LayerNum)
@@ -526,15 +547,23 @@ namespace LevelComponents
         }
     }
 
+    // TODO documentation
     void Room::SetBGLayerAutoScrollEnabled(bool enability)
     {
-        if(enability){
+        if(enability)
+        {
             RoomHeader.Layer3Scrolling = (unsigned char) 7;
-        }else{
+        }
+        else
+        {
             if(RoomHeader.Layer3MappingType == (unsigned char) 0)
+            {
                 RoomHeader.Layer3Scrolling = (unsigned char) 3;
+            }
             else
+            {
                 RoomHeader.Layer3Scrolling = (unsigned char) 1;
+            }
         }
     }
 }
