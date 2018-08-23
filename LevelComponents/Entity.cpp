@@ -18,13 +18,23 @@ static const int OAMDimensions[24] = {
 
 namespace LevelComponents
 {
-    // TODO documentation
+    /// <summary>
+    /// Construct an instance of Entity.
+    /// </summary>
+    /// <param name="entityID">
+    /// Global entity ID.
+    /// </param>
+    /// <param name="_currentEntityset">
+    /// Entire set pointer.
+    /// </param>
     Entity::Entity(int entityID, EntitySet *_currentEntityset) : currentEntityset(_currentEntityset)
     {
 
     }
 
-    // TODO documentation
+    /// <summary>
+    /// Deconstruct an instance of Entity.
+    /// </summary>
     Entity::~Entity()
     {
         // Free the Tile8x8 objects pushed to the entity tiles vector
