@@ -18,8 +18,12 @@ namespace LevelComponents
         QVector<int> EntityIDs;
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
+        Tile8x8 *BlankTile;
+
     public:
         EntitySet(int _EntitySetID, int basicElementPalettePtr);
+        Tile8x8 **GetTileData() { return tile8x8data[]; }
+        QVector<QRgb> *GetPalettes() { return palettes; }
     };
 }
 
