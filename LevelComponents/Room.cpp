@@ -91,10 +91,12 @@ namespace LevelComponents
             }
         }
 
-        // TODO what goes here?
+        // TODOs: load Entityset and Entities for different difficulties and different Doors.
     }
 
-    // TODO documentation
+    /// <summary>
+    /// Deconstruct drawLayers[].
+    /// </summary>
     void Room::FreeDrawLayers()
     {
         for(unsigned int i = 0; i < sizeof(drawLayers) / sizeof(drawLayers[0]); ++i)
@@ -106,7 +108,9 @@ namespace LevelComponents
         }
     }
 
-    // TODO documentation
+    /// <summary>
+    /// Deconstruct an instance of Room.
+    /// </summary>
     Room::~Room()
     {
         // Free drawlayer elements
@@ -453,7 +457,9 @@ namespace LevelComponents
         return nullptr;
     }
 
-    // TODO documentation
+    /// <summary>
+    /// Set Layers Priority and Alpha Attributes for Layer instances and class members in Room (this) class.
+    /// </summary>
     void Room::SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr)
     {
         // Prioritize the layers
@@ -528,7 +534,9 @@ namespace LevelComponents
         }
     }
 
-    // TODO documentation
+    /// <summary>
+    /// Set Layer data pointer into the Room header struct in sake of saving changes.
+    /// </summary>
     void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
     {
         switch(LayerNum)
@@ -547,7 +555,9 @@ namespace LevelComponents
         }
     }
 
-    // TODO documentation
+    /// <summary>
+    /// Set attributes relate to layer 3 autoscroll in Room header struct in sake of saving changes.
+    /// </summary>
     void Room::SetBGLayerAutoScrollEnabled(bool enability)
     {
         if(enability)
