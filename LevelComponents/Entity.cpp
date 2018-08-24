@@ -27,9 +27,15 @@ namespace LevelComponents
     /// <param name="_currentEntityset">
     /// Entire set pointer.
     /// </param>
-    Entity::Entity(int entityID, EntitySet *_currentEntityset) : currentEntityset(_currentEntityset)
+    Entity::Entity(int entityID, int entityGlabalId, EntitySet *_currentEntityset) :
+        currentEntityset(_currentEntityset), EntityID(entityID), EntityGlobalID(entityGlabalId)
     {
-
+        int spritesActionOAMTablePtr = 0;
+        // TODO: Get spritesActionOAMTablePtr using ordered positive sequence of (EntityId, FrameDataPtr) arrays
+        OAMDataTablePtr = spritesActionOAMTablePtr;
+        int ActionPtr = ROMUtils::PointerFromData(spritesActionOAMTablePtr);
+        ExtractSpritesTiles(ActionPtr, 0); //TODO: load a different frame when meet with some of the Entity
+        // TODO: Load other Entity informations
     }
 
     /// <summary>
@@ -90,15 +96,26 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Extract all the Sprite tiles8x8 using frame data.
+    /// Extract all the Sprite tiles8x8 using frame data in on frame.
     /// </summary>
-    void Entity::ExtractSpritesTiles(int spritesFrameDataPtr)
+    void Entity::ExtractSpritesTiles(int spritesFrameDataPtr, int frame)
     {
         unsigned short *u16_attribute = (unsigned short*) (ROMUtils::CurrentFile + spritesFrameDataPtr);
-        int OAMnum = (int) u16_attribute[0];
-        for(int i = 0; i < OAMnum; ++i)
+        int offset = 0, objectnum = 0, nowframe = 0;
+        while(nowframe <= frame)
         {
-            OAMtoTiles(u16_attribute + i * 3 + 1);
+            if(nowframe < frame)
+            {
+                objectnum = (int) u16_attribute[offset];
+                offset += 1 + 3 * objectnum;
+                ++nowframe;
+                continue;
+            }
+            objectnum = (int) u16_attribute[offset];
+            for(int i = 0; i < objectnum; ++i)
+            {
+                OAMtoTiles(u16_attribute + i * 3 + 1);
+            }
         }
     }
 }

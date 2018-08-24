@@ -24,8 +24,8 @@ namespace LevelComponents
     {
     private:
         int EntityID = 0;
-        int ENtityGlobalID = 0;
-        int OAMDataPtr = 0;
+        int EntityGlobalID = 0;
+        int OAMDataTablePtr = 0;
         int EntityDeltaX = 0, EntityDeltaY = 0;
         int Priority;
         int PaletteOffset;
@@ -36,11 +36,11 @@ namespace LevelComponents
         ~Entity();
 
     public:
-        Entity(int entityID, EntitySet *_currentEntityset);
+        Entity(int entityID, int entityGlabalId, EntitySet *_currentEntityset);
 
     private:
         void OAMtoTiles(unsigned short *singleOAM);
-        void ExtractSpritesTiles(int spritesFrameDataPtr);
+        void ExtractSpritesTiles(int spritesFrameDataPtr, int frame);
     };
 }
 
