@@ -104,6 +104,7 @@ namespace LevelComponents
         int Layer0ColorBlendCoefficient_EVB;
         std::vector<struct __CameraControlRecord*> CameraControlRecords;
         struct __RoomHeader RoomHeader;
+        int CurrentEntitySetID = 0;
         std::list<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
         Layer *layers[4];
         Tileset *tileset;
@@ -117,7 +118,7 @@ namespace LevelComponents
         int GetTilesetID() { return TilesetID; }
         Tileset *GetTileset() { return tileset; }
         void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; TilesetID = tilesetID; RoomHeader.TilesetID = (unsigned int)tilesetID; }
-        void PushBack_Door(Door* newdoor) { doors.push_back(newdoor); }
+        void PushBack_Door(Door* newdoor) { doors.push_back(newdoor); if(!CurrentEntitySetID) CurrentEntitySetID = newdoor->GetEntitySetID();}
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
@@ -143,6 +144,8 @@ namespace LevelComponents
         int GetLayerEffectsParam() { return (int) RoomHeader.LayerEffects; }
         LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
         int CountDoors() { return doors.size(); }
+        int GetCurrentEntitySetID() { return CurrentEntitySetID; }
+        void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
     };
 }
 
