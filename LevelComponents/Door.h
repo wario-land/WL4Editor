@@ -44,10 +44,13 @@ namespace LevelComponents
         signed char DeltaX, DeltaY;
         unsigned char EntitySetID;
         unsigned int BGM_ID;
+        bool newDoor = false;
+        int DoorID; // Global Door Id in one Room
+        __DoorEntry DoorEntry;
 
     public:
         // Constructors
-        Door(unsigned char _RoomID, enum DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
+        Door(__DoorEntry _DoorEntry, unsigned char _RoomID, enum DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2, int doorId);
 
         // Methods
         Door *GetDestinationDoor() { return DestinationDoor; }
@@ -69,6 +72,7 @@ namespace LevelComponents
         int GetY2() { return this->Y2; }
         int GetBGM_ID() { return (int) BGM_ID; }
         QPoint GetWarioOriginalPosition_x4();
+        void SetDoorID(int doorId) { DoorID = doorId; }
         //TODO: GenerateDoorSavingData()  (ssp)
     };
 }

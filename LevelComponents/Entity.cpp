@@ -34,7 +34,7 @@ namespace LevelComponents
         // TODO: Get spritesActionOAMTablePtr using ordered positive sequence of (EntityId, FrameDataPtr) arrays
         OAMDataTablePtr = spritesActionOAMTablePtr;
         int ActionPtr = ROMUtils::PointerFromData(spritesActionOAMTablePtr);
-        ExtractSpritesTiles(ActionPtr, 0); //TODO: load a different frame when meet with some of the Entity
+        ExtractSpritesTiles(ActionPtr, 0); //TODO: load a different frame when meet with some of the Entities
         // TODO: Load other Entity informations
     }
 
@@ -96,7 +96,7 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Extract all the Sprite tiles8x8 using frame data in on frame.
+    /// Extract all the Sprite tiles8x8 using frame data in one frame.
     /// </summary>
     void Entity::ExtractSpritesTiles(int spritesFrameDataPtr, int frame)
     {

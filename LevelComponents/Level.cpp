@@ -76,16 +76,18 @@ namespace LevelComponents
         int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + levelIndex * 4);
         struct __DoorEntry *doorPtr = (struct __DoorEntry*) (ROMUtils::CurrentFile + doorStartAddress);
         unsigned char *firstByte;
+        int currentDoornum = 0;
         while(*(firstByte = (unsigned char*) doorPtr))
         {
             enum DoorType type = static_cast<DoorType>(doorPtr->DoorTypeByte);
-            Door *newDoor = new Door(doorPtr->RoomID, type, doorPtr->x1, doorPtr->x2, doorPtr->y1, doorPtr->y2);
+            Door *newDoor = new Door(*doorPtr, doorPtr->RoomID, type, doorPtr->x1, doorPtr->x2, doorPtr->y1, doorPtr->y2, currentDoornum);
             newDoor->SetEntitySetID(doorPtr->EntitySetID);
             newDoor->SetBGM(doorPtr->BGM_ID_LowByte | ((unsigned int) (doorPtr->BGM_ID_HighByte)) << 8);
             newDoor->SetDelta(doorPtr->HorizontalDelta, doorPtr->VerticalDelta);
             doors.push_back(newDoor);
             destinations.push_back(doorPtr->LinkerDestination);
             ++doorPtr;
+            ++currentDoornum;
         }
         // Assign the destinations for the doors
         for(unsigned int i = 0; i < doors.size(); ++i)
