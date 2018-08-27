@@ -12,31 +12,50 @@ namespace LevelComponents
         int deltaX;
         int deltaY;
         Tile8x8 *objTile;
+    };
 
-        // Deconstructor for the struct
-        ~EntityTile()
+    struct OAMTile
+    {
+        int Xoff;
+        int Yoff;
+        int OAMwidth;
+        int OAMheight;
+        bool xFlip;
+        bool yFlip;
+        QVector<EntityTile*> tile8x8;
+
+        QImage Render();
+
+        // Deconstructor for the OAMTile struct
+        ~OAMTile()
         {
-            delete objTile;
+            foreach(EntityTile *t, tile8x8)
+            {
+                delete t->objTile;
+                delete t;
+            }
         }
     };
 
     class Entity
     {
     private:
+        bool xFlip = false;
+        bool yFlip = false;
         int EntityID = 0;
         int EntityGlobalID = 0;
         int OAMDataTablePtr = 0;
         int EntityDeltaX = 0, EntityDeltaY = 0;
         int Priority;
-        int PaletteOffset;
-        int PaletteOffsetChange = 0;
+        int PaletteOffset = 0;
         bool SemiTransparent = false;
-        QVector<EntityTile*> entityTiles;
+        QVector<OAMTile*> OAMTiles;
         EntitySet *currentEntityset;
         ~Entity();
 
     public:
         Entity(int entityID, int entityGlabalId, EntitySet *_currentEntityset);
+        QImage Render();
 
     private:
         void OAMtoTiles(unsigned short *singleOAM);

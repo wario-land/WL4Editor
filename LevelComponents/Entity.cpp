@@ -1,5 +1,7 @@
 #include "Entity.h"
 
+#include <QPainter>
+
 // tuples of (width, height) in 8x8 tiles; see TONC table. Row major: size attribute
 static const int OAMDimensions[24] = {
     1, 1,
@@ -44,7 +46,7 @@ namespace LevelComponents
     Entity::~Entity()
     {
         // Free the Tile8x8 objects pushed to the entity tiles vector
-        for(auto iter = entityTiles.begin(); iter != entityTiles.end(); ++iter)
+        for(auto iter = OAMTiles.begin(); iter != OAMTiles.end(); ++iter)
         {
             delete *iter;
         }
@@ -61,38 +63,70 @@ namespace LevelComponents
         unsigned short attr2 = singleOAM[2];
 
         // Obtain the tile parameters for the OAM tile
-        int OAM_X = attr1 & 0xFF; // Offset of OAM tile from entity origin
-        int OAM_Y = attr0 & 0x1FF;
-        bool xFlip = (attr1 & (1 << 0xC)) != 0;
-        bool yFlip = (attr1 & (1 << 0xD)) != 0;
+        struct OAMTile *newOAM = new struct OAMTile();
+        newOAM->Xoff = attr1 & 0xFF; // Offset of OAM tile from entity origin
+        newOAM->Yoff = attr0 & 0x1FF;
+        newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
+        newOAM->yFlip = (attr1 & (1 << 0xD)) != 0;
         int SZ = (attr1 >> 0xD) & 3;
         int SH = (attr0 >> 0xD) & 3;
+        int OAMindex = SH * 4 + SZ;
+        newOAM->OAMwidth = OAMDimensions[OAMindex * 2]; // unit: 8x8 tiles
+        newOAM->OAMheight = OAMDimensions[OAMindex * 2 + 1];
         int tileID = attr2 & 0x3FF;
         int palNum = (attr2 >> 0xB) & 0xF;
 
-        // Create the tiles
-        int OAMindex = SH * 4 + SZ;
-        int OAMwidth = OAMDimensions[OAMindex * 2]; // unit: 8x8 tiles
-        int OAMheight = OAMDimensions[OAMindex * 2 + 1];
-        for(int y = 0; y < OAMheight; ++y)
+        // Create the tile8x8 objects
+        Tile8x8 **tileData = currentEntityset->GetTileData();
+        for(int y = 0; y < newOAM->OAMheight; ++y)
         {
-            int dy = yFlip ? OAMheight - y - 1 : y; // 8x8 tile offset within OAM tile
-            for(int x = 0; x < OAMwidth; ++x)
+            for(int x = 0; x < newOAM->OAMwidth; ++x)
             {
-                int dx = xFlip ? OAMheight - x - 1 : x; // 8x8 tile offset within OAM tile
-                struct EntityTile* et = new struct EntityTile();
-                et->deltaX = OAM_X + dx * 8;
-                et->deltaY = OAM_Y + dy * 8;
-                int offsetID = tileID; // TODO
-                int offsetPal = palNum; // TODO
-                Tile8x8 *newTile = new Tile8x8(currentEntityset->GetTileData()[offsetID]);
-                newTile->SetFlipX(xFlip);
-                newTile->SetFlipY(yFlip);
+                struct EntityTile* entityTile = new struct EntityTile();
+                entityTile->deltaX = x * 8;
+                entityTile->deltaY = y * 8;
+                int offsetID = tileID + y * 0x20 + x; // TODO add row number
+                int offsetPal = palNum; // TODO add palette offset here
+                Tile8x8 *newTile = new Tile8x8(tileData[offsetID]);
                 newTile->SetPaletteIndex(offsetPal);
-                et->objTile = newTile;
-                entityTiles.push_back(et);
+                entityTile->objTile = newTile;
+                newOAM->tile8x8.push_back(entityTile);
             }
         }
+        OAMTiles.push_back(newOAM);
+    }
+
+    /// <summary>
+    /// Render an OAM tile as a QImage.
+    /// </summary>
+    /// <returns>
+    /// The rendered QImage object.
+    /// </returns>
+    QImage OAMTile::Render()
+    {
+        QPixmap pm(OAMwidth * 8, OAMheight * 8);
+        foreach(EntityTile *et, tile8x8)
+        {
+            et->objTile->DrawTile(&pm, et->deltaX, et->deltaY);
+        }
+        return pm.toImage().mirrored(xFlip, yFlip);
+    }
+
+    /// <summary>
+    /// Render an entity's constituent OAM tiles as a QImage.
+    /// </summary>
+    /// <returns>
+    /// The rendered QImage object.
+    /// </returns>
+    QImage Entity::Render()
+    {
+        QPixmap pm;
+        QPainter p(&pm);
+        foreach(OAMTile *ot, OAMTiles)
+        {
+            p.drawImage(ot->Xoff, ot->Yoff, ot->Render());
+        }
+        return pm.toImage().mirrored(xFlip, yFlip);
     }
 
     /// <summary>
