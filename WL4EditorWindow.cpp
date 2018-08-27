@@ -507,6 +507,9 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
             CurrentLevel->GetRooms()[selectedRoom]->SetTileset(currentTileset, configParams.CurrentTilesetIndex);
         }
 
+        // Delete _currentRoomConfigParams
+        delete _currentRoomConfigParams;
+
         // reset all the Parameters in Room class. TODO: except new layer data pointers, generate them on saving
         CurrentLevel->GetRooms()[selectedRoom]->SetHeight(configParams.RoomHeight);
         CurrentLevel->GetRooms()[selectedRoom]->SetWidth(configParams.RoomWidth);

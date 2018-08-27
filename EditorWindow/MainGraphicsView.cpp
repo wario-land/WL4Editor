@@ -51,7 +51,6 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         {
             if(room->CountDoors())
             {
-                SelectedDoorID = -1;
                 for(int i = 0; i < room->CountDoors(); i++)
                 {
                     LevelComponents::Door *door = room->GetDoor(i);
@@ -63,7 +62,11 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     {
                         if(i == SelectedDoorID)
                         {
-                            // TODO show dialog
+                            DoorConfigDialog _doorconfigdialog(singleton, singleton->GetCurrentRoom(), i, singleton->GetCurrentLevel()->GetRooms());
+                            if(_doorconfigdialog.exec() == QDialog::Accepted)
+                            {
+                                // TODO
+                            }
                         }
                         SelectedDoorID = i;
                         break;

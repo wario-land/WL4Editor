@@ -14,12 +14,17 @@ class DoorConfigDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID);
+    explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, std::vector<LevelComponents::Room*> _levelrooms);
     ~DoorConfigDialog();
     static void StaticInitialization();
 
 private:
     Ui::DoorConfigDialog *ui;
+    std::vector<LevelComponents::Room*> Levelrooms;
+    LevelComponents::Room *CurrentRoom = nullptr;
+    int DoorID = -1;
+    void InitRenderGraphicsView_Preview();
+    void InitRenderGraphicsView_DestinationDoor(LevelComponents::Room *currentRoom, int doorIDinRoom);
 
     // Enumeration of Door type
     static constexpr const char *DoortypeSetData[5] =

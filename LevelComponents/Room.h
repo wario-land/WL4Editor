@@ -69,9 +69,9 @@ namespace LevelComponents
     // Enumeration of the ways in which we can re-render the main graphics view
     enum RenderUpdateType
     {
-        FullRender  = 0,
-        SingleTile  = 1,
-        LayerEnable = 2
+        FullRender   = 0,
+        SingleTile   = 1,
+        LayerEnable  = 2,
     };
 
     // This struct defines the parameters necessary to perform a rendering update to the main graphics view
