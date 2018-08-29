@@ -41,6 +41,7 @@ public:
     ~WL4EditorWindow();
     void RenderScreenFull();
     void RenderScreenVisibilityChange();
+    void RenderScreenElementsLayersUpdate(unsigned int DoorId);
     void RenderScreenTileChange(int tileX, int tileY, unsigned short tileID, int LayerID);
     void SetStatusBarText(char *str);
     void LoadRoomUIUpdate();

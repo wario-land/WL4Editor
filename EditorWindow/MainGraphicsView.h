@@ -14,7 +14,7 @@ public:
     MainGraphicsView(QWidget *param) : QGraphicsView(param) {}
     void mousePressEvent(QMouseEvent *event);
     int GetSelectedDoorID() { return SelectedDoorID; }
-    void UnSelectDoor() { SelectedDoorID = -1; } //TODO
+    void UnSelectDoor();
 
 private:
     int SelectedDoorID = -1;

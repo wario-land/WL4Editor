@@ -222,6 +222,16 @@ void WL4EditorWindow::RenderScreenVisibilityChange()
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
+void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId)
+{
+    struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::ElementsLayersUpdate);
+    renderParams.mode = EditModeWidget->GetEditModeParams();
+    renderParams.SelectedDoorID = DoorId;
+    QGraphicsScene *scene = CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+    ui->graphicsView->setScene(scene);
+    ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+}
+
 /// <summary>
 /// Perform a re-render of a single changed tile.
 /// </summary>

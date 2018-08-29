@@ -71,10 +71,17 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                         SelectedDoorID = i;
                         break;
                     }
+                    SelectedDoorID = -1;
                 }
             }
-            singleton->RenderScreenFull(); // TODO use a function here that can just re-render the doors
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID);
         }
         // TODO add more cases for other edit mode types
     }
+}
+
+void MainGraphicsView::UnSelectDoor()
+{
+    SelectedDoorID = -1;
+    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
 }

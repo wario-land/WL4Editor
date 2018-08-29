@@ -135,6 +135,9 @@ namespace LevelComponents
     /// </return>
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
+        int sceneWidth = Width * 16;
+        int sceneHeight = Height * 16;
+        int Z = 0;
         switch(renderParams->type)
         {
         case FullRender:
@@ -156,11 +159,8 @@ namespace LevelComponents
                 });
 
                 // Create a graphics scene with the layers added in order of priority
-                int sceneWidth = Width * 16;
-                int sceneHeight = Height * 16;
                 if(scene) { delete scene; } // Make a new graphics scene to draw to
                 scene = new QGraphicsScene(0, 0, qMax(sceneWidth, 16 * this->GetLayer(0)->GetLayerWidth()), sceneHeight);
-                int Z = 0;
 
                 // This represents the EVA alpha layer, which will be rendered in passes before the alpha layer is finalized
                 QPixmap alphaPixmap(sceneWidth, sceneHeight);
@@ -224,6 +224,18 @@ namespace LevelComponents
                     else RenderedLayers[7] = nullptr;
                 }
                 delete[] LayersCurrentVisibility;
+                // Fall through to ElementsLayersUpdate section
+            }
+        case ElementsLayersUpdate:
+            {
+                if(Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
+                {
+                    Z = 5;
+                }
+                else
+                {
+                    Z = 4;
+                }
 
                 // TODO render entity layer
 
@@ -255,9 +267,17 @@ namespace LevelComponents
                         doorPainter.fillRect(doorX + 1, doorY + 1, doorWidth - 2, doorHeight - 2, QColor(0, 0, 0xFF, 0x5F));
                     }
                 }
-                QGraphicsPixmapItem *doorpixmapItem = scene->addPixmap(doorPixmap);
-                doorpixmapItem->setZValue(Z++);
-                RenderedLayers[5] = doorpixmapItem;
+                QGraphicsPixmapItem *doorpixmapItem;
+                if(!RenderedLayers[5])
+                {
+                    doorpixmapItem = scene->addPixmap(doorPixmap);
+                    doorpixmapItem->setZValue(Z++);
+                    RenderedLayers[5] = doorpixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[5]->setPixmap(doorPixmap);
+                }
 
                 // Render camera box layer
                 QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
@@ -353,12 +373,19 @@ namespace LevelComponents
                 {
                     // TODO other camera control type
                 }
-
-                QGraphicsPixmapItem *CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
-                CameraLimitationpixmapItem->setZValue(Z++);
-                RenderedLayers[6] = CameraLimitationpixmapItem;
-            }
+                QGraphicsPixmapItem *CameraLimitationpixmapItem;
+                if(!RenderedLayers[6])
+                {
+                   CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
+                   CameraLimitationpixmapItem->setZValue(Z++);
+                   RenderedLayers[6] = CameraLimitationpixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[6]->setPixmap(CameraLimitationPixmap);
+                }
             // Fall through to layer enable section
+            }
         case LayerEnable:
             {
                 // Enable visibility of the foreground and background layers

@@ -72,6 +72,7 @@ namespace LevelComponents
         FullRender   = 0,
         SingleTile   = 1,
         LayerEnable  = 2,
+        ElementsLayersUpdate = 3
     };
 
     // This struct defines the parameters necessary to perform a rendering update to the main graphics view
