@@ -68,11 +68,15 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                                 // TODO
                             }
                         }
-                        SelectedDoorID = i;
-                        break;
+                        else
+                        {
+                            SelectedDoorID = i;
+                        }
+                        goto DOOR_FOUND;
                     }
-                    SelectedDoorID = -1;
                 }
+                SelectedDoorID = -1;
+                DOOR_FOUND:;
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID);
         }
