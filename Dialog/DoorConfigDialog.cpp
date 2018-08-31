@@ -11,29 +11,31 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     QDialog(parent),
     ui(new Ui::DoorConfigDialog),
     Levelrooms(_levelrooms),
-    CurrentRoom(currentroom),
+    CurrentRoom(new LevelComponents::Room(currentroom)),
     DoorID(doorID)
 {
     ui->setupUi(this);
 
     // Initialize UI elements
     ui->ComboBox_DoorType->addItems(DoortypeSet);
-    ui->ComboBox_DoorType->setCurrentIndex(currentroom->GetDoor(doorID)->GetDoortypeNum() - 1);
-    ui->SpinBox_DoorX->setValue(currentroom->GetDoor(doorID)->GetX1());
-    ui->SpinBox_DoorY->setValue(currentroom->GetDoor(doorID)->GetY1());
-    int doorwidth = currentroom->GetDoor(doorID)->GetX2() - currentroom->GetDoor(doorID)->GetX1() + 1;
-    int doorheight = currentroom->GetDoor(doorID)->GetY2() - currentroom->GetDoor(doorID)->GetY1() + 1;
+    LevelComponents::Door *currentdoor = CurrentRoom->GetDoor(doorID);
+    ui->ComboBox_DoorType->setCurrentIndex(currentdoor->GetDoortypeNum() - 1);
+    ui->SpinBox_DoorX->setValue(currentdoor->GetX1());
+    ui->SpinBox_DoorY->setValue(currentdoor->GetY1());
+    int doorwidth = currentdoor->GetX2() - currentdoor->GetX1() + 1;
+    int doorheight = currentdoor->GetY2() - currentdoor->GetY1() + 1;
     ui->SpinBox_DoorWidth->setValue(doorwidth);
     ui->SpinBox_DoorHeight->setValue(doorheight);
-    ui->SpinBox_WarioX->setValue(currentroom->GetDoor(doorID)->GetDeltaX());
-    ui->SpinBox_WarioY->setValue(currentroom->GetDoor(doorID)->GetDeltaY());
-    ui->SpinBox_BGM_ID->setValue(currentroom->GetDoor(doorID)->GetBGM_ID());
+    ui->SpinBox_WarioX->setValue(currentdoor->GetDeltaX());
+    ui->SpinBox_WarioY->setValue(currentdoor->GetDeltaY());
+    ui->SpinBox_BGM_ID->setValue(currentdoor->GetBGM_ID());
     InitRenderGraphicsView_Preview();
     // TODOs
 }
 
 DoorConfigDialog::~DoorConfigDialog()
 {
+    delete CurrentRoom;
     delete ui;
 }
 

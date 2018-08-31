@@ -98,6 +98,7 @@ namespace LevelComponents
         } *drawLayers[4];
         enum __CameraControlType CameraControlType;
         unsigned int RoomID;
+        unsigned int LevelID;
         int TilesetID;
         unsigned int Width, Height;
         bool Layer0ColorBlending = false;
@@ -115,9 +116,13 @@ namespace LevelComponents
 
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
+        Room(Room *room);
         ~Room();
         int GetTilesetID() { return TilesetID; }
         Tileset *GetTileset() { return tileset; }
+        unsigned int GetRoomID() { return RoomID; }
+        unsigned int GetLevelID() { return LevelID; }
+        struct __RoomHeader GetRoomHeader() { return RoomHeader; }
         void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; TilesetID = tilesetID; RoomHeader.TilesetID = (unsigned int)tilesetID; }
         void PushBack_Door(Door* newdoor) { doors.push_back(newdoor); if(!CurrentEntitySetID) CurrentEntitySetID = newdoor->GetEntitySetID();}
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }

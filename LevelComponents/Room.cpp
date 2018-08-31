@@ -27,6 +27,7 @@ namespace LevelComponents
     /// </param>
     Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) :
         RoomID(_RoomID),
+        LevelID(_LevelID),
         TilesetID(ROMUtils::CurrentFile[roomDataPtr])
     {
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
@@ -94,6 +95,78 @@ namespace LevelComponents
         // TODOs: load Entityset and Entities for different difficulties and different Doors.
     }
 
+    Room::Room(Room *room)
+    {
+        RoomID = room->GetRoomID();
+        TilesetID = room->GetTilesetID();
+        LevelID = room->GetLevelID();
+        memset(RenderedLayers, 0, sizeof(RenderedLayers));
+        memset(drawLayers, 0, sizeof(drawLayers));
+
+        // Copy the room header information
+        RoomHeader = room->GetRoomHeader();
+
+        // Set up tileset
+        int tilesetPtr = WL4Constants::TilesetDataTable + TilesetID * 36;
+        tileset = new Tileset(tilesetPtr, TilesetID);
+
+        // Set up the layer data
+        Width = room->GetWidth();
+        Height = room->GetHeight();
+        unsigned char *roomheader_charptr = (unsigned char *) &RoomHeader;
+        int *roomDataPtr = (int *) (&RoomHeader.Layer0Data);
+        for(int i = 0; i < 4; ++i)
+        {
+            enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(*(roomheader_charptr + i + 1) & 0x30);
+            int layerPtr = (*(roomDataPtr + i)) - 0x8000000;
+            layers[i] = new Layer(layerPtr, mappingType);
+        }
+
+        SetLayerPriorityAndAlphaAttributes((int) room->GetRoomHeader().LayerEffects);
+
+        // Set up camera control data
+        // TODO are there more types than 1, 2 and 3?
+        if((CameraControlType = static_cast<enum __CameraControlType>(room->GetRoomHeader().CameraControlType)) == HasControlAttrs)
+        {
+            int pLevelCameraControlPointerTable = ROMUtils::PointerFromData(WL4Constants::CameraControlPointerTable + LevelID * 4);
+            for(int i = 0; i < 16; i++)
+            {
+                int CurrentPointer = ROMUtils::PointerFromData(pLevelCameraControlPointerTable + i * 4);
+                if(CurrentPointer == WL4Constants::CameraRecordSentinel)
+                    break;
+                if(ROMUtils::CurrentFile[CurrentPointer] == RoomID)
+                {
+                    int RecordNum = ROMUtils::CurrentFile[CurrentPointer + 1];
+                    struct __CameraControlRecord *recordPtr = (struct __CameraControlRecord*) (ROMUtils::CurrentFile + CurrentPointer + 2);
+                    while(RecordNum--)
+                    {
+                        CameraControlRecords.push_back(recordPtr++);
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Load Entity list for each difficulty level
+        for(int i = 0; i < 3; i++)
+        {
+            int *EntityListaddress = (int *) ((unsigned char *)(&RoomHeader) + 28 + 4 * i);
+            int ListAddress = *EntityListaddress - 0x8000000;
+            int k = 0;
+            while(ROMUtils::CurrentFile[ListAddress + 3 * k] != (unsigned char) '\xFF') // maximum entity count is 46
+            {
+                EntityRoomAttribute tmpEntityroomattribute;
+                tmpEntityroomattribute.YPos     = (int) ROMUtils::CurrentFile[ListAddress + 3 * k];
+                tmpEntityroomattribute.XPos     = (int) ROMUtils::CurrentFile[ListAddress + 3 * k + 1];
+                tmpEntityroomattribute.EntityID = (int) ROMUtils::CurrentFile[ListAddress + 3 * k + 2];
+                EntityList[i].push_back(tmpEntityroomattribute);
+                k++;
+            }
+        }
+
+        // TODOs: load Entityset and Entities for different difficulties and different Doors.
+    }
+
     /// <summary>
     /// Deconstruct drawLayers[].
     /// </summary>
@@ -115,6 +188,7 @@ namespace LevelComponents
     {
         // Free drawlayer elements
         FreeDrawLayers();
+        delete tileset;
     }
 
     /// <summary>
