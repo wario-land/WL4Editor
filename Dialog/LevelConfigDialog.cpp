@@ -32,7 +32,7 @@ LevelConfigDialog::LevelConfigDialog(QWidget *parent) :
 }
 
 /// <summary>
-/// Deconstruct the WL4EditorWindow and clean up its instance objects on the heap.
+/// Deconstruct the Level Config Dialog.
 /// </summary>
 LevelConfigDialog::~LevelConfigDialog()
 {

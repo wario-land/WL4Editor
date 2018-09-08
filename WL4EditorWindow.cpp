@@ -222,6 +222,9 @@ void WL4EditorWindow::RenderScreenVisibilityChange()
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
+/// <summary>
+/// Perform a re-render of the Door/Camera limitation rectangle/Entity layer.
+/// </summary>
 void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId)
 {
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::ElementsLayersUpdate);

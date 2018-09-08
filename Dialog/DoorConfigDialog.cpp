@@ -7,6 +7,12 @@ constexpr const char *DoorConfigDialog::DoortypeSetData[5];
 // static variables used by DoorConfigDialog
 static QStringList DoortypeSet;
 
+/// <summary>
+/// Construct the instance of the DoorConfigDialog.
+/// </summary>
+/// <param name="parent">
+/// The parent QWidget.
+/// </param>
 DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level) :
     QDialog(parent),
     ui(new Ui::DoorConfigDialog),
@@ -34,11 +40,14 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->SpinBox_WarioX->setValue(currentdoor->GetDeltaX());
     ui->SpinBox_WarioY->setValue(currentdoor->GetDeltaY());
     ui->SpinBox_BGM_ID->setValue(currentdoor->GetBGM_ID());
-    InitRenderGraphicsView_Preview();
-    InitRenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(currentdoor->GetDestinationDoor()->GetGlobalDoorID()));
+    RenderGraphicsView_Preview();
+    RenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(currentdoor->GetDestinationDoor()->GetGlobalDoorID()));
     // TODOs
 }
 
+/// <summary>
+/// Deconstruct the Door Config Dialog.
+/// </summary>
 DoorConfigDialog::~DoorConfigDialog()
 {
     delete tmpCurrentRoom;
@@ -46,6 +55,9 @@ DoorConfigDialog::~DoorConfigDialog()
     delete ui;
 }
 
+/// <summary>
+/// Perform static initializtion of constant data structures for the dialog.
+/// </summary>
 void DoorConfigDialog::StaticInitialization()
 {
     // Initialize the selections for the Door type
@@ -55,7 +67,10 @@ void DoorConfigDialog::StaticInitialization()
     }
 }
 
-void DoorConfigDialog::InitRenderGraphicsView_Preview()
+/// <summary>
+/// Render Room and Doors on GraphicsView_Preview.
+/// </summary>
+void DoorConfigDialog::RenderGraphicsView_Preview()
 {
     QGraphicsScene *oldScene = ui->GraphicsView_Preview->scene();
     if(oldScene)
@@ -72,7 +87,10 @@ void DoorConfigDialog::InitRenderGraphicsView_Preview()
     ui->GraphicsView_Preview->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
-void DoorConfigDialog::InitRenderGraphicsView_DestinationDoor(int doorIDinRoom)
+/// <summary>
+/// Render Room and Doors on GraphicsView_DestinationDoor.
+/// </summary>
+void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
 {
     QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
     if(oldScene)

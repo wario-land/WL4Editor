@@ -95,6 +95,12 @@ namespace LevelComponents
         // TODOs: load Entityset and Entities for different difficulties and different Doors.
     }
 
+    /// <summary>
+    /// Copy constructor of Room.
+    /// </summary>
+    /// <remarks>
+    /// the new instance should only be used to render Room graphic temporarily, it is unsafe to add it to a Level.
+    /// </remarks>
     Room::Room(Room *room)
     {
         RoomID = room->GetRoomID();

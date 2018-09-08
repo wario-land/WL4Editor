@@ -24,8 +24,8 @@ private:
     LevelComponents::Room *tmpCurrentRoom = nullptr;
     LevelComponents::Room *tmpDestinationRoom = nullptr;
     int DoorID = -1;
-    void InitRenderGraphicsView_Preview();
-    void InitRenderGraphicsView_DestinationDoor(int doorIDinRoom);
+    void RenderGraphicsView_Preview();
+    void RenderGraphicsView_DestinationDoor(int doorIDinRoom);
 
     // Enumeration of Door type
     static constexpr const char *DoortypeSetData[5] =
