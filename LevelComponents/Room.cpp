@@ -677,4 +677,14 @@ namespace LevelComponents
             }
         }
     }
+
+    int Room::GetLocalDoorID(int globalDoorId)
+    {
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            if(doors[i]->GetGlobalDoorID() == globalDoorId)
+            return (int) i;
+        }
+        return -1; // TODO: Error handling
+    }
 }

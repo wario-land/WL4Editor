@@ -62,7 +62,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     {
                         if(i == SelectedDoorID)
                         {
-                            DoorConfigDialog _doorconfigdialog(singleton, singleton->GetCurrentRoom(), i, singleton->GetCurrentLevel()->GetRooms());
+                            DoorConfigDialog _doorconfigdialog(singleton, singleton->GetCurrentRoom(), i, singleton->GetCurrentLevel());
                             if(_doorconfigdialog.exec() == QDialog::Accepted)
                             {
                                 // TODO

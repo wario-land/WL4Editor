@@ -7,18 +7,23 @@ constexpr const char *DoorConfigDialog::DoortypeSetData[5];
 // static variables used by DoorConfigDialog
 static QStringList DoortypeSet;
 
-DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, std::vector<LevelComponents::Room *> _levelrooms) :
+DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level) :
     QDialog(parent),
     ui(new Ui::DoorConfigDialog),
-    Levelrooms(_levelrooms),
-    CurrentRoom(new LevelComponents::Room(currentroom)),
+    _currentLevel(_level),
+    tmpCurrentRoom(new LevelComponents::Room(currentroom)),
+    tmpDestinationRoom(new LevelComponents::Room(_level->GetRooms()[currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()])),
     DoorID(doorID)
 {
     ui->setupUi(this);
 
+    // Distribute Doors into the temp CurrentRoom
+    tmpCurrentRoom->SetDoors(_level->GetRoomDoors(currentroom->GetRoomID()));
+    tmpDestinationRoom->SetDoors(_level->GetRoomDoors(currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()));
+
     // Initialize UI elements
     ui->ComboBox_DoorType->addItems(DoortypeSet);
-    LevelComponents::Door *currentdoor = CurrentRoom->GetDoor(doorID);
+    LevelComponents::Door *currentdoor = tmpCurrentRoom->GetDoor(doorID);
     ui->ComboBox_DoorType->setCurrentIndex(currentdoor->GetDoortypeNum() - 1);
     ui->SpinBox_DoorX->setValue(currentdoor->GetX1());
     ui->SpinBox_DoorY->setValue(currentdoor->GetY1());
@@ -30,12 +35,14 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->SpinBox_WarioY->setValue(currentdoor->GetDeltaY());
     ui->SpinBox_BGM_ID->setValue(currentdoor->GetBGM_ID());
     InitRenderGraphicsView_Preview();
+    InitRenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(currentdoor->GetDestinationDoor()->GetGlobalDoorID()));
     // TODOs
 }
 
 DoorConfigDialog::~DoorConfigDialog()
 {
-    delete CurrentRoom;
+    delete tmpCurrentRoom;
+    delete tmpDestinationRoom;
     delete ui;
 }
 
@@ -60,12 +67,12 @@ void DoorConfigDialog::InitRenderGraphicsView_Preview()
     tparam.SelectedDoorID = (unsigned int) DoorID; //ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
     tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
-    QGraphicsScene *scene = CurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
+    QGraphicsScene *scene = tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
     ui->GraphicsView_Preview->setScene(scene);
     ui->GraphicsView_Preview->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
-void DoorConfigDialog::InitRenderGraphicsView_DestinationDoor(LevelComponents::Room *currentRoom, int doorIDinRoom)
+void DoorConfigDialog::InitRenderGraphicsView_DestinationDoor(int doorIDinRoom)
 {
     QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
     if(oldScene)
@@ -77,7 +84,7 @@ void DoorConfigDialog::InitRenderGraphicsView_DestinationDoor(LevelComponents::R
     tparam.SelectedDoorID = (unsigned int) doorIDinRoom; //ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
     tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
-    QGraphicsScene *scene = currentRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
+    QGraphicsScene *scene = tmpDestinationRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
     ui->GraphicsView_DestinationDoor->setScene(scene);
     ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
