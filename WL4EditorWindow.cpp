@@ -178,7 +178,12 @@ void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 
 bool *WL4EditorWindow::GetLayersVisibilityArray()
 {
-   return EditModeWidget->GetLayersVisibilityArray();
+    return EditModeWidget->GetLayersVisibilityArray();
+}
+
+void WL4EditorWindow::Graphicsview_UnselectDoor()
+{
+    ui->graphicsView->UnSelectDoor();
 }
 
 /// <summary>

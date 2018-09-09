@@ -168,6 +168,7 @@ namespace LevelComponents
     int Level::GetTimeCountdownCounter(__LevelDifficulty LevelDifficulty)
     {
         int a, b, c;
+        a = b = c = 0;
         if(LevelDifficulty == HardDifficulty)
         {
             a = (int) LevelHeader.HardModeMinuteNum;

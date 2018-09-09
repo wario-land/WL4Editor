@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <QPoint>
+#include <QString>
 
 namespace LevelComponents
 {
@@ -55,6 +56,7 @@ namespace LevelComponents
         // Methods
         Door *GetDestinationDoor() { return DestinationDoor; }
         int GetRoomID() {return (int) this->RoomID; }
+        QString GetDoorname() { return "Room " + QString::number((int) RoomID, 16) + " Door " + QString::number(DoorID, 10); }
         void SetDestinationDoor(Door *otherDoor) { DestinationDoor = otherDoor; }
         void SetDelta(unsigned char _DeltaX, unsigned char _DeltaY);
         int GetDeltaX() { return (int) DeltaX; }

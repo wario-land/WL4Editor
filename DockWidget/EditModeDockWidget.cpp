@@ -220,4 +220,10 @@ void EditModeDockWidget::on_CheckBox_AlphaView_stateChanged(int arg1)
     singleton->RenderScreenVisibilityChange(); // TODO this should probably be a full re-render
 }
 
-
+void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
+{
+    if(!checked)
+    {
+        singleton->Graphicsview_UnselectDoor();
+    }
+}

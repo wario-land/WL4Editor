@@ -40,6 +40,15 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->SpinBox_WarioX->setValue(currentdoor->GetDeltaX());
     ui->SpinBox_WarioY->setValue(currentdoor->GetDeltaY());
     ui->SpinBox_BGM_ID->setValue(currentdoor->GetBGM_ID());
+
+    // Initialize the selections for destination door combobox
+    QStringList doorofLevelSet;
+    for(unsigned int i = 0; i < _level->GetDoors().size(); ++i)
+    {
+        doorofLevelSet << _level->GetDoors()[i]->GetDoorname();
+    }
+    ui->ComboBox_DoorDestinationPicker->addItems(doorofLevelSet);
+    ui->ComboBox_DoorDestinationPicker->setCurrentIndex(currentdoor->GetDestinationDoor()->GetGlobalDoorID());
     RenderGraphicsView_Preview();
     RenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(currentdoor->GetDestinationDoor()->GetGlobalDoorID()));
     // TODOs
