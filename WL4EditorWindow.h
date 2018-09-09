@@ -41,12 +41,14 @@ public:
     ~WL4EditorWindow();
     void RenderScreenFull();
     void RenderScreenVisibilityChange();
+    void RenderScreenElementsLayersUpdate(unsigned int DoorId);
     void RenderScreenTileChange(int tileX, int tileY, unsigned short tileID, int LayerID);
     void SetStatusBarText(char *str);
     void LoadRoomUIUpdate();
     Tile16DockWidget *GetTile16DockWidgetPtr() { return Tile16SelecterWidget; }
     EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
+    LevelComponents::Level *GetCurrentLevel() { return CurrentLevel; }
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
     bool FirstROMIsLoaded() { return firstROMLoaded; }
     void OpenROM();

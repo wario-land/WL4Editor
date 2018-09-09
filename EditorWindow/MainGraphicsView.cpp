@@ -51,7 +51,6 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         {
             if(room->CountDoors())
             {
-                SelectedDoorID = -1;
                 for(int i = 0; i < room->CountDoors(); i++)
                 {
                     LevelComponents::Door *door = room->GetDoor(i);
@@ -63,15 +62,30 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     {
                         if(i == SelectedDoorID)
                         {
-                            // TODO show dialog
+                            DoorConfigDialog _doorconfigdialog(singleton, singleton->GetCurrentRoom(), i, singleton->GetCurrentLevel());
+                            if(_doorconfigdialog.exec() == QDialog::Accepted)
+                            {
+                                // TODO
+                            }
                         }
-                        SelectedDoorID = i;
-                        break;
+                        else
+                        {
+                            SelectedDoorID = i;
+                        }
+                        goto DOOR_FOUND;
                     }
                 }
+                SelectedDoorID = -1;
+                DOOR_FOUND:;
             }
-            singleton->RenderScreenFull(); // TODO use a function here that can just re-render the doors
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID);
         }
         // TODO add more cases for other edit mode types
     }
+}
+
+void MainGraphicsView::UnSelectDoor()
+{
+    SelectedDoorID = -1;
+    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
 }

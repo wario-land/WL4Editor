@@ -69,9 +69,10 @@ namespace LevelComponents
     // Enumeration of the ways in which we can re-render the main graphics view
     enum RenderUpdateType
     {
-        FullRender  = 0,
-        SingleTile  = 1,
-        LayerEnable = 2
+        FullRender   = 0,
+        SingleTile   = 1,
+        LayerEnable  = 2,
+        ElementsLayersUpdate = 3
     };
 
     // This struct defines the parameters necessary to perform a rendering update to the main graphics view
@@ -97,6 +98,7 @@ namespace LevelComponents
         } *drawLayers[4];
         enum __CameraControlType CameraControlType;
         unsigned int RoomID;
+        unsigned int LevelID;
         int TilesetID;
         unsigned int Width, Height;
         bool Layer0ColorBlending = false;
@@ -114,9 +116,13 @@ namespace LevelComponents
 
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
+        Room(Room *room);
         ~Room();
         int GetTilesetID() { return TilesetID; }
         Tileset *GetTileset() { return tileset; }
+        unsigned int GetRoomID() { return RoomID; }
+        unsigned int GetLevelID() { return LevelID; }
+        struct __RoomHeader GetRoomHeader() { return RoomHeader; }
         void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; TilesetID = tilesetID; RoomHeader.TilesetID = (unsigned int)tilesetID; }
         void PushBack_Door(Door* newdoor) { doors.push_back(newdoor); if(!CurrentEntitySetID) CurrentEntitySetID = newdoor->GetEntitySetID();}
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
@@ -144,6 +150,8 @@ namespace LevelComponents
         int GetLayerEffectsParam() { return (int) RoomHeader.LayerEffects; }
         LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
         int CountDoors() { return doors.size(); }
+        void SetDoors(std::vector<Door*> _doors) { doors = _doors;}
+        int GetLocalDoorID(int globalDoorId);
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
     };

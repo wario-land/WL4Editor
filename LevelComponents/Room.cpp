@@ -27,6 +27,7 @@ namespace LevelComponents
     /// </param>
     Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) :
         RoomID(_RoomID),
+        LevelID(_LevelID),
         TilesetID(ROMUtils::CurrentFile[roomDataPtr])
     {
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
@@ -95,6 +96,84 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Copy constructor of Room.
+    /// </summary>
+    /// <remarks>
+    /// the new instance should only be used to render Room graphic temporarily, it is unsafe to add it to a Level.
+    /// </remarks>
+    Room::Room(Room *room)
+    {
+        RoomID = room->GetRoomID();
+        TilesetID = room->GetTilesetID();
+        LevelID = room->GetLevelID();
+        memset(RenderedLayers, 0, sizeof(RenderedLayers));
+        memset(drawLayers, 0, sizeof(drawLayers));
+
+        // Copy the room header information
+        RoomHeader = room->GetRoomHeader();
+
+        // Set up tileset
+        int tilesetPtr = WL4Constants::TilesetDataTable + TilesetID * 36;
+        tileset = new Tileset(tilesetPtr, TilesetID);
+
+        // Set up the layer data
+        Width = room->GetWidth();
+        Height = room->GetHeight();
+        unsigned char *roomheader_charptr = (unsigned char *) &RoomHeader;
+        int *roomDataPtr = (int *) (&RoomHeader.Layer0Data);
+        for(int i = 0; i < 4; ++i)
+        {
+            enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(*(roomheader_charptr + i + 1) & 0x30);
+            int layerPtr = (*(roomDataPtr + i)) - 0x8000000;
+            layers[i] = new Layer(layerPtr, mappingType);
+        }
+
+        SetLayerPriorityAndAlphaAttributes((int) room->GetRoomHeader().LayerEffects);
+
+        // Set up camera control data
+        // TODO are there more types than 1, 2 and 3?
+        if((CameraControlType = static_cast<enum __CameraControlType>(room->GetRoomHeader().CameraControlType)) == HasControlAttrs)
+        {
+            int pLevelCameraControlPointerTable = ROMUtils::PointerFromData(WL4Constants::CameraControlPointerTable + LevelID * 4);
+            for(int i = 0; i < 16; i++)
+            {
+                int CurrentPointer = ROMUtils::PointerFromData(pLevelCameraControlPointerTable + i * 4);
+                if(CurrentPointer == WL4Constants::CameraRecordSentinel)
+                    break;
+                if(ROMUtils::CurrentFile[CurrentPointer] == RoomID)
+                {
+                    int RecordNum = ROMUtils::CurrentFile[CurrentPointer + 1];
+                    struct __CameraControlRecord *recordPtr = (struct __CameraControlRecord*) (ROMUtils::CurrentFile + CurrentPointer + 2);
+                    while(RecordNum--)
+                    {
+                        CameraControlRecords.push_back(recordPtr++);
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Load Entity list for each difficulty level
+        for(int i = 0; i < 3; i++)
+        {
+            int *EntityListaddress = (int *) ((unsigned char *)(&RoomHeader) + 28 + 4 * i);
+            int ListAddress = *EntityListaddress - 0x8000000;
+            int k = 0;
+            while(ROMUtils::CurrentFile[ListAddress + 3 * k] != (unsigned char) '\xFF') // maximum entity count is 46
+            {
+                EntityRoomAttribute tmpEntityroomattribute;
+                tmpEntityroomattribute.YPos     = (int) ROMUtils::CurrentFile[ListAddress + 3 * k];
+                tmpEntityroomattribute.XPos     = (int) ROMUtils::CurrentFile[ListAddress + 3 * k + 1];
+                tmpEntityroomattribute.EntityID = (int) ROMUtils::CurrentFile[ListAddress + 3 * k + 2];
+                EntityList[i].push_back(tmpEntityroomattribute);
+                k++;
+            }
+        }
+
+        // TODOs: load Entityset and Entities for different difficulties and different Doors.
+    }
+
+    /// <summary>
     /// Deconstruct drawLayers[].
     /// </summary>
     void Room::FreeDrawLayers()
@@ -115,6 +194,7 @@ namespace LevelComponents
     {
         // Free drawlayer elements
         FreeDrawLayers();
+        delete tileset;
     }
 
     /// <summary>
@@ -135,6 +215,9 @@ namespace LevelComponents
     /// </return>
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
+        int sceneWidth = Width * 16;
+        int sceneHeight = Height * 16;
+        int Z = 0;
         switch(renderParams->type)
         {
         case FullRender:
@@ -156,11 +239,8 @@ namespace LevelComponents
                 });
 
                 // Create a graphics scene with the layers added in order of priority
-                int sceneWidth = Width * 16;
-                int sceneHeight = Height * 16;
                 if(scene) { delete scene; } // Make a new graphics scene to draw to
                 scene = new QGraphicsScene(0, 0, qMax(sceneWidth, 16 * this->GetLayer(0)->GetLayerWidth()), sceneHeight);
-                int Z = 0;
 
                 // This represents the EVA alpha layer, which will be rendered in passes before the alpha layer is finalized
                 QPixmap alphaPixmap(sceneWidth, sceneHeight);
@@ -224,6 +304,18 @@ namespace LevelComponents
                     else RenderedLayers[7] = nullptr;
                 }
                 delete[] LayersCurrentVisibility;
+                // Fall through to ElementsLayersUpdate section
+            }
+        case ElementsLayersUpdate:
+            {
+                if(Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
+                {
+                    Z = 5;
+                }
+                else
+                {
+                    Z = 4;
+                }
 
                 // TODO render entity layer
 
@@ -255,9 +347,17 @@ namespace LevelComponents
                         doorPainter.fillRect(doorX + 1, doorY + 1, doorWidth - 2, doorHeight - 2, QColor(0, 0, 0xFF, 0x5F));
                     }
                 }
-                QGraphicsPixmapItem *doorpixmapItem = scene->addPixmap(doorPixmap);
-                doorpixmapItem->setZValue(Z++);
-                RenderedLayers[5] = doorpixmapItem;
+                QGraphicsPixmapItem *doorpixmapItem;
+                if(!RenderedLayers[5])
+                {
+                    doorpixmapItem = scene->addPixmap(doorPixmap);
+                    doorpixmapItem->setZValue(Z++);
+                    RenderedLayers[5] = doorpixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[5]->setPixmap(doorPixmap);
+                }
 
                 // Render camera box layer
                 QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
@@ -353,12 +453,19 @@ namespace LevelComponents
                 {
                     // TODO other camera control type
                 }
-
-                QGraphicsPixmapItem *CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
-                CameraLimitationpixmapItem->setZValue(Z++);
-                RenderedLayers[6] = CameraLimitationpixmapItem;
-            }
+                QGraphicsPixmapItem *CameraLimitationpixmapItem;
+                if(!RenderedLayers[6])
+                {
+                   CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
+                   CameraLimitationpixmapItem->setZValue(Z++);
+                   RenderedLayers[6] = CameraLimitationpixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[6]->setPixmap(CameraLimitationPixmap);
+                }
             // Fall through to layer enable section
+            }
         case LayerEnable:
             {
                 // Enable visibility of the foreground and background layers
@@ -575,5 +682,15 @@ namespace LevelComponents
                 RoomHeader.Layer3Scrolling = (unsigned char) 1;
             }
         }
+    }
+
+    int Room::GetLocalDoorID(int globalDoorId)
+    {
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            if(doors[i]->GetGlobalDoorID() == globalDoorId)
+            return (int) i;
+        }
+        return -1; // TODO: Error handling
     }
 }

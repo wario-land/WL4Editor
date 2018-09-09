@@ -71,7 +71,6 @@ namespace LevelComponents
         memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
 
         // Load the door data
-        std::vector<Door*> doors;
         std::vector<int> destinations;
         int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + levelIndex * 4);
         struct __DoorEntry *doorPtr = (struct __DoorEntry*) (ROMUtils::CurrentFile + doorStartAddress);
@@ -104,10 +103,7 @@ namespace LevelComponents
         }
 
         // Distribute door data to every room
-        for(unsigned int i = 0; i < doors.size(); ++i)
-        {
-            rooms[doors[i]->GetRoomID()]->PushBack_Door(doors[i]);
-        }
+        RedistributeDoor();
 
         // Load the level name
         int LevelNameAddress = ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4);
@@ -191,6 +187,27 @@ namespace LevelComponents
             c = (int) LevelHeader.SHardModeSecondOnePlaceNum;
         }
         return (a * 60 + b * 10 + c);
+    }
+
+    void Level::RedistributeDoor()
+    {
+        // Distribute door data to every room
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            rooms[doors[i]->GetRoomID()]->PushBack_Door(doors[i]);
+        }
+    }
+
+    std::vector<Door *> Level::GetRoomDoors(unsigned int roomId)
+    {
+        std::vector<Door *> roomDoors;
+        // Distribute door data
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            if(doors[i]->GetRoomID() == (int) roomId)
+            roomDoors.push_back(doors[i]);
+        }
+        return roomDoors;
     }
 
     /// <summary>

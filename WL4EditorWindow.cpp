@@ -223,6 +223,19 @@ void WL4EditorWindow::RenderScreenVisibilityChange()
 }
 
 /// <summary>
+/// Perform a re-render of the Door/Camera limitation rectangle/Entity layer.
+/// </summary>
+void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId)
+{
+    struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::ElementsLayersUpdate);
+    renderParams.mode = EditModeWidget->GetEditModeParams();
+    renderParams.SelectedDoorID = DoorId;
+    QGraphicsScene *scene = CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+    ui->graphicsView->setScene(scene);
+    ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+}
+
+/// <summary>
 /// Perform a re-render of a single changed tile.
 /// </summary>
 void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned short tileID, int LayerID)
@@ -506,6 +519,9 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
             currentTileset = new LevelComponents::Tileset(tilesetPtr, configParams.CurrentTilesetIndex);
             CurrentLevel->GetRooms()[selectedRoom]->SetTileset(currentTileset, configParams.CurrentTilesetIndex);
         }
+
+        // Delete _currentRoomConfigParams
+        delete _currentRoomConfigParams;
 
         // reset all the Parameters in Room class. TODO: except new layer data pointers, generate them on saving
         CurrentLevel->GetRooms()[selectedRoom]->SetHeight(configParams.RoomHeight);
