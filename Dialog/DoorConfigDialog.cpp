@@ -3,9 +3,11 @@
 
 // constexpr declarations for the initializers in the header
 constexpr const char *DoorConfigDialog::DoortypeSetData[5];
+constexpr const char *DoorConfigDialog::EntitynameSetData[128];
 
 // static variables used by DoorConfigDialog
 static QStringList DoortypeSet;
+static QStringList EntitynameSet;
 
 /// <summary>
 /// Construct the instance of the DoorConfigDialog.
@@ -73,6 +75,12 @@ void DoorConfigDialog::StaticInitialization()
     for(unsigned int i = 0; i < sizeof(DoortypeSetData)/sizeof(DoortypeSetData[0]); ++i)
     {
         DoortypeSet << DoortypeSetData[i];
+    }
+
+    // Initialize the selections for the Entity name
+    for(unsigned int i = 0; i < sizeof(EntitynameSetData)/sizeof(EntitynameSetData[0]); ++i)
+    {
+        EntitynameSet << EntitynameSetData[i];
     }
 }
 
