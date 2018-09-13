@@ -3,6 +3,7 @@
 
 #include <QVector>
 
+#include "ROMUtils.h"
 #include "LevelComponents/EntitySet.h"
 
 namespace LevelComponents

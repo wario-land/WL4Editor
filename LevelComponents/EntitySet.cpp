@@ -1,5 +1,7 @@
 #include "EntitySet.h"
 
+constexpr int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
+
 namespace LevelComponents
 {
     /// <summary>
@@ -126,6 +128,34 @@ namespace LevelComponents
         LoadSpritesTiles(tiledataptr, tiledatalength, 30);
 
         // TODOs: set other entity informations
+    }
+
+    int EntitySet::EntitySetFromEntityID(int entityglobalId)
+    {
+        if(entityglobalId < 0x11)
+        {
+            entityglobalId = 0x11;
+        }
+        for(int j = 0; j < 90; ++j)
+        {
+            int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + 4 * j);
+            int i = 0;
+            while(ROMUtils::CurrentFile[entitysetptr + 2 * i] == (unsigned char)0)
+            {
+                unsigned char *entityidtmp = ROMUtils::CurrentFile + entitysetptr + 2 * i;
+                if(*entityidtmp == (unsigned char)entityglobalId)
+                {
+                    return j;
+                }
+                i++;
+            }
+        }
+        return 0; //TODO: Error handling
+    }
+
+    int EntitySet::GetEntityFirstActionFrameSetPtr(int entityglobalId)
+    {
+        return EntitiesFirstActionFrameSetsPtrsData[entityglobalId];
     }
 
     /// <summary>

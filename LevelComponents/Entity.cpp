@@ -32,8 +32,7 @@ namespace LevelComponents
     Entity::Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset) :
         currentEntityset(_currentEntityset), EntityID(entityID), EntityGlobalID(entityGlobalId)
     {
-        int spritesActionOAMTablePtr = 0;
-        // TODO: Get spritesActionOAMTablePtr using ordered positive sequence of (EntityId, FrameDataPtr) arrays
+        int spritesActionOAMTablePtr = ROMUtils::PointerFromData(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId));
         OAMDataTablePtr = spritesActionOAMTablePtr;
         int ActionPtr = ROMUtils::PointerFromData(spritesActionOAMTablePtr);
         ExtractSpritesTiles(ActionPtr, 0); //TODO: load a different frame when meet with some of the Entities
@@ -85,8 +84,8 @@ namespace LevelComponents
                 struct EntityTile* entityTile = new struct EntityTile();
                 entityTile->deltaX = x * 8;
                 entityTile->deltaY = y * 8;
-                int offsetID = tileID + y * 0x20 + x; // TODO add row number
-                int offsetPal = palNum; // TODO add palette offset here
+                int offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
+                int offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID);
                 Tile8x8 *newTile = new Tile8x8(tileData[offsetID]);
                 newTile->SetPaletteIndex(offsetPal);
                 entityTile->objTile = newTile;
