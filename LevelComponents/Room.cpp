@@ -93,6 +93,7 @@ namespace LevelComponents
         }
 
         // TODOs: load Entityset and Entities for different difficulties and different Doors.
+
     }
 
     /// <summary>
@@ -318,6 +319,8 @@ namespace LevelComponents
                 }
 
                 // TODO render entity layer
+
+
 
                 // Render door layer
                 QPixmap doorPixmap(sceneWidth, sceneHeight);

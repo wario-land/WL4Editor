@@ -108,6 +108,7 @@ namespace LevelComponents
         struct __RoomHeader RoomHeader;
         int CurrentEntitySetID = 0;
         std::list<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
+        std::vector<Entity*> Entities[3]; // Temporary rendered entity list
         Layer *layers[4];
         Tileset *tileset;
         std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor

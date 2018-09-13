@@ -29,8 +29,8 @@ namespace LevelComponents
     /// <param name="_currentEntityset">
     /// Entire set pointer.
     /// </param>
-    Entity::Entity(int entityID, int entityGlabalId, EntitySet *_currentEntityset) :
-        currentEntityset(_currentEntityset), EntityID(entityID), EntityGlobalID(entityGlabalId)
+    Entity::Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset) :
+        currentEntityset(_currentEntityset), EntityID(entityID), EntityGlobalID(entityGlobalId)
     {
         int spritesActionOAMTablePtr = 0;
         // TODO: Get spritesActionOAMTablePtr using ordered positive sequence of (EntityId, FrameDataPtr) arrays

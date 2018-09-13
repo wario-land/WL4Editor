@@ -30,11 +30,11 @@ private:
     // Enumeration of Door type
     static constexpr const char *DoortypeSetData[5] =
     {
-        "1. Portal",
-        "2, Room Edge",
-        "3. Door or Tube",
-        "4. Item Shop Door",
-        "5. Boss Door"
+        "1: Portal",
+        "2: Room Edge",
+        "3: Door or Pipe",
+        "4: Item Shop Door",
+        "5: Boss Door"
     };
 };
 
