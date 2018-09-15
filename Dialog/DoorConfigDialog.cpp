@@ -24,6 +24,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     DoorID(doorID)
 {
     ui->setupUi(this);
+    IsInitialized = false;
 
     // Distribute Doors into the temp CurrentRoom
     tmpCurrentRoom->SetDoors(_level->GetRoomDoors(currentroom->GetRoomID()));
@@ -34,7 +35,9 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     LevelComponents::Door *currentdoor = tmpCurrentRoom->GetDoor(doorID);
     ui->ComboBox_DoorType->setCurrentIndex(currentdoor->GetDoortypeNum() - 1);
     ui->SpinBox_DoorX->setValue(currentdoor->GetX1());
+    ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - 1);
     ui->SpinBox_DoorY->setValue(currentdoor->GetY1());
+    ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetHeight() - 1);
     int doorwidth = currentdoor->GetX2() - currentdoor->GetX1() + 1;
     int doorheight = currentdoor->GetY2() - currentdoor->GetY1() + 1;
     ui->SpinBox_DoorWidth->setValue(doorwidth);
@@ -52,8 +55,8 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->ComboBox_DoorDestinationPicker->addItems(doorofLevelSet);
     ui->ComboBox_DoorDestinationPicker->setCurrentIndex(currentdoor->GetDestinationDoor()->GetGlobalDoorID());
     RenderGraphicsView_Preview();
-    RenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(currentdoor->GetDestinationDoor()->GetGlobalDoorID()));
     // TODOs
+    IsInitialized = true;
 }
 
 /// <summary>
@@ -85,7 +88,7 @@ void DoorConfigDialog::StaticInitialization()
 }
 
 /// <summary>
-/// Render Room and Doors on GraphicsView_Preview.
+/// Render Room and Doors in GraphicsView_Preview.
 /// </summary>
 void DoorConfigDialog::RenderGraphicsView_Preview()
 {
@@ -105,7 +108,7 @@ void DoorConfigDialog::RenderGraphicsView_Preview()
 }
 
 /// <summary>
-/// Render Room and Doors on GraphicsView_DestinationDoor.
+/// Render Room and Doors in GraphicsView_DestinationDoor.
 /// </summary>
 void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
 {
@@ -124,6 +127,9 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
     ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
+/// <summary>
+/// Update Door layer in GraphicsView_Preview.
+/// </summary>
 void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
 {
     QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
@@ -139,4 +145,23 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
     QGraphicsScene *scene = tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
     ui->GraphicsView_DestinationDoor->setScene(scene);
     ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+}
+
+void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index)
+{
+    delete tmpDestinationRoom;
+    tmpDestinationRoom = new LevelComponents::Room(_currentLevel->GetRooms()[_currentLevel->GetDoors()[index]->GetRoomID()]);
+    tmpDestinationRoom->SetDoors(_currentLevel->GetRoomDoors((unsigned int) _currentLevel->GetDoors()[index]->GetRoomID()));
+    _currentLevel->GetDoors()[index]->SetDestinationDoor(_currentLevel->GetDoors()[index]); //TODO: this does not work.
+    RenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(index));
+}
+
+void DoorConfigDialog::on_SpinBox_DoorX_valueChanged(int arg1)
+{
+    (void) arg1;
+    if(!IsInitialized) return;
+    LevelComponents::Door * currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
+    currentdoor0->SetDoorPlace((unsigned char) ui->SpinBox_DoorX->value(), (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
+                               (unsigned char) ui->SpinBox_DoorY->value(), (unsigned char) (ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1));
+    UpdateDoorLayerGraphicsView_Preview();
 }

@@ -18,12 +18,17 @@ public:
     ~DoorConfigDialog();
     static void StaticInitialization();
 
+private slots:
+    void on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index);
+    void on_SpinBox_DoorX_valueChanged(int arg1);
+
 private:
     Ui::DoorConfigDialog *ui;
     LevelComponents::Level *_currentLevel;
     LevelComponents::Room *tmpCurrentRoom = nullptr;
     LevelComponents::Room *tmpDestinationRoom = nullptr;
     int DoorID = -1;
+    bool IsInitialized = false;
     void RenderGraphicsView_Preview();
     void RenderGraphicsView_DestinationDoor(int doorIDinRoom);
     void UpdateDoorLayerGraphicsView_Preview();

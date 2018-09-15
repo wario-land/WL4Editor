@@ -351,9 +351,16 @@ namespace LevelComponents
                     }
                 }
                 QGraphicsPixmapItem *doorpixmapItem;
-                doorpixmapItem = scene->addPixmap(doorPixmap);
-                doorpixmapItem->setZValue(Z++);
-                RenderedLayers[5] = doorpixmapItem;
+                if(!RenderedLayers[5] || renderParams->type == FullRender)
+                {
+                    doorpixmapItem = scene->addPixmap(doorPixmap);
+                    doorpixmapItem->setZValue(Z++);
+                    RenderedLayers[5] = doorpixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[5]->setPixmap(doorPixmap);
+                }
 
                 // Render camera box layer
                 QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
@@ -450,9 +457,16 @@ namespace LevelComponents
                     // TODO other camera control type
                 }
                 QGraphicsPixmapItem *CameraLimitationpixmapItem;
-                CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
-                CameraLimitationpixmapItem->setZValue(Z++);
-                RenderedLayers[6] = CameraLimitationpixmapItem;
+                if(!RenderedLayers[6] || renderParams->type == FullRender)
+                {
+                    CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
+                    CameraLimitationpixmapItem->setZValue(Z++);
+                    RenderedLayers[6] = CameraLimitationpixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[6]->setPixmap(CameraLimitationPixmap);
+                }
             }
             // Fall through to layer enable section
         case LayerEnable:
