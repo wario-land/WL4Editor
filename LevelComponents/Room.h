@@ -102,8 +102,8 @@ namespace LevelComponents
         int TilesetID;
         unsigned int Width, Height;
         bool Layer0ColorBlending = false;
-        int Layer0ColorBlendCoefficient_EVA;
-        int Layer0ColorBlendCoefficient_EVB;
+        int Layer0ColorBlendCoefficient_EVA = 16;
+        int Layer0ColorBlendCoefficient_EVB = 0;
         std::vector<struct __CameraControlRecord*> CameraControlRecords;
         struct __RoomHeader RoomHeader;
         int CurrentEntitySetID = 0;

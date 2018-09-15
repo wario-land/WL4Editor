@@ -305,8 +305,8 @@ namespace LevelComponents
                     else RenderedLayers[7] = nullptr;
                 }
                 delete[] LayersCurrentVisibility;
-                // Fall through to ElementsLayersUpdate section
             }
+            // Fall through to ElementsLayersUpdate section
         case ElementsLayersUpdate:
             {
                 if(Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
@@ -351,16 +351,9 @@ namespace LevelComponents
                     }
                 }
                 QGraphicsPixmapItem *doorpixmapItem;
-                if(!RenderedLayers[5])
-                {
-                    doorpixmapItem = scene->addPixmap(doorPixmap);
-                    doorpixmapItem->setZValue(Z++);
-                    RenderedLayers[5] = doorpixmapItem;
-                }
-                else
-                {
-                    RenderedLayers[5]->setPixmap(doorPixmap);
-                }
+                doorpixmapItem = scene->addPixmap(doorPixmap);
+                doorpixmapItem->setZValue(Z++);
+                RenderedLayers[5] = doorpixmapItem;
 
                 // Render camera box layer
                 QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
@@ -457,18 +450,11 @@ namespace LevelComponents
                     // TODO other camera control type
                 }
                 QGraphicsPixmapItem *CameraLimitationpixmapItem;
-                if(!RenderedLayers[6])
-                {
-                   CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
-                   CameraLimitationpixmapItem->setZValue(Z++);
-                   RenderedLayers[6] = CameraLimitationpixmapItem;
-                }
-                else
-                {
-                    RenderedLayers[6]->setPixmap(CameraLimitationPixmap);
-                }
-            // Fall through to layer enable section
+                CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
+                CameraLimitationpixmapItem->setZValue(Z++);
+                RenderedLayers[6] = CameraLimitationpixmapItem;
             }
+            // Fall through to layer enable section
         case LayerEnable:
             {
                 // Enable visibility of the foreground and background layers

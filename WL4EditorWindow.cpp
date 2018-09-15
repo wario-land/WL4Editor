@@ -284,17 +284,18 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     {
         return;
     }
+    ui->graphicsView->UnSelectDoor();
 
     // Load the first level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
     if(tmpdialog.exec() == QDialog::Accepted) {
         selectedLevel = tmpdialog.GetResult();
+        if(CurrentLevel) delete CurrentLevel;
         CurrentLevel = new LevelComponents::Level(
             static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
             static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
         );
         selectedRoom = 0;
-        ui->graphicsView->UnSelectDoor();
         LoadRoomUIUpdate();
         int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
@@ -319,10 +320,11 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     {
         return;
     }
+    // unselect door
+    ui->graphicsView->UnSelectDoor();
 
     // Load the previous room
     --selectedRoom;
-    ui->graphicsView->UnSelectDoor();
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
@@ -346,10 +348,11 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     {
         return;
     }
+    // unselect door
+    ui->graphicsView->UnSelectDoor();
 
     // Load the next room
     ++selectedRoom;
-    ui->graphicsView->UnSelectDoor();
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
@@ -539,7 +542,6 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         CurrentLevel->GetRooms()[selectedRoom]->SetBGLayerEnabled(configParams.BackgroundLayerEnable);
         CurrentLevel->GetRooms()[selectedRoom]->SetBGLayerAutoScrollEnabled(configParams.BackgroundLayerAutoScrollEnable);
         CurrentLevel->GetRooms()[selectedRoom]->SetLayerDataPtr(3, configParams.BackgroundLayerDataPtr);
-
         // TODO: this should be done with the operation history
     }
 }

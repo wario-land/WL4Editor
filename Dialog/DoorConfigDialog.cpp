@@ -123,3 +123,20 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
     ui->GraphicsView_DestinationDoor->setScene(scene);
     ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
+
+void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
+{
+    QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
+    if(oldScene)
+    {
+        delete oldScene;
+    }
+    struct LevelComponents::RenderUpdateParams tparam(LevelComponents::ElementsLayersUpdate);
+    tparam.tileX = tparam.tileY = 0; tparam.tileID = (unsigned short) 0;
+    tparam.SelectedDoorID = (unsigned int) DoorID; //ID in Room
+    tparam.mode.editMode = Ui::DoorEditMode;
+    tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
+    QGraphicsScene *scene = tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
+    ui->GraphicsView_DestinationDoor->setScene(scene);
+    ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+}
