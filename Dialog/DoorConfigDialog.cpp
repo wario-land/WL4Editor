@@ -35,13 +35,15 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     LevelComponents::Door *currentdoor = tmpCurrentRoom->GetDoor(doorID);
     ui->ComboBox_DoorType->setCurrentIndex(currentdoor->GetDoortypeNum() - 1);
     ui->SpinBox_DoorX->setValue(currentdoor->GetX1());
-    ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - 1);
     ui->SpinBox_DoorY->setValue(currentdoor->GetY1());
-    ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetHeight() - 1);
     int doorwidth = currentdoor->GetX2() - currentdoor->GetX1() + 1;
     int doorheight = currentdoor->GetY2() - currentdoor->GetY1() + 1;
     ui->SpinBox_DoorWidth->setValue(doorwidth);
     ui->SpinBox_DoorHeight->setValue(doorheight);
+    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - currentdoor->GetX1());
+    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - currentdoor->GetY1());
+    ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - doorwidth);
+    ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetHeight() - doorheight);
     ui->SpinBox_WarioX->setValue(currentdoor->GetDeltaX());
     ui->SpinBox_WarioY->setValue(currentdoor->GetDeltaY());
     ui->SpinBox_BGM_ID->setValue(currentdoor->GetBGM_ID());
@@ -110,6 +112,9 @@ void DoorConfigDialog::RenderGraphicsView_Preview()
 /// <summary>
 /// Render Room and Doors in GraphicsView_DestinationDoor.
 /// </summary>
+/// /// <param name="doorIDinRoom">
+/// door Id in Room.
+/// </param>
 void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
 {
     QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
@@ -128,6 +133,25 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
 }
 
 /// <summary>
+/// Reset Door Rect according to the value from the door properties SpinBoxes.
+/// </summary>
+void DoorConfigDialog::ResetDoorRect()
+{
+    LevelComponents::Door *currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
+    currentdoor0->SetDoorPlace((unsigned char) ui->SpinBox_DoorX->value(), (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
+                               (unsigned char) ui->SpinBox_DoorY->value(), (unsigned char) (ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1));
+    int doorwidth = currentdoor0->GetX2() - currentdoor0->GetX1() + 1;
+    int doorheight = currentdoor0->GetY2() - currentdoor0->GetY1() + 1;
+    ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - doorwidth);
+    ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetHeight() - doorheight);
+    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - currentdoor0->GetX1());
+    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - currentdoor0->GetY1());
+    UpdateDoorLayerGraphicsView_Preview();
+    // when DestinationDoor and currentDoor are in the same Room, the DestinationDoor also needs an update.
+    UpdateDoorLayerGraphicsView_DestinationDoor();
+}
+
+/// <summary>
 /// Update Door layer in GraphicsView_Preview.
 /// </summary>
 void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
@@ -140,6 +164,9 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
     tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
 }
 
+/// <summary>
+/// Update Door layer in GraphicsView_DestinationDoor.
+/// </summary>
 void DoorConfigDialog::UpdateDoorLayerGraphicsView_DestinationDoor()
 {
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::ElementsLayersUpdate);
@@ -150,22 +177,127 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_DestinationDoor()
     tmpDestinationRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
 }
 
+/// <summary>
+/// Reset currentDoor destination according to the currentIndex of the ComboBox_DoorDestinationPicker.
+/// </summary>
+/// <param name="index">
+/// currentIndex of the ComboBox_DoorDestinationPicker.
+/// </param>
 void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index)
 {
     delete tmpDestinationRoom;
     tmpDestinationRoom = new LevelComponents::Room(_currentLevel->GetRooms()[_currentLevel->GetDoors()[index]->GetRoomID()]);
     tmpDestinationRoom->SetDoors(_currentLevel->GetRoomDoors((unsigned int) _currentLevel->GetDoors()[index]->GetRoomID()));
-    _currentLevel->GetDoors()[index]->SetDestinationDoor(_currentLevel->GetDoors()[index]); //TODO: this does not work.
+    _currentLevel->GetDoors()[index]->SetDestinationDoor(_currentLevel->GetDoors()[index]);
     RenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(index));
 }
 
+/// <summary>
+/// Reset X value of Door position.
+/// </summary>
+/// <param name="arg1">
+/// unused.
+/// </param>
 void DoorConfigDialog::on_SpinBox_DoorX_valueChanged(int arg1)
 {
     (void) arg1;
     if(!IsInitialized) return;
-    LevelComponents::Door * currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
-    currentdoor0->SetDoorPlace((unsigned char) ui->SpinBox_DoorX->value(), (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
-                               (unsigned char) ui->SpinBox_DoorY->value(), (unsigned char) (ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1));
-    UpdateDoorLayerGraphicsView_Preview();
-    UpdateDoorLayerGraphicsView_DestinationDoor(); // when DestinationDoor and currentDoor are in the same Room.
+    ResetDoorRect();
+}
+
+/// <summary>
+/// Reset Y value of Door position.
+/// </summary>
+/// <param name="arg1">
+/// unused.
+/// </param>
+void DoorConfigDialog::on_SpinBox_DoorY_valueChanged(int arg1)
+{
+    (void) arg1;
+    if(!IsInitialized) return;
+    ResetDoorRect();
+}
+
+/// <summary>
+/// Reset Door Width according to the value from the door properties SpinBoxes.
+/// </summary>
+/// <param name="arg1">
+/// unused.
+/// </param>
+void DoorConfigDialog::on_SpinBox_DoorWidth_valueChanged(int arg1)
+{
+    (void) arg1;
+    if(!IsInitialized) return;
+    ResetDoorRect();
+}
+
+/// <summary>
+/// Reset Door Height according to the value from the door properties SpinBoxes.
+/// </summary>
+/// <param name="arg1">
+/// unused.
+/// </param>
+void DoorConfigDialog::on_SpinBox_DoorHeight_valueChanged(int arg1)
+{
+    (void) arg1;
+    if(!IsInitialized) return;
+    ResetDoorRect();
+}
+
+/// <summary>
+/// Reset currentDoor DoorType.
+/// </summary>
+/// <param name="index">
+/// currentIndex of the ComboBox_DoorType.
+/// </param>
+void DoorConfigDialog::on_ComboBox_DoorType_currentIndexChanged(int index)
+{
+    if(!IsInitialized) return;
+    LevelComponents::Door *currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
+    if((index == 0) && (currentdoor0->GetDoortypeNum() != 1))
+    {
+        QMessageBox::information(this, QString("Info"), QString("if you know what you are doing, or don't putting more than 1 Portal-type Door(vortex) in one level."));
+//        ui->ComboBox_DoorType->blockSignals(true);
+//        ui->ComboBox_DoorType->setCurrentIndex(currentdoor0->GetDoortypeNum() - 1);
+//        ui->ComboBox_DoorType->blockSignals(false);
+//        return;
+    }
+    // TODOs: need more auto-reset to some of the Door attributes when select DoorType 4 or 5.
+    currentdoor0->SetDoorType(static_cast<LevelComponents::DoorType>(index + 1));
+}
+
+/// <summary>
+/// Reset Wario appearing place X delta.
+/// </summary>
+/// <param name="arg1">
+/// unused.
+/// </param>
+void DoorConfigDialog::on_SpinBox_WarioX_valueChanged(int arg1)
+{
+    (void) arg1;
+    tmpCurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
+}
+
+/// <summary>
+/// Reset Wario appearing place Y delta.
+/// </summary>
+/// <param name="arg1">
+/// unused.
+/// </param>
+void DoorConfigDialog::on_SpinBox_WarioY_valueChanged(int arg1)
+{
+    (void) arg1;
+    tmpCurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
+}
+
+/// <summary>
+/// Set a new BGM_ID for the Door if the BGM need a reset.
+/// </summary>
+/// <param name="arg1">
+/// unused.
+/// </param>
+void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
+{
+    (void) arg1;
+    tmpCurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) ui->SpinBox_BGM_ID->value());
 }

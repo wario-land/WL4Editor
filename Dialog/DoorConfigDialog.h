@@ -2,6 +2,7 @@
 #define DOORCONFIGDIALOG_H
 
 #include <QDialog>
+#include <QMessageBox>
 
 #include "LevelComponents/Level.h"
 
@@ -21,6 +22,13 @@ public:
 private slots:
     void on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index);
     void on_SpinBox_DoorX_valueChanged(int arg1);
+    void on_SpinBox_DoorY_valueChanged(int arg1);
+    void on_SpinBox_DoorWidth_valueChanged(int arg1);
+    void on_SpinBox_DoorHeight_valueChanged(int arg1);
+    void on_ComboBox_DoorType_currentIndexChanged(int index);
+    void on_SpinBox_WarioX_valueChanged(int arg1);
+    void on_SpinBox_WarioY_valueChanged(int arg1);
+    void on_SpinBox_BGM_ID_valueChanged(int arg1);
 
 private:
     Ui::DoorConfigDialog *ui;
@@ -31,6 +39,7 @@ private:
     bool IsInitialized = false;
     void RenderGraphicsView_Preview();
     void RenderGraphicsView_DestinationDoor(int doorIDinRoom);
+    void ResetDoorRect();
     void UpdateDoorLayerGraphicsView_Preview();
     void UpdateDoorLayerGraphicsView_DestinationDoor();
 
