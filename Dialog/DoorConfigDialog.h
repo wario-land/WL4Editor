@@ -32,6 +32,7 @@ private:
     void RenderGraphicsView_Preview();
     void RenderGraphicsView_DestinationDoor(int doorIDinRoom);
     void UpdateDoorLayerGraphicsView_Preview();
+    void UpdateDoorLayerGraphicsView_DestinationDoor();
 
     // Enumeration of Door type
     static constexpr const char *DoortypeSetData[5] =

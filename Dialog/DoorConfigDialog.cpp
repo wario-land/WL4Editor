@@ -132,19 +132,22 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
 /// </summary>
 void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
 {
-    QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
-    if(oldScene)
-    {
-        delete oldScene;
-    }
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::ElementsLayersUpdate);
     tparam.tileX = tparam.tileY = 0; tparam.tileID = (unsigned short) 0;
     tparam.SelectedDoorID = (unsigned int) DoorID; //ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
     tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
-    QGraphicsScene *scene = tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
-    ui->GraphicsView_DestinationDoor->setScene(scene);
-    ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
+}
+
+void DoorConfigDialog::UpdateDoorLayerGraphicsView_DestinationDoor()
+{
+    struct LevelComponents::RenderUpdateParams tparam(LevelComponents::ElementsLayersUpdate);
+    tparam.tileX = tparam.tileY = 0; tparam.tileID = (unsigned short) 0;
+    tparam.SelectedDoorID = (unsigned int) tmpDestinationRoom->GetLocalDoorID(ui->ComboBox_DoorDestinationPicker->currentIndex()); //ID in Room
+    tparam.mode.editMode = Ui::DoorEditMode;
+    tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
+    tmpDestinationRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
 }
 
 void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index)
@@ -164,4 +167,5 @@ void DoorConfigDialog::on_SpinBox_DoorX_valueChanged(int arg1)
     currentdoor0->SetDoorPlace((unsigned char) ui->SpinBox_DoorX->value(), (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
                                (unsigned char) ui->SpinBox_DoorY->value(), (unsigned char) (ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1));
     UpdateDoorLayerGraphicsView_Preview();
+    UpdateDoorLayerGraphicsView_DestinationDoor(); // when DestinationDoor and currentDoor are in the same Room.
 }

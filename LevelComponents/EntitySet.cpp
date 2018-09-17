@@ -130,6 +130,12 @@ namespace LevelComponents
         // TODOs: set other entity informations
     }
 
+    /// <summary>
+    /// Find an EntitySet which includes the entity with id.
+    /// </summary>
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
     int EntitySet::EntitySetFromEntityID(int entityglobalId)
     {
         if(entityglobalId < 0x11)
@@ -153,6 +159,12 @@ namespace LevelComponents
         return 0; //TODO: Error handling
     }
 
+    /// <summary>
+    /// Get the first action set of a choosed entity with its global id.
+    /// </summary>
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
     int EntitySet::GetEntityFirstActionFrameSetPtr(int entityglobalId)
     {
         return EntitiesFirstActionFrameSetsPtrsData[entityglobalId];
