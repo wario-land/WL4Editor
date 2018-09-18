@@ -442,6 +442,17 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         DialogParams::RoomConfigParams configParams = dialog.GetConfigParams();
 
         // Apply the selected parameters to the current room
+        // reset the Tileset instance in Room class
+        if(configParams.CurrentTilesetIndex != _currentRoomConfigParams->CurrentTilesetIndex)
+        {
+            LevelComponents::Tileset *currentTileset = CurrentLevel->GetRooms()[selectedRoom]->GetTileset();
+            delete currentTileset;
+            int tilesetPtr = WL4Constants::TilesetDataTable + configParams.CurrentTilesetIndex * 36;
+            currentTileset = new LevelComponents::Tileset(tilesetPtr, configParams.CurrentTilesetIndex);
+            CurrentLevel->GetRooms()[selectedRoom]->SetTileset(currentTileset, configParams.CurrentTilesetIndex);
+            Tile16SelecterWidget->SetTileset(configParams.CurrentTilesetIndex);
+        }
+
         // refresh the Layer 2, 0, 3 instances
         if(configParams.Layer2Enable && !_currentRoomConfigParams->Layer2Enable)
         {
@@ -452,7 +463,7 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
 
         if(!_currentRoomConfigParams->Layer0Enable && configParams.Layer0Enable)
         {
-            if((_currentRoomConfigParams->Layer0MappingTypeParam & 0x30) == 0x10)
+            if((configParams.Layer0MappingTypeParam & 0x30) == 0x10)
             {
                 CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->CreateNewLayer_type0x10(configParams.RoomWidth, configParams.RoomHeight);
             }else{
@@ -518,16 +529,6 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
             }
         }
 
-        // reset the Tileset instance in Room class
-        if(configParams.CurrentTilesetIndex != _currentRoomConfigParams->CurrentTilesetIndex)
-        {
-            LevelComponents::Tileset *currentTileset = CurrentLevel->GetRooms()[selectedRoom]->GetTileset();
-            delete currentTileset;
-            int tilesetPtr = WL4Constants::TilesetDataTable + configParams.CurrentTilesetIndex * 36;
-            currentTileset = new LevelComponents::Tileset(tilesetPtr, configParams.CurrentTilesetIndex);
-            CurrentLevel->GetRooms()[selectedRoom]->SetTileset(currentTileset, configParams.CurrentTilesetIndex);
-        }
-
         // Delete _currentRoomConfigParams
         delete _currentRoomConfigParams;
 
@@ -542,6 +543,10 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         CurrentLevel->GetRooms()[selectedRoom]->SetBGLayerEnabled(configParams.BackgroundLayerEnable);
         CurrentLevel->GetRooms()[selectedRoom]->SetBGLayerAutoScrollEnabled(configParams.BackgroundLayerAutoScrollEnable);
         CurrentLevel->GetRooms()[selectedRoom]->SetLayerDataPtr(3, configParams.BackgroundLayerDataPtr);
+
+        // UI update
+        RenderScreenFull();
+        SetEditModeDockWidgetLayerEditability();
         // TODO: this should be done with the operation history
     }
 }

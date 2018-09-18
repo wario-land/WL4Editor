@@ -260,7 +260,7 @@ namespace LevelComponents
     /// Number of new rows you wan to add to the layer.
     /// </param>
     /// <param name="StartFrom">
-    /// the id of the specific row which we add new blank rows before it.
+    /// the id of the specific row which we add new blank rows after it. (id start from 1)
     /// </param>
     void Layer::AddRows(int NumberOfNewRows, int StartFrom)
     {
@@ -271,12 +271,12 @@ namespace LevelComponents
         {
             for(int i = 0; i < Width; i++)
             {
-                if((StartFrom >= j) && (k < NumberOfNewRows))
+                if((StartFrom <= j) && (k < NumberOfNewRows))
                     tmpLayerData[i + j * Width] = (unsigned short) 0;
                 else
                     tmpLayerData[i + j * Width] = LayerData[i + (j - k) * Width];
             }
-            if((StartFrom >= j) && (k < NumberOfNewRows)) k++;
+            if((StartFrom <= j) && (k < NumberOfNewRows)) k++;
         }
         delete[] LayerData;
         LayerData = tmpLayerData;
@@ -289,7 +289,7 @@ namespace LevelComponents
     /// Number of new columns you wan to add to the layer.
     /// </param>
     /// <param name="StartFrom">
-    /// the id of the specific column which we add new blank columns before it.
+    /// the id of the specific column which we add new blank columns after it. (id start from 1)
     /// </param>
     void Layer::AddColumns(int NumberOfNewColumns, int StartFrom)
     {
@@ -300,7 +300,7 @@ namespace LevelComponents
         {
             for(int i = 0; i < Width; i++)
             {
-                if((StartFrom >= i) && (k < NumberOfNewColumns))
+                if((StartFrom <= i) && (k < NumberOfNewColumns))
                 {
                     tmpLayerData[i + j * Width] = (unsigned short) 0;
                     k++;

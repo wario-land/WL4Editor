@@ -574,6 +574,7 @@ namespace LevelComponents
     {
         // Prioritize the layers
         int priorityFlag = layerPriorityAndAlphaAttr;
+        RoomHeader.LayerEffects = (unsigned char) layerPriorityAndAlphaAttr;
         switch(priorityFlag & 3)
         {
         case 0:

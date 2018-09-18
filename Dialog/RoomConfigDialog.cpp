@@ -36,7 +36,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->CheckBox_Layer0Alpha->setChecked(CurrentRoomParams->Layer0Alpha);
     int LayerPriorityID = CurrentRoomParams->LayerPriorityAndAlphaAttr & 3;
     ui->ComboBox_LayerPriority->setCurrentIndex((LayerPriorityID < 2) ? LayerPriorityID : (LayerPriorityID - 1));
-    ui->ComboBox_AlphaBlendAttribute->setCurrentIndex((CurrentRoomParams->LayerPriorityAndAlphaAttr & 0x78) >> 3);
+    ui->ComboBox_AlphaBlendAttribute->setCurrentIndex((CurrentRoomParams->LayerPriorityAndAlphaAttr & 0x78) >> 2);
     if(CurrentRoomParams->Layer0Enable)
     {
         ui->ComboBox_Layer0MappingType->setCurrentIndex((((CurrentRoomParams->Layer0MappingTypeParam) & 0x30) >> 4) - 1);
@@ -101,7 +101,14 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     configParams.Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();
     if(configParams.Layer0Enable)
     {
-        configParams.Layer0MappingTypeParam = (ui->ComboBox_Layer0MappingType->currentIndex() + 1) << 4;
+        if(ui->ComboBox_Layer0MappingType->isEnabled())
+        {
+            configParams.Layer0MappingTypeParam = (ui->ComboBox_Layer0MappingType->currentIndex() + 1) << 4;
+        }
+        else
+        {
+            configParams.Layer0MappingTypeParam = 0x10;
+        }
         if(ui->CheckBox_Layer0AutoScroll->isChecked()) configParams.Layer0MappingTypeParam = 22;
         configParams.Layer0DataPtr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
     }
@@ -112,7 +119,7 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
         case 1: configParams.LayerPriorityAndAlphaAttr = 5; break;
         case 2: configParams.LayerPriorityAndAlphaAttr = 7; break;
     }
-    configParams.LayerPriorityAndAlphaAttr += (ui->ComboBox_AlphaBlendAttribute->currentIndex() << 3);
+    configParams.LayerPriorityAndAlphaAttr += (ui->ComboBox_AlphaBlendAttribute->currentIndex() << 2);
     configParams.BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
     configParams.BackgroundLayerAutoScrollEnable = ui->CheckBox_BGLayerAutoScroll;
     if(configParams.BackgroundLayerEnable)
