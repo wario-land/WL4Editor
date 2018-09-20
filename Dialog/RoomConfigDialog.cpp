@@ -137,7 +137,7 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
 /// <summary>
 /// Perform static initializtion of constant data structures for the dialog.
 /// </summary>
-void RoomConfigDialog::StaticInitialization()
+void RoomConfigDialog::StaticComboBoxesInitialization()
 {
     // Initialize the selections for the tilesets
     for(unsigned int i = 0; i < sizeof(TilesetNamesSetData)/sizeof(TilesetNamesSetData[0]); ++i)

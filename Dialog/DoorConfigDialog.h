@@ -17,7 +17,8 @@ class DoorConfigDialog : public QDialog
 public:
     explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level);
     ~DoorConfigDialog();
-    static void StaticInitialization();
+    static void StaticComboBoxesInitialization();
+    static void StaticEntitySetsInitialization();
 
 private slots:
     void on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index);
@@ -37,6 +38,8 @@ private:
     LevelComponents::Room *tmpDestinationRoom = nullptr;
     int DoorID = -1;
     bool IsInitialized = false;
+    static LevelComponents::EntitySet *entitiessets[90];
+    static LevelComponents::Entity *entities[129];
     void RenderGraphicsView_Preview();
     void RenderGraphicsView_DestinationDoor(int doorIDinRoom);
     void ResetDoorRect();

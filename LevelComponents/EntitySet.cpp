@@ -136,12 +136,13 @@ namespace LevelComponents
     /// <param name="entityglobalId">
     /// Entity global id.
     /// </param>
-    int EntitySet::EntitySetFromEntityID(int entityglobalId)
+    EntitySetAndEntitylocalId EntitySet::EntitySetFromEntityID(int entityglobalId)
     {
         if(entityglobalId < 0x11)
         {
             entityglobalId = 0x11;
         }
+        struct EntitySetAndEntitylocalId tmpEntitySetAndEntitylocalId;
         for(int j = 0; j < 90; ++j)
         {
             int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + 4 * j);
@@ -151,12 +152,15 @@ namespace LevelComponents
                 unsigned char *entityidtmp = ROMUtils::CurrentFile + entitysetptr + 2 * i;
                 if(*entityidtmp == (unsigned char)entityglobalId)
                 {
-                    return j;
+                    tmpEntitySetAndEntitylocalId.entitysetId = j;
+                    tmpEntitySetAndEntitylocalId.entitylocalId = i;
+                    return tmpEntitySetAndEntitylocalId;
                 }
                 i++;
             }
         }
-        return 0; //TODO: Error handling
+        memset(&tmpEntitySetAndEntitylocalId, 0, sizeof(tmpEntitySetAndEntitylocalId));
+        return tmpEntitySetAndEntitylocalId; //TODO: Error handling
     }
 
     /// <summary>

@@ -77,7 +77,7 @@ class RoomConfigDialog : public QDialog
 public:
     explicit RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigParams *CurrentRoomParams);
     ~RoomConfigDialog();
-    static void StaticInitialization();
+    static void StaticComboBoxesInitialization();
     DialogParams::RoomConfigParams GetConfigParams();
 
 private slots:

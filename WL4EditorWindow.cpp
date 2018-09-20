@@ -166,6 +166,7 @@ void WL4EditorWindow::OpenROM()
     }
 
     LoadRoomUIUpdate();
+    DoorConfigDialog::StaticEntitySetsInitialization();
 }
 
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
@@ -263,12 +264,11 @@ void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned shor
 bool WL4EditorWindow::UnsavedChangesWarning()
 {
     return UnsavedChanges ? QMessageBox::warning(
-        singleton,
-        "Unsaved Changes",
-        "There are unsaved changes. If you load another level, these will be lost. Load level anyway?",
-        QMessageBox::Ok | QMessageBox::Cancel,
-        QMessageBox::Cancel
-    ) == QMessageBox::Ok : true;
+                                singleton,
+                                "Unsaved Changes",
+                                "There are unsaved changes. If you load another level, these will be lost. Load level anyway?",
+                                QMessageBox::Ok | QMessageBox::Cancel,
+                                QMessageBox::Cancel) == QMessageBox::Ok : true;
 }
 
 /// <summary>

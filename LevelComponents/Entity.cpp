@@ -33,6 +33,11 @@ namespace LevelComponents
         currentEntityset(_currentEntityset), EntityID(entityID), EntityGlobalID(entityGlobalId)
     {
         int spritesActionOAMTablePtr = ROMUtils::PointerFromData(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId));
+        if(spritesActionOAMTablePtr == 0)
+        {
+            UnusedEntity = true;
+            return;
+        }
         OAMDataTablePtr = spritesActionOAMTablePtr;
         int ActionPtr = ROMUtils::PointerFromData(spritesActionOAMTablePtr);
         ExtractSpritesTiles(ActionPtr, 0); //TODO: load a different frame when meet with some of the Entities
@@ -120,6 +125,10 @@ namespace LevelComponents
     QImage Entity::Render()
     {
         QPixmap pm;
+        if(UnusedEntity)
+        {
+            return pm.toImage();
+        }
         QPainter p(&pm);
         foreach(OAMTile *ot, OAMTiles)
         {

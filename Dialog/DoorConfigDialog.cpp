@@ -8,6 +8,8 @@ constexpr const char *DoorConfigDialog::EntitynameSetData[128];
 // static variables used by DoorConfigDialog
 static QStringList DoortypeSet;
 static QStringList EntitynameSet;
+LevelComponents::EntitySet *LevelComponents::EntitySet::entitiessets[90] = {nullptr};
+LevelComponents::Entity *LevelComponents::EntitySet::entities[129] = {nullptr};
 
 /// <summary>
 /// Construct the instance of the DoorConfigDialog.
@@ -74,7 +76,7 @@ DoorConfigDialog::~DoorConfigDialog()
 /// <summary>
 /// Perform static initializtion of constant data structures for the dialog.
 /// </summary>
-void DoorConfigDialog::StaticInitialization()
+void DoorConfigDialog::StaticComboBoxesInitialization()
 {
     // Initialize the selections for the Door type
     for(unsigned int i = 0; i < sizeof(DoortypeSetData)/sizeof(DoortypeSetData[0]); ++i)
@@ -86,6 +88,25 @@ void DoorConfigDialog::StaticInitialization()
     for(unsigned int i = 0; i < sizeof(EntitynameSetData)/sizeof(EntitynameSetData[0]); ++i)
     {
         EntitynameSet << EntitynameSetData[i];
+    }
+}
+
+/// <summary>
+/// Perform static initializtion of EntitySets and Entities for the dialog.
+/// </summary>
+void DoorConfigDialog::StaticEntitySetsInitialization()
+{
+    // Initialize all the entitysets
+    for(int i = 0; i < 90; ++i)
+    {
+        LevelComponents::EntitySet::entitiessets[i] = new LevelComponents::EntitySet(i, WL4Constants::UniversalSpritesPalette);
+    }
+
+    // Initialize all the Entity
+    for(int i = 0; i < 129; ++i)
+    {
+        struct LevelComponents::EntitySetAndEntitylocalId tmpEntitysetAndEntitylocalId = LevelComponents::EntitySet::EntitySetFromEntityID(i);
+        LevelComponents::EntitySet::entities[i] = new LevelComponents::Entity(tmpEntitysetAndEntitylocalId.entitylocalId, i, LevelComponents::EntitySet::entitiessets[tmpEntitysetAndEntitylocalId.entitysetId]);
     }
 }
 

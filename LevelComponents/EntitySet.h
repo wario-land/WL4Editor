@@ -16,6 +16,12 @@ namespace LevelComponents
         int paletteOffset;
     };
 
+    struct EntitySetAndEntitylocalId
+    {
+        int entitysetId;
+        int entitylocalId;
+    };
+
     class EntitySet
     {
     private:
@@ -34,7 +40,7 @@ namespace LevelComponents
         QVector<QRgb> *GetPalettes() { return palettes; }
         int GetEntityPaletteOffset(int _entityID) { return EntityinfoTable[_entityID].paletteOffset + 8; }
         int GetEntityTileIdOffset(int _entityID) { return 64 * (EntityinfoTable[_entityID].paletteOffset + 8); }
-        static int EntitySetFromEntityID(int entityglobalId);
+        static EntitySetAndEntitylocalId EntitySetFromEntityID(int entityglobalId);
         static int GetEntityFirstActionFrameSetPtr(int entityglobalId);
 
     private:
