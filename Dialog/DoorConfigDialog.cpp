@@ -8,8 +8,9 @@ constexpr const char *DoorConfigDialog::EntitynameSetData[128];
 // static variables used by DoorConfigDialog
 static QStringList DoortypeSet;
 static QStringList EntitynameSet;
-LevelComponents::EntitySet *LevelComponents::EntitySet::entitiessets[90] = {nullptr};
-LevelComponents::Entity *LevelComponents::EntitySet::entities[129] = {nullptr};
+
+LevelComponents::EntitySet *DoorConfigDialog::entitiessets[90];
+LevelComponents::Entity *DoorConfigDialog::entities[129];
 
 /// <summary>
 /// Construct the instance of the DoorConfigDialog.
@@ -99,14 +100,14 @@ void DoorConfigDialog::StaticEntitySetsInitialization()
     // Initialize all the entitysets
     for(int i = 0; i < 90; ++i)
     {
-        LevelComponents::EntitySet::entitiessets[i] = new LevelComponents::EntitySet(i, WL4Constants::UniversalSpritesPalette);
+        entitiessets[i] = new LevelComponents::EntitySet(i, WL4Constants::UniversalSpritesPalette);
     }
 
     // Initialize all the Entity
     for(int i = 0; i < 129; ++i)
     {
         struct LevelComponents::EntitySetAndEntitylocalId tmpEntitysetAndEntitylocalId = LevelComponents::EntitySet::EntitySetFromEntityID(i);
-        LevelComponents::EntitySet::entities[i] = new LevelComponents::Entity(tmpEntitysetAndEntitylocalId.entitylocalId, i, LevelComponents::EntitySet::entitiessets[tmpEntitysetAndEntitylocalId.entitysetId]);
+        entities[i] = new LevelComponents::Entity(tmpEntitysetAndEntitylocalId.entitylocalId, i, entitiessets[tmpEntitysetAndEntitylocalId.entitysetId]);
     }
 }
 

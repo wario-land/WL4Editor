@@ -38,13 +38,15 @@ private:
     LevelComponents::Room *tmpDestinationRoom = nullptr;
     int DoorID = -1;
     bool IsInitialized = false;
-    static LevelComponents::EntitySet *entitiessets[90];
-    static LevelComponents::Entity *entities[129];
+
     void RenderGraphicsView_Preview();
     void RenderGraphicsView_DestinationDoor(int doorIDinRoom);
     void ResetDoorRect();
     void UpdateDoorLayerGraphicsView_Preview();
     void UpdateDoorLayerGraphicsView_DestinationDoor();
+
+    static LevelComponents::EntitySet *entitiessets[90];
+    static LevelComponents::Entity *entities[129];
 
     // Enumeration of Door type
     static constexpr const char *DoortypeSetData[5] =
