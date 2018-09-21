@@ -30,7 +30,9 @@ namespace LevelComponents
     /// Entire set pointer.
     /// </param>
     Entity::Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset) :
-        currentEntityset(_currentEntityset), EntityID(entityID), EntityGlobalID(entityGlobalId)
+        EntityID(entityID),
+        currentEntityset(_currentEntityset),
+        EntityGlobalID(entityGlobalId)
     {
         int spritesActionOAMTablePtr = ROMUtils::PointerFromData(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId));
         if(spritesActionOAMTablePtr == 0)
