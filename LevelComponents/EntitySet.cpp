@@ -51,7 +51,8 @@ namespace LevelComponents
         int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + _EntitySetID * 4);
 
         // Load 16 color palettes, ignore the first 3 rows, they are only for wario tiles
-        int palettePtr;
+        int palettePtr, lastpalettePtr;
+        palettePtr = lastpalettePtr = 0;
         int tmpEntityId;
         int EntityPaletteNum;
         int k = 0;
@@ -63,8 +64,13 @@ namespace LevelComponents
             if((tmpEntityId > 0x10) && (EntityPaletteNum != currentpaletteID))
             {
                 palettePtr = ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable + 4 * (tmpEntityId - 0x10));
-                LoadSubPalettes(8, EntityPaletteNum - currentpaletteID, palettePtr);
-                currentpaletteID = EntityPaletteNum;
+                EntityPaletteNum = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (tmpEntityId - 0x10)) / (32 * 32 * 2);
+                if(lastpalettePtr != palettePtr)
+                {
+                    LoadSubPalettes(8 + currentpaletteID, EntityPaletteNum, palettePtr);
+                    currentpaletteID += EntityPaletteNum;
+                }
+                lastpalettePtr = palettePtr;
             }
             k++;
         } while((tmpEntityId != 0) && (currentpaletteID != 7));
@@ -102,6 +108,7 @@ namespace LevelComponents
         // Load Entities' tile8x8s which differ amongst all entitysets
         k = 0;
         int currentrow = 16;
+        int lasttiledataptr = 0;
         do
         {
             tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
@@ -112,8 +119,13 @@ namespace LevelComponents
             EntityinfoTable.push_back(Tmp_entitytableElement);
             tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable + 4 * (tmpEntityId - 0x10));
             tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (tmpEntityId - 0x10));
-            LoadSpritesTiles(tiledataptr, tiledatalength, currentrow);
-            currentrow += tiledatalength / (32 * 32); k++;
+            if(tiledataptr != lasttiledataptr)
+            {
+                LoadSpritesTiles(tiledataptr, tiledatalength, currentrow);
+                currentrow += tiledatalength / (32 * 32);
+            }
+            k++;
+            lasttiledataptr = tiledataptr;
         } while(1);
         if(currentrow < 30)
         {
@@ -131,6 +143,42 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Get Entity palette offset by local entity id.
+    /// </summary>
+    /// <param name="_entityID">
+    /// Entity local id.
+    /// </param>
+    int EntitySet::GetEntityPaletteOffset(int _entityID)
+    {
+        if(_entityID == -1)// TODO: find what the game does
+        {
+            return 0;
+        }
+        else
+        {
+            return EntityinfoTable[_entityID].paletteOffset + 8;
+        }
+    }
+
+    /// <summary>
+    /// Get Entity tileid offset by local entity id.
+    /// </summary>
+    /// <param name="_entityID">
+    /// Entity local id.
+    /// </param>
+    int EntitySet::GetEntityTileIdOffset(int _entityID)
+    {
+        if(_entityID == -1)// TODO: find what the game does
+        {
+            return 0;
+        }
+        else
+        {
+            return 64 * (EntityinfoTable[_entityID].paletteOffset + 8);
+        }
+    }
+
+    /// <summary>
     /// Find an EntitySet which includes the entity with id.
     /// </summary>
     /// <param name="entityglobalId">
@@ -138,12 +186,14 @@ namespace LevelComponents
     /// </param>
     EntitySetAndEntitylocalId EntitySet::EntitySetFromEntityID(int entityglobalId)
     {
+        struct EntitySetAndEntitylocalId tmpEntitySetAndEntitylocalId;
         if(entityglobalId < 0x11)
         {
-            entityglobalId = 0x11;
+            tmpEntitySetAndEntitylocalId.entitysetId = 1;
+            tmpEntitySetAndEntitylocalId.entitylocalId = -1;
+            return tmpEntitySetAndEntitylocalId;
         }
-        struct EntitySetAndEntitylocalId tmpEntitySetAndEntitylocalId;
-        for(int j = 0; j < 90; ++j)
+        for(int j = 1; j < 90; ++j)
         {
             int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + 4 * j);
             int i = 0;

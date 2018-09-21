@@ -34,15 +34,14 @@ namespace LevelComponents
         currentEntityset(_currentEntityset),
         EntityGlobalID(entityGlobalId)
     {
-        int spritesActionOAMTablePtr = ROMUtils::PointerFromData(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId));
-        if(spritesActionOAMTablePtr == 0)
+        if(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId) == 0)
         {
             UnusedEntity = true;
             return;
         }
+        int spritesActionOAMTablePtr = ROMUtils::PointerFromData(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId));
         OAMDataTablePtr = spritesActionOAMTablePtr;
-        int ActionPtr = ROMUtils::PointerFromData(spritesActionOAMTablePtr);
-        ExtractSpritesTiles(ActionPtr, 0); //TODO: load a different frame when meet with some of the Entities
+        ExtractSpritesTiles(spritesActionOAMTablePtr, 0); //TODO: load a different frame when meet with some of the Entities
         // TODO: Load other Entity informations
     }
 
