@@ -54,6 +54,7 @@ public:
     void OpenROM();
     void SetEditModeDockWidgetLayerEditability();
     bool *GetLayersVisibilityArray();
+    void Graphicsview_UnselectDoor();
 
 private slots:
     void on_actionOpen_ROM_triggered();

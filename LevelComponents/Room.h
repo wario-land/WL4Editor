@@ -102,8 +102,8 @@ namespace LevelComponents
         int TilesetID;
         unsigned int Width, Height;
         bool Layer0ColorBlending = false;
-        int Layer0ColorBlendCoefficient_EVA;
-        int Layer0ColorBlendCoefficient_EVB;
+        int Layer0ColorBlendCoefficient_EVA = 16;
+        int Layer0ColorBlendCoefficient_EVB = 0;
         std::vector<struct __CameraControlRecord*> CameraControlRecords;
         struct __RoomHeader RoomHeader;
         int CurrentEntitySetID = 0;
@@ -151,7 +151,7 @@ namespace LevelComponents
         int GetLayerEffectsParam() { return (int) RoomHeader.LayerEffects; }
         LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
         int CountDoors() { return doors.size(); }
-        void SetDoors(std::vector<Door*> _doors) { doors = _doors;}
+        void SetDoors(std::vector<Door*> _doors) { doors = _doors; }
         int GetLocalDoorID(int globalDoorId);
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }

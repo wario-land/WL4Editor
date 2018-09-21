@@ -220,4 +220,16 @@ void EditModeDockWidget::on_CheckBox_AlphaView_stateChanged(int arg1)
     singleton->RenderScreenVisibilityChange(); // TODO this should probably be a full re-render
 }
 
-
+/// <summary>
+/// Unselect the selected Door when change to other edit mode.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_DoorMode.
+/// </param>
+void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
+{
+    if(!checked)
+    {
+        singleton->Graphicsview_UnselectDoor();
+    }
+}

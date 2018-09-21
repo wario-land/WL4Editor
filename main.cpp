@@ -53,10 +53,10 @@ bool LoadROMFile(std::string filePath)
 
 }
 
-static void AllStaticInitialization()
+static void StaticInitialization_BeforeROMLoading()
 {
-    RoomConfigDialog::StaticInitialization();
-    DoorConfigDialog::StaticInitialization();
+    RoomConfigDialog::StaticComboBoxesInitialization();
+    DoorConfigDialog::StaticComboBoxesInitialization();
 }
 
 /// <summary>
@@ -66,7 +66,7 @@ static void AllStaticInitialization()
 /// <param name="argv">Array of command line arguments.</param>
 int main(int argc, char *argv[])
 {
-    AllStaticInitialization();
+    StaticInitialization_BeforeROMLoading();
 
     QApplication a(argc, argv);
     WL4EditorWindow w;

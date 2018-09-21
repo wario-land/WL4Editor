@@ -61,6 +61,7 @@ private slots:
     void on_CheckBox_DoorView_stateChanged(int arg1);
     void on_CheckBox_CameraView_stateChanged(int arg1);
     void on_CheckBox_AlphaView_stateChanged(int arg1);
+    void on_RadioButton_DoorMode_toggled(bool checked);
 };
 
 #endif // EDITMODEDOCKWIDGET_H

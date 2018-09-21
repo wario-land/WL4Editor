@@ -1,5 +1,7 @@
 #include "EntitySet.h"
 
+constexpr int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
+
 namespace LevelComponents
 {
     /// <summary>
@@ -126,6 +128,50 @@ namespace LevelComponents
         LoadSpritesTiles(tiledataptr, tiledatalength, 30);
 
         // TODOs: set other entity informations
+    }
+
+    /// <summary>
+    /// Find an EntitySet which includes the entity with id.
+    /// </summary>
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
+    EntitySetAndEntitylocalId EntitySet::EntitySetFromEntityID(int entityglobalId)
+    {
+        if(entityglobalId < 0x11)
+        {
+            entityglobalId = 0x11;
+        }
+        struct EntitySetAndEntitylocalId tmpEntitySetAndEntitylocalId;
+        for(int j = 0; j < 90; ++j)
+        {
+            int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + 4 * j);
+            int i = 0;
+            while(ROMUtils::CurrentFile[entitysetptr + 2 * i] == (unsigned char)0)
+            {
+                unsigned char *entityidtmp = ROMUtils::CurrentFile + entitysetptr + 2 * i;
+                if(*entityidtmp == (unsigned char)entityglobalId)
+                {
+                    tmpEntitySetAndEntitylocalId.entitysetId = j;
+                    tmpEntitySetAndEntitylocalId.entitylocalId = i;
+                    return tmpEntitySetAndEntitylocalId;
+                }
+                i++;
+            }
+        }
+        memset(&tmpEntitySetAndEntitylocalId, 0, sizeof(tmpEntitySetAndEntitylocalId));
+        return tmpEntitySetAndEntitylocalId; //TODO: Error handling
+    }
+
+    /// <summary>
+    /// Get the first action set of a choosed entity with its global id.
+    /// </summary>
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
+    int EntitySet::GetEntityFirstActionFrameSetPtr(int entityglobalId)
+    {
+        return EntitiesFirstActionFrameSetsPtrsData[entityglobalId];
     }
 
     /// <summary>

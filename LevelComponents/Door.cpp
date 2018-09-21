@@ -27,6 +27,10 @@ namespace LevelComponents
         X2 = _X2;
         Y1 = _Y1;
         Y2 = _Y2;
+        DoorEntry.x1 = _X1;
+        DoorEntry.x2 = _X2;
+        DoorEntry.y1 = _Y1;
+        DoorEntry.y2 = _Y2;
     }
 
     /// <summary>

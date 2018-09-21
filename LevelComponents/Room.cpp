@@ -305,8 +305,8 @@ namespace LevelComponents
                     else RenderedLayers[7] = nullptr;
                 }
                 delete[] LayersCurrentVisibility;
-                // Fall through to ElementsLayersUpdate section
             }
+            // Fall through to ElementsLayersUpdate section
         case ElementsLayersUpdate:
             {
                 if(Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
@@ -351,7 +351,7 @@ namespace LevelComponents
                     }
                 }
                 QGraphicsPixmapItem *doorpixmapItem;
-                if(!RenderedLayers[5])
+                if(!RenderedLayers[5] || renderParams->type == FullRender)
                 {
                     doorpixmapItem = scene->addPixmap(doorPixmap);
                     doorpixmapItem->setZValue(Z++);
@@ -457,18 +457,18 @@ namespace LevelComponents
                     // TODO other camera control type
                 }
                 QGraphicsPixmapItem *CameraLimitationpixmapItem;
-                if(!RenderedLayers[6])
+                if(!RenderedLayers[6] || renderParams->type == FullRender)
                 {
-                   CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
-                   CameraLimitationpixmapItem->setZValue(Z++);
-                   RenderedLayers[6] = CameraLimitationpixmapItem;
+                    CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
+                    CameraLimitationpixmapItem->setZValue(Z++);
+                    RenderedLayers[6] = CameraLimitationpixmapItem;
                 }
                 else
                 {
                     RenderedLayers[6]->setPixmap(CameraLimitationPixmap);
                 }
-            // Fall through to layer enable section
             }
+            // Fall through to layer enable section
         case LayerEnable:
             {
                 // Enable visibility of the foreground and background layers
@@ -574,6 +574,7 @@ namespace LevelComponents
     {
         // Prioritize the layers
         int priorityFlag = layerPriorityAndAlphaAttr;
+        RoomHeader.LayerEffects = (unsigned char) layerPriorityAndAlphaAttr;
         switch(priorityFlag & 3)
         {
         case 0:

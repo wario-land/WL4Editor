@@ -3,6 +3,7 @@
 
 #include <QVector>
 
+#include "ROMUtils.h"
 #include "LevelComponents/EntitySet.h"
 
 namespace LevelComponents
@@ -49,6 +50,7 @@ namespace LevelComponents
         int Priority;
         int PaletteOffset = 0;
         bool SemiTransparent = false;
+        bool UnusedEntity = false;
         QVector<OAMTile*> OAMTiles;
         EntitySet *currentEntityset;
         ~Entity();
