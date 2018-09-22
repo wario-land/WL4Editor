@@ -60,8 +60,8 @@ namespace LevelComponents
         do // Load palette 8 - 14 if exist for entities
         {
             tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
-            EntityPaletteNum = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
-            if((tmpEntityId > 0x10) && (EntityPaletteNum != currentpaletteID))
+            //EntityPaletteNum = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
+            if((tmpEntityId > 0x10)) // && (EntityPaletteNum != currentpaletteID)
             {
                 palettePtr = ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable + 4 * (tmpEntityId - 0x10));
                 EntityPaletteNum = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (tmpEntityId - 0x10)) / (32 * 32 * 2);
