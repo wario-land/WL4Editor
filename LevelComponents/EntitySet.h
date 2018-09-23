@@ -41,6 +41,8 @@ namespace LevelComponents
         QVector<QRgb> *GetPalettes() { return palettes; }
         int GetEntityPaletteOffset(int _entityID);
         int GetEntityTileIdOffset(int _entityID);
+        bool IsEntityInside(int entityglobalId);
+        bool IncludeBossTiles();
         static EntitySetAndEntitylocalId EntitySetFromEntityID(int entityglobalId);
         static int GetEntityFirstActionFrameSetPtr(int entityglobalId);
 

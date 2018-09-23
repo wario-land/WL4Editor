@@ -114,14 +114,14 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x73 "Utsuboank¨­"                      -98 -66 0x3DE0E0 2 0 +p
 0x74 "Togenobi"                        -98 -66 (incorrect delta value) 0x3DE320 2 0 +p
 0x75 "falling icicle"                  -98 -66 0x3DE498 1 0 +p
-0x76 "Cractus"                         -98 -66 (incorrect) 0x3DF2D0 2 0 0
+0x76 "Boss: Cractus"                   -98 -66 (incorrect) 0x3DF2D0 2 0 0
 0x77 "Dice"                            -100 -66 0x3E0D68 2 0 +p
 0x78 "Toy Car 10 points"               -100 -66 0x3E1650 2 0 +p
 0x79 "Onom¨©"                           -101 -66 0x3E269C 2 0 +p
 0x7A "cat in bass corrider"            -98 -66 0x3E2A2C 2 0 +p
 0x7B "PET Bottom"                      -100 -66 0x3E3878 2 0 +p
 0x7C "Pearl Bird"                      -98 -66 0x3E45F0 2 0 +p
-0x7D "Golden Diva"                     ? ? 0x3B59EC 130 0 0
+0x7D "Boss: Golden Diva"               ? ? 0x3B59EC 130 0 0
 0x7E "falling Chandelier"              -67 -66 0x3F0F04 1 0 +p
 0x7F "unsteady step"                   -98 -98 0x3F122C 2 0 +p
 0x80 "Arewo Shitain-hakase"            -98 -66 0x3F1AA0 2 0 +p
