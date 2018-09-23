@@ -144,6 +144,14 @@ namespace LevelComponents
             tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable);
             tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable);
             LoadSpritesTiles(tiledataptr, tiledatalength, 30);
+            currentrow += tiledatalength / (32 * 32);
+        }
+        if(currentrow < 32)
+        {
+            for(int i = currentrow * 32; i < (32 * 32); ++i)
+            {
+                tile8x8data[i] = BlankTile;
+            }
         }
 
         // TODOs: set other entity informations
