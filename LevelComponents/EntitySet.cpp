@@ -51,7 +51,8 @@ namespace LevelComponents
         int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + _EntitySetID * 4);
 
         // Load 16 color palettes, ignore the first 3 rows, they are only for wario tiles
-        int palettePtr;
+        int palettePtr, lastpalettePtr;
+        palettePtr = lastpalettePtr = 0;
         int tmpEntityId;
         int EntityPaletteNum;
         int k = 0;
@@ -59,16 +60,22 @@ namespace LevelComponents
         do // Load palette 8 - 14 if exist for entities
         {
             tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
-            EntityPaletteNum = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
-            if((tmpEntityId > 0x10) && (EntityPaletteNum != currentpaletteID))
+            //EntityPaletteNum = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
+            if((tmpEntityId > 0x10)) // && (EntityPaletteNum != currentpaletteID)
             {
                 palettePtr = ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable + 4 * (tmpEntityId - 0x10));
-                LoadSubPalettes(8, EntityPaletteNum - currentpaletteID, palettePtr);
-                currentpaletteID = EntityPaletteNum;
+                EntityPaletteNum = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (tmpEntityId - 0x10)) / (32 * 32 * 2);
+                if(lastpalettePtr != palettePtr)
+                {
+                    LoadSubPalettes(8 + currentpaletteID, EntityPaletteNum, palettePtr);
+                    currentpaletteID += EntityPaletteNum;
+                }
+                lastpalettePtr = palettePtr;
             }
             k++;
         } while((tmpEntityId != 0) && (currentpaletteID != 7));
-        if(currentpaletteID < 7) // Set palette before and not include 15 to be 0 if not exist
+        // Set palette before and not include 15 to be 0 if not exist
+        if(currentpaletteID < 7)
         {
             for(int i = (8 + currentpaletteID); i < 15; ++i)
             {
@@ -78,9 +85,12 @@ namespace LevelComponents
                 }
             }
         }
-        LoadSubPalettes(3, 5, basicElementPalettePtr); // Load palette 3 - 7 for Basic Element used in the room
-        LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable)); // Load palette 15 for treasure boxes
-        for(int i = 0; i < 2; ++i) // Set palette 0 - 2 all to 0 for Wario Sprites only
+        // Load palette 3 - 7 for Basic Element used in the room
+        LoadSubPalettes(3, 5, basicElementPalettePtr);
+        // Load palette 15 for treasure boxes
+        LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable));
+        // Set palette 0 - 2 all to 0 for Wario Sprites only
+        for(int i = 0; i < 2; ++i)
         {
             for(int j = 1; j < 16; ++j)
             {
@@ -102,6 +112,7 @@ namespace LevelComponents
         // Load Entities' tile8x8s which differ amongst all entitysets
         k = 0;
         int currentrow = 16;
+        int lasttiledataptr = 0;
         do
         {
             tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
@@ -112,8 +123,13 @@ namespace LevelComponents
             EntityinfoTable.push_back(Tmp_entitytableElement);
             tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable + 4 * (tmpEntityId - 0x10));
             tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (tmpEntityId - 0x10));
-            LoadSpritesTiles(tiledataptr, tiledatalength, currentrow);
-            currentrow += tiledatalength / (32 * 32); k++;
+            if(tiledataptr != lasttiledataptr)
+            {
+                LoadSpritesTiles(tiledataptr, tiledatalength, currentrow);
+                currentrow += tiledatalength / (32 * 32);
+            }
+            k++;
+            lasttiledataptr = tiledataptr;
         } while(1);
         if(currentrow < 30)
         {
@@ -122,12 +138,87 @@ namespace LevelComponents
                 tile8x8data[i] = BlankTile;
             }
         }
-        // Load Treasure/CD Boxes tile8x8s
-        tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable);
-        tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable);
-        LoadSpritesTiles(tiledataptr, tiledatalength, 30);
+        // Load Treasure/CD Boxes tile8x8s when this Entityset is not a Boss Entityset
+        if(!IncludeBossTiles())
+        {
+            tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable);
+            tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable);
+            LoadSpritesTiles(tiledataptr, tiledatalength, 30);
+            currentrow += tiledatalength / (32 * 32);
+        }
+        if(currentrow < 32)
+        {
+            for(int i = currentrow * 32; i < (32 * 32); ++i)
+            {
+                tile8x8data[i] = BlankTile;
+            }
+        }
 
         // TODOs: set other entity informations
+    }
+
+    /// <summary>
+    /// Get Entity palette offset by local entity id.
+    /// </summary>
+    /// <param name="_entityID">
+    /// Entity local id.
+    /// </param>
+    int EntitySet::GetEntityPaletteOffset(int _entityID)
+    {
+        if(_entityID == -1)// TODO: find what the game does
+        {
+            return 0;
+        }
+        else
+        {
+            return EntityinfoTable[_entityID].paletteOffset + 8;
+        }
+    }
+
+    /// <summary>
+    /// Get Entity tileid offset by local entity id.
+    /// </summary>
+    /// <param name="_entityID">
+    /// Entity local id.
+    /// </param>
+    int EntitySet::GetEntityTileIdOffset(int _entityID)
+    {
+        if(_entityID == -1)// TODO: find what the game does
+        {
+            return 0;
+        }
+        else
+        {
+            return 64 * (EntityinfoTable[_entityID].paletteOffset);
+        }
+    }
+
+    /// <summary>
+    /// Check if an entity is inside this Entityset by global entity id.
+    /// </summary>
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
+    bool EntitySet::IsEntityInside(int entityglobalId)
+    {
+        for(unsigned int i = 0; i < EntityinfoTable.size(); ++i)
+        {
+            if(EntityinfoTable[i].Global_EntityID == entityglobalId)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Check if an Boss entity is inside this Entityset.
+    /// </summary>
+    bool EntitySet::IncludeBossTiles()
+    {
+        if(IsEntityInside(18) || IsEntityInside(0x2C) || IsEntityInside(0x51) || IsEntityInside(0x69) ||
+                IsEntityInside(0x76) || IsEntityInside(0x7D)) return true;
+        return false;
     }
 
     /// <summary>
@@ -138,16 +229,18 @@ namespace LevelComponents
     /// </param>
     EntitySetAndEntitylocalId EntitySet::EntitySetFromEntityID(int entityglobalId)
     {
+        struct EntitySetAndEntitylocalId tmpEntitySetAndEntitylocalId;
         if(entityglobalId < 0x11)
         {
-            entityglobalId = 0x11;
+            tmpEntitySetAndEntitylocalId.entitysetId = 1;
+            tmpEntitySetAndEntitylocalId.entitylocalId = -1;
+            return tmpEntitySetAndEntitylocalId;
         }
-        struct EntitySetAndEntitylocalId tmpEntitySetAndEntitylocalId;
-        for(int j = 0; j < 90; ++j)
+        for(int j = 1; j < 90; ++j)
         {
             int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + 4 * j);
             int i = 0;
-            while(ROMUtils::CurrentFile[entitysetptr + 2 * i] == (unsigned char)0)
+            while(ROMUtils::CurrentFile[entitysetptr + 2 * i] != (unsigned char)0)
             {
                 unsigned char *entityidtmp = ROMUtils::CurrentFile + entitysetptr + 2 * i;
                 if(*entityidtmp == (unsigned char)entityglobalId)

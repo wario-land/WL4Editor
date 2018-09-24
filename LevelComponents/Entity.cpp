@@ -34,15 +34,14 @@ namespace LevelComponents
         currentEntityset(_currentEntityset),
         EntityGlobalID(entityGlobalId)
     {
-        int spritesActionOAMTablePtr = ROMUtils::PointerFromData(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId));
-        if(spritesActionOAMTablePtr == 0)
+        if(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId) == 0)
         {
             UnusedEntity = true;
             return;
         }
+        int spritesActionOAMTablePtr = ROMUtils::PointerFromData(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId));
         OAMDataTablePtr = spritesActionOAMTablePtr;
-        int ActionPtr = ROMUtils::PointerFromData(spritesActionOAMTablePtr);
-        ExtractSpritesTiles(ActionPtr, 0); //TODO: load a different frame when meet with some of the Entities
+        ExtractSpritesTiles(spritesActionOAMTablePtr, 0); //TODO: load a different frame when meet with some of the Entities
         // TODO: Load other Entity informations
     }
 
@@ -91,8 +90,25 @@ namespace LevelComponents
                 struct EntityTile* entityTile = new struct EntityTile();
                 entityTile->deltaX = x * 8;
                 entityTile->deltaY = y * 8;
-                int offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
-                int offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID);
+                int offsetID, offsetPal;
+                // Bosses' offsetID are loaded directly
+                if((EntityGlobalID > 0x10) && (EntityGlobalID != 0x18) && (EntityGlobalID != 0x2C) &&
+                        (EntityGlobalID != 0x51) && (EntityGlobalID != 0x69) &&
+                        (EntityGlobalID != 0x76) && (EntityGlobalID != 0x7D))
+                {
+                    offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
+                    offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID);
+                }
+                else if(EntityGlobalID < 7)
+                {
+                    offsetID = tileID + y * 0x20 + x; // + currentEntityset->GetEntityTileIdOffset(EntityID) //untest
+                    offsetPal = palNum + 7 + 8;
+                }
+                else //TODO: more cases
+                {
+                    offsetID = tileID + y * 0x20 + x;
+                    offsetPal = palNum;
+                }
                 Tile8x8 *newTile = new Tile8x8(tileData[offsetID]);
                 newTile->SetPaletteIndex(offsetPal);
                 entityTile->objTile = newTile;
@@ -146,20 +162,20 @@ namespace LevelComponents
     {
         unsigned short *u16_attribute = (unsigned short*) (ROMUtils::CurrentFile + spritesFrameDataPtr);
         int offset = 0, objectnum = 0, nowframe = 0;
+        objectnum = (int) u16_attribute[offset];
         while(nowframe <= frame)
         {
             if(nowframe < frame)
             {
-                objectnum = (int) u16_attribute[offset];
                 offset += 1 + 3 * objectnum;
                 ++nowframe;
                 continue;
             }
-            objectnum = (int) u16_attribute[offset];
             for(int i = 0; i < objectnum; ++i)
             {
                 OAMtoTiles(u16_attribute + i * 3 + 1);
             }
+            break;
         }
     }
 }
