@@ -32,6 +32,11 @@ namespace LevelComponents
         bool FlipX = false;
         bool FlipY = false;
 
+        static QImage *GetCachedImageData(QImage *image);
+        static QMap<QImage*, int> ImageDataCache;
+        static void DeleteCachedImageData(QImage *image);
+        static int CompareImages(QImage *img1, QImage *img2);
+
     public:
         Tile8x8(int dataPtr, QVector<QRgb> *_palettes);
         Tile8x8(Tile8x8 *other);
