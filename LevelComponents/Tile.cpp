@@ -11,8 +11,36 @@
 namespace LevelComponents
 {
     /// <summary>
+    /// Construct an instance of Tile8x8. (private constructor)
+    /// </summary>
+    /// <param name="_palettes">
+    /// Entire palette for the tileset this tile is a part of.
+    /// </param>
+    Tile8x8::Tile8x8(QVector<QRgb> *_palettes) : Tile(TileType8x8),
+        ImageData(new QImage(8, 8, QImage::Format_Indexed8)),
+        palettes(_palettes)
+    {
+        ImageData->setColorTable(palettes[paletteIndex]);
+    }
+
+    /// <summary>
+    /// Copy constructor for Tile8x8
+    /// </summary>
+    /// <param name="other">
+    /// Another Tile8x8 to copy image data from.
+    /// </param>
+    Tile8x8::Tile8x8(Tile8x8 *other) : Tile(TileType8x8),
+        palettes(other->palettes)
+    {
+        ImageData = new QImage(*other->ImageData);
+    }
+
+    /// <summary>
     /// Construct an instance of Tile8x8.
     /// </summary>
+    /// <remarks>
+    /// This constructor will attempt to match the image data to a cached QImage
+    /// </remarks>
     /// <param name="dataPtr">
     /// Pointer to the beginning of the tile graphic data.
     /// </param>
@@ -82,6 +110,18 @@ namespace LevelComponents
         QPixmap tilePixmap = QPixmap::fromImage(ImageData->mirrored(FlipX, FlipY));
         QPoint drawDestination(x, y);
         painter.drawImage(drawDestination, tilePixmap.toImage());
+    }
+
+    /// <summary>
+    /// Set the index for this tile within its palette group
+    /// </summary>
+    /// <param name="index">
+    /// The index (0 - 15) of which palette to use for the image.
+    /// </param>
+    void Tile8x8::SetPaletteIndex(int index)
+    {
+        paletteIndex = index;
+        ImageData->setColorTable(palettes[paletteIndex]);
     }
 
     /// <summary>

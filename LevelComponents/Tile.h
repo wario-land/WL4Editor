@@ -25,6 +25,7 @@ namespace LevelComponents
     class Tile8x8 : public Tile
     {
     private:
+        Tile8x8(QVector<QRgb> *_palettes);
         QImage *ImageData;
         QVector<QRgb> *palettes;
         int paletteIndex = 0;
@@ -32,25 +33,13 @@ namespace LevelComponents
         bool FlipY = false;
 
     public:
-        Tile8x8(QVector<QRgb> *_palettes) : Tile(TileType8x8),
-            ImageData(new QImage(8, 8, QImage::Format_Indexed8)),
-            palettes(_palettes)
-        {
-            ImageData->setColorTable(palettes[paletteIndex]);
-        }
         Tile8x8(int dataPtr, QVector<QRgb> *_palettes);
-        Tile8x8(Tile8x8 *other) : Tile(TileType8x8),
-            ImageData(new QImage(*other->ImageData)),
-            palettes(other->palettes) { }
+        Tile8x8(Tile8x8 *other);
         void DrawTile(QPixmap *layerPixmap, int x, int y);
         static Tile8x8 *CreateBlankTile(QVector<QRgb> *_palettes);
         void SetFlipX(bool _flipX) { FlipX = _flipX; }
         void SetFlipY(bool _flipY) { FlipY = _flipY; }
-        void SetPaletteIndex(int index)
-        {
-            paletteIndex = index;
-            ImageData->setColorTable(palettes[paletteIndex]);
-        }
+        void SetPaletteIndex(int index);
         ~Tile8x8();
     };
 

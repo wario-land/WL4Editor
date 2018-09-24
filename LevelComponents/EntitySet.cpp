@@ -72,7 +72,7 @@ namespace LevelComponents
         {
             for(int i = (8 + currentpaletteID); i < 15; ++i)
             {
-                for(int j = 1; j < 16; ++j)
+                for(int j = 0; j < 16; ++j)
                 {
                     palettes[i].push_back(0);
                 }
@@ -82,7 +82,7 @@ namespace LevelComponents
         LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable)); // Load palette 15 for treasure boxes
         for(int i = 0; i < 2; ++i) // Set palette 0 - 2 all to 0 for Wario Sprites only
         {
-            for(int j = 1; j < 16; ++j)
+            for(int j = 0; j < 16; ++j)
             {
                 palettes[i].push_back(0);
             }
