@@ -5,8 +5,6 @@
 
 #include <QPixmap>
 
-static int TilesetCount, Map16Count;
-
 namespace LevelComponents
 {
     /// <summary>
@@ -23,8 +21,6 @@ namespace LevelComponents
     /// </param>
     Tileset::Tileset(int tilesetPtr, int __TilesetID)
     {
-        std::cout << "Tileset " << TilesetCount++ << std::endl;
-
         memset(tile8x8data, 0, sizeof(tile8x8data) / sizeof(tile8x8data[0]));
 
         // Create all 16 color palettes
@@ -112,8 +108,6 @@ namespace LevelComponents
         int map16size = sizeof(map16data) / sizeof(map16data[0]);
         for(int i = 0; i < map16size; ++i)
         {
-            std::cout << "\t\tMap16 " << Map16Count++ << std::endl;
-
             unsigned short *map16tilePtr = (unsigned short*) (ROMUtils::CurrentFile + map16ptr + i * 8);
             Tile8x8 *tiles[4];
             for(int j = 0; j < 4; ++j)

@@ -60,8 +60,7 @@ namespace LevelComponents
         do // Load palette 8 - 14 if exist for entities
         {
             tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
-            //EntityPaletteNum = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
-            if((tmpEntityId > 0x10)) // && (EntityPaletteNum != currentpaletteID)
+            if((tmpEntityId > 0x10))
             {
                 palettePtr = ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable + 4 * (tmpEntityId - 0x10));
                 EntityPaletteNum = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (tmpEntityId - 0x10)) / (32 * 32 * 2);
@@ -100,7 +99,8 @@ namespace LevelComponents
 
         // Load 1024 sprites tiles, ignore the first 4 rows, they are wario tiles
         BlankTile = Tile8x8::CreateBlankTile(palettes);
-        for(int i = 0; i < (4 * 32); ++i)
+        // Initialize all the tiles
+        for(int i = 0; i < (34 * 32); ++i) //TODO: Can we use memset here ?
         {
             tile8x8data[i] = BlankTile;
         }
@@ -131,27 +131,12 @@ namespace LevelComponents
             k++;
             lasttiledataptr = tiledataptr;
         } while(1);
-        if(currentrow < 30)
-        {
-            for(int i = currentrow * 32; i < (30 * 32); ++i)
-            {
-                tile8x8data[i] = BlankTile;
-            }
-        }
         // Load Treasure/CD Boxes tile8x8s when this Entityset is not a Boss Entityset
         if(!IncludeBossTiles())
         {
             tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable);
             tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable);
             LoadSpritesTiles(tiledataptr, tiledatalength, 30);
-            currentrow += tiledatalength / (32 * 32);
-        }
-        if(currentrow < 32)
-        {
-            for(int i = currentrow * 32; i < (32 * 32); ++i)
-            {
-                tile8x8data[i] = BlankTile;
-            }
         }
 
         // TODOs: set other entity informations

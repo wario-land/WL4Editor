@@ -12,8 +12,6 @@
 
 //#define NOCACHE
 
-static int Tile8x8Count;
-
 namespace LevelComponents
 {
     QHash<QImageW*, int> Tile8x8::ImageDataCache;
@@ -57,8 +55,6 @@ namespace LevelComponents
     /// </param>
     Tile8x8::Tile8x8(int dataPtr, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
     {
-        std::cout << "\tTile8x8 " << Tile8x8Count++ << std::endl;
-
         // Initialize the QImage data from ROM
         for(int i = 0; i < 8; ++i) {
             for(int j = 0; j < 4; ++j) {
