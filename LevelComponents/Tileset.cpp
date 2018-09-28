@@ -1,7 +1,11 @@
 #include "Tileset.h"
 #include "ROMUtils.h"
 
+#include <iostream>
+
 #include <QPixmap>
+
+static int TilesetCount, Map16Count;
 
 namespace LevelComponents
 {
@@ -19,6 +23,8 @@ namespace LevelComponents
     /// </param>
     Tileset::Tileset(int tilesetPtr, int __TilesetID)
     {
+        std::cout << "Tileset " << TilesetCount++ << std::endl;
+
         memset(tile8x8data, 0, sizeof(tile8x8data) / sizeof(tile8x8data[0]));
 
         // Create all 16 color palettes
@@ -51,7 +57,7 @@ namespace LevelComponents
         int tmpAnimatedTilesHeaderPtr;
         int tmpoffset;
         int tmpAnimatedTilesdataPtr;
-        for(int v1 = 0; v1 < 16; v1++)
+        for(int v1 = 0; v1 < 16; ++v1)
         {
             /*
              * the reason why not using this is that it will cause problem and worse in some situation,
@@ -67,12 +73,18 @@ namespace LevelComponents
             tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
             tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
             if((ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x03') || (ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x06'))
+            {
                 tmpoffset -= 1;
+            }
             else
+            {
                 tmpoffset = 0;
+            }
             tmpoffset *= 128;
-            for(int i = 0; i < 4; i++)
+            for(int i = 0; i < 4; ++i)
+            {
                 tile8x8data[i + 4 * v1] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes);
+            }
         }
 
         // Load the 8x8 tile graphics
@@ -98,8 +110,10 @@ namespace LevelComponents
         // Load the map16 data
         int map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
         int map16size = sizeof(map16data) / sizeof(map16data[0]);
-        for(int i = 0; i < map16size; ++i) // TODO crashes on i = 6
+        for(int i = 0; i < map16size; ++i)
         {
+            std::cout << "\t\tMap16 " << Map16Count++ << std::endl;
+
             unsigned short *map16tilePtr = (unsigned short*) (ROMUtils::CurrentFile + map16ptr + i * 8);
             Tile8x8 *tiles[4];
             for(int j = 0; j < 4; ++j)

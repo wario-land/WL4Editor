@@ -10,11 +10,13 @@
 
 #include <iostream>
 
-#define NOCACHE
+//#define NOCACHE
+
+static int Tile8x8Count;
 
 namespace LevelComponents
 {
-    QMap<QImage*, int> Tile8x8::ImageDataCache;
+    QHash<QImageW*, int> Tile8x8::ImageDataCache;
 
     /// <summary>
     /// Construct an instance of Tile8x8 with uninitialized data. (private constructor)
@@ -23,7 +25,7 @@ namespace LevelComponents
     /// Entire palette for the tileset this tile is a part of.
     /// </param>
     Tile8x8::Tile8x8(QVector<QRgb> *_palettes) : Tile(TileType8x8),
-        ImageData(new QImage(8, 8, QImage::Format_Indexed8)),
+        ImageData(new QImageW(8, 8, QImage::Format_Indexed8)),
         palettes(_palettes)
     {
         ImageData->setColorTable(palettes[paletteIndex]);
@@ -55,6 +57,8 @@ namespace LevelComponents
     /// </param>
     Tile8x8::Tile8x8(int dataPtr, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
     {
+        std::cout << "\tTile8x8 " << Tile8x8Count++ << std::endl;
+
         // Initialize the QImage data from ROM
         for(int i = 0; i < 8; ++i) {
             for(int j = 0; j < 4; ++j) {
@@ -66,7 +70,7 @@ namespace LevelComponents
 
 #ifndef NOCACHE
         // Cache the QImage
-        QImage *cached = GetCachedImageData(ImageData);
+        QImageW *cached = GetCachedImageData(ImageData);
         if(cached != ImageData)
         {
             delete ImageData;
@@ -106,6 +110,17 @@ namespace LevelComponents
                 t->ImageData->setPixel(i, j, 0);
             }
         }
+
+#ifndef NOCACHE
+        // Cache the QImage
+        QImageW *cached = GetCachedImageData(t->ImageData);
+        if(cached != t->ImageData)
+        {
+            delete t->ImageData;
+            t->ImageData = cached;
+        }
+#endif
+
         return t;
     }
 
@@ -142,11 +157,11 @@ namespace LevelComponents
     void Tile8x8::SetPaletteIndex(int index)
     {
         paletteIndex = index;
-        QImage *newImage = new QImage(*ImageData);
+        QImageW *newImage = new QImageW(*ImageData);
         newImage->setColorTable(palettes[paletteIndex]);
         ImageData = newImage;
 #ifndef NOCACHE
-        QImage *cached = GetCachedImageData(ImageData);
+        QImageW *cached = GetCachedImageData(ImageData);
         if(cached != ImageData)
         {
             delete ImageData;
@@ -221,21 +236,12 @@ namespace LevelComponents
     /// <returns>
     /// The original image if not cached yet, or the already cached image.
     /// </returns>
-    QImage *Tile8x8::GetCachedImageData(QImage *image)
+    QImageW *Tile8x8::GetCachedImageData(QImageW *image)
     {
-        int references = ImageDataCache.value(image, 0);
-        if(references)
+        if(ImageDataCache.value(image, 0))
         {
             ++ImageDataCache[image];
-            for(QImage *img : ImageDataCache.keys())
-            {
-                if(!CompareImages(image, img))
-                {
-                    return img;
-                }
-            }
-            // This area should never be reached (there is a reference in the map, but no matching QImage)
-            assert(0);
+            return ImageDataCache.find(image).key();
         }
         else
         {
@@ -244,7 +250,15 @@ namespace LevelComponents
         }
     }
 
-    void Tile8x8::DeleteCachedImageData(QImage *image)
+    /// <summary>
+    /// Delete an image reference from the cache.
+    /// If there is more than 1 reference in the cache, only decrement the reference count.
+    /// If there is only one copy in the cache, actually remove the data from it as well.
+    /// </summary>
+    /// <param name="image">
+    /// The image data to remove from the cache.
+    /// </param>
+    void Tile8x8::DeleteCachedImageData(QImageW *image)
     {
         int references = ImageDataCache.value(image, 0);
         if(references > 1)
@@ -261,29 +275,5 @@ namespace LevelComponents
             // This area should never be reached (there cannot be a QImage in the map with 0 references)
             assert(0);
         }
-    }
-
-    int Tile8x8::CompareImages(QImage *img1, QImage *img2)
-    {
-        QVector<QRgb> pal1 = img1->colorTable();
-        QVector<QRgb> pal2 = img2->colorTable();
-        if(pal1.size() != pal2.size())
-        {
-            return pal1.size() - pal2.size();
-        }
-        for(int i = 0; i < pal1.size(); ++i)
-        {
-            if(pal1[i] != pal2[i])
-            {
-                return pal1[i] - pal2[i];
-            }
-        }
-        int size1 = img1->width() * img1->height();
-        int size2 = img2->width() * img2->height();
-        if(size1 != size2)
-        {
-            return size1 - size2;
-        }
-        return memcmp(img1->data_ptr(), img2->data_ptr(), size1);
     }
 }

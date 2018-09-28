@@ -3,6 +3,8 @@
 
 #include <QImage>
 
+#define ROT(X) (((X)<<13)|((X)>>19))
+
 namespace LevelComponents
 {
     enum TileType
@@ -22,20 +24,90 @@ namespace LevelComponents
         virtual ~Tile() {}
     };
 
+    class QImageW : public QImage
+    {
+    public:
+        QImageW(int W, int H, QImage::Format F) : QImage(W, H, F) {}
+        QImageW(const QImageW &img) : QImage(img) {}
+
+        /// <summary>
+        /// Inline equality comparison functionality to provide O(1) performance for QHash
+        /// </summary>
+        /// <param name="img1">
+        /// The first image to compare.
+        /// </param>
+        /// <param name="img2">
+        /// The second image to compare.
+        /// </param>
+        /// <returns>
+        /// True if the image data and palettes are equal for both images.
+        /// </returns>
+        inline bool operator==(const QImageW &other)
+        {
+            QVector<QRgb> pal1 = colorTable();
+            QVector<QRgb> pal2 = other.colorTable();
+            if(pal1.size() != pal2.size())
+            {
+                return false;
+            }
+            for(int i = 0; i < pal1.size(); ++i)
+            {
+                if(pal1[i] != pal2[i])
+                {
+                    return false;
+                }
+            }
+            int size1 = width() * height();
+            int size2 = other.width() * other.height();
+            if(size1 != size2)
+            {
+                return false;
+            }
+            QImageW *ptr = (QImageW*) &other;
+            return !memcmp(data_ptr(), ptr->data_ptr(), size1);
+        }
+
+        /// <summary>
+        /// Inline hashing functionality to provide O(1) performance for QHash
+        /// </summary>
+        /// <param name="img">
+        /// The image to hash.
+        /// </param>
+        /// <param name="seed">
+        /// The seed value for hashing the image.
+        /// </param>
+        /// <returns>
+        /// A hash value for the QImage.
+        /// </returns>
+        inline uint qHash(const QImageW *img, uint seed)
+        {
+            for(QRgb rgb : img->colorTable())
+            {
+                seed = ROT(seed ^ (uint)rgb);
+            }
+            const int bytes = img->width() * img->height() * img->depth() / 32;
+            unsigned int *data = (unsigned int*) img->constBits();
+            for(int i = 0; i < bytes; ++i)
+            {
+                seed = ROT(seed ^ data[i]);
+            }
+            return seed;
+        }
+    };
+
     class Tile8x8 : public Tile
     {
     private:
         Tile8x8(QVector<QRgb> *_palettes);
-        QImage *ImageData;
+        QImageW *ImageData;
         QVector<QRgb> *palettes;
         int paletteIndex = 0;
         bool FlipX = false;
         bool FlipY = false;
 
-        static QImage *GetCachedImageData(QImage *image);
-        static QMap<QImage*, int> ImageDataCache;
-        static void DeleteCachedImageData(QImage *image);
-        static int CompareImages(QImage *img1, QImage *img2);
+        static QImageW *GetCachedImageData(QImageW *image);
+        static QHash<QImageW*, int> ImageDataCache;
+        static void DeleteCachedImageData(QImageW *image);
 
     public:
         Tile8x8(int dataPtr, QVector<QRgb> *_palettes);
