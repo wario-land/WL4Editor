@@ -39,7 +39,7 @@ bool LoadROMFile(std::string filePath)
     ifs.close();
     // To check ROM correct
     if(strncmp((const char*)(ROMAddr + 0xA0), "WARIOLANDE", 10)!=0)
-    {//if loaded a wrong ROM
+    { //if loaded a wrong ROM
         delete[] ROMAddr;
         return false;
     }
@@ -47,10 +47,9 @@ bool LoadROMFile(std::string filePath)
     {
         ROMUtils::CurrentFileSize = length;
         strcpy(ROMUtils::ROMFilePath, filePath.c_str());
-        ROMUtils::CurrentFile=(unsigned char*)ROMAddr;
+        ROMUtils::CurrentFile = (unsigned char*)ROMAddr;
         return true;
     }
-
 }
 
 static void StaticInitialization_BeforeROMLoading()
