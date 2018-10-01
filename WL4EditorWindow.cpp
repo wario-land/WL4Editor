@@ -443,88 +443,66 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
 
         // Apply the selected parameters to the current room
         // reset the Tileset instance in Room class
+        LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
         if(configParams.CurrentTilesetIndex != _currentRoomConfigParams->CurrentTilesetIndex)
         {
-            LevelComponents::Tileset *currentTileset = CurrentLevel->GetRooms()[selectedRoom]->GetTileset();
+            LevelComponents::Tileset *currentTileset = currentRoom->GetTileset();
             delete currentTileset;
             int tilesetPtr = WL4Constants::TilesetDataTable + configParams.CurrentTilesetIndex * 36;
             currentTileset = new LevelComponents::Tileset(tilesetPtr, configParams.CurrentTilesetIndex);
-            CurrentLevel->GetRooms()[selectedRoom]->SetTileset(currentTileset, configParams.CurrentTilesetIndex);
+            currentRoom->SetTileset(currentTileset, configParams.CurrentTilesetIndex);
             Tile16SelecterWidget->SetTileset(configParams.CurrentTilesetIndex);
         }
 
         // refresh the Layer 2, 0, 3 instances
         if(configParams.Layer2Enable && !_currentRoomConfigParams->Layer2Enable)
         {
-            CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->CreateNewLayer_type0x10(configParams.RoomWidth, configParams.RoomHeight);
-        }else if(_currentRoomConfigParams->Layer2Enable && !configParams.Layer2Enable){
-            CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->SetDisabled();
+            currentRoom->GetLayer(2)->CreateNewLayer_type0x10(configParams.RoomWidth, configParams.RoomHeight);
+        }
+        else if(_currentRoomConfigParams->Layer2Enable && !configParams.Layer2Enable)
+        {
+            currentRoom->GetLayer(2)->SetDisabled();
         }
 
         if(!_currentRoomConfigParams->Layer0Enable && configParams.Layer0Enable)
         {
             if((configParams.Layer0MappingTypeParam & 0x30) == 0x10)
             {
-                CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->CreateNewLayer_type0x10(configParams.RoomWidth, configParams.RoomHeight);
-            }else{
-                LevelComponents::Layer *currentLayer0 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0);
+                currentRoom->GetLayer(0)->CreateNewLayer_type0x10(configParams.RoomWidth, configParams.RoomHeight);
+            }
+            else
+            {
+                LevelComponents::Layer *currentLayer0 = currentRoom->GetLayer(0);
                 delete currentLayer0;
                 currentLayer0 = new LevelComponents::Layer(configParams.Layer0DataPtr, LevelComponents::LayerTile8x8);
-                CurrentLevel->GetRooms()[selectedRoom]->SetLayer(0, currentLayer0);
+                currentRoom->SetLayer(0, currentLayer0);
             }
-        }else if(_currentRoomConfigParams->Layer0Enable && !configParams.Layer0Enable){
-            CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->SetDisabled();
+        }
+        else if(_currentRoomConfigParams->Layer0Enable && !configParams.Layer0Enable)
+        {
+            currentRoom->GetLayer(0)->SetDisabled();
         }
 
         if(configParams.BackgroundLayerEnable)
         {
-            LevelComponents::Layer *currentLayer3 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3);
+            LevelComponents::Layer *currentLayer3 = currentRoom->GetLayer(3);
             delete currentLayer3;
             currentLayer3 = new LevelComponents::Layer(configParams.BackgroundLayerDataPtr, LevelComponents::LayerTile8x8);
-            CurrentLevel->GetRooms()[selectedRoom]->SetLayer(3, currentLayer3);
-        }else if(_currentRoomConfigParams->BackgroundLayerEnable && !configParams.BackgroundLayerEnable){
-            CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3)->SetDisabled();
+            currentRoom->SetLayer(3, currentLayer3);
+        }
+        else if(_currentRoomConfigParams->BackgroundLayerEnable && !configParams.BackgroundLayerEnable)
+        {
+            currentRoom->GetLayer(3)->SetDisabled();
         }
 
         // change the width and height for all layers
-        if(configParams.RoomHeight > _currentRoomConfigParams->RoomHeight)
+        if(configParams.RoomWidth != _currentRoomConfigParams->RoomWidth || configParams.RoomHeight != _currentRoomConfigParams->RoomHeight)
         {
-            for(int i = 0; i < 3; i++)
+            for(int i = 0; i < 3; ++i)
             {
-                if((CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16) &&
-                        (CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->GetLayerHeight() == _currentRoomConfigParams->RoomHeight))
+                if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
                 {
-                    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->AddRows(configParams.RoomHeight - _currentRoomConfigParams->RoomHeight, configParams.RoomHeight);
-                }
-            }
-        }else if(configParams.RoomHeight < _currentRoomConfigParams->RoomHeight){
-            for(int i = 0; i < 3; i++)
-            {
-                if((CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16) &&
-                        (CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->GetLayerHeight() == _currentRoomConfigParams->RoomHeight))
-                {
-                    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->DeleteRows(configParams.RoomHeight - _currentRoomConfigParams->RoomHeight, configParams.RoomHeight);
-                }
-            }
-        }
-
-        if(configParams.RoomWidth > _currentRoomConfigParams->RoomWidth)
-        {
-            for(int i = 0; i < 3; i++)
-            {
-                if((CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16) &&
-                        (CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->GetLayerWidth() == _currentRoomConfigParams->RoomWidth))
-                {
-                    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->AddColumns(configParams.RoomWidth - _currentRoomConfigParams->RoomWidth, configParams.RoomWidth);
-                }
-            }
-        }else if(configParams.RoomWidth < _currentRoomConfigParams->RoomWidth){
-            for(int i = 0; i < 3; i++)
-            {
-                if((CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16) &&
-                        (CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->GetLayerWidth() == _currentRoomConfigParams->RoomWidth))
-                {
-                    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(i)->DeleteColumns(configParams.RoomWidth - _currentRoomConfigParams->RoomWidth, configParams.RoomWidth);
+                    currentRoom->GetLayer(i)->ChangeDimensions(configParams.RoomWidth, configParams.RoomHeight);
                 }
             }
         }
@@ -533,16 +511,16 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         delete _currentRoomConfigParams;
 
         // reset all the Parameters in Room class. TODO: except new layer data pointers, generate them on saving
-        CurrentLevel->GetRooms()[selectedRoom]->SetHeight(configParams.RoomHeight);
-        CurrentLevel->GetRooms()[selectedRoom]->SetWidth(configParams.RoomWidth);
-        CurrentLevel->GetRooms()[selectedRoom]->SetLayer0MappingParam(configParams.Layer0MappingTypeParam);
-        CurrentLevel->GetRooms()[selectedRoom]->SetLayer0ColorBlendingEnabled(configParams.Layer0Alpha);
-        CurrentLevel->GetRooms()[selectedRoom]->SetLayerPriorityAndAlphaAttributes(configParams.LayerPriorityAndAlphaAttr);
-        CurrentLevel->GetRooms()[selectedRoom]->SetLayer2Enabled(configParams.Layer2Enable);
-        if(configParams.Layer0DataPtr != 0) CurrentLevel->GetRooms()[selectedRoom]->SetLayerDataPtr(0, configParams.Layer0DataPtr);
-        CurrentLevel->GetRooms()[selectedRoom]->SetBGLayerEnabled(configParams.BackgroundLayerEnable);
-        CurrentLevel->GetRooms()[selectedRoom]->SetBGLayerAutoScrollEnabled(configParams.BackgroundLayerAutoScrollEnable);
-        CurrentLevel->GetRooms()[selectedRoom]->SetLayerDataPtr(3, configParams.BackgroundLayerDataPtr);
+        currentRoom->SetHeight(configParams.RoomHeight);
+        currentRoom->SetWidth(configParams.RoomWidth);
+        currentRoom->SetLayer0MappingParam(configParams.Layer0MappingTypeParam);
+        currentRoom->SetLayer0ColorBlendingEnabled(configParams.Layer0Alpha);
+        currentRoom->SetLayerPriorityAndAlphaAttributes(configParams.LayerPriorityAndAlphaAttr);
+        currentRoom->SetLayer2Enabled(configParams.Layer2Enable);
+        if(configParams.Layer0DataPtr != 0) currentRoom->SetLayerDataPtr(0, configParams.Layer0DataPtr);
+        currentRoom->SetBGLayerEnabled(configParams.BackgroundLayerEnable);
+        currentRoom->SetBGLayerAutoScrollEnabled(configParams.BackgroundLayerAutoScrollEnable);
+        currentRoom->SetLayerDataPtr(3, configParams.BackgroundLayerDataPtr);
 
         // UI update
         RenderScreenFull();

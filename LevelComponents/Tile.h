@@ -33,14 +33,11 @@ namespace LevelComponents
         /// <summary>
         /// Inline equality comparison functionality to provide O(1) performance for QHash
         /// </summary>
-        /// <param name="img1">
+        /// <param name="other">
         /// The first image to compare.
         /// </param>
-        /// <param name="img2">
-        /// The second image to compare.
-        /// </param>
         /// <returns>
-        /// True if the image data and palettes are equal for both images.
+        /// True if the image data of this image and the other one are equal.
         /// </returns>
         inline bool operator==(const QImageW &other)
         {

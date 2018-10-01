@@ -8,6 +8,9 @@
 
 #include "WL4Constants.h"
 
+#define MIN_VAL(A,B) ((A)<(B)?(A):(B))
+#define MAX_VAL(A,B) ((A)>(B)?(A):(B))
+
 namespace ROMUtils
 {
     // Global variables

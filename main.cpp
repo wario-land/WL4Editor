@@ -38,7 +38,7 @@ bool LoadROMFile(std::string filePath)
     ifs.read((char*) ROMAddr, length);
     ifs.close();
     // To check ROM correct
-    if(strncmp((const char*)(ROMAddr + 0xA0), "WARIOLANDE", 10)!=0)
+    if(strncmp((const char*)(ROMAddr + 0xA0), "WARIOLANDE", 10))
     { //if loaded a wrong ROM
         delete[] ROMAddr;
         return false;
