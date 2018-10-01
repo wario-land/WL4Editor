@@ -250,123 +250,42 @@ namespace LevelComponents
         if(LayerData != nullptr)
             delete[] LayerData;
         LayerData = new unsigned short[layerWidth * layerHeight];
-        memset(LayerData, '\0', sizeof(char) * 2 * layerWidth * layerHeight);
+        memset(LayerData, 0, sizeof(char) * 2 * layerWidth * layerHeight);
     }
 
     /// <summary>
-    /// Use this function to add rows to the existing layer.
+    /// Change the size of the Layer.
     /// </summary>
-    /// <param name="NumberOfNewRows">
-    /// Number of new rows you wan to add to the layer.
+    /// <remarks>
+    /// This function will initialize new tiles to 0x40
+    /// </remarks>
+    /// <param name="newWidth">
+    /// New layer width.
     /// </param>
-    /// <param name="StartFrom">
-    /// the id of the specific row which we add new blank rows after it. (id start from 1)
+    /// <param name="newHeight">
+    /// New layer height.
     /// </param>
-    void Layer::AddRows(int NumberOfNewRows, int StartFrom)
+    void Layer::ChangeDimensions(int newWidth, int newHeight)
     {
-        Height += NumberOfNewRows;
-        unsigned short *tmpLayerData = new unsigned short[Width * Height];
-        int k = 0;
-        for(int j = 0; j < Height; j++)
+        unsigned short *tmpLayerData = new unsigned short[newWidth * newHeight];
+        int boundX = qMin(Width, newWidth);
+        int boundY = qMin(Height, newHeight);
+        unsigned short defaultValue = 0x0040;
+        for(int i = 0; i < boundY; ++i)
         {
-            for(int i = 0; i < Width; i++)
+            memcpy(tmpLayerData + i * newWidth, LayerData + i * Width, boundX * sizeof(short));
+            for(int j = boundX; j < newWidth; ++j)
             {
-                if((StartFrom <= j) && (k < NumberOfNewRows))
-                    tmpLayerData[i + j * Width] = (unsigned short) 0;
-                else
-                    tmpLayerData[i + j * Width] = LayerData[i + (j - k) * Width];
-            }
-            if((StartFrom <= j) && (k < NumberOfNewRows)) k++;
-        }
-        delete[] LayerData;
-        LayerData = tmpLayerData;
-    }
-
-    /// <summary>
-    /// Use this function to add columns to the existing layer.
-    /// </summary>
-    /// <param name="NumberOfNewColumns">
-    /// Number of new columns you wan to add to the layer.
-    /// </param>
-    /// <param name="StartFrom">
-    /// the id of the specific column which we add new blank columns after it. (id start from 1)
-    /// </param>
-    void Layer::AddColumns(int NumberOfNewColumns, int StartFrom)
-    {
-        Width += NumberOfNewColumns;
-        unsigned short *tmpLayerData = new unsigned short[Width * Height];
-        int k = 0;
-        for(int j = 0; j < Height; j++)
-        {
-            for(int i = 0; i < Width; i++)
-            {
-                if((StartFrom <= i) && (k < NumberOfNewColumns))
-                {
-                    tmpLayerData[i + j * Width] = (unsigned short) 0;
-                    k++;
-                }
-                else
-                {
-                    tmpLayerData[i + j * Width] = LayerData[i - k + j * (Width - NumberOfNewColumns)];
-                }
-            }
-            k = 0;
-        }
-        delete[] LayerData;
-        LayerData = tmpLayerData;
-    }
-
-    /// <summary>
-    /// Use this function to delete rows from the existing layer.
-    /// </summary>
-    /// <param name="NumberOfWillBeDeletedRows">
-    /// Number of rows you wan to delete form the layer.
-    /// </param>
-    /// <param name="StartFrom">
-    /// the id of the specific row which we start delet rows.
-    /// </param>
-    void Layer::DeleteRows(int NumberOfWillBeDeletedRows, int StartFrom)
-    {
-        Height -= NumberOfWillBeDeletedRows;
-        unsigned short *tmpLayerData = new unsigned short[Width * Height];
-        for(int j = 0; j < Height; j++)
-        {
-            for(int i = 0; i < Width; i++)
-            {
-                if(StartFrom >= j)
-                    tmpLayerData[i + j * Width] = LayerData[i + (j + NumberOfWillBeDeletedRows) * Width];
-                else
-                    tmpLayerData[i + j * Width] = LayerData[i + j * Width];
+                tmpLayerData[i * newWidth + j] = defaultValue;
             }
         }
-        delete[] LayerData;
-        LayerData = tmpLayerData;
-    }
-
-    /// <summary>
-    /// Use this function to delete columns from the existing layer.
-    /// </summary>
-    /// <param name="NumberOfWillBeDeletedColumns">
-    /// Number of columns you wan to delete form the layer.
-    /// </param>
-    /// <param name="StartFrom">
-    /// the id of the specific column which we start delet columns.
-    /// </param>
-    void Layer::DeleteColumns(int NumberOfWillBeDeletedColumns, int StartFrom)
-    {
-        Width -= NumberOfWillBeDeletedColumns;
-        unsigned short *tmpLayerData = new unsigned short[Width * Height];
-        for(int j = 0; j < Height; j++)
+        for(int i = boundY * newWidth; i < newWidth * newHeight; ++i)
         {
-            for(int i = 0; i < Width; i++)
-            {
-                if(StartFrom >= i)
-                    tmpLayerData[i + j * Width] = LayerData[i + j * (Width + NumberOfWillBeDeletedColumns) + NumberOfWillBeDeletedColumns];
-                else
-                    tmpLayerData[i + j * Width] = LayerData[i + j * (Width + NumberOfWillBeDeletedColumns)];
-            }
+            tmpLayerData[i] = defaultValue;
         }
-        delete[] LayerData;
+        Width = newWidth;
+        Height = newHeight;
+        delete LayerData;
         LayerData = tmpLayerData;
     }
 }
