@@ -14,7 +14,7 @@ namespace LevelComponents
         Tile8x8 *tile8x8data[0x600];
         TileMap16 *map16data[0x300];
         QVector<QRgb> palettes[16];
-        Tile8x8 *blankTile;
+        Tile8x8 *blankTile = nullptr;
         int UniversalSpritesTilesPalettePtr = 0;
 
     public:
