@@ -15,6 +15,7 @@ namespace LevelComponents
         TileMap16 *map16data[0x300];
         QVector<QRgb> palettes[16];
         Tile8x8 *blankTile;
+        int UniversalSpritesTilesPalettePtr = 0;
 
     public:
         Tileset(int tilesetPtr, int __TilesetID);
@@ -25,6 +26,7 @@ namespace LevelComponents
         unsigned char *Map16WarioAnimationSlotIDTable;
         ~Tileset();
         QPixmap Render(int columns);
+        int GetUniversalSpritesTilesPalettePtr() { return UniversalSpritesTilesPalettePtr; }
     };
 }
 

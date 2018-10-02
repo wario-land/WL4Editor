@@ -129,6 +129,9 @@ namespace LevelComponents
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
         Map16WarioAnimationSlotIDTable = (unsigned char*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24));
+
+        // Get pointer of Universal Sprites tiles Palette
+        UniversalSpritesTilesPalettePtr = ROMUtils::PointerFromData(tilesetPtr + 32);
     }
 
     /// <summary>

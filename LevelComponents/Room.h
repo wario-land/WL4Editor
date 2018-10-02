@@ -107,13 +107,18 @@ namespace LevelComponents
         std::vector<struct __CameraControlRecord*> CameraControlRecords;
         struct __RoomHeader RoomHeader;
         int CurrentEntitySetID = 0;
+        EntitySet *currentEntitySet = nullptr;
         std::list<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
-        std::vector<Entity*> Entities[3]; // Temporary rendered entity list
+        std::vector<Entity*> currentEntityListSource; // Initialize Entities here
+        std::vector<Entity*> Entities[3]; // entity pointer lists for 3 difficulties
+        int currentDifficulty = 1;
         Layer *layers[4];
         Tileset *tileset;
         std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem *RenderedLayers[8]; // L0 - 3, E, D, C, A (may not exist)
         void FreeDrawLayers();
+        void FreecurrentEntityListSource();
+        void ResetEntitySet(int entitysetId);
 
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
@@ -125,7 +130,7 @@ namespace LevelComponents
         unsigned int GetLevelID() { return LevelID; }
         struct __RoomHeader GetRoomHeader() { return RoomHeader; }
         void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; TilesetID = tilesetID; RoomHeader.TilesetID = (unsigned int)tilesetID; }
-        void PushBack_Door(Door* newdoor) { doors.push_back(newdoor); if(!CurrentEntitySetID) CurrentEntitySetID = newdoor->GetEntitySetID();}
+        void PushBack_Door(Door* newdoor);
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
