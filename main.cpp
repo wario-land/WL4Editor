@@ -48,7 +48,8 @@ bool LoadROMFile(QString filePath)
     else
     {
         ROMUtils::CurrentFileSize = length;
-        strcpy(ROMUtils::ROMFilePath, filePath.toStdString().c_str());
+        ROMUtils::ROMFilePath = filePath;
+        //strcpy(ROMUtils::ROMFilePath, filePath.toStdString().c_str());
         ROMUtils::CurrentFile = (unsigned char*)ROMAddr;
         return true;
     }
