@@ -35,6 +35,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
             if(layer->IsEnabled() == false) return;
             int selectedTileIndex = tileX + tileY * room->GetWidth();
+            if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
             struct OperationParams *params = new struct OperationParams();
             params->type = ChangeTileOperation;
             params->tileChangeParams.push_back(TileChangeParams::Create(

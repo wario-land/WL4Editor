@@ -8,6 +8,7 @@
 #include "Dialog/DoorConfigDialog.h"
 #include <iostream>
 #include <cstring>
+#include <QFile>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -21,36 +22,37 @@
 
 extern int selectedRoom;
 
-bool LoadROMFile(std::string filePath)
+bool LoadROMFile(QString filePath)
 {
     // Read ROM file into current file array
-    std::ifstream ifs(filePath, std::ios::binary | std::ios::ate);
-    std::ifstream::pos_type pos = ifs.tellg();
-    // To check ROM size
-    int length = pos;
-    if(length<=0xB0)
+    QFile file(filePath);
+    file.open(QIODevice::ReadOnly);
+    // To check OPEN file
+    int length;
+    if(!file.isOpen() || (length = (int)file.size()) <= 0xB0)
     {
-		ifs.close();
+        file.close();
         return false;
     }
+    // Read data
     unsigned char * ROMAddr = new unsigned char[length];
-    ifs.seekg(0, std::ios::beg);
-    ifs.read((char*) ROMAddr, length);
-    ifs.close();
+    file.read((char *)ROMAddr, length);
+    file.close();
+
     // To check ROM correct
-    if(strncmp((const char*)(ROMAddr + 0xA0), "WARIOLANDE", 10)!=0)
-    {//if loaded a wrong ROM
+    if(strncmp((const char*)(ROMAddr + 0xA0), "WARIOLANDE", 10))
+    { //if loaded a wrong ROM
         delete[] ROMAddr;
         return false;
     }
     else
     {
         ROMUtils::CurrentFileSize = length;
-        strcpy(ROMUtils::ROMFilePath, filePath.c_str());
-        ROMUtils::CurrentFile=(unsigned char*)ROMAddr;
+        ROMUtils::ROMFilePath = filePath;
+        //strcpy(ROMUtils::ROMFilePath, filePath.toStdString().c_str());
+        ROMUtils::CurrentFile = (unsigned char*)ROMAddr;
         return true;
     }
-
 }
 
 static void StaticInitialization_BeforeROMLoading()

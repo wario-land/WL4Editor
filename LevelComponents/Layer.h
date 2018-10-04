@@ -41,10 +41,7 @@ namespace LevelComponents
         void SetDisabled();
         void CreateNewLayer_type0x10(int layerWidth, int layerHeight);
         bool IsNewLayer() { return NewLayer; }
-        void AddRows(int NumberOfNewRows, int StartFrom);
-        void AddColumns(int NumberOfNewColumns, int StartFrom);
-        void DeleteRows(int NumberOfWillBeDeletedRows, int StartFrom);
-        void DeleteColumns(int NumberOfWillBeDeletedColumns, int StartFrom);
+        void ChangeDimensions(int newWidth, int newHeight);
         ~Layer();
     };
 }
