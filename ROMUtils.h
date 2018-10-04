@@ -5,6 +5,7 @@
 #include <string>
 #include <cstdio>  //include definition for FILE
 #include <cstring>
+#include <QString>
 
 #include "WL4Constants.h"
 
@@ -16,7 +17,8 @@ namespace ROMUtils
     // Global variables
     extern unsigned char *CurrentFile;
     extern int CurrentFileSize;
-    extern char ROMFilePath[260]; //the MAX_PATH in Windows is 260, perhaps we should use a bigger number
+    extern QString ROMFilePath;
+    //extern char ROMFilePath[260]; //the MAX_PATH in Windows is 260, perhaps we should use a bigger number
 
     // Global functions
     int IntFromData(int address);
