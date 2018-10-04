@@ -1,11 +1,13 @@
 #include "ROMUtils.h"
 #include <cassert>
+#include <QFile>
 
 namespace ROMUtils
 {
     unsigned char *CurrentFile;
     int CurrentFileSize;
-    char ROMFilePath[260];
+    QString ROMFilePath;
+    //char ROMFilePath[260];
 
     /// <summary>
     /// Get a 4-byte, little-endian integer from ROM data.
@@ -301,9 +303,15 @@ namespace ROMUtils
 
     void SaveFile()
     {
-        FILE *outfile = fopen(ROMFilePath, "w");
-        fwrite(CurrentFile, sizeof(unsigned char) * CurrentFileSize, 1, outfile);
-        fclose(outfile);
+        QFile file(ROMFilePath);
+        file.open(QIODevice::WriteOnly);
+        if (file.isOpen()){
+            file.write((const char*)CurrentFile, CurrentFileSize* sizeof(unsigned char));
+        }
+        else{
+            // can't open file to save ROM
+        }
+        file.close();
     }
 
 }
