@@ -188,6 +188,9 @@ namespace LevelComponents
         }
     }
 
+    /// <summary>
+    /// release Entity instances list in this Room.
+    /// </summary>
     void Room::FreecurrentEntityListSource()
     {
         int i = currentEntityListSource.size();
@@ -200,6 +203,12 @@ namespace LevelComponents
         currentEntityListSource.clear();
     }
 
+    /// <summary>
+    /// Reset the EntitySet in this Room.
+    /// </summary>
+    /// <param name="entitysetId">
+    /// New EntitySet Id.
+    /// </param>
     void Room::ResetEntitySet(int entitysetId)
     {
         if(currentEntitySet != nullptr) delete currentEntitySet;
@@ -229,6 +238,12 @@ namespace LevelComponents
         delete tileset;
     }
 
+    /// <summary>
+    /// Get distributed doors' pointers from Room class and Reset EntitySet in this Room by the way if needed.
+    /// </summary>
+    /// <param name="newdoor">
+    /// eExisting Door ptr.
+    /// </param>
     void Room::PushBack_Door(Door *newdoor)
     {
          doors.push_back(newdoor);

@@ -210,6 +210,9 @@ namespace LevelComponents
                 IsEntityInside(0x7D);
     }
 
+    /// <summary>
+    /// Get a copy of EntitySetinfoTableElement from this EntitySet.
+    /// </summary>
     std::vector<EntitySetinfoTableElement> EntitySet::GetEntityTable()
     {
         std::vector<EntitySetinfoTableElement> newtable;
