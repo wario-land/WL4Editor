@@ -193,7 +193,7 @@ namespace LevelComponents
     /// </summary>
     void Room::FreecurrentEntityListSource()
     {
-        int i = currentEntityListSource.size();
+        int i = (int) currentEntityListSource.size();
         if(i < 1) return;
         for(int j = 0; j < i; ++j)
         {
