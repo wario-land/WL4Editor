@@ -207,7 +207,17 @@ namespace LevelComponents
             IsEntityInside(0x51) ||
             IsEntityInside(0x69) ||
             IsEntityInside(0x76) ||
-            IsEntityInside(0x7D);
+                IsEntityInside(0x7D);
+    }
+
+    /// <summary>
+    /// Get a copy of EntitySetinfoTableElement from this EntitySet.
+    /// </summary>
+    std::vector<EntitySetinfoTableElement> EntitySet::GetEntityTable()
+    {
+        std::vector<EntitySetinfoTableElement> newtable;
+        newtable.assign(EntityinfoTable.begin(), EntityinfoTable.end());
+        return newtable;
     }
 
     /// <summary>

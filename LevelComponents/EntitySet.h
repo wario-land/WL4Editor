@@ -32,17 +32,18 @@ namespace LevelComponents
         std::vector<EntitySetinfoTableElement> EntityinfoTable;
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
-        Tile8x8 *BlankTile;
-        ~EntitySet();
+        Tile8x8 *BlankTile = nullptr;
 
     public:
         EntitySet(int _EntitySetID, int basicElementPalettePtr);
+        ~EntitySet();
         Tile8x8 **GetTileData() { return tile8x8data; }
         QVector<QRgb> *GetPalettes() { return palettes; }
         int GetEntityPaletteOffset(int _entityID);
         int GetEntityTileIdOffset(int _entityID);
         bool IsEntityInside(int entityglobalId);
         bool IncludeBossTiles();
+        std::vector<EntitySetinfoTableElement> GetEntityTable();
         static EntitySetAndEntitylocalId EntitySetFromEntityID(int entityglobalId);
         static int GetEntityFirstActionFrameSetPtr(int entityglobalId);
 

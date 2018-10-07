@@ -189,13 +189,69 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// release Entity instances list in this Room.
+    /// </summary>
+    void Room::FreecurrentEntityListSource()
+    {
+        int i = currentEntityListSource.size();
+        if(i < 1) return;
+        for(int j = 0; j < i; ++j)
+        {
+            Entity *currententity = currentEntityListSource[j];
+            delete currententity;
+        }
+        currentEntityListSource.clear();
+    }
+
+    /// <summary>
+    /// Reset the EntitySet in this Room.
+    /// </summary>
+    /// <param name="entitysetId">
+    /// New EntitySet Id.
+    /// </param>
+    void Room::ResetEntitySet(int entitysetId)
+    {
+        if(currentEntitySet != nullptr) delete currentEntitySet;
+        FreecurrentEntityListSource();
+        currentEntitySet = new EntitySet(entitysetId, tileset->GetUniversalSpritesTilesPalettePtr());
+        for(int i = 0; i < 16; ++i)
+        {
+            Entity *newEntity = new Entity(-1, i, currentEntitySet);
+            currentEntityListSource.push_back(newEntity);
+        }
+        for(int i = 0; i < (int) (currentEntitySet->GetEntityTable().size() - 1); ++i)
+        {
+            Entity *newEntity = new Entity(i, currentEntitySet->GetEntityTable().at(i + 1).Global_EntityID, currentEntitySet);
+            currentEntityListSource.push_back(newEntity);
+        }
+    }
+
+    /// <summary>
     /// Deconstruct an instance of Room.
     /// </summary>
     Room::~Room()
     {
         // Free drawlayer elements
         FreeDrawLayers();
+        if(currentEntitySet != nullptr) delete currentEntitySet;
+        FreecurrentEntityListSource();
         delete tileset;
+    }
+
+    /// <summary>
+    /// Get distributed doors' pointers from Room class and Reset EntitySet in this Room by the way if needed.
+    /// </summary>
+    /// <param name="newdoor">
+    /// eExisting Door ptr.
+    /// </param>
+    void Room::PushBack_Door(Door *newdoor)
+    {
+         doors.push_back(newdoor);
+         if(!CurrentEntitySetID)
+         {
+             CurrentEntitySetID = newdoor->GetEntitySetID();
+             ResetEntitySet(CurrentEntitySetID);
+         }
     }
 
     /// <summary>

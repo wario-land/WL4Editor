@@ -53,10 +53,10 @@ namespace LevelComponents
         bool UnusedEntity = false;
         QVector<OAMTile*> OAMTiles;
         EntitySet *currentEntityset;
-        ~Entity();
 
     public:
         Entity(int entityID, int entityGlabalId, EntitySet *_currentEntityset);
+        ~Entity();
         QImage Render();
 
     private:
