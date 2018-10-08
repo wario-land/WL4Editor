@@ -382,8 +382,8 @@ namespace LevelComponents
                 for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
                 {
                     Entity *currententity = currentEntityListSource[EntityList[currentDifficulty].at(i).EntityID - 1];
-                    EntityPainter[3 - currententity->GetPriority()]->drawImage(8 * EntityList[currentDifficulty].at(i).XPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset,
-                                                                               8 * EntityList[currentDifficulty].at(i).YPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset,
+                    EntityPainter[3 - currententity->GetPriority()]->drawImage(16 * EntityList[currentDifficulty][i].XPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset,
+                                                                               16 * EntityList[currentDifficulty][i].YPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset,
                                                                                currententity->Render());
                 }
                 for(int i = 0; i < 4; ++i)

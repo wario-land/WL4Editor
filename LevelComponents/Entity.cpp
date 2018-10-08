@@ -102,7 +102,7 @@ namespace LevelComponents
                         (EntityGlobalID != 0x76) && (EntityGlobalID != 0x7D))
                 {
                     offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
-                    offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID);
+                    offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID, EntityGlobalID);
                 }
                 else if(EntityGlobalID < 7)
                 {

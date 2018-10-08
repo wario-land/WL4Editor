@@ -45,7 +45,7 @@ namespace LevelComponents
         ~EntitySet();
         Tile8x8 **GetTileData() { return tile8x8data; }
         QVector<QRgb> *GetPalettes() { return palettes; }
-        int GetEntityPaletteOffset(int _entityID);
+        int GetEntityPaletteOffset(int _entityID, int entityglobalId);
         int GetEntityTileIdOffset(int _entityID);
         bool IsEntityInside(int entityglobalId);
         bool IncludeBossTiles();
