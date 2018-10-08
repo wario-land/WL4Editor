@@ -13,7 +13,7 @@ LevelComponents::EntitySet *DoorConfigDialog::entitiessets[90];
 LevelComponents::Entity *DoorConfigDialog::entities[129];
 
 /// <summary>
-/// Construct the instance of the DoorConfigDialog.
+/// Construct an instance of DoorConfigDialog.
 /// </summary>
 /// <param name="parent">
 /// The parent QWidget.
@@ -27,6 +27,8 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     DoorID(doorID)
 {
     ui->setupUi(this);
+    EntityFilterTable = new EntityFilterTableModel(ui->TableView_EntityFilter);
+    ui->TableView_EntityFilter->setModel(EntityFilterTable);
     IsInitialized = false;
 
     // Distribute Doors into the temp CurrentRoom
@@ -71,6 +73,7 @@ DoorConfigDialog::~DoorConfigDialog()
 {
     delete tmpCurrentRoom;
     delete tmpDestinationRoom;
+    delete EntityFilterTable;
     delete ui;
 }
 
@@ -322,4 +325,76 @@ void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
 {
     (void) arg1;
     tmpCurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) ui->SpinBox_BGM_ID->value());
+}
+
+//---------------------------------------------------------------------------------------------------------------------------
+// EntityFilterTableModel functions
+//---------------------------------------------------------------------------------------------------------------------------
+
+/// <summary>
+/// Construct an instance of EntityFilterTableModel.
+/// </summary>
+/// <param name="parent">
+/// The parent QWidget.
+/// </param>
+EntityFilterTableModel::EntityFilterTableModel(QWidget *_parent) : QAbstractTableModel(_parent), parent(_parent)
+{
+    // TODO
+}
+
+/// <summary>
+/// Deconstruct the EntityFilterTableModel.
+/// </summary>
+EntityFilterTableModel::~EntityFilterTableModel()
+{
+    // TODO
+}
+
+/// <summary>
+/// Add an Entity to EntityFilterTableModel.
+/// </summary>
+/// <param name="entity">
+/// The entity to add.
+/// </param>
+void EntityFilterTableModel::AddEntity(LevelComponents::Entity entity)
+{
+    beginInsertRows((const QModelIndex&)*parent, entities.size(), entities.size());
+    entities.push_back(entity);
+    endInsertRows();
+}
+
+/// <summary>
+/// Remove an Entity from EntityFilterTableModel.
+/// </summary>
+/// <param name="entity">
+/// The entity to remove.
+/// </param>
+void EntityFilterTableModel::ClearEntities()
+{
+    beginRemoveRows((const QModelIndex&)*parent, 0, entities.size() - 1);
+    entities.clear();
+    endRemoveRows();
+}
+
+/// <summary>
+/// Return the data for some cell in the table.
+/// <summary>
+/// <param name="index">
+/// The 2D indexer for the table.
+/// </param>
+/// <returns>
+/// The data at X = index.column(), Y = index.row()
+/// </returns>
+QVariant EntityFilterTableModel::data(const QModelIndex &index, int) const
+{
+    if(index.column())
+    {
+        // TODO return what goes in the right column
+        return "bar";
+    }
+    else
+    {
+        // TODO return what goes in the left column
+        return "foo";
+    }
 }

@@ -44,7 +44,6 @@ SOURCES += \
     DockWidget/EditModeDockWidget.cpp \
     Dialog/RoomConfigDialog.cpp \
     Dialog/RoomPreviewGraphicsView.cpp \
-    Dialog/EntityFilterTableView.cpp \
     Dialog/DoorConfigDialog.cpp \
     LevelComponents/Entity.cpp
 
@@ -68,7 +67,6 @@ HEADERS += \
     Operation.h \
     Dialog/RoomConfigDialog.h \
     Dialog/RoomPreviewGraphicsView.h \
-    Dialog/EntityFilterTableView.h \
     Dialog/DoorConfigDialog.h \
     LevelComponents/Entity.h
 

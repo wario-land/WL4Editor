@@ -24,9 +24,12 @@ namespace LevelComponents
     /// Construct an instance of Entity.
     /// </summary>
     /// <param name="entityID">
+    /// Local entity ID in entity set.
+    /// </param>
+    /// <param name="entityGlobalId">
     /// Global entity ID.
     /// </param>
-    /// <param name="_currentEntityset">
+    /// </param name="_currentEntityset">
     /// Entire set pointer.
     /// </param>
     Entity::Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset) :
