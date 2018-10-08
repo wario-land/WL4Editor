@@ -29,7 +29,7 @@ namespace LevelComponents
     /// <param name="entityGlobalId">
     /// Global entity ID.
     /// </param>
-    /// </param>urrentEntityset">
+    /// </param name="_currentEntityset">
     /// Entire set pointer.
     /// </param>
     Entity::Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset) :
