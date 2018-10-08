@@ -55,7 +55,7 @@ namespace LevelComponents
         EntitySet *currentEntityset;
 
     public:
-        Entity(int entityID, int entityGlabalId, EntitySet *_currentEntityset);
+        Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset);
         ~Entity();
         QImage Render();
 
