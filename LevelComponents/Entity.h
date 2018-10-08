@@ -47,7 +47,7 @@ namespace LevelComponents
         int EntityGlobalID = 0;
         int OAMDataTablePtr = 0;
         int EntityDeltaX = 0, EntityDeltaY = 0;
-        int Priority;
+        int Priority = 0;
         int PaletteOffset = 0;
         bool SemiTransparent = false;
         bool UnusedEntity = false;
@@ -58,6 +58,10 @@ namespace LevelComponents
         Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset);
         ~Entity();
         QImage Render();
+        int GetPriority() { return Priority; }
+        EntityPositionalOffset GetLevelComponents() { return currentEntityset->GetEntityPositionalOffset(EntityGlobalID); }
+        int GetEntityID() { return EntityID; }
+        int GetEntityGlobalID() { return EntityGlobalID;}
 
     private:
         void OAMtoTiles(unsigned short *singleOAM);

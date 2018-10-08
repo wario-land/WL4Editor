@@ -83,6 +83,8 @@ namespace LevelComponents
         newOAM->OAMheight = OAMDimensions[OAMindex * 2 + 1];
         int tileID = attr2 & 0x3FF;
         int palNum = (attr2 >> 0xB) & 0xF;
+        SemiTransparent = (((attr0 >> 0xA) & 3) == 1) ? true : false;
+        Priority = (attr2 >> 0xA) & 3;
 
         // Create the tile8x8 objects
         Tile8x8 **tileData = currentEntityset->GetTileData();
