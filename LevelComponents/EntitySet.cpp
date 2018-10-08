@@ -1,6 +1,7 @@
 #include "EntitySet.h"
 
 constexpr int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
+constexpr int LevelComponents::EntitySet::EntityPositinalOffset[258];
 
 namespace LevelComponents
 {
@@ -256,7 +257,7 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Get the first action set of a choosed entity with its global id.
+    /// Get the first action set of a choosed entity by its global id.
     /// </summary>
     /// <param name="entityglobalId">
     /// Entity global id.
@@ -264,6 +265,20 @@ namespace LevelComponents
     int EntitySet::GetEntityFirstActionFrameSetPtr(int entityglobalId)
     {
         return EntitiesFirstActionFrameSetsPtrsData[entityglobalId];
+    }
+
+    /// <summary>
+    /// Get Entity Positional offset by its global id.
+    /// </summary>
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
+    EntityPositionalOffset EntitySet::GetEntityPositionalOffset(int entityglobalId)
+    {
+        EntityPositionalOffset tmpEntityPositionalOffset;
+        tmpEntityPositionalOffset.XOffset = EntityPositinalOffset[2 * entityglobalId];
+        tmpEntityPositionalOffset.YOffset = EntityPositinalOffset[2 * entityglobalId + 1];
+        return tmpEntityPositionalOffset;
     }
 
     /// <summary>
