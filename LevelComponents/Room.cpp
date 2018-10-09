@@ -173,7 +173,9 @@ namespace LevelComponents
             }
         }
 
-        // TODOs: load Entityset and Entities for different difficulties and different Doors.
+        // Deep Copy Entityset and Entities
+        CurrentEntitySetID = room->GetCurrentEntitySetID();
+        ResetEntitySet(CurrentEntitySetID);
     }
 
     /// <summary>
