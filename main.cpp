@@ -58,7 +58,7 @@ bool LoadROMFile(QString filePath)
 static void StaticInitialization_BeforeROMLoading()
 {
     RoomConfigDialog::StaticComboBoxesInitialization();
-    DoorConfigDialog::StaticComboBoxesInitialization();
+    DoorConfigDialog::StaticInitialization();
 }
 
 /// <summary>

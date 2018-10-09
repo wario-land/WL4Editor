@@ -166,7 +166,7 @@ void WL4EditorWindow::OpenROM()
     }
 
     LoadRoomUIUpdate();
-    DoorConfigDialog::StaticEntitySetsInitialization();
+    DoorConfigDialog::EntitySetsInitialization();
 }
 
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()

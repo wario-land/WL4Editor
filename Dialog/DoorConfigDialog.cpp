@@ -62,7 +62,15 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->ComboBox_DoorDestinationPicker->addItems(doorofLevelSet);
     ui->ComboBox_DoorDestinationPicker->setCurrentIndex(currentdoor->GetDestinationDoor()->GetGlobalDoorID());
     RenderGraphicsView_Preview();
-    // TODOs
+
+    // Initialize the entity list drop-down
+    for(unsigned int i = 1; i < sizeof(entities)/sizeof(entities[0]); ++i)
+    {
+        EntityFilterTable->AddEntity(entities[i]);
+    }
+    //unsigned char entitySetID = currentdoor->GetEntitySetID();
+    // TODO set the index here
+
     IsInitialized = true;
 }
 
@@ -80,7 +88,7 @@ DoorConfigDialog::~DoorConfigDialog()
 /// <summary>
 /// Perform static initializtion of constant data structures for the dialog.
 /// </summary>
-void DoorConfigDialog::StaticComboBoxesInitialization()
+void DoorConfigDialog::StaticInitialization()
 {
     // Initialize the selections for the Door type
     for(unsigned int i = 0; i < sizeof(DoortypeSetData)/sizeof(DoortypeSetData[0]); ++i)
@@ -98,7 +106,7 @@ void DoorConfigDialog::StaticComboBoxesInitialization()
 /// <summary>
 /// Perform static initializtion of EntitySets and Entities for the dialog.
 /// </summary>
-void DoorConfigDialog::StaticEntitySetsInitialization()
+void DoorConfigDialog::EntitySetsInitialization()
 {
     // Initialize all the entitysets
     for(int i = 0; i < 90; ++i)
@@ -281,11 +289,7 @@ void DoorConfigDialog::on_ComboBox_DoorType_currentIndexChanged(int index)
     LevelComponents::Door *currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
     if((index == 0) && (currentdoor0->GetDoortypeNum() != 1))
     {
-        QMessageBox::information(this, QString("Info"), QString("if you know what you are doing, or don't putting more than 1 Portal-type Door(vortex) in one level."));
-//        ui->ComboBox_DoorType->blockSignals(true);
-//        ui->ComboBox_DoorType->setCurrentIndex(currentdoor0->GetDoortypeNum() - 1);
-//        ui->ComboBox_DoorType->blockSignals(false);
-//        return;
+        QMessageBox::information(this, QString("Info"), QString("Unless you know what you are doing, don't put more than 1 Portal-type Door (vortex) in one level."));
     }
     // TODOs: need more auto-reset to some of the Door attributes when select DoorType 4 or 5.
     currentdoor0->SetDoorType(static_cast<LevelComponents::DoorType>(index + 1));
@@ -356,24 +360,11 @@ EntityFilterTableModel::~EntityFilterTableModel()
 /// <param name="entity">
 /// The entity to add.
 /// </param>
-void EntityFilterTableModel::AddEntity(LevelComponents::Entity entity)
+void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
 {
     beginInsertRows((const QModelIndex&)*parent, entities.size(), entities.size());
     entities.push_back(entity);
     endInsertRows();
-}
-
-/// <summary>
-/// Remove an Entity from EntityFilterTableModel.
-/// </summary>
-/// <param name="entity">
-/// The entity to remove.
-/// </param>
-void EntityFilterTableModel::ClearEntities()
-{
-    beginRemoveRows((const QModelIndex&)*parent, 0, entities.size() - 1);
-    entities.clear();
-    endRemoveRows();
 }
 
 /// <summary>
@@ -389,12 +380,10 @@ QVariant EntityFilterTableModel::data(const QModelIndex &index, int) const
 {
     if(index.column())
     {
-        // TODO return what goes in the right column
-        return "bar";
+        return entities[index.row()]->Render();
     }
     else
     {
-        // TODO return what goes in the left column
-        return "foo";
+        return DoorConfigDialog::EntitynameSetData[entities[index.row()]->GetEntityGlobalID() - 1];
     }
 }
