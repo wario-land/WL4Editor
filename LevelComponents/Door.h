@@ -62,7 +62,7 @@ namespace LevelComponents
         int GetDeltaX() { return (int) DeltaX; }
         int GetDeltaY() { return (int) DeltaY; }
         void SetEntitySetID(unsigned char _EntitySetID) { EntitySetID = _EntitySetID; }
-        int GetEntitySetID() {return (int) EntitySetID; }
+        int GetEntitySetID() { return EntitySetID; }
         void SetBGM(unsigned int _BGM_ID) { BGM_ID = _BGM_ID; }
         void SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
         void SetDoorType(enum DoorType _DoorType) { type = _DoorType; }

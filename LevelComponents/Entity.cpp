@@ -147,7 +147,14 @@ namespace LevelComponents
     /// </returns>
     QImage Entity::Render()
     {
-        QPixmap pm;
+        int width = 0, height = 0;
+        foreach(OAMTile *ot, OAMTiles)
+        {
+            width = qMax(width, ot->OAMwidth * 8 + ot->Xoff);
+            height = qMax(height, ot->OAMheight * 8 + ot->Yoff);
+        }
+        QPixmap pm(width, height);
+        pm.fill(Qt::transparent);
         if(UnusedEntity)
         {
             return pm.toImage();
