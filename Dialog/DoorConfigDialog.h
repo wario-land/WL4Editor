@@ -18,10 +18,9 @@ class EntityFilterTableModel : public QAbstractTableModel
 public:
     explicit EntityFilterTableModel(QWidget *_parent);
     ~EntityFilterTableModel();
-    void AddEntity(LevelComponents::Entity entity);
-    void ClearEntities();
+    void AddEntity(LevelComponents::Entity *entity);
 
-    QList<LevelComponents::Entity> entities;
+    QList<LevelComponents::Entity*> entities;
 
 private:
     // Required for QAbstractItemModel implementation
@@ -34,12 +33,6 @@ private:
 class DoorConfigDialog : public QDialog
 {
     Q_OBJECT
-
-public:
-    explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level);
-    ~DoorConfigDialog();
-    static void StaticComboBoxesInitialization();
-    static void StaticEntitySetsInitialization();
 
 private slots:
     void on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index);
@@ -66,9 +59,16 @@ private:
     void ResetDoorRect();
     void UpdateDoorLayerGraphicsView_Preview();
     void UpdateDoorLayerGraphicsView_DestinationDoor();
+    void PopulateTable(LevelComponents::EntitySet entitySet);
 
     static LevelComponents::EntitySet *entitiessets[90];
     static LevelComponents::Entity *entities[129];
+
+public:
+    explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level);
+    ~DoorConfigDialog();
+    static void StaticInitialization();
+    static void EntitySetsInitialization();
 
     // Enumeration of Door type
     static constexpr const char *DoortypeSetData[5] =
