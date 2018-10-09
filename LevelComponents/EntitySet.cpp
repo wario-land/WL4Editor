@@ -149,7 +149,10 @@ namespace LevelComponents
     /// <param name="_entityID">
     /// Entity local id.
     /// </param>
-    int EntitySet::GetEntityPaletteOffset(int _entityID)
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
+    int EntitySet::GetEntityPaletteOffset(int _entityID, int entityglobalId)
     {
         if(_entityID == -1)// TODO: find what the game does
         {
@@ -157,7 +160,23 @@ namespace LevelComponents
         }
         else
         {
-            return EntityinfoTable[_entityID].paletteOffset + 8;
+            int Paloffset = EntityinfoTable[_entityID].paletteOffset + 8;
+
+            // these Entities have an extra relative palette offset
+            if((entityglobalId == 0x12) || (entityglobalId == 0x1D) || (entityglobalId == 0x2B) ||
+                    (entityglobalId == 0x30) || (entityglobalId == 0x31) || (entityglobalId == 0x32) ||
+                    (entityglobalId == 0x33) || (entityglobalId == 0x34) || (entityglobalId == 0x35) ||
+                    (entityglobalId == 0x36) || (entityglobalId == 0x37) || (entityglobalId == 0x38) ||
+                    (entityglobalId == 0x39))
+            {
+                Paloffset++;
+            }
+            if(entityglobalId == 0x13)
+            {
+                Paloffset += 2;
+            }
+
+            return Paloffset;
         }
     }
 

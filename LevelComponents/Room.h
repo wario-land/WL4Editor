@@ -7,7 +7,6 @@
 #include <DockWidget/EditModeDockWidget.h>
 
 #include <vector>
-#include <list>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 
@@ -96,6 +95,7 @@ namespace LevelComponents
             Layer *layer;
             int index;
         } *drawLayers[4];
+        int EntityLayerZValue[4];
         enum __CameraControlType CameraControlType;
         unsigned int RoomID;
         unsigned int LevelID;
@@ -108,14 +108,13 @@ namespace LevelComponents
         struct __RoomHeader RoomHeader;
         int CurrentEntitySetID = 0;
         EntitySet *currentEntitySet = nullptr;
-        std::list<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
+        std::vector<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
         std::vector<Entity*> currentEntityListSource; // Initialize Entities here
-        std::vector<Entity*> Entities[3]; // entity pointer lists for 3 difficulties
         int currentDifficulty = 1;
         Layer *layers[4];
         Tileset *tileset;
         std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor
-        QGraphicsPixmapItem *RenderedLayers[8]; // L0 - 3, E, D, C, A (may not exist)
+        QGraphicsPixmapItem *RenderedLayers[12]; // L0 - 3, E, D, C, A (may not exist)
         void FreeDrawLayers();
         void FreecurrentEntityListSource();
         void ResetEntitySet(int entitysetId);
