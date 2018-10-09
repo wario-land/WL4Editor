@@ -372,7 +372,7 @@ namespace LevelComponents
             // Fall through to ElementsLayersUpdate section
         case ElementsLayersUpdate:
             {
-                /*
+
                 // Render entity layer
                 QPixmap *EntityPixmap[4];
                 QPainter *EntityPainter[4];
@@ -408,7 +408,7 @@ namespace LevelComponents
 
                 // Reset Z value
                 Z = (Layer0ColorBlending && Layer0ColorBlendCoefficient_EVB) ? 9 : 8;
-                */
+
 
                 // Render door layer
                 QPixmap doorPixmap(sceneWidth, sceneHeight);
