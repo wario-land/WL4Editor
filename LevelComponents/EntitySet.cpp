@@ -149,6 +149,9 @@ namespace LevelComponents
     /// <param name="_entityID">
     /// Entity local id.
     /// </param>
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
     int EntitySet::GetEntityPaletteOffset(int _entityID, int entityglobalId)
     {
         if(_entityID == -1)// TODO: find what the game does
