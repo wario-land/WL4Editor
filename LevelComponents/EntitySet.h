@@ -8,6 +8,7 @@
 #include <vector>
 #include <QVector>
 #include <QColor>
+#include <QPixmap>
 
 namespace LevelComponents
 {
@@ -53,6 +54,7 @@ namespace LevelComponents
         static EntitySetAndEntitylocalId EntitySetFromEntityID(int entityglobalId);
         static int GetEntityFirstActionFrameSetPtr(int entityglobalId);
         EntityPositionalOffset GetEntityPositionalOffset(int entityglobalId);
+        QPixmap GetPixmap();
 
     private:
         static constexpr const int EntitiesFirstActionFrameSetsPtrsData[129] =
