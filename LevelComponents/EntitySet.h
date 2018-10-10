@@ -54,7 +54,7 @@ namespace LevelComponents
         static EntitySetAndEntitylocalId EntitySetFromEntityID(int entityglobalId);
         static int GetEntityFirstActionFrameSetPtr(int entityglobalId);
         EntityPositionalOffset GetEntityPositionalOffset(int entityglobalId);
-        QPixmap GetPixmap();
+        QPixmap GetPixmap(int paletteId);
 
     private:
         static constexpr const int EntitiesFirstActionFrameSetsPtrsData[129] =

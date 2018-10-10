@@ -565,13 +565,13 @@ namespace LevelComponents
                 QGraphicsPixmapItem *testpixmapItem;
                 if(!RenderedLayers[4] || renderParams->type == FullRender)
                 {
-                    testpixmapItem = scene->addPixmap(currentEntitySet->GetPixmap());
+                    testpixmapItem = scene->addPixmap(currentEntitySet->GetPixmap(3));
                     testpixmapItem->setZValue(Z++);
                     RenderedLayers[4] = testpixmapItem;
                 }
                 else
                 {
-                    RenderedLayers[4]->setPixmap(currentEntitySet->GetPixmap());
+                    RenderedLayers[4]->setPixmap(currentEntitySet->GetPixmap(3));
                 }
             }
             // Fall through to layer enable section

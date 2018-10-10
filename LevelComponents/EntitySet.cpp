@@ -301,9 +301,12 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Render sll Tiles in EntitySet.
+    /// Use one of the palette to render the whole Entityset for testing.
     /// </summary>
-    QPixmap EntitySet::GetPixmap()
+    /// <param name="paletteId">
+    /// palette id.
+    /// </param>
+    QPixmap EntitySet::GetPixmap(int paletteId)
     {
         QPixmap pixmap(8 * 32, 8 * 32);
         pixmap.fill(Qt::transparent);
@@ -314,6 +317,8 @@ namespace LevelComponents
                 tile8x8data[num + 32 * L]->DrawTile(&pixmap, num * 8, L * 8);
             }
         }
+        QImage tmpImage = pixmap.toImage();
+        tmpImage.setColorTable(palettes[paletteId]);
         return pixmap;
     }
 
