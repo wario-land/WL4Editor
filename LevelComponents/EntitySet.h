@@ -23,6 +23,12 @@ namespace LevelComponents
         int entitylocalId;
     };
 
+    struct EntityPositionalOffset
+    {
+        int XOffset;
+        int YOffset;
+    };
+
     class EntitySet
     {
     private:
@@ -32,19 +38,21 @@ namespace LevelComponents
         std::vector<EntitySetinfoTableElement> EntityinfoTable;
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
-        Tile8x8 *BlankTile;
-        ~EntitySet();
+        Tile8x8 *BlankTile = nullptr;
 
     public:
         EntitySet(int _EntitySetID, int basicElementPalettePtr);
+        ~EntitySet();
         Tile8x8 **GetTileData() { return tile8x8data; }
         QVector<QRgb> *GetPalettes() { return palettes; }
-        int GetEntityPaletteOffset(int _entityID);
+        int GetEntityPaletteOffset(int _entityID, int entityglobalId);
         int GetEntityTileIdOffset(int _entityID);
         bool IsEntityInside(int entityglobalId);
         bool IncludeBossTiles();
+        std::vector<EntitySetinfoTableElement> GetEntityTable();
         static EntitySetAndEntitylocalId EntitySetFromEntityID(int entityglobalId);
         static int GetEntityFirstActionFrameSetPtr(int entityglobalId);
+        EntityPositionalOffset GetEntityPositionalOffset(int entityglobalId);
 
     private:
         static constexpr const int EntitiesFirstActionFrameSetsPtrsData[129] =
@@ -178,6 +186,139 @@ namespace LevelComponents
             WL4Constants::Entity7E_0x3F0F04,
             WL4Constants::Entity7F_0x3F122C,
             WL4Constants::Entity80_0x3F1AA0
+        };
+
+        static constexpr const int EntityPositinalOffset[258] =
+        {
+               0,    0, //0x00
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -67,  -70,
+             -98,  -66,
+            -130, -130,
+               0,    0,
+               0,    0,
+               0,    0,
+               0,    0,
+               0,    0,
+               0,    0,
+             -98,  -66, //0x10
+            -101,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -98,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66, //0x20
+             -98,  -98,
+             -98,  -66,
+             -98,  -98,
+             -98,  -98,
+             -98,  -98,
+             -98,  -78,
+             -98,  -66,
+             -67, -130,
+             -98,  -98,
+            -100,  -66,
+            -100,  -66,
+             -98,  -66,
+               0,    0,
+             -98,  -66,
+             -98,  -66,
+            -130,  -66, //0x30
+             -67,  -66,
+            -130,  -66,
+             -67,  -66,
+            -130,  -66,
+             -67,  -66,
+            -130,  -66,
+             -67,  -66,
+            -130,  -66,
+             -67,  -66,
+            -130,  -66,
+             -67,  -66,
+             -98,  -66,
+             -98,  -74,
+             -98,  -66,
+             -98,  -66,
+            -100,  -98, //0x40
+             -98,  -66,
+             -98,  -66,
+             -67,  -66,
+               0,    0,
+             -67,  -66,
+             -67,  -66,
+             -67,  -98,
+            -100,  -66,
+            -101,  -66,
+             -98,  -66,
+             -98,  -66,
+            -101,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66, //0x50
+             -98,   -3,
+             -98,  -98,
+             -98,  -66,
+             -98,  -66,
+             -98,  -98,
+             -98,  -98,
+             -98,  -66,
+             -67, -130,
+             -67, -130,
+             -67, -130,
+             -67, -130,
+             -67, -130,
+             -67, -130,
+             -98,  -66,
+             -35, -130,
+             -98,  -66, //0x60
+            -100,  -66,
+             -67, -380,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+            -194, -321,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+               0,    0,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66, //0x70
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+             -98,  -66,
+            -100,  -66,
+            -100,  -66,
+            -101,  -66,
+             -98,  -66,
+            -100,  -66,
+             -98,  -66,
+               0,    0,
+             -67,  -66,
+             -98,  -98,
+             -98,  -66  //0x80
         };
     };
 }

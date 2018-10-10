@@ -13,7 +13,7 @@ LevelComponents::EntitySet *DoorConfigDialog::entitiessets[90];
 LevelComponents::Entity *DoorConfigDialog::entities[129];
 
 /// <summary>
-/// Construct the instance of the DoorConfigDialog.
+/// Construct an instance of DoorConfigDialog.
 /// </summary>
 /// <param name="parent">
 /// The parent QWidget.
@@ -27,6 +27,8 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     DoorID(doorID)
 {
     ui->setupUi(this);
+    EntityFilterTable = new EntityFilterTableModel(ui->TableView_EntityFilter);
+    ui->TableView_EntityFilter->setModel(EntityFilterTable);
     IsInitialized = false;
 
     // Distribute Doors into the temp CurrentRoom
@@ -60,7 +62,15 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->ComboBox_DoorDestinationPicker->addItems(doorofLevelSet);
     ui->ComboBox_DoorDestinationPicker->setCurrentIndex(currentdoor->GetDestinationDoor()->GetGlobalDoorID());
     RenderGraphicsView_Preview();
-    // TODOs
+
+    // Initialize the entity list drop-down
+    for(unsigned int i = 1; i < sizeof(entities)/sizeof(entities[0]); ++i)
+    {
+        EntityFilterTable->AddEntity(entities[i]);
+    }
+    //unsigned char entitySetID = currentdoor->GetEntitySetID();
+    // TODO set the index here
+
     IsInitialized = true;
 }
 
@@ -71,13 +81,14 @@ DoorConfigDialog::~DoorConfigDialog()
 {
     delete tmpCurrentRoom;
     delete tmpDestinationRoom;
+    delete EntityFilterTable;
     delete ui;
 }
 
 /// <summary>
 /// Perform static initializtion of constant data structures for the dialog.
 /// </summary>
-void DoorConfigDialog::StaticComboBoxesInitialization()
+void DoorConfigDialog::StaticInitialization()
 {
     // Initialize the selections for the Door type
     for(unsigned int i = 0; i < sizeof(DoortypeSetData)/sizeof(DoortypeSetData[0]); ++i)
@@ -95,7 +106,7 @@ void DoorConfigDialog::StaticComboBoxesInitialization()
 /// <summary>
 /// Perform static initializtion of EntitySets and Entities for the dialog.
 /// </summary>
-void DoorConfigDialog::StaticEntitySetsInitialization()
+void DoorConfigDialog::EntitySetsInitialization()
 {
     // Initialize all the entitysets
     for(int i = 0; i < 90; ++i)
@@ -278,11 +289,7 @@ void DoorConfigDialog::on_ComboBox_DoorType_currentIndexChanged(int index)
     LevelComponents::Door *currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
     if((index == 0) && (currentdoor0->GetDoortypeNum() != 1))
     {
-        QMessageBox::information(this, QString("Info"), QString("if you know what you are doing, or don't putting more than 1 Portal-type Door(vortex) in one level."));
-//        ui->ComboBox_DoorType->blockSignals(true);
-//        ui->ComboBox_DoorType->setCurrentIndex(currentdoor0->GetDoortypeNum() - 1);
-//        ui->ComboBox_DoorType->blockSignals(false);
-//        return;
+        QMessageBox::information(this, QString("Info"), QString("Unless you know what you are doing, don't put more than 1 Portal-type Door (vortex) in one level."));
     }
     // TODOs: need more auto-reset to some of the Door attributes when select DoorType 4 or 5.
     currentdoor0->SetDoorType(static_cast<LevelComponents::DoorType>(index + 1));
@@ -322,4 +329,61 @@ void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
 {
     (void) arg1;
     tmpCurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) ui->SpinBox_BGM_ID->value());
+}
+
+//---------------------------------------------------------------------------------------------------------------------------
+// EntityFilterTableModel functions
+//---------------------------------------------------------------------------------------------------------------------------
+
+/// <summary>
+/// Construct an instance of EntityFilterTableModel.
+/// </summary>
+/// <param name="parent">
+/// The parent QWidget.
+/// </param>
+EntityFilterTableModel::EntityFilterTableModel(QWidget *_parent) : QAbstractTableModel(_parent), parent(_parent)
+{
+    // TODO
+}
+
+/// <summary>
+/// Deconstruct the EntityFilterTableModel.
+/// </summary>
+EntityFilterTableModel::~EntityFilterTableModel()
+{
+    // TODO
+}
+
+/// <summary>
+/// Add an Entity to EntityFilterTableModel.
+/// </summary>
+/// <param name="entity">
+/// The entity to add.
+/// </param>
+void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
+{
+    beginInsertRows((const QModelIndex&)*parent, entities.size(), entities.size());
+    entities.push_back(entity);
+    endInsertRows();
+}
+
+/// <summary>
+/// Return the data for some cell in the table.
+/// <summary>
+/// <param name="index">
+/// The 2D indexer for the table.
+/// </param>
+/// <returns>
+/// The data at X = index.column(), Y = index.row()
+/// </returns>
+QVariant EntityFilterTableModel::data(const QModelIndex &index, int) const
+{
+    if(index.column())
+    {
+        return entities[index.row()]->Render();
+    }
+    else
+    {
+        return DoorConfigDialog::EntitynameSetData[entities[index.row()]->GetEntityGlobalID() - 1];
+    }
 }

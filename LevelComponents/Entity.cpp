@@ -24,9 +24,12 @@ namespace LevelComponents
     /// Construct an instance of Entity.
     /// </summary>
     /// <param name="entityID">
+    /// Local entity ID in entity set.
+    /// </param>
+    /// <param name="entityGlobalId">
     /// Global entity ID.
     /// </param>
-    /// <param name="_currentEntityset">
+    /// </param name="_currentEntityset">
     /// Entire set pointer.
     /// </param>
     Entity::Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset) :
@@ -80,6 +83,8 @@ namespace LevelComponents
         newOAM->OAMheight = OAMDimensions[OAMindex * 2 + 1];
         int tileID = attr2 & 0x3FF;
         int palNum = (attr2 >> 0xB) & 0xF;
+        SemiTransparent = (((attr0 >> 0xA) & 3) == 1) ? true : false;
+        Priority = (attr2 >> 0xA) & 3;
 
         // Create the tile8x8 objects
         Tile8x8 **tileData = currentEntityset->GetTileData();
@@ -97,7 +102,7 @@ namespace LevelComponents
                         (EntityGlobalID != 0x76) && (EntityGlobalID != 0x7D))
                 {
                     offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
-                    offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID);
+                    offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID, EntityGlobalID);
                 }
                 else if(EntityGlobalID < 7)
                 {
@@ -142,7 +147,14 @@ namespace LevelComponents
     /// </returns>
     QImage Entity::Render()
     {
-        QPixmap pm;
+        int width = 0, height = 0;
+        foreach(OAMTile *ot, OAMTiles)
+        {
+            width = qMax(width, ot->OAMwidth * 8 + ot->Xoff);
+            height = qMax(height, ot->OAMheight * 8 + ot->Yoff);
+        }
+        QPixmap pm(width, height);
+        pm.fill(Qt::transparent);
         if(UnusedEntity)
         {
             return pm.toImage();

@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QMessageBox>
+#include <QAbstractTableModel>
 
 #include "LevelComponents/Level.h"
 
@@ -10,15 +11,28 @@ namespace Ui {
 class DoorConfigDialog;
 }
 
-class DoorConfigDialog : public QDialog
+class EntityFilterTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level);
-    ~DoorConfigDialog();
-    static void StaticComboBoxesInitialization();
-    static void StaticEntitySetsInitialization();
+    explicit EntityFilterTableModel(QWidget *_parent);
+    ~EntityFilterTableModel();
+    void AddEntity(LevelComponents::Entity *entity);
+
+    QList<LevelComponents::Entity*> entities;
+
+private:
+    // Required for QAbstractItemModel implementation
+    QWidget *parent;
+    int rowCount(const QModelIndex &) const override { return entities.size(); }
+    int columnCount(const QModelIndex &) const override { return 2; }
+    QVariant data(const QModelIndex &index, int) const override;
+};
+
+class DoorConfigDialog : public QDialog
+{
+    Q_OBJECT
 
 private slots:
     void on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index);
@@ -38,15 +52,23 @@ private:
     LevelComponents::Room *tmpDestinationRoom = nullptr;
     int DoorID = -1;
     bool IsInitialized = false;
+    EntityFilterTableModel *EntityFilterTable;
 
     void RenderGraphicsView_Preview();
     void RenderGraphicsView_DestinationDoor(int doorIDinRoom);
     void ResetDoorRect();
     void UpdateDoorLayerGraphicsView_Preview();
     void UpdateDoorLayerGraphicsView_DestinationDoor();
+    void PopulateTable(LevelComponents::EntitySet entitySet);
 
     static LevelComponents::EntitySet *entitiessets[90];
     static LevelComponents::Entity *entities[129];
+
+public:
+    explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level);
+    ~DoorConfigDialog();
+    static void StaticInitialization();
+    static void EntitySetsInitialization();
 
     // Enumeration of Door type
     static constexpr const char *DoortypeSetData[5] =
@@ -58,13 +80,13 @@ private:
         "5: Boss Door"
     };
 
-    // Enumeration of Entity name
+    // Enumeration of Entity names
     static constexpr const char *EntitynameSetData[128] =
     {
-        "0x01 Box with top-right quadrant",
-        "0x02 Box with bottom-right quadrant",
-        "0x03 Box with bottom-left quadrant",
-        "0x04 Box with top-left quadrant",
+        "0x01 Box (top-right quadrant)",
+        "0x02 Box (bottom-right quadrant)",
+        "0x03 Box (bottom-left quadrant)",
+        "0x04 Box (top-left quadrant)",
         "0x05 CD box",
         "0x06 Health box",
         "0x07 Large diamond",
@@ -76,10 +98,10 @@ private:
         "0x0D nothing",
         "0x0E nothing",
         "0x0F nothing",
-        "0x10 cat",
-        "0x11 yellow Spear-Mask",
-        "0x12 blue Spear-Mask",
-        "0x13 red Spear-Mask",
+        "0x10 Cat",
+        "0x11 Yellow Spear-Mask",
+        "0x12 Blue Spear-Mask",
+        "0x13 Red Spear-Mask",
         "0x14 Rotate Platforms",
         "0x15 Rock",
         "0x16 Skeleton Bird",
@@ -93,37 +115,37 @@ private:
         "0x1D Harimenzetto",
         "0x1E Bobble",
         "0x1F Togerobo",
-        "0x20 falling snow",
+        "0x20 Falling Snow",
         "0x21 Spiked Head",
-        "0x22 ball lightning",
-        "0x23 drive-by-wire Platform",
-        "0x24 vertical moving platform go down first",
-        "0x25 horizontal moving platform go right first",
+        "0x22 Ball Lightning",
+        "0x23 Platform on Track",
+        "0x24 Vertical Moving Platform (down first)",
+        "0x25 Horizontal Moving Platform (right first)",
         "0x26 Magic Carpets",
         "0x27 Bow Balloon",
-        "0x28 chance wheel",
+        "0x28 Chance Wheel",
         "0x29 Vortex",
-        "0x2A purple Marumen",
-        "0x2B red Marumen",
+        "0x2A Purple Marumen",
+        "0x2B Red Marumen",
         "0x2C Boss: Spoiled Rotten",
         "0x2D nothing",
-        "0x2E trigger push down 9 o'clock CW",
-        "0x2F trigger push up 3 o'clock CCW",
-        "0x30 4 dominoes go right",
-        "0x31 4 dominoes go left",
-        "0x32 dominoes stares go right & down",
-        "0x33 dominoes stares go right & up",
-        "0x34 go right & up dominoes stares",
-        "0x35 go left & up dominoes stares",
-        "0x36 dominoes go right & trigger down",
-        "0x37 dominoes go left & trigger down",
-        "0x38 dominoes go right & trigger up",
-        "0x39 dominoes go left & trigger up",
-        "0x3A Domino terminal flag point",
-        "0x3B dise block",
+        "0x2E Trigger Push Down 9 o'clock CW",
+        "0x2F Trigger Push Up 3 o'clock CCW",
+        "0x30 4 Dominoes go Right",
+        "0x31 4 Dominoes go Left",
+        "0x32 Domino Stairs go Right & Down",
+        "0x33 Domino Stairs go Right & Up",
+        "0x34 Go Right & Up Domino Stairs",
+        "0x35 Go Left & Up Domino Stairs",
+        "0x36 Dominoes go Right & Trigger Down",
+        "0x37 Dominoes go Left & Trigger Down",
+        "0x38 Dominoes go Right & Trigger Up",
+        "0x39 Dominoes go Left & Trigger Up",
+        "0x3A Domino flag",
+        "0x3B Dice Block",
         "0x3C Mayu Bird",
         "0x3D Minicula",
-        "0x3E falling Spikeball",
+        "0x3E Falling Spikeball",
         "0x3F Yūrei",
         "0x40 Beezley",
         "0x41 Money Flowers",
@@ -140,55 +162,55 @@ private:
         "0x4C Tobawani",
         "0x4D Shieragucchi",
         "0x4E Ringosukī",
-        "0x4F Steam Hammer",
-        "0x50 Steam Hammer 2rd",
+        "0x4F Flattening Hammer 1",
+        "0x50 Flattening Hammer 2",
         "0x51 Boss: Catbat",
-        "0x52 Vortex, duplicated",
-        "0x53 Swinging Platform",
-        "0x54 Swinging Platform 2rd",
+        "0x52 Vortex (duplicate)",
+        "0x53 Swinging Platform 1",
+        "0x54 Swinging Platform 2",
         "0x55 Auto-rotate Platform CW",
         "0x56 Auto-rotate Platform CCW",
         "0x57 Pinball",
-        "0x58 Pinball block upside open",
-        "0x59 Pinball block downside open",
-        "0x5A Pinball block leftside open",
-        "0x5B Pinball block rightside open",
-        "0x5C Existing Pinball counter",
-        "0x5D final chance wheel",
-        "0x5E Spikes emitter (without body)",
-        "0x5F money sunflower disk",
+        "0x58 Pinball Block (up)",
+        "0x59 Pinball Block (down)",
+        "0x5A Pinball Block (left)",
+        "0x5B Pinball Block (right)",
+        "0x5C Pinball-Left Counter",
+        "0x5D Final Chance Wheel",
+        "0x5E Spikes Emitter (without body)",
+        "0x5F Money Sunflower Disk",
         "0x60 Yeti",
         "0x61 Iwao",
-        "0x62 spouting lava",
-        "0x63 boss door 1",
-        "0x64 boss door 2",
-        "0x65 boss door 3",
-        "0x66 boss door 4",
-        "0x67 boss door 5",
-        "0x68 boss door 6",
+        "0x62 Lava Spout",
+        "0x63 Boss Door 1",
+        "0x64 Boss Door 2",
+        "0x65 Boss Door 3",
+        "0x66 Boss Door 4",
+        "0x67 Boss Door 5",
+        "0x68 Boss Door 6",
         "0x69 Boss: Aerodent",
         "0x6A Hoggus",
         "0x6B Denden",
         "0x6C Butatabi",
-        "0x6E folding door",
-        "0x6F perple pencil",
-        "0x70 blue pencil",
-        "0x71 red pencil",
+        "0x6E Folding Door",
+        "0x6F Purple Pencil",
+        "0x70 Blue Pencil",
+        "0x71 Red Pencil",
         "0x72 Robo Bird",
         "0x73 Utsuboankō",
         "0x74 Togenobi",
-        "0x75 falling icicle",
+        "0x75 Falling Icicle",
         "0x76 Cractus",
         "0x77 Dice",
         "0x78 Toy Car 10 points",
         "0x79 Onomī",
-        "0x7A cat in bass corrider",
+        "0x7A Cat in boss corridor",
         "0x7B PET Bottom",
         "0x7C Pearl Bird",
         "0x7D Golden Diva",
-        "0x7E falling Chandelier",
-        "0x7F unsteady step",
-        "0x80 Arewo Shitain-hakase"
+        "0x7E Falling Chandelier",
+        "0x7F Crumbling Platform",
+        "0x80 Arewo Shitain-Hakase"
     };
 };
 

@@ -1,6 +1,7 @@
 #include "EntitySet.h"
 
 constexpr int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
+constexpr int LevelComponents::EntitySet::EntityPositinalOffset[258];
 
 namespace LevelComponents
 {
@@ -148,7 +149,10 @@ namespace LevelComponents
     /// <param name="_entityID">
     /// Entity local id.
     /// </param>
-    int EntitySet::GetEntityPaletteOffset(int _entityID)
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
+    int EntitySet::GetEntityPaletteOffset(int _entityID, int entityglobalId)
     {
         if(_entityID == -1)// TODO: find what the game does
         {
@@ -156,7 +160,23 @@ namespace LevelComponents
         }
         else
         {
-            return EntityinfoTable[_entityID].paletteOffset + 8;
+            int Paloffset = EntityinfoTable[_entityID].paletteOffset + 8;
+
+            // these Entities have an extra relative palette offset
+            if((entityglobalId == 0x12) || (entityglobalId == 0x1D) || (entityglobalId == 0x2B) ||
+                    (entityglobalId == 0x30) || (entityglobalId == 0x31) || (entityglobalId == 0x32) ||
+                    (entityglobalId == 0x33) || (entityglobalId == 0x34) || (entityglobalId == 0x35) ||
+                    (entityglobalId == 0x36) || (entityglobalId == 0x37) || (entityglobalId == 0x38) ||
+                    (entityglobalId == 0x39))
+            {
+                Paloffset++;
+            }
+            if(entityglobalId == 0x13)
+            {
+                Paloffset += 2;
+            }
+
+            return Paloffset;
         }
     }
 
@@ -207,7 +227,17 @@ namespace LevelComponents
             IsEntityInside(0x51) ||
             IsEntityInside(0x69) ||
             IsEntityInside(0x76) ||
-            IsEntityInside(0x7D);
+                IsEntityInside(0x7D);
+    }
+
+    /// <summary>
+    /// Get a copy of EntitySetinfoTableElement from this EntitySet.
+    /// </summary>
+    std::vector<EntitySetinfoTableElement> EntitySet::GetEntityTable()
+    {
+        std::vector<EntitySetinfoTableElement> newtable;
+        newtable.assign(EntityinfoTable.begin(), EntityinfoTable.end());
+        return newtable;
     }
 
     /// <summary>
@@ -246,7 +276,7 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Get the first action set of a choosed entity with its global id.
+    /// Get the first action set of a choosed entity by its global id.
     /// </summary>
     /// <param name="entityglobalId">
     /// Entity global id.
@@ -254,6 +284,20 @@ namespace LevelComponents
     int EntitySet::GetEntityFirstActionFrameSetPtr(int entityglobalId)
     {
         return EntitiesFirstActionFrameSetsPtrsData[entityglobalId];
+    }
+
+    /// <summary>
+    /// Get Entity Positional offset by its global id.
+    /// </summary>
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
+    EntityPositionalOffset EntitySet::GetEntityPositionalOffset(int entityglobalId)
+    {
+        EntityPositionalOffset tmpEntityPositionalOffset;
+        tmpEntityPositionalOffset.XOffset = EntityPositinalOffset[2 * entityglobalId];
+        tmpEntityPositionalOffset.YOffset = EntityPositinalOffset[2 * entityglobalId + 1];
+        return tmpEntityPositionalOffset;
     }
 
     /// <summary>
