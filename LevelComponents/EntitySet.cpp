@@ -101,7 +101,7 @@ namespace LevelComponents
         // Load 1024 sprites tiles, ignore the first 4 rows, they are wario tiles
         BlankTile = Tile8x8::CreateBlankTile(palettes);
         // Initialize all the tiles
-        for(int i = 0; i < (34 * 32); ++i) //TODO: Can we use memset here ?
+        for(int i = 0; i < (36 * 32); ++i) //TODO: Can we use memset here ?
         {
             tile8x8data[i] = BlankTile;
         }

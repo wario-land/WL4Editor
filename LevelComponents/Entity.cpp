@@ -107,7 +107,7 @@ namespace LevelComponents
                 else if(EntityGlobalID < 7)
                 {
                     offsetID = tileID + y * 0x20 + x; // + currentEntityset->GetEntityTileIdOffset(EntityID) //untest
-                    offsetPal = palNum /*+ 7 + 8*/;
+                    offsetPal = palNum/* + 7 + 8*/;
                 }
                 else //TODO: more cases
                 {
@@ -174,9 +174,9 @@ namespace LevelComponents
     {
         unsigned short *u16_attribute = (unsigned short*) (ROMUtils::CurrentFile + spritesFrameDataPtr);
         int offset = 0, objectnum = 0, nowframe = 0;
-        objectnum = (int) u16_attribute[offset];
         while(nowframe <= frame)
         {
+            objectnum = (int) u16_attribute[offset];
             if(nowframe < frame)
             {
                 offset += 1 + 3 * objectnum;

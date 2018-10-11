@@ -385,8 +385,8 @@ namespace LevelComponents
                 {
                     Entity *currententity = currentEntityListSource[EntityList[currentDifficulty].at(i).EntityID - 1];
                     EntityPainter[3 - currententity->GetPriority()]->drawImage(
-                        16 * EntityList[currentDifficulty][i].XPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset,
-                        16 * EntityList[currentDifficulty][i].YPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset,
+                        16 * EntityList[currentDifficulty][i].XPos - 16 * 16/* + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset*/,
+                        16 * EntityList[currentDifficulty][i].YPos - 16 * 16/* + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset*/,
                         currententity->Render());
                 }
                 for(int i = 0; i < 4; ++i)
@@ -557,21 +557,28 @@ namespace LevelComponents
                 }
 
                 // TODO: Render Entities Boxes used for selecting
-
-
-
-
-                // Test: Render EntitySet Tiles in the frontest Layer RenderedLayers[4]
-                QGraphicsPixmapItem *testpixmapItem;
+                QPixmap EntityBoxPixmap(sceneWidth, sceneHeight);
+                EntityBoxPixmap.fill(Qt::transparent);
+                QPainter EntityBoxPainter(&EntityBoxPixmap);
+                QPen EntityBoxPen = QPen(QBrush(Qt::yellow), 2);
+                EntityBoxPen.setJoinStyle(Qt::MiterJoin);
+                EntityBoxPainter.setPen(EntityBoxPen);
+                for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
+                {
+                    EntityBoxPainter.drawRect(16 * EntityList[currentDifficulty][i].XPos, 16 * EntityList[currentDifficulty][i].YPos, 16, 16);
+                }
+                // Test: Render EntitySet Tiles in the front of the Layer RenderedLayers[4]
+                EntityBoxPainter.drawPixmap(0, 0, currentEntitySet->GetPixmap(9));
+                QGraphicsPixmapItem *EntityBoxpixmapItem;
                 if(!RenderedLayers[4] || renderParams->type == FullRender)
                 {
-                    testpixmapItem = scene->addPixmap(currentEntitySet->GetPixmap(9));
-                    testpixmapItem->setZValue(Z++);
-                    RenderedLayers[4] = testpixmapItem;
+                    EntityBoxpixmapItem = scene->addPixmap(EntityBoxPixmap);
+                    EntityBoxpixmapItem->setZValue(Z++);
+                    RenderedLayers[4] = EntityBoxpixmapItem;
                 }
                 else
                 {
-                    RenderedLayers[4]->setPixmap(currentEntitySet->GetPixmap(9));
+                    RenderedLayers[4]->setPixmap(EntityBoxPixmap);
                 }
             }
             // Fall through to layer enable section
