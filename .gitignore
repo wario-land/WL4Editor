@@ -45,6 +45,7 @@ ui_*
 
 # Miscellanious
 *.swp
+*.autosave
 WL4Editor
 TEST/LoadROMFileTEST.cpp
 

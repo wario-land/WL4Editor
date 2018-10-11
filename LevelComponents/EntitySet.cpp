@@ -227,7 +227,7 @@ namespace LevelComponents
             IsEntityInside(0x51) ||
             IsEntityInside(0x69) ||
             IsEntityInside(0x76) ||
-                IsEntityInside(0x7D);
+            IsEntityInside(0x7D);
     }
 
     /// <summary>
@@ -317,11 +317,10 @@ namespace LevelComponents
         {
             for(int num = 0; num < 32; ++num)
             {
+                tile8x8data[num + 32 * L]->SetPaletteIndex(paletteId);
                 tile8x8data[num + 32 * L]->DrawTile(&pixmap, num * 8, L * 8);
             }
         }
-        QImage tmpImage = pixmap.toImage();
-        tmpImage.setColorTable(palettes[paletteId]);
         return pixmap;
     }
 
