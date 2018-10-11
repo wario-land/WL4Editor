@@ -29,6 +29,16 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->setupUi(this);
     EntityFilterTable = new EntityFilterTableModel(ui->TableView_EntityFilter);
     ui->TableView_EntityFilter->setModel(EntityFilterTable);
+
+    EntityFilterTable->setColumnCount(3);
+    // set col width
+    ui->TableView_EntityFilter->setColumnWidth(0, 30);
+    ui->TableView_EntityFilter->setColumnWidth(2, 50);
+    ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+    ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
+    ui->TableView_EntityFilter->resizeColumnsToContents();
+
     IsInitialized = false;
 
     // Distribute Doors into the temp CurrentRoom
@@ -341,14 +351,11 @@ void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
 /// <param name="parent">
 /// The parent QWidget.
 /// </param>
-EntityFilterTableModel::EntityFilterTableModel(QWidget *_parent) : QAbstractTableModel(_parent), parent(_parent)
+EntityFilterTableModel::EntityFilterTableModel(QWidget *_parent) : QStandardItemModel(_parent), parent(_parent)
 {
-    // TODO
+    //TODO
 }
 
-/// <summary>
-/// Deconstruct the EntityFilterTableModel.
-/// </summary>
 EntityFilterTableModel::~EntityFilterTableModel()
 {
     // TODO
@@ -362,9 +369,35 @@ EntityFilterTableModel::~EntityFilterTableModel()
 /// </param>
 void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
 {
-    beginInsertRows((const QModelIndex&)*parent, entities.size(), entities.size());
+    // add entity to list
     entities.push_back(entity);
-    endInsertRows();
+
+    // get current row
+    int row = rowCount();
+
+    // checkbox item
+    QStandardItem *checkbox = new QStandardItem;
+    checkbox->setCheckable(true);
+    checkbox->setCheckState(Qt::Unchecked);
+    setItem(row, 0, checkbox);
+
+    // entity name item
+    QStandardItem *entityName = new QStandardItem(DoorConfigDialog::EntitynameSetData[entities[row]->GetEntityGlobalID()-1]);
+    setItem(row, 1, entityName);
+
+    // pixmap item
+    QStandardItem *imageItem = new QStandardItem;
+    static QPixmap pixmap(16,16);
+    pixmap.fill(Qt::red);
+
+    //imageItem->setData(QVariant(QPixmap::fromImage(entities[row]->Render())), Qt::DecorationRole);
+    imageItem->setData(QVariant(pixmap), Qt::DecorationRole);
+    setItem(row, 2, imageItem);
+
+    // disable edit
+    checkbox->setEditable(false);
+    entityName->setEditable(false);
+    imageItem->setEditable(false);
 }
 
 /// <summary>
@@ -376,6 +409,8 @@ void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
 /// <returns>
 /// The data at X = index.column(), Y = index.row()
 /// </returns>
+///
+/*
 QVariant EntityFilterTableModel::data(const QModelIndex &index, int) const
 {
     if(index.column())
@@ -387,3 +422,4 @@ QVariant EntityFilterTableModel::data(const QModelIndex &index, int) const
         return DoorConfigDialog::EntitynameSetData[entities[index.row()]->GetEntityGlobalID() - 1];
     }
 }
+*/

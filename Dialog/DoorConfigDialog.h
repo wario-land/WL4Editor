@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QMessageBox>
 #include <QAbstractTableModel>
+#include <QStandardItemModel>
 
 #include "LevelComponents/Level.h"
 
@@ -11,7 +12,8 @@ namespace Ui {
 class DoorConfigDialog;
 }
 
-class EntityFilterTableModel : public QAbstractTableModel
+/*
+class _EntityFilterTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
@@ -28,6 +30,23 @@ private:
     int rowCount(const QModelIndex &) const override { return entities.size(); }
     int columnCount(const QModelIndex &) const override { return 2; }
     QVariant data(const QModelIndex &index, int) const override;
+};
+*/
+
+class EntityFilterTableModel : public QStandardItemModel
+{
+    Q_OBJECT
+
+public:
+    explicit EntityFilterTableModel(QWidget *_parent);
+    ~EntityFilterTableModel();
+
+    void AddEntity(LevelComponents::Entity *entity);
+
+    QList<LevelComponents::Entity*> entities;
+
+private:
+    QWidget *parent;
 };
 
 class DoorConfigDialog : public QDialog
