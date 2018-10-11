@@ -392,15 +392,15 @@ namespace LevelComponents
                 for(int i = 0; i < 4; ++i)
                 {
                     QGraphicsPixmapItem *EntityItem;
-                    if(!RenderedLayers[7 + i] || renderParams->type == FullRender)
+                    if(!RenderedLayers[8 + i] || renderParams->type == FullRender)
                     {
                         EntityItem = scene->addPixmap(*EntityPixmap[i]);
                         EntityItem->setZValue(EntityLayerZValue[i]);
-                        RenderedLayers[7 + i] = EntityItem;
+                        RenderedLayers[8 + i] = EntityItem;
                     }
                     else
                     {
-                        RenderedLayers[7 + i]->setPixmap(*EntityPixmap[i]);
+                        RenderedLayers[8 + i]->setPixmap(*EntityPixmap[i]);
                     }
                     delete EntityPainter[i];
                     delete EntityPixmap[i];
@@ -554,6 +554,24 @@ namespace LevelComponents
                 else
                 {
                     RenderedLayers[6]->setPixmap(CameraLimitationPixmap);
+                }
+
+                // TODO: Render Entities Boxes used for selecting
+
+
+
+
+                // Test: Render EntitySet Tiles in the frontest Layer RenderedLayers[4]
+                QGraphicsPixmapItem *testpixmapItem;
+                if(!RenderedLayers[4] || renderParams->type == FullRender)
+                {
+                    testpixmapItem = scene->addPixmap(currentEntitySet->GetPixmap(3));
+                    testpixmapItem->setZValue(Z++);
+                    RenderedLayers[4] = testpixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[4]->setPixmap(currentEntitySet->GetPixmap(3));
                 }
             }
             // Fall through to layer enable section
