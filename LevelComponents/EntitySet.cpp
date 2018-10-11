@@ -306,6 +306,9 @@ namespace LevelComponents
     /// <param name="paletteId">
     /// palette id.
     /// </param>
+    /// <returns>
+    /// the EntitySet rendered a pixmap.
+    /// </returns>
     QPixmap EntitySet::GetPixmap(int paletteId)
     {
         QPixmap pixmap(8 * 32, 8 * 32);
