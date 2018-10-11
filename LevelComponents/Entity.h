@@ -40,6 +40,15 @@ namespace LevelComponents
 
     class Entity
     {
+    public:
+        Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset);
+        ~Entity();
+        QImage Render();
+        int GetPriority() { return Priority; }
+        EntityPositionalOffset GetLevelComponents() { return currentEntityset->GetEntityPositionalOffset(EntityGlobalID); }
+        int GetEntityID() { return EntityID; }
+        int GetEntityGlobalID() { return EntityGlobalID;}
+
     private:
         bool xFlip = false;
         bool yFlip = false;
@@ -53,17 +62,6 @@ namespace LevelComponents
         bool UnusedEntity = false;
         QVector<OAMTile*> OAMTiles;
         EntitySet *currentEntityset;
-
-    public:
-        Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset);
-        ~Entity();
-        QImage Render();
-        int GetPriority() { return Priority; }
-        EntityPositionalOffset GetLevelComponents() { return currentEntityset->GetEntityPositionalOffset(EntityGlobalID); }
-        int GetEntityID() { return EntityID; }
-        int GetEntityGlobalID() { return EntityGlobalID;}
-
-    private:
         void OAMtoTiles(unsigned short *singleOAM);
         void ExtractSpritesTiles(int spritesFrameDataPtr, int frame);
     };

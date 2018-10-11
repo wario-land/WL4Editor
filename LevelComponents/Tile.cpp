@@ -139,9 +139,9 @@ namespace LevelComponents
     {
         QPainter painter(layerPixmap);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
-        QPixmap tilePixmap = QPixmap::fromImage(ImageData->mirrored(FlipX, FlipY));
+        QImage tileImage = ImageData->mirrored(FlipX, FlipY);
         QPoint drawDestination(x, y);
-        painter.drawImage(drawDestination, tilePixmap.toImage());
+        painter.drawImage(drawDestination, tileImage);
     }
 
     /// <summary>

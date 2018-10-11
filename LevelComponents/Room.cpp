@@ -372,7 +372,6 @@ namespace LevelComponents
             // Fall through to ElementsLayersUpdate section
         case ElementsLayersUpdate:
             {
-
                 // Render entity layer
                 QPixmap *EntityPixmap[4];
                 QPainter *EntityPainter[4];
@@ -385,9 +384,10 @@ namespace LevelComponents
                 for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
                 {
                     Entity *currententity = currentEntityListSource[EntityList[currentDifficulty].at(i).EntityID - 1];
-                    EntityPainter[3 - currententity->GetPriority()]->drawImage(16 * EntityList[currentDifficulty][i].XPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset,
-                                                                               16 * EntityList[currentDifficulty][i].YPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset,
-                                                                               currententity->Render());
+                    EntityPainter[3 - currententity->GetPriority()]->drawImage(
+                        16 * EntityList[currentDifficulty][i].XPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset,
+                        16 * EntityList[currentDifficulty][i].YPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset,
+                        currententity->Render());
                 }
                 for(int i = 0; i < 4; ++i)
                 {
@@ -565,13 +565,13 @@ namespace LevelComponents
                 QGraphicsPixmapItem *testpixmapItem;
                 if(!RenderedLayers[4] || renderParams->type == FullRender)
                 {
-                    testpixmapItem = scene->addPixmap(currentEntitySet->GetPixmap(3));
+                    testpixmapItem = scene->addPixmap(currentEntitySet->GetPixmap(9));
                     testpixmapItem->setZValue(Z++);
                     RenderedLayers[4] = testpixmapItem;
                 }
                 else
                 {
-                    RenderedLayers[4]->setPixmap(currentEntitySet->GetPixmap(3));
+                    RenderedLayers[4]->setPixmap(currentEntitySet->GetPixmap(9));
                 }
             }
             // Fall through to layer enable section
