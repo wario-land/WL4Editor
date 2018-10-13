@@ -4,18 +4,18 @@
 
 // tuples of (width, height) in 8x8 tiles; see TONC table. Row major: size attribute
 static const int OAMDimensions[24] = {
-    1, 1,
-    2, 2,
-    4, 4,
-    8, 8,
-    2, 1,
-    4, 1,
-    4, 2,
-    8, 4,
-    1, 2,
-    1, 4,
-    2, 4,
-    4, 8
+    4, 4,//    1, 1, \/
+    2, 4,//    2, 1, \/
+    4, 2,//    1, 2, \/
+    8, 4,//    2, 2
+    4, 8,//    4, 1,
+    8, 4,//    1, 4,
+    2, 2,//    4, 4, \/
+    1, 4,//    4, 2,
+    4, 1,//    2, 4, \/
+    1, 4,//    8, 8,
+    1, 4,//    8, 4,
+    2, 1 //    4, 8
 };
 
 namespace LevelComponents
@@ -76,11 +76,10 @@ namespace LevelComponents
         newOAM->Yoff = attr0 & 0x1FF;
         newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
         newOAM->yFlip = (attr1 & (1 << 0xD)) != 0;
-        int SZ = (attr1 >> 0xD) & 3;
-        int SH = (attr0 >> 0xD) & 3;
-        int OAMindex = SH * 4 + SZ;
-        newOAM->OAMwidth = OAMDimensions[OAMindex * 2]; // unit: 8x8 tiles
-        newOAM->OAMheight = OAMDimensions[OAMindex * 2 + 1];
+        int SZ = (attr1 >> 0xD) & 3; // object size
+        int SH = (attr0 >> 0xD) & 3; // object shape
+        newOAM->OAMwidth = OAMDimensions[SZ * 6 + SH * 2]; // unit: 8x8 tiles
+        newOAM->OAMheight = OAMDimensions[SZ * 6 + SH * 2 + 1];
         int tileID = attr2 & 0x3FF;
         int palNum = (attr2 >> 0xB) & 0xF;
         SemiTransparent = (((attr0 >> 0xA) & 3) == 1) ? true : false;
