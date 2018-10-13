@@ -104,7 +104,7 @@ namespace LevelComponents
                     offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
                     offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID, EntityGlobalID);
                 }
-                else if(EntityGlobalID < 7)
+                else if(EntityGlobalID < 17)
                 {
                     offsetID = tileID + y * 0x20 + x; // + currentEntityset->GetEntityTileIdOffset(EntityID) //untest
                     offsetPal = palNum/* + 7 + 8*/;
@@ -132,9 +132,9 @@ namespace LevelComponents
     QImage OAMTile::Render()
     {
         QPixmap pm(OAMwidth * 8, OAMheight * 8);
-        foreach(EntityTile *et, tile8x8)
+        for(auto iter = tile8x8.rbegin();iter != tile8x8.rend(); ++iter)
         {
-            et->objTile->DrawTile(&pm, et->deltaX, et->deltaY);
+            (*iter)->objTile->DrawTile(&pm, (*iter)->deltaX, (*iter)->deltaY);;
         }
         return pm.toImage().mirrored(xFlip, yFlip);
     }
@@ -150,8 +150,8 @@ namespace LevelComponents
         int width = 0, height = 0;
         foreach(OAMTile *ot, OAMTiles)
         {
-            width = qMax(width, ot->OAMwidth * 8 + ot->Xoff);
-            height = qMax(height, ot->OAMheight * 8 + ot->Yoff);
+            width = qMax(width, ot->OAMwidth * 8 + (ot->Xoff));
+            height = qMax(height, ot->OAMheight * 8 + (ot->Yoff));
         }
         QPixmap pm(width, height);
         pm.fill(Qt::transparent);
