@@ -223,9 +223,10 @@ namespace LevelComponents
             Entity *newEntity = new Entity(-1, i, currentEntitySet);
             currentEntityListSource.push_back(newEntity);
         }
-        for(int i = 0; i < (int) (currentEntitySet->GetEntityTable().size() - 1); ++i)
+        for(int i = 0; i < (int) currentEntitySet->GetEntityTable().size(); ++i)
         {
-            Entity *newEntity = new Entity(i, currentEntitySet->GetEntityTable().at(i + 1).Global_EntityID, currentEntitySet);
+            int _globalId = currentEntitySet->GetEntityTable().at(i).Global_EntityID;
+            Entity *newEntity = new Entity(i, _globalId, currentEntitySet);
             currentEntityListSource.push_back(newEntity);
         }
     }
@@ -251,7 +252,7 @@ namespace LevelComponents
     void Room::PushBack_Door(Door *newdoor)
     {
          doors.push_back(newdoor);
-         if(!CurrentEntitySetID)
+         if(CurrentEntitySetID == 0)
          {
              CurrentEntitySetID = newdoor->GetEntitySetID();
              ResetEntitySet(CurrentEntitySetID);
@@ -383,10 +384,10 @@ namespace LevelComponents
                 }
                 for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
                 {
-                    Entity *currententity = currentEntityListSource[EntityList[currentDifficulty].at(i).EntityID - 1];
+                    Entity *currententity = currentEntityListSource[EntityList[currentDifficulty].at(i).EntityID];
                     EntityPainter[3 - currententity->GetPriority()]->drawImage(
-                        16 * EntityList[currentDifficulty][i].XPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset,
-                        16 * EntityList[currentDifficulty][i].YPos + currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset,
+                        16 * EntityList[currentDifficulty][i].XPos - 256/* + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset >> 2)*/,
+                        16 * EntityList[currentDifficulty][i].YPos - 256/* + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset >> 2)*/,
                         currententity->Render());
                 }
                 for(int i = 0; i < 4; ++i)
@@ -557,21 +558,28 @@ namespace LevelComponents
                 }
 
                 // TODO: Render Entities Boxes used for selecting
-
-
-
-
-                // Test: Render EntitySet Tiles in the frontest Layer RenderedLayers[4]
-                QGraphicsPixmapItem *testpixmapItem;
+                QPixmap EntityBoxPixmap(sceneWidth, sceneHeight);
+                EntityBoxPixmap.fill(Qt::transparent);
+                QPainter EntityBoxPainter(&EntityBoxPixmap);
+                QPen EntityBoxPen = QPen(QBrush(Qt::yellow), 2);
+                EntityBoxPen.setJoinStyle(Qt::MiterJoin);
+                EntityBoxPainter.setPen(EntityBoxPen);
+                for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
+                {
+                    EntityBoxPainter.drawRect(16 * EntityList[currentDifficulty][i].XPos, 16 * EntityList[currentDifficulty][i].YPos, 16, 16);
+                }
+                // Test: Render EntitySet Tiles in the front of the Layer RenderedLayers[4]
+                //EntityBoxPainter.drawPixmap(0, 0, currentEntitySet->GetPixmap(9));
+                QGraphicsPixmapItem *EntityBoxpixmapItem;
                 if(!RenderedLayers[4] || renderParams->type == FullRender)
                 {
-                    testpixmapItem = scene->addPixmap(currentEntitySet->GetPixmap(9));
-                    testpixmapItem->setZValue(Z++);
-                    RenderedLayers[4] = testpixmapItem;
+                    EntityBoxpixmapItem = scene->addPixmap(EntityBoxPixmap);
+                    EntityBoxpixmapItem->setZValue(Z++);
+                    RenderedLayers[4] = EntityBoxpixmapItem;
                 }
                 else
                 {
-                    RenderedLayers[4]->setPixmap(currentEntitySet->GetPixmap(9));
+                    RenderedLayers[4]->setPixmap(EntityBoxPixmap);
                 }
             }
             // Fall through to layer enable section
