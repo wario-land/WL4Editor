@@ -386,8 +386,8 @@ namespace LevelComponents
                 {
                     Entity *currententity = currentEntityListSource[EntityList[currentDifficulty].at(i).EntityID];
                     EntityPainter[3 - currententity->GetPriority()]->drawImage(
-                        16 * EntityList[currentDifficulty][i].XPos - 256/* + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset >> 2)*/,
-                        16 * EntityList[currentDifficulty][i].YPos - 256/* + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset >> 2)*/,
+                        16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8,
+                        16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16,
                         currententity->Render());
                 }
                 for(int i = 0; i < 4; ++i)

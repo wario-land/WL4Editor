@@ -33,6 +33,8 @@ namespace LevelComponents
     /// Entire set pointer.
     /// </param>
     Entity::Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset) :
+        xOffset(0x7FFFFFFF),
+        yOffset(0x7FFFFFFF),
         EntityID(entityID),
         EntityGlobalID(entityGlobalId),
         currentEntityset(_currentEntityset)
@@ -42,9 +44,19 @@ namespace LevelComponents
             UnusedEntity = true;
             return;
         }
+
+        // Set the OAM tile information
         int spritesActionOAMTablePtr = ROMUtils::PointerFromData(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId));
         OAMDataTablePtr = spritesActionOAMTablePtr;
         ExtractSpritesTiles(spritesActionOAMTablePtr, 0); //TODO: load a different frame when meet with some of the Entities
+
+        // Set the image offsets for the entity
+        foreach(OAMTile *ot, OAMTiles)
+        {
+            xOffset = qMin(xOffset, ot->Xoff);
+            yOffset = qMin(yOffset, ot->Yoff);
+        }
+
         // TODO: Load other Entity informations
     }
 
@@ -54,9 +66,9 @@ namespace LevelComponents
     Entity::~Entity()
     {
         // Free the Tile8x8 objects pushed to the entity tiles vector
-        for(auto iter = OAMTiles.begin(); iter != OAMTiles.end(); ++iter)
+        foreach(OAMTile *tile, OAMTiles)
         {
-            delete *iter;
+            delete tile;
         }
     }
 
@@ -72,8 +84,8 @@ namespace LevelComponents
 
         // Obtain the tile parameters for the OAM tile
         struct OAMTile *newOAM = new struct OAMTile();
-        newOAM->Xoff = attr1 & 0xFF; // Offset of OAM tile from entity origin
-        newOAM->Yoff = attr0 & 0x1FF;
+        newOAM->Xoff = (attr1 & 0xFF) - (attr1 & 0x100); // Offset of OAM tile from entity origin
+        newOAM->Yoff = (attr0 & 0x7F) - (attr0 & 0x80);
         newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
         newOAM->yFlip = (attr1 & (1 << 0xD)) != 0;
         int SZ = (attr1 >> 0xD) & 3; // object size
@@ -131,9 +143,9 @@ namespace LevelComponents
     QImage OAMTile::Render()
     {
         QPixmap pm(OAMwidth * 8, OAMheight * 8);
-        for(auto iter = tile8x8.rbegin();iter != tile8x8.rend(); ++iter)
+        foreach(EntityTile *et, tile8x8)
         {
-            (*iter)->objTile->DrawTile(&pm, (*iter)->deltaX, (*iter)->deltaY);;
+            et->objTile->DrawTile(&pm, et->deltaX, et->deltaY);
         }
         return pm.toImage().mirrored(xFlip, yFlip);
     }
@@ -146,12 +158,13 @@ namespace LevelComponents
     /// </returns>
     QImage Entity::Render()
     {
-        int width = 0, height = 0;
+        int maxX = 0x80000000, maxY = 0x80000000;
         foreach(OAMTile *ot, OAMTiles)
         {
-            width = qMax(width, ot->OAMwidth * 8 + (ot->Xoff));
-            height = qMax(height, ot->OAMheight * 8 + (ot->Yoff));
+            maxX = qMax(maxX, ot->OAMwidth * 8 + (ot->Xoff));
+            maxY = qMax(maxY, ot->OAMheight * 8 + (ot->Yoff));
         }
+        int width = maxX - xOffset, height = maxY - yOffset;
         QPixmap pm(width, height);
         pm.fill(Qt::transparent);
         if(UnusedEntity)
@@ -159,9 +172,11 @@ namespace LevelComponents
             return pm.toImage();
         }
         QPainter p(&pm);
-        foreach(OAMTile *ot, OAMTiles)
+        // OAM tiles must be rendered in reverse order as per the GBA graphical specifications
+        for(auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
         {
-            p.drawImage(ot->Xoff, ot->Yoff, ot->Render());
+            OAMTile *ot = *iter;
+            p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, ot->Render());
         }
         return pm.toImage().mirrored(xFlip, yFlip);
     }
