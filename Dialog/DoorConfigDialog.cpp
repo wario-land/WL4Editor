@@ -33,10 +33,9 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     EntityFilterTable->setColumnCount(3);
     // set col width
     ui->TableView_EntityFilter->setColumnWidth(0, 30);
-    ui->TableView_EntityFilter->setColumnWidth(2, 50);
-    ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
-    ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
+    ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    //ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+    //ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
     ui->TableView_EntityFilter->resizeColumnsToContents();
 
     IsInitialized = false;
@@ -387,11 +386,9 @@ void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
 
     // pixmap item
     QStandardItem *imageItem = new QStandardItem;
-    static QPixmap pixmap(16,16);
-    pixmap.fill(Qt::red);
 
-    //imageItem->setData(QVariant(QPixmap::fromImage(entities[row]->Render())), Qt::DecorationRole);
-    imageItem->setData(QVariant(pixmap), Qt::DecorationRole);
+    imageItem->setData(QVariant(QPixmap::fromImage(entities[row]->Render())), Qt::DecorationRole);
+    //imageItem->setData(QVariant(pixmap), Qt::DecorationRole);
     setItem(row, 2, imageItem);
 
     // disable edit
