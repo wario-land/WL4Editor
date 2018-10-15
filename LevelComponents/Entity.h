@@ -47,11 +47,14 @@ namespace LevelComponents
         int GetPriority() { return Priority; }
         EntityPositionalOffset GetLevelComponents() { return currentEntityset->GetEntityPositionalOffset(EntityGlobalID); }
         int GetEntityID() { return EntityID; }
-        int GetEntityGlobalID() { return EntityGlobalID;}
+        int GetEntityGlobalID() { return EntityGlobalID; }
+        int GetXOffset() { return xOffset; }
+        int GetYOffset() { return yOffset; }
 
     private:
         bool xFlip = false;
         bool yFlip = false;
+        int xOffset, yOffset;
         int EntityID = 0;
         int EntityGlobalID = 0;
         int OAMDataTablePtr = 0;
