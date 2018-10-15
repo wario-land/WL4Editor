@@ -4,18 +4,18 @@
 
 // tuples of (width, height) in 8x8 tiles; see TONC table. Row major: size attribute
 static const int OAMDimensions[24] = {
-    1, 1,
-    2, 2,
-    4, 4,
-    8, 8,
-    2, 1,
-    4, 1,
-    4, 2,
-    8, 4,
-    1, 2,
-    1, 4,
-    2, 4,
-    4, 8
+    4, 4,//    1, 1, \/
+    2, 4,//    2, 1, \/
+    4, 2,//    1, 2, \/
+    8, 4,//    2, 2
+    4, 8,//    4, 1,
+    8, 4,//    1, 4,
+    2, 2,//    4, 4, \/
+    1, 4,//    4, 2,
+    4, 1,//    2, 4, \/
+    1, 4,//    8, 8,
+    1, 4,//    8, 4,
+    2, 1 //    4, 8
 };
 
 namespace LevelComponents
@@ -76,11 +76,10 @@ namespace LevelComponents
         newOAM->Yoff = attr0 & 0x1FF;
         newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
         newOAM->yFlip = (attr1 & (1 << 0xD)) != 0;
-        int SZ = (attr1 >> 0xD) & 3;
-        int SH = (attr0 >> 0xD) & 3;
-        int OAMindex = SH * 4 + SZ;
-        newOAM->OAMwidth = OAMDimensions[OAMindex * 2]; // unit: 8x8 tiles
-        newOAM->OAMheight = OAMDimensions[OAMindex * 2 + 1];
+        int SZ = (attr1 >> 0xD) & 3; // object size
+        int SH = (attr0 >> 0xD) & 3; // object shape
+        newOAM->OAMwidth = OAMDimensions[SZ * 6 + SH * 2]; // unit: 8x8 tiles
+        newOAM->OAMheight = OAMDimensions[SZ * 6 + SH * 2 + 1];
         int tileID = attr2 & 0x3FF;
         int palNum = (attr2 >> 0xB) & 0xF;
         SemiTransparent = (((attr0 >> 0xA) & 3) == 1) ? true : false;
@@ -104,10 +103,10 @@ namespace LevelComponents
                     offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
                     offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID, EntityGlobalID);
                 }
-                else if(EntityGlobalID < 7)
+                else if(EntityGlobalID < 17)
                 {
                     offsetID = tileID + y * 0x20 + x; // + currentEntityset->GetEntityTileIdOffset(EntityID) //untest
-                    offsetPal = palNum /*+ 7 + 8*/;
+                    offsetPal = palNum/* + 7 + 8*/;
                 }
                 else //TODO: more cases
                 {
@@ -132,9 +131,9 @@ namespace LevelComponents
     QImage OAMTile::Render()
     {
         QPixmap pm(OAMwidth * 8, OAMheight * 8);
-        foreach(EntityTile *et, tile8x8)
+        for(auto iter = tile8x8.rbegin();iter != tile8x8.rend(); ++iter)
         {
-            et->objTile->DrawTile(&pm, et->deltaX, et->deltaY);
+            (*iter)->objTile->DrawTile(&pm, (*iter)->deltaX, (*iter)->deltaY);;
         }
         return pm.toImage().mirrored(xFlip, yFlip);
     }
@@ -150,8 +149,8 @@ namespace LevelComponents
         int width = 0, height = 0;
         foreach(OAMTile *ot, OAMTiles)
         {
-            width = qMax(width, ot->OAMwidth * 8 + ot->Xoff);
-            height = qMax(height, ot->OAMheight * 8 + ot->Yoff);
+            width = qMax(width, ot->OAMwidth * 8 + (ot->Xoff));
+            height = qMax(height, ot->OAMheight * 8 + (ot->Yoff));
         }
         QPixmap pm(width, height);
         pm.fill(Qt::transparent);
@@ -174,9 +173,9 @@ namespace LevelComponents
     {
         unsigned short *u16_attribute = (unsigned short*) (ROMUtils::CurrentFile + spritesFrameDataPtr);
         int offset = 0, objectnum = 0, nowframe = 0;
-        objectnum = (int) u16_attribute[offset];
         while(nowframe <= frame)
         {
+            objectnum = (int) u16_attribute[offset];
             if(nowframe < frame)
             {
                 offset += 1 + 3 * objectnum;

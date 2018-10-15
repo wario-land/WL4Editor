@@ -90,7 +90,7 @@ namespace LevelComponents
         // Load palette 15 for treasure boxes
         LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable));
         // Set palette 0 - 2 all to 0 for Wario Sprites only
-        for(int i = 0; i < 2; ++i)
+        for(int i = 0; i < 3; ++i)
         {
             for(int j = 0; j < 16; ++j)
             {
@@ -101,7 +101,7 @@ namespace LevelComponents
         // Load 1024 sprites tiles, ignore the first 4 rows, they are wario tiles
         BlankTile = Tile8x8::CreateBlankTile(palettes);
         // Initialize all the tiles
-        for(int i = 0; i < (34 * 32); ++i) //TODO: Can we use memset here ?
+        for(int i = 0; i < (36 * 32); ++i) //TODO: Can we use memset here ?
         {
             tile8x8data[i] = BlankTile;
         }
@@ -227,7 +227,7 @@ namespace LevelComponents
             IsEntityInside(0x51) ||
             IsEntityInside(0x69) ||
             IsEntityInside(0x76) ||
-                IsEntityInside(0x7D);
+            IsEntityInside(0x7D);
     }
 
     /// <summary>
@@ -298,6 +298,30 @@ namespace LevelComponents
         tmpEntityPositionalOffset.XOffset = EntityPositinalOffset[2 * entityglobalId];
         tmpEntityPositionalOffset.YOffset = EntityPositinalOffset[2 * entityglobalId + 1];
         return tmpEntityPositionalOffset;
+    }
+
+    /// <summary>
+    /// Use one of the palette to render the whole Entityset for testing.
+    /// </summary>
+    /// <param name="paletteId">
+    /// palette id.
+    /// </param>
+    /// <returns>
+    /// the EntitySet rendered a pixmap.
+    /// </returns>
+    QPixmap EntitySet::GetPixmap(int paletteId)
+    {
+        QPixmap pixmap(8 * 32, 8 * 32);
+        pixmap.fill(Qt::transparent);
+        for(int L = 0; L < 32; ++L)
+        {
+            for(int num = 0; num < 32; ++num)
+            {
+                tile8x8data[num + 32 * L]->SetPaletteIndex(paletteId);
+                tile8x8data[num + 32 * L]->DrawTile(&pixmap, num * 8, L * 8);
+            }
+        }
+        return pixmap;
     }
 
     /// <summary>
