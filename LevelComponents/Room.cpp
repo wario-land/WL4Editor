@@ -410,7 +410,6 @@ namespace LevelComponents
                 // Reset Z value
                 Z = (Layer0ColorBlending && Layer0ColorBlendCoefficient_EVB) ? 9 : 8;
 
-
                 // Render door layer
                 QPixmap doorPixmap(sceneWidth, sceneHeight);
                 doorPixmap.fill(Qt::transparent);
@@ -561,7 +560,7 @@ namespace LevelComponents
                 QPixmap EntityBoxPixmap(sceneWidth, sceneHeight);
                 EntityBoxPixmap.fill(Qt::transparent);
                 QPainter EntityBoxPainter(&EntityBoxPixmap);
-                QPen EntityBoxPen = QPen(QBrush(Qt::yellow), 2);
+                QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0x5F)), 2);
                 EntityBoxPen.setJoinStyle(Qt::MiterJoin);
                 EntityBoxPainter.setPen(EntityBoxPen);
                 for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)

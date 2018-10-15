@@ -4,18 +4,18 @@
 
 // tuples of (width, height) in 8x8 tiles; see TONC table. Row major: size attribute
 static const int OAMDimensions[24] = {
-    4, 4,//    1, 1, \/
-    2, 4,//    2, 1, \/
-    4, 2,//    1, 2, \/
-    8, 4,//    2, 2
-    4, 8,//    4, 1,
-    8, 4,//    1, 4,
-    2, 2,//    4, 4, \/
-    1, 4,//    4, 2,
-    4, 1,//    2, 4, \/
-    1, 4,//    8, 8,
-    1, 4,//    8, 4,
-    2, 1 //    4, 8
+    1, 1, // size * 3 + shape (tuples of OAM width and height in 8x8 tiles)
+    2, 1,
+    1, 2,
+    2, 2,
+    4, 1,
+    1, 4,
+    4, 4,
+    4, 2,
+    2, 4,
+    8, 8,
+    8, 4,
+    4, 8
 };
 
 namespace LevelComponents
@@ -88,10 +88,10 @@ namespace LevelComponents
         newOAM->Yoff = (attr0 & 0x7F) - (attr0 & 0x80);
         newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
         newOAM->yFlip = (attr1 & (1 << 0xD)) != 0;
-        int SZ = (attr1 >> 0xD) & 3; // object size
-        int SH = (attr0 >> 0xD) & 3; // object shape
-        newOAM->OAMwidth = OAMDimensions[SZ * 6 + SH * 2]; // unit: 8x8 tiles
-        newOAM->OAMheight = OAMDimensions[SZ * 6 + SH * 2 + 1];
+        int SZ = (attr1 >> 0xE) & 3; // object size
+        int SH = (attr0 >> 0xE) & 3; // object shape
+        newOAM->OAMwidth = OAMDimensions[2 * (SZ * 3 + SH)]; // unit: 8x8 tiles
+        newOAM->OAMheight = OAMDimensions[2 * (SZ * 3 + SH) + 1];
         int tileID = attr2 & 0x3FF;
         int palNum = (attr2 >> 0xB) & 0xF;
         SemiTransparent = (((attr0 >> 0xA) & 3) == 1) ? true : false;
@@ -172,6 +172,7 @@ namespace LevelComponents
             return pm.toImage();
         }
         QPainter p(&pm);
+        p.setCompositionMode(QPainter::CompositionMode_SourceOver);
         // OAM tiles must be rendered in reverse order as per the GBA graphical specifications
         for(auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
         {
