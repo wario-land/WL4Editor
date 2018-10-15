@@ -386,8 +386,8 @@ namespace LevelComponents
                 {
                     Entity *currententity = currentEntityListSource[EntityList[currentDifficulty].at(i).EntityID];
                     EntityPainter[3 - currententity->GetPriority()]->drawImage(
-                        16 * EntityList[currentDifficulty][i].XPos - 256/* + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset >> 2)*/,
-                        16 * EntityList[currentDifficulty][i].YPos - 256/* + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset >> 2)*/,
+                        16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8,
+                        16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16,
                         currententity->Render());
                 }
                 for(int i = 0; i < 4; ++i)
@@ -409,7 +409,6 @@ namespace LevelComponents
 
                 // Reset Z value
                 Z = (Layer0ColorBlending && Layer0ColorBlendCoefficient_EVB) ? 9 : 8;
-
 
                 // Render door layer
                 QPixmap doorPixmap(sceneWidth, sceneHeight);
@@ -561,7 +560,7 @@ namespace LevelComponents
                 QPixmap EntityBoxPixmap(sceneWidth, sceneHeight);
                 EntityBoxPixmap.fill(Qt::transparent);
                 QPainter EntityBoxPainter(&EntityBoxPixmap);
-                QPen EntityBoxPen = QPen(QBrush(Qt::yellow), 2);
+                QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0x7F)), 2);
                 EntityBoxPen.setJoinStyle(Qt::MiterJoin);
                 EntityBoxPainter.setPen(EntityBoxPen);
                 for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
