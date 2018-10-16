@@ -115,10 +115,15 @@ namespace LevelComponents
                     offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
                     offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID, EntityGlobalID);
                 }
-                else if(EntityGlobalID < 17)
+                else if((EntityGlobalID < 17) && (EntityGlobalID > 6))
                 {
                     offsetID = tileID + y * 0x20 + x; // + currentEntityset->GetEntityTileIdOffset(EntityID) //untest
-                    offsetPal = palNum/* + 7 + 8*/;
+                    offsetPal = qMin(palNum + 5, 15);
+                }
+                else if(EntityGlobalID < 7)
+                {
+                    offsetID = tileID + (y + 14) * 0x20 + x;
+                    offsetPal = 15;
                 }
                 else //TODO: more cases
                 {
@@ -177,7 +182,10 @@ namespace LevelComponents
         for(auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
         {
             OAMTile *ot = *iter;
-            p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, ot->Render());
+            QImage tmpObject = ot->Render();
+//            QImage mask = tmpObject.createMaskFromColor(tmpObject.colorTable().at(0), Qt::MaskInColor);
+//            tmpObject.setAlphaChannel(mask);
+            p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, tmpObject);
         }
         return pm.toImage().mirrored(xFlip, yFlip);
     }
