@@ -241,7 +241,7 @@ namespace LevelComponents
     bool EntitySet::IncludeBossTiles()
     {
         return
-            IsEntityInside(0x12) ||
+            IsEntityInside(0x18) ||
             IsEntityInside(0x2C) ||
             IsEntityInside(0x51) ||
             IsEntityInside(0x69) ||

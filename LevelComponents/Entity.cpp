@@ -122,8 +122,8 @@ namespace LevelComponents
                 }
                 else if(EntityGlobalID < 7)
                 {
-                    offsetID = tileID + (y + 6) * 0x20 + x;
-                    offsetPal = qMin(palNum + 5, 15);
+                    offsetID = tileID + (y + 14) * 0x20 + x;
+                    offsetPal = 15;
                 }
                 else //TODO: more cases
                 {
