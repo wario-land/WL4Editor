@@ -1,8 +1,6 @@
 #include "Entity.h"
 
 #include <QPainter>
-#include <QGraphicsScene>
-#include <QGraphicsPixmapItem>
 
 // tuples of (width, height) in 8x8 tiles; see TONC table. Row major: size attribute
 static const int OAMDimensions[24] = {
