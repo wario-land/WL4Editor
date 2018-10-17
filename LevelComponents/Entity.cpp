@@ -148,6 +148,7 @@ namespace LevelComponents
     QImage OAMTile::Render()
     {
         QPixmap pm(OAMwidth * 8, OAMheight * 8);
+        pm.fill(Qt::transparent);
         foreach(EntityTile *et, tile8x8)
         {
             et->objTile->DrawTile(&pm, et->deltaX, et->deltaY);
@@ -177,15 +178,11 @@ namespace LevelComponents
             return pm.toImage();
         }
         QPainter p(&pm);
-        p.setCompositionMode(QPainter::CompositionMode_SourceOver);
         // OAM tiles must be rendered in reverse order as per the GBA graphical specifications
         for(auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
         {
             OAMTile *ot = *iter;
-            QImage tmpObject = ot->Render();
-//            QImage mask = tmpObject.createMaskFromColor(tmpObject.colorTable().at(0), Qt::MaskInColor);
-//            tmpObject.setAlphaChannel(mask);
-            p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, tmpObject);
+            p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, ot->Render());
         }
         return pm.toImage().mirrored(xFlip, yFlip);
     }
