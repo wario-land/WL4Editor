@@ -391,22 +391,22 @@ namespace LevelComponents
                     {
                         int tmppriority = (layers[1]->GetLayerPriority()) > (layers[2]->GetLayerPriority()) ? layers[1]->GetLayerPriority(): (layers[2]->GetLayerPriority());
                         EntityPainter[tmppriority]->drawImage(
-                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8,
-                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16,
+                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset + 98) / 4,
+                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset + 66) / 4,
                                     currententity->Render());
                     }
                     else if(/*(layers[0]->GetLayerPriority() != 0) && */(Layer0ColorBlending == true) && (Layer0ColorBlendCoefficient_EVB != 0))
                     {
                         EntityPainter[layers[0]->GetLayerPriority()]->drawImage(
-                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8,
-                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16,
+                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset + 98) / 4,
+                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset + 66) / 4,
                                     currententity->Render());
                     }
                     else
                     {
                         EntityPainter[layers[1]->GetLayerPriority() + 1]->drawImage(
-                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8,
-                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16,
+                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset + 98) / 4,
+                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset + 66) / 4,
                                     currententity->Render());
                     }
                 }
