@@ -8,6 +8,15 @@ namespace LevelComponents
     /// <summary>
     /// sub function used in EntitySet constructor for loading sub palettes for each Entity.
     /// </summary>
+    /// <param name="startPaletteId">
+    /// Id of the palette where start to reset.
+    /// </param>
+    /// <param name="paletteNum">
+    /// Amount of palettes that will be reset.
+    /// </param>
+    /// <param name="paletteSetPtr">
+    /// Palette data address in ROM.
+    /// </param>
     void EntitySet::LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr)
     {
         for(int i = 0; i < paletteNum; ++i)
@@ -30,6 +39,15 @@ namespace LevelComponents
     /// <summary>
     /// sub function used in EntitySet constructor for loading Tile8x8s for each Entity.
     /// </summary>
+    /// <param name="tileaddress">
+    /// Address of Entity tiles in ROM.
+    /// </param>
+    /// <param name="datalength">
+    /// Length of Tiles' data.
+    /// </param>
+    /// <param name="startrow">
+    /// The row number to load new Entity Tiles.
+    /// </param>
     void EntitySet::LoadSpritesTiles(int tileaddress, int datalength, int startrow)
     {
         for(int i = 0; i < (datalength / 32); ++i)
@@ -86,7 +104,8 @@ namespace LevelComponents
             }
         }
         // Load palette 3 - 7 for Basic Element used in the room
-        LoadSubPalettes(3, 5, basicElementPalettePtr);
+        LoadSubPalettes(3, 1, basicElementPalettePtr);
+        LoadSubPalettes(4, 4, WL4Constants::UniversalSpritesPalette2);
         // Load palette 15 for treasure boxes
         LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable));
         // Set palette 0 - 2 all to 0 for Wario Sprites only
@@ -135,9 +154,10 @@ namespace LevelComponents
         // Load Treasure/CD Boxes tile8x8s when this Entityset is not a Boss Entityset
         if(!IncludeBossTiles())
         {
-            tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable);
-            tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable);
-            LoadSpritesTiles(tiledataptr, tiledatalength, 30);
+//            tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable);
+//            tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable);
+//            LoadSpritesTiles(tiledataptr, tiledatalength, 30);
+            LoadSpritesTiles(0x352CF0, 2048, 30);
         }
 
         // TODOs: set other entity informations
@@ -224,7 +244,7 @@ namespace LevelComponents
     bool EntitySet::IncludeBossTiles()
     {
         return
-            IsEntityInside(0x12) ||
+            IsEntityInside(0x18) ||
             IsEntityInside(0x2C) ||
             IsEntityInside(0x51) ||
             IsEntityInside(0x69) ||

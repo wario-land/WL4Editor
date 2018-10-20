@@ -110,15 +110,27 @@ namespace LevelComponents
                 // Bosses' offsetID are loaded directly
                 if((EntityGlobalID > 0x10) && (EntityGlobalID != 0x18) && (EntityGlobalID != 0x2C) &&
                         (EntityGlobalID != 0x51) && (EntityGlobalID != 0x69) &&
-                        (EntityGlobalID != 0x76) && (EntityGlobalID != 0x7D))
+                        (EntityGlobalID != 0x76) && (EntityGlobalID != 0x7D)) // Boxes
                 {
                     offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
                     offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID, EntityGlobalID);
                 }
-                else if(EntityGlobalID < 17)
+                else if((EntityGlobalID < 9) && (EntityGlobalID > 6)) // Diamond and Frog switch
                 {
-                    offsetID = tileID + y * 0x20 + x; // + currentEntityset->GetEntityTileIdOffset(EntityID) //untest
-                    offsetPal = palNum/* + 7 + 8*/;
+                    offsetID = tileID + y * 0x20 + x;
+                    offsetPal = 5;
+                }
+                else if((EntityGlobalID < 17) && (EntityGlobalID > 8)) // Keyzer
+                {
+                    offsetID = tileID + y * 0x20 + x;
+                    // the Keyzer use 2 palette (6 and 7), but the OAM data are set by only 1 palette
+                    // Using palette 7 here makes the render result more similar to the real graphic
+                    offsetPal = 7;
+                }
+                else if(EntityGlobalID < 7)
+                {
+                    offsetID = tileID + (y + 14) * 0x20 + x;
+                    offsetPal = 15;
                 }
                 else //TODO: more cases
                 {
@@ -143,6 +155,7 @@ namespace LevelComponents
     QImage OAMTile::Render()
     {
         QPixmap pm(OAMwidth * 8, OAMheight * 8);
+        pm.fill(Qt::transparent);
         foreach(EntityTile *et, tile8x8)
         {
             et->objTile->DrawTile(&pm, et->deltaX, et->deltaY);
@@ -172,7 +185,6 @@ namespace LevelComponents
             return pm.toImage();
         }
         QPainter p(&pm);
-        p.setCompositionMode(QPainter::CompositionMode_SourceOver);
         // OAM tiles must be rendered in reverse order as per the GBA graphical specifications
         for(auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
         {
