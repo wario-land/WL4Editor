@@ -218,6 +218,7 @@ namespace LevelComponents
         if(currentEntitySet != nullptr) delete currentEntitySet;
         FreecurrentEntityListSource();
         currentEntitySet = new EntitySet(entitysetId, tileset->GetUniversalSpritesTilesPalettePtr());
+//        currentEntitySet = new EntitySet(entitysetId, WL4Constants::UniversalSpritesPalette);
         for(int i = 0; i < 17; ++i)
         {
             Entity *newEntity = new Entity(-1, i, currentEntitySet);
@@ -332,7 +333,7 @@ namespace LevelComponents
                     // Add the rendered layer to the graphics scene
                     QGraphicsPixmapItem *pixmapItem = scene->addPixmap(pixmap);
                     pixmapItem->setZValue(Z); Z += 2;
-                    EntityLayerZValue[i] = Z - 1;
+                    EntityLayerZValue[3 - i] = Z - 1;
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
 
                     // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
@@ -385,10 +386,30 @@ namespace LevelComponents
                 for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
                 {
                     Entity *currententity = currentEntityListSource[EntityList[currentDifficulty].at(i).EntityID];
-                    EntityPainter[3 - currententity->GetPriority()]->drawImage(
-                        16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8,
-                        16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16,
-                        currententity->Render());
+//                    EntityPainter[3 - currententity->GetPriority()]->drawImage(
+                    // Use an alternative method to render the Entity in a not-so-bad place
+                    if((Layer0ColorBlendCoefficient_EVB == 0) && (Layer0ColorBlending == true))
+                    {
+                        int tmppriority = (layers[1]->GetLayerPriority()) > (layers[2]->GetLayerPriority()) ? layers[1]->GetLayerPriority(): (layers[2]->GetLayerPriority());
+                        EntityPainter[tmppriority]->drawImage(
+                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset + 98) / 4,
+                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset + 66) / 4,
+                                    currententity->Render());
+                    }
+                    else if(/*(layers[0]->GetLayerPriority() != 0) && */(Layer0ColorBlending == true) && (Layer0ColorBlendCoefficient_EVB != 0))
+                    {
+                        EntityPainter[layers[0]->GetLayerPriority()]->drawImage(
+                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset + 98) / 4,
+                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset + 66) / 4,
+                                    currententity->Render());
+                    }
+                    else
+                    {
+                        EntityPainter[layers[1]->GetLayerPriority() + 1]->drawImage(
+                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset + 98) / 4,
+                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset + 66) / 4,
+                                    currententity->Render());
+                    }
                 }
                 for(int i = 0; i < 4; ++i)
                 {
@@ -560,7 +581,7 @@ namespace LevelComponents
                 QPixmap EntityBoxPixmap(sceneWidth, sceneHeight);
                 EntityBoxPixmap.fill(Qt::transparent);
                 QPainter EntityBoxPainter(&EntityBoxPixmap);
-                QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0x7F)), 2);
+                QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0xFF)), 2);
                 EntityBoxPen.setJoinStyle(Qt::MiterJoin);
                 EntityBoxPainter.setPen(EntityBoxPen);
                 for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
