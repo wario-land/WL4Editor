@@ -838,13 +838,4 @@ namespace LevelComponents
         }
         return -1; // TODO: Error handling
     }
-
-    int Room::GetLayerIdbyPriority(int priority)
-    {
-        for(int i = 0; i < 4; ++i)
-        {
-            if(layers[i]->GetLayerPriority() == priority) return i;
-        }
-        return -1;
-    }
 }
