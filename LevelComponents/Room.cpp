@@ -218,6 +218,7 @@ namespace LevelComponents
         if(currentEntitySet != nullptr) delete currentEntitySet;
         FreecurrentEntityListSource();
         currentEntitySet = new EntitySet(entitysetId, tileset->GetUniversalSpritesTilesPalettePtr());
+//        currentEntitySet = new EntitySet(entitysetId, WL4Constants::UniversalSpritesPalette);
         for(int i = 0; i < 17; ++i)
         {
             Entity *newEntity = new Entity(-1, i, currentEntitySet);

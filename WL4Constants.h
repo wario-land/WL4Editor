@@ -23,6 +23,7 @@ namespace WL4Constants
     const int NormalLayerDefaultPtr       = 0x3F2263;
     const int ToxicLandfillDustyLayer0Ptr = 0x601854;
     const int UniversalSpritesPalette     = 0x556DDC;
+    const int UniversalSpritesPalette2    = 0x400A68;
 
     // Other
     const int AvailableSpaceBeginningInROM = 0x78F970;
