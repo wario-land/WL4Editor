@@ -104,7 +104,8 @@ namespace LevelComponents
             }
         }
         // Load palette 3 - 7 for Basic Element used in the room
-        LoadSubPalettes(3, 5, basicElementPalettePtr);
+        LoadSubPalettes(3, 1, basicElementPalettePtr);
+        LoadSubPalettes(4, 4, WL4Constants::UniversalSpritesPalette2);
         // Load palette 15 for treasure boxes
         LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable));
         // Set palette 0 - 2 all to 0 for Wario Sprites only
