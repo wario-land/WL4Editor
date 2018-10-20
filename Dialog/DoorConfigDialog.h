@@ -12,26 +12,13 @@ namespace Ui {
 class DoorConfigDialog;
 }
 
-/*
-class _EntityFilterTableModel : public QAbstractTableModel
+struct TableEntityItem
 {
-    Q_OBJECT
-
-public:
-    explicit EntityFilterTableModel(QWidget *_parent);
-    ~EntityFilterTableModel();
-    void AddEntity(LevelComponents::Entity *entity);
-
-    QList<LevelComponents::Entity*> entities;
-
-private:
-    // Required for QAbstractItemModel implementation
-    QWidget *parent;
-    int rowCount(const QModelIndex &) const override { return entities.size(); }
-    int columnCount(const QModelIndex &) const override { return 2; }
-    QVariant data(const QModelIndex &index, int) const override;
+    LevelComponents::Entity *entity;
+    QString entityName;
+    QImage entityImage;
+    bool visible; // unused
 };
-*/
 
 class EntityFilterTableModel : public QStandardItemModel
 {
@@ -42,18 +29,27 @@ public:
     ~EntityFilterTableModel();
 
     void AddEntity(LevelComponents::Entity *entity);
+    void DelEntity(int line);
 
-    QList<LevelComponents::Entity*> entities;
+    QList<TableEntityItem> entities;
 
 private:
     QWidget *parent;
 };
+
+struct EntitySetItem
+{
+    int id;
+    bool visible;
+};
+
 
 class DoorConfigDialog : public QDialog
 {
     Q_OBJECT
 
 private slots:
+    void on_TableView_Checkbox_stateChanged(QStandardItem * item);
     void on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index);
     void on_SpinBox_DoorX_valueChanged(int arg1);
     void on_SpinBox_DoorY_valueChanged(int arg1);
@@ -80,9 +76,18 @@ private:
     void UpdateDoorLayerGraphicsView_DestinationDoor();
     void PopulateTable(LevelComponents::EntitySet entitySet);
 
+    int GetSelectedComboBoxEntitySetID();
+
+    // EntitySet
+    void UpdateComboBoxEntitySet();
+    // TableView
+    void UpdateTableView();
+
     static LevelComponents::EntitySet *entitiessets[90];
     static LevelComponents::Entity *entities[129];
 
+    // visible in EntitySet ComboBox
+    QList<EntitySetItem> comboboxEntitySet;
 public:
     explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level);
     ~DoorConfigDialog();

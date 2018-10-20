@@ -206,6 +206,8 @@ namespace LevelComponents
     /// </param>
     bool EntitySet::IsEntityInside(int entityglobalId)
     {
+        if (entityglobalId >= 0 && entityglobalId <= 0x10)
+            return true;
         for(unsigned int i = 0; i < EntityinfoTable.size(); ++i)
         {
             if(EntityinfoTable[i].Global_EntityID == entityglobalId)
