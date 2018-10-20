@@ -159,6 +159,7 @@ namespace LevelComponents
         int GetLocalDoorID(int globalDoorId);
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
+        int GetLayerIdbyPriority(int priority);
     };
 }
 
