@@ -14,9 +14,9 @@ class DoorConfigDialog;
 
 struct TableEntityItem
 {
-    LevelComponents::Entity *entity;
-    QString entityName;
-    QImage entityImage;
+    LevelComponents::Entity *entity;    // pointer to entity
+    QString entityName;                 // name of entity
+    QImage entityImage;                 // image of entity
     bool visible; // unused
 };
 
@@ -29,7 +29,6 @@ public:
     ~EntityFilterTableModel();
 
     void AddEntity(LevelComponents::Entity *entity);
-    void DelEntity(int line);
 
     QList<TableEntityItem> entities;
 
@@ -39,8 +38,8 @@ private:
 
 struct EntitySetItem
 {
-    int id;
-    bool visible;
+    int id;         // id of entity set
+    bool visible;   // visible in ComboBox
 };
 
 
@@ -134,7 +133,6 @@ public:
         "0x19 Totsumen",
         "0x1A Pig Head Statue",
         "0x1B Moguramen",
-        "0x1B Moguramen",
         "0x1C Harimen (100 points)",
         "0x1D Harimenzetto",
         "0x1E Bobble",
@@ -216,6 +214,7 @@ public:
         "0x6A Hoggus",
         "0x6B Denden",
         "0x6C Butatabi",
+        "0x6D Unknow",
         "0x6E Folding Door",
         "0x6F Purple Pencil",
         "0x70 Blue Pencil",

@@ -92,9 +92,6 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     // Initialize the entity list drop-down
     for(unsigned int i = 1; i < sizeof(entities)/sizeof(entities[0]); ++i)
     {
-        // skip it 0x1B Moguramen
-        if(i == 27)
-            continue;
         EntityFilterTable->AddEntity(entities[i]);
     }
     UpdateTableView();
@@ -241,10 +238,12 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_DestinationDoor()
     tmpDestinationRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
 }
 
-///
-/// \brief DoorConfigDialog::GetSelectedComboBoxEntitySetID
-/// \return -1 if invalid
-///
+/// <summary>
+/// Return the current entity set ID in ComboBox_EntitySetID.
+/// </summary>
+/// <return>
+/// return -1 if there is no entity ID in ComboBox_EntitySetID.
+/// </return>
 int DoorConfigDialog::GetSelectedComboBoxEntitySetID()
 {
     QString str = ui->ComboBox_EntitySetID->currentText();
@@ -257,7 +256,7 @@ int DoorConfigDialog::GetSelectedComboBoxEntitySetID()
 }
 
 /// <sumary>
-///
+/// Update items in ComboBox_EntitySetID using comboboxEntitySet
 /// <sumary>
 void DoorConfigDialog::UpdateComboBoxEntitySet()
 {
@@ -271,8 +270,9 @@ void DoorConfigDialog::UpdateComboBoxEntitySet()
     }
 }
 
-
-
+/// <sumary>
+/// Update items in TableView_EntityFilter using entities
+/// <sumary>
 void DoorConfigDialog::UpdateTableView()
 {
     EntityFilterTableModel *model =  static_cast<EntityFilterTableModel*>(ui->TableView_EntityFilter->model());
@@ -307,6 +307,13 @@ void DoorConfigDialog::UpdateTableView()
     }
 }
 
+
+/// <summary>
+/// Called when state of checkbox changed.
+/// </summary>
+/// <param name="item">
+/// The checkbox that state changed.
+/// </param>
 void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
 {
     EntityFilterTableModel *model =  static_cast<EntityFilterTableModel*>(ui->TableView_EntityFilter->model());
@@ -515,31 +522,4 @@ void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
                        });
 }
 
-void EntityFilterTableModel::DelEntity(int line)
-{
 
-}
-
-/// <summary>
-/// Return the data for some cell in the table.
-/// <summary>
-/// <param name="index">
-/// The 2D indexer for the table.
-/// </param>
-/// <returns>
-/// The data at X = index.column(), Y = index.row()
-/// </returns>
-///
-/*
-QVariant EntityFilterTableModel::data(const QModelIndex &index, int) const
-{
-    if(index.column())
-    {
-        return entities[index.row()]->Render();
-    }
-    else
-    {
-        return DoorConfigDialog::EntitynameSetData[entities[index.row()]->GetEntityGlobalID() - 1];
-    }
-}
-*/
