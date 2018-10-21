@@ -27,18 +27,27 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     DoorID(doorID)
 {
     ui->setupUi(this);
-    EntityFilterTable = new EntityFilterTableModel(ui->TableView_EntityFilter);
-    ui->TableView_EntityFilter->setModel(EntityFilterTable);
 
+    // TableView
+    EntityFilterTable = new EntityFilterTableModel(ui->TableView_EntityFilter);
+    // Header
+    EntityFilterTable->setHorizontalHeaderLabels(QStringList() << "" << "Entity Name" << "Entity Image");
     EntityFilterTable->setColumnCount(3);
     // set col width
     ui->TableView_EntityFilter->setColumnWidth(0, 30);
     ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    //ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
-    //ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
     ui->TableView_EntityFilter->resizeColumnsToContents();
-
+    // set rwo height
+    ui->TableView_EntityFilter->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->TableView_EntityFilter->resizeRowsToContents();
     IsInitialized = false;
+    // connect CheckBox in TableView to action
+    connect(EntityFilterTable,
+            SIGNAL(itemChanged(QStandardItem*)),
+            this,
+            SLOT(on_TableView_Checkbox_stateChanged(QStandardItem*)));
+    // set model
+    ui->TableView_EntityFilter->setModel(EntityFilterTable);
 
     // Distribute Doors into the temp CurrentRoom
     tmpCurrentRoom->SetDoors(_level->GetRoomDoors(currentroom->GetRoomID()));
@@ -72,11 +81,20 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->ComboBox_DoorDestinationPicker->setCurrentIndex(currentdoor->GetDestinationDoor()->GetGlobalDoorID());
     RenderGraphicsView_Preview();
 
+    // Initialize the EntitySet ComboBox
+    for (int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
+    {
+        comboboxEntitySet.push_back({i, true});
+    }
+    UpdateComboBoxEntitySet();
+
     // Initialize the entity list drop-down
     for(unsigned int i = 1; i < sizeof(entities)/sizeof(entities[0]); ++i)
     {
         EntityFilterTable->AddEntity(entities[i]);
     }
+    UpdateTableView();
+
     //unsigned char entitySetID = currentdoor->GetEntitySetID();
     // TODO set the index here
 
@@ -220,11 +238,129 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_DestinationDoor()
 }
 
 /// <summary>
-/// Reset currentDoor destination according to the currentIndex of the ComboBox_DoorDestinationPicker.
+/// Return the current entity set ID in ComboBox_EntitySetID.
 /// </summary>
-/// <param name="index">
-/// currentIndex of the ComboBox_DoorDestinationPicker.
+/// <return>
+/// return -1 if there is no entity ID in ComboBox_EntitySetID.
+/// </return>
+int DoorConfigDialog::GetSelectedComboBoxEntitySetID()
+{
+    QString str = ui->ComboBox_EntitySetID->currentText();
+    bool ok = false;
+    int ret = str.toInt(&ok);
+    if (!ok)
+        ret = -1;
+
+    return ret;
+}
+
+/// <sumary>
+/// Update items in ComboBox_EntitySetID using comboboxEntitySet
+/// <sumary>
+void DoorConfigDialog::UpdateComboBoxEntitySet()
+{
+    QComboBox *model = ui->ComboBox_EntitySetID;
+    model->clear();
+    for(const auto item : comboboxEntitySet)
+    {
+        if (!item.visible)
+            continue;
+        model->addItem(QString::number(item.id));
+    }
+}
+
+/// <sumary>
+/// Update items in TableView_EntityFilter using entities
+/// <sumary>
+void DoorConfigDialog::UpdateTableView()
+{
+    EntityFilterTableModel *model =  static_cast<EntityFilterTableModel*>(ui->TableView_EntityFilter->model());
+    model->clear();
+    for(const auto& item : model->entities)
+    {
+        // skip invisible item
+        if (!item.visible)
+            continue;
+
+        int row = model->rowCount();
+        QStandardItem *checkbox = new QStandardItem;
+        checkbox->setCheckable(true);
+        checkbox->setCheckState(Qt::Unchecked);
+        model->setItem(row, 0, checkbox);
+
+        // entity name item
+        QStandardItem *entityName = new QStandardItem(item.entityName);
+        //QStandardItem *entityName = new QStandardItem(QString::number(row));
+        model->setItem(row, 1, entityName);
+
+        // pixmap item
+        QStandardItem *imageItem = new QStandardItem;
+        imageItem->setData(QVariant(item.entityImage), Qt::DecorationRole);
+        model->setItem(row, 2, imageItem);
+
+        // disable edit
+        checkbox->setEditable(false);
+        entityName->setEditable(false);
+        imageItem->setEditable(false);
+
+    }
+}
+
+
+/// <summary>
+/// Called when state of checkbox changed.
+/// </summary>
+/// <param name="item">
+/// The checkbox that state changed.
 /// </param>
+void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
+{
+    EntityFilterTableModel *model =  static_cast<EntityFilterTableModel*>(ui->TableView_EntityFilter->model());
+    const TableEntityItem &it = model->entities[item->row()];
+
+    if (item->checkState() == Qt::Checked)
+    {
+
+        for(auto &set : comboboxEntitySet)
+        {
+
+            if (set.visible && !entitiessets[set.id]->IsEntityInside(it.entity->GetEntityGlobalID()))
+            {
+                set.visible = false;
+            }
+        }
+        UpdateComboBoxEntitySet();
+    }
+    else if (item->checkState() == Qt::Unchecked)
+    {
+        // for every set
+        // if there are any entity that is checked and
+        // the set isn't inside it
+        // then the set is still invisible
+        for(auto &set : comboboxEntitySet)
+        {
+            if (set.visible)
+                continue;
+
+            bool visible = true;
+            for(int i=0; i < model->rowCount(); ++i)
+            {
+                // the entity is checked
+                bool checked = model->item(i, 0)->checkState();
+                if (checked){
+                    if (!entitiessets[set.id]->IsEntityInside(model->entities[i].entity->GetEntityGlobalID()))
+                    {
+                        visible = false;
+                        break;
+                    }
+                }
+            }
+            set.visible = visible;
+        }
+        UpdateComboBoxEntitySet();
+    }
+}
+
 void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index)
 {
     delete tmpDestinationRoom;
@@ -358,6 +494,11 @@ EntityFilterTableModel::EntityFilterTableModel(QWidget *_parent) : QStandardItem
 EntityFilterTableModel::~EntityFilterTableModel()
 {
     // TODO
+    for (auto& item : entities)
+    {
+        // don't delete
+        item.entity = NULL;
+    }
 }
 
 /// <summary>
@@ -368,55 +509,16 @@ EntityFilterTableModel::~EntityFilterTableModel()
 /// </param>
 void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
 {
-    // add entity to list
-    entities.push_back(entity);
-
-    // get current row
-    int row = rowCount();
-
-    // checkbox item
-    QStandardItem *checkbox = new QStandardItem;
-    checkbox->setCheckable(true);
-    checkbox->setCheckState(Qt::Unchecked);
-    setItem(row, 0, checkbox);
-
-    // entity name item
-    QStandardItem *entityName = new QStandardItem(DoorConfigDialog::EntitynameSetData[entities[row]->GetEntityGlobalID()-1]);
-    setItem(row, 1, entityName);
-
-    // pixmap item
-    QStandardItem *imageItem = new QStandardItem;
-
-    imageItem->setData(QVariant(QPixmap::fromImage(entities[row]->Render())), Qt::DecorationRole);
-    //imageItem->setData(QVariant(pixmap), Qt::DecorationRole);
-    setItem(row, 2, imageItem);
-
-    // disable edit
-    checkbox->setEditable(false);
-    entityName->setEditable(false);
-    imageItem->setEditable(false);
+    /*TableEntity item;
+    item.entity = entity;
+    item.entityName = DoorConfigDialog::EntitynameSetData[entity->GetEntityGlobalID()-1];
+    item.entityImage = */
+    entities.push_back({
+                           entity,
+                           DoorConfigDialog::EntitynameSetData[entity->GetEntityGlobalID()-1],
+                           entity->Render(),
+                           true
+                       });
 }
 
-/// <summary>
-/// Return the data for some cell in the table.
-/// <summary>
-/// <param name="index">
-/// The 2D indexer for the table.
-/// </param>
-/// <returns>
-/// The data at X = index.column(), Y = index.row()
-/// </returns>
-///
-/*
-QVariant EntityFilterTableModel::data(const QModelIndex &index, int) const
-{
-    if(index.column())
-    {
-        return entities[index.row()]->Render();
-    }
-    else
-    {
-        return DoorConfigDialog::EntitynameSetData[entities[index.row()]->GetEntityGlobalID() - 1];
-    }
-}
-*/
+
