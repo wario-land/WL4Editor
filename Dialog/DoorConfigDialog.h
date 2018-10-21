@@ -12,26 +12,13 @@ namespace Ui {
 class DoorConfigDialog;
 }
 
-/*
-class _EntityFilterTableModel : public QAbstractTableModel
+struct TableEntityItem
 {
-    Q_OBJECT
-
-public:
-    explicit EntityFilterTableModel(QWidget *_parent);
-    ~EntityFilterTableModel();
-    void AddEntity(LevelComponents::Entity *entity);
-
-    QList<LevelComponents::Entity*> entities;
-
-private:
-    // Required for QAbstractItemModel implementation
-    QWidget *parent;
-    int rowCount(const QModelIndex &) const override { return entities.size(); }
-    int columnCount(const QModelIndex &) const override { return 2; }
-    QVariant data(const QModelIndex &index, int) const override;
+    LevelComponents::Entity *entity;    // pointer to entity
+    QString entityName;                 // name of entity
+    QImage entityImage;                 // image of entity
+    bool visible; // unused
 };
-*/
 
 class EntityFilterTableModel : public QStandardItemModel
 {
@@ -43,17 +30,25 @@ public:
 
     void AddEntity(LevelComponents::Entity *entity);
 
-    QList<LevelComponents::Entity*> entities;
+    QList<TableEntityItem> entities;
 
 private:
     QWidget *parent;
 };
+
+struct EntitySetItem
+{
+    int id;         // id of entity set
+    bool visible;   // visible in ComboBox
+};
+
 
 class DoorConfigDialog : public QDialog
 {
     Q_OBJECT
 
 private slots:
+    void on_TableView_Checkbox_stateChanged(QStandardItem * item);
     void on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index);
     void on_SpinBox_DoorX_valueChanged(int arg1);
     void on_SpinBox_DoorY_valueChanged(int arg1);
@@ -80,9 +75,18 @@ private:
     void UpdateDoorLayerGraphicsView_DestinationDoor();
     void PopulateTable(LevelComponents::EntitySet entitySet);
 
+    int GetSelectedComboBoxEntitySetID();
+
+    // EntitySet
+    void UpdateComboBoxEntitySet();
+    // TableView
+    void UpdateTableView();
+
     static LevelComponents::EntitySet *entitiessets[90];
     static LevelComponents::Entity *entities[129];
 
+    // visible in EntitySet ComboBox
+    QList<EntitySetItem> comboboxEntitySet;
 public:
     explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level);
     ~DoorConfigDialog();
@@ -128,7 +132,6 @@ public:
         "0x18 Boss: Cuckoo Condor",
         "0x19 Totsumen",
         "0x1A Pig Head Statue",
-        "0x1B Moguramen",
         "0x1B Moguramen",
         "0x1C Harimen (100 points)",
         "0x1D Harimenzetto",
@@ -211,6 +214,7 @@ public:
         "0x6A Hoggus",
         "0x6B Denden",
         "0x6C Butatabi",
+        "0x6D Unknow",
         "0x6E Folding Door",
         "0x6F Purple Pencil",
         "0x70 Blue Pencil",

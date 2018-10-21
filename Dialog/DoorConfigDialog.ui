@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>960</width>
-    <height>720</height>
+    <width>1060</width>
+    <height>779</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <widget class="QGroupBox" name="GroupBox_Preview">
      <property name="maximumSize">
       <size>
-       <width>470</width>
+       <width>560</width>
        <height>16777215</height>
       </size>
      </property>
@@ -56,7 +56,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="ComboBox_EntityID"/>
+       <widget class="QComboBox" name="ComboBox_EntitySetID"/>
       </item>
       <item>
        <widget class="QLabel" name="Label_EntityFilter">
