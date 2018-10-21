@@ -1,6 +1,5 @@
 #include "DoorConfigDialog.h"
 #include "ui_DoorConfigDialog.h"
-#include <time.h>
 
 // constexpr declarations for the initializers in the header
 constexpr const char *DoorConfigDialog::DoortypeSetData[5];
