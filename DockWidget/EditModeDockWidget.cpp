@@ -28,8 +28,8 @@ EditModeDockWidget::EditModeDockWidget(QWidget *parent) :
     layerIndices[ui->RadioButton_EditOnLayer1] = 1;
     layerIndices[ui->RadioButton_EditOnLayer2] = 2;
     layerIndices[ui->RadioButton_EditOnLayer3] = 3;
-    difficultyIndices[ui->RadioButton_NMode] = 0;
-    difficultyIndices[ui->RadioButton_HMode] = 1;
+    difficultyIndices[ui->RadioButton_HMode] = 0;
+    difficultyIndices[ui->RadioButton_NMode] = 1;
     difficultyIndices[ui->RadioButton_SHMode] = 2;
     modeGroup = new QButtonGroup(ui->editModeGroupBox);
     modeGroup->addButton(ui->RadioButton_LayerMode);
@@ -70,6 +70,16 @@ void EditModeDockWidget::SetLayersCheckBoxEnabled(int index, bool usable)
         case 7: ui->CheckBox_AlphaView->setEnabled(usable); ui->CheckBox_AlphaView->setChecked(usable); break;
     }
     ui->RadioButton_EditOnLayer1->setChecked(true);
+}
+
+void EditModeDockWidget::SetDifficultyRadioBox(int modeid)
+{
+    switch(modeid)
+    {
+        case 0: ui->RadioButton_HMode->setChecked(true); break;
+        case 2: ui->RadioButton_SHMode->setChecked(true); break;
+        default: ui->RadioButton_NMode->setChecked(true); // case 1
+    }
 }
 
 bool *EditModeDockWidget::GetLayersVisibilityArray()
@@ -231,5 +241,29 @@ void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
     if(!checked)
     {
         singleton->Graphicsview_UnselectDoor();
+    }
+}
+
+void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
+{
+    if(!checked)
+    {
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
+    }
+}
+
+void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
+{
+    if(!checked)
+    {
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
+    }
+}
+
+void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
+{
+    if(!checked)
+    {
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
     }
 }

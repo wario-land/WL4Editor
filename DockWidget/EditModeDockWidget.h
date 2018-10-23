@@ -50,6 +50,7 @@ public:
     struct Ui::EditModeParams GetEditModeParams();
     ~EditModeDockWidget();
     void SetLayersCheckBoxEnabled(int index, bool usable);
+    void SetDifficultyRadioBox(int modeid);
     bool *GetLayersVisibilityArray();
 
 private slots:
@@ -62,6 +63,9 @@ private slots:
     void on_CheckBox_CameraView_stateChanged(int arg1);
     void on_CheckBox_AlphaView_stateChanged(int arg1);
     void on_RadioButton_DoorMode_toggled(bool checked);
+    void on_RadioButton_NMode_toggled(bool checked);
+    void on_RadioButton_HMode_toggled(bool checked);
+    void on_RadioButton_SHMode_toggled(bool checked);
 };
 
 #endif // EDITMODEDOCKWIDGET_H
