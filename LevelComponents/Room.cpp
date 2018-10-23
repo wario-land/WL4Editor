@@ -383,6 +383,7 @@ namespace LevelComponents
                     EntityPixmap[i]->fill(Qt::transparent);
                     EntityPainter[i] = new QPainter(EntityPixmap[i]);
                 }
+                currentDifficulty = renderParams->mode.seleteddifficulty;
                 for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
                 {
                     Entity *currententity = currentEntityListSource[EntityList[currentDifficulty].at(i).EntityID];

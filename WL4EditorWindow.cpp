@@ -102,6 +102,7 @@ void WL4EditorWindow::LoadRoomUIUpdate()
     // Render the screen
     RenderScreenFull();
     SetEditModeDockWidgetLayerEditability();
+    EditModeWidget->SetDifficultyRadioBox(1);
 }
 
 /// <summary>
@@ -172,6 +173,7 @@ void WL4EditorWindow::OpenROM()
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 {
     EditModeWidget->SetLayersCheckBoxEnabled(0, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(1, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(2, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(3, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(7, CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnable());
@@ -525,6 +527,7 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         // UI update
         RenderScreenFull();
         SetEditModeDockWidgetLayerEditability();
+        EditModeWidget->SetDifficultyRadioBox(1);
         // TODO: this should be done with the operation history
     }
 }
