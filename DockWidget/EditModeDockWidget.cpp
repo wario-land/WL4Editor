@@ -72,6 +72,12 @@ void EditModeDockWidget::SetLayersCheckBoxEnabled(int index, bool usable)
     ui->RadioButton_EditOnLayer1->setChecked(true);
 }
 
+/// <summary>
+/// Function will called by the WL4EditorWindow for reset difficulty.
+/// </summary>
+/// <param name="modeid">
+/// difficulty id.
+/// </param>
 void EditModeDockWidget::SetDifficultyRadioBox(int modeid)
 {
     switch(modeid)
@@ -244,6 +250,12 @@ void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
     }
 }
 
+/// <summary>
+/// Slot function for change difficulty to Normal.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_NMode.
+/// </param>
 void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
 {
     if(!checked)
@@ -252,6 +264,12 @@ void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
     }
 }
 
+/// <summary>
+/// Slot function for change difficulty to Hard.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_HMode.
+/// </param>
 void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 {
     if(!checked)
@@ -260,6 +278,12 @@ void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
     }
 }
 
+/// <summary>
+/// Slot function for change difficulty to SHard.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_SHMode.
+/// </param>
 void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
 {
     if(!checked)
