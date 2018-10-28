@@ -110,7 +110,7 @@ namespace LevelComponents
                 // Bosses' offsetID are loaded directly
                 if((EntityGlobalID > 0x10) && (EntityGlobalID != 0x18) && (EntityGlobalID != 0x2C) &&
                         (EntityGlobalID != 0x51) && (EntityGlobalID != 0x69) &&
-                        (EntityGlobalID != 0x76) && (EntityGlobalID != 0x7D)) // Boxes
+                        (EntityGlobalID != 0x76) && (EntityGlobalID != 0x7D)) // Normal Entities
                 {
                     offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
                     offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID, EntityGlobalID);
@@ -127,11 +127,16 @@ namespace LevelComponents
                     // Using palette 7 here makes the render result more similar to the real graphic
                     offsetPal = 7;
                 }
-                else if(EntityGlobalID < 7)
+                else if(EntityGlobalID < 7) // Boxes
                 {
                     offsetID = tileID + (y + 14) * 0x20 + x;
                     offsetPal = 15;
                 }
+                else if(EntityGlobalID == 0x18) { offsetID = tileID + y * 0x20 + x; offsetPal = palNum + 1; }
+                else if((EntityGlobalID == 0x2C) || (EntityGlobalID == 0x51)) { offsetID = tileID + y * 0x20 + x; offsetPal = palNum + 8; }
+                else if(EntityGlobalID == 0x76) { offsetID = tileID + y * 0x20 + x; offsetPal = palNum + 8; } //only showing flowerpot
+                else if(EntityGlobalID == 0x7D) { offsetID = tileID + y * 0x20 + x; offsetPal = palNum + 3; } //Golden Diva is a Frog Switch ??
+                else if(EntityGlobalID == 0x69) { offsetID = tileID + y * 0x20 + x; offsetPal = palNum + 5; }
                 else //TODO: more cases
                 {
                     offsetID = tileID + y * 0x20 + x;
