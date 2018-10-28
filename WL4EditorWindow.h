@@ -55,6 +55,7 @@ public:
     void SetEditModeDockWidgetLayerEditability();
     bool *GetLayersVisibilityArray();
     void Graphicsview_UnselectDoor();
+    void RoomConfigReset(DialogParams::RoomConfigParams *previousroomconfig, DialogParams::RoomConfigParams *currentroomconfig);
 
 private slots:
     void on_actionOpen_ROM_triggered();

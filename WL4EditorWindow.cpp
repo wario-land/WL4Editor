@@ -189,6 +189,87 @@ void WL4EditorWindow::Graphicsview_UnselectDoor()
     ui->graphicsView->UnSelectDoor();
 }
 
+void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *previousroomconfig, DialogParams::RoomConfigParams *currentroomconfig)
+{
+    // Apply the selected parameters to the current room
+    // reset the Tileset instance in Room class
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
+    if(currentroomconfig->CurrentTilesetIndex != previousroomconfig->CurrentTilesetIndex)
+    {
+        LevelComponents::Tileset *currentTileset = currentRoom->GetTileset();
+        delete currentTileset;
+        int tilesetPtr = WL4Constants::TilesetDataTable + currentroomconfig->CurrentTilesetIndex * 36;
+        currentTileset = new LevelComponents::Tileset(tilesetPtr, currentroomconfig->CurrentTilesetIndex);
+        currentRoom->SetTileset(currentTileset, currentroomconfig->CurrentTilesetIndex);
+        Tile16SelecterWidget->SetTileset(currentroomconfig->CurrentTilesetIndex);
+    }
+
+    // refresh the Layer 2, 0, 3 instances
+    if(currentroomconfig->Layer2Enable && !previousroomconfig->Layer2Enable)
+    {
+        currentRoom->GetLayer(2)->CreateNewLayer_type0x10(currentroomconfig->RoomWidth, currentroomconfig->RoomHeight);
+    }
+    else if(previousroomconfig->Layer2Enable && !currentroomconfig->Layer2Enable)
+    {
+        currentRoom->GetLayer(2)->SetDisabled();
+    }
+
+    if(!previousroomconfig->Layer0Enable && currentroomconfig->Layer0Enable)
+    {
+        if((currentroomconfig->Layer0MappingTypeParam & 0x30) == 0x10)
+        {
+            currentRoom->GetLayer(0)->CreateNewLayer_type0x10(currentroomconfig->RoomWidth, currentroomconfig->RoomHeight);
+        }
+        else
+        {
+            LevelComponents::Layer *currentLayer0 = currentRoom->GetLayer(0);
+            delete currentLayer0;
+            currentLayer0 = new LevelComponents::Layer(currentroomconfig->Layer0DataPtr, LevelComponents::LayerTile8x8);
+            currentRoom->SetLayer(0, currentLayer0);
+        }
+    }
+    else if(previousroomconfig->Layer0Enable && !currentroomconfig->Layer0Enable)
+    {
+        currentRoom->GetLayer(0)->SetDisabled();
+    }
+
+    if(currentroomconfig->BackgroundLayerEnable)
+    {
+        LevelComponents::Layer *currentLayer3 = currentRoom->GetLayer(3);
+        delete currentLayer3;
+        currentLayer3 = new LevelComponents::Layer(currentroomconfig->BackgroundLayerDataPtr, LevelComponents::LayerTile8x8);
+        currentRoom->SetLayer(3, currentLayer3);
+    }
+    else if(previousroomconfig->BackgroundLayerEnable && !currentroomconfig->BackgroundLayerEnable)
+    {
+        currentRoom->GetLayer(3)->SetDisabled();
+    }
+
+    // change the width and height for all layers
+    if(currentroomconfig->RoomWidth != previousroomconfig->RoomWidth || currentroomconfig->RoomHeight != previousroomconfig->RoomHeight)
+    {
+        for(int i = 0; i < 3; ++i)
+        {
+            if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
+            {
+                currentRoom->GetLayer(i)->ChangeDimensions(currentroomconfig->RoomWidth, currentroomconfig->RoomHeight);
+            }
+        }
+    }
+
+    // reset all the Parameters in Room class. TODO: except new layer data pointers, generate them on saving
+    currentRoom->SetHeight(currentroomconfig->RoomHeight);
+    currentRoom->SetWidth(currentroomconfig->RoomWidth);
+    currentRoom->SetLayer0MappingParam(currentroomconfig->Layer0MappingTypeParam);
+    currentRoom->SetLayer0ColorBlendingEnabled(currentroomconfig->Layer0Alpha);
+    currentRoom->SetLayerPriorityAndAlphaAttributes(currentroomconfig->LayerPriorityAndAlphaAttr);
+    currentRoom->SetLayer2Enabled(currentroomconfig->Layer2Enable);
+    if(currentroomconfig->Layer0DataPtr != 0) currentRoom->SetLayerDataPtr(0, currentroomconfig->Layer0DataPtr);
+    currentRoom->SetBGLayerEnabled(currentroomconfig->BackgroundLayerEnable);
+    currentRoom->SetBGLayerAutoScrollEnabled(currentroomconfig->BackgroundLayerAutoScrollEnable);
+    currentRoom->SetLayerDataPtr(3, currentroomconfig->BackgroundLayerDataPtr);
+}
+
 /// <summary>
 /// Call the OpenROM function when the action for it is triggered in the main window.
 /// </summary>
@@ -442,92 +523,16 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     if(dialog.exec() == QDialog::Accepted)
     {
         DialogParams::RoomConfigParams configParams = dialog.GetConfigParams();
+        RoomConfigReset(_currentRoomConfigParams, &configParams);
 
-        // Apply the selected parameters to the current room
-        // reset the Tileset instance in Room class
-        LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
-        if(configParams.CurrentTilesetIndex != _currentRoomConfigParams->CurrentTilesetIndex)
-        {
-            LevelComponents::Tileset *currentTileset = currentRoom->GetTileset();
-            delete currentTileset;
-            int tilesetPtr = WL4Constants::TilesetDataTable + configParams.CurrentTilesetIndex * 36;
-            currentTileset = new LevelComponents::Tileset(tilesetPtr, configParams.CurrentTilesetIndex);
-            currentRoom->SetTileset(currentTileset, configParams.CurrentTilesetIndex);
-            Tile16SelecterWidget->SetTileset(configParams.CurrentTilesetIndex);
-        }
-
-        // refresh the Layer 2, 0, 3 instances
-        if(configParams.Layer2Enable && !_currentRoomConfigParams->Layer2Enable)
-        {
-            currentRoom->GetLayer(2)->CreateNewLayer_type0x10(configParams.RoomWidth, configParams.RoomHeight);
-        }
-        else if(_currentRoomConfigParams->Layer2Enable && !configParams.Layer2Enable)
-        {
-            currentRoom->GetLayer(2)->SetDisabled();
-        }
-
-        if(!_currentRoomConfigParams->Layer0Enable && configParams.Layer0Enable)
-        {
-            if((configParams.Layer0MappingTypeParam & 0x30) == 0x10)
-            {
-                currentRoom->GetLayer(0)->CreateNewLayer_type0x10(configParams.RoomWidth, configParams.RoomHeight);
-            }
-            else
-            {
-                LevelComponents::Layer *currentLayer0 = currentRoom->GetLayer(0);
-                delete currentLayer0;
-                currentLayer0 = new LevelComponents::Layer(configParams.Layer0DataPtr, LevelComponents::LayerTile8x8);
-                currentRoom->SetLayer(0, currentLayer0);
-            }
-        }
-        else if(_currentRoomConfigParams->Layer0Enable && !configParams.Layer0Enable)
-        {
-            currentRoom->GetLayer(0)->SetDisabled();
-        }
-
-        if(configParams.BackgroundLayerEnable)
-        {
-            LevelComponents::Layer *currentLayer3 = currentRoom->GetLayer(3);
-            delete currentLayer3;
-            currentLayer3 = new LevelComponents::Layer(configParams.BackgroundLayerDataPtr, LevelComponents::LayerTile8x8);
-            currentRoom->SetLayer(3, currentLayer3);
-        }
-        else if(_currentRoomConfigParams->BackgroundLayerEnable && !configParams.BackgroundLayerEnable)
-        {
-            currentRoom->GetLayer(3)->SetDisabled();
-        }
-
-        // change the width and height for all layers
-        if(configParams.RoomWidth != _currentRoomConfigParams->RoomWidth || configParams.RoomHeight != _currentRoomConfigParams->RoomHeight)
-        {
-            for(int i = 0; i < 3; ++i)
-            {
-                if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
-                {
-                    currentRoom->GetLayer(i)->ChangeDimensions(configParams.RoomWidth, configParams.RoomHeight);
-                }
-            }
-        }
+        // TODO: this should be done with the operation history
 
         // Delete _currentRoomConfigParams
         delete _currentRoomConfigParams;
-
-        // reset all the Parameters in Room class. TODO: except new layer data pointers, generate them on saving
-        currentRoom->SetHeight(configParams.RoomHeight);
-        currentRoom->SetWidth(configParams.RoomWidth);
-        currentRoom->SetLayer0MappingParam(configParams.Layer0MappingTypeParam);
-        currentRoom->SetLayer0ColorBlendingEnabled(configParams.Layer0Alpha);
-        currentRoom->SetLayerPriorityAndAlphaAttributes(configParams.LayerPriorityAndAlphaAttr);
-        currentRoom->SetLayer2Enabled(configParams.Layer2Enable);
-        if(configParams.Layer0DataPtr != 0) currentRoom->SetLayerDataPtr(0, configParams.Layer0DataPtr);
-        currentRoom->SetBGLayerEnabled(configParams.BackgroundLayerEnable);
-        currentRoom->SetBGLayerAutoScrollEnabled(configParams.BackgroundLayerAutoScrollEnable);
-        currentRoom->SetLayerDataPtr(3, configParams.BackgroundLayerDataPtr);
 
         // UI update
         RenderScreenFull();
         SetEditModeDockWidgetLayerEditability();
         EditModeWidget->SetDifficultyRadioBox(1);
-        // TODO: this should be done with the operation history
     }
 }
