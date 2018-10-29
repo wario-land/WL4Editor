@@ -18,7 +18,7 @@ namespace ROMUtils
     extern unsigned char *CurrentFile;
     extern int CurrentFileSize;
     extern QString ROMFilePath;
-    //extern char ROMFilePath[260]; //the MAX_PATH in Windows is 260, perhaps we should use a bigger number
+    extern int SaveDataIndex;
 
     // Global functions
     int IntFromData(int address);
@@ -28,6 +28,15 @@ namespace ROMUtils
     int FindSpaceInROM(int NewDataLength);
     int SaveTemp(unsigned char *tmpData, int pointerAddress, int dataLength);
     void SaveFile();
+
+    struct SaveData {
+        int ptr_addr;
+        unsigned int size;
+        unsigned char *data;
+        int index;
+        int dest_index = -1;
+        bool alignment = false;
+    };
 }
 
 #endif // ROMUTILS_H

@@ -24,7 +24,7 @@ namespace LevelComponents
         int Width = 0;int Height = 0;
         unsigned short *LayerData = nullptr;
         int LayerPriority = 0;
-        bool NewLayer = false;
+        bool dirty = false;
 
     public:
         Layer(int layerDataPtr, enum LayerMappingType mappingType);
@@ -40,8 +40,8 @@ namespace LevelComponents
         bool IsEnabled() { return Enabled; }
         void SetDisabled();
         void CreateNewLayer_type0x10(int layerWidth, int layerHeight);
-        bool IsNewLayer() { return NewLayer; }
         void ChangeDimensions(int newWidth, int newHeight);
+        bool IsDirty() { return dirty; }
         ~Layer();
     };
 }

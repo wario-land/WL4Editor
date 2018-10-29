@@ -191,6 +191,7 @@ namespace LevelComponents
     /// </param>
     void Layer::ReRenderTile(int X, int Y, unsigned short TileID, Tileset *tileset)
     {
+        dirty = true;
         int index = X + Y * Width;
         if(MappingType == LayerMap16)
         {
@@ -229,7 +230,7 @@ namespace LevelComponents
         delete[] LayerData; LayerData = nullptr;
         MappingType = LayerDisabled;
         Enabled = false; Width = 0; Height = 0;
-        NewLayer = false;
+        dirty = false;
     }
 
     /// <summary>
@@ -245,7 +246,8 @@ namespace LevelComponents
     {
         Width = layerWidth;
         Height = layerHeight;
-        NewLayer = true; Enabled = true;
+        dirty = true;
+        Enabled = true;
         MappingType = LayerMap16;
         if(LayerData != nullptr)
             delete[] LayerData;
@@ -287,5 +289,6 @@ namespace LevelComponents
         Height = newHeight;
         delete LayerData;
         LayerData = tmpLayerData;
+        dirty = true;
     }
 }

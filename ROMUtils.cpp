@@ -1,13 +1,16 @@
 #include "ROMUtils.h"
 #include <cassert>
 #include <QFile>
+#include <WL4EditorWindow.h>
+
+extern WL4EditorWindow *singleton;
 
 namespace ROMUtils
 {
     unsigned char *CurrentFile;
     int CurrentFileSize;
     QString ROMFilePath;
-    //char ROMFilePath[260];
+    int SaveDataIndex;
 
     /// <summary>
     /// Get a 4-byte, little-endian integer from ROM data.
@@ -303,6 +306,15 @@ namespace ROMUtils
 
     void SaveFile()
     {
+        // Obtain the list of data chucks to save to the rom
+        SaveDataIndex = 0;
+        QVector<struct SaveData> chunks;
+        singleton->GetCurrentLevel()->Save(chunks);
+
+        // Find space for each chunk and write it in a copy of CurrentFile (not the original CurrentFile)
+
+
+        // Save the rom file from the CurrentFile copy
         QFile file(ROMFilePath);
         file.open(QIODevice::WriteOnly);
         if (file.isOpen()){
@@ -312,6 +324,8 @@ namespace ROMUtils
             // can't open file to save ROM
         }
         file.close();
-    }
 
+        // Set the CurrentFile to the copied CurrentFile data (and clean up the old array)
+
+    }
 }

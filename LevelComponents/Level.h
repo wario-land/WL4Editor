@@ -60,6 +60,8 @@ namespace LevelComponents
         std::string LevelName;
         std::vector<Door*> doors;
         __LevelHeader LevelHeader;
+        enum __passage passage;
+        enum __stage stage;
         void LoadLevelName(int address);
 
     public:
@@ -73,6 +75,7 @@ namespace LevelComponents
         void RedistributeDoor();
         std::vector<Door*> GetRoomDoors(unsigned int roomId);
         ~Level();
+        void Save(QVector<struct ROMUtils::SaveData> chunks);
     };
 }
 

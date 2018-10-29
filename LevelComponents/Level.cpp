@@ -32,7 +32,7 @@ namespace LevelComponents
     ///      0x02 (1): Mapping type for layer 1 (always 0x10?)
     ///      0x03 (1): Mapping type for layer 2 (0x00, 0x10)
     ///      0x04 (1): Mapping type for layer 3 (0x00, 0x20)
-    ///      0x05 (3): (always 0?)
+    ///      0x05 (3): (padding, always 0)
     ///      0x08 (4): Pointer to compressed layer 0 tiles
     ///      0x0C (4): Pointer to compressed layer 1 tiles
     ///      0x10 (4): Pointer to compressed layer 2 tiles
@@ -58,7 +58,7 @@ namespace LevelComponents
     /// <param name="stage">
     /// The stage number.
     /// </param>
-    Level::Level(enum __passage passage, enum __stage stage)
+    Level::Level(enum __passage _passage, enum __stage _stage) : passage(_passage), stage(_stage)
     {
         // Get the level header index
         int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
@@ -239,5 +239,20 @@ namespace LevelComponents
                 LevelName.append(1, (unsigned char) 32);
             }
         }
+    }
+
+    void Level::Save(QVector<struct ROMUtils::SaveData> chunks)
+    {
+        // Populate chunks with room data
+        foreach(Room room, rooms)
+        {
+
+        }
+
+        // Add door list chunk
+
+
+        // Add camera boundary chunk
+
     }
 }

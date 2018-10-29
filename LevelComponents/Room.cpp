@@ -839,4 +839,26 @@ namespace LevelComponents
         }
         return -1; // TODO: Error handling
     }
+
+    void Room::Save(QVector<struct ROMUtils::SaveData> chunks)
+    {
+        // Create the contiguous room header chunk first
+
+
+        // Populate layer chunks (uses chunk-relative addresses)
+        for(int i = 0; i < 4; ++i)
+        {
+            Layer *layer = layers[i];
+            if(layer->IsDirty())
+            {
+                // Add the data for this layer, it must be compressed
+
+            }
+            else
+            {
+                // Write the old layer data pointer to the header
+
+            }
+        }
+    }
 }
