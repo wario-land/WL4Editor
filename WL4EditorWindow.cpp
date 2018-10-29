@@ -102,7 +102,6 @@ void WL4EditorWindow::LoadRoomUIUpdate()
     // Render the screen
     RenderScreenFull();
     SetEditModeDockWidgetLayerEditability();
-    EditModeWidget->SetDifficultyRadioBox(1);
 }
 
 /// <summary>
