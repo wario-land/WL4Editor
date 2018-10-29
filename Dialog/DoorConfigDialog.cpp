@@ -95,8 +95,9 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     }
     UpdateTableView();
 
-    //unsigned char entitySetID = currentdoor->GetEntitySetID();
-    // TODO set the index here
+    // Set the current EntitySet in the ComboBox
+    int entitySetID = currentdoor->GetEntitySetID();
+    ui->ComboBox_EntitySetID->setCurrentIndex(entitySetID);
 
     IsInitialized = true;
 }
@@ -476,6 +477,26 @@ void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
     tmpCurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) ui->SpinBox_BGM_ID->value());
 }
 
+/// <summary>
+/// Show All the Entities' names in the selected EntitySet.
+/// </summary>
+/// <param name="index">
+/// currentIndex of the ComboBox_EntitySetID.
+/// </param>
+void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
+{
+    int currentEntitySetId = tmpCurrentRoom->GetDoor(DoorID)->GetEntitySetID();
+    if((index != 0) && (index != -1)) currentEntitySetId = index;
+    ui->TextEdit_AllTheEntities->clear();
+    std::vector<LevelComponents::EntitySetinfoTableElement> currentEntityTable = entitiessets[currentEntitySetId]->GetEntityTable();
+    for(unsigned int i = 0; i < currentEntityTable.size(); ++i)
+    {
+        QString currentname = EntitynameSetData[currentEntityTable[i].Global_EntityID - 1];
+        ui->TextEdit_AllTheEntities->append(currentname);
+    }
+    tmpCurrentRoom->GetDoor(DoorID)->SetEntitySetID((unsigned char) currentEntitySetId);
+}
+
 //---------------------------------------------------------------------------------------------------------------------------
 // EntityFilterTableModel functions
 //---------------------------------------------------------------------------------------------------------------------------
@@ -520,5 +541,3 @@ void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
                            true
                        });
 }
-
-

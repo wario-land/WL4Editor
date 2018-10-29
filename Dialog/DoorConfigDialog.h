@@ -2,9 +2,11 @@
 #define DOORCONFIGDIALOG_H
 
 #include <QDialog>
+#include <QString>
 #include <QMessageBox>
 #include <QAbstractTableModel>
 #include <QStandardItemModel>
+#include <vector>
 
 #include "LevelComponents/Level.h"
 
@@ -58,6 +60,7 @@ private slots:
     void on_SpinBox_WarioX_valueChanged(int arg1);
     void on_SpinBox_WarioY_valueChanged(int arg1);
     void on_SpinBox_BGM_ID_valueChanged(int arg1);
+    void on_ComboBox_EntitySetID_currentIndexChanged(int index);
 
 private:
     Ui::DoorConfigDialog *ui;
@@ -99,8 +102,8 @@ public:
         "1: Portal",
         "2: Room Edge",
         "3: Door or Pipe",
-        "4: Item Shop Door",
-        "5: Boss Door"
+        "4: Boss Door",
+        "5: Item Shop Door"
     };
 
     // Enumeration of Entity names
