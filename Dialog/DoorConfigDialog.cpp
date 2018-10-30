@@ -486,7 +486,7 @@ void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
 void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
 {
     int currentEntitySetId = tmpCurrentRoom->GetDoor(DoorID)->GetEntitySetID();
-    if((index != 0) && (index != -1)) currentEntitySetId = index;
+    if(IsInitialized == true) currentEntitySetId = index;
     ui->TextEdit_AllTheEntities->clear();
     std::vector<LevelComponents::EntitySetinfoTableElement> currentEntityTable = entitiessets[currentEntitySetId]->GetEntityTable();
     for(unsigned int i = 0; i < currentEntityTable.size(); ++i)
