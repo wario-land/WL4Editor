@@ -12,6 +12,8 @@
 
 namespace LevelComponents
 {
+    class Room;
+
     // This struct defines the header attributes for a Room. It is arranged similar to its format in the ROM file.
     struct __RoomHeader
     {
@@ -33,6 +35,9 @@ namespace LevelComponents
         unsigned int EntityTableNormal;
         unsigned int EntityTableSHard;
         unsigned char DATA_28[4];
+
+        __RoomHeader() {}
+        __RoomHeader(Room *room);
     };
 
     // This struct defines the attributes for a single camera control record in rooms with camera boxes.
@@ -160,6 +165,8 @@ namespace LevelComponents
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
         void Save(QVector<struct ROMUtils::SaveData> chunks);
+        enum __CameraControlType GetCameraControlType() { return CameraControlType; }
+        unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
     };
 }
 

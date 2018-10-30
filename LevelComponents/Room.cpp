@@ -842,7 +842,7 @@ namespace LevelComponents
 
     void Room::Save(QVector<struct ROMUtils::SaveData> chunks)
     {
-        // Create the contiguous room header chunk first
+
 
 
         // Populate layer chunks (uses chunk-relative addresses)
@@ -861,4 +861,22 @@ namespace LevelComponents
             }
         }
     }
+
+    __RoomHeader::__RoomHeader(Room *room) :
+        TilesetID(room->GetTilesetID()),
+        Layer0MappingType(room->GetLayer(0)->GetMappingType()),
+        Layer1MappingType(room->GetLayer(1)->GetMappingType()),
+        Layer2MappingType(room->GetLayer(2)->GetMappingType()),
+        Layer3MappingType(room->GetLayer(3)->GetMappingType()),
+        Layer0Data(0), // set manually
+        Layer1Data(0),
+        Layer2Data(0),
+        Layer3Data(0),
+        CameraControlType(room->GetCameraControlType()),
+        Layer3Scrolling(room->GetBGScrollParameter()),
+        LayerEffects(room->GetLayerEffectsParam()),
+        DATA_1B(0),
+        EntityTableHard(0), // set manually
+        EntityTableNormal(0),
+        EntityTableSHard(0) {}
 }

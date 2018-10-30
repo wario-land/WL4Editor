@@ -243,6 +243,9 @@ namespace LevelComponents
 
     void Level::Save(QVector<struct ROMUtils::SaveData> chunks)
     {
+        // Create the contiguous room header chunk first
+
+
         // Populate chunks with room data
         foreach(Room room, rooms)
         {

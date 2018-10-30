@@ -62,6 +62,7 @@ namespace LevelComponents
         __LevelHeader LevelHeader;
         enum __passage passage;
         enum __stage stage;
+
         void LoadLevelName(int address);
 
     public:
