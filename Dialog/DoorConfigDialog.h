@@ -29,9 +29,7 @@ class EntityFilterTableModel : public QStandardItemModel
 public:
     explicit EntityFilterTableModel(QWidget *_parent);
     ~EntityFilterTableModel();
-
     void AddEntity(LevelComponents::Entity *entity);
-
     QList<TableEntityItem> entities;
 
 private:

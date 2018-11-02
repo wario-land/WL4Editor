@@ -291,3 +291,22 @@ void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
     }
 }
+
+void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
+{
+    if(checked)
+    {
+        singleton->HideEntitySetDockWidget();
+        singleton->ShowTile16DockWidget();
+    }
+}
+
+void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
+{
+    if(checked)
+    {
+        singleton->HideTile16DockWidget();
+        singleton->ResetEntitySetDockWidget();
+        singleton->ShowEntitySetDockWidget();
+    }
+}

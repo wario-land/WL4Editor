@@ -66,6 +66,8 @@ private slots:
     void on_RadioButton_NMode_toggled(bool checked);
     void on_RadioButton_HMode_toggled(bool checked);
     void on_RadioButton_SHMode_toggled(bool checked);
+    void on_RadioButton_LayerMode_toggled(bool checked);
+    void on_RadioButton_EntityMode_toggled(bool checked);
 };
 
 #endif // EDITMODEDOCKWIDGET_H

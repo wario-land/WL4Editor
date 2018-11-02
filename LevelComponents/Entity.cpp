@@ -42,6 +42,7 @@ namespace LevelComponents
         if(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId) == 0)
         {
             UnusedEntity = true;
+            xOffset = yOffset = 0;
             return;
         }
 
