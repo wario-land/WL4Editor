@@ -167,6 +167,9 @@ namespace LevelComponents
         void Save(QVector<struct ROMUtils::SaveData> chunks);
         enum __CameraControlType GetCameraControlType() { return CameraControlType; }
         unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
+        std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
+        bool FindEntity(int XPos, int YPos);
+        void AddEntity(int XPos, int YPos, int localEntityId);
     };
 }
 

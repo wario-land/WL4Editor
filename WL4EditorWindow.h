@@ -10,6 +10,7 @@
 #include "Dialog/ChooseLevelDialog.h"
 #include "DockWidget/Tile16DockWidget.h"
 #include "DockWidget/EditModeDockWidget.h"
+#include "DockWidget/EntitySetDockWidget.h"
 #include "Dialog/LevelConfigDialog.h"
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/DoorConfigDialog.h"
@@ -27,6 +28,7 @@ private:
     QLabel *statusBarLabel;
     Tile16DockWidget *Tile16SelecterWidget;
     EditModeDockWidget *EditModeWidget;
+    EntitySetDockWidget *EntitySetWidget;
     LevelComponents::Level *CurrentLevel = nullptr;
     int selectedRoom = 0;
     bool UnsavedChanges = false;
@@ -47,6 +49,7 @@ public:
     void LoadRoomUIUpdate();
     Tile16DockWidget *GetTile16DockWidgetPtr() { return Tile16SelecterWidget; }
     EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
+    EntitySetDockWidget *GetEntitySetDockWidgetPtr() { return EntitySetWidget; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
     LevelComponents::Level *GetCurrentLevel() { return CurrentLevel; }
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
@@ -56,6 +59,11 @@ public:
     bool *GetLayersVisibilityArray();
     void Graphicsview_UnselectDoor();
     void RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig, DialogParams::RoomConfigParams *nextroomconfig);
+    void ShowEntitySetDockWidget() { EntitySetWidget->setVisible(true); }
+    void ShowTile16DockWidget() { Tile16SelecterWidget->setVisible(true); }
+    void HideEntitySetDockWidget() { EntitySetWidget->setVisible(false); }
+    void HideTile16DockWidget() { Tile16SelecterWidget->setVisible(false); }
+    void ResetEntitySetDockWidget() { EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);}
 
 private slots:
     void on_actionOpen_ROM_triggered();

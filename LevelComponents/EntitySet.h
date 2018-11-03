@@ -35,6 +35,7 @@ namespace LevelComponents
     public:
         EntitySet(int _EntitySetID, int basicElementPalettePtr);
         ~EntitySet();
+        int GetEntitySetId() { return EntitySetID; }
         Tile8x8 **GetTileData() { return tile8x8data; }
         QVector<QRgb> *GetPalettes() { return palettes; }
         int GetEntityPaletteOffset(int _entityID, int entityglobalId);
@@ -44,7 +45,7 @@ namespace LevelComponents
         std::vector<EntitySetinfoTableElement> GetEntityTable();
         static EntitySetAndEntitylocalId EntitySetFromEntityID(int entityglobalId);
         static int GetEntityFirstActionFrameSetPtr(int entityglobalId);
-        EntityPositionalOffset GetEntityPositionalOffset(int entityglobalId);
+        static EntityPositionalOffset GetEntityPositionalOffset(int entityglobalId);
         QPixmap GetPixmap(int paletteId);
 
     private:

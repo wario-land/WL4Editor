@@ -42,6 +42,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
     ui->statusBar->addWidget(statusBarLabel);
     EditModeWidget = new EditModeDockWidget();
     Tile16SelecterWidget = new Tile16DockWidget();
+    EntitySetWidget = new EntitySetDockWidget();
 }
 
 /// <summary>
@@ -53,6 +54,7 @@ WL4EditorWindow::~WL4EditorWindow()
     delete ui;
     delete Tile16SelecterWidget;
     delete EditModeWidget;
+    delete EntitySetWidget;
     delete statusBarLabel;
     if(CurrentLevel)
     {
@@ -162,6 +164,8 @@ void WL4EditorWindow::OpenROM()
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
         addDockWidget(Qt::RightDockWidgetArea, Tile16SelecterWidget);
+        addDockWidget(Qt::RightDockWidgetArea, EntitySetWidget);
+        EntitySetWidget->setVisible(false);
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
     }
 
@@ -390,6 +394,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         LoadRoomUIUpdate();
         int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
+        ResetEntitySetDockWidget();
 
         // Set program control changes
         UnsavedChanges = false;
@@ -419,6 +424,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    ResetEntitySetDockWidget();
 
     // Set program control changes
     UnsavedChanges = false;
@@ -447,6 +453,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    ResetEntitySetDockWidget();
 
     // Set program control changes
     UnsavedChanges = false;

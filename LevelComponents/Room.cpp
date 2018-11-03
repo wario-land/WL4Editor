@@ -879,4 +879,44 @@ namespace LevelComponents
         EntityTableHard(0), // set manually
         EntityTableNormal(0),
         EntityTableSHard(0) {}
+
+    /// <summary>
+    /// Check if there is an Entity exist in one place.
+    /// </summary>
+    /// <param name="XPos">
+    /// The X position of the place.
+    /// </param>
+    /// <param name="YPos">
+    /// The Y position of the place.
+    /// </param>
+    bool Room::FindEntity(int XPos, int YPos)
+    {
+        int Entitynum = EntityList[currentDifficulty].size();
+        for(int i = 0; i < Entitynum; ++i)
+        {
+            if((EntityList[currentDifficulty][i].XPos == XPos) && (EntityList[currentDifficulty][i].YPos == YPos)) return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Add a new Entity into the current Entity List.
+    /// </summary>
+    /// <param name="XPos">
+    /// The X position of the place.
+    /// </param>
+    /// <param name="YPos">
+    /// The Y position of the place.
+    /// </param>
+    /// <param name="localEntityId">
+    /// The local Id of the Entity in the current EntitySet.
+    /// </param>
+    void Room::AddEntity(int XPos, int YPos, int localEntityId)
+    {
+        EntityRoomAttribute newEntityattrs;
+        newEntityattrs.XPos = XPos;
+        newEntityattrs.YPos = YPos;
+        newEntityattrs.EntityID = localEntityId;
+        EntityList[currentDifficulty].push_back(newEntityattrs);
+    }
 }

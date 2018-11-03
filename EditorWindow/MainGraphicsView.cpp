@@ -63,7 +63,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     {
                         if(i == SelectedDoorID)
                         {
-                            DoorConfigDialog _doorconfigdialog(singleton, singleton->GetCurrentRoom(), i, singleton->GetCurrentLevel());
+                            DoorConfigDialog _doorconfigdialog(singleton, room, i, singleton->GetCurrentLevel());
                             if(_doorconfigdialog.exec() == QDialog::Accepted)
                             {
                                 // TODO
@@ -80,6 +80,18 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 DOOR_FOUND:;
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID);
+        }
+        else if(editMode == Ui::EntityEditMode) // select or add an Entity
+        {
+            if(room->FindEntity(tileX, tileY))
+            {
+                // TODO: Select the existing Entity
+            }
+            else
+            {
+                room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
+            }
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
         }
         // TODO add more cases for other edit mode types
     }

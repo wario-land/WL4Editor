@@ -279,7 +279,7 @@ void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 }
 
 /// <summary>
-/// Slot function for change difficulty to SHard.
+/// Slot function for changing difficulty to SHard.
 /// </summary>
 /// <param name="checked">
 /// show the check state of the RadioButton_SHMode.
@@ -289,5 +289,36 @@ void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
     if(!checked)
     {
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
+    }
+}
+
+/// <summary>
+/// Slot function for switcing to Layer editing mode.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_LayerMode.
+/// </param>
+void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
+{
+    if(checked)
+    {
+        singleton->HideEntitySetDockWidget();
+        singleton->ShowTile16DockWidget();
+    }
+}
+
+/// <summary>
+/// Slot function for switcing to Entity editing mode.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_EntityMode.
+/// </param>
+void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
+{
+    if(checked)
+    {
+        singleton->HideTile16DockWidget();
+        singleton->ResetEntitySetDockWidget();
+        singleton->ShowEntitySetDockWidget();
     }
 }
