@@ -159,6 +159,9 @@ namespace LevelComponents
         int GetLocalDoorID(int globalDoorId);
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
+        std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
+        bool FindEntity(int XPos, int YPos);
+        void AddEntity(int XPos, int YPos, int localEntityId);
     };
 }
 
