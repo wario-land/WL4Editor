@@ -83,14 +83,16 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         }
         else if(editMode == Ui::EntityEditMode) // select or add an Entity
         {
+            bool success;
             if(room->FindEntity(tileX, tileY))
             {
                 // TODO: Select the existing Entity
             }
             else
             {
-                room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
+                success = room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
             }
+            // TODO: Show information if unsuccess
             singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
         }
         // TODO add more cases for other edit mode types

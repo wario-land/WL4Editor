@@ -871,12 +871,14 @@ namespace LevelComponents
     /// <param name="localEntityId">
     /// The local Id of the Entity in the current EntitySet.
     /// </param>
-    void Room::AddEntity(int XPos, int YPos, int localEntityId)
+    bool Room::AddEntity(int XPos, int YPos, int localEntityId)
     {
+        if(EntityList[currentDifficulty].size() == (int) 47) return false;
         EntityRoomAttribute newEntityattrs;
         newEntityattrs.XPos = XPos;
         newEntityattrs.YPos = YPos;
         newEntityattrs.EntityID = localEntityId;
         EntityList[currentDifficulty].push_back(newEntityattrs);
+        return true;
     }
 }
