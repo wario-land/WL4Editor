@@ -246,7 +246,7 @@ void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
 {
     if(!checked)
     {
-        singleton->Graphicsview_UnselectDoor();
+        singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
 
@@ -260,7 +260,7 @@ void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
 {
     if(!checked)
     {
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
 }
 
@@ -274,7 +274,7 @@ void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 {
     if(!checked)
     {
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
 }
 
@@ -288,7 +288,7 @@ void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
 {
     if(!checked)
     {
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
 }
 
@@ -320,5 +320,9 @@ void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
         singleton->HideTile16DockWidget();
         singleton->ResetEntitySetDockWidget();
         singleton->ShowEntitySetDockWidget();
+    }
+    else
+    {
+        singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }

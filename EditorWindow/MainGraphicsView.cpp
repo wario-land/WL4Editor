@@ -79,28 +79,35 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 SelectedDoorID = -1;
                 DOOR_FOUND:;
             }
-            singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID);
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
         }
         else if(editMode == Ui::EntityEditMode) // select or add an Entity
         {
-            bool success;
-            if(room->FindEntity(tileX, tileY))
+            SelectedEntityID = room->FindEntity(tileX, tileY);
+            if(SelectedEntityID == -1)
             {
-                // TODO: Select the existing Entity
+                bool success = room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
+                // TODO: Show information if unsuccess
             }
-            else
-            {
-                success = room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
-            }
-            // TODO: Show information if unsuccess
-            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
         }
         // TODO add more cases for other edit mode types
     }
 }
 
-void MainGraphicsView::UnSelectDoor()
+void MainGraphicsView::keyPressEvent(QKeyEvent *event)
+{
+    if((SelectedEntityID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
+    {
+        singleton->DeleteEntity(SelectedEntityID);
+        SelectedEntityID = -1;
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+}
+
+void MainGraphicsView::UnSelectDoorAndEntity()
 {
     SelectedDoorID = -1;
-    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
+    SelectedEntityID = -1;
+    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 }

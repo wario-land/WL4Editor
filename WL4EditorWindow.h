@@ -43,7 +43,7 @@ public:
     ~WL4EditorWindow();
     void RenderScreenFull();
     void RenderScreenVisibilityChange();
-    void RenderScreenElementsLayersUpdate(unsigned int DoorId);
+    void RenderScreenElementsLayersUpdate(unsigned int DoorId, int EntityId);
     void RenderScreenTileChange(int tileX, int tileY, unsigned short tileID, int LayerID);
     void SetStatusBarText(char *str);
     void LoadRoomUIUpdate();
@@ -57,13 +57,14 @@ public:
     void OpenROM();
     void SetEditModeDockWidgetLayerEditability();
     bool *GetLayersVisibilityArray();
-    void Graphicsview_UnselectDoor();
+    void Graphicsview_UnselectDoorAndEntity();
     void RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig, DialogParams::RoomConfigParams *nextroomconfig);
     void ShowEntitySetDockWidget() { EntitySetWidget->setVisible(true); }
     void ShowTile16DockWidget() { Tile16SelecterWidget->setVisible(true); }
     void HideEntitySetDockWidget() { EntitySetWidget->setVisible(false); }
     void HideTile16DockWidget() { Tile16SelecterWidget->setVisible(false); }
-    void ResetEntitySetDockWidget() { EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);}
+    void ResetEntitySetDockWidget() { EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]); }
+    void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
 
 private slots:
     void on_actionOpen_ROM_triggered();
