@@ -10,7 +10,12 @@
 
 extern WL4EditorWindow *singleton;
 
-// TODO why is this event not getting called?
+/// <summary>
+/// this function will be called when the graphic view in the main window is clicked.
+/// </summary>
+/// <param name="event">
+/// The mouse click event.
+/// </param>
 void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 {
     if(!singleton->FirstROMIsLoaded()) return;
@@ -95,6 +100,12 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
     }
 }
 
+/// <summary>
+/// this function will be called when key-press happens.
+/// </summary>
+/// <param name="event">
+/// The key-press event.
+/// </param>
 void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 {
     if((SelectedEntityID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
