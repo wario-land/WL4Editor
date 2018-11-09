@@ -87,6 +87,7 @@ namespace LevelComponents
         int tileY = 0;
         unsigned short tileID = 0;
         unsigned int SelectedDoorID = (unsigned int) -1;
+        int SelectedEntityID = -1;
         struct Ui::EditModeParams mode = {};
         RenderUpdateParams(enum RenderUpdateType _type) : type(_type) {}
     };
@@ -168,8 +169,9 @@ namespace LevelComponents
         enum __CameraControlType GetCameraControlType() { return CameraControlType; }
         unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
         std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
-        bool FindEntity(int XPos, int YPos);
-        void AddEntity(int XPos, int YPos, int localEntityId);
+        int FindEntity(int XPos, int YPos);
+        bool AddEntity(int XPos, int YPos, int localEntityId);
+        void DeleteEntity(int index);
     };
 }
 

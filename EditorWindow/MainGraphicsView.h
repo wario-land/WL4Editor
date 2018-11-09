@@ -13,11 +13,13 @@ class MainGraphicsView : public QGraphicsView
 public:
     MainGraphicsView(QWidget *param) : QGraphicsView(param) {}
     void mousePressEvent(QMouseEvent *event);
+    void keyPressEvent(QKeyEvent *event);
     int GetSelectedDoorID() { return SelectedDoorID; }
-    void UnSelectDoor();
+    void UnSelectDoorAndEntity();
 
 private:
     int SelectedDoorID = -1;
+    int SelectedEntityID = -1;
 };
 
 #endif // MAINGRAPHICSVIEW_H
