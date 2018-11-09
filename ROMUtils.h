@@ -16,26 +16,26 @@ namespace ROMUtils
 {
     // Global variables
     extern unsigned char *CurrentFile;
-    extern int CurrentFileSize;
+    extern unsigned int CurrentFileSize;
     extern QString ROMFilePath;
-    extern int SaveDataIndex;
+    extern unsigned int SaveDataIndex;
 
     // Global functions
-    int IntFromData(int address);
-    int PointerFromData(int address);
+    unsigned int IntFromData(int address);
+    unsigned int PointerFromData(int address);
     unsigned char *LayerRLEDecompress(int address, int outputSize);
-    long LayerRLECompress(int _layersize, unsigned char *LayerData, unsigned char **OutputCompressedData);
+    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
     int FindSpaceInROM(int NewDataLength);
     int SaveTemp(unsigned char *tmpData, int pointerAddress, int dataLength);
     void SaveFile();
 
     struct SaveData {
-        int ptr_addr;
+        unsigned int ptr_addr;
         unsigned int size;
         unsigned char *data;
-        int index;
-        int dest_index = -1;
-        bool alignment = false;
+        unsigned int index;
+        bool alignment; // false: do not perform special alignment of the save chunk
+        unsigned int dest_index; // 0: the address of the pointer that points to this chunk is in main ROM. Else, it is in another chunk
     };
 }
 

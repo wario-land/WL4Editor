@@ -8,9 +8,9 @@ extern WL4EditorWindow *singleton;
 namespace ROMUtils
 {
     unsigned char *CurrentFile;
-    int CurrentFileSize;
+    unsigned int CurrentFileSize;
     QString ROMFilePath;
-    int SaveDataIndex;
+    unsigned int SaveDataIndex;
 
     /// <summary>
     /// Get a 4-byte, little-endian integer from ROM data.
@@ -21,9 +21,9 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the integer from.
     /// </param>
-    int IntFromData(int address)
+    unsigned int IntFromData(int address)
     {
-        return *(int*) (CurrentFile + address); // This program is almost certainly executing on a little-endian architecture
+        return *(unsigned int*) (CurrentFile + address); // This program is almost certainly executing on a little-endian architecture
     }
 
     /// <summary>
@@ -39,9 +39,9 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the pointer from.
     /// </param>
-    int PointerFromData(int address)
+    unsigned int PointerFromData(int address)
     {
-        int ret = IntFromData(address) & 0x7FFFFFF;
+        unsigned int ret = IntFromData(address) & 0x7FFFFFF;
         assert(ret < CurrentFileSize); // Fail if the pointer is out of range. TODO proper error handling
         return ret;
     }
@@ -112,7 +112,7 @@ namespace ROMUtils
                 while(1)
                 {
                     int ctrl = ((int) CurrentFile[address] << 8) | CurrentFile[address + 1];
-                    address += 2; //offset + 2
+                    address += 2; // offset + 2
                     if(ctrl == 0)
                     {
                         break;
@@ -168,50 +168,58 @@ namespace ROMUtils
     /// unsigned char pointer to the compressed layer data.
     /// </param>
     /// <return>the length of compressed data.</return>
-    long LayerRLECompress(int _layersize, unsigned char *LayerData, unsigned char **OutputCompressedData)
+    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData)
     {
-        unsigned char *cmp = new unsigned char[_layersize];
+        unsigned char *cmp = new unsigned char[_layersize], *Uncompressed = (unsigned char*) LayerData;
         *OutputCompressedData = cmp;
-        int cmpptr=0;
-        int sizeptr=0;
-        int dataptr=0;
-        unsigned short rl=0;
+        unsigned int cmpptr = 0, sizeptr = 0, dataptr = 0;
+        unsigned short rl = 0;
 
-        for(int j=0; j<2; j++)
+        for(int j = 0; j < 2; j++)
         {
-            cmp[cmpptr++]=1;
-            while(_layersize>dataptr)
+            cmp[cmpptr++] = 1;
+            while(_layersize > dataptr)
             {
                 rl = 2;
-                while(LayerData[dataptr]==LayerData[dataptr+2] && LayerData[dataptr+2]==LayerData[dataptr+4] && rl<0x7F && _layersize>dataptr)
+                while(Uncompressed[dataptr] == Uncompressed[dataptr + 2] &&
+                      Uncompressed[dataptr + 2] == Uncompressed[dataptr + 4] &&
+                      rl < 0x7F && _layersize > dataptr)
                 {
-
-                    dataptr+=2;
+                    dataptr += 2;
                     rl++;
                 }
+
                 if(rl > 2)
                 {
-                    cmp[cmpptr++]=(unsigned char) ((rl | 0x80) & 0xFF);
-                    cmp[cmpptr++]=LayerData[dataptr];
-                    dataptr+=4;
+                    cmp[cmpptr++] = (unsigned char) ((rl | 0x80) & 0xFF);
+                    cmp[cmpptr++] = Uncompressed[dataptr];
+                    dataptr += 4;
                 }
-                sizeptr=cmpptr;
+                sizeptr = cmpptr;
                 cmpptr++;
                 rl = 0;
-                while((LayerData[dataptr]!=LayerData[dataptr+2] || LayerData[dataptr+2]!=LayerData[dataptr+4]) && rl<0x7F && _layersize>dataptr)
-                {
 
-                    cmp[cmpptr++]=LayerData[dataptr];
-                    dataptr+=2;
+                while((Uncompressed[dataptr] != Uncompressed[dataptr + 2] ||
+                       Uncompressed[dataptr + 2] != Uncompressed[dataptr + 4]) &&
+                       rl < 0x7F &&
+                       _layersize > dataptr)
+                {
+                    cmp[cmpptr++] = Uncompressed[dataptr];
+                    dataptr += 2;
                     rl++;
                 }
+
                 if(rl != 0)
-                    cmp[sizeptr]=(unsigned char) rl;
+                {
+                    cmp[sizeptr] = (unsigned char) rl;
+                }
                 else
+                {
                     cmpptr--;
+                }
             }
-            cmp[cmpptr++]=0;
-            dataptr=1;
+            cmp[cmpptr++] = 0;
+            dataptr = 1;
         }
 
         return cmpptr;
@@ -279,8 +287,8 @@ namespace ROMUtils
     /// <return>A pointer to decompressed data.</return>
     int SaveTemp(unsigned char *tmpData, int pointerAddress, int dataLength)
     {
-        int OriginalPtr = PointerFromData(pointerAddress);
-        int tmpPtr = OriginalPtr - 8;
+        unsigned int OriginalPtr = PointerFromData(pointerAddress);
+        unsigned int tmpPtr = OriginalPtr - 8;
 
         // Recover the block in ROM if it is possible
         if((tmpPtr > WL4Constants::AvailableSpaceBeginningInROM) && !strncmp((const char*) (CurrentFile + tmpPtr), "STAR", 4))
@@ -307,7 +315,7 @@ namespace ROMUtils
     void SaveFile()
     {
         // Obtain the list of data chucks to save to the rom
-        SaveDataIndex = 0;
+        SaveDataIndex = 1;
         QVector<struct SaveData> chunks;
         singleton->GetCurrentLevel()->Save(chunks);
 

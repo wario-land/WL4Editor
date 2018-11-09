@@ -291,4 +291,23 @@ namespace LevelComponents
         LayerData = tmpLayerData;
         dirty = true;
     }
+
+    /// <summary>
+    /// Create and returned compressed layer data (on the heap)
+    /// </summary>
+    /// <param name="dataSize">
+    /// The int to write the data size to after the compressed data array is created.
+    /// </param>
+    /// <returns>
+    /// Pointer to the compressed data.
+    /// </returns>
+    unsigned char *Layer::GetCompressedLayerData(unsigned int *dataSize)
+    {
+        unsigned char *dataBuffer;
+        unsigned int compressedSize = ROMUtils::LayerRLECompress(Width * Height, LayerData, &dataBuffer);
+        // TODO redesign the way the data is being calculated
+
+        *dataSize = compressedSize;
+        return dataBuffer;
+    }
 }

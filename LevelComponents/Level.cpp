@@ -3,6 +3,7 @@
 #include "WL4Constants.h"
 
 #include <cstring>
+#include <cassert>
 
 namespace LevelComponents
 {
@@ -243,19 +244,54 @@ namespace LevelComponents
 
     void Level::Save(QVector<struct ROMUtils::SaveData> chunks)
     {
-        // Create the contiguous room header chunk first
+        // Calculate some values needed to initialize the save data
+        int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
+        int levelHeaderIndex = ROMUtils::IntFromData(offset);
+        int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
+        int levelIndex = ROMUtils::CurrentFile[levelHeaderPointer];
+        unsigned int roomTablePtr = WL4Constants::RoomDataTable + levelIndex * 4;
+        unsigned int roomHeaderChunkSize = rooms.size() * sizeof(struct __RoomHeader);
+        unsigned int doorTablePtr = WL4Constants::DoorTable + levelIndex * 4;
+        unsigned int doorChunkSize = doors.size() * sizeof(struct __DoorEntry);
 
+        // Create the contiguous room header chunk
+        struct ROMUtils::SaveData roomHeaders =
+        {
+            roomTablePtr,
+            roomHeaderChunkSize,
+            (unsigned char*) malloc(roomHeaderChunkSize),
+            ROMUtils::SaveDataIndex++,
+            false,
+            0
+        };
 
         // Populate chunks with room data
-        foreach(Room room, rooms)
+        for(unsigned int i = 0; i < rooms.size(); ++i)
         {
-
+            struct __RoomHeader rh = rooms[i]->GetRoomHeader();
+            memcpy(roomHeaders.data + i * sizeof(struct __RoomHeader), &rh, sizeof(struct __RoomHeader));
+            rooms[i]->Save(chunks, &roomHeaders);
         }
 
-        // Add door list chunk
+        // Create door list chunk
+        struct ROMUtils::SaveData doorChunk =
+        {
+            doorTablePtr,
+            doorChunkSize,
+            (unsigned char*) malloc(doorChunkSize),
+            ROMUtils::SaveDataIndex++,
+            true,
+            0
+        };
 
+        // Populate door chunk data
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            Door *door = doors[i];
+            // TODO
+        }
 
-        // Add camera boundary chunk
-
+        chunks.append(roomHeaders);
+        chunks.append(doorChunk);
     }
 }

@@ -4,8 +4,9 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <QPainter>
+#include <cassert>
 
+#include <QPainter>
 #include <iostream>
 
 #include <WL4EditorWindow.h>
@@ -127,7 +128,7 @@ namespace LevelComponents
         for(int i = 0; i < 4; ++i)
         {
             enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(*(roomheader_charptr + i + 1) & 0x30);
-            int layerPtr = (*(roomDataPtr + i)) - 0x8000000;
+            int layerPtr = (*(roomDataPtr + i)) & 0x7FFFFFF;
             layers[i] = new Layer(layerPtr, mappingType);
         }
 
@@ -783,20 +784,8 @@ namespace LevelComponents
     /// </return>
     int Room::GetLayerDataPtr(int LayerNum)
     {
-        switch(LayerNum)
-        {
-            case 0:
-                return RoomHeader.Layer0Data & 0x7FFFFFF;
-            case 1:
-                return RoomHeader.Layer1Data & 0x7FFFFFF;
-            case 2:
-                return RoomHeader.Layer2Data & 0x7FFFFFF;
-            case 3:
-                return RoomHeader.Layer3Data & 0x7FFFFFF;
-            default:
-                // ERROR
-                return 0;
-        }
+        assert(!(LayerNum & 0xFFFFFFFC)); // 0 <= LayerNum < 4
+        return ((unsigned int*)(&RoomHeader.Layer0Data))[LayerNum] & 0x7FFFFFF;
     }
 
     /// <summary>
@@ -804,20 +793,8 @@ namespace LevelComponents
     /// </summary>
     void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
     {
-        switch(LayerNum)
-        {
-            case 0:
-                RoomHeader.Layer0Data = dataPtr; break;
-            case 1:
-                RoomHeader.Layer1Data = dataPtr; break;
-            case 2:
-                RoomHeader.Layer2Data = dataPtr; break;
-            case 3:
-                RoomHeader.Layer3Data = dataPtr; break;
-            default:
-                // ERROR
-                return;
-        }
+        assert(!(LayerNum & 0xFFFFFFFC));
+        ((unsigned int*)(&RoomHeader.Layer0Data))[LayerNum] = dataPtr;
     }
 
     /// <summary>
@@ -852,26 +829,59 @@ namespace LevelComponents
         return -1; // TODO: Error handling
     }
 
-    void Room::Save(QVector<struct ROMUtils::SaveData> chunks)
+    void Room::Save(QVector<struct ROMUtils::SaveData> chunks, struct ROMUtils::SaveData *headerChunk)
     {
-
-
+        // Calculate some values needed to initialize the save data
+        unsigned int doorTablePtr = WL4Constants::DoorTable + LevelID * 4;
+        unsigned int cameraChunkSize = CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
 
         // Populate layer chunks (uses chunk-relative addresses)
-        for(int i = 0; i < 4; ++i)
+        unsigned int *layerPtrs = (unsigned int*)(headerChunk->data + RoomID * sizeof(struct __RoomHeader) + 8);
+        for(unsigned int i = 0; i < 4; ++i)
         {
             Layer *layer = layers[i];
             if(layer->IsDirty())
             {
                 // Add the data for this layer, it must be compressed
-
+                unsigned int compressedSize;
+                unsigned char *compressedData = layer->GetCompressedLayerData(&compressedSize);
+                struct ROMUtils::SaveData layerChunk =
+                {
+                    RoomID * sizeof(struct __RoomHeader) + 8 + i * 4,
+                    compressedSize,
+                    compressedData,
+                    ROMUtils::SaveDataIndex++,
+                    true,
+                    headerChunk->index
+                };
+                chunks.append(layerChunk);
             }
             else
             {
                 // Write the old layer data pointer to the header
-
+                layerPtrs[i] = GetLayerDataPtr(i);
             }
         }
+
+        // Create camera boundary chunk
+        struct ROMUtils::SaveData cameraChunk =
+        {
+            doorTablePtr,
+            cameraChunkSize,
+            (unsigned char*) malloc(cameraChunkSize),
+            ROMUtils::SaveDataIndex++,
+            false,
+            0
+        };
+
+        // Populate camera boundary chunk with data
+        for(unsigned int i = 0; i < CameraControlRecords.size(); ++i)
+        {
+            struct __CameraControlRecord *ccr = CameraControlRecords[i];
+            // TODO
+        }
+
+        chunks.append(cameraChunk);
     }
 
     __RoomHeader::__RoomHeader(Room *room) :
@@ -901,6 +911,9 @@ namespace LevelComponents
     /// <param name="YPos">
     /// The Y position of the place.
     /// </param>
+    /// <returns>
+    /// The index of the entity at the location, or -1 if there is none.
+    /// </returns>
     int Room::FindEntity(int XPos, int YPos)
     {
         int Entitynum = EntityList[currentDifficulty].size();
@@ -923,6 +936,9 @@ namespace LevelComponents
     /// <param name="localEntityId">
     /// The local Id of the Entity in the current EntitySet.
     /// </param>
+    /// <returns>
+    /// Always true (?)
+    /// </returns>
     bool Room::AddEntity(int XPos, int YPos, int localEntityId)
     {
         if(EntityList[currentDifficulty].size() == (int) 47) return false;
