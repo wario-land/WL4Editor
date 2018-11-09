@@ -188,9 +188,9 @@ bool *WL4EditorWindow::GetLayersVisibilityArray()
     return EditModeWidget->GetLayersVisibilityArray();
 }
 
-void WL4EditorWindow::Graphicsview_UnselectDoor()
+void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity()
 {
-    ui->graphicsView->UnSelectDoor();
+    ui->graphicsView->UnSelectDoorAndEntity();
 }
 
 /// <summary>
@@ -327,11 +327,12 @@ void WL4EditorWindow::RenderScreenVisibilityChange()
 /// <summary>
 /// Perform a re-render of the Door/Camera limitation rectangle/Entity layer.
 /// </summary>
-void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId)
+void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId, int EntityId)
 {
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::ElementsLayersUpdate);
     renderParams.mode = EditModeWidget->GetEditModeParams();
     renderParams.SelectedDoorID = DoorId;
+    renderParams.SelectedEntityID = EntityId;
     QGraphicsScene *scene = CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -380,7 +381,9 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     {
         return;
     }
-    ui->graphicsView->UnSelectDoor();
+
+    // unselect Door and Entity
+    ui->graphicsView->UnSelectDoorAndEntity();
 
     // Load the first level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
@@ -417,8 +420,8 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     {
         return;
     }
-    // unselect door
-    ui->graphicsView->UnSelectDoor();
+    // unselect Door and Entity
+    ui->graphicsView->UnSelectDoorAndEntity();
 
     // Load the previous room
     --selectedRoom;
@@ -446,8 +449,8 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     {
         return;
     }
-    // unselect door
-    ui->graphicsView->UnSelectDoor();
+    // unselect Door and Entity
+    ui->graphicsView->UnSelectDoorAndEntity();
 
     // Load the next room
     ++selectedRoom;

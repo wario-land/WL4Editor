@@ -587,7 +587,19 @@ namespace LevelComponents
                 EntityBoxPainter.setPen(EntityBoxPen);
                 for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
                 {
-                    EntityBoxPainter.drawRect(16 * EntityList[currentDifficulty][i].XPos, 16 * EntityList[currentDifficulty][i].YPos, 16, 16);
+                    if(i == renderParams->SelectedEntityID)
+                    {
+                        QPen EntityBoxPen2 = QPen(QBrush(QColor(0xFF, 0x7F, 0, 0xFF)), 2);
+                        EntityBoxPen2.setJoinStyle(Qt::MiterJoin);
+                        EntityBoxPainter.setPen(EntityBoxPen2);
+                        EntityBoxPainter.drawRect(16 * EntityList[currentDifficulty][i].XPos, 16 * EntityList[currentDifficulty][i].YPos, 16, 16);
+                        EntityBoxPainter.setPen(EntityBoxPen);
+                    }
+                    else
+                    {
+                        EntityBoxPainter.drawRect(16 * EntityList[currentDifficulty][i].XPos, 16 * EntityList[currentDifficulty][i].YPos, 16, 16);
+                    }
+
                 }
                 // Test: Render EntitySet Tiles in the front of the Layer RenderedLayers[4]
                 //EntityBoxPainter.drawPixmap(0, 0, currentEntitySet->GetPixmap(9));
@@ -849,14 +861,14 @@ namespace LevelComponents
     /// <param name="YPos">
     /// The Y position of the place.
     /// </param>
-    bool Room::FindEntity(int XPos, int YPos)
+    int Room::FindEntity(int XPos, int YPos)
     {
         int Entitynum = EntityList[currentDifficulty].size();
         for(int i = 0; i < Entitynum; ++i)
         {
-            if((EntityList[currentDifficulty][i].XPos == XPos) && (EntityList[currentDifficulty][i].YPos == YPos)) return true;
+            if((EntityList[currentDifficulty][i].XPos == XPos) && (EntityList[currentDifficulty][i].YPos == YPos)) return i;
         }
-        return false;
+        return -1;
     }
 
     /// <summary>
@@ -871,12 +883,25 @@ namespace LevelComponents
     /// <param name="localEntityId">
     /// The local Id of the Entity in the current EntitySet.
     /// </param>
-    void Room::AddEntity(int XPos, int YPos, int localEntityId)
+    bool Room::AddEntity(int XPos, int YPos, int localEntityId)
     {
+        if(EntityList[currentDifficulty].size() == (int) 47) return false;
         EntityRoomAttribute newEntityattrs;
         newEntityattrs.XPos = XPos;
         newEntityattrs.YPos = YPos;
         newEntityattrs.EntityID = localEntityId;
         EntityList[currentDifficulty].push_back(newEntityattrs);
+        return true;
+    }
+
+    /// <summary>
+    /// Delete an Entity from a Entity List.
+    /// </summary>
+    /// <param name="index">
+    /// The index of the Entity record in EntityList[currentDifficulty], count from 0.
+    /// </param>
+    void Room::DeleteEntity(int index)
+    {
+        EntityList[currentDifficulty].erase(EntityList[currentDifficulty].begin() + index);
     }
 }

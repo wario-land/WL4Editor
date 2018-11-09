@@ -10,7 +10,12 @@
 
 extern WL4EditorWindow *singleton;
 
-// TODO why is this event not getting called?
+/// <summary>
+/// this function will be called when the graphic view in the main window is clicked.
+/// </summary>
+/// <param name="event">
+/// The mouse click event.
+/// </param>
 void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 {
     if(!singleton->FirstROMIsLoaded()) return;
@@ -79,26 +84,41 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 SelectedDoorID = -1;
                 DOOR_FOUND:;
             }
-            singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID);
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
         }
         else if(editMode == Ui::EntityEditMode) // select or add an Entity
         {
-            if(room->FindEntity(tileX, tileY))
+            SelectedEntityID = room->FindEntity(tileX, tileY);
+            if(SelectedEntityID == -1)
             {
-                // TODO: Select the existing Entity
+                bool success = room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
+                // TODO: Show information if unsuccess
             }
-            else
-            {
-                room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
-            }
-            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
         }
         // TODO add more cases for other edit mode types
     }
 }
 
-void MainGraphicsView::UnSelectDoor()
+/// <summary>
+/// this function will be called when key-press happens.
+/// </summary>
+/// <param name="event">
+/// The key-press event.
+/// </param>
+void MainGraphicsView::keyPressEvent(QKeyEvent *event)
+{
+    if((SelectedEntityID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
+    {
+        singleton->DeleteEntity(SelectedEntityID);
+        SelectedEntityID = -1;
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+}
+
+void MainGraphicsView::UnSelectDoorAndEntity()
 {
     SelectedDoorID = -1;
-    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1);
+    SelectedEntityID = -1;
+    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 }
