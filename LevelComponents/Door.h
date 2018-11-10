@@ -42,6 +42,7 @@ namespace LevelComponents
         unsigned char RoomID;
         int X1, X2, Y1, Y2; //destination just be (X1, Y1)
         Door *DestinationDoor = nullptr;
+        bool is_vortex = false;
         signed char DeltaX, DeltaY;
         unsigned char EntitySetID;
         unsigned int BGM_ID;
@@ -57,7 +58,10 @@ namespace LevelComponents
         Door *GetDestinationDoor() { return DestinationDoor; }
         int GetRoomID() {return (int) this->RoomID; }
         QString GetDoorname() { return "Room " + QString::number((int) RoomID, 16) + " Door " + QString::number(DoorID, 10); }
-        void SetDestinationDoor(Door *otherDoor) { DestinationDoor = otherDoor; }
+        void SetVortex() { is_vortex = true; }
+        bool IsVortex() { return is_vortex; }
+        bool IsDestinationDoorDisabled() { return DestinationDoor->IsVortex(); }
+        void SetDestinationDoor(Door *otherDoor) { DestinationDoor = otherDoor; } //Note: Set DestinationDoor Disabled by setting DestinationDoor point to the vortex Door
         void SetDelta(unsigned char _DeltaX, unsigned char _DeltaY);
         int GetDeltaX() { return (int) DeltaX; }
         int GetDeltaY() { return (int) DeltaY; }

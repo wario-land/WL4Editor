@@ -93,6 +93,8 @@ namespace LevelComponents
         {
             doors[i]->SetDestinationDoor(doors[destinations[i]]);
         }
+        // Set the first Door be Vortex Door
+        doors[0]->SetVortex();
 
         // Load the room data
         int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + levelIndex * 4);
