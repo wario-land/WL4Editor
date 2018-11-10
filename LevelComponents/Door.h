@@ -79,6 +79,7 @@ namespace LevelComponents
         int GetBGM_ID() { return (int) BGM_ID; }
         QPoint GetWarioOriginalPosition_x4();
         void SetGlobalDoorID(int doorId) { DoorID = doorId; }
+        void GlobalDoorIdDec() { --DoorID; }
         int GetGlobalDoorID() { return DoorID; }
         //TODO: GenerateDoorSavingData()  (ssp)
     };

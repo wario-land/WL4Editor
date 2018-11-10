@@ -72,6 +72,7 @@ namespace LevelComponents
         void SetLevelName(std::string newlevelname) {this->LevelName = newlevelname; }
         void RedistributeDoor();
         std::vector<Door*> GetRoomDoors(unsigned int roomId);
+        void DeleteDoor(int globalDoorIndex);
         ~Level();
     };
 }

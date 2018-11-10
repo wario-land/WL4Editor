@@ -214,6 +214,18 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Delete a Door from the Door list and destroy the intance.
+    /// </summary>
+    /// <param name="globalDoorIndex">
+    /// The global Door id given by current Level.
+    /// </param>
+    void Level::DeleteDoor(int globalDoorIndex)
+    {
+        delete(*(doors.begin() + globalDoorIndex));
+        doors.erase(doors.begin() + globalDoorIndex);
+    }
+
+    /// <summary>
     /// Helper function to populate LevelName with the name string from the ROM.
     /// </summary>
     /// <param name="address">

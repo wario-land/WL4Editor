@@ -65,6 +65,7 @@ public:
     void HideTile16DockWidget() { Tile16SelecterWidget->setVisible(false); }
     void ResetEntitySetDockWidget() { EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]); }
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
+    void DeleteDoor(int globalDoorIndex);
 
 private slots:
     void on_actionOpen_ROM_triggered();

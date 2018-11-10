@@ -114,6 +114,12 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         SelectedEntityID = -1;
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
+    else if((SelectedDoorID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
+    {
+        singleton->DeleteDoor(SelectedDoorID);
+        SelectedDoorID = -1;
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
 }
 
 void MainGraphicsView::UnSelectDoorAndEntity()

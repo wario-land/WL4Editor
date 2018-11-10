@@ -284,6 +284,42 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
 }
 
 /// <summary>
+/// Delete a Door from the current Level.
+/// </summary>
+/// <param name="globalDoorIndex">
+/// The global Door id given by current Level.
+/// </param>
+void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
+{
+    // You cannot delete the vortex, it is always the first Door.
+    if(globalDoorIndex == 0) return;
+
+    // Delete the Door from the Room Door list
+    CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()]->DeleteDoor(globalDoorIndex);
+
+    // Disable the destination for all the existing Doors whose DestinationDoor is the Door which is being deleting
+    for(unsigned int i = 0; i < CurrentLevel->GetDoors().size(); ++i)
+    {
+        if(CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID() == globalDoorIndex)
+        {
+            CurrentLevel->GetDoors()[i]->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
+        }
+    }
+
+    // Delete the Door from the Level Door list
+    CurrentLevel->DeleteDoor(globalDoorIndex);
+
+    // Decline the GlobalDoorId for the Doors indexed after the deleted Door
+    if(globalDoorIndex < ((int) CurrentLevel->GetDoors().size() - 2))
+    {
+        for(unsigned int i = globalDoorIndex; i < CurrentLevel->GetDoors().size(); ++i)
+        {
+            CurrentLevel->GetDoors()[i]->GlobalDoorIdDec();
+        }
+    }
+}
+
+/// <summary>
 /// Call the OpenROM function when the action for it is triggered in the main window.
 /// </summary>
 void WL4EditorWindow::on_actionOpen_ROM_triggered()
