@@ -46,7 +46,8 @@ SOURCES += \
     Dialog/RoomPreviewGraphicsView.cpp \
     Dialog/DoorConfigDialog.cpp \
     LevelComponents/Entity.cpp \
-    DockWidget/EntitySetDockWidget.cpp
+    DockWidget/EntitySetDockWidget.cpp \
+    Compress.cpp
 
 HEADERS += \
         WL4EditorWindow.h \
@@ -70,7 +71,8 @@ HEADERS += \
     Dialog/RoomPreviewGraphicsView.h \
     Dialog/DoorConfigDialog.h \
     LevelComponents/Entity.h \
-    DockWidget/EntitySetDockWidget.h
+    DockWidget/EntitySetDockWidget.h \
+    Compress.h
 
 FORMS += \
         WL4EditorWindow.ui \

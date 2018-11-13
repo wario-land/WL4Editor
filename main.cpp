@@ -16,6 +16,8 @@
 #pragma comment(lib,"Advapi32.lib")
 #endif
 
+#include "Compress.h"
+
 #ifdef linux
 #include <unistd.h>
 #endif
@@ -69,6 +71,10 @@ static void StaticInitialization_BeforeROMLoading()
 int main(int argc, char *argv[])
 {
     StaticInitialization_BeforeROMLoading();
+
+    char foo[12] = { 1, 2, 2, 3, 0xF, 0xF, 0xF, 0xF, 1, 2, 2, 3 };
+    ROMUtils::RLEMetadata8Bit meta = ROMUtils::RLEMetadata8Bit(foo, 12);
+    int metaLen = meta.GetCompressedLength();
 
     QApplication a(argc, argv);
     WL4EditorWindow w;
