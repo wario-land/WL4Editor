@@ -591,3 +591,19 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         EditModeWidget->SetDifficultyRadioBox(1);
     }
 }
+
+/// <summary>
+/// Add a new Door to the current room.
+/// </summary>
+void WL4EditorWindow::on_actionNew_Door_triggered()
+{
+    if(!firstROMLoaded) return;
+    LevelComponents::DoorType type = LevelComponents::Instant;
+    LevelComponents::__DoorEntry newDoorEntry;
+    memset(&newDoorEntry, 0, sizeof(newDoorEntry));
+    newDoorEntry.DoorTypeByte = (unsigned char) 2;
+    newDoorEntry.EntitySetID = (unsigned char) 1;
+    newDoorEntry.RoomID = (unsigned char) selectedRoom;
+    LevelComponents::Door *newDoor = new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, type, 0, 0, 0, 0, CurrentLevel->GetDoors().size());
+    CurrentLevel->AddDoor(newDoor);
+}

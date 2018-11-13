@@ -57,6 +57,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         {
             if(room->CountDoors())
             {
+                // Select a Door if possible
                 for(int i = 0; i < room->CountDoors(); i++)
                 {
                     LevelComponents::Door *door = room->GetDoor(i);

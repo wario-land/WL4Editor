@@ -226,6 +226,18 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Add a new Door to the Door list and distribute it to the Room.
+    /// </summary>
+    /// <param name="newdoor">
+    /// new Door instance.
+    /// </param>
+    void Level::AddDoor(Door *newdoor)
+    {
+        doors.push_back(newdoor);
+        rooms[doors[doors.size() - 1]->GetRoomID()]->PushBack_Door(doors[doors.size() - 1]);
+    }
+
+    /// <summary>
     /// Helper function to populate LevelName with the name string from the ROM.
     /// </summary>
     /// <param name="address">
