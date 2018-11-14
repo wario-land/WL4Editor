@@ -310,11 +310,21 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
     CurrentLevel->DeleteDoor(globalDoorIndex);
 
     // Decline the GlobalDoorId for the Doors indexed after the deleted Door
-    if(globalDoorIndex < ((int) CurrentLevel->GetDoors().size() - 2))
+    int afterDoornum = (int) CurrentLevel->GetDoors().size() - globalDoorIndex;
+    if(afterDoornum)
     {
         for(unsigned int i = globalDoorIndex; i < CurrentLevel->GetDoors().size(); ++i)
         {
             CurrentLevel->GetDoors()[i]->GlobalDoorIdDec();
+        }
+    }
+
+    // Correct the LinkerDestination in DoorEntry for each Door
+    if(CurrentLevel->GetDoors().size() > 1)
+    {
+        for(unsigned int i = 1; i < CurrentLevel->GetDoors().size(); ++i)
+        {
+            CurrentLevel->GetDoors()[i]->SetLinkerDestination(CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID());
         }
     }
 }

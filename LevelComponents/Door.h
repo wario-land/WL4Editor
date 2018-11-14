@@ -80,6 +80,7 @@ namespace LevelComponents
         QPoint GetWarioOriginalPosition_x4();
         void SetGlobalDoorID(int doorId) { DoorID = doorId; }
         void GlobalDoorIdDec() { --DoorID; }
+        void SetLinkerDestination(int dest_RoomId) { DoorEntry.LinkerDestination = (unsigned char) dest_RoomId; }
         int GetGlobalDoorID() { return DoorID; }
         //TODO: GenerateDoorSavingData()  (ssp)
     };
