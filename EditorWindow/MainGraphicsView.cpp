@@ -92,7 +92,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             if(SelectedEntityID == -1)
             {
                 bool success = room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
-                // TODO: Show information if unsuccess
+                // TODO: Show information if failure
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
         }

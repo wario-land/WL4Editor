@@ -10,19 +10,25 @@ namespace ROMUtils
     /// </param>
     void RLEMetadata::InitializeJumpTableHelper(unsigned short jumpLimit)
     {
+        // Define variables used in the creation of the jump table
         unsigned char *data = (unsigned char*) this->data;
-        // TODO reference data[i] through a virtual function to get chars or shorts
         unsigned short *R = new unsigned short[data_len * 2];
+        unsigned short *C = R + data_len;
+        int cons = 0, minrun = GetMinimumRunSize();
+
+        // Seed the dynamic programming jump table
         R[data_len - 1] = 1;
+
+        // Populate R backwards in the jump table
         for(unsigned int i = data_len - 1; i >= 1; --i)
         {
             R[i - 1] = (R[i] == jumpLimit || data[i] != data[i - 1]) ? 1 : R[i] + 1;
         }
-        unsigned short *C = R + data_len;
-        int cons = 0;
+
+        // Populate C forwards in the jump table
         for(unsigned int i = 0; i < data_len; ++i)
         {
-            if(R[i] <= 2 && cons < jumpLimit)
+            if(R[i] < minrun && cons < jumpLimit)
             {
                 ++cons;
             }
@@ -37,7 +43,8 @@ namespace ROMUtils
         {
             C[data_len - cons] = cons;
         }
-        JumpTable = R;
+
+        JumpTable = R; // set the jump table since it has been populated
     }
 
     /// <summary>
@@ -48,47 +55,57 @@ namespace ROMUtils
     /// </param>
     unsigned int RLEMetadata::GetCompressedLengthHelper(unsigned int opcodeSize)
     {
-        unsigned int i = 0, size = 0;
+        // Define the variables used to traverse the jump table
+        unsigned int size = 0;
+        unsigned int i = 0, minrun = GetMinimumRunSize();
         unsigned short *R = JumpTable, *C = JumpTable + data_len;
+
+        // Calculate the size
         while(i < data_len)
         {
-            bool runmode = R[i] >= 3;
+            bool runmode = R[i] >= minrun;
             unsigned short len = runmode ? R[i] : C[i];
-            size += opcodeSize * (runmode ? 2 : len + 1);
+            size += opcodeSize + (runmode ? 1 : len);
             i += len;
         }
-        return size + opcodeSize; // termination value
+        return 1 + size + opcodeSize; // type identifier, data, termination value
     }
 
     /// <summary>
-    /// Initialize the jump table using an 8-bit jump limit.
+    /// Helper function to get the compressed data using the RLE metadata's jump table.
     /// </summary>
-    void RLEMetadata8Bit::InitializeJumpTable()
+    /// <returns>
+    /// The compressed data in a dynamically allocated array.
+    /// </returns>
+    void *RLEMetadata::GetCompressedData()
     {
-        InitializeJumpTableHelper(0x7F);
-    }
+        // Define variables used by compression
+        QVector<unsigned char> compressedData;
+        unsigned int i = 0, minrun = GetMinimumRunSize();
+        unsigned short *R = JumpTable, *C = JumpTable + data_len;
+        unsigned char *data = (unsigned char*) this->data;
 
-    /// <summary>
-    /// Initialize the jump table using a 16-bit jump limit.
-    /// </summary>
-    void RLEMetadata16Bit::InitializeJumpTable()
-    {
-        InitializeJumpTableHelper(0x7FFF);
-    }
+        // Populate the compressed data
+        compressedData.append(GetTypeIdentifier());
+        while(i < data_len)
+        {
+            bool runmode = R[i] >= minrun;
+            unsigned short len = runmode ? R[i] : C[i];
+            AddOpcode(compressedData, len, runmode);
+            for(int j = 0; j < (runmode ? 1 : len); ++j)
+            {
+                compressedData.append(data[i + j]);
+            }
+            i += len;
+        }
+        AddOpcode(compressedData, 0, true); // termination value
 
-    /// <summary>
-    /// Get the compressed length of 8-bit compressed data.
-    /// </summary>
-    unsigned int RLEMetadata8Bit::GetCompressedLength()
-    {
-        return GetCompressedLengthHelper(1);
-    }
-
-    /// <summary>
-    /// Get the compressed length of 16-bit compressed data.
-    /// </summary>
-    unsigned int RLEMetadata16Bit::GetCompressedLength()
-    {
-        return GetCompressedLengthHelper(2);
+        // Create the dynamically allocated char array
+        unsigned char *compressed = new unsigned char[compressedData.size()];
+        for(int i = 0; i < compressedData.size(); ++i)
+        {
+            compressed[i] = compressedData[i];
+        }
+        return compressed;
     }
 }

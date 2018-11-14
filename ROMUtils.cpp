@@ -1,4 +1,5 @@
 #include "ROMUtils.h"
+#include "Compress.h"
 #include <cassert>
 #include <QFile>
 #include <WL4EditorWindow.h>
@@ -223,6 +224,60 @@ namespace ROMUtils
         }
 
         return cmpptr;
+    }
+
+    /// <summary>
+    /// compress Layer data by run-length encoding.
+    /// </summary>
+    /// <remarks>
+    /// the first and second byte as the layer width and height information will not be generated in the function
+    /// you have to add them by yourself when saving compressed data.
+    /// </remarks>
+    /// <param name="_layersize">
+    /// the size of the layer, the value equal to (layerwidth * layerheight).
+    /// </param>
+    /// <param name="LayerData">
+    /// unsigned char pointer to the uncompressed layer data.
+    /// </param>
+    /// <param name="OutputCompressedData">
+    /// unsigned char pointer to the compressed layer data.
+    /// </param>
+    /// <return>the length of compressed data.</return>
+    unsigned int LayerRLECompress2(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData)
+    {
+        // Separate short data into char arrays
+        unsigned char *separatedBytes = new unsigned char[_layersize * 2];
+        for(unsigned int i = 0; i < _layersize; ++i)
+        {
+            unsigned short s = LayerData[i];
+            separatedBytes[i] = (unsigned char) s;
+            separatedBytes[i + _layersize] = (unsigned char) (s >> 8);
+        }
+
+        // Decide on 8 or 16 bit compression for the arrays
+        RLEMetadata *Lower8Bit = new RLEMetadata8Bit(separatedBytes, _layersize);
+        RLEMetadata *Lower16Bit = new RLEMetadata16Bit(separatedBytes, _layersize);
+        RLEMetadata *Upper8Bit = new RLEMetadata8Bit(separatedBytes + _layersize, _layersize);
+        RLEMetadata *Upper16Bit = new RLEMetadata16Bit(separatedBytes + _layersize, _layersize);
+        RLEMetadata *Lower = Lower8Bit->GetCompressedLength() < Lower16Bit->GetCompressedLength() ? Lower8Bit : Lower16Bit;
+        RLEMetadata *Upper = Upper8Bit->GetCompressedLength() < Upper16Bit->GetCompressedLength() ? Upper8Bit : Upper16Bit;
+
+        // Create the data to return
+        unsigned int lowerLength = Lower->GetCompressedLength(), upperLength = Upper->GetCompressedLength();
+        unsigned int size = lowerLength + upperLength;
+        *OutputCompressedData = new unsigned char[size];
+        void *lowerData = Lower->GetCompressedData();
+        void *upperData = Upper->GetCompressedData();
+        memcpy(*OutputCompressedData, lowerData, lowerLength);
+        memcpy(*OutputCompressedData + lowerLength, upperData, upperLength);
+
+        // Clean up
+        delete separatedBytes;
+        delete Lower8Bit;
+        delete Lower16Bit;
+        delete Upper8Bit;
+        delete Upper16Bit;
+        return size;
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 #include "Layer.h"
 #include "ROMUtils.h"
 #include <iostream>
+#include <cstring>
 
 namespace LevelComponents
 {
@@ -36,23 +37,8 @@ namespace LevelComponents
         else if(mappingType == LayerTile8x8)
         {
             // Set
-            switch(ROMUtils::CurrentFile[layerDataPtr])
-            {
-            case 0:
-                Width = Height = 32;
-                break;
-            case 1:
-                Width = 64;
-                Height = 32;
-                break;
-            case 2:
-                Width = 32;
-                Height = 64;
-                break;
-            default:
-                // TODO error handling. This line should not be reached for valid layer data!
-                return;
-            }
+            Width = (1 + (ROMUtils::CurrentFile[layerDataPtr] & 1)) << 5;
+            Height = (1 + ((ROMUtils::CurrentFile[layerDataPtr] >> 1) & 1)) << 5;
 
             // Get the layer data
             LayerData = (unsigned short *) ROMUtils::LayerRLEDecompress(layerDataPtr + 1, Width * Height * 2);
@@ -304,10 +290,22 @@ namespace LevelComponents
     unsigned char *Layer::GetCompressedLayerData(unsigned int *dataSize)
     {
         unsigned char *dataBuffer;
-        unsigned int compressedSize = ROMUtils::LayerRLECompress(Width * Height, LayerData, &dataBuffer);
-        // TODO redesign the way the data is being calculated
-
-        *dataSize = compressedSize;
+        unsigned int compressedSize = ROMUtils::LayerRLECompress2(Width * Height, LayerData, &dataBuffer);
+        unsigned int sizeInfoLen = MappingType == LayerMap16 ? 2 : 1;
+        dataBuffer = (unsigned char*) realloc(dataBuffer, sizeInfoLen + compressedSize);
+        if(MappingType == LayerMap16)
+        {
+            memmove(dataBuffer + 2, dataBuffer, compressedSize);
+            dataBuffer[0] = (unsigned char) Width;
+            dataBuffer[1] = (unsigned char) Height;
+        }
+        else
+        {
+            memmove(dataBuffer + 1, dataBuffer, compressedSize);
+            unsigned char sizeByte = (Width >> 6) | ((Height >> 6) << 1);
+            dataBuffer[0] = sizeByte;
+        }
+        *dataSize = sizeInfoLen + compressedSize;
         return dataBuffer;
     }
 }
