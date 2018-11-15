@@ -172,6 +172,7 @@ namespace LevelComponents
         int FindEntity(int XPos, int YPos);
         bool AddEntity(int XPos, int YPos, int localEntityId);
         void DeleteEntity(int index);
+        void DeleteDoor(int globalDoorIndex);
     };
 }
 

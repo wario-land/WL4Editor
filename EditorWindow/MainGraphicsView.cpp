@@ -57,6 +57,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         {
             if(room->CountDoors())
             {
+                // Select a Door if possible
                 for(int i = 0; i < room->CountDoors(); i++)
                 {
                     LevelComponents::Door *door = room->GetDoor(i);
@@ -112,6 +113,12 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
     {
         singleton->DeleteEntity(SelectedEntityID);
         SelectedEntityID = -1;
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+    else if((SelectedDoorID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
+    {
+        singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
+        SelectedDoorID = -1;
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
 }

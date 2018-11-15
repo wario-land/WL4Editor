@@ -283,6 +283,52 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
 }
 
 /// <summary>
+/// Delete a Door from the current Level.
+/// </summary>
+/// <param name="globalDoorIndex">
+/// The global Door id given by current Level.
+/// </param>
+void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
+{
+    // You cannot delete the vortex, it is always the first Door.
+    if(globalDoorIndex == 0) return;
+
+    // Delete the Door from the Room Door list
+    CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()]->DeleteDoor(globalDoorIndex);
+
+    // Disable the destination for all the existing Doors whose DestinationDoor is the Door which is being deleting
+    for(unsigned int i = 0; i < CurrentLevel->GetDoors().size(); ++i)
+    {
+        if(CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID() == globalDoorIndex)
+        {
+            CurrentLevel->GetDoors()[i]->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
+        }
+    }
+
+    // Delete the Door from the Level Door list
+    CurrentLevel->DeleteDoor(globalDoorIndex);
+
+    // Decline the GlobalDoorId for the Doors indexed after the deleted Door
+    int afterDoornum = (int) CurrentLevel->GetDoors().size() - globalDoorIndex;
+    if(afterDoornum)
+    {
+        for(unsigned int i = globalDoorIndex; i < CurrentLevel->GetDoors().size(); ++i)
+        {
+            CurrentLevel->GetDoors()[i]->GlobalDoorIdDec();
+        }
+    }
+
+    // Correct the LinkerDestination in DoorEntry for each Door
+    if(CurrentLevel->GetDoors().size() > 1)
+    {
+        for(unsigned int i = 1; i < CurrentLevel->GetDoors().size(); ++i)
+        {
+            CurrentLevel->GetDoors()[i]->SetLinkerDestination(CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID());
+        }
+    }
+}
+
+/// <summary>
 /// Call the OpenROM function when the action for it is triggered in the main window.
 /// </summary>
 void WL4EditorWindow::on_actionOpen_ROM_triggered()
@@ -553,4 +599,25 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         SetEditModeDockWidgetLayerEditability();
         EditModeWidget->SetDifficultyRadioBox(1);
     }
+}
+
+/// <summary>
+/// Add a new Door to the current room.
+/// </summary>
+void WL4EditorWindow::on_actionNew_Door_triggered()
+{
+    if(!firstROMLoaded) return;
+    LevelComponents::DoorType type = LevelComponents::Instant;
+    LevelComponents::__DoorEntry newDoorEntry;
+    memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
+    newDoorEntry.DoorTypeByte = (unsigned char) 2;
+    newDoorEntry.EntitySetID = (unsigned char) 1;
+    newDoorEntry.RoomID = (unsigned char) selectedRoom;
+    LevelComponents::Door *newDoor = new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, type, 0, 0, 0, 0, CurrentLevel->GetDoors().size());
+    newDoor->SetEntitySetID((unsigned char) 1);
+    newDoor->SetBGM((unsigned int) 0);
+    newDoor->SetDelta((unsigned int) 0, (unsigned int) 0);
+    newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
+    CurrentLevel->AddDoor(newDoor);
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 }

@@ -94,6 +94,8 @@ namespace LevelComponents
         {
             doors[i]->SetDestinationDoor(doors[destinations[i]]);
         }
+        // Set the first Door be Vortex Door
+        doors[0]->SetVortex();
 
         // Load the room data
         int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + levelIndex * 4);
@@ -210,6 +212,30 @@ namespace LevelComponents
             roomDoors.push_back(doors[i]);
         }
         return roomDoors;
+    }
+
+    /// <summary>
+    /// Delete a Door from the Door list and destroy the intance.
+    /// </summary>
+    /// <param name="globalDoorIndex">
+    /// The global Door id given by current Level.
+    /// </param>
+    void Level::DeleteDoor(int globalDoorIndex)
+    {
+        delete(*(doors.begin() + globalDoorIndex));
+        doors.erase(doors.begin() + globalDoorIndex);
+    }
+
+    /// <summary>
+    /// Add a new Door to the Door list and distribute it to the Room.
+    /// </summary>
+    /// <param name="newdoor">
+    /// new Door instance.
+    /// </param>
+    void Level::AddDoor(Door *newdoor)
+    {
+        doors.push_back(newdoor);
+        rooms[doors[doors.size() - 1]->GetRoomID()]->PushBack_Door(doors[doors.size() - 1]);
     }
 
     /// <summary>

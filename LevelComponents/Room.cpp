@@ -960,4 +960,22 @@ namespace LevelComponents
     {
         EntityList[currentDifficulty].erase(EntityList[currentDifficulty].begin() + index);
     }
+
+    /// <summary>
+    /// Delete an Door from the Room.
+    /// </summary>
+    /// <param name="globalDoorIndex">
+    /// The global Door id given by current Level.
+    /// </param>
+    void Room::DeleteDoor(int globalDoorIndex)
+    {
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            if(doors[i]->GetGlobalDoorID() == globalDoorIndex)
+            {
+                doors.erase(doors.begin() + i);
+                return;
+            }
+        }
+    }
 }
