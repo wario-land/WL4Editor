@@ -65,6 +65,7 @@ public:
     void HideTile16DockWidget() { Tile16SelecterWidget->setVisible(false); }
     void ResetEntitySetDockWidget() { EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]); }
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
+    void DeleteDoor(int globalDoorIndex);
 
 private slots:
     void on_actionOpen_ROM_triggered();
@@ -75,6 +76,7 @@ private slots:
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
     void on_actionRoom_Config_triggered();
+    void on_actionNew_Door_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H
