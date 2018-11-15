@@ -290,7 +290,7 @@ namespace LevelComponents
     unsigned char *Layer::GetCompressedLayerData(unsigned int *dataSize)
     {
         unsigned char *dataBuffer;
-        unsigned int compressedSize = ROMUtils::LayerRLECompress2(Width * Height, LayerData, &dataBuffer);
+        unsigned int compressedSize = ROMUtils::LayerRLECompress(Width * Height, LayerData, &dataBuffer);
         unsigned int sizeInfoLen = MappingType == LayerMap16 ? 2 : 1;
         dataBuffer = (unsigned char*) realloc(dataBuffer, sizeInfoLen + compressedSize);
         if(MappingType == LayerMap16)

@@ -80,9 +80,9 @@ namespace LevelComponents
         while(*(firstByte = (unsigned char*) doorPtr))
         {
             enum DoorType type = static_cast<DoorType>(doorPtr->DoorTypeByte);
-            Door *newDoor = new Door(*doorPtr, doorPtr->RoomID, type, doorPtr->x1, doorPtr->x2, doorPtr->y1, doorPtr->y2, currentDoornum);
+            Door *newDoor = new Door(*doorPtr, doorPtr->RoomID, currentDoornum);
             newDoor->SetEntitySetID(doorPtr->EntitySetID);
-            newDoor->SetBGM(doorPtr->BGM_ID_LowByte | ((unsigned int) (doorPtr->BGM_ID_HighByte)) << 8);
+            newDoor->SetBGM(doorPtr->BGM_ID);
             newDoor->SetDelta(doorPtr->HorizontalDelta, doorPtr->VerticalDelta);
             doors.push_back(newDoor);
             destinations.push_back(doorPtr->LinkerDestination);
@@ -95,7 +95,7 @@ namespace LevelComponents
             doors[i]->SetDestinationDoor(doors[destinations[i]]);
         }
         // Set the first Door be Vortex Door
-        doors[0]->SetVortex();
+        doors[0]->SetAsVortex();
 
         // Load the room data
         int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + levelIndex * 4);
@@ -314,8 +314,11 @@ namespace LevelComponents
         for(unsigned int i = 0; i < doors.size(); ++i)
         {
             Door *door = doors[i];
-            // TODO
+
         }
+
+        // Set the name for the level
+        // TODO
 
         chunks.append(roomHeaders);
         chunks.append(doorChunk);

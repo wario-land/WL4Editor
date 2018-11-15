@@ -607,16 +607,16 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
 void WL4EditorWindow::on_actionNew_Door_triggered()
 {
     if(!firstROMLoaded) return;
-    LevelComponents::DoorType type = LevelComponents::Instant;
     LevelComponents::__DoorEntry newDoorEntry;
     memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
     newDoorEntry.DoorTypeByte = (unsigned char) 2;
     newDoorEntry.EntitySetID = (unsigned char) 1;
     newDoorEntry.RoomID = (unsigned char) selectedRoom;
-    LevelComponents::Door *newDoor = new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, type, 0, 0, 0, 0, CurrentLevel->GetDoors().size());
+    newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
+    LevelComponents::Door *newDoor = new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, CurrentLevel->GetDoors().size());
     newDoor->SetEntitySetID((unsigned char) 1);
-    newDoor->SetBGM((unsigned int) 0);
-    newDoor->SetDelta((unsigned int) 0, (unsigned int) 0);
+    newDoor->SetBGM(0);
+    newDoor->SetDelta(0, 0);
     newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
     CurrentLevel->AddDoor(newDoor);
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
