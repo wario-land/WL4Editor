@@ -64,6 +64,7 @@ namespace LevelComponents
         int GetX2() { return DoorEntry.x2; }
         int GetY1() { return DoorEntry.y1; }
         int GetY2() { return DoorEntry.y2; }
+        struct __DoorEntry GetEntryStruct() { return DoorEntry; }
 
         // Setters
         void SetAsVortex() { is_vortex = true; }

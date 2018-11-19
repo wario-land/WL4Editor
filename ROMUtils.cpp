@@ -3,8 +3,29 @@
 #include <cassert>
 #include <QFile>
 #include <WL4EditorWindow.h>
+#include <iostream>
 
 extern WL4EditorWindow *singleton;
+
+// Helper function to find the number of characters matched in ptr to a pattern
+static inline int StrMatch(unsigned char *ptr, const char *pattern)
+{
+    int matched = 0;
+    do {
+        if(ptr[matched] != *pattern) break;
+        ++matched;
+    } while(*++pattern);
+    return matched;
+}
+
+// Helper function to validate RATS at an address
+static inline bool ValidRATS(unsigned char *ptr)
+{
+    if(strncmp((const char*) ptr, "STAR", 4)) return false;
+    short chunkLen = *(short*) (ptr + 4);
+    short chunkComp = *(short*) (ptr + 6);
+    return chunkLen == ~chunkComp;
+}
 
 namespace ROMUtils
 {
@@ -205,114 +226,164 @@ namespace ROMUtils
     }
 
     /// <summary>
-    /// a sub routine for ROMUtils::SaveTemp(...), we had better not use it elsewhere
+    /// Find the next available address in ROM data that is free based on RATS.
     /// </summary>
-    int FindSpaceInROM(int NewDataLength)
+    /// <param name="ROMData">
+    /// The pointer to the ROM data being processed.
+    /// </param>
+    /// <param name="ROMLength">
+    /// The length of the ROM data.
+    /// </param>
+    /// <param name="startAddr">
+    /// The start address to search from.
+    /// </param>
+    /// <param name="chunkSize">
+    /// The size of the chunk for which we must find free space.
+    /// </param>
+    /// <returns>
+    /// The pointer to the available space, or 0 if none exists.
+    /// </returns>
+    int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize)
     {
-        if(NewDataLength > 0xFFFF)
-            return -1;
-
-        int dst = WL4Constants::AvailableSpaceBeginningInROM;
-        int runData = 0;
-        while(1)
+        int freeBytes = 0; // number of free bytes found from startAddr
+        if(startAddr + chunkSize > ROMLength) return 0; // fail if not enough room in ROM
+        while(freeBytes < chunkSize)
         {
-            if((CurrentFile[dst] == (unsigned char) '\xFF') && (dst < 0x800000) && (runData < (NewDataLength + 8)))
+            // Optimize search by incrementing more with partial matches
+            int STARmatch = StrMatch(ROMData + startAddr + freeBytes, "STAR");
+            if(STARmatch < 4)
             {
-                dst++;
-                runData++;
-                continue;
+                // STAR not found at current address
+                freeBytes += MAX_VAL(STARmatch, 1);
             }
-            else if(dst == 0x800000)
+            else
             {
-                return -2;
-            }
-            else if(runData == (NewDataLength + 8))
-            {
-                return (dst - runData);
-            }
-            else if(CurrentFile[dst] != (unsigned char) '\xFF')
-            {
-                if(!strncmp((const char*) (CurrentFile + dst), "STAR", 4))
+                // STAR found at current address: validate the RATS checksum
+                if(ValidRATS(ROMData + startAddr + freeBytes))
                 {
-                    unsigned short val1 = *(unsigned short*) (CurrentFile + dst + 4);
-                    unsigned short val2 = *(unsigned short*) (CurrentFile + dst + 6);
-                    if(val1 + val2 == 0xFFFF)
-                    {
-                        dst += (8 + val1);
-                        runData = 0;
-                        continue;
-                    }
-                    else
-                    {
-                        return -3; //TODO: error handling: the ROM is patch by unknown program.
-                    }
+                    // Checksum pass: Restart the search at end of the chunk
+                    unsigned short chunkLen = *(unsigned short*) (ROMData + startAddr + freeBytes + 4);
+                    startAddr += freeBytes + 8 + chunkLen;
+                    if(startAddr + chunkSize > ROMLength) return 0; // fail if not enough room in ROM
+                    freeBytes = 0;
+                }
+                else
+                {
+                    // Checksum fail: Advance freeBytes past the invalid RATS identifier
+                    freeBytes += 4;
                 }
             }
         }
+        return startAddr;
     }
 
     /// <summary>
-    /// Save change into CurrentFile (NOT THE SOURCE ROM FILE)
+    /// Save the currently loaded level to the ROM file.
     /// </summary>
-    /// <param name="tmpData">
-    /// a C-type pointer points to the new data array we want to save.
-    /// </param>
-    /// <param name="pointerAddress">
-    /// An address points to a pointer which points to the offset that save data.
-    /// </param>
-    /// <param name="datalength">
-    /// the length of the new data array.
-    /// </param>
-    /// <return>A pointer to decompressed data.</return>
-    int SaveTemp(unsigned char *tmpData, int pointerAddress, int dataLength)
-    {
-        unsigned int OriginalPtr = PointerFromData(pointerAddress);
-        unsigned int tmpPtr = OriginalPtr - 8;
-
-        // Recover the block in ROM if it is possible
-        if((tmpPtr > WL4Constants::AvailableSpaceBeginningInROM) && !strncmp((const char*) (CurrentFile + tmpPtr), "STAR", 4))
-        {
-            int tmpLength = *(unsigned short*) (CurrentFile + tmpPtr + 4);
-            memset((void*) (CurrentFile + tmpPtr), '\xFF', tmpLength + 8);
-        }
-
-        // Save New Data
-        int newPtr = FindSpaceInROM(dataLength);
-        if (newPtr < 0)
-            return -1;  // TODO: error handling: the ROM cannot be patched due to some reason.
-
-        memcpy(CurrentFile + newPtr, "STAR", 4); // Write RATS tag
-        *(unsigned short*) (CurrentFile + newPtr + 4) = (unsigned short) dataLength;
-        *(unsigned short*) (CurrentFile + newPtr + 6) = (unsigned short) (0xFFFF - dataLength);
-        *(unsigned int*) (CurrentFile + pointerAddress) = newPtr + 0x8000000; // write pointer
-
-        memcpy((void*) (CurrentFile + newPtr + 8), tmpData, dataLength); // Copy data into RATS protected area
-
-        return -1; // just return some random value which not equal to the one stand for error.
-    }
-
     void SaveFile()
     {
         // Obtain the list of data chucks to save to the rom
         SaveDataIndex = 1;
         QVector<struct SaveData> chunks;
-        singleton->GetCurrentLevel()->Save(chunks);
+        singleton->GetCurrentLevel()->GetSaveChunks(chunks);
 
-        // Find space for each chunk and write it in a copy of CurrentFile (not the original CurrentFile)
+        // Finding space for the chunks can be done faster if the chunks are ordered by size
+        qSort(chunks.begin(), chunks.end(), [](const struct SaveData& a, const struct SaveData& b) {
+            return a.size < b.size;
+        });
+        std::map<int, int> chunkIDtoIndex;
+        for(int i = 0; i < chunks.size(); ++i)
+        {
+            chunkIDtoIndex[chunks[i].index] = i;
+        }
 
+        // Invalidate old chunk data
+        unsigned char *TempFile = new unsigned char[CurrentFileSize];
+        unsigned int TempLength = CurrentFileSize;
+        memcpy(TempFile, CurrentFile, CurrentFileSize);
+        foreach(struct SaveData chunk, chunks)
+        {
+            // TODO the old index from entries with (chunk.dest_index > 0) cannot get old address. design changes necessary
+            unsigned int oldChunkAddr = PointerFromData(chunk.ptr_addr);
+            if(oldChunkAddr > WL4Constants::AvailableSpaceBeginningInROM)
+            {
+                unsigned char *RATSaddr = TempFile + oldChunkAddr - 8;
+                if(ValidRATS(RATSaddr))
+                {
+                    strncpy((char*) RATSaddr, "STAR_INV", 8);
+                }
+                else std::cout << "Invalid RATS identifier for existing chunk, index " << chunk.index << std::endl;
+            }
+        }
+
+        // Find space in the ROM for each chunk and assign addresses for the chunks
+        std::map<int, int> indexToChunkPtr;
+        int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
+        for(int i = 0; i < chunks.size(); ++i)
+        {
+            int chunkSize = chunks[i].size + 8 + (chunks[i].alignment ? 3 : 0);
+            int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
+            if(chunks[i].alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
+            if(!chunkAddr)
+            {
+                // Could not find free space in ROM
+                assert(0);
+            }
+            indexToChunkPtr[chunks[i].index] = chunkAddr;
+            startAddr = chunkAddr + chunkSize; // do not re-search old areas of the ROM
+        }
+
+        // Apply source pointer modifications
+        foreach(struct SaveData chunk, chunks)
+        {
+            unsigned char *ptrLoc = chunk.dest_index ?
+                // Source pointer is in another chunk
+                chunks[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr :
+                // Source pointer is in main ROM
+                TempFile + chunk.ptr_addr;
+
+            // We add 8 to the pointer location because the chunk ptr starts at the chunk's RATS tag
+            *(unsigned int*) ptrLoc = (indexToChunkPtr[chunk.index] + 8) | 0x8000000;
+        }
+
+        // Write each chunk to TempFile
+        foreach(struct SaveData chunk, chunks)
+        {
+            // Create the RATS tag
+            unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
+            strncpy((char*) destPtr, "STAR", 4);
+            assert(!(chunk.size & 0xFFFF0000)); // size must be a 16-bit value
+            unsigned short chunkLen = (unsigned short) chunk.size;
+            *(unsigned short*) (destPtr + 4) = chunkLen;
+            *(unsigned short*) (destPtr + 6) = ~chunkLen;
+
+            // Write the data
+            memcpy(destPtr + 8, chunk.data, chunkLen);
+
+            // Clean up the data since it has been copied
+            free(chunk.data);
+        }
 
         // Save the rom file from the CurrentFile copy
         QFile file(ROMFilePath);
         file.open(QIODevice::WriteOnly);
-        if (file.isOpen()){
-            file.write((const char*)CurrentFile, CurrentFileSize* sizeof(unsigned char));
+        if (file.isOpen())
+        {
+            file.write((const char*) TempFile, TempLength);
         }
-        else{
+        else
+        {
             // can't open file to save ROM
+            assert(0);
         }
         file.close();
 
         // Set the CurrentFile to the copied CurrentFile data (and clean up the old array)
+        free(CurrentFile);
+        CurrentFile = TempFile;
+        CurrentFileSize = TempLength;
 
+        // Mark dirty objects as clean
+        // TODO
     }
 }

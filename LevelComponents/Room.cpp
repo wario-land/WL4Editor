@@ -829,7 +829,7 @@ namespace LevelComponents
         return -1; // TODO: Error handling
     }
 
-    void Room::Save(QVector<struct ROMUtils::SaveData> chunks, struct ROMUtils::SaveData *headerChunk)
+    void Room::GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks, struct ROMUtils::SaveData *headerChunk)
     {
         // Calculate some values needed to initialize the save data
         unsigned int doorTablePtr = WL4Constants::DoorTable + LevelID * 4;
@@ -859,7 +859,7 @@ namespace LevelComponents
             else
             {
                 // Write the old layer data pointer to the header
-                layerPtrs[i] = GetLayerDataPtr(i);
+                layerPtrs[i] = GetLayerDataPtr(i) | 0x8000000;
             }
         }
 
@@ -881,7 +881,8 @@ namespace LevelComponents
             // TODO
         }
 
-        chunks.append(cameraChunk);
+        //chunks.append(cameraChunk);
+        free(cameraChunk.data); // TODO remove this when we can add the camera chunk
     }
 
     __RoomHeader::__RoomHeader(Room *room) :

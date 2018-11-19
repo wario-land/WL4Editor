@@ -79,7 +79,6 @@ namespace LevelComponents
         int currentDoornum = 0;
         while(*(firstByte = (unsigned char*) doorPtr))
         {
-            enum DoorType type = static_cast<DoorType>(doorPtr->DoorTypeByte);
             Door *newDoor = new Door(*doorPtr, doorPtr->RoomID, currentDoornum);
             newDoor->SetEntitySetID(doorPtr->EntitySetID);
             newDoor->SetBGM(doorPtr->BGM_ID);
@@ -251,15 +250,15 @@ namespace LevelComponents
             unsigned char chr = ROMUtils::CurrentFile[address + i];
             if(chr <= 0x09)
             {
-                LevelName.append(1, chr + (unsigned char) 48);
+                LevelName.append(1, chr + 48);
             }
             else if(chr >= 0x0A && chr <= 0x23)
             {
-                LevelName.append(1, chr + (unsigned char) 55);
+                LevelName.append(1, chr + 55);
             }
             else if(chr >= 0x24 && chr <= 0x3D)
             {
-                LevelName.append(1, chr + (unsigned char) 61);
+                LevelName.append(1, chr + 61);
             }
             else
             {
@@ -268,7 +267,7 @@ namespace LevelComponents
         }
     }
 
-    void Level::Save(QVector<struct ROMUtils::SaveData> chunks)
+    void Level::GetSaveChunks(QVector<ROMUtils::SaveData> &chunks)
     {
         // Calculate some values needed to initialize the save data
         int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
@@ -279,6 +278,7 @@ namespace LevelComponents
         unsigned int roomHeaderChunkSize = rooms.size() * sizeof(struct __RoomHeader);
         unsigned int doorTablePtr = WL4Constants::DoorTable + levelIndex * 4;
         unsigned int doorChunkSize = doors.size() * sizeof(struct __DoorEntry);
+        unsigned int LevelNamePtr = WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4;
 
         // Create the contiguous room header chunk
         struct ROMUtils::SaveData roomHeaders =
@@ -296,7 +296,7 @@ namespace LevelComponents
         {
             struct __RoomHeader rh = rooms[i]->GetRoomHeader();
             memcpy(roomHeaders.data + i * sizeof(struct __RoomHeader), &rh, sizeof(struct __RoomHeader));
-            rooms[i]->Save(chunks, &roomHeaders);
+            rooms[i]->GetSaveChunks(chunks, &roomHeaders);
         }
 
         // Create door list chunk
@@ -311,16 +311,40 @@ namespace LevelComponents
         };
 
         // Populate door chunk data
+        std::map<Door*, int> indexMapping;
         for(unsigned int i = 0; i < doors.size(); ++i)
         {
-            Door *door = doors[i];
-
+            indexMapping[doors[i]] = i;
+        }
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            struct __DoorEntry entryStruct = doors[i]->GetEntryStruct();
+            entryStruct.LinkerDestination = indexMapping[doors[i]->GetDestinationDoor()];
+            memcpy(doorChunk.data + i * sizeof(struct __DoorEntry), &entryStruct, sizeof(struct __DoorEntry));
         }
 
-        // Set the name for the level
-        // TODO
+        // Create the level name chunk
+        struct ROMUtils::SaveData levelNameChunk =
+        {
+            LevelNamePtr,
+            26,
+            (unsigned char*) malloc(26),
+            ROMUtils::SaveDataIndex++,
+            false,
+            0
+        };
+        memset(levelNameChunk.data, 0xFF, 26);
+        unsigned char *str = levelNameChunk.data + (26 - LevelName.size()) / 2;
+        foreach(char c, LevelName)
+        {
+            if(c <= 57) { c -= 48; }
+            else if(c >= 65 && c <= 90) { c -= 55; }
+            else { c -= 61; }
+            *str++ = c;
+        }
 
         chunks.append(roomHeaders);
         chunks.append(doorChunk);
+        chunks.append(levelNameChunk);
     }
 }

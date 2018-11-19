@@ -309,8 +309,7 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
     CurrentLevel->DeleteDoor(globalDoorIndex);
 
     // Decline the GlobalDoorId for the Doors indexed after the deleted Door
-    int afterDoornum = (int) CurrentLevel->GetDoors().size() - globalDoorIndex;
-    if(afterDoornum)
+    if(CurrentLevel->GetDoors().size() - globalDoorIndex)
     {
         for(unsigned int i = globalDoorIndex; i < CurrentLevel->GetDoors().size(); ++i)
         {
@@ -620,4 +619,12 @@ void WL4EditorWindow::on_actionNew_Door_triggered()
     newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
     CurrentLevel->AddDoor(newDoor);
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+}
+
+/// <summary>
+/// Call the function which saves the currently loaded level
+/// </summary>
+void WL4EditorWindow::on_actionSave_ROM_triggered()
+{
+    ROMUtils::SaveFile();
 }

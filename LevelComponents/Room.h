@@ -165,7 +165,7 @@ namespace LevelComponents
         int GetLocalDoorID(int globalDoorId);
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
-        void Save(QVector<struct ROMUtils::SaveData> chunks, ROMUtils::SaveData *headerChunk);
+        void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk);
         enum __CameraControlType GetCameraControlType() { return CameraControlType; }
         unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
         std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }

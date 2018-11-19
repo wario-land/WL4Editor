@@ -72,13 +72,13 @@ namespace LevelComponents
         std::vector<Door*> GetDoors() { return doors; }
         std::vector<Room*> GetRooms() { return rooms; }
         std::string GetLevelName() { return LevelName; }
-        void SetLevelName(std::string newlevelname) {this->LevelName = newlevelname; }
+        void SetLevelName(std::string newlevelname) { LevelName = newlevelname; }
         void RedistributeDoor();
         std::vector<Door*> GetRoomDoors(unsigned int roomId);
         void DeleteDoor(int globalDoorIndex);
         void AddDoor(Door* newdoor);
         ~Level();
-        void Save(QVector<struct ROMUtils::SaveData> chunks);
+        void GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks);
     };
 }
 
