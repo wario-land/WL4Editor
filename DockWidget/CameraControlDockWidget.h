@@ -2,7 +2,12 @@
 #define CAMERACONTROLDOCKWIDGET_H
 
 #include <QString>
+#include <QStandardItem>
+#include <QStandardItemModel>
+#include <QModelIndex>
 #include <QDockWidget>
+
+#include <vector>
 
 #include "LevelComponents/Room.h"
 
@@ -17,6 +22,10 @@ class CameraControlDockWidget : public QDockWidget
 private:
     Ui::CameraControlDockWidget *ui;
     LevelComponents::Room *currentRoom = nullptr;
+    QStandardItemModel *ListViewItemModel = nullptr;
+
+private slots:
+    void on_CameraLimitators_listView_clicked(const QModelIndex &index);
 
 public:
     explicit CameraControlDockWidget(QWidget *parent = 0);

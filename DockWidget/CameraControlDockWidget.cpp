@@ -46,6 +46,44 @@ void CameraControlDockWidget::ResetCameraControlInfo(LevelComponents::Room *curr
 //    {
 //        ui->UseCameraLimitators_radioButton->setChecked(true);
 //    }
+//    if(currentcameracontroltype != LevelComponents::HasControlAttrs)
+//    {
+//        ui->ExistingLimitators_groupBox->setEnabled(false);
+//    }
+//    else
+//    {
+        ui->ExistingLimitators_groupBox->setEnabled(true);
+        std::vector<struct LevelComponents::__CameraControlRecord*> currentCameraLimitators = currentroom->GetCameraControlRecords();
+        if(ListViewItemModel != nullptr)
+        {
+            ListViewItemModel->clear();
+            delete ListViewItemModel;
+        }
+        ListViewItemModel = new QStandardItemModel(this);
+        QStringList List_strs;
+        if(currentCameraLimitators.size() > (unsigned int) 0)
+        {
+            for(int i = 0; i < (int) currentCameraLimitators.size(); ++i)
+            {
+                QString string = "(" +
+                        QString::number((int) currentCameraLimitators[i]->x1, 10) + ", " +
+                        QString::number((int) currentCameraLimitators[i]->y1, 10) + ") - (" +
+                        QString::number((int) currentCameraLimitators[i]->x2, 10) + ", " +
+                        QString::number((int) currentCameraLimitators[i]->y2, 10) + ")";
+                List_strs << string;
+            }
+            int nCount = List_strs.size();
+
+            for(int i = 0; i < nCount; i++)
+            {
+                QString string = static_cast<QString>(List_strs.at(i));
+                QStandardItem *item = new QStandardItem(string);
+                ListViewItemModel->appendRow(item);
+            }
+            ui->CameraLimitators_listView->setModel(ListViewItemModel);
+            ui->verticalLayout_LimitatorSetting->setEnabled(false);
+        }
+//    }
 }
 
 /// <summary>
@@ -58,4 +96,9 @@ void CameraControlDockWidget::StaticInitialization()
     {
         CameraLimitatorTypeNameSet << CameraLimitatorResetSideTypeNameData[i];
     }
+}
+
+void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelIndex &index)
+{
+
 }

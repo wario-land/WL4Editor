@@ -165,6 +165,7 @@ namespace LevelComponents
         bool AddEntity(int XPos, int YPos, int localEntityId);
         void DeleteEntity(int index);
         void DeleteDoor(int globalDoorIndex);
+        std::vector<struct __CameraControlRecord*> GetCameraControlRecords() { return CameraControlRecords; }
     };
 }
 
