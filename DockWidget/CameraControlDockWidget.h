@@ -23,6 +23,7 @@ private:
     Ui::CameraControlDockWidget *ui;
     LevelComponents::Room *currentRoom = nullptr;
     QStandardItemModel *ListViewItemModel = nullptr;
+    void ClearCurrentLimitatorSetting();
 
 private slots:
     void on_CameraLimitators_listView_clicked(const QModelIndex &index);
@@ -30,16 +31,16 @@ private slots:
 public:
     explicit CameraControlDockWidget(QWidget *parent = 0);
     ~CameraControlDockWidget();
-    void ResetCameraControlInfo(LevelComponents::Room *currentroom);
+    void SetCameraControlInfo(LevelComponents::Room *currentroom);
     static void StaticInitialization();
 
     static constexpr const char *CameraLimitatorResetSideTypeNameData[5] =
     {
         "Fixed",
-        "0: Can reset upper side",
-        "1: Can reset lower side",
-        "2: Can reset left side",
-        "3: Can reset right side"
+        "0: Can reset left side",
+        "1: Can reset right side",
+        "2: Can reset upper side",
+        "3: Can reset lower side"
     };
 };
 
