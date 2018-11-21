@@ -115,14 +115,14 @@ namespace LevelComponents
         // Copy the room header information
         RoomHeader = room->GetRoomHeader();
 
-        // Set up tileset
+        // Set up tileset, TODO: if we support Tileset changes in the editor, this need to be changed
         int tilesetPtr = WL4Constants::TilesetDataTable + TilesetID * 36;
         tileset = new Tileset(tilesetPtr, TilesetID);
 
         // Set up the layer data
         Width = room->GetWidth();
         Height = room->GetHeight();
-        unsigned char *roomheader_charptr = (unsigned char *) &RoomHeader;
+        unsigned char *roomheader_charptr = (unsigned char *) &RoomHeader; //TODO: the following code need to be re-implemented, add deep copy constructor for Layer class
         int *roomDataPtr = (int *) (&RoomHeader.Layer0Data);
         for(int i = 0; i < 4; ++i)
         {
@@ -135,42 +135,17 @@ namespace LevelComponents
 
         // Set up camera control data
         // TODO are there more types than 1, 2 and 3?
-        if((CameraControlType = static_cast<enum __CameraControlType>(room->GetRoomHeader().CameraControlType)) == HasControlAttrs)
+        CameraControlType = room->GetCameraControlType();
+        if(CameraControlType == LevelComponents::HasControlAttrs)
         {
-            int pLevelCameraControlPointerTable = ROMUtils::PointerFromData(WL4Constants::CameraControlPointerTable + LevelID * 4);
-            for(int i = 0; i < 16; i++)
-            {
-                int CurrentPointer = ROMUtils::PointerFromData(pLevelCameraControlPointerTable + i * 4);
-                if(CurrentPointer == WL4Constants::CameraRecordSentinel)
-                    break;
-                if(ROMUtils::CurrentFile[CurrentPointer] == RoomID)
-                {
-                    int RecordNum = ROMUtils::CurrentFile[CurrentPointer + 1];
-                    struct __CameraControlRecord *recordPtr = (struct __CameraControlRecord*) (ROMUtils::CurrentFile + CurrentPointer + 2);
-                    while(RecordNum--)
-                    {
-                        CameraControlRecords.push_back(recordPtr++);
-                    }
-                    break;
-                }
-            }
+            std::vector<struct __CameraControlRecord*> tmpCameraControlRecord = room->GetCameraControlRecords();
+            CameraControlRecords.assign(tmpCameraControlRecord.begin(), tmpCameraControlRecord.end());
         }
 
         // Load Entity list for each difficulty level
         for(int i = 0; i < 3; i++)
         {
-            int *EntityListaddress = (int *) ((unsigned char *)(&RoomHeader) + 28 + 4 * i);
-            int ListAddress = *EntityListaddress - 0x8000000;
-            int k = 0;
-            while(ROMUtils::CurrentFile[ListAddress + 3 * k] != (unsigned char) '\xFF') // maximum entity count is 46
-            {
-                EntityRoomAttribute tmpEntityroomattribute;
-                tmpEntityroomattribute.YPos     = (int) ROMUtils::CurrentFile[ListAddress + 3 * k];
-                tmpEntityroomattribute.XPos     = (int) ROMUtils::CurrentFile[ListAddress + 3 * k + 1];
-                tmpEntityroomattribute.EntityID = (int) ROMUtils::CurrentFile[ListAddress + 3 * k + 2];
-                EntityList[i].push_back(tmpEntityroomattribute);
-                k++;
-            }
+            EntityList[i] = room->GetEntityList(i);
         }
 
         // Deep Copy Entityset and Entities
@@ -241,6 +216,12 @@ namespace LevelComponents
         FreeDrawLayers();
         if(currentEntitySet != nullptr) delete currentEntitySet;
         FreecurrentEntityListSource();
+        for(int i = 0; i < (int) CameraControlRecords.size(); ++i)
+        {
+            struct __CameraControlRecord *currentCameralimitator = CameraControlRecords[i];
+            delete currentCameralimitator;
+        }
+        CameraControlRecords.clear();
         delete tileset;
     }
 
