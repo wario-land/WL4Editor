@@ -77,7 +77,7 @@ class RoomConfigDialog : public QDialog
 public:
     explicit RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigParams *CurrentRoomParams);
     ~RoomConfigDialog();
-    static void StaticInitialization();
+    static void StaticComboBoxesInitialization();
     DialogParams::RoomConfigParams GetConfigParams();
 
 private slots:
@@ -112,7 +112,7 @@ private:
         "08  Factory",
         "09  Wildflower Underground",
         "0A  Wildflower WaterPlace",
-        "0B  Underwater",
+        "0B  Wildflower Sunflower",
         "0C  Toy Block Tower",
         "0D  Toy Block Tower",
         "0E  Toy Block Tower",

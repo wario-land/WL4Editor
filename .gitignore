@@ -45,5 +45,16 @@ ui_*
 
 # Miscellanious
 *.swp
+*.autosave
 WL4Editor
 TEST/LoadROMFileTEST.cpp
+
+# Visual Studio user files
+Backup/
+debug/
+release/
+UpgradeLog.htm
+*.vcproj
+*.vcxproj
+*.filters
+*.sln

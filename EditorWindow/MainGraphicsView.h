@@ -4,6 +4,7 @@
 #include <QGraphicsView>
 #include "WL4EditorWindow.h"
 #include "LevelComponents/Level.h"
+#include "Dialog/DoorConfigDialog.h"
 
 class MainGraphicsView : public QGraphicsView
 {
@@ -12,11 +13,13 @@ class MainGraphicsView : public QGraphicsView
 public:
     MainGraphicsView(QWidget *param) : QGraphicsView(param) {}
     void mousePressEvent(QMouseEvent *event);
+    void keyPressEvent(QKeyEvent *event);
     int GetSelectedDoorID() { return SelectedDoorID; }
-    void UnSelectDoor() { SelectedDoorID = -1; }//under Implement
+    void UnSelectDoorAndEntity();
 
 private:
     int SelectedDoorID = -1;
+    int SelectedEntityID = -1;
 };
 
 #endif // MAINGRAPHICSVIEW_H

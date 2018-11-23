@@ -27,10 +27,12 @@ namespace LevelComponents
     /// </param>
     Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) :
         RoomID(_RoomID),
+        LevelID(_LevelID),
         TilesetID(ROMUtils::CurrentFile[roomDataPtr])
     {
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
         memset(drawLayers, 0, sizeof(drawLayers));
+        memset(EntityLayerZValue, 0, sizeof(EntityLayerZValue));
 
         // Copy the room header information
         memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
@@ -91,10 +93,69 @@ namespace LevelComponents
             }
         }
 
-        // TODO what goes here?
+        // TODOs: load Entityset and Entities for different difficulties and different Doors.
+
     }
 
-    // TODO documentation
+    /// <summary>
+    /// Copy constructor of Room.
+    /// </summary>
+    /// <remarks>
+    /// the new instance should only be used to render Room graphic temporarily, it is unsafe to add it to a Level.
+    /// </remarks>
+    Room::Room(Room *room)
+    {
+        RoomID = room->GetRoomID();
+        TilesetID = room->GetTilesetID();
+        LevelID = room->GetLevelID();
+        memset(RenderedLayers, 0, sizeof(RenderedLayers));
+        memset(drawLayers, 0, sizeof(drawLayers));
+        memset(EntityLayerZValue, 0, sizeof(EntityLayerZValue));
+
+        // Copy the room header information
+        RoomHeader = room->GetRoomHeader();
+
+        // Set up tileset, TODO: if we support Tileset changes in the editor, this need to be changed
+        int tilesetPtr = WL4Constants::TilesetDataTable + TilesetID * 36;
+        tileset = new Tileset(tilesetPtr, TilesetID);
+
+        // Set up the layer data
+        Width = room->GetWidth();
+        Height = room->GetHeight();
+        unsigned char *roomheader_charptr = (unsigned char *) &RoomHeader; //TODO: the following code need to be re-implemented, add deep copy constructor for Layer class
+        int *roomDataPtr = (int *) (&RoomHeader.Layer0Data);
+        for(int i = 0; i < 4; ++i)
+        {
+            enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(*(roomheader_charptr + i + 1) & 0x30);
+            int layerPtr = (*(roomDataPtr + i)) - 0x8000000;
+            layers[i] = new Layer(layerPtr, mappingType);
+        }
+
+        SetLayerPriorityAndAlphaAttributes((int) room->GetRoomHeader().LayerEffects);
+
+        // Set up camera control data
+        // TODO are there more types than 1, 2 and 3?
+        CameraControlType = room->GetCameraControlType();
+        if(CameraControlType == LevelComponents::HasControlAttrs)
+        {
+            std::vector<struct __CameraControlRecord*> tmpCameraControlRecord = room->GetCameraControlRecords();
+            CameraControlRecords.assign(tmpCameraControlRecord.begin(), tmpCameraControlRecord.end());
+        }
+
+        // Load Entity list for each difficulty level
+        for(int i = 0; i < 3; i++)
+        {
+            EntityList[i] = room->GetEntityList(i);
+        }
+
+        // Deep Copy Entityset and Entities
+        CurrentEntitySetID = room->GetCurrentEntitySetID();
+        ResetEntitySet(CurrentEntitySetID);
+    }
+
+    /// <summary>
+    /// Deconstruct drawLayers[].
+    /// </summary>
     void Room::FreeDrawLayers()
     {
         for(unsigned int i = 0; i < sizeof(drawLayers) / sizeof(drawLayers[0]); ++i)
@@ -106,11 +167,78 @@ namespace LevelComponents
         }
     }
 
-    // TODO documentation
+    /// <summary>
+    /// release Entity instances list in this Room.
+    /// </summary>
+    void Room::FreecurrentEntityListSource()
+    {
+        int i = (int) currentEntityListSource.size();
+        if(i < 1) return;
+        for(int j = 0; j < i; ++j)
+        {
+            Entity *currententity = currentEntityListSource[j];
+            delete currententity;
+        }
+        currentEntityListSource.clear();
+    }
+
+    /// <summary>
+    /// Reset the EntitySet in this Room.
+    /// </summary>
+    /// <param name="entitysetId">
+    /// New EntitySet Id.
+    /// </param>
+    void Room::ResetEntitySet(int entitysetId)
+    {
+        if(currentEntitySet != nullptr) delete currentEntitySet;
+        FreecurrentEntityListSource();
+        currentEntitySet = new EntitySet(entitysetId, tileset->GetUniversalSpritesTilesPalettePtr());
+//        currentEntitySet = new EntitySet(entitysetId, WL4Constants::UniversalSpritesPalette);
+        for(int i = 0; i < 17; ++i)
+        {
+            Entity *newEntity = new Entity(-1, i, currentEntitySet);
+            currentEntityListSource.push_back(newEntity);
+        }
+        for(int i = 0; i < (int) currentEntitySet->GetEntityTable().size(); ++i)
+        {
+            int _globalId = currentEntitySet->GetEntityTable().at(i).Global_EntityID;
+            Entity *newEntity = new Entity(i, _globalId, currentEntitySet);
+            currentEntityListSource.push_back(newEntity);
+        }
+    }
+
+    /// <summary>
+    /// Deconstruct an instance of Room.
+    /// </summary>
     Room::~Room()
     {
         // Free drawlayer elements
         FreeDrawLayers();
+        if(currentEntitySet != nullptr) delete currentEntitySet;
+        FreecurrentEntityListSource();
+        for(int i = 0; i < (int) CameraControlRecords.size(); ++i)
+        {
+            struct __CameraControlRecord *currentCameralimitator = CameraControlRecords[i];
+            delete currentCameralimitator;
+        }
+        CameraControlRecords.clear();
+        delete tileset;
+    }
+
+    /// <summary>
+    /// Get distributed doors' pointers from Room class and Reset EntitySet in this Room by the way if needed.
+    /// </summary>
+    /// <param name="newdoor">
+    /// eExisting Door ptr.
+    /// </param>
+    void Room::PushBack_Door(Door *newdoor)
+    {
+         doors.push_back(newdoor);
+         if(CurrentEntitySetID == 0)
+         {
+             CurrentEntitySetID = newdoor->GetEntitySetID();
+             ResetEntitySet(CurrentEntitySetID);
+         }
     }
 
     /// <summary>
@@ -131,6 +259,9 @@ namespace LevelComponents
     /// </return>
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
+        int sceneWidth = Width * 16;
+        int sceneHeight = Height * 16;
+        int Z = 0;
         switch(renderParams->type)
         {
         case FullRender:
@@ -152,11 +283,8 @@ namespace LevelComponents
                 });
 
                 // Create a graphics scene with the layers added in order of priority
-                int sceneWidth = Width * 16;
-                int sceneHeight = Height * 16;
                 if(scene) { delete scene; } // Make a new graphics scene to draw to
                 scene = new QGraphicsScene(0, 0, qMax(sceneWidth, 16 * this->GetLayer(0)->GetLayerWidth()), sceneHeight);
-                int Z = 0;
 
                 // This represents the EVA alpha layer, which will be rendered in passes before the alpha layer is finalized
                 QPixmap alphaPixmap(sceneWidth, sceneHeight);
@@ -185,7 +313,8 @@ namespace LevelComponents
 
                     // Add the rendered layer to the graphics scene
                     QGraphicsPixmapItem *pixmapItem = scene->addPixmap(pixmap);
-                    pixmapItem->setZValue(Z++);
+                    pixmapItem->setZValue(Z); Z += 2;
+                    EntityLayerZValue[3 - i] = Z - 1;
                     RenderedLayers[drawLayers[i]->index] = pixmapItem;
 
                     // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
@@ -197,6 +326,7 @@ namespace LevelComponents
                         else if((3 - i) == layers[0]->GetLayerPriority())
                         {
                             // Blend the EVA and EVB pixels for the new layer
+                            Z--;
                             QImage imageA = RenderedLayers[0]->pixmap().toImage();
                             QImage imageB = alphaPixmap.toImage();
                             for(int j = 0; j < sceneHeight; ++j)
@@ -213,15 +343,75 @@ namespace LevelComponents
 
                             // Add the alpha pixmap above the non-blended layer 0, but below the next one to be rendered
                             QGraphicsPixmapItem *alphaItem = scene->addPixmap(QPixmap::fromImage(imageA));
-                            alphaItem->setZValue(Z++);
+                            alphaItem->setZValue(Z); Z += 2;
+                            EntityLayerZValue[i] = Z - 1;
                             RenderedLayers[7] = alphaItem;
                         };
                     }
                     else RenderedLayers[7] = nullptr;
                 }
                 delete[] LayersCurrentVisibility;
+            }
+            // Fall through to ElementsLayersUpdate section
+        case ElementsLayersUpdate:
+            {
+                // Render entity layer
+                QPixmap *EntityPixmap[4];
+                QPainter *EntityPainter[4];
+                for(int i = 0; i < 4; ++i)
+                {
+                    EntityPixmap[i] = new QPixmap(sceneWidth, sceneHeight);
+                    EntityPixmap[i]->fill(Qt::transparent);
+                    EntityPainter[i] = new QPainter(EntityPixmap[i]);
+                }
+                currentDifficulty = renderParams->mode.seleteddifficulty;
+                for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
+                {
+                    Entity *currententity = currentEntityListSource[EntityList[currentDifficulty].at(i).EntityID];
+//                    EntityPainter[3 - currententity->GetPriority()]->drawImage(
+                    // Use an alternative method to render the Entity in a not-so-bad place
+                    if((Layer0ColorBlendCoefficient_EVB == 0) && (Layer0ColorBlending == true))
+                    {
+                        int tmppriority = (layers[1]->GetLayerPriority()) > (layers[2]->GetLayerPriority()) ? layers[1]->GetLayerPriority(): (layers[2]->GetLayerPriority());
+                        EntityPainter[tmppriority]->drawImage(
+                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset + 98) / 4,
+                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset + 66) / 4,
+                                    currententity->Render());
+                    }
+                    else if(/*(layers[0]->GetLayerPriority() != 0) && */(Layer0ColorBlending == true) && (Layer0ColorBlendCoefficient_EVB != 0))
+                    {
+                        EntityPainter[layers[0]->GetLayerPriority()]->drawImage(
+                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset + 98) / 4,
+                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset + 66) / 4,
+                                    currententity->Render());
+                    }
+                    else
+                    {
+                        EntityPainter[layers[1]->GetLayerPriority() + 1]->drawImage(
+                                    16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset + 98) / 4,
+                                    16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 + (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset + 66) / 4,
+                                    currententity->Render());
+                    }
+                }
+                for(int i = 0; i < 4; ++i)
+                {
+                    QGraphicsPixmapItem *EntityItem;
+                    if(!RenderedLayers[8 + i] || renderParams->type == FullRender)
+                    {
+                        EntityItem = scene->addPixmap(*EntityPixmap[i]);
+                        EntityItem->setZValue(EntityLayerZValue[i]);
+                        RenderedLayers[8 + i] = EntityItem;
+                    }
+                    else
+                    {
+                        RenderedLayers[8 + i]->setPixmap(*EntityPixmap[i]);
+                    }
+                    delete EntityPainter[i];
+                    delete EntityPixmap[i];
+                }
 
-                // TODO render entity layer
+                // Reset Z value
+                Z = (Layer0ColorBlending && Layer0ColorBlendCoefficient_EVB) ? 9 : 8;
 
                 // Render door layer
                 QPixmap doorPixmap(sceneWidth, sceneHeight);
@@ -251,9 +441,17 @@ namespace LevelComponents
                         doorPainter.fillRect(doorX + 1, doorY + 1, doorWidth - 2, doorHeight - 2, QColor(0, 0, 0xFF, 0x5F));
                     }
                 }
-                QGraphicsPixmapItem *doorpixmapItem = scene->addPixmap(doorPixmap);
-                doorpixmapItem->setZValue(Z++);
-                RenderedLayers[5] = doorpixmapItem;
+                QGraphicsPixmapItem *doorpixmapItem;
+                if(!RenderedLayers[5] || renderParams->type == FullRender)
+                {
+                    doorpixmapItem = scene->addPixmap(doorPixmap);
+                    doorpixmapItem->setZValue(Z++);
+                    RenderedLayers[5] = doorpixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[5]->setPixmap(doorPixmap);
+                }
 
                 // Render camera box layer
                 QPixmap CameraLimitationPixmap(sceneWidth, sceneHeight);
@@ -349,10 +547,54 @@ namespace LevelComponents
                 {
                     // TODO other camera control type
                 }
+                QGraphicsPixmapItem *CameraLimitationpixmapItem;
+                if(!RenderedLayers[6] || renderParams->type == FullRender)
+                {
+                    CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
+                    CameraLimitationpixmapItem->setZValue(Z++);
+                    RenderedLayers[6] = CameraLimitationpixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[6]->setPixmap(CameraLimitationPixmap);
+                }
 
-                QGraphicsPixmapItem *CameraLimitationpixmapItem = scene->addPixmap(CameraLimitationPixmap);
-                CameraLimitationpixmapItem->setZValue(Z++);
-                RenderedLayers[6] = CameraLimitationpixmapItem;
+                // TODO: Render Entities Boxes used for selecting
+                QPixmap EntityBoxPixmap(sceneWidth, sceneHeight);
+                EntityBoxPixmap.fill(Qt::transparent);
+                QPainter EntityBoxPainter(&EntityBoxPixmap);
+                QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0xFF)), 2);
+                EntityBoxPen.setJoinStyle(Qt::MiterJoin);
+                EntityBoxPainter.setPen(EntityBoxPen);
+                for(int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
+                {
+                    if(i == renderParams->SelectedEntityID)
+                    {
+                        QPen EntityBoxPen2 = QPen(QBrush(QColor(0xFF, 0x7F, 0, 0xFF)), 2);
+                        EntityBoxPen2.setJoinStyle(Qt::MiterJoin);
+                        EntityBoxPainter.setPen(EntityBoxPen2);
+                        EntityBoxPainter.drawRect(16 * EntityList[currentDifficulty][i].XPos, 16 * EntityList[currentDifficulty][i].YPos, 16, 16);
+                        EntityBoxPainter.setPen(EntityBoxPen);
+                    }
+                    else
+                    {
+                        EntityBoxPainter.drawRect(16 * EntityList[currentDifficulty][i].XPos, 16 * EntityList[currentDifficulty][i].YPos, 16, 16);
+                    }
+
+                }
+                // Test: Render EntitySet Tiles in the front of the Layer RenderedLayers[4]
+                //EntityBoxPainter.drawPixmap(0, 0, currentEntitySet->GetPixmap(9));
+                QGraphicsPixmapItem *EntityBoxpixmapItem;
+                if(!RenderedLayers[4] || renderParams->type == FullRender)
+                {
+                    EntityBoxpixmapItem = scene->addPixmap(EntityBoxPixmap);
+                    EntityBoxpixmapItem->setZValue(Z++);
+                    RenderedLayers[4] = EntityBoxpixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[4]->setPixmap(EntityBoxPixmap);
+                }
             }
             // Fall through to layer enable section
         case LayerEnable:
@@ -365,7 +607,14 @@ namespace LevelComponents
                 }
 
                 // Enable the visibility of the sprite and editor overlay layers
-                if(RenderedLayers[4]) RenderedLayers[4]->setVisible(layerVisibility->entitiesEnabled);
+                if(RenderedLayers[4])
+                {
+                    RenderedLayers[4]->setVisible(layerVisibility->entitiesEnabled);
+                    RenderedLayers[8]->setVisible(layerVisibility->entitiesEnabled);
+                    RenderedLayers[9]->setVisible(layerVisibility->entitiesEnabled);
+                    RenderedLayers[10]->setVisible(layerVisibility->entitiesEnabled);
+                    RenderedLayers[11]->setVisible(layerVisibility->entitiesEnabled);
+                }
                 if(RenderedLayers[5]) RenderedLayers[5]->setVisible(layerVisibility->doorsEnabled);
                 if(RenderedLayers[6]) RenderedLayers[6]->setVisible(layerVisibility->cameraAreasEnabled);
                 if(RenderedLayers[7]) RenderedLayers[7]->setVisible(layerVisibility->alphaBlendingEnabled);
@@ -453,11 +702,14 @@ namespace LevelComponents
         return nullptr;
     }
 
-    // TODO documentation
+    /// <summary>
+    /// Set Layers Priority and Alpha Attributes for Layer instances and class members in Room (this) class.
+    /// </summary>
     void Room::SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr)
     {
         // Prioritize the layers
         int priorityFlag = layerPriorityAndAlphaAttr;
+        RoomHeader.LayerEffects = (unsigned char) layerPriorityAndAlphaAttr;
         switch(priorityFlag & 3)
         {
         case 0:
@@ -528,7 +780,9 @@ namespace LevelComponents
         }
     }
 
-    // TODO documentation
+    /// <summary>
+    /// Set Layer data pointer into the Room header struct in sake of saving changes.
+    /// </summary>
     void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
     {
         switch(LayerNum)
@@ -547,7 +801,9 @@ namespace LevelComponents
         }
     }
 
-    // TODO documentation
+    /// <summary>
+    /// Set attributes relate to layer 3 autoscroll in Room header struct in sake of saving changes.
+    /// </summary>
     void Room::SetBGLayerAutoScrollEnabled(bool enability)
     {
         if(enability)
@@ -563,6 +819,87 @@ namespace LevelComponents
             else
             {
                 RoomHeader.Layer3Scrolling = (unsigned char) 1;
+            }
+        }
+    }
+
+    int Room::GetLocalDoorID(int globalDoorId)
+    {
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            if(doors[i]->GetGlobalDoorID() == globalDoorId)
+            return (int) i;
+        }
+        return -1; // TODO: Error handling
+    }
+
+    /// <summary>
+    /// Check if there is an Entity exist in one place.
+    /// </summary>
+    /// <param name="XPos">
+    /// The X position of the place.
+    /// </param>
+    /// <param name="YPos">
+    /// The Y position of the place.
+    /// </param>
+    int Room::FindEntity(int XPos, int YPos)
+    {
+        int Entitynum = EntityList[currentDifficulty].size();
+        for(int i = 0; i < Entitynum; ++i)
+        {
+            if((EntityList[currentDifficulty][i].XPos == XPos) && (EntityList[currentDifficulty][i].YPos == YPos)) return i;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// Add a new Entity into the current Entity List.
+    /// </summary>
+    /// <param name="XPos">
+    /// The X position of the place.
+    /// </param>
+    /// <param name="YPos">
+    /// The Y position of the place.
+    /// </param>
+    /// <param name="localEntityId">
+    /// The local Id of the Entity in the current EntitySet.
+    /// </param>
+    bool Room::AddEntity(int XPos, int YPos, int localEntityId)
+    {
+        if(EntityList[currentDifficulty].size() == (int) 47) return false;
+        EntityRoomAttribute newEntityattrs;
+        newEntityattrs.XPos = XPos;
+        newEntityattrs.YPos = YPos;
+        newEntityattrs.EntityID = localEntityId;
+        EntityList[currentDifficulty].push_back(newEntityattrs);
+        return true;
+    }
+
+    /// <summary>
+    /// Delete an Entity from a Entity List.
+    /// </summary>
+    /// <param name="index">
+    /// The index of the Entity record in EntityList[currentDifficulty], count from 0.
+    /// </param>
+    void Room::DeleteEntity(int index)
+    {
+        EntityList[currentDifficulty].erase(EntityList[currentDifficulty].begin() + index);
+    }
+
+    /// <summary>
+    /// Delete an Door from the Room.
+    /// </summary>
+    /// <param name="globalDoorIndex">
+    /// The global Door id given by current Level.
+    /// </param>
+    void Room::DeleteDoor(int globalDoorIndex)
+    {
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            if(doors[i]->GetGlobalDoorID() == globalDoorIndex)
+            {
+                doors.erase(doors.begin() + i);
+                return;
             }
         }
     }

@@ -22,6 +22,8 @@ namespace WL4Constants
     const int BGLayerDefaultPtr           = 0x58DA7C;
     const int NormalLayerDefaultPtr       = 0x3F2263;
     const int ToxicLandfillDustyLayer0Ptr = 0x601854;
+    const int UniversalSpritesPalette     = 0x556DDC;
+    const int UniversalSpritesPalette2    = 0x400A68;
 
     // Other
     const int AvailableSpaceBeginningInROM = 0x78F970;
@@ -83,10 +85,10 @@ namespace WL4Constants
 
     //Entity OAM default action frames data pointers
     /*
-     * Created by DataExtraction
-     * src:DataExtraction.cpp
-     * in:Entity data.txt
-     * ouput:Entity data(processed).txt
+     * Generated using c code.
+     * src: Hacking Documents\DataExtraction.cpp
+     * in: Hacking Documents\Entity data.txt
+     * ouput: Hacking Documents\Entity data(processed).txt
      */
     const int Entity01_0x3B4F94 = 0x3B4F94;
     const int Entity02_0x3B4FA4 = 0x3B4FA4;
@@ -96,8 +98,8 @@ namespace WL4Constants
     const int Entity06_0x3B4FF4 = 0x3B4FF4;
     const int Entity07_0x3B62AC = 0x3B62AC;
     const int Entity08_0x3B59EC = 0x3B59EC;
-    const int Entity09_0x3B492C = 0x3B492C;
-    const int Entity10_0x3DA17C = 0x3DA17C;
+    const int Entity09_0x3B492C = 0x3B492C; // Notice: 0x0A - 0x0F never used
+    const int Entity10_0x3DA17C = 0x3DA17C; // Notice: 0x10 - "cat"  never used
     const int Entity11_0x3B416C = 0x3B416C;
     const int Entity12_0x3B43DC = 0x3B43DC;
     const int Entity13_0x3B43DC = 0x3B43DC;
@@ -109,7 +111,7 @@ namespace WL4Constants
     const int Entity19_0x3BB0E8 = 0x3BB0E8;
     const int Entity1A_0x3BB63C = 0x3BB63C;
     const int Entity1B_0x3BBD6C = 0x3BBD6C;
-    const int Entity1B_0x3BBDF4 = 0x3BBDF4;
+    const int Entity1B_0x3BBDF4 = 0x3BBDF4; // Notice: there are two different entities here but indexed the same number, they use different palettes so render them carefully
     const int Entity1C_0x3BC570 = 0x3BC570;
     const int Entity1D_0x3BC570 = 0x3BC570;
     const int Entity1E_0x3BC8E4 = 0x3BC8E4;
@@ -126,7 +128,7 @@ namespace WL4Constants
     const int Entity29_0x3B505C = 0x3B505C;
     const int Entity2A_0x3C1270 = 0x3C1270;
     const int Entity2B_0x3C1270 = 0x3C1270;
-    const int Entity2C_0x3C302C = 0x3C302C;
+    const int Entity2C_0x3C302C = 0x3C302C; // Notice: 0x2D - I cannot render anything in game
     const int Entity2E_0x3C48D4 = 0x3C48D4;
     const int Entity2F_0x3C48F4 = 0x3C48F4;
     const int Entity30_0x3C4174 = 0x3C4174;
@@ -148,7 +150,7 @@ namespace WL4Constants
     const int Entity40_0x3C62FC = 0x3C62FC;
     const int Entity41_0x3C7034 = 0x3C7034;
     const int Entity42_0x3C770C = 0x3C770C;
-    const int Entity43_0x3C798C = 0x3C798C;
+    const int Entity43_0x3C798C = 0x3C798C; // Notice: 0x44 - I cannot render anything in game
     const int Entity45_0x3C799C = 0x3C799C;
     const int Entity46_0x3C79AC = 0x3C79AC;
     const int Entity47_0x3C7A5C = 0x3C7A5C;
@@ -208,7 +210,6 @@ namespace WL4Constants
     const int Entity7E_0x3F0F04 = 0x3F0F04;
     const int Entity7F_0x3F122C = 0x3F122C;
     const int Entity80_0x3F1AA0 = 0x3F1AA0;
-
 }
 
 #endif // WL4CONSTANTS_H

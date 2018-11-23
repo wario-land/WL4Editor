@@ -2,13 +2,15 @@
 
 namespace LevelComponents
 {
-    Door::Door(unsigned char _RoomID, LevelComponents::DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2) :
+    Door::Door(__DoorEntry _DoorEntry, unsigned char _RoomID, LevelComponents::DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2, int doorId) :
         type(_DoorType),
         RoomID(_RoomID),
         X1(_X1),
         X2(_X2),
         Y1(_Y1),
-        Y2(_Y2)
+        Y2(_Y2),
+        DoorID(doorId),
+        DoorEntry(_DoorEntry)
     {
         // nothing here (yet)
     }
@@ -25,6 +27,10 @@ namespace LevelComponents
         X2 = _X2;
         Y1 = _Y1;
         Y2 = _Y2;
+        DoorEntry.x1 = _X1;
+        DoorEntry.x2 = _X2;
+        DoorEntry.y1 = _Y1;
+        DoorEntry.y2 = _Y2;
     }
 
     /// <summary>

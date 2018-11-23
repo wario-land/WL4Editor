@@ -131,11 +131,18 @@
     <property name="title">
      <string>Edit</string>
     </property>
+    <widget class="QMenu" name="menuAdd">
+     <property name="title">
+      <string>Add</string>
+     </property>
+     <addaction name="actionNew_Door"/>
+    </widget>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
     <addaction name="separator"/>
     <addaction name="actionLevel_Config"/>
     <addaction name="actionRoom_Config"/>
+    <addaction name="menuAdd"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -187,6 +194,11 @@
    </property>
    <property name="text">
     <string>Room Config</string>
+   </property>
+  </action>
+  <action name="actionNew_Door">
+   <property name="text">
+    <string>New Door</string>
    </property>
   </action>
  </widget>

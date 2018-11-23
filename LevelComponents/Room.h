@@ -7,7 +7,6 @@
 #include <DockWidget/EditModeDockWidget.h>
 
 #include <vector>
-#include <list>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 
@@ -69,9 +68,10 @@ namespace LevelComponents
     // Enumeration of the ways in which we can re-render the main graphics view
     enum RenderUpdateType
     {
-        FullRender  = 0,
-        SingleTile  = 1,
-        LayerEnable = 2
+        FullRender   = 0,
+        SingleTile   = 1,
+        LayerEnable  = 2,
+        ElementsLayersUpdate = 3
     };
 
     // This struct defines the parameters necessary to perform a rendering update to the main graphics view
@@ -82,6 +82,7 @@ namespace LevelComponents
         int tileY = 0;
         unsigned short tileID = 0;
         unsigned int SelectedDoorID = (unsigned int) -1;
+        int SelectedEntityID = -1;
         struct Ui::EditModeParams mode = {};
         RenderUpdateParams(enum RenderUpdateType _type) : type(_type) {}
     };
@@ -95,29 +96,41 @@ namespace LevelComponents
             Layer *layer;
             int index;
         } *drawLayers[4];
+        int EntityLayerZValue[4];
         enum __CameraControlType CameraControlType;
         unsigned int RoomID;
+        unsigned int LevelID;
         int TilesetID;
         unsigned int Width, Height;
         bool Layer0ColorBlending = false;
-        int Layer0ColorBlendCoefficient_EVA;
-        int Layer0ColorBlendCoefficient_EVB;
+        int Layer0ColorBlendCoefficient_EVA = 16;
+        int Layer0ColorBlendCoefficient_EVB = 0;
         std::vector<struct __CameraControlRecord*> CameraControlRecords;
         struct __RoomHeader RoomHeader;
-        std::list<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
+        int CurrentEntitySetID = 0;
+        EntitySet *currentEntitySet = nullptr;
+        std::vector<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
+        std::vector<Entity*> currentEntityListSource; // Initialize Entities here
+        int currentDifficulty = 1;
         Layer *layers[4];
         Tileset *tileset;
         std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor
-        QGraphicsPixmapItem *RenderedLayers[8]; // L0 - 3, E, D, C, A (may not exist)
+        QGraphicsPixmapItem *RenderedLayers[12]; // L0 - 3, E, D, C, A (may not exist)
         void FreeDrawLayers();
+        void FreecurrentEntityListSource();
+        void ResetEntitySet(int entitysetId);
 
     public:
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
+        Room(Room *room);
         ~Room();
         int GetTilesetID() { return TilesetID; }
         Tileset *GetTileset() { return tileset; }
+        unsigned int GetRoomID() { return RoomID; }
+        unsigned int GetLevelID() { return LevelID; }
+        struct __RoomHeader GetRoomHeader() { return RoomHeader; }
         void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; TilesetID = tilesetID; RoomHeader.TilesetID = (unsigned int)tilesetID; }
-        void PushBack_Door(Door* newdoor) { doors.push_back(newdoor); }
+        void PushBack_Door(Door* newdoor);
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
@@ -142,7 +155,19 @@ namespace LevelComponents
         void SetBGLayerAutoScrollEnabled(bool enability);
         int GetLayerEffectsParam() { return (int) RoomHeader.LayerEffects; }
         LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
-        int CountDoors() { return doors.size(); }
+        int CountDoors() { return (int)doors.size(); }
+        void SetDoors(std::vector<Door*> _doors) { doors = _doors; }
+        int GetLocalDoorID(int globalDoorId);
+        int GetCurrentEntitySetID() { return CurrentEntitySetID; }
+        void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
+        enum __CameraControlType GetCameraControlType() { return CameraControlType; } //Delete this line when PR
+        std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
+        int FindEntity(int XPos, int YPos);
+        bool AddEntity(int XPos, int YPos, int localEntityId);
+        void DeleteEntity(int index);
+        void DeleteDoor(int globalDoorIndex);
+        std::vector<struct __CameraControlRecord*> GetCameraControlRecords() { return CameraControlRecords; }
+        std::vector<struct EntityRoomAttribute> GetEntityList(int difficulty_id) { return EntityList[difficulty_id]; }
     };
 }
 

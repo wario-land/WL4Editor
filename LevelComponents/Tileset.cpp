@@ -1,6 +1,8 @@
 #include "Tileset.h"
 #include "ROMUtils.h"
 
+#include <iostream>
+
 #include <QPixmap>
 
 namespace LevelComponents
@@ -51,7 +53,7 @@ namespace LevelComponents
         int tmpAnimatedTilesHeaderPtr;
         int tmpoffset;
         int tmpAnimatedTilesdataPtr;
-        for(int v1 = 0; v1 < 16; v1++)
+        for(int v1 = 0; v1 < 16; ++v1)
         {
             /*
              * the reason why not using this is that it will cause problem and worse in some situation,
@@ -67,12 +69,18 @@ namespace LevelComponents
             tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
             tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
             if((ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x03') || (ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x06'))
+            {
                 tmpoffset -= 1;
+            }
             else
+            {
                 tmpoffset = 0;
+            }
             tmpoffset *= 128;
-            for(int i = 0; i < 4; i++)
+            for(int i = 0; i < 4; ++i)
+            {
                 tile8x8data[i + 4 * v1] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes);
+            }
         }
 
         // Load the 8x8 tile graphics
@@ -98,7 +106,7 @@ namespace LevelComponents
         // Load the map16 data
         int map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
         int map16size = sizeof(map16data) / sizeof(map16data[0]);
-        for(int i = 0; i < map16size; ++i) // TODO crashes on i = 6
+        for(int i = 0; i < map16size; ++i)
         {
             unsigned short *map16tilePtr = (unsigned short*) (ROMUtils::CurrentFile + map16ptr + i * 8);
             Tile8x8 *tiles[4];
@@ -121,6 +129,9 @@ namespace LevelComponents
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
         Map16WarioAnimationSlotIDTable = (unsigned char*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24));
+
+        // Get pointer of Universal Sprites tiles Palette
+        UniversalSpritesTilesPalettePtr = ROMUtils::PointerFromData(tilesetPtr + 32);
     }
 
     /// <summary>

@@ -28,8 +28,8 @@ EditModeDockWidget::EditModeDockWidget(QWidget *parent) :
     layerIndices[ui->RadioButton_EditOnLayer1] = 1;
     layerIndices[ui->RadioButton_EditOnLayer2] = 2;
     layerIndices[ui->RadioButton_EditOnLayer3] = 3;
-    difficultyIndices[ui->RadioButton_NMode] = 0;
-    difficultyIndices[ui->RadioButton_HMode] = 1;
+    difficultyIndices[ui->RadioButton_HMode] = 0;
+    difficultyIndices[ui->RadioButton_NMode] = 1;
     difficultyIndices[ui->RadioButton_SHMode] = 2;
     modeGroup = new QButtonGroup(ui->editModeGroupBox);
     modeGroup->addButton(ui->RadioButton_LayerMode);
@@ -67,8 +67,25 @@ void EditModeDockWidget::SetLayersCheckBoxEnabled(int index, bool usable)
         case 0: ui->CheckBox_Layer0View->setEnabled(usable); ui->CheckBox_Layer0View->setChecked(usable); ui->RadioButton_EditOnLayer0->setEnabled(usable); break;
         case 2: ui->CheckBox_Layer2View->setEnabled(usable); ui->CheckBox_Layer2View->setChecked(usable); ui->RadioButton_EditOnLayer2->setEnabled(usable); break;
         case 3: ui->CheckBox_Layer3View->setEnabled(usable); ui->CheckBox_Layer3View->setChecked(usable); ui->RadioButton_EditOnLayer3->setEnabled(usable); break;
+        case 7: ui->CheckBox_AlphaView->setEnabled(usable); ui->CheckBox_AlphaView->setChecked(usable); break;
     }
     ui->RadioButton_EditOnLayer1->setChecked(true);
+}
+
+/// <summary>
+/// Function will called by the WL4EditorWindow for reset difficulty.
+/// </summary>
+/// <param name="modeid">
+/// difficulty id.
+/// </param>
+void EditModeDockWidget::SetDifficultyRadioBox(int modeid)
+{
+    switch(modeid)
+    {
+        case 0: ui->RadioButton_HMode->setChecked(true); break;
+        case 2: ui->RadioButton_SHMode->setChecked(true); break;
+        default: ui->RadioButton_NMode->setChecked(true); // case 1
+    }
 }
 
 bool *EditModeDockWidget::GetLayersVisibilityArray()
@@ -219,4 +236,105 @@ void EditModeDockWidget::on_CheckBox_AlphaView_stateChanged(int arg1)
     singleton->RenderScreenVisibilityChange(); // TODO this should probably be a full re-render
 }
 
+/// <summary>
+/// Unselect the selected Door when change to other edit mode.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_DoorMode.
+/// </param>
+void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
+{
+    if(!checked)
+    {
+        singleton->Graphicsview_UnselectDoorAndEntity();
+    }
+}
 
+/// <summary>
+/// Slot function for change difficulty to Normal.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_NMode.
+/// </param>
+void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
+{
+    if(!checked)
+    {
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+}
+
+/// <summary>
+/// Slot function for change difficulty to Hard.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_HMode.
+/// </param>
+void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
+{
+    if(!checked)
+    {
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+}
+
+/// <summary>
+/// Slot function for changing difficulty to SHard.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_SHMode.
+/// </param>
+void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
+{
+    if(!checked)
+    {
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+}
+
+/// <summary>
+/// Slot function for switcing to Layer editing mode.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_LayerMode.
+/// </param>
+void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
+{
+    if(checked)
+    {
+        singleton->HideEntitySetDockWidget();
+        singleton->HideCameraControlDockWidget();
+        singleton->ShowTile16DockWidget();
+    }
+}
+
+/// <summary>
+/// Slot function for switcing to Entity editing mode.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_EntityMode.
+/// </param>
+void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
+{
+    if(checked)
+    {
+        singleton->HideTile16DockWidget();
+        singleton->HideCameraControlDockWidget();
+//        singleton->ResetEntitySetDockWidget();
+        singleton->ShowEntitySetDockWidget();
+    }
+    else
+    {
+        singleton->Graphicsview_UnselectDoorAndEntity();
+    }
+}
+
+void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
+{
+    if(checked)
+    {
+        singleton->HideEntitySetDockWidget();
+        singleton->HideTile16DockWidget();
+        singleton->ShowCameraControlDockWidget();
+    }
+}

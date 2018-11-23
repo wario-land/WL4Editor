@@ -10,7 +10,12 @@
 
 extern WL4EditorWindow *singleton;
 
-// TODO why is this event not getting called?
+/// <summary>
+/// this function will be called when the graphic view in the main window is clicked.
+/// </summary>
+/// <param name="event">
+/// The mouse click event.
+/// </param>
 void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 {
     if(!singleton->FirstROMIsLoaded()) return;
@@ -35,6 +40,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
             if(layer->IsEnabled() == false) return;
             int selectedTileIndex = tileX + tileY * room->GetWidth();
+            if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
             struct OperationParams *params = new struct OperationParams();
             params->type = ChangeTileOperation;
             params->tileChangeParams.push_back(TileChangeParams::Create(
@@ -51,7 +57,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         {
             if(room->CountDoors())
             {
-                SelectedDoorID = -1;
+                // Select a Door if possible
                 for(int i = 0; i < room->CountDoors(); i++)
                 {
                     LevelComponents::Door *door = room->GetDoor(i);
@@ -63,15 +69,63 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     {
                         if(i == SelectedDoorID)
                         {
-                            // TODO show dialog
+                            DoorConfigDialog _doorconfigdialog(singleton, room, i, singleton->GetCurrentLevel());
+                            if(_doorconfigdialog.exec() == QDialog::Accepted)
+                            {
+                                // TODO
+                            }
                         }
-                        SelectedDoorID = i;
-                        break;
+                        else
+                        {
+                            SelectedDoorID = i;
+                        }
+                        goto DOOR_FOUND;
                     }
                 }
+                SelectedDoorID = -1;
+                DOOR_FOUND:;
             }
-            singleton->RenderScreenFull(); // TODO use a function here that can just re-render the doors
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
+        }
+        else if(editMode == Ui::EntityEditMode) // select or add an Entity
+        {
+            SelectedEntityID = room->FindEntity(tileX, tileY);
+            if(SelectedEntityID == -1)
+            {
+                bool success = room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
+                // TODO: Show information if unsuccess
+            }
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
         }
         // TODO add more cases for other edit mode types
     }
+}
+
+/// <summary>
+/// this function will be called when key-press happens.
+/// </summary>
+/// <param name="event">
+/// The key-press event.
+/// </param>
+void MainGraphicsView::keyPressEvent(QKeyEvent *event)
+{
+    if((SelectedEntityID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
+    {
+        singleton->DeleteEntity(SelectedEntityID);
+        SelectedEntityID = -1;
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+    else if((SelectedDoorID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
+    {
+        singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
+        SelectedDoorID = -1;
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+}
+
+void MainGraphicsView::UnSelectDoorAndEntity()
+{
+    SelectedDoorID = -1;
+    SelectedEntityID = -1;
+    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 }

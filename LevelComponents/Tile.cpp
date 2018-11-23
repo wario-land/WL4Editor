@@ -1,6 +1,8 @@
 #include "Tile.h"
 #include "ROMUtils.h"
 
+#include <cassert>
+
 #include <QGraphicsPixmapItem>
 #include <QTransform>
 #include <QPainter>
@@ -8,11 +10,43 @@
 
 #include <iostream>
 
+//#define NOCACHE
+
 namespace LevelComponents
 {
+    QHash<QImageW*, int> Tile8x8::ImageDataCache;
+
+    /// <summary>
+    /// Construct an instance of Tile8x8 with uninitialized data. (private constructor)
+    /// </summary>
+    /// <param name="_palettes">
+    /// Entire palette for the tileset this tile is a part of.
+    /// </param>
+    Tile8x8::Tile8x8(QVector<QRgb> *_palettes) : Tile(TileType8x8),
+        ImageData(new QImageW(8, 8, QImage::Format_Indexed8)),
+        palettes(_palettes)
+    {
+        ImageData->setColorTable(palettes[paletteIndex]);
+    }
+
+    /// <summary>
+    /// Copy constructor for Tile8x8
+    /// </summary>
+    /// <param name="other">
+    /// Another Tile8x8 to copy image data from.
+    /// </param>
+    Tile8x8::Tile8x8(Tile8x8 *other) : Tile(TileType8x8),
+        palettes(other->palettes)
+    {
+        ImageData = GetCachedImageData(other->ImageData);
+    }
+
     /// <summary>
     /// Construct an instance of Tile8x8.
     /// </summary>
+    /// <remarks>
+    /// This constructor will attempt to match the image data to a cached QImage
+    /// </remarks>
     /// <param name="dataPtr">
     /// Pointer to the beginning of the tile graphic data.
     /// </param>
@@ -21,6 +55,7 @@ namespace LevelComponents
     /// </param>
     Tile8x8::Tile8x8(int dataPtr, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
     {
+        // Initialize the QImage data from ROM
         for(int i = 0; i < 8; ++i) {
             for(int j = 0; j < 4; ++j) {
                 unsigned char val = ROMUtils::CurrentFile[dataPtr + i * 4 + j];
@@ -28,6 +63,16 @@ namespace LevelComponents
                 ImageData->setPixel(j * 2 + 1, i, (unsigned char) ((val >> 4) & 0xF));
             }
         }
+
+#ifndef NOCACHE
+        // Cache the QImage
+        QImageW *cached = GetCachedImageData(ImageData);
+        if(cached != ImageData)
+        {
+            delete ImageData;
+            ImageData = cached;
+        }
+#endif
     }
 
     /// <summary>
@@ -35,7 +80,11 @@ namespace LevelComponents
     /// </summary>
     Tile8x8::~Tile8x8()
     {
+#ifndef NOCACHE
+        DeleteCachedImageData(ImageData);
+#else
         delete ImageData;
+#endif
     }
 
     /// <summary>
@@ -57,6 +106,17 @@ namespace LevelComponents
                 t->ImageData->setPixel(i, j, 0);
             }
         }
+
+#ifndef NOCACHE
+        // Cache the QImage
+        QImageW *cached = GetCachedImageData(t->ImageData);
+        if(cached != t->ImageData)
+        {
+            delete t->ImageData;
+            t->ImageData = cached;
+        }
+#endif
+
         return t;
     }
 
@@ -79,9 +139,31 @@ namespace LevelComponents
     {
         QPainter painter(layerPixmap);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
-        QPixmap tilePixmap = QPixmap::fromImage(ImageData->mirrored(FlipX, FlipY));
+        QImage tileImage = ImageData->mirrored(FlipX, FlipY);
         QPoint drawDestination(x, y);
-        painter.drawImage(drawDestination, tilePixmap.toImage());
+        painter.drawImage(drawDestination, tileImage);
+    }
+
+    /// <summary>
+    /// Set the index for this tile within its palette group
+    /// </summary>
+    /// <param name="index">
+    /// The index (0 - 15) of which palette to use for the image.
+    /// </param>
+    void Tile8x8::SetPaletteIndex(int index)
+    {
+        paletteIndex = index;
+        QImageW *newImage = new QImageW(*ImageData);
+        newImage->setColorTable(palettes[paletteIndex]);
+        ImageData = newImage;
+#ifndef NOCACHE
+        QImageW *cached = GetCachedImageData(ImageData);
+        if(cached != ImageData)
+        {
+            delete ImageData;
+            ImageData = cached;
+        }
+#endif
     }
 
     /// <summary>
@@ -139,5 +221,55 @@ namespace LevelComponents
         TileData[1]->DrawTile(layerPixmap, x + 8, y);
         TileData[2]->DrawTile(layerPixmap, x, y + 8);
         TileData[3]->DrawTile(layerPixmap, x + 8, y + 8);
+    }
+
+    /// <summary>
+    /// Cache and/or return the cached copy of existing image data in the global cache.
+    /// </summary>
+    /// <param name="image">
+    /// The image data to attempt to obtain a cached copy for.
+    /// </param>
+    /// <returns>
+    /// The original image if not cached yet, or the already cached image.
+    /// </returns>
+    QImageW *Tile8x8::GetCachedImageData(QImageW *image)
+    {
+        if(ImageDataCache.value(image, 0))
+        {
+            ++ImageDataCache[image];
+            return ImageDataCache.find(image).key();
+        }
+        else
+        {
+            ImageDataCache[image] = 1;
+            return image;
+        }
+    }
+
+    /// <summary>
+    /// Delete an image reference from the cache.
+    /// If there is more than 1 reference in the cache, only decrement the reference count.
+    /// If there is only one copy in the cache, actually remove the data from it as well.
+    /// </summary>
+    /// <param name="image">
+    /// The image data to remove from the cache.
+    /// </param>
+    void Tile8x8::DeleteCachedImageData(QImageW *image)
+    {
+        int references = ImageDataCache.value(image, 0);
+        if(references > 1)
+        {
+            --ImageDataCache[image];
+        }
+        else if(references == 1)
+        {
+            ImageDataCache.take(image);
+            delete image;
+        }
+        else
+        {
+            // This area should never be reached (there cannot be a QImage in the map with 0 references)
+            assert(0);
+        }
     }
 }

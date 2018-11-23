@@ -10,6 +10,8 @@
 #include "Dialog/ChooseLevelDialog.h"
 #include "DockWidget/Tile16DockWidget.h"
 #include "DockWidget/EditModeDockWidget.h"
+#include "DockWidget/EntitySetDockWidget.h"
+#include "DockWidget/CameraControlDockWidget.h"
 #include "Dialog/LevelConfigDialog.h"
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/DoorConfigDialog.h"
@@ -27,6 +29,8 @@ private:
     QLabel *statusBarLabel;
     Tile16DockWidget *Tile16SelecterWidget;
     EditModeDockWidget *EditModeWidget;
+    EntitySetDockWidget *EntitySetWidget;
+    CameraControlDockWidget *CameraControlWidget;
     LevelComponents::Level *CurrentLevel = nullptr;
     int selectedRoom = 0;
     bool UnsavedChanges = false;
@@ -41,17 +45,32 @@ public:
     ~WL4EditorWindow();
     void RenderScreenFull();
     void RenderScreenVisibilityChange();
+    void RenderScreenElementsLayersUpdate(unsigned int DoorId, int EntityId);
     void RenderScreenTileChange(int tileX, int tileY, unsigned short tileID, int LayerID);
     void SetStatusBarText(char *str);
     void LoadRoomUIUpdate();
     Tile16DockWidget *GetTile16DockWidgetPtr() { return Tile16SelecterWidget; }
     EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
+    EntitySetDockWidget *GetEntitySetDockWidgetPtr() { return EntitySetWidget; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
+    LevelComponents::Level *GetCurrentLevel() { return CurrentLevel; }
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
     bool FirstROMIsLoaded() { return firstROMLoaded; }
     void OpenROM();
     void SetEditModeDockWidgetLayerEditability();
     bool *GetLayersVisibilityArray();
+    void Graphicsview_UnselectDoorAndEntity();
+    void RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig, DialogParams::RoomConfigParams *nextroomconfig);
+    void ShowEntitySetDockWidget() { EntitySetWidget->setVisible(true); }
+    void ShowTile16DockWidget() { Tile16SelecterWidget->setVisible(true); }
+    void ShowCameraControlDockWidget() { CameraControlWidget->setVisible(true); }
+    void HideCameraControlDockWidget() { CameraControlWidget->setVisible(false); }
+    void HideEntitySetDockWidget() { EntitySetWidget->setVisible(false); }
+    void HideTile16DockWidget() { Tile16SelecterWidget->setVisible(false); }
+    void ResetEntitySetDockWidget() { EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]); }
+    void ResetCameraControlDockWidget() { CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]); }
+    void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
+    void DeleteDoor(int globalDoorIndex);
 
 private slots:
     void on_actionOpen_ROM_triggered();
@@ -62,6 +81,7 @@ private slots:
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
     void on_actionRoom_Config_triggered();
+    void on_actionNew_Door_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

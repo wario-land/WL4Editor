@@ -71,27 +71,30 @@ namespace LevelComponents
         memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
 
         // Load the door data
-        std::vector<Door*> doors;
         std::vector<int> destinations;
         int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + levelIndex * 4);
         struct __DoorEntry *doorPtr = (struct __DoorEntry*) (ROMUtils::CurrentFile + doorStartAddress);
         unsigned char *firstByte;
+        int currentDoornum = 0;
         while(*(firstByte = (unsigned char*) doorPtr))
         {
             enum DoorType type = static_cast<DoorType>(doorPtr->DoorTypeByte);
-            Door *newDoor = new Door(doorPtr->RoomID, type, doorPtr->x1, doorPtr->x2, doorPtr->y1, doorPtr->y2);
+            Door *newDoor = new Door(*doorPtr, doorPtr->RoomID, type, doorPtr->x1, doorPtr->x2, doorPtr->y1, doorPtr->y2, currentDoornum);
             newDoor->SetEntitySetID(doorPtr->EntitySetID);
             newDoor->SetBGM(doorPtr->BGM_ID_LowByte | ((unsigned int) (doorPtr->BGM_ID_HighByte)) << 8);
             newDoor->SetDelta(doorPtr->HorizontalDelta, doorPtr->VerticalDelta);
             doors.push_back(newDoor);
             destinations.push_back(doorPtr->LinkerDestination);
             ++doorPtr;
+            ++currentDoornum;
         }
         // Assign the destinations for the doors
         for(unsigned int i = 0; i < doors.size(); ++i)
         {
             doors[i]->SetDestinationDoor(doors[destinations[i]]);
         }
+        // Set the first Door be Vortex Door
+        doors[0]->SetVortex();
 
         // Load the room data
         int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + levelIndex * 4);
@@ -102,10 +105,7 @@ namespace LevelComponents
         }
 
         // Distribute door data to every room
-        for(unsigned int i = 0; i < doors.size(); ++i)
-        {
-            rooms[doors[i]->GetRoomID()]->PushBack_Door(doors[i]);
-        }
+        RedistributeDoor();
 
         // Load the level name
         int LevelNameAddress = ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4);
@@ -170,6 +170,7 @@ namespace LevelComponents
     int Level::GetTimeCountdownCounter(__LevelDifficulty LevelDifficulty)
     {
         int a, b, c;
+        a = b = c = 0;
         if(LevelDifficulty == HardDifficulty)
         {
             a = (int) LevelHeader.HardModeMinuteNum;
@@ -189,6 +190,51 @@ namespace LevelComponents
             c = (int) LevelHeader.SHardModeSecondOnePlaceNum;
         }
         return (a * 60 + b * 10 + c);
+    }
+
+    void Level::RedistributeDoor()
+    {
+        // Distribute door data to every room
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            rooms[doors[i]->GetRoomID()]->PushBack_Door(doors[i]);
+        }
+    }
+
+    std::vector<Door *> Level::GetRoomDoors(unsigned int roomId)
+    {
+        std::vector<Door *> roomDoors;
+        // Distribute door data
+        for(unsigned int i = 0; i < doors.size(); ++i)
+        {
+            if(doors[i]->GetRoomID() == (int) roomId)
+            roomDoors.push_back(doors[i]);
+        }
+        return roomDoors;
+    }
+
+    /// <summary>
+    /// Delete a Door from the Door list and destroy the intance.
+    /// </summary>
+    /// <param name="globalDoorIndex">
+    /// The global Door id given by current Level.
+    /// </param>
+    void Level::DeleteDoor(int globalDoorIndex)
+    {
+        delete(*(doors.begin() + globalDoorIndex));
+        doors.erase(doors.begin() + globalDoorIndex);
+    }
+
+    /// <summary>
+    /// Add a new Door to the Door list and distribute it to the Room.
+    /// </summary>
+    /// <param name="newdoor">
+    /// new Door instance.
+    /// </param>
+    void Level::AddDoor(Door *newdoor)
+    {
+        doors.push_back(newdoor);
+        rooms[doors[doors.size() - 1]->GetRoomID()]->PushBack_Door(doors[doors.size() - 1]);
     }
 
     /// <summary>
