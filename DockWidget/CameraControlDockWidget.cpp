@@ -10,6 +10,9 @@ constexpr const char *CameraControlDockWidget::CameraLimitatorResetSideTypeNameD
 // static variables used by CameraControlDockWidget
 static QStringList CameraLimitatorTypeNameSet;
 
+/// <summary>
+/// Constructor function of the CameraControlDockWidget.
+/// </summary>
 CameraControlDockWidget::CameraControlDockWidget(QWidget *parent) :
     QDockWidget(parent),
     ui(new Ui::CameraControlDockWidget)
@@ -19,6 +22,9 @@ CameraControlDockWidget::CameraControlDockWidget(QWidget *parent) :
     ui->CameraLimitatorTypePicker_comboBox->addItems(CameraLimitatorTypeNameSet);
 }
 
+/// <summary>
+/// Deconstructor function of the CameraControlDockWidget.
+/// </summary>
 CameraControlDockWidget::~CameraControlDockWidget()
 {
     delete ui;
@@ -116,6 +122,12 @@ void CameraControlDockWidget::ClearCurrentLimitatorSetting()
     ui->TriggerBlockPositionY_spinBox->setValue(0);
 }
 
+/// <summary>
+/// Be called the listview is clicked and a limitator is selected.
+/// </summary>
+/// <param name="index">
+/// Referrence of the selected QModelIndex from the listview.
+/// </param>
 void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelIndex &index)
 {
     ui->LimitatorSetting_groupBox->setEnabled(true);
