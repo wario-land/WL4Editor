@@ -168,6 +168,9 @@ namespace LevelComponents
         void DeleteDoor(int globalDoorIndex);
         std::vector<struct __CameraControlRecord*> GetCameraControlRecords() { return CameraControlRecords; }
         std::vector<struct EntityRoomAttribute> GetEntityList(int difficulty_id) { return EntityList[difficulty_id]; }
+        void DeleteCameraLimitator(int index);
+        void AddCameraLimitator();
+        void SetCameraLimitator(int index, __CameraControlRecord limitator_data);
     };
 }
 

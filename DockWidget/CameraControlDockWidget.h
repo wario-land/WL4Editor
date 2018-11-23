@@ -24,9 +24,20 @@ private:
     LevelComponents::Room *currentRoom = nullptr;
     QStandardItemModel *ListViewItemModel = nullptr;
     void ClearCurrentLimitatorSetting();
+    int SelectedLimitator = -1;
+    bool IsSavingData = false;
+    void SetCurrentLimitator();
 
 private slots:
     void on_CameraLimitators_listView_clicked(const QModelIndex &index);
+    void on_CameraLimitatorTypePicker_comboBox_currentIndexChanged(int index);
+    void on_spinBox_x1_valueChanged(int arg1);
+    void on_spinBox_y1_valueChanged(int arg1);
+    void on_spinBox_width_valueChanged(int arg1);
+    void on_spinBox_height_valueChanged(int arg1);
+    void on_LimitatorSideOffset_spinBox_valueChanged(int arg1);
+    void on_TriggerBlockPositionX_spinBox_valueChanged(int arg1);
+    void on_TriggerBlockPositionY_spinBox_valueChanged(int arg1);
 
 public:
     explicit CameraControlDockWidget(QWidget *parent = 0);
