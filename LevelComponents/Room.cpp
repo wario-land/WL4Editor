@@ -59,6 +59,7 @@ namespace LevelComponents
         if((CameraControlType = static_cast<enum __CameraControlType>(ROMUtils::CurrentFile[roomDataPtr + 24])) == HasControlAttrs)
         {
             int pLevelCameraControlPointerTable = ROMUtils::PointerFromData(WL4Constants::CameraControlPointerTable + _LevelID * 4);
+            struct __CameraControlRecord *recordPtr = NULL;
             for(int i = 0; i < 16; i++)
             {
                 int CurrentPointer = ROMUtils::PointerFromData(pLevelCameraControlPointerTable + i * 4);
@@ -67,10 +68,13 @@ namespace LevelComponents
                 if(ROMUtils::CurrentFile[CurrentPointer] == _RoomID)
                 {
                     int RecordNum = ROMUtils::CurrentFile[CurrentPointer + 1];
-                    struct __CameraControlRecord *recordPtr = (struct __CameraControlRecord*) (ROMUtils::CurrentFile + CurrentPointer + 2);
+                    //struct __CameraControlRecord *recordPtr = (struct __CameraControlRecord*) (ROMUtils::CurrentFile + CurrentPointer + 2);
+                    recordPtr= (struct __CameraControlRecord*) new __CameraControlRecord;
+                    memcpy(recordPtr,ROMUtils::CurrentFile + CurrentPointer + 2,sizeof(struct __CameraControlRecord));
                     while(RecordNum--)
                     {
-                        CameraControlRecords.push_back(recordPtr++);
+                        CameraControlRecords.push_back(recordPtr);
+                        //CameraControlRecords.push_back(recordPtr++);
                     }
                     break;
                 }
