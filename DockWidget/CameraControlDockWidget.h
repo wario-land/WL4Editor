@@ -27,6 +27,9 @@ private:
     int SelectedLimitator = -1;
     bool IsSavingData = false;
     void SetCurrentLimitator();
+    void SetListviewItemText(int row);
+    void PaintListView();
+    void ClearListView();
 
 private slots:
     void on_CameraLimitators_listView_clicked(const QModelIndex &index);
@@ -38,6 +41,12 @@ private slots:
     void on_LimitatorSideOffset_spinBox_valueChanged(int arg1);
     void on_TriggerBlockPositionX_spinBox_valueChanged(int arg1);
     void on_TriggerBlockPositionY_spinBox_valueChanged(int arg1);
+    void on_CameraYFixed_radioButton_clicked(bool checked);
+    void on_FollowWario_radioButton_clicked(bool checked);
+    void on_UseCameraLimitators_radioButton_clicked(bool checked);
+    void on_AddCameraLimitator_pushButton_clicked();
+
+    void on_DeleteCameraLimitator_pushButton_clicked();
 
 public:
     explicit CameraControlDockWidget(QWidget *parent = 0);

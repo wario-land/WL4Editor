@@ -161,6 +161,7 @@ namespace LevelComponents
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
         enum __CameraControlType GetCameraControlType() { return CameraControlType; } //Delete this line when PR
+        void SetCameraControlType(__CameraControlType new_control_type) { CameraControlType = new_control_type; RoomHeader.CameraControlType = (unsigned char) new_control_type; }
         std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
         int FindEntity(int XPos, int YPos);
         bool AddEntity(int XPos, int YPos, int localEntityId);
