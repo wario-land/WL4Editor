@@ -28,6 +28,15 @@ namespace ROMUtils
     int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
     void SaveFile();
 
+    enum SaveDataChunkType {
+        RoomHeaderChunkType     = '\x01',
+        DoorChunkType           = '\x02',
+        LayerChunkType          = '\x03',
+        CameraBoundaryChunkType = '\x04',
+        LevelNameChunkType      = '\x05',
+        EntityListChunk         = '\x06'
+    };
+
     struct SaveData {
         unsigned int ptr_addr;
         unsigned int size;
@@ -35,6 +44,8 @@ namespace ROMUtils
         unsigned int index;
         bool alignment; // false: do not perform special alignment of the save chunk
         unsigned int dest_index; // 0: the address of the pointer that points to this chunk is in main ROM. Else, it is in another chunk
+        unsigned int old_chunk_addr; // address of the old chunk that was pointed to
+        enum SaveDataChunkType ChunkType;
     };
 }
 

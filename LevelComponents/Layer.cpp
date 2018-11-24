@@ -18,7 +18,7 @@ namespace LevelComponents
     /// The mapping type for the layer.
     /// </param>
     Layer::Layer(int layerDataPtr, enum LayerMappingType mappingType) :
-        MappingType(mappingType), Enabled(mappingType != LayerDisabled)
+        MappingType(mappingType), Enabled(mappingType != LayerDisabled), DataPtr(layerDataPtr)
     {
         if(mappingType == LayerDisabled)
         {

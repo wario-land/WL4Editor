@@ -139,30 +139,30 @@ namespace LevelComponents
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
-        bool IsLayer0ColorBlendingEnable() { return Layer0ColorBlending; }
+        bool IsLayer0ColorBlendingEnabled() { return Layer0ColorBlending; }
         void SetLayer0ColorBlendingEnabled(bool enability) { Layer0ColorBlending = enability; }
         int GetEVA() { return Layer0ColorBlendCoefficient_EVA; }
         int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
         void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
         int GetWidth() { return (int) Width; }
-        void SetWidth(int _width) { Width = (unsigned int)_width; }
+        void SetWidth(int _width) { Width = (unsigned int) _width; }
         int GetHeight() { return (int) Height; }
-        void SetHeight(int _height) { Height = (unsigned int)_height; }
-        int GetLayer0MappingParam() { return (int) RoomHeader.Layer0MappingType; }
+        void SetHeight(int _height) { Height = (unsigned int) _height; }
+        int GetLayer0MappingParam() { return RoomHeader.Layer0MappingType; }
         void SetLayer0MappingParam(int layer0MappingTypeParam) { RoomHeader.Layer0MappingType = layer0MappingTypeParam; }
         int GetLayerDataPtr(int LayerNum);
         void SetLayerDataPtr(int LayerNum, int dataPtr);
         bool IsLayer2Enabled() { return RoomHeader.Layer2MappingType; }
-        void SetLayer2Enabled(bool enability) { RoomHeader.Layer2MappingType = enability ? (unsigned char) 0x10 : (unsigned char) 0; }
+        void SetLayer2Enabled(bool enability) { RoomHeader.Layer2MappingType = enability ? '\x10' : '\x00'; }
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
-        void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? (unsigned char) 0x20 : (unsigned char) 0; }
-        bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == (unsigned char) 7; }
+        void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
+        bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == '\x07'; }
         void SetBGLayerAutoScrollEnabled(bool enability);
         int GetLayerEffectsParam() { return (int) RoomHeader.LayerEffects; }
         LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
-        int CountDoors() { return (int)doors.size(); }
+        unsigned int CountDoors() { return doors.size(); }
         void SetDoors(std::vector<Door*> _doors) { doors = _doors; }
-        int GetLocalDoorID(int globalDoorId);
+        unsigned int GetLocalDoorID(int globalDoorId);
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
         void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk);

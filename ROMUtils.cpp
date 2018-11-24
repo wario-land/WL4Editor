@@ -263,7 +263,7 @@ namespace ROMUtils
                 {
                     // Checksum pass: Restart the search at end of the chunk
                     unsigned short chunkLen = *(unsigned short*) (ROMData + startAddr + freeBytes + 4);
-                    startAddr += freeBytes + 8 + chunkLen;
+                    startAddr += freeBytes + 12 + chunkLen;
                     if(startAddr + chunkSize > ROMLength) return 0; // fail if not enough room in ROM
                     freeBytes = 0;
                 }
@@ -282,10 +282,11 @@ namespace ROMUtils
     /// </summary>
     void SaveFile()
     {
-        // Obtain the list of data chucks to save to the rom
+        // Obtain the list of data chunks to save to the rom
         SaveDataIndex = 1;
         QVector<struct SaveData> chunks;
-        singleton->GetCurrentLevel()->GetSaveChunks(chunks);
+        LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
+        currentLevel->GetSaveChunks(chunks);
 
         // Finding space for the chunks can be done faster if the chunks are ordered by size
         qSort(chunks.begin(), chunks.end(), [](const struct SaveData& a, const struct SaveData& b) {
@@ -303,11 +304,9 @@ namespace ROMUtils
         memcpy(TempFile, CurrentFile, CurrentFileSize);
         foreach(struct SaveData chunk, chunks)
         {
-            // TODO the old index from entries with (chunk.dest_index > 0) cannot get old address. design changes necessary
-            unsigned int oldChunkAddr = PointerFromData(chunk.ptr_addr);
-            if(oldChunkAddr > WL4Constants::AvailableSpaceBeginningInROM)
+            if(chunk.old_chunk_addr > WL4Constants::AvailableSpaceBeginningInROM)
             {
-                unsigned char *RATSaddr = TempFile + oldChunkAddr - 8;
+                unsigned char *RATSaddr = TempFile + chunk.old_chunk_addr - 12;
                 if(ValidRATS(RATSaddr))
                 {
                     strncpy((char*) RATSaddr, "STAR_INV", 8);
@@ -321,7 +320,7 @@ namespace ROMUtils
         int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
         for(int i = 0; i < chunks.size(); ++i)
         {
-            int chunkSize = chunks[i].size + 8 + (chunks[i].alignment ? 3 : 0);
+            int chunkSize = chunks[i].size + 12 + (chunks[i].alignment ? 3 : 0);
             int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
             if(chunks[i].alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
             if(!chunkAddr)
@@ -342,8 +341,8 @@ namespace ROMUtils
                 // Source pointer is in main ROM
                 TempFile + chunk.ptr_addr;
 
-            // We add 8 to the pointer location because the chunk ptr starts at the chunk's RATS tag
-            *(unsigned int*) ptrLoc = (indexToChunkPtr[chunk.index] + 8) | 0x8000000;
+            // We add 12 to the pointer location because the chunk ptr starts at the chunk's RATS tag
+            *(unsigned int*) ptrLoc = (indexToChunkPtr[chunk.index] + 12) | 0x8000000;
         }
 
         // Write each chunk to TempFile
@@ -357,8 +356,12 @@ namespace ROMUtils
             *(unsigned short*) (destPtr + 4) = chunkLen;
             *(unsigned short*) (destPtr + 6) = ~chunkLen;
 
+            // Write the chunk metadata
+            *(unsigned int*) (destPtr + 8) = 0;
+            destPtr[8] = chunk.ChunkType;
+
             // Write the data
-            memcpy(destPtr + 8, chunk.data, chunkLen);
+            memcpy(destPtr + 12, chunk.data, chunkLen);
 
             // Clean up the data since it has been copied
             free(chunk.data);
@@ -383,7 +386,24 @@ namespace ROMUtils
         CurrentFile = TempFile;
         CurrentFileSize = TempLength;
 
-        // Mark dirty objects as clean
-        // TODO
+        // Set the new internal data pointer for LevelComponents objects, and mark dirty ones as clean
+        struct SaveData roomHeaderChunk = *std::find_if(chunks.begin(), chunks.end(), [](const struct SaveData &chunk) {
+            return chunk.ChunkType == SaveDataChunkType::RoomHeaderChunkType;
+        });
+        unsigned int roomHeaderInROM = indexToChunkPtr[roomHeaderChunk.index] + 12;
+        std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
+        for(unsigned int i = 0; i < rooms.size(); ++i)
+        {
+            struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
+                (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
+            unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
+            LevelComponents::Room *room = rooms[i];
+            for(unsigned int j = 0; j < 4; ++j)
+            {
+                LevelComponents::Layer *layer = room->GetLayer(j);
+                layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
+                layer->SetClean();
+            }
+        }
     }
 }

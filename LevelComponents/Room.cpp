@@ -819,16 +819,25 @@ namespace LevelComponents
         }
     }
 
-    int Room::GetLocalDoorID(int globalDoorId)
+    unsigned int Room::GetLocalDoorID(int globalDoorId)
     {
         for(unsigned int i = 0; i < doors.size(); ++i)
         {
             if(doors[i]->GetGlobalDoorID() == globalDoorId)
-            return (int) i;
+            return i;
         }
-        return -1; // TODO: Error handling
+        return 0xFFFFFFFF; // TODO: Error handling
     }
 
+    /// <summary>
+    /// Populate a vector with save data chunks for a level.
+    /// </summary>
+    /// <param name="chunks">
+    /// The vector to populate.
+    /// </param>
+    /// <param name="headerChunk">
+    /// The save chunk for the room headers. This is necessary to update pointers within the chunk itself.
+    /// </param>
     void Room::GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks, struct ROMUtils::SaveData *headerChunk)
     {
         // Calculate some values needed to initialize the save data
@@ -852,7 +861,9 @@ namespace LevelComponents
                     compressedData,
                     ROMUtils::SaveDataIndex++,
                     true,
-                    headerChunk->index
+                    headerChunk->index,
+                    layer->GetDataPtr(),
+                    ROMUtils::LayerChunkType
                 };
                 chunks.append(layerChunk);
             }
@@ -871,7 +882,9 @@ namespace LevelComponents
             (unsigned char*) malloc(cameraChunkSize),
             ROMUtils::SaveDataIndex++,
             false,
-            0
+            0,
+            ROMUtils::PointerFromData(doorTablePtr),
+            ROMUtils::CameraBoundaryChunkType
         };
 
         // Populate camera boundary chunk with data
@@ -885,6 +898,15 @@ namespace LevelComponents
         free(cameraChunk.data); // TODO remove this when we can add the camera chunk
     }
 
+    /// <summary>
+    /// Construct an instance of the RoomHeader struct using a Room object.
+    /// </summary>
+    /// <remarks>
+    /// Layer data and entity list data are not set by this constructor.
+    /// </remarks>
+    /// <param name="room">
+    /// The base Room object to make a RoomHeader struct from.
+    /// </param>
     __RoomHeader::__RoomHeader(Room *room) :
         TilesetID(room->GetTilesetID()),
         Layer0MappingType(room->GetLayer(0)->GetMappingType()),

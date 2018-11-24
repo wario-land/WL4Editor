@@ -267,6 +267,12 @@ namespace LevelComponents
         }
     }
 
+    /// <summary>
+    /// Populate a vector with save data chunks for a level.
+    /// </summary>
+    /// <param name="chunks">
+    /// The vector to populate.
+    /// </param>
     void Level::GetSaveChunks(QVector<ROMUtils::SaveData> &chunks)
     {
         // Calculate some values needed to initialize the save data
@@ -288,7 +294,9 @@ namespace LevelComponents
             (unsigned char*) malloc(roomHeaderChunkSize),
             ROMUtils::SaveDataIndex++,
             false,
-            0
+            0,
+            ROMUtils::PointerFromData(roomTablePtr),
+            ROMUtils::RoomHeaderChunkType
         };
 
         // Populate chunks with room data
@@ -307,7 +315,9 @@ namespace LevelComponents
             (unsigned char*) malloc(doorChunkSize),
             ROMUtils::SaveDataIndex++,
             true,
-            0
+            0,
+            ROMUtils::PointerFromData(doorTablePtr),
+            ROMUtils::DoorChunkType
         };
 
         // Populate door chunk data
@@ -331,7 +341,9 @@ namespace LevelComponents
             (unsigned char*) malloc(26),
             ROMUtils::SaveDataIndex++,
             false,
-            0
+            0,
+            ROMUtils::PointerFromData(LevelNamePtr),
+            ROMUtils::LevelNameChunkType
         };
         memset(levelNameChunk.data, 0xFF, 26);
         unsigned char *str = levelNameChunk.data + (26 - LevelName.size()) / 2;
