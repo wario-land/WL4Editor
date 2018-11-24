@@ -44,6 +44,9 @@ private slots:
     void on_CameraYFixed_radioButton_clicked(bool checked);
     void on_FollowWario_radioButton_clicked(bool checked);
     void on_UseCameraLimitators_radioButton_clicked(bool checked);
+    void on_AddCameraLimitator_pushButton_clicked();
+
+    void on_DeleteCameraLimitator_pushButton_clicked();
 
 public:
     explicit CameraControlDockWidget(QWidget *parent = 0);

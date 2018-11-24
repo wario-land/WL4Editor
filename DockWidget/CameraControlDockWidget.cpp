@@ -39,7 +39,6 @@ CameraControlDockWidget::~CameraControlDockWidget()
 void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *currentroom)
 {
     currentRoom = currentroom;
-    IsSavingData = false;
     ClearListView();
     if(ListViewItemModel != nullptr)
     {
@@ -73,7 +72,6 @@ void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *curren
         ui->ExistingLimitators_groupBox->setEnabled(true);
         PaintListView();
     }
-    IsSavingData = true;
 }
 
 /// <summary>
@@ -93,14 +91,16 @@ void CameraControlDockWidget::StaticInitialization()
 /// </summary>
 void CameraControlDockWidget::ClearCurrentLimitatorSetting()
 {
+    IsSavingData = false;
     ui->CameraLimitatorTypePicker_comboBox->setCurrentIndex(0);
-    ui->spinBox_x1->setValue(0);
-    ui->spinBox_y1->setValue(0);
+    ui->spinBox_x1->setValue(2);
+    ui->spinBox_y1->setValue(2);
     ui->spinBox_width->setValue(1);
     ui->spinBox_height->setValue(1);
     ui->LimitatorSideOffset_spinBox->setValue(0);
     ui->TriggerBlockPositionX_spinBox->setValue(0);
     ui->TriggerBlockPositionY_spinBox->setValue(0);
+    IsSavingData = true;
 }
 
 /// <summary>
@@ -379,7 +379,6 @@ void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
 {
     if(checked)
     {
-        IsSavingData = false;
         singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::FixedY);
         SelectedLimitator = -1;
         ClearCurrentLimitatorSetting();
@@ -388,7 +387,6 @@ void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
         ui->LimitatorSetting_groupBox->setEnabled(false);
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
-        IsSavingData = true;
     }
 }
 
@@ -402,7 +400,6 @@ void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
 {
     if(checked)
     {
-        IsSavingData = false;
         singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::NoLimit);
         SelectedLimitator = -1;
         ClearCurrentLimitatorSetting();
@@ -411,7 +408,6 @@ void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
         ui->LimitatorSetting_groupBox->setEnabled(false);
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
-        IsSavingData = true;
     }
 }
 
@@ -434,4 +430,28 @@ void CameraControlDockWidget::on_UseCameraLimitators_radioButton_clicked(bool ch
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
+}
+
+/// <summary>
+/// Be called when AddCameraLimitator_pushButton is clicked.
+/// </summary>
+void CameraControlDockWidget::on_AddCameraLimitator_pushButton_clicked()
+{
+    currentRoom->AddCameraLimitator();
+    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    PaintListView();
+}
+
+/// <summary>
+/// Be called when DeleteCameraLimitator_pushButton is clicked.
+/// </summary>
+void CameraControlDockWidget::on_DeleteCameraLimitator_pushButton_clicked()
+{
+    if(SelectedLimitator == -1) return;
+    ui->LimitatorSetting_groupBox->setEnabled(false);
+    currentRoom->DeleteCameraLimitator(SelectedLimitator);
+    SelectedLimitator = -1;
+    ClearCurrentLimitatorSetting();
+    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    PaintListView();
 }
