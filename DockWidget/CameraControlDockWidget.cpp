@@ -323,3 +323,62 @@ void CameraControlDockWidget::on_TriggerBlockPositionY_spinBox_valueChanged(int 
     if(!IsSavingData) return;
     SetCurrentLimitator();
 }
+
+/// <summary>
+/// Be called when CameraYFixed_radioButton is clicked.
+/// </summary>
+/// <param name="checked">
+/// Show if CameraYFixed_radioButton is been checked.
+/// </param>
+void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
+{
+    if(checked)
+    {
+        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::FixedY);
+        SelectedLimitator = -1;
+        ClearCurrentLimitatorSetting();
+        ui->ExistingLimitators_groupBox->setEnabled(false);
+        ui->LimitatorSetting_groupBox->setEnabled(false);
+        // Rerender graphicview in MainWindow
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+}
+
+/// <summary>
+/// Be called when FollowWario_radioButton is clicked.
+/// </summary>
+/// <param name="checked">
+/// Show if FollowWario_radioButton is been checked.
+/// </param>
+void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
+{
+    if(checked)
+    {
+        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::NoLimit);
+        SelectedLimitator = -1;
+        ClearCurrentLimitatorSetting();
+        ui->ExistingLimitators_groupBox->setEnabled(false);
+        ui->LimitatorSetting_groupBox->setEnabled(false);
+        // Rerender graphicview in MainWindow
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+}
+
+/// <summary>
+/// Be called when UseCameraLimitators_radioButton is clicked.
+/// </summary>
+/// <param name="checked">
+/// Show if UseCameraLimitators_radioButton is been checked.
+/// </param>
+void CameraControlDockWidget::on_UseCameraLimitators_radioButton_clicked(bool checked)
+{
+    if(checked)
+    {
+        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::HasControlAttrs);
+        SelectedLimitator = -1;
+        ClearCurrentLimitatorSetting();
+        ui->LimitatorSetting_groupBox->setEnabled(false);
+        // Rerender graphicview in MainWindow
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
+}

@@ -38,6 +38,9 @@ private slots:
     void on_LimitatorSideOffset_spinBox_valueChanged(int arg1);
     void on_TriggerBlockPositionX_spinBox_valueChanged(int arg1);
     void on_TriggerBlockPositionY_spinBox_valueChanged(int arg1);
+    void on_CameraYFixed_radioButton_clicked(bool checked);
+    void on_FollowWario_radioButton_clicked(bool checked);
+    void on_UseCameraLimitators_radioButton_clicked(bool checked);
 
 public:
     explicit CameraControlDockWidget(QWidget *parent = 0);
