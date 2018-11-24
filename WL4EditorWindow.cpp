@@ -42,6 +42,8 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
     ui->statusBar->addWidget(statusBarLabel);
     EditModeWidget = new EditModeDockWidget();
     Tile16SelecterWidget = new Tile16DockWidget();
+    EntitySetWidget = new EntitySetDockWidget();
+    CameraControlWidget = new CameraControlDockWidget();
 }
 
 /// <summary>
@@ -53,6 +55,8 @@ WL4EditorWindow::~WL4EditorWindow()
     delete ui;
     delete Tile16SelecterWidget;
     delete EditModeWidget;
+    delete EntitySetWidget;
+    delete CameraControlWidget;
     delete statusBarLabel;
     if(CurrentLevel)
     {
@@ -102,6 +106,7 @@ void WL4EditorWindow::LoadRoomUIUpdate()
     // Render the screen
     RenderScreenFull();
     SetEditModeDockWidgetLayerEditability();
+    EditModeWidget->SetDifficultyRadioBox(1);
 }
 
 /// <summary>
@@ -162,7 +167,12 @@ void WL4EditorWindow::OpenROM()
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
         addDockWidget(Qt::RightDockWidgetArea, Tile16SelecterWidget);
+        addDockWidget(Qt::RightDockWidgetArea, EntitySetWidget);
+        addDockWidget(Qt::RightDockWidgetArea, CameraControlWidget);
+        CameraControlWidget->setVisible(false);
+        EntitySetWidget->setVisible(false);
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
+        CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
     }
 
     LoadRoomUIUpdate();
@@ -172,6 +182,7 @@ void WL4EditorWindow::OpenROM()
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 {
     EditModeWidget->SetLayersCheckBoxEnabled(0, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(1, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(2, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(3, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(7, CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnable());
@@ -182,9 +193,145 @@ bool *WL4EditorWindow::GetLayersVisibilityArray()
     return EditModeWidget->GetLayersVisibilityArray();
 }
 
-void WL4EditorWindow::Graphicsview_UnselectDoor()
+void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity()
 {
-    ui->graphicsView->UnSelectDoor();
+    ui->graphicsView->UnSelectDoorAndEntity();
+}
+
+/// <summary>
+/// Reset the Room with a new/old RoomConfigParams.
+/// </summary>
+/// <param name="currentroomconfig">
+/// The current RoomConfigParams which can be made by the current Room.
+/// </param>
+/// <param name="nextroomconfig">
+/// The next RoomConfigParams which you want to apply to the current Room.
+/// </param>
+void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig, DialogParams::RoomConfigParams *nextroomconfig)
+{
+    // Apply the selected parameters to the current room
+    // reset the Tileset instance in Room class
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
+    if(nextroomconfig->CurrentTilesetIndex != currentroomconfig->CurrentTilesetIndex)
+    {
+        LevelComponents::Tileset *currentTileset = currentRoom->GetTileset();
+        delete currentTileset;
+        int tilesetPtr = WL4Constants::TilesetDataTable + nextroomconfig->CurrentTilesetIndex * 36;
+        currentTileset = new LevelComponents::Tileset(tilesetPtr, nextroomconfig->CurrentTilesetIndex);
+        currentRoom->SetTileset(currentTileset, nextroomconfig->CurrentTilesetIndex);
+        Tile16SelecterWidget->SetTileset(nextroomconfig->CurrentTilesetIndex);
+    }
+
+    // refresh the Layer 2, 0, 3 instances
+    if(nextroomconfig->Layer2Enable && !currentroomconfig->Layer2Enable)
+    {
+        currentRoom->GetLayer(2)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+    }
+    else if(currentroomconfig->Layer2Enable && !nextroomconfig->Layer2Enable)
+    {
+        currentRoom->GetLayer(2)->SetDisabled();
+    }
+
+    if(!currentroomconfig->Layer0Enable && nextroomconfig->Layer0Enable)
+    {
+        if((nextroomconfig->Layer0MappingTypeParam & 0x30) == 0x10)
+        {
+            currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+        }
+        else
+        {
+            LevelComponents::Layer *currentLayer0 = currentRoom->GetLayer(0);
+            delete currentLayer0;
+            currentLayer0 = new LevelComponents::Layer(nextroomconfig->Layer0DataPtr, LevelComponents::LayerTile8x8);
+            currentRoom->SetLayer(0, currentLayer0);
+        }
+    }
+    else if(currentroomconfig->Layer0Enable && !nextroomconfig->Layer0Enable)
+    {
+        currentRoom->GetLayer(0)->SetDisabled();
+    }
+
+    if(nextroomconfig->BackgroundLayerEnable)
+    {
+        LevelComponents::Layer *currentLayer3 = currentRoom->GetLayer(3);
+        delete currentLayer3;
+        currentLayer3 = new LevelComponents::Layer(nextroomconfig->BackgroundLayerDataPtr, LevelComponents::LayerTile8x8);
+        currentRoom->SetLayer(3, currentLayer3);
+    }
+    else if(currentroomconfig->BackgroundLayerEnable && !nextroomconfig->BackgroundLayerEnable)
+    {
+        currentRoom->GetLayer(3)->SetDisabled();
+    }
+
+    // change the width and height for all layers
+    if(nextroomconfig->RoomWidth != currentroomconfig->RoomWidth || nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
+    {
+        for(int i = 0; i < 3; ++i)
+        {
+            if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
+            {
+                currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+            }
+        }
+    }
+
+    // reset all the Parameters in Room class. TODO: except new layer data pointers, generate them on saving
+    currentRoom->SetHeight(nextroomconfig->RoomHeight);
+    currentRoom->SetWidth(nextroomconfig->RoomWidth);
+    currentRoom->SetLayer0MappingParam(nextroomconfig->Layer0MappingTypeParam);
+    currentRoom->SetLayer0ColorBlendingEnabled(nextroomconfig->Layer0Alpha);
+    currentRoom->SetLayerPriorityAndAlphaAttributes(nextroomconfig->LayerPriorityAndAlphaAttr);
+    currentRoom->SetLayer2Enabled(nextroomconfig->Layer2Enable);
+    if(nextroomconfig->Layer0DataPtr != 0) currentRoom->SetLayerDataPtr(0, nextroomconfig->Layer0DataPtr);
+    currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
+    currentRoom->SetBGLayerAutoScrollEnabled(nextroomconfig->BackgroundLayerAutoScrollEnable);
+    currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
+}
+
+/// <summary>
+/// Delete a Door from the current Level.
+/// </summary>
+/// <param name="globalDoorIndex">
+/// The global Door id given by current Level.
+/// </param>
+void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
+{
+    // You cannot delete the vortex, it is always the first Door.
+    if(globalDoorIndex == 0) return;
+
+    // Delete the Door from the Room Door list
+    CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()]->DeleteDoor(globalDoorIndex);
+
+    // Disable the destination for all the existing Doors whose DestinationDoor is the Door which is being deleting
+    for(unsigned int i = 0; i < CurrentLevel->GetDoors().size(); ++i)
+    {
+        if(CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID() == globalDoorIndex)
+        {
+            CurrentLevel->GetDoors()[i]->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
+        }
+    }
+
+    // Delete the Door from the Level Door list
+    CurrentLevel->DeleteDoor(globalDoorIndex);
+
+    // Decline the GlobalDoorId for the Doors indexed after the deleted Door
+    int afterDoornum = (int) CurrentLevel->GetDoors().size() - globalDoorIndex;
+    if(afterDoornum)
+    {
+        for(unsigned int i = globalDoorIndex; i < CurrentLevel->GetDoors().size(); ++i)
+        {
+            CurrentLevel->GetDoors()[i]->GlobalDoorIdDec();
+        }
+    }
+
+    // Correct the LinkerDestination in DoorEntry for each Door
+    if(CurrentLevel->GetDoors().size() > 1)
+    {
+        for(unsigned int i = 1; i < CurrentLevel->GetDoors().size(); ++i)
+        {
+            CurrentLevel->GetDoors()[i]->SetLinkerDestination(CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID());
+        }
+    }
 }
 
 /// <summary>
@@ -231,11 +378,12 @@ void WL4EditorWindow::RenderScreenVisibilityChange()
 /// <summary>
 /// Perform a re-render of the Door/Camera limitation rectangle/Entity layer.
 /// </summary>
-void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId)
+void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId, int EntityId)
 {
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::ElementsLayersUpdate);
     renderParams.mode = EditModeWidget->GetEditModeParams();
     renderParams.SelectedDoorID = DoorId;
+    renderParams.SelectedEntityID = EntityId;
     QGraphicsScene *scene = CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -284,7 +432,9 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     {
         return;
     }
-    ui->graphicsView->UnSelectDoor();
+
+    // unselect Door and Entity
+    ui->graphicsView->UnSelectDoorAndEntity();
 
     // Load the first level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
@@ -299,6 +449,8 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         LoadRoomUIUpdate();
         int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
+        ResetEntitySetDockWidget();
+        ResetCameraControlDockWidget();
 
         // Set program control changes
         UnsavedChanges = false;
@@ -320,14 +472,16 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     {
         return;
     }
-    // unselect door
-    ui->graphicsView->UnSelectDoor();
+    // unselect Door and Entity
+    ui->graphicsView->UnSelectDoorAndEntity();
 
     // Load the previous room
     --selectedRoom;
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    ResetEntitySetDockWidget();
+    ResetCameraControlDockWidget();
 
     // Set program control changes
     UnsavedChanges = false;
@@ -348,14 +502,16 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     {
         return;
     }
-    // unselect door
-    ui->graphicsView->UnSelectDoor();
+    // unselect Door and Entity
+    ui->graphicsView->UnSelectDoorAndEntity();
 
     // Load the next room
     ++selectedRoom;
     LoadRoomUIUpdate();
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    ResetEntitySetDockWidget();
+    ResetCameraControlDockWidget();
 
     // Set program control changes
     UnsavedChanges = false;
@@ -440,91 +596,37 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     if(dialog.exec() == QDialog::Accepted)
     {
         DialogParams::RoomConfigParams configParams = dialog.GetConfigParams();
+        RoomConfigReset(_currentRoomConfigParams, &configParams);
 
-        // Apply the selected parameters to the current room
-        // reset the Tileset instance in Room class
-        LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
-        if(configParams.CurrentTilesetIndex != _currentRoomConfigParams->CurrentTilesetIndex)
-        {
-            LevelComponents::Tileset *currentTileset = currentRoom->GetTileset();
-            delete currentTileset;
-            int tilesetPtr = WL4Constants::TilesetDataTable + configParams.CurrentTilesetIndex * 36;
-            currentTileset = new LevelComponents::Tileset(tilesetPtr, configParams.CurrentTilesetIndex);
-            currentRoom->SetTileset(currentTileset, configParams.CurrentTilesetIndex);
-            Tile16SelecterWidget->SetTileset(configParams.CurrentTilesetIndex);
-        }
-
-        // refresh the Layer 2, 0, 3 instances
-        if(configParams.Layer2Enable && !_currentRoomConfigParams->Layer2Enable)
-        {
-            currentRoom->GetLayer(2)->CreateNewLayer_type0x10(configParams.RoomWidth, configParams.RoomHeight);
-        }
-        else if(_currentRoomConfigParams->Layer2Enable && !configParams.Layer2Enable)
-        {
-            currentRoom->GetLayer(2)->SetDisabled();
-        }
-
-        if(!_currentRoomConfigParams->Layer0Enable && configParams.Layer0Enable)
-        {
-            if((configParams.Layer0MappingTypeParam & 0x30) == 0x10)
-            {
-                currentRoom->GetLayer(0)->CreateNewLayer_type0x10(configParams.RoomWidth, configParams.RoomHeight);
-            }
-            else
-            {
-                LevelComponents::Layer *currentLayer0 = currentRoom->GetLayer(0);
-                delete currentLayer0;
-                currentLayer0 = new LevelComponents::Layer(configParams.Layer0DataPtr, LevelComponents::LayerTile8x8);
-                currentRoom->SetLayer(0, currentLayer0);
-            }
-        }
-        else if(_currentRoomConfigParams->Layer0Enable && !configParams.Layer0Enable)
-        {
-            currentRoom->GetLayer(0)->SetDisabled();
-        }
-
-        if(configParams.BackgroundLayerEnable)
-        {
-            LevelComponents::Layer *currentLayer3 = currentRoom->GetLayer(3);
-            delete currentLayer3;
-            currentLayer3 = new LevelComponents::Layer(configParams.BackgroundLayerDataPtr, LevelComponents::LayerTile8x8);
-            currentRoom->SetLayer(3, currentLayer3);
-        }
-        else if(_currentRoomConfigParams->BackgroundLayerEnable && !configParams.BackgroundLayerEnable)
-        {
-            currentRoom->GetLayer(3)->SetDisabled();
-        }
-
-        // change the width and height for all layers
-        if(configParams.RoomWidth != _currentRoomConfigParams->RoomWidth || configParams.RoomHeight != _currentRoomConfigParams->RoomHeight)
-        {
-            for(int i = 0; i < 3; ++i)
-            {
-                if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
-                {
-                    currentRoom->GetLayer(i)->ChangeDimensions(configParams.RoomWidth, configParams.RoomHeight);
-                }
-            }
-        }
+        // TODO: this should be done with the operation history
 
         // Delete _currentRoomConfigParams
         delete _currentRoomConfigParams;
 
-        // reset all the Parameters in Room class. TODO: except new layer data pointers, generate them on saving
-        currentRoom->SetHeight(configParams.RoomHeight);
-        currentRoom->SetWidth(configParams.RoomWidth);
-        currentRoom->SetLayer0MappingParam(configParams.Layer0MappingTypeParam);
-        currentRoom->SetLayer0ColorBlendingEnabled(configParams.Layer0Alpha);
-        currentRoom->SetLayerPriorityAndAlphaAttributes(configParams.LayerPriorityAndAlphaAttr);
-        currentRoom->SetLayer2Enabled(configParams.Layer2Enable);
-        if(configParams.Layer0DataPtr != 0) currentRoom->SetLayerDataPtr(0, configParams.Layer0DataPtr);
-        currentRoom->SetBGLayerEnabled(configParams.BackgroundLayerEnable);
-        currentRoom->SetBGLayerAutoScrollEnabled(configParams.BackgroundLayerAutoScrollEnable);
-        currentRoom->SetLayerDataPtr(3, configParams.BackgroundLayerDataPtr);
-
         // UI update
         RenderScreenFull();
         SetEditModeDockWidgetLayerEditability();
-        // TODO: this should be done with the operation history
+        EditModeWidget->SetDifficultyRadioBox(1);
     }
+}
+
+/// <summary>
+/// Add a new Door to the current room.
+/// </summary>
+void WL4EditorWindow::on_actionNew_Door_triggered()
+{
+    if(!firstROMLoaded) return;
+    LevelComponents::DoorType type = LevelComponents::Instant;
+    LevelComponents::__DoorEntry newDoorEntry;
+    memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
+    newDoorEntry.DoorTypeByte = (unsigned char) 2;
+    newDoorEntry.EntitySetID = (unsigned char) 1;
+    newDoorEntry.RoomID = (unsigned char) selectedRoom;
+    LevelComponents::Door *newDoor = new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, type, 0, 0, 0, 0, CurrentLevel->GetDoors().size());
+    newDoor->SetEntitySetID((unsigned char) 1);
+    newDoor->SetBGM((unsigned int) 0);
+    newDoor->SetDelta((unsigned int) 0, (unsigned int) 0);
+    newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
+    CurrentLevel->AddDoor(newDoor);
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 }

@@ -73,7 +73,8 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
 
     // Initialize the selections for destination door combobox
     QStringList doorofLevelSet;
-    for(unsigned int i = 0; i < _level->GetDoors().size(); ++i)
+    doorofLevelSet << "Disable destination door";
+    for(unsigned int i = 1; i < _level->GetDoors().size(); ++i)
     {
         doorofLevelSet << _level->GetDoors()[i]->GetDoorname();
     }
@@ -82,9 +83,9 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     RenderGraphicsView_Preview();
 
     // Initialize the EntitySet ComboBox
-    for (int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
+    for (unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
     {
-        comboboxEntitySet.push_back({i, true});
+        comboboxEntitySet.push_back({(int) i, true});
     }
     UpdateComboBoxEntitySet();
 
@@ -95,8 +96,9 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     }
     UpdateTableView();
 
-    //unsigned char entitySetID = currentdoor->GetEntitySetID();
-    // TODO set the index here
+    // Set the current EntitySet in the ComboBox
+    int entitySetID = currentdoor->GetEntitySetID();
+    ui->ComboBox_EntitySetID->setCurrentIndex(entitySetID);
 
     IsInitialized = true;
 }
@@ -208,7 +210,7 @@ void DoorConfigDialog::ResetDoorRect()
     ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - currentdoor0->GetY1());
     UpdateDoorLayerGraphicsView_Preview();
     // when DestinationDoor and currentDoor are in the same Room, the DestinationDoor also needs an update.
-    UpdateDoorLayerGraphicsView_DestinationDoor();
+    if(ui->ComboBox_DoorDestinationPicker->currentIndex() != 0) UpdateDoorLayerGraphicsView_DestinationDoor();
 }
 
 /// <summary>
@@ -361,13 +363,30 @@ void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
     }
 }
 
+/// <summary>
+/// Called when current index of ComboBox_DoorDestinationPicker is changed even on its initialization time.
+/// </summary>
+/// <param name="index">
+/// The selected item's index in ComboBox_DoorDestinationPicker.
+/// </param>
 void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index)
 {
     delete tmpDestinationRoom;
     tmpDestinationRoom = new LevelComponents::Room(_currentLevel->GetRooms()[_currentLevel->GetDoors()[index]->GetRoomID()]);
     tmpDestinationRoom->SetDoors(_currentLevel->GetRoomDoors((unsigned int) _currentLevel->GetDoors()[index]->GetRoomID()));
     _currentLevel->GetDoors()[index]->SetDestinationDoor(_currentLevel->GetDoors()[index]);
-    RenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(index));
+    if(index != 0)
+    {
+        RenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(index));
+    }
+    else
+    {
+        QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
+        if(oldScene)
+        {
+            delete oldScene; // UI automaticcally update
+        }
+    }
 }
 
 /// <summary>
@@ -449,6 +468,7 @@ void DoorConfigDialog::on_ComboBox_DoorType_currentIndexChanged(int index)
 void DoorConfigDialog::on_SpinBox_WarioX_valueChanged(int arg1)
 {
     (void) arg1;
+    if(!IsInitialized) return;
     tmpCurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
 }
 
@@ -461,6 +481,7 @@ void DoorConfigDialog::on_SpinBox_WarioX_valueChanged(int arg1)
 void DoorConfigDialog::on_SpinBox_WarioY_valueChanged(int arg1)
 {
     (void) arg1;
+    if(!IsInitialized) return;
     tmpCurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
 }
 
@@ -473,7 +494,28 @@ void DoorConfigDialog::on_SpinBox_WarioY_valueChanged(int arg1)
 void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
 {
     (void) arg1;
+    if(!IsInitialized) return;
     tmpCurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) ui->SpinBox_BGM_ID->value());
+}
+
+/// <summary>
+/// Show All the Entities' names in the selected EntitySet.
+/// </summary>
+/// <param name="index">
+/// currentIndex of the ComboBox_EntitySetID.
+/// </param>
+void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
+{
+    int currentEntitySetId = tmpCurrentRoom->GetDoor(DoorID)->GetEntitySetID();
+    if(IsInitialized == true) currentEntitySetId = index;
+    ui->TextEdit_AllTheEntities->clear();
+    std::vector<LevelComponents::EntitySetinfoTableElement> currentEntityTable = entitiessets[currentEntitySetId]->GetEntityTable();
+    for(unsigned int i = 0; i < currentEntityTable.size(); ++i)
+    {
+        QString currentname = EntitynameSetData[currentEntityTable[i].Global_EntityID - 1];
+        ui->TextEdit_AllTheEntities->append(currentname);
+    }
+    tmpCurrentRoom->GetDoor(DoorID)->SetEntitySetID((unsigned char) currentEntitySetId);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------
@@ -520,5 +562,3 @@ void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
                            true
                        });
 }
-
-

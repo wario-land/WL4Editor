@@ -42,6 +42,7 @@ namespace LevelComponents
         unsigned char RoomID;
         int X1, X2, Y1, Y2; //destination just be (X1, Y1)
         Door *DestinationDoor = nullptr;
+        bool is_vortex = false;
         signed char DeltaX, DeltaY;
         unsigned char EntitySetID;
         unsigned int BGM_ID;
@@ -57,12 +58,15 @@ namespace LevelComponents
         Door *GetDestinationDoor() { return DestinationDoor; }
         int GetRoomID() {return (int) this->RoomID; }
         QString GetDoorname() { return "Room " + QString::number((int) RoomID, 16) + " Door " + QString::number(DoorID, 10); }
-        void SetDestinationDoor(Door *otherDoor) { DestinationDoor = otherDoor; }
+        void SetVortex() { is_vortex = true; }
+        bool IsVortex() { return is_vortex; }
+        bool IsDestinationDoorDisabled() { return DestinationDoor->IsVortex(); }
+        void SetDestinationDoor(Door *otherDoor) { DestinationDoor = otherDoor; } //Note: Set DestinationDoor Disabled by setting DestinationDoor point to the vortex Door
         void SetDelta(unsigned char _DeltaX, unsigned char _DeltaY);
         int GetDeltaX() { return (int) DeltaX; }
         int GetDeltaY() { return (int) DeltaY; }
         void SetEntitySetID(unsigned char _EntitySetID) { EntitySetID = _EntitySetID; }
-        int GetEntitySetID() { return EntitySetID; }
+        int GetEntitySetID() { return (int) EntitySetID; }
         void SetBGM(unsigned int _BGM_ID) { BGM_ID = _BGM_ID; }
         void SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2);
         void SetDoorType(enum DoorType _DoorType) { type = _DoorType; }
@@ -75,6 +79,8 @@ namespace LevelComponents
         int GetBGM_ID() { return (int) BGM_ID; }
         QPoint GetWarioOriginalPosition_x4();
         void SetGlobalDoorID(int doorId) { DoorID = doorId; }
+        void GlobalDoorIdDec() { --DoorID; }
+        void SetLinkerDestination(int dest_RoomId) { DoorEntry.LinkerDestination = (unsigned char) dest_RoomId; }
         int GetGlobalDoorID() { return DoorID; }
         //TODO: GenerateDoorSavingData()  (ssp)
     };
