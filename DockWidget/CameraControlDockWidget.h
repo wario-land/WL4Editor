@@ -27,6 +27,9 @@ private:
     int SelectedLimitator = -1;
     bool IsSavingData = false;
     void SetCurrentLimitator();
+    void SetListviewItemText(int row);
+    void PaintListView();
+    void ClearListView();
 
 private slots:
     void on_CameraLimitators_listView_clicked(const QModelIndex &index);
