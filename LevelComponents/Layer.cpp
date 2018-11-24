@@ -72,7 +72,7 @@ namespace LevelComponents
     /// </summary>
     Layer::~Layer()
     {
-        if(LayerData == nullptr) return;
+        if(!LayerData) return;
 
         // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
         if(MappingType == LayerTile8x8)
@@ -202,21 +202,25 @@ namespace LevelComponents
     /// </summary>
     void Layer::SetDisabled()
     {
-        if(LayerData == nullptr) return;
+        if(!LayerData) return;
         if(MappingType == LayerTile8x8) // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
         {
             for(auto iter = tiles.begin(); iter != tiles.end(); ++iter)
             {
                 delete(*iter);
             }
-        }else{ // If it is map16 type, then they are just pointer copies so only free the vector
+        }
+        else
+        {
+            // If it is map16 type, then they are just pointer copies so only free the vector
             tiles.clear();
         }
 
-        delete[] LayerData; LayerData = nullptr;
+        delete[] LayerData;
+        LayerData = nullptr;
         MappingType = LayerDisabled;
-        Enabled = false; Width = 0; Height = 0;
-        dirty = false;
+        Enabled = dirty = false;
+        Width = Height = 0;
     }
 
     /// <summary>
@@ -232,11 +236,12 @@ namespace LevelComponents
     {
         Width = layerWidth;
         Height = layerHeight;
-        dirty = true;
-        Enabled = true;
+        dirty = Enabled = true;
         MappingType = LayerMap16;
-        if(LayerData != nullptr)
+        if(LayerData)
+        {
             delete[] LayerData;
+        }
         LayerData = new unsigned short[layerWidth * layerHeight];
         memset(LayerData, 0, sizeof(char) * 2 * layerWidth * layerHeight);
     }
@@ -256,8 +261,7 @@ namespace LevelComponents
     void Layer::ChangeDimensions(int newWidth, int newHeight)
     {
         unsigned short *tmpLayerData = new unsigned short[newWidth * newHeight];
-        int boundX = qMin(Width, newWidth);
-        int boundY = qMin(Height, newHeight);
+        int boundX = qMin(Width, newWidth), boundY = qMin(Height, newHeight);
         unsigned short defaultValue = 0x0040;
         for(int i = 0; i < boundY; ++i)
         {

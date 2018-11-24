@@ -47,7 +47,8 @@ SOURCES += \
     Dialog/DoorConfigDialog.cpp \
     LevelComponents/Entity.cpp \
     DockWidget/EntitySetDockWidget.cpp \
-    Compress.cpp
+    Compress.cpp \
+    DockWidget/CameraControlDockWidget.cpp
 
 HEADERS += \
         WL4EditorWindow.h \
@@ -72,7 +73,8 @@ HEADERS += \
     Dialog/DoorConfigDialog.h \
     LevelComponents/Entity.h \
     DockWidget/EntitySetDockWidget.h \
-    Compress.h
+    Compress.h \
+    DockWidget/CameraControlDockWidget.h
 
 FORMS += \
         WL4EditorWindow.ui \
@@ -82,4 +84,5 @@ FORMS += \
     DockWidget/EditModeDockWidget.ui \
     Dialog/RoomConfigDialog.ui \
     Dialog/DoorConfigDialog.ui \
-    DockWidget/EntitySetDockWidget.ui
+    DockWidget/EntitySetDockWidget.ui \
+    DockWidget/CameraControlDockWidget.ui

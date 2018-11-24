@@ -6,6 +6,7 @@
 #include "LevelComponents/Level.h"
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/DoorConfigDialog.h"
+#include "DockWidget/CameraControlDockWidget.h"
 #include <iostream>
 #include <cstring>
 #include <QFile>
@@ -61,6 +62,7 @@ static void StaticInitialization_BeforeROMLoading()
 {
     RoomConfigDialog::StaticComboBoxesInitialization();
     DoorConfigDialog::StaticInitialization();
+    CameraControlDockWidget::StaticInitialization();
 }
 
 /// <summary>

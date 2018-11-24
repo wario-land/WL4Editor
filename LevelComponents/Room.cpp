@@ -60,6 +60,8 @@ namespace LevelComponents
         if((CameraControlType = static_cast<enum __CameraControlType>(ROMUtils::CurrentFile[roomDataPtr + 24])) == HasControlAttrs)
         {
             int pLevelCameraControlPointerTable = ROMUtils::PointerFromData(WL4Constants::CameraControlPointerTable + _LevelID * 4);
+            struct __CameraControlRecord *recordPtr = nullptr;
+            int k = 0;
             for(int i = 0; i < 16; i++)
             {
                 int CurrentPointer = ROMUtils::PointerFromData(pLevelCameraControlPointerTable + i * 4);
@@ -68,10 +70,12 @@ namespace LevelComponents
                 if(ROMUtils::CurrentFile[CurrentPointer] == _RoomID)
                 {
                     int RecordNum = ROMUtils::CurrentFile[CurrentPointer + 1];
-                    struct __CameraControlRecord *recordPtr = (struct __CameraControlRecord*) (ROMUtils::CurrentFile + CurrentPointer + 2);
                     while(RecordNum--)
                     {
-                        CameraControlRecords.push_back(recordPtr++);
+                        recordPtr = (struct __CameraControlRecord*) new __CameraControlRecord;
+                        memcpy(recordPtr, ROMUtils::CurrentFile + CurrentPointer + k * sizeof(struct __CameraControlRecord) + 2, sizeof(struct __CameraControlRecord));
+                        CameraControlRecords.push_back(recordPtr);
+                        recordPtr = nullptr; ++k;
                     }
                     break;
                 }
@@ -116,14 +120,14 @@ namespace LevelComponents
         // Copy the room header information
         RoomHeader = room->GetRoomHeader();
 
-        // Set up tileset
+        // Set up tileset, TODO: if we support Tileset changes in the editor, this need to be changed
         int tilesetPtr = WL4Constants::TilesetDataTable + TilesetID * 36;
         tileset = new Tileset(tilesetPtr, TilesetID);
 
         // Set up the layer data
         Width = room->GetWidth();
         Height = room->GetHeight();
-        unsigned char *roomheader_charptr = (unsigned char *) &RoomHeader;
+        unsigned char *roomheader_charptr = (unsigned char *) &RoomHeader; //TODO: the following code need to be re-implemented, add deep copy constructor for Layer class
         int *roomDataPtr = (int *) (&RoomHeader.Layer0Data);
         for(int i = 0; i < 4; ++i)
         {
@@ -136,42 +140,17 @@ namespace LevelComponents
 
         // Set up camera control data
         // TODO are there more types than 1, 2 and 3?
-        if((CameraControlType = static_cast<enum __CameraControlType>(room->GetRoomHeader().CameraControlType)) == HasControlAttrs)
+        CameraControlType = room->GetCameraControlType();
+        if(CameraControlType == LevelComponents::HasControlAttrs)
         {
-            int pLevelCameraControlPointerTable = ROMUtils::PointerFromData(WL4Constants::CameraControlPointerTable + LevelID * 4);
-            for(int i = 0; i < 16; i++)
-            {
-                int CurrentPointer = ROMUtils::PointerFromData(pLevelCameraControlPointerTable + i * 4);
-                if(CurrentPointer == WL4Constants::CameraRecordSentinel)
-                    break;
-                if(ROMUtils::CurrentFile[CurrentPointer] == RoomID)
-                {
-                    int RecordNum = ROMUtils::CurrentFile[CurrentPointer + 1];
-                    struct __CameraControlRecord *recordPtr = (struct __CameraControlRecord*) (ROMUtils::CurrentFile + CurrentPointer + 2);
-                    while(RecordNum--)
-                    {
-                        CameraControlRecords.push_back(recordPtr++);
-                    }
-                    break;
-                }
-            }
+            std::vector<struct __CameraControlRecord*> tmpCameraControlRecord = room->GetCameraControlRecords();
+            CameraControlRecords.assign(tmpCameraControlRecord.begin(), tmpCameraControlRecord.end());
         }
 
         // Load Entity list for each difficulty level
         for(int i = 0; i < 3; i++)
         {
-            int *EntityListaddress = (int *) ((unsigned char *)(&RoomHeader) + 28 + 4 * i);
-            int ListAddress = *EntityListaddress - 0x8000000;
-            int k = 0;
-            while(ROMUtils::CurrentFile[ListAddress + 3 * k] != (unsigned char) '\xFF') // maximum entity count is 46
-            {
-                EntityRoomAttribute tmpEntityroomattribute;
-                tmpEntityroomattribute.YPos     = (int) ROMUtils::CurrentFile[ListAddress + 3 * k];
-                tmpEntityroomattribute.XPos     = (int) ROMUtils::CurrentFile[ListAddress + 3 * k + 1];
-                tmpEntityroomattribute.EntityID = (int) ROMUtils::CurrentFile[ListAddress + 3 * k + 2];
-                EntityList[i].push_back(tmpEntityroomattribute);
-                k++;
-            }
+            EntityList[i] = room->GetEntityList(i);
         }
 
         // Deep Copy Entityset and Entities
@@ -242,6 +221,12 @@ namespace LevelComponents
         FreeDrawLayers();
         if(currentEntitySet != nullptr) delete currentEntitySet;
         FreecurrentEntityListSource();
+        for(int i = 0; i < (int) CameraControlRecords.size(); ++i)
+        {
+            struct __CameraControlRecord *currentCameralimitator = CameraControlRecords[i];
+            delete currentCameralimitator;
+        }
+        CameraControlRecords.clear();
         delete tileset;
     }
 
@@ -1000,5 +985,44 @@ namespace LevelComponents
                 return;
             }
         }
+    }
+
+    /// <summary>
+    /// Delete a CameraLimitator from std::vector<struct __CameraControlRecord*> CameraControlRecords.
+    /// </summary>
+    /// <param name="index">
+    /// The index of the limitator in std::vector<struct __CameraControlRecord*> CameraControlRecords needs to be deleted, count from 0.
+    /// </param>
+    void Room::DeleteCameraLimitator(int index)
+    {
+        __CameraControlRecord *limitatorptr = CameraControlRecords[index];
+        delete limitatorptr;
+        CameraControlRecords.erase(CameraControlRecords.begin() + index);
+    }
+
+    /// <summary>
+    /// Add a CameraLimitator to std::vector<struct __CameraControlRecord*> CameraControlRecords.
+    /// </summary>
+    void Room::AddCameraLimitator()
+    {
+        __CameraControlRecord *recordPtr = (struct __CameraControlRecord*) new __CameraControlRecord;
+        memset(recordPtr, 0, sizeof(struct __CameraControlRecord));
+        recordPtr->TransboundaryControl = recordPtr->x1 = recordPtr->x2 = recordPtr->y1 = recordPtr->y2 = (unsigned char) 2;
+        recordPtr->ChangedValue = recordPtr->ChangeValueOffset = recordPtr->x3 = recordPtr->y3 = (unsigned char) 0xFF;
+        CameraControlRecords.push_back(recordPtr);
+    }
+
+    /// <summary>
+    /// Set a CameraLimitator in std::vector<struct __CameraControlRecord*> CameraControlRecords.
+    /// </summary>
+    /// <param name="index">
+    /// The index of the limitator in std::vector<struct __CameraControlRecord*> CameraControlRecords needs to be changed, count from 0.
+    /// </param>
+    /// <param name="limitator_data">
+    /// New __CameraControlRecord set onto the limitator.
+    /// </param>
+    void Room::SetCameraLimitator(int index, __CameraControlRecord limitator_data)
+    {
+        memcpy(CameraControlRecords[index], &limitator_data, sizeof(__CameraControlRecord));
     }
 }
