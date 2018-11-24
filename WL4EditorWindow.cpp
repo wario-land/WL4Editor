@@ -43,6 +43,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
     EditModeWidget = new EditModeDockWidget();
     Tile16SelecterWidget = new Tile16DockWidget();
     EntitySetWidget = new EntitySetDockWidget();
+    CameraControlWidget = new CameraControlDockWidget();
 }
 
 /// <summary>
@@ -55,6 +56,7 @@ WL4EditorWindow::~WL4EditorWindow()
     delete Tile16SelecterWidget;
     delete EditModeWidget;
     delete EntitySetWidget;
+    delete CameraControlWidget;
     delete statusBarLabel;
     if(CurrentLevel)
     {
@@ -166,8 +168,11 @@ void WL4EditorWindow::OpenROM()
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
         addDockWidget(Qt::RightDockWidgetArea, Tile16SelecterWidget);
         addDockWidget(Qt::RightDockWidgetArea, EntitySetWidget);
+        addDockWidget(Qt::RightDockWidgetArea, CameraControlWidget);
+        CameraControlWidget->setVisible(false);
         EntitySetWidget->setVisible(false);
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
+        CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
     }
 
     LoadRoomUIUpdate();
@@ -445,6 +450,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
         ResetEntitySetDockWidget();
+        ResetCameraControlDockWidget();
 
         // Set program control changes
         UnsavedChanges = false;
@@ -475,6 +481,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     ResetEntitySetDockWidget();
+    ResetCameraControlDockWidget();
 
     // Set program control changes
     UnsavedChanges = false;
@@ -504,6 +511,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     ResetEntitySetDockWidget();
+    ResetCameraControlDockWidget();
 
     // Set program control changes
     UnsavedChanges = false;

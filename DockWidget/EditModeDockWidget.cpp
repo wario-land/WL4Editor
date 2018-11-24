@@ -303,6 +303,7 @@ void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
     if(checked)
     {
         singleton->HideEntitySetDockWidget();
+        singleton->HideCameraControlDockWidget();
         singleton->ShowTile16DockWidget();
     }
 }
@@ -318,11 +319,22 @@ void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
     if(checked)
     {
         singleton->HideTile16DockWidget();
-        singleton->ResetEntitySetDockWidget();
+        singleton->HideCameraControlDockWidget();
+//        singleton->ResetEntitySetDockWidget();
         singleton->ShowEntitySetDockWidget();
     }
     else
     {
         singleton->Graphicsview_UnselectDoorAndEntity();
+    }
+}
+
+void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
+{
+    if(checked)
+    {
+        singleton->HideEntitySetDockWidget();
+        singleton->HideTile16DockWidget();
+        singleton->ShowCameraControlDockWidget();
     }
 }

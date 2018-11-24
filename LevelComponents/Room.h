@@ -160,11 +160,17 @@ namespace LevelComponents
         int GetLocalDoorID(int globalDoorId);
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
+        enum __CameraControlType GetCameraControlType() { return CameraControlType; } //Delete this line when PR
         std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
         int FindEntity(int XPos, int YPos);
         bool AddEntity(int XPos, int YPos, int localEntityId);
         void DeleteEntity(int index);
         void DeleteDoor(int globalDoorIndex);
+        std::vector<struct __CameraControlRecord*> GetCameraControlRecords() { return CameraControlRecords; }
+        std::vector<struct EntityRoomAttribute> GetEntityList(int difficulty_id) { return EntityList[difficulty_id]; }
+        void DeleteCameraLimitator(int index);
+        void AddCameraLimitator();
+        void SetCameraLimitator(int index, __CameraControlRecord limitator_data);
     };
 }
 

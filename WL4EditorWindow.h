@@ -11,6 +11,7 @@
 #include "DockWidget/Tile16DockWidget.h"
 #include "DockWidget/EditModeDockWidget.h"
 #include "DockWidget/EntitySetDockWidget.h"
+#include "DockWidget/CameraControlDockWidget.h"
 #include "Dialog/LevelConfigDialog.h"
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/DoorConfigDialog.h"
@@ -29,6 +30,7 @@ private:
     Tile16DockWidget *Tile16SelecterWidget;
     EditModeDockWidget *EditModeWidget;
     EntitySetDockWidget *EntitySetWidget;
+    CameraControlDockWidget *CameraControlWidget;
     LevelComponents::Level *CurrentLevel = nullptr;
     int selectedRoom = 0;
     bool UnsavedChanges = false;
@@ -61,9 +63,12 @@ public:
     void RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig, DialogParams::RoomConfigParams *nextroomconfig);
     void ShowEntitySetDockWidget() { EntitySetWidget->setVisible(true); }
     void ShowTile16DockWidget() { Tile16SelecterWidget->setVisible(true); }
+    void ShowCameraControlDockWidget() { CameraControlWidget->setVisible(true); }
+    void HideCameraControlDockWidget() { CameraControlWidget->setVisible(false); }
     void HideEntitySetDockWidget() { EntitySetWidget->setVisible(false); }
     void HideTile16DockWidget() { Tile16SelecterWidget->setVisible(false); }
     void ResetEntitySetDockWidget() { EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]); }
+    void ResetCameraControlDockWidget() { CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]); }
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
     void DeleteDoor(int globalDoorIndex);
 
