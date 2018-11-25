@@ -197,7 +197,7 @@ namespace LevelComponents
         // Distribute door data to every room
         for(unsigned int i = 0; i < doors.size(); ++i)
         {
-            rooms[doors[i]->GetRoomID()]->PushBack_Door(doors[i]);
+            rooms[doors[i]->GetRoomID()]->AddDoor(doors[i]);
         }
     }
 
@@ -234,7 +234,7 @@ namespace LevelComponents
     void Level::AddDoor(Door *newdoor)
     {
         doors.push_back(newdoor);
-        rooms[doors[doors.size() - 1]->GetRoomID()]->PushBack_Door(doors[doors.size() - 1]);
+        rooms[doors[doors.size() - 1]->GetRoomID()]->AddDoor(doors[doors.size() - 1]);
     }
 
     /// <summary>

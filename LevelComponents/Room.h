@@ -96,16 +96,18 @@ namespace LevelComponents
     class Room
     {
     private:
+        // This is an internal struct that is used for sorting layers by render priority
         struct DLS
         {
             Layer *layer;
             int index;
         } *drawLayers[4];
+
+        // Locals
         int EntityLayerZValue[4];
         enum __CameraControlType CameraControlType;
         unsigned int RoomID;
         unsigned int LevelID;
-        int TilesetID;
         unsigned int Width, Height;
         bool Layer0ColorBlending = false;
         int Layer0ColorBlendCoefficient_EVA = 16;
@@ -121,62 +123,73 @@ namespace LevelComponents
         Tileset *tileset;
         std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem *RenderedLayers[12]; // L0 - 3, E, D, C, A (may not exist)
+        bool CameraBoundaryDirty = false;
+
+        // Helper functions
         void FreeDrawLayers();
         void FreecurrentEntityListSource();
         void ResetEntitySet(int entitysetId);
 
     public:
+        // Object construction
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
         Room(Room *room);
         ~Room();
-        int GetTilesetID() { return TilesetID; }
-        Tileset *GetTileset() { return tileset; }
-        unsigned int GetRoomID() { return RoomID; }
-        unsigned int GetLevelID() { return LevelID; }
-        struct __RoomHeader GetRoomHeader() { return RoomHeader; }
-        void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; TilesetID = tilesetID; RoomHeader.TilesetID = (unsigned int)tilesetID; }
-        void PushBack_Door(Door* newdoor);
-        Layer *GetLayer(int LayerID) { return layers[LayerID]; }
-        void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
-        QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
-        bool IsLayer0ColorBlendingEnabled() { return Layer0ColorBlending; }
-        void SetLayer0ColorBlendingEnabled(bool enability) { Layer0ColorBlending = enability; }
-        int GetEVA() { return Layer0ColorBlendCoefficient_EVA; }
-        int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
-        void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
-        int GetWidth() { return (int) Width; }
-        void SetWidth(int _width) { Width = (unsigned int) _width; }
-        int GetHeight() { return (int) Height; }
-        void SetHeight(int _height) { Height = (unsigned int) _height; }
-        int GetLayer0MappingParam() { return RoomHeader.Layer0MappingType; }
-        void SetLayer0MappingParam(int layer0MappingTypeParam) { RoomHeader.Layer0MappingType = layer0MappingTypeParam; }
-        int GetLayerDataPtr(int LayerNum);
-        void SetLayerDataPtr(int LayerNum, int dataPtr);
-        bool IsLayer2Enabled() { return RoomHeader.Layer2MappingType; }
-        void SetLayer2Enabled(bool enability) { RoomHeader.Layer2MappingType = enability ? '\x10' : '\x00'; }
-        bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
-        void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
-        bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == '\x07'; }
-        void SetBGLayerAutoScrollEnabled(bool enability);
-        int GetLayerEffectsParam() { return (int) RoomHeader.LayerEffects; }
-        LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
+
+        // Getters
         unsigned int CountDoors() { return doors.size(); }
-        void SetDoors(std::vector<Door*> _doors) { doors = _doors; }
-        unsigned int GetLocalDoorID(int globalDoorId);
-        int GetCurrentEntitySetID() { return CurrentEntitySetID; }
-        void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
-        void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk);
         unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
+        std::vector<struct __CameraControlRecord*> GetCameraControlRecords() { return CameraControlRecords; }
         enum __CameraControlType GetCameraControlType() { return CameraControlType; }
         std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
-        int FindEntity(int XPos, int YPos);
-        bool AddEntity(int XPos, int YPos, int localEntityId);
-        void DeleteEntity(int index);
-        void DeleteDoor(int globalDoorIndex);
-        std::vector<struct __CameraControlRecord*> GetCameraControlRecords() { return CameraControlRecords; }
+        int GetCurrentEntitySetID() { return CurrentEntitySetID; }
+        LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
         std::vector<struct EntityRoomAttribute> GetEntityList(int difficulty_id) { return EntityList[difficulty_id]; }
+        int GetEVA() { return Layer0ColorBlendCoefficient_EVA; }
+        int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
+        unsigned int GetHeight() { return Height; }
+        unsigned int GetWidth() { return Width; }
+        Layer *GetLayer(int LayerID) { return layers[LayerID]; }
+        int GetLayer0MappingParam() { return RoomHeader.Layer0MappingType; }
+        int GetLayerDataPtr(int LayerNum);
+        int GetLayerEffectsParam() { return RoomHeader.LayerEffects; }
+        unsigned int GetLevelID() { return LevelID; }
+        struct __RoomHeader GetRoomHeader() { return RoomHeader; }
+        unsigned int GetRoomID() { return RoomID; }
+        Tileset *GetTileset() { return tileset; }
+        int GetTilesetID() { return RoomHeader.TilesetID; }
+        bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == '\x07'; }
+        bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
+        bool IsLayer0ColorBlendingEnabled() { return Layer0ColorBlending; }
+        bool IsLayer2Enabled() { return RoomHeader.Layer2MappingType; }
+
+        // Setters
+        void AddDoor(Door *newdoor);
+        bool AddEntity(int XPos, int YPos, int localEntityId);
         void DeleteCameraLimitator(int index);
+        void DeleteDoor(int globalDoorIndex);
+        void DeleteEntity(int index);
+        void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
+        void SetBGLayerAutoScrollEnabled(bool enability);
+        void SetCameraControlType(__CameraControlType new_control_type) { CameraControlType = new_control_type; RoomHeader.CameraControlType = (unsigned char) new_control_type; }
+        void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
+        void SetDoorsVector(std::vector<Door*> _doors) { doors = _doors; }
+        void SetHeight(int _height) { Height = (unsigned int) _height; }
+        void SetWidth(int _width) { Width = (unsigned int) _width; }
+        void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
+        void SetLayer0ColorBlendingEnabled(bool enability) { Layer0ColorBlending = enability; }
+        void SetLayer0MappingParam(int layer0MappingTypeParam) { RoomHeader.Layer0MappingType = layer0MappingTypeParam; }
+        void SetLayer2Enabled(bool enability) { RoomHeader.Layer2MappingType = enability ? '\x10' : '\x00'; }
+        void SetLayerDataPtr(int LayerNum, int dataPtr);
+        void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
+        void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; RoomHeader.TilesetID = (unsigned char) tilesetID; }
+
+        // Functions
         void AddCameraLimitator();
+        int FindEntity(int XPos, int YPos);
+        unsigned int GetLocalDoorID(int globalDoorId);
+        void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk);
+        QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
         void SetCameraLimitator(int index, __CameraControlRecord limitator_data);
     };
 }

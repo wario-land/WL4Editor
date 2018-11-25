@@ -254,7 +254,7 @@ namespace ROMUtils
             if(STARmatch < 4)
             {
                 // STAR not found at current address
-                freeBytes += MAX_VAL(STARmatch, 1);
+                freeBytes += qMin(STARmatch, 1);
             }
             else
             {
@@ -289,7 +289,8 @@ namespace ROMUtils
         currentLevel->GetSaveChunks(chunks);
 
         // Finding space for the chunks can be done faster if the chunks are ordered by size
-        qSort(chunks.begin(), chunks.end(), [](const struct SaveData& a, const struct SaveData& b) {
+        std::sort(chunks.begin(), chunks.end(), [](const struct SaveData& a, const struct SaveData& b)
+        {
             return a.size < b.size;
         });
         std::map<int, int> chunkIDtoIndex;

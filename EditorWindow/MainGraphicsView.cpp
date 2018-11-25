@@ -7,6 +7,7 @@
 #include <QMouseEvent>
 
 #include <iostream>
+#include <cassert>
 
 extern WL4EditorWindow *singleton;
 
@@ -21,10 +22,10 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
     if(!singleton->FirstROMIsLoaded()) return;
 
     // Get the ID of the tile that was clicked
-    int X = event->x() + horizontalScrollBar()->sliderPosition();
-    int Y = event->y() + verticalScrollBar()->sliderPosition();
-    int tileX = X / 32;
-    int tileY = Y / 32;
+    unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
+    unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
+    unsigned int tileX = X / 32;
+    unsigned int tileY = Y / 32;
 
     // Different cases for different editting mode
     LevelComponents::Room *room = singleton->GetCurrentRoom();
@@ -55,19 +56,20 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         }
         else if(editMode == Ui::DoorEditMode) // select a door
         {
-            if(room->CountDoors())
+            unsigned int doorCount = room->CountDoors();
+            if(doorCount)
             {
                 // Select a Door if possible
-                for(int i = 0; i < room->CountDoors(); i++)
+                for(unsigned int i = 0; i < doorCount; i++)
                 {
                     LevelComponents::Door *door = room->GetDoor(i);
-                    bool b1 = door->GetX1() <= tileX;
-                    bool b2 = door->GetX2() >= tileX;
-                    bool b3 = door->GetY1() <= tileY;
-                    bool b4 = door->GetY2() >= tileY;
+                    bool b1 = door->GetX1() <= (int) tileX;
+                    bool b2 = door->GetX2() >= (int) tileX;
+                    bool b3 = door->GetY1() <= (int) tileY;
+                    bool b4 = door->GetY2() >= (int) tileY;
                     if(b1 && b2 && b3 && b4)
                     {
-                        if(i == SelectedDoorID)
+                        if((int) i == SelectedDoorID)
                         {
                             DoorConfigDialog _doorconfigdialog(singleton, room, i, singleton->GetCurrentLevel());
                             if(_doorconfigdialog.exec() == QDialog::Accepted)
@@ -93,7 +95,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             if(SelectedEntityID == -1)
             {
                 bool success = room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
-                // TODO: Show information if failure
+                assert(success); // TODO: Show information if failure
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
         }

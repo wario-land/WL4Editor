@@ -57,6 +57,7 @@ namespace LevelComponents
         QString GetDoorName() { return "Room " + QString::number((int) RoomID, 16) + " Door " + QString::number(DoorID, 10); }
         int GetDoorTypeNum() { return DoorEntry.DoorTypeByte; }
         int GetEntitySetID() { return DoorEntry.EntitySetID; }
+        struct __DoorEntry GetEntryStruct() { return DoorEntry; }
         int GetGlobalDoorID() { return DoorID; }
         int GetRoomID() { return RoomID; }
         QPoint GetWarioOriginalPosition_x4();
@@ -64,7 +65,6 @@ namespace LevelComponents
         int GetX2() { return DoorEntry.x2; }
         int GetY1() { return DoorEntry.y1; }
         int GetY2() { return DoorEntry.y2; }
-        struct __DoorEntry GetEntryStruct() { return DoorEntry; }
 
         // Setters
         void SetAsVortex() { is_vortex = true; }

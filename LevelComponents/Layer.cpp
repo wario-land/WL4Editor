@@ -243,7 +243,7 @@ namespace LevelComponents
             delete[] LayerData;
         }
         LayerData = new unsigned short[layerWidth * layerHeight];
-        memset(LayerData, 0, sizeof(char) * 2 * layerWidth * layerHeight);
+        memset(LayerData, 0, 2 * layerWidth * layerHeight);
     }
 
     /// <summary>

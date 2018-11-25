@@ -28,8 +28,7 @@ namespace LevelComponents
     /// </param>
     Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) :
         RoomID(_RoomID),
-        LevelID(_LevelID),
-        TilesetID(ROMUtils::CurrentFile[roomDataPtr])
+        LevelID(_LevelID)
     {
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
         memset(drawLayers, 0, sizeof(drawLayers));
@@ -39,8 +38,8 @@ namespace LevelComponents
         memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
 
         // Set up tileset
-        int tilesetPtr = WL4Constants::TilesetDataTable + TilesetID * 36;
-        tileset = new Tileset(tilesetPtr, TilesetID);
+        int tilesetPtr = WL4Constants::TilesetDataTable + RoomHeader.TilesetID * 36;
+        tileset = new Tileset(tilesetPtr, RoomHeader.TilesetID);
 
         // Set up the layer data
         int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
@@ -53,11 +52,11 @@ namespace LevelComponents
             layers[i] = new Layer(layerPtr, mappingType);
         }
 
-        SetLayerPriorityAndAlphaAttributes((int) ROMUtils::CurrentFile[roomDataPtr + 26]);
+        SetLayerPriorityAndAlphaAttributes(ROMUtils::CurrentFile[roomDataPtr + 26]);
 
         // Set up camera control data
-        // TODO are there more types than 1, 2 and 3?
-        if((CameraControlType = static_cast<enum __CameraControlType>(ROMUtils::CurrentFile[roomDataPtr + 24])) == HasControlAttrs)
+        if((CameraControlType = static_cast<enum __CameraControlType>(ROMUtils::CurrentFile[roomDataPtr + 24]))
+            == __CameraControlType::HasControlAttrs)
         {
             int pLevelCameraControlPointerTable = ROMUtils::PointerFromData(WL4Constants::CameraControlPointerTable + _LevelID * 4);
             struct __CameraControlRecord *recordPtr = nullptr;
@@ -66,16 +65,18 @@ namespace LevelComponents
             {
                 int CurrentPointer = ROMUtils::PointerFromData(pLevelCameraControlPointerTable + i * 4);
                 if(CurrentPointer == WL4Constants::CameraRecordSentinel)
+                {
                     break;
+                }
                 if(ROMUtils::CurrentFile[CurrentPointer] == _RoomID)
                 {
                     int RecordNum = ROMUtils::CurrentFile[CurrentPointer + 1];
                     while(RecordNum--)
                     {
-                        recordPtr = (struct __CameraControlRecord*) new __CameraControlRecord;
-                        memcpy(recordPtr, ROMUtils::CurrentFile + CurrentPointer + k * sizeof(struct __CameraControlRecord) + 2, sizeof(struct __CameraControlRecord));
+                        recordPtr = new __CameraControlRecord;
+                        memcpy(recordPtr, ROMUtils::CurrentFile + CurrentPointer + k++ * sizeof(struct __CameraControlRecord) + 2, sizeof(struct __CameraControlRecord));
                         CameraControlRecords.push_back(recordPtr);
-                        recordPtr = nullptr; ++k;
+                        recordPtr = nullptr;
                     }
                     break;
                 }
@@ -90,16 +91,13 @@ namespace LevelComponents
             while(ROMUtils::CurrentFile[Listaddress + 3 * k] != (unsigned char) '\xFF') // maximum entity count is 46
             {
                 EntityRoomAttribute tmpEntityroomattribute;
-                tmpEntityroomattribute.YPos     = (int) ROMUtils::CurrentFile[Listaddress + 3 * k];
-                tmpEntityroomattribute.XPos     = (int) ROMUtils::CurrentFile[Listaddress + 3 * k + 1];
-                tmpEntityroomattribute.EntityID = (int) ROMUtils::CurrentFile[Listaddress + 3 * k + 2];
+                tmpEntityroomattribute.YPos     = ROMUtils::CurrentFile[Listaddress + 3 * k];
+                tmpEntityroomattribute.XPos     = ROMUtils::CurrentFile[Listaddress + 3 * k + 1];
+                tmpEntityroomattribute.EntityID = ROMUtils::CurrentFile[Listaddress + 3 * k + 2];
                 EntityList[i].push_back(tmpEntityroomattribute);
                 k++;
             }
         }
-
-        // TODOs: load Entityset and Entities for different difficulties and different Doors.
-
     }
 
     /// <summary>
@@ -111,7 +109,6 @@ namespace LevelComponents
     Room::Room(Room *room)
     {
         RoomID = room->GetRoomID();
-        TilesetID = room->GetTilesetID();
         LevelID = room->GetLevelID();
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
         memset(drawLayers, 0, sizeof(drawLayers));
@@ -121,8 +118,8 @@ namespace LevelComponents
         RoomHeader = room->GetRoomHeader();
 
         // Set up tileset, TODO: if we support Tileset changes in the editor, this need to be changed
-        int tilesetPtr = WL4Constants::TilesetDataTable + TilesetID * 36;
-        tileset = new Tileset(tilesetPtr, TilesetID);
+        int tilesetPtr = WL4Constants::TilesetDataTable + RoomHeader.TilesetID * 36;
+        tileset = new Tileset(tilesetPtr, RoomHeader.TilesetID);
 
         // Set up the layer data
         Width = room->GetWidth();
@@ -198,7 +195,6 @@ namespace LevelComponents
         if(currentEntitySet != nullptr) delete currentEntitySet;
         FreecurrentEntityListSource();
         currentEntitySet = new EntitySet(entitysetId, tileset->GetUniversalSpritesTilesPalettePtr());
-//        currentEntitySet = new EntitySet(entitysetId, WL4Constants::UniversalSpritesPalette);
         for(int i = 0; i < 17; ++i)
         {
             Entity *newEntity = new Entity(-1, i, currentEntitySet);
@@ -219,9 +215,9 @@ namespace LevelComponents
     {
         // Free drawlayer elements
         FreeDrawLayers();
-        if(currentEntitySet != nullptr) delete currentEntitySet;
+        if(currentEntitySet) delete currentEntitySet;
         FreecurrentEntityListSource();
-        for(int i = 0; i < (int) CameraControlRecords.size(); ++i)
+        for(unsigned int i = 0; i < CameraControlRecords.size(); ++i)
         {
             struct __CameraControlRecord *currentCameralimitator = CameraControlRecords[i];
             delete currentCameralimitator;
@@ -236,10 +232,10 @@ namespace LevelComponents
     /// <param name="newdoor">
     /// eExisting Door ptr.
     /// </param>
-    void Room::PushBack_Door(Door *newdoor)
+    void Room::AddDoor(Door *newdoor)
     {
          doors.push_back(newdoor);
-         if(CurrentEntitySetID == 0)
+         if(!CurrentEntitySetID)
          {
              CurrentEntitySetID = newdoor->GetEntitySetID();
              ResetEntitySet(CurrentEntitySetID);
@@ -264,9 +260,7 @@ namespace LevelComponents
     /// </return>
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
-        int sceneWidth = Width * 16;
-        int sceneHeight = Height * 16;
-        int Z = 0;
+        int sceneWidth = Width * 16, sceneHeight = Height * 16, Z = 0;
         switch(renderParams->type)
         {
         case FullRender:
@@ -654,7 +648,7 @@ namespace LevelComponents
                     QList<Layer*> layerlist;
                     layerlist.push_back(layers[0]); layerlist.push_back(layers[1]); layerlist.push_back(layers[2]); layerlist.push_back(layers[3]);
 
-                    qSort(layerlist.begin(), layerlist.end(), [](Layer *layera, Layer *layerb)
+                    std::sort(layerlist.begin(), layerlist.end(), [](Layer *layera, Layer *layerb)
                     {
                         return layera->GetLayerPriority() < layerb->GetLayerPriority();
                     });
@@ -789,21 +783,20 @@ namespace LevelComponents
     {
         if(enability)
         {
-            RoomHeader.Layer3Scrolling = (unsigned char) 7;
+            RoomHeader.Layer3Scrolling = '\x07';
         }
         else
         {
-            if(RoomHeader.Layer3MappingType == (unsigned char) 0)
-            {
-                RoomHeader.Layer3Scrolling = (unsigned char) 3;
-            }
-            else
-            {
-                RoomHeader.Layer3Scrolling = (unsigned char) 1;
-            }
+            RoomHeader.Layer3Scrolling = RoomHeader.Layer3MappingType ? '\x01' : '\x03';
         }
     }
 
+    /// <summary>
+    /// Convert a level-wide door ID into a room-wide door ID.
+    /// </summary>
+    /// <param name="globalDoorId">
+    /// The level's door ID.
+    /// </param>
     unsigned int Room::GetLocalDoorID(int globalDoorId)
     {
         for(unsigned int i = 0; i < doors.size(); ++i)
@@ -811,7 +804,8 @@ namespace LevelComponents
             if(doors[i]->GetGlobalDoorID() == globalDoorId)
             return i;
         }
-        return 0xFFFFFFFF; // TODO: Error handling
+        return 0xFFFFFFFF;
+        assert(0); // TODO: Error handling
     }
 
     /// <summary>
@@ -825,10 +819,6 @@ namespace LevelComponents
     /// </param>
     void Room::GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks, struct ROMUtils::SaveData *headerChunk)
     {
-        // Calculate some values needed to initialize the save data
-        unsigned int doorTablePtr = WL4Constants::DoorTable + LevelID * 4;
-        unsigned int cameraChunkSize = CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
-
         // Populate layer chunks (uses chunk-relative addresses)
         unsigned int *layerPtrs = (unsigned int*)(headerChunk->data + RoomID * sizeof(struct __RoomHeader) + 8);
         for(unsigned int i = 0; i < 4; ++i)
@@ -859,28 +849,38 @@ namespace LevelComponents
             }
         }
 
-        // Create camera boundary chunk
-        struct ROMUtils::SaveData cameraChunk =
+        // Create entity list chunks
+        for(unsigned int i = 0; i < 3; ++i)
         {
-            doorTablePtr,
-            cameraChunkSize,
-            (unsigned char*) malloc(cameraChunkSize),
-            ROMUtils::SaveDataIndex++,
-            false,
-            0,
-            ROMUtils::PointerFromData(doorTablePtr),
-            ROMUtils::CameraBoundaryChunkType
-        };
 
-        // Populate camera boundary chunk with data
-        for(unsigned int i = 0; i < CameraControlRecords.size(); ++i)
-        {
-            struct __CameraControlRecord *ccr = CameraControlRecords[i];
-            // TODO
         }
 
-        //chunks.append(cameraChunk);
-        free(cameraChunk.data); // TODO remove this when we can add the camera chunk
+        // Create camera boundary chunk, if it is the appropriate type
+        if(CameraControlType == __CameraControlType::HasControlAttrs)
+        {
+            unsigned int cameraTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
+            unsigned int cameraChunkSize = CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
+            struct ROMUtils::SaveData cameraChunk =
+            {
+                cameraTablePtr,
+                cameraChunkSize,
+                (unsigned char*) malloc(cameraChunkSize),
+                ROMUtils::SaveDataIndex++,
+                false,
+                0,
+                ROMUtils::PointerFromData(cameraTablePtr),
+                ROMUtils::CameraBoundaryChunkType
+            };
+
+            // Populate camera boundary chunk with data
+            for(unsigned int i = 0; i < CameraControlRecords.size(); ++i)
+            {
+                struct __CameraControlRecord *ccr = CameraControlRecords[i];
+                memcpy(cameraChunk.data + i * sizeof(struct __CameraControlRecord), ccr, sizeof(struct __CameraControlRecord));
+            }
+
+            chunks.append(cameraChunk);
+        }
     }
 
     /// <summary>

@@ -50,8 +50,8 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->TableView_EntityFilter->setModel(EntityFilterTable);
 
     // Distribute Doors into the temp CurrentRoom
-    tmpCurrentRoom->SetDoors(_level->GetRoomDoors(currentroom->GetRoomID()));
-    tmpDestinationRoom->SetDoors(_level->GetRoomDoors(currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()));
+    tmpCurrentRoom->SetDoorsVector(_level->GetRoomDoors(currentroom->GetRoomID()));
+    tmpDestinationRoom->SetDoorsVector(_level->GetRoomDoors(currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()));
 
     // Initialize UI elements
     ui->ComboBox_DoorType->addItems(DoortypeSet);
@@ -373,7 +373,7 @@ void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int
 {
     delete tmpDestinationRoom;
     tmpDestinationRoom = new LevelComponents::Room(_currentLevel->GetRooms()[_currentLevel->GetDoors()[index]->GetRoomID()]);
-    tmpDestinationRoom->SetDoors(_currentLevel->GetRoomDoors((unsigned int) _currentLevel->GetDoors()[index]->GetRoomID()));
+    tmpDestinationRoom->SetDoorsVector(_currentLevel->GetRoomDoors((unsigned int) _currentLevel->GetDoors()[index]->GetRoomID()));
     _currentLevel->GetDoors()[index]->SetDestinationDoor(_currentLevel->GetDoors()[index]);
     if(index != 0)
     {
