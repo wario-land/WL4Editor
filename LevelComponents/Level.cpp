@@ -67,13 +67,13 @@ namespace LevelComponents
 
         // Load the level information
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-        int levelIndex = ROMUtils::CurrentFile[levelHeaderPointer]; // 0x3000023
+        LevelID = ROMUtils::CurrentFile[levelHeaderPointer]; // 0x3000023
 
         memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
 
         // Load the door data
         std::vector<int> destinations;
-        int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + levelIndex * 4);
+        int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + LevelID * 4);
         struct __DoorEntry *doorPtr = (struct __DoorEntry*) (ROMUtils::CurrentFile + doorStartAddress);
         unsigned char *firstByte;
         int currentDoornum = 0;
@@ -97,11 +97,11 @@ namespace LevelComponents
         doors[0]->SetAsVortex();
 
         // Load the room data
-        int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + levelIndex * 4);
+        int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + LevelID * 4);
         int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
         for(int i = 0; i < roomCount; i++)
         {
-            rooms.push_back(new Room(roomTableAddress + i * 0x2C, i, levelIndex));
+            rooms.push_back(new Room(roomTableAddress + i * 0x2C, i, LevelID));
         }
 
         // Distribute door data to every room
@@ -296,15 +296,57 @@ namespace LevelComponents
             false,
             0,
             ROMUtils::PointerFromData(roomTablePtr),
-            ROMUtils::RoomHeaderChunkType
+            ROMUtils::SaveDataChunkType::RoomHeaderChunkType
         };
 
+        // Create Room camera boundary pointer table chunk
+        // only do this if one of the rooms has dirty camera boundaries, and type HasControlAttrs
+        struct ROMUtils::SaveData *cameraPointerTable = nullptr;
+        if(rooms.end() != std::find_if(rooms.begin(), rooms.end(), [](Room *R)
+            { return R->IsCameraBoundaryDirty() &&
+                     R->GetCameraControlType() == __CameraControlType::HasControlAttrs &&
+                     R->GetCameraControlRecords().size(); }))
+        {
+            const unsigned int GBAptrSentinel = 0x8000000 | WL4Constants::CameraRecordSentinel;
+
+            // Create the camera boundary pointer table save chunk
+            unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
+            int boundaryEntries = std::count_if(rooms.begin(), rooms.end(), [](Room *R)
+                { return R->GetCameraControlRecords().size(); });
+            unsigned int cameraPointerTableSize = (boundaryEntries + 1) * 4;
+            cameraPointerTable = (struct ROMUtils::SaveData*) malloc(sizeof(struct ROMUtils::SaveData));
+            cameraPointerTable->ptr_addr = cameraPointerTablePtr;
+            cameraPointerTable->size = cameraPointerTableSize;
+            cameraPointerTable->data = (unsigned char*) malloc(cameraPointerTableSize);
+            cameraPointerTable->index = ROMUtils::SaveDataIndex++;
+            cameraPointerTable->alignment = false;
+            cameraPointerTable->dest_index = 0;
+            cameraPointerTable->old_chunk_addr = ROMUtils::PointerFromData(cameraPointerTablePtr);
+            cameraPointerTable->ChunkType = ROMUtils::CameraPointerTableType;
+            *(int*) (cameraPointerTable->data + boundaryEntries * 4) = GBAptrSentinel;
+
+            // Create null entries in the chunk data which will be used to invalidate old camera boundary chunks
+            unsigned int cameraBoundaryListEntryPtr = ROMUtils::PointerFromData(cameraPointerTablePtr);
+            while(*(int*)(ROMUtils::CurrentFile + cameraBoundaryListEntryPtr) != GBAptrSentinel)
+            {
+                struct ROMUtils::SaveData invalidationEntry =
+                {
+                    0, 0, nullptr, ROMUtils::SaveDataIndex++, false, 0,
+                    cameraBoundaryListEntryPtr,
+                    ROMUtils::SaveDataChunkType::NullType
+                };
+                chunks.append(invalidationEntry);
+                cameraBoundaryListEntryPtr += 4;
+            }
+        }
+
         // Populate chunks with room data
+        unsigned int cameraPointerTableIndex = 0;
         for(unsigned int i = 0; i < rooms.size(); ++i)
         {
             struct __RoomHeader rh = rooms[i]->GetRoomHeader();
             memcpy(roomHeaders.data + i * sizeof(struct __RoomHeader), &rh, sizeof(struct __RoomHeader));
-            rooms[i]->GetSaveChunks(chunks, &roomHeaders);
+            rooms[i]->GetSaveChunks(chunks, &roomHeaders, cameraPointerTable, &cameraPointerTableIndex);
         }
 
         // Create door list chunk
@@ -317,7 +359,7 @@ namespace LevelComponents
             true,
             0,
             ROMUtils::PointerFromData(doorTablePtr),
-            ROMUtils::DoorChunkType
+            ROMUtils::SaveDataChunkType::DoorChunkType
         };
 
         // Populate door chunk data
@@ -343,7 +385,7 @@ namespace LevelComponents
             false,
             0,
             ROMUtils::PointerFromData(LevelNamePtr),
-            ROMUtils::LevelNameChunkType
+            ROMUtils::SaveDataChunkType::LevelNameChunkType
         };
         memset(levelNameChunk.data, 0xFF, 26);
         unsigned char *str = levelNameChunk.data + (26 - LevelName.size()) / 2;
@@ -358,5 +400,6 @@ namespace LevelComponents
         chunks.append(roomHeaders);
         chunks.append(doorChunk);
         chunks.append(levelNameChunk);
+        if(cameraPointerTable) { chunks.append(*cameraPointerTable); free(cameraPointerTable); }
     }
 }

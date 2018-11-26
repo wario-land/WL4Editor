@@ -349,6 +349,8 @@ namespace ROMUtils
         // Write each chunk to TempFile
         foreach(struct SaveData chunk, chunks)
         {
+            if(chunk.ChunkType == SaveDataChunkType::NullType) continue; // skip NullType chunks
+
             // Create the RATS tag
             unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
             strncpy((char*) destPtr, "STAR", 4);
@@ -387,7 +389,7 @@ namespace ROMUtils
         CurrentFile = TempFile;
         CurrentFileSize = TempLength;
 
-        // Set the new internal data pointer for LevelComponents objects, and mark dirty ones as clean
+        // Set the new internal data pointer for LevelComponents objects, and mark dirty objects as clean
         struct SaveData roomHeaderChunk = *std::find_if(chunks.begin(), chunks.end(), [](const struct SaveData &chunk) {
             return chunk.ChunkType == SaveDataChunkType::RoomHeaderChunkType;
         });
@@ -399,6 +401,7 @@ namespace ROMUtils
                 (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
             unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
             LevelComponents::Room *room = rooms[i];
+            room->SetCameraBoundaryDirty(false);
             for(unsigned int j = 0; j < 4; ++j)
             {
                 LevelComponents::Layer *layer = room->GetLayer(j);

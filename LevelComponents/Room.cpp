@@ -817,7 +817,7 @@ namespace LevelComponents
     /// <param name="headerChunk">
     /// The save chunk for the room headers. This is necessary to update pointers within the chunk itself.
     /// </param>
-    void Room::GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks, struct ROMUtils::SaveData *headerChunk)
+    void Room::GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks, struct ROMUtils::SaveData *headerChunk, ROMUtils::SaveData *cameraPointerTableChunk, unsigned int *cameraPointerTableIndex)
     {
         // Populate layer chunks (uses chunk-relative addresses)
         unsigned int *layerPtrs = (unsigned int*)(headerChunk->data + RoomID * sizeof(struct __RoomHeader) + 8);
@@ -838,7 +838,7 @@ namespace LevelComponents
                     true,
                     headerChunk->index,
                     layer->GetDataPtr(),
-                    ROMUtils::LayerChunkType
+                    ROMUtils::SaveDataChunkType::LayerChunkType
                 };
                 chunks.append(layerChunk);
             }
@@ -852,31 +852,32 @@ namespace LevelComponents
         // Create entity list chunks
         for(unsigned int i = 0; i < 3; ++i)
         {
-
+            // TODO
         }
 
         // Create camera boundary chunk, if it is the appropriate type
-        if(CameraControlType == __CameraControlType::HasControlAttrs)
+        if(cameraPointerTableChunk && CameraControlType == __CameraControlType::HasControlAttrs)
         {
-            unsigned int cameraTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
-            unsigned int cameraChunkSize = CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
+            unsigned int cameraChunkSize = 2 + CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
             struct ROMUtils::SaveData cameraChunk =
             {
-                cameraTablePtr,
+                4 * (*cameraPointerTableIndex)++,
                 cameraChunkSize,
                 (unsigned char*) malloc(cameraChunkSize),
                 ROMUtils::SaveDataIndex++,
-                false,
+                true,
+                cameraPointerTableChunk->index,
                 0,
-                ROMUtils::PointerFromData(cameraTablePtr),
-                ROMUtils::CameraBoundaryChunkType
+                ROMUtils::SaveDataChunkType::CameraBoundaryChunkType
             };
 
             // Populate camera boundary chunk with data
+            cameraChunk.data[0] = (unsigned char) RoomID;
+            cameraChunk.data[1] = (unsigned char) CameraControlRecords.size();
             for(unsigned int i = 0; i < CameraControlRecords.size(); ++i)
             {
                 struct __CameraControlRecord *ccr = CameraControlRecords[i];
-                memcpy(cameraChunk.data + i * sizeof(struct __CameraControlRecord), ccr, sizeof(struct __CameraControlRecord));
+                memcpy(cameraChunk.data + 2 + i * sizeof(struct __CameraControlRecord), ccr, sizeof(struct __CameraControlRecord));
             }
 
             chunks.append(cameraChunk);

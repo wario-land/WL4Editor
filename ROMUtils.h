@@ -26,12 +26,14 @@ namespace ROMUtils
     void SaveFile();
 
     enum SaveDataChunkType {
+        NullType                = '\x00',
         RoomHeaderChunkType     = '\x01',
         DoorChunkType           = '\x02',
         LayerChunkType          = '\x03',
-        CameraBoundaryChunkType = '\x04',
-        LevelNameChunkType      = '\x05',
-        EntityListChunk         = '\x06'
+        LevelNameChunkType      = '\x04',
+        EntityListChunk         = '\x05',
+        CameraPointerTableType  = '\x06',
+        CameraBoundaryChunkType = '\x07',
     };
 
     struct SaveData {

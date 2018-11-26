@@ -160,6 +160,7 @@ namespace LevelComponents
         int GetTilesetID() { return RoomHeader.TilesetID; }
         bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == '\x07'; }
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
+        bool IsCameraBoundaryDirty() { return CameraBoundaryDirty; }
         bool IsLayer0ColorBlendingEnabled() { return Layer0ColorBlending; }
         bool IsLayer2Enabled() { return RoomHeader.Layer2MappingType; }
 
@@ -171,6 +172,7 @@ namespace LevelComponents
         void DeleteEntity(int index);
         void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
         void SetBGLayerAutoScrollEnabled(bool enability);
+        void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }
         void SetCameraControlType(__CameraControlType new_control_type) { CameraControlType = new_control_type; RoomHeader.CameraControlType = (unsigned char) new_control_type; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
         void SetDoorsVector(std::vector<Door*> _doors) { doors = _doors; }
@@ -188,7 +190,7 @@ namespace LevelComponents
         void AddCameraLimitator();
         int FindEntity(int XPos, int YPos);
         unsigned int GetLocalDoorID(int globalDoorId);
-        void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk);
+        void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk, ROMUtils::SaveData *cameraPointerTableChunk, unsigned int *cameraPointerTableIndex);
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
         void SetCameraLimitator(int index, __CameraControlRecord limitator_data);
     };
