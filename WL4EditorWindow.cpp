@@ -173,6 +173,7 @@ void WL4EditorWindow::OpenROM()
         EntitySetWidget->setVisible(false);
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
         CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
+        EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
     }
 
     LoadRoomUIUpdate();
