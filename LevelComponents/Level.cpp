@@ -293,7 +293,7 @@ namespace LevelComponents
             roomHeaderChunkSize,
             (unsigned char*) malloc(roomHeaderChunkSize),
             ROMUtils::SaveDataIndex++,
-            false,
+            true,
             0,
             ROMUtils::PointerFromData(roomTablePtr),
             ROMUtils::SaveDataChunkType::RoomHeaderChunkType
