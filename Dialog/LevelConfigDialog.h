@@ -25,6 +25,7 @@ public:
     int GetHModeTimer();
     int GetNModeTimer();
     int GetSHModeTimer();
+
 private slots:
     void on_NModeTimer_TextBox_textChanged(const QString &arg1);
     void on_SHModeTimer_TextBox_textChanged(const QString &arg1);

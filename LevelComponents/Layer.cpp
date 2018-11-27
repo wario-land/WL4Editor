@@ -1,6 +1,7 @@
 #include "Layer.h"
 #include "ROMUtils.h"
 #include <iostream>
+#include <cstring>
 
 namespace LevelComponents
 {
@@ -17,7 +18,7 @@ namespace LevelComponents
     /// The mapping type for the layer.
     /// </param>
     Layer::Layer(int layerDataPtr, enum LayerMappingType mappingType) :
-        MappingType(mappingType), Enabled(mappingType != LayerDisabled)
+        MappingType(mappingType), Enabled(mappingType != LayerDisabled), DataPtr(layerDataPtr)
     {
         if(mappingType == LayerDisabled)
         {
@@ -36,23 +37,8 @@ namespace LevelComponents
         else if(mappingType == LayerTile8x8)
         {
             // Set
-            switch(ROMUtils::CurrentFile[layerDataPtr])
-            {
-            case 0:
-                Width = Height = 32;
-                break;
-            case 1:
-                Width = 64;
-                Height = 32;
-                break;
-            case 2:
-                Width = 32;
-                Height = 64;
-                break;
-            default:
-                // TODO error handling. This line should not be reached for valid layer data!
-                return;
-            }
+            Width = (1 + (ROMUtils::CurrentFile[layerDataPtr] & 1)) << 5;
+            Height = (1 + ((ROMUtils::CurrentFile[layerDataPtr] >> 1) & 1)) << 5;
 
             // Get the layer data
             LayerData = (unsigned short *) ROMUtils::LayerRLEDecompress(layerDataPtr + 1, Width * Height * 2);
@@ -86,7 +72,7 @@ namespace LevelComponents
     /// </summary>
     Layer::~Layer()
     {
-        if(LayerData == nullptr) return;
+        if(!LayerData) return;
 
         // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
         if(MappingType == LayerTile8x8)
@@ -191,6 +177,7 @@ namespace LevelComponents
     /// </param>
     void Layer::ReRenderTile(int X, int Y, unsigned short TileID, Tileset *tileset)
     {
+        dirty = true;
         int index = X + Y * Width;
         if(MappingType == LayerMap16)
         {
@@ -215,21 +202,25 @@ namespace LevelComponents
     /// </summary>
     void Layer::SetDisabled()
     {
-        if(LayerData == nullptr) return;
+        if(!LayerData) return;
         if(MappingType == LayerTile8x8) // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
         {
             for(auto iter = tiles.begin(); iter != tiles.end(); ++iter)
             {
                 delete(*iter);
             }
-        }else{ // If it is map16 type, then they are just pointer copies so only free the vector
+        }
+        else
+        {
+            // If it is map16 type, then they are just pointer copies so only free the vector
             tiles.clear();
         }
 
-        delete[] LayerData; LayerData = nullptr;
+        delete[] LayerData;
+        LayerData = nullptr;
         MappingType = LayerDisabled;
-        Enabled = false; Width = 0; Height = 0;
-        NewLayer = false;
+        Enabled = dirty = false;
+        Width = Height = 0;
     }
 
     /// <summary>
@@ -245,12 +236,14 @@ namespace LevelComponents
     {
         Width = layerWidth;
         Height = layerHeight;
-        NewLayer = true; Enabled = true;
+        dirty = Enabled = true;
         MappingType = LayerMap16;
-        if(LayerData != nullptr)
+        if(LayerData)
+        {
             delete[] LayerData;
+        }
         LayerData = new unsigned short[layerWidth * layerHeight];
-        memset(LayerData, 0, sizeof(char) * 2 * layerWidth * layerHeight);
+        memset(LayerData, 0, 2 * layerWidth * layerHeight);
     }
 
     /// <summary>
@@ -268,8 +261,7 @@ namespace LevelComponents
     void Layer::ChangeDimensions(int newWidth, int newHeight)
     {
         unsigned short *tmpLayerData = new unsigned short[newWidth * newHeight];
-        int boundX = qMin(Width, newWidth);
-        int boundY = qMin(Height, newHeight);
+        int boundX = qMin(Width, newWidth), boundY = qMin(Height, newHeight);
         unsigned short defaultValue = 0x0040;
         for(int i = 0; i < boundY; ++i)
         {
@@ -287,5 +279,37 @@ namespace LevelComponents
         Height = newHeight;
         delete LayerData;
         LayerData = tmpLayerData;
+        dirty = true;
+    }
+
+    /// <summary>
+    /// Create and returned compressed layer data (on the heap)
+    /// </summary>
+    /// <param name="dataSize">
+    /// The int to write the data size to after the compressed data array is created.
+    /// </param>
+    /// <returns>
+    /// Pointer to the compressed data.
+    /// </returns>
+    unsigned char *Layer::GetCompressedLayerData(unsigned int *dataSize)
+    {
+        unsigned char *dataBuffer;
+        unsigned int compressedSize = ROMUtils::LayerRLECompress(Width * Height, LayerData, &dataBuffer);
+        unsigned int sizeInfoLen = MappingType == LayerMap16 ? 2 : 1;
+        dataBuffer = (unsigned char*) realloc(dataBuffer, sizeInfoLen + compressedSize);
+        if(MappingType == LayerMap16)
+        {
+            memmove(dataBuffer + 2, dataBuffer, compressedSize);
+            dataBuffer[0] = (unsigned char) Width;
+            dataBuffer[1] = (unsigned char) Height;
+        }
+        else
+        {
+            memmove(dataBuffer + 1, dataBuffer, compressedSize);
+            unsigned char sizeByte = (Width >> 6) | ((Height >> 6) << 1);
+            dataBuffer[0] = sizeByte;
+        }
+        *dataSize = sizeInfoLen + compressedSize;
+        return dataBuffer;
     }
 }

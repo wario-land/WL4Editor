@@ -12,6 +12,8 @@
 
 namespace LevelComponents
 {
+    class Room;
+
     // This struct defines the header attributes for a Room. It is arranged similar to its format in the ROM file.
     struct __RoomHeader
     {
@@ -33,6 +35,9 @@ namespace LevelComponents
         unsigned int EntityTableNormal;
         unsigned int EntityTableSHard;
         unsigned char DATA_28[4];
+
+        __RoomHeader() {}
+        __RoomHeader(Room *room);
     };
 
     // This struct defines the attributes for a single camera control record in rooms with camera boxes.
@@ -60,9 +65,9 @@ namespace LevelComponents
     // This struct defines the attributes for a single entity record in RoomHeader EntityTable
     struct EntityRoomAttribute
     {
-        int YPos;
-        int XPos;
-        int EntityID;
+        unsigned char YPos;
+        unsigned char XPos;
+        unsigned char EntityID;
     };
 
     // Enumeration of the ways in which we can re-render the main graphics view
@@ -91,16 +96,18 @@ namespace LevelComponents
     class Room
     {
     private:
+        // This is an internal struct that is used for sorting layers by render priority
         struct DLS
         {
             Layer *layer;
             int index;
         } *drawLayers[4];
+
+        // Locals
         int EntityLayerZValue[4];
         enum __CameraControlType CameraControlType;
         unsigned int RoomID;
         unsigned int LevelID;
-        int TilesetID;
         unsigned int Width, Height;
         bool Layer0ColorBlending = false;
         int Layer0ColorBlendCoefficient_EVA = 16;
@@ -110,67 +117,85 @@ namespace LevelComponents
         int CurrentEntitySetID = 0;
         EntitySet *currentEntitySet = nullptr;
         std::vector<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
+        bool EntityListDirty[3];
         std::vector<Entity*> currentEntityListSource; // Initialize Entities here
         int currentDifficulty = 1;
         Layer *layers[4];
         Tileset *tileset;
         std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem *RenderedLayers[12]; // L0 - 3, E, D, C, A (may not exist)
+        bool CameraBoundaryDirty = false;
+
+        // Helper functions
         void FreeDrawLayers();
         void FreecurrentEntityListSource();
         void ResetEntitySet(int entitysetId);
 
     public:
+        // Object construction
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
         Room(Room *room);
         ~Room();
-        int GetTilesetID() { return TilesetID; }
-        Tileset *GetTileset() { return tileset; }
-        unsigned int GetRoomID() { return RoomID; }
-        unsigned int GetLevelID() { return LevelID; }
-        struct __RoomHeader GetRoomHeader() { return RoomHeader; }
-        void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; TilesetID = tilesetID; RoomHeader.TilesetID = (unsigned int)tilesetID; }
-        void PushBack_Door(Door* newdoor);
-        Layer *GetLayer(int LayerID) { return layers[LayerID]; }
-        void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
-        QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
-        bool IsLayer0ColorBlendingEnable() { return Layer0ColorBlending; }
-        void SetLayer0ColorBlendingEnabled(bool enability) { Layer0ColorBlending = enability; }
+
+        // Getters
+        unsigned int CountDoors() { return doors.size(); }
+        unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
+        std::vector<struct __CameraControlRecord*> GetCameraControlRecords() { return CameraControlRecords; }
+        enum __CameraControlType GetCameraControlType() { return CameraControlType; }
+        std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
+        int GetCurrentEntitySetID() { return CurrentEntitySetID; }
+        LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
+        std::vector<struct EntityRoomAttribute> GetEntityList(int difficulty_id) { return EntityList[difficulty_id]; }
+        bool GetEntityListDirty(int difficulty) { return EntityListDirty[difficulty]; }
         int GetEVA() { return Layer0ColorBlendCoefficient_EVA; }
         int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
-        void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
-        int GetWidth() { return (int) Width; }
-        void SetWidth(int _width) { Width = (unsigned int)_width; }
-        int GetHeight() { return (int) Height; }
-        void SetHeight(int _height) { Height = (unsigned int)_height; }
-        int GetLayer0MappingParam() { return (int) RoomHeader.Layer0MappingType; }
-        void SetLayer0MappingParam(int layer0MappingTypeParam) { RoomHeader.Layer0MappingType = layer0MappingTypeParam; }
+        unsigned int GetHeight() { return Height; }
+        unsigned int GetWidth() { return Width; }
+        Layer *GetLayer(int LayerID) { return layers[LayerID]; }
+        int GetLayer0MappingParam() { return RoomHeader.Layer0MappingType; }
         int GetLayerDataPtr(int LayerNum);
-        void SetLayerDataPtr(int LayerNum, int dataPtr);
-        bool IsLayer2Enabled() { return RoomHeader.Layer2MappingType; }
-        void SetLayer2Enabled(bool enability) { RoomHeader.Layer2MappingType = enability ? (unsigned char) 0x10 : (unsigned char) 0; }
+        int GetLayerEffectsParam() { return RoomHeader.LayerEffects; }
+        unsigned int GetLevelID() { return LevelID; }
+        struct __RoomHeader GetRoomHeader() { return RoomHeader; }
+        unsigned int GetRoomID() { return RoomID; }
+        Tileset *GetTileset() { return tileset; }
+        int GetTilesetID() { return RoomHeader.TilesetID; }
+        bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == '\x07'; }
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
-        void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? (unsigned char) 0x20 : (unsigned char) 0; }
-        bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == (unsigned char) 7; }
-        void SetBGLayerAutoScrollEnabled(bool enability);
-        int GetLayerEffectsParam() { return (int) RoomHeader.LayerEffects; }
-        LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
-        int CountDoors() { return (int)doors.size(); }
-        void SetDoors(std::vector<Door*> _doors) { doors = _doors; }
-        int GetLocalDoorID(int globalDoorId);
-        int GetCurrentEntitySetID() { return CurrentEntitySetID; }
-        void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
-        enum __CameraControlType GetCameraControlType() { return CameraControlType; } //Delete this line when PR
-        void SetCameraControlType(__CameraControlType new_control_type) { CameraControlType = new_control_type; RoomHeader.CameraControlType = (unsigned char) new_control_type; }
-        std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
-        int FindEntity(int XPos, int YPos);
+        bool IsCameraBoundaryDirty() { return CameraBoundaryDirty; }
+        bool IsLayer0ColorBlendingEnabled() { return Layer0ColorBlending; }
+        bool IsLayer2Enabled() { return RoomHeader.Layer2MappingType; }
+
+        // Setters
+        void AddDoor(Door *newdoor);
         bool AddEntity(int XPos, int YPos, int localEntityId);
-        void DeleteEntity(int index);
-        void DeleteDoor(int globalDoorIndex);
-        std::vector<struct __CameraControlRecord*> GetCameraControlRecords() { return CameraControlRecords; }
-        std::vector<struct EntityRoomAttribute> GetEntityList(int difficulty_id) { return EntityList[difficulty_id]; }
         void DeleteCameraLimitator(int index);
+        void DeleteDoor(int globalDoorIndex);
+        void DeleteEntity(int index);
+        void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
+        void SetBGLayerAutoScrollEnabled(bool enability);
+        void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }
+        void SetCameraControlType(__CameraControlType new_control_type) { CameraControlType = new_control_type; RoomHeader.CameraControlType = (unsigned char) new_control_type; }
+        void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
+        void SetDoorsVector(std::vector<Door*> _doors) { doors = _doors; }
+        void SetEntityListDirty(int difficulty, bool dirty) { EntityListDirty[difficulty] = dirty; }
+        void SetEntityListPtr(int difficulty, unsigned int ptr) { (&RoomHeader.EntityTableHard)[difficulty] = ptr; }
+        void SetHeight(int _height) { Height = (unsigned int) _height; }
+        void SetWidth(int _width) { Width = (unsigned int) _width; }
+        void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
+        void SetLayer0ColorBlendingEnabled(bool enability) { Layer0ColorBlending = enability; }
+        void SetLayer0MappingParam(int layer0MappingTypeParam) { RoomHeader.Layer0MappingType = layer0MappingTypeParam; }
+        void SetLayer2Enabled(bool enability) { RoomHeader.Layer2MappingType = enability ? '\x10' : '\x00'; }
+        void SetLayerDataPtr(int LayerNum, int dataPtr);
+        void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
+        void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; RoomHeader.TilesetID = (unsigned char) tilesetID; }
+
+        // Functions
         void AddCameraLimitator();
+        int FindEntity(int XPos, int YPos);
+        unsigned int GetLocalDoorID(int globalDoorId);
+        void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk, ROMUtils::SaveData *cameraPointerTableChunk, unsigned int *cameraPointerTableIndex);
+        QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
         void SetCameraLimitator(int index, __CameraControlRecord limitator_data);
     };
 }

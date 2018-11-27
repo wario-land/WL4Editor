@@ -50,20 +50,20 @@ void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *curren
     ClearCurrentLimitatorSetting();
     ui->LimitatorSetting_groupBox->setEnabled(false);
     enum LevelComponents::__CameraControlType currentcameracontroltype = currentroom->GetCameraControlType();
-    if(currentcameracontroltype == LevelComponents::FixedY)
+    if(currentcameracontroltype == LevelComponents::__CameraControlType::FixedY)
     {
         ui->CameraYFixed_radioButton->setChecked(true);
     }
-    else if(currentcameracontroltype == LevelComponents::NoLimit)
+    else if(currentcameracontroltype == LevelComponents::__CameraControlType::NoLimit)
     {
         ui->FollowWario_radioButton->setChecked(true);
     }
-    else if(currentcameracontroltype == LevelComponents::HasControlAttrs)
+    else if(currentcameracontroltype == LevelComponents::__CameraControlType::HasControlAttrs)
     {
         ui->UseCameraLimitators_radioButton->setChecked(true);
     }
 
-    if(currentcameracontroltype != LevelComponents::HasControlAttrs)
+    if(currentcameracontroltype != LevelComponents::__CameraControlType::HasControlAttrs)
     {
         ui->ExistingLimitators_groupBox->setEnabled(false);
     }
@@ -75,7 +75,7 @@ void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *curren
 }
 
 /// <summary>
-/// Perform static initializtion of constant data structures for the dock widget.
+/// Perform static initialization of constant data structures for the dock widget.
 /// </summary>
 void CameraControlDockWidget::StaticInitialization()
 {
@@ -123,25 +123,17 @@ void CameraControlDockWidget::SetCurrentLimitator()
             current_limitator_data.ChangeValueOffset = (unsigned char) limitator_type;
             switch(limitator_type)
             {
-            case 0: //Reset left side
-            {
+            case 0: // Reset left side
                 current_limitator_data.ChangedValue = (unsigned char) (ui->spinBox_x1->value() + ui->LimitatorSideOffset_spinBox->value());
                 break;
-            }
-            case 1: //Reset right side
-            {
+            case 1: // Reset right side
                 current_limitator_data.ChangedValue = (unsigned char) (ui->spinBox_x1->value() + ui->spinBox_width->value() - 1 + ui->LimitatorSideOffset_spinBox->value());
                 break;
-            }
-            case 2: //Reset upper side
-            {
+            case 2: // Reset upper side
                 current_limitator_data.ChangedValue = (unsigned char) (ui->spinBox_y1->value() + ui->LimitatorSideOffset_spinBox->value());
                 break;
-            }
-            case 3: //Reset lower side
-            {
+            case 3: // Reset lower side
                 current_limitator_data.ChangedValue = (unsigned char) (ui->spinBox_y1->value() + ui->spinBox_height->value() - 1 + ui->LimitatorSideOffset_spinBox->value());
-            }
             }
             current_limitator_data.x3 = (unsigned char) ui->TriggerBlockPositionX_spinBox->value();
             current_limitator_data.y3 = (unsigned char) ui->TriggerBlockPositionY_spinBox->value();
@@ -210,7 +202,7 @@ void CameraControlDockWidget::PaintListView()
 /// </summary>
 void CameraControlDockWidget::ClearListView()
 {
-    if(ListViewItemModel != nullptr)
+    if(ListViewItemModel)
     {
         ListViewItemModel->clear();
         delete ListViewItemModel;
@@ -222,7 +214,7 @@ void CameraControlDockWidget::ClearListView()
 /// Be called the listview is clicked and a limitator is selected.
 /// </summary>
 /// <param name="index">
-/// Referrence of the selected QModelIndex from the listview.
+/// Reference of the selected QModelIndex from the listview.
 /// </param>
 void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelIndex &index)
 {
@@ -255,7 +247,7 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
 }
 
 /// <summary>
-/// Be called when current camera limitator type is changed.
+/// Called when current camera limitator type is changed.
 /// </summary>
 /// <param name="index">
 /// Index of the current selected item in CameraLimitatorTypePicker_comboBox.
@@ -268,10 +260,11 @@ void CameraControlDockWidget::on_CameraLimitatorTypePicker_comboBox_currentIndex
     ui->TriggerBlockPositionX_spinBox->setValue(0);
     ui->TriggerBlockPositionY_spinBox->setValue(0);
     SetCurrentLimitator();
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
 }
 
 /// <summary>
-/// Be called when setting the x1 value of the current camera limitator.
+/// Called when setting the x1 value of the current camera limitator.
 /// </summary>
 /// <param name="arg1">
 /// Spinbox value of the widget.
@@ -282,11 +275,12 @@ void CameraControlDockWidget::on_spinBox_x1_valueChanged(int arg1)
     if(!IsSavingData) return;
     SetListviewItemText(SelectedLimitator);
     SetCurrentLimitator();
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
     // TODO: Reset the text in the listview
 }
 
 /// <summary>
-/// Be called when setting the y1 value of the current camera limitator.
+/// Called when setting the y1 value of the current camera limitator.
 /// </summary>
 /// <param name="arg1">
 /// Spinbox value of the widget.
@@ -297,11 +291,12 @@ void CameraControlDockWidget::on_spinBox_y1_valueChanged(int arg1)
     if(!IsSavingData) return;
     SetListviewItemText(SelectedLimitator);
     SetCurrentLimitator();
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
     // TODO: Reset the text in the listview
 }
 
 /// <summary>
-/// Be called when setting the width of the current camera limitator.
+/// Called when setting the width of the current camera limitator.
 /// </summary>
 /// <param name="arg1">
 /// Spinbox value of the widget.
@@ -312,11 +307,12 @@ void CameraControlDockWidget::on_spinBox_width_valueChanged(int arg1)
     if(!IsSavingData) return;
     SetListviewItemText(SelectedLimitator);
     SetCurrentLimitator();
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
     // TODO: Reset the text in the listview
 }
 
 /// <summary>
-/// Be called when setting the height of the current camera limitator.
+/// Called when setting the height of the current camera limitator.
 /// </summary>
 /// <param name="arg1">
 /// Spinbox value of the widget.
@@ -327,11 +323,12 @@ void CameraControlDockWidget::on_spinBox_height_valueChanged(int arg1)
     if(!IsSavingData) return;
     SetListviewItemText(SelectedLimitator);
     SetCurrentLimitator();
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
     // TODO: Reset the text in the listview
 }
 
 /// <summary>
-/// Be called when setting the sideoffset of the current camera limitator.
+/// Called when setting the sideoffset of the current camera limitator.
 /// </summary>
 /// <param name="arg1">
 /// Spinbox value of the widget.
@@ -341,10 +338,11 @@ void CameraControlDockWidget::on_LimitatorSideOffset_spinBox_valueChanged(int ar
     (void) arg1;
     if(!IsSavingData) return;
     SetCurrentLimitator();
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
 }
 
 /// <summary>
-/// Be called when setting the TriggerBlockPositionX of the current camera limitator.
+/// Called when setting the TriggerBlockPositionX of the current camera limitator.
 /// </summary>
 /// <param name="arg1">
 /// Spinbox value of the widget.
@@ -354,10 +352,11 @@ void CameraControlDockWidget::on_TriggerBlockPositionX_spinBox_valueChanged(int 
     (void) arg1;
     if(!IsSavingData) return;
     SetCurrentLimitator();
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
 }
 
 /// <summary>
-/// Be called when setting the TriggerBlockPositionY of the current camera limitator.
+/// Called when setting the TriggerBlockPositionY of the current camera limitator.
 /// </summary>
 /// <param name="arg1">
 /// Spinbox value of the widget.
@@ -367,10 +366,11 @@ void CameraControlDockWidget::on_TriggerBlockPositionY_spinBox_valueChanged(int 
     (void) arg1;
     if(!IsSavingData) return;
     SetCurrentLimitator();
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
 }
 
 /// <summary>
-/// Be called when CameraYFixed_radioButton is clicked.
+/// Called when CameraYFixed_radioButton is clicked.
 /// </summary>
 /// <param name="checked">
 /// Show if CameraYFixed_radioButton is been checked.
@@ -379,7 +379,7 @@ void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
 {
     if(checked)
     {
-        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::FixedY);
+        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::__CameraControlType::FixedY);
         SelectedLimitator = -1;
         ClearCurrentLimitatorSetting();
         ClearListView();
@@ -388,10 +388,11 @@ void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
 }
 
 /// <summary>
-/// Be called when FollowWario_radioButton is clicked.
+/// Called when FollowWario_radioButton is clicked.
 /// </summary>
 /// <param name="checked">
 /// Show if FollowWario_radioButton is been checked.
@@ -400,7 +401,7 @@ void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
 {
     if(checked)
     {
-        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::NoLimit);
+        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::__CameraControlType::NoLimit);
         SelectedLimitator = -1;
         ClearCurrentLimitatorSetting();
         ClearListView();
@@ -409,10 +410,11 @@ void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
 }
 
 /// <summary>
-/// Be called when UseCameraLimitators_radioButton is clicked.
+/// Called when UseCameraLimitators_radioButton is clicked.
 /// </summary>
 /// <param name="checked">
 /// Show if UseCameraLimitators_radioButton is been checked.
@@ -421,7 +423,7 @@ void CameraControlDockWidget::on_UseCameraLimitators_radioButton_clicked(bool ch
 {
     if(checked)
     {
-        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::HasControlAttrs);
+        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::__CameraControlType::HasControlAttrs);
         SelectedLimitator = -1;
         ClearCurrentLimitatorSetting();
         PaintListView();
@@ -430,20 +432,22 @@ void CameraControlDockWidget::on_UseCameraLimitators_radioButton_clicked(bool ch
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
 }
 
 /// <summary>
-/// Be called when AddCameraLimitator_pushButton is clicked.
+/// Called when AddCameraLimitator_pushButton is clicked.
 /// </summary>
 void CameraControlDockWidget::on_AddCameraLimitator_pushButton_clicked()
 {
     currentRoom->AddCameraLimitator();
     singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     PaintListView();
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
 }
 
 /// <summary>
-/// Be called when DeleteCameraLimitator_pushButton is clicked.
+/// Called when DeleteCameraLimitator_pushButton is clicked.
 /// </summary>
 void CameraControlDockWidget::on_DeleteCameraLimitator_pushButton_clicked()
 {
@@ -454,4 +458,5 @@ void CameraControlDockWidget::on_DeleteCameraLimitator_pushButton_clicked()
     ClearCurrentLimitatorSetting();
     singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     PaintListView();
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
 }

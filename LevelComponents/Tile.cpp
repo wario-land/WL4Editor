@@ -268,8 +268,7 @@ namespace LevelComponents
         }
         else
         {
-            // This area should never be reached (there cannot be a QImage in the map with 0 references)
-            assert(0);
+            assert(0 /* Cached QImage with 0 references */);
         }
     }
 }
