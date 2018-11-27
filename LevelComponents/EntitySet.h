@@ -49,7 +49,7 @@ namespace LevelComponents
         QPixmap GetPixmap(int paletteId);
 
     private:
-        int EntitySetID; // maximun 89 (from 0 to 89)
+        int EntitySetID; // from 0 to 89 inclusive
         QVector<QRgb> palettes[16];
         Tile8x8 *tile8x8data[0x480];
         std::vector<EntitySetinfoTableElement> EntityinfoTable;
@@ -59,7 +59,7 @@ namespace LevelComponents
 
         static constexpr const int EntitiesFirstActionFrameSetsPtrsData[129] =
         {
-            0,
+            0,                               // 0x00
             WL4Constants::Entity01_0x3B4F94,
             WL4Constants::Entity02_0x3B4FA4,
             WL4Constants::Entity03_0x3B4F84,
@@ -75,7 +75,7 @@ namespace LevelComponents
             0,
             0,
             0,
-            WL4Constants::Entity10_0x3DA17C,
+            WL4Constants::Entity10_0x3DA17C, // 0x10
             WL4Constants::Entity11_0x3B416C,
             WL4Constants::Entity12_0x3B43DC,
             WL4Constants::Entity13_0x3B43DC,
@@ -91,7 +91,7 @@ namespace LevelComponents
             WL4Constants::Entity1D_0x3BC570,
             WL4Constants::Entity1E_0x3BC8E4,
             WL4Constants::Entity1F_0x3BCEFC,
-            WL4Constants::Entity20_0x3BD42C,
+            WL4Constants::Entity20_0x3BD42C, // 0x20
             WL4Constants::Entity21_0x3BD660,
             WL4Constants::Entity22_0x3BDAF0,
             WL4Constants::Entity23_0x3BDD54,
@@ -107,7 +107,7 @@ namespace LevelComponents
             0,
             WL4Constants::Entity2E_0x3C48D4,
             WL4Constants::Entity2F_0x3C48F4,
-            WL4Constants::Entity30_0x3C4174,
+            WL4Constants::Entity30_0x3C4174, // 0x30
             WL4Constants::Entity31_0x3C41F4,
             WL4Constants::Entity32_0x3C4274,
             WL4Constants::Entity33_0x3C4314,
@@ -123,7 +123,7 @@ namespace LevelComponents
             WL4Constants::Entity3D_0x3C4CD8,
             WL4Constants::Entity3E_0x3C4F20,
             WL4Constants::Entity3F_0x3C53B4,
-            WL4Constants::Entity40_0x3C62FC,
+            WL4Constants::Entity40_0x3C62FC, // 0x40
             WL4Constants::Entity41_0x3C7034,
             WL4Constants::Entity42_0x3C770C,
             WL4Constants::Entity43_0x3C798C,
@@ -139,7 +139,7 @@ namespace LevelComponents
             WL4Constants::Entity4D_0x3C9C20,
             WL4Constants::Entity4E_0x3CA178,
             WL4Constants::Entity4F_0x3CA898,
-            WL4Constants::Entity50_0x3CA898,
+            WL4Constants::Entity50_0x3CA898, // 0x50
             WL4Constants::Entity51_0x3CE468,
             WL4Constants::Entity52_0x3B505C,
             WL4Constants::Entity53_0x3CFB58,
@@ -155,7 +155,7 @@ namespace LevelComponents
             WL4Constants::Entity5D_0x3C0A28,
             WL4Constants::Entity5E_0x3D0DB4,
             WL4Constants::Entity5F_0x3D0E94,
-            WL4Constants::Entity60_0x3D155C,
+            WL4Constants::Entity60_0x3D155C, // 0x60
             WL4Constants::Entity61_0x3D21E4,
             WL4Constants::Entity62_0x3D2570,
             WL4Constants::Entity63_0x3D27C8,
@@ -171,7 +171,7 @@ namespace LevelComponents
             0, //TODO: find the ptr for Entity6D
             WL4Constants::Entity6E_0x3DD720,
             WL4Constants::Entity6F_0x3DD658,
-            WL4Constants::Entity70_0x3DD668,
+            WL4Constants::Entity70_0x3DD668, // 0x70
             WL4Constants::Entity71_0x3DD678,
             WL4Constants::Entity72_0x3DDB14,
             WL4Constants::Entity73_0x3DE0E0,
@@ -187,7 +187,7 @@ namespace LevelComponents
             WL4Constants::Entity7D_0x3B59EC,
             WL4Constants::Entity7E_0x3F0F04,
             WL4Constants::Entity7F_0x3F122C,
-            WL4Constants::Entity80_0x3F1AA0
+            WL4Constants::Entity80_0x3F1AA0  // 0x80
         };
 
         static constexpr const int EntityPositinalOffset[258] =

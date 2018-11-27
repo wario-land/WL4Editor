@@ -21,10 +21,11 @@ namespace LevelComponents
         enum LayerMappingType MappingType;
         bool Enabled = false;
         std::vector<Tile*> tiles;
-        int Width = 0;int Height = 0;
+        int Width = 0, Height = 0;
         unsigned short *LayerData = nullptr;
         int LayerPriority = 0;
-        bool NewLayer = false;
+        bool dirty = false;
+        unsigned int DataPtr; // this pointer does not include the 0x8000000 bit
 
     public:
         Layer(int layerDataPtr, enum LayerMappingType mappingType);
@@ -40,9 +41,13 @@ namespace LevelComponents
         bool IsEnabled() { return Enabled; }
         void SetDisabled();
         void CreateNewLayer_type0x10(int layerWidth, int layerHeight);
-        bool IsNewLayer() { return NewLayer; }
         void ChangeDimensions(int newWidth, int newHeight);
+        bool IsDirty() { return dirty; }
+        void SetClean() { dirty = false; }
+        unsigned char *GetCompressedLayerData(unsigned int *dataSize);
         ~Layer();
+        unsigned int GetDataPtr() { return DataPtr; }
+        void SetDataPtr(unsigned int _dataPtr) { DataPtr = _dataPtr; }
     };
 }
 

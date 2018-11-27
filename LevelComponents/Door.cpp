@@ -2,37 +2,6 @@
 
 namespace LevelComponents
 {
-    Door::Door(__DoorEntry _DoorEntry, unsigned char _RoomID, LevelComponents::DoorType _DoorType, unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2, int doorId) :
-        type(_DoorType),
-        RoomID(_RoomID),
-        X1(_X1),
-        X2(_X2),
-        Y1(_Y1),
-        Y2(_Y2),
-        DoorID(doorId),
-        DoorEntry(_DoorEntry)
-    {
-        // nothing here (yet)
-    }
-
-    void Door::SetDelta(unsigned char _DeltaX, unsigned char _DeltaY)
-    {
-        DeltaX = (signed char) _DeltaX;
-        DeltaY = (signed char) _DeltaY;
-    }
-
-    void Door::SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2)
-    {
-        X1 = _X1;
-        X2 = _X2;
-        Y1 = _Y1;
-        Y2 = _Y2;
-        DoorEntry.x1 = _X1;
-        DoorEntry.x2 = _X2;
-        DoorEntry.y1 = _Y1;
-        DoorEntry.y2 = _Y2;
-    }
-
     /// <summary>
     /// Determine if a door is unused.
     /// </summary>
@@ -41,7 +10,7 @@ namespace LevelComponents
     /// </return>
     bool Door::IsUnused()
     {
-        return type != Portal && DestinationDoor == nullptr;
+        return DoorEntry.DoorTypeByte != Portal && DestinationDoor == nullptr;
     }
 
     /// <summary>
@@ -53,16 +22,16 @@ namespace LevelComponents
     QPoint Door::GetWarioOriginalPosition_x4()
     {
         int ypos, xpos;
-        if(this->type == NormalDoor)
+        if(DoorEntry.DoorTypeByte == NormalDoor)
         {
-            ypos = (Y2 + 1) << 6;
-            xpos = ((X1 + 1) << 6) - 1;
+            xpos = ((DoorEntry.x1 + 1) << 6) - 1;
+            ypos = (DoorEntry.y2 + 1) << 6;
             // The ypos is related to current Wario animations, we only generate case for standing Wario
         }
         else
         {
-            xpos = ((X1 + 1) << 6) + 4 * (DeltaX + 8);
-            ypos = ((Y2 + 1) << 6) + 4 * DeltaY - 1;
+            xpos = ((DoorEntry.x1 + 1) << 6) + 4 * (DoorEntry.HorizontalDelta + 8);
+            ypos = ((DoorEntry.y2 + 1) << 6) + 4 * DoorEntry.VerticalDelta - 1;
         }
         QPoint WarioLeftTopPosition;
         WarioLeftTopPosition.setX(xpos);

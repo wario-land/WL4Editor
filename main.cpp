@@ -14,8 +14,12 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <lmcons.h>
+#if _MSC_VER && !__INTEL_COMPILER
 #pragma comment(lib,"Advapi32.lib")
-#endif
+#endif // _MSC_VER
+#endif // _WIN32
+
+#include "Compress.h"
 
 #ifdef linux
 #include <unistd.h>

@@ -137,7 +137,7 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
 void EditModeDockWidget::on_CheckBox_Layer0View_stateChanged(int arg1)
 {
     (void) arg1;
-    if(ui->CheckBox_Layer0View->isChecked() && singleton->GetCurrentRoom()->IsLayer0ColorBlendingEnable())
+    if(ui->CheckBox_Layer0View->isChecked() && singleton->GetCurrentRoom()->IsLayer0ColorBlendingEnabled())
     {
 
         ui->CheckBox_AlphaView->setChecked(true);
