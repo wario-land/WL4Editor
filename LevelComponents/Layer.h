@@ -25,7 +25,7 @@ namespace LevelComponents
         unsigned short *LayerData = nullptr;
         int LayerPriority = 0;
         bool dirty = false;
-        unsigned int DataPtr;
+        unsigned int DataPtr; // this pointer does not include the 0x8000000 bit
 
     public:
         Layer(int layerDataPtr, enum LayerMappingType mappingType);

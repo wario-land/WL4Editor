@@ -170,6 +170,7 @@ void WL4EditorWindow::OpenROM()
         addDockWidget(Qt::RightDockWidgetArea, CameraControlWidget);
         CameraControlWidget->setVisible(false);
         EntitySetWidget->setVisible(false);
+        EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
         CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
     }
@@ -194,7 +195,7 @@ bool *WL4EditorWindow::GetLayersVisibilityArray()
 
 void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity()
 {
-    ui->graphicsView->UnSelectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity();
 }
 
 /// <summary>
@@ -432,7 +433,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     }
 
     // unselect Door and Entity
-    ui->graphicsView->UnSelectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity();
 
     // Load the first level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
@@ -471,7 +472,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
         return;
     }
     // unselect Door and Entity
-    ui->graphicsView->UnSelectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity();
 
     // Load the previous room
     --selectedRoom;
@@ -501,7 +502,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
         return;
     }
     // unselect Door and Entity
-    ui->graphicsView->UnSelectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity();
 
     // Load the next room
     ++selectedRoom;

@@ -65,9 +65,9 @@ namespace LevelComponents
     // This struct defines the attributes for a single entity record in RoomHeader EntityTable
     struct EntityRoomAttribute
     {
-        int YPos;
-        int XPos;
-        int EntityID;
+        unsigned char YPos;
+        unsigned char XPos;
+        unsigned char EntityID;
     };
 
     // Enumeration of the ways in which we can re-render the main graphics view
@@ -117,6 +117,7 @@ namespace LevelComponents
         int CurrentEntitySetID = 0;
         EntitySet *currentEntitySet = nullptr;
         std::vector<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
+        bool EntityListDirty[3];
         std::vector<Entity*> currentEntityListSource; // Initialize Entities here
         int currentDifficulty = 1;
         Layer *layers[4];
@@ -145,6 +146,7 @@ namespace LevelComponents
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
         std::vector<struct EntityRoomAttribute> GetEntityList(int difficulty_id) { return EntityList[difficulty_id]; }
+        bool GetEntityListDirty(int difficulty) { return EntityListDirty[difficulty]; }
         int GetEVA() { return Layer0ColorBlendCoefficient_EVA; }
         int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
         unsigned int GetHeight() { return Height; }
@@ -176,6 +178,8 @@ namespace LevelComponents
         void SetCameraControlType(__CameraControlType new_control_type) { CameraControlType = new_control_type; RoomHeader.CameraControlType = (unsigned char) new_control_type; }
         void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
         void SetDoorsVector(std::vector<Door*> _doors) { doors = _doors; }
+        void SetEntityListDirty(int difficulty, bool dirty) { EntityListDirty[difficulty] = dirty; }
+        void SetEntityListPtr(int difficulty, unsigned int ptr) { (&RoomHeader.EntityTableHard)[difficulty] = ptr; }
         void SetHeight(int _height) { Height = (unsigned int) _height; }
         void SetWidth(int _width) { Width = (unsigned int) _width; }
         void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }

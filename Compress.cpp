@@ -98,7 +98,7 @@ namespace ROMUtils
             }
             i += len;
         }
-        AddTerminationFlag(compressedData);
+        AddOpcode(compressedData, 0, false);
 
         // Create the dynamically allocated char array
         unsigned char *compressed = new unsigned char[compressedData.size()];

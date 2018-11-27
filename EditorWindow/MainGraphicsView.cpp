@@ -85,7 +85,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     }
                 }
                 SelectedDoorID = -1;
-                DOOR_FOUND:;
+DOOR_FOUND:     ;
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
         }
@@ -96,6 +96,8 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             {
                 bool success = room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
                 assert(success /* Failure to add entity */); // TODO: Show information if failure
+                int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                room->SetEntityListDirty(difficulty, true);
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
         }
@@ -125,7 +127,10 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
     }
 }
 
-void MainGraphicsView::UnSelectDoorAndEntity()
+/// <summary>
+/// This function will deselect doors and entities.
+/// </summary>
+void MainGraphicsView::DeselectDoorAndEntity()
 {
     SelectedDoorID = -1;
     SelectedEntityID = -1;

@@ -33,6 +33,7 @@ namespace LevelComponents
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
         memset(drawLayers, 0, sizeof(drawLayers));
         memset(EntityLayerZValue, 0, sizeof(EntityLayerZValue));
+        memset(EntityListDirty, 0, sizeof(EntityListDirty));
 
         // Copy the room header information
         memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
@@ -84,18 +85,15 @@ namespace LevelComponents
         }
 
         // Load Entity list for each difficulty level
-        for(int i = 0; i < 3; i++)
+        for(unsigned int i = 0; i < 3; i++)
         {
-            int Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
-            int k = 0;
-            while(ROMUtils::CurrentFile[Listaddress + 3 * k] != (unsigned char) '\xFF') // maximum entity count is 46
+            unsigned int Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
+            unsigned int k = 0;
+            while(ROMUtils::CurrentFile[Listaddress + 3 * k] != 0xFF) // maximum entity count is 46
             {
-                EntityRoomAttribute tmpEntityroomattribute;
-                tmpEntityroomattribute.YPos     = ROMUtils::CurrentFile[Listaddress + 3 * k];
-                tmpEntityroomattribute.XPos     = ROMUtils::CurrentFile[Listaddress + 3 * k + 1];
-                tmpEntityroomattribute.EntityID = ROMUtils::CurrentFile[Listaddress + 3 * k + 2];
+                struct EntityRoomAttribute tmpEntityroomattribute;
+                memcpy(&tmpEntityroomattribute, ROMUtils::CurrentFile + Listaddress + 3 * k++, sizeof(struct EntityRoomAttribute));
                 EntityList[i].push_back(tmpEntityroomattribute);
-                k++;
             }
         }
     }
@@ -113,6 +111,7 @@ namespace LevelComponents
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
         memset(drawLayers, 0, sizeof(drawLayers));
         memset(EntityLayerZValue, 0, sizeof(EntityLayerZValue));
+        memset(EntityListDirty, 0, sizeof(EntityListDirty));
 
         // Copy the room header information
         RoomHeader = room->GetRoomHeader();
@@ -124,12 +123,12 @@ namespace LevelComponents
         // Set up the layer data
         Width = room->GetWidth();
         Height = room->GetHeight();
-        unsigned char *roomheader_charptr = (unsigned char *) &RoomHeader; //TODO: the following code need to be re-implemented, add deep copy constructor for Layer class
-        int *roomDataPtr = (int *) (&RoomHeader.Layer0Data);
+        unsigned char *roomheader_charptr = (unsigned char*) &RoomHeader; //TODO: the following code need to be re-implemented, add deep copy constructor for Layer class
+        int *roomDataPtr = (int*) (&RoomHeader.Layer0Data);
         for(int i = 0; i < 4; ++i)
         {
-            enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(*(roomheader_charptr + i + 1) & 0x30);
-            int layerPtr = (*(roomDataPtr + i)) & 0x7FFFFFF;
+            enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(roomheader_charptr[i + 1] & 0x30);
+            int layerPtr = roomDataPtr[i] & 0x7FFFFFF;
             layers[i] = new Layer(layerPtr, mappingType);
         }
 
@@ -850,9 +849,34 @@ namespace LevelComponents
         }
 
         // Create entity list chunks
+        unsigned int *entityPtrs = layerPtrs + 5;
         for(unsigned int i = 0; i < 3; ++i)
         {
-            // TODO
+            if(EntityListDirty[i])
+            {
+                unsigned int entityListSize = (EntityList[i].size() + 1) * sizeof(struct EntityRoomAttribute);
+                struct ROMUtils::SaveData entityListChunk =
+                {
+                    RoomID * sizeof(struct __RoomHeader) + 28 + i * 4,
+                    entityListSize,
+                    (unsigned char*) malloc(entityListSize),
+                    ROMUtils::SaveDataIndex++,
+                    true,
+                    headerChunk->index,
+                    (&RoomHeader.EntityTableHard)[i] & 0x7FFFFFF,
+                    ROMUtils::SaveDataChunkType::EntityListChunk
+                };
+                for(unsigned int j = 0; j < EntityList[i].size(); ++j)
+                {
+                    memcpy(entityListChunk.data + j * sizeof(struct EntityRoomAttribute), &EntityList[i][j], sizeof(struct EntityRoomAttribute));
+                    memset(entityListChunk.data + EntityList[i].size() * sizeof(struct EntityRoomAttribute), 0xFF, sizeof(struct EntityRoomAttribute));
+                }
+                chunks.append(entityListChunk);
+            }
+            else
+            {
+                entityPtrs[i] = (&RoomHeader.EntityTableHard)[i];
+            }
         }
 
         // Create camera boundary chunk, if it is the appropriate type

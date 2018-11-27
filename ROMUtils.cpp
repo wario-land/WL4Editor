@@ -219,7 +219,7 @@ namespace ROMUtils
         void *upperData = Upper->GetCompressedData();
         memcpy(*OutputCompressedData, lowerData, lowerLength);
         memcpy(*OutputCompressedData + lowerLength, upperData, upperLength);
-        memset(*OutputCompressedData + lowerLength + upperLength, 0, 1);
+        (*OutputCompressedData)[lowerLength + upperLength] = '\0';
 
         // Clean up
         delete separatedBytes;
@@ -399,6 +399,7 @@ namespace ROMUtils
             struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
                 (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
             unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
+            unsigned int *entityListPtrs = (unsigned int*) &roomHeader->EntityTableHard;
             LevelComponents::Room *room = rooms[i];
             room->SetCameraBoundaryDirty(false);
             for(unsigned int j = 0; j < 4; ++j)
@@ -406,6 +407,11 @@ namespace ROMUtils
                 LevelComponents::Layer *layer = room->GetLayer(j);
                 layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
                 layer->SetClean();
+            }
+            for(unsigned int j = 0; j < 3; ++j)
+            {
+                room->SetEntityListDirty(j, false);
+                room->SetEntityListPtr(j, entityListPtrs[j] | 0x8000000);
             }
         }
     }
