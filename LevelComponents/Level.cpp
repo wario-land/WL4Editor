@@ -388,15 +388,15 @@ namespace LevelComponents
             ROMUtils::PointerFromData(LevelNamePtr),
             ROMUtils::SaveDataChunkType::LevelNameChunkType
         };
-        memset(levelNameChunk.data, 0xFF, 26);
-        unsigned char *str = levelNameChunk.data + (26 - LevelName.size()) / 2;
-        foreach(char c, LevelName)
+        assert(LevelName.size() == 26 /* Level name must be internally represented as 26 characters in length */);
+        for(unsigned int i = 0; i < 26; ++i)
         {
+            char c = LevelName[i];
             if(c == ' ')                { c = '\xFF'; }
             else if(c <= 57)            { c -= 48; }
             else if(c >= 65 && c <= 90) { c -= 55; }
             else                        { c -= 61; }
-            *str++ = c;
+            levelNameChunk.data[i] = c;
         }
 
         chunks.append(roomHeaders);

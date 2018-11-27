@@ -763,7 +763,7 @@ namespace LevelComponents
     /// </return>
     int Room::GetLayerDataPtr(int LayerNum)
     {
-        assert(!(LayerNum & 0xFFFFFFFC)); // 0 <= LayerNum < 4
+        assert(!(LayerNum & 0xFFFFFFFC) /* LayerNum must be within range [0, 4) */);
         return ((unsigned int*)(&RoomHeader.Layer0Data))[LayerNum] & 0x7FFFFFF;
     }
 
@@ -772,7 +772,7 @@ namespace LevelComponents
     /// </summary>
     void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
     {
-        assert(!(LayerNum & 0xFFFFFFFC));
+        assert(!(LayerNum & 0xFFFFFFFC) /* LayerNum must be within range [0, 4) */);
         ((unsigned int*)(&RoomHeader.Layer0Data))[LayerNum] = dataPtr;
     }
 
@@ -804,8 +804,8 @@ namespace LevelComponents
             if(doors[i]->GetGlobalDoorID() == globalDoorId)
             return i;
         }
+        assert(0 /* globalDoorId must match one of the door's global ID */); // TODO: Error handling
         return 0xFFFFFFFF;
-        assert(0); // TODO: Error handling
     }
 
     /// <summary>

@@ -64,7 +64,7 @@ namespace ROMUtils
     unsigned int PointerFromData(int address)
     {
         unsigned int ret = IntFromData(address) & 0x7FFFFFF;
-        assert(ret < CurrentFileSize); // Fail if the pointer is out of range. TODO proper error handling
+        assert(ret < CurrentFileSize /* Pointer is out of range */); // TODO proper error handling
         return ret;
     }
 
@@ -326,8 +326,7 @@ namespace ROMUtils
             if(chunks[i].alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
             if(!chunkAddr)
             {
-                // Could not find free space in ROM
-                assert(0);
+                assert(0 /* Could not find free space in ROM */);
             }
             indexToChunkPtr[chunks[i].index] = chunkAddr;
             startAddr = chunkAddr + chunkSize; // do not re-search old areas of the ROM
@@ -354,7 +353,7 @@ namespace ROMUtils
             // Create the RATS tag
             unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
             strncpy((char*) destPtr, "STAR", 4);
-            assert(!(chunk.size & 0xFFFF0000)); // size must be a 16-bit value
+            assert(!(chunk.size & 0xFFFF0000) /* Chunk size must be a 16-bit value */);
             unsigned short chunkLen = (unsigned short) chunk.size;
             *(unsigned short*) (destPtr + 4) = chunkLen;
             *(unsigned short*) (destPtr + 6) = ~chunkLen;
@@ -379,8 +378,7 @@ namespace ROMUtils
         }
         else
         {
-            // can't open file to save ROM
-            assert(0);
+            assert(0 /* Can't open file to save ROM */);
         }
         file.close();
 
