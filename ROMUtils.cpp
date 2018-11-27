@@ -213,12 +213,13 @@ namespace ROMUtils
 
         // Create the data to return
         unsigned int lowerLength = Lower->GetCompressedLength(), upperLength = Upper->GetCompressedLength();
-        unsigned int size = lowerLength + upperLength;
+        unsigned int size = lowerLength + upperLength + 1;
         *OutputCompressedData = new unsigned char[size];
         void *lowerData = Lower->GetCompressedData();
         void *upperData = Upper->GetCompressedData();
         memcpy(*OutputCompressedData, lowerData, lowerLength);
         memcpy(*OutputCompressedData + lowerLength, upperData, upperLength);
+        memset(*OutputCompressedData + lowerLength + upperLength, 0, 1);
 
         // Clean up
         delete separatedBytes;

@@ -16,6 +16,7 @@ namespace ROMUtils
         virtual int GetTypeIdentifier() = 0;
         virtual int GetMinimumRunSize() = 0;
         virtual void AddOpcode(QVector<unsigned char> &compressedData, unsigned short opcode, bool runmode) = 0;
+        virtual void AddTerminationFlag(QVector<unsigned char> &compressedData) = 0;
         RLEMetadata(void *data, unsigned int len) : data(data), data_len(len) { }
         void InitializeJumpTableHelper(unsigned short jumpLimit);
         unsigned int GetCompressedLengthHelper(unsigned int opcodeSize);
@@ -33,9 +34,10 @@ namespace ROMUtils
         int GetMinimumRunSize() { return 3; }
         void AddOpcode(QVector<unsigned char> &compressedData, unsigned short opcode, bool runmode)
         {
-            if(!runmode) opcode |= 0x80;
+            if(runmode) opcode |= 0x80;
             compressedData.append((unsigned char) opcode);
         }
+        void AddTerminationFlag(QVector<unsigned char> &compressedData) { compressedData.append((unsigned char) 0); }
     public:
         RLEMetadata8Bit(void *data, unsigned int len) : RLEMetadata(data, len) { InitializeJumpTable(); }
         unsigned int GetCompressedLength() { return GetCompressedLengthHelper(1); }
@@ -49,10 +51,11 @@ namespace ROMUtils
         int GetMinimumRunSize() { return 5; }
         void AddOpcode(QVector<unsigned char> &compressedData, unsigned short opcode, bool runmode)
         {
-            if(!runmode) opcode |= 0x8000;
-            compressedData.append((unsigned char) opcode);
+            if(runmode) opcode |= 0x8000;
             compressedData.append((unsigned char) (opcode >> 8));
+            compressedData.append((unsigned char) opcode);
         }
+        void AddTerminationFlag(QVector<unsigned char> &compressedData) { compressedData.append((unsigned char) 0); compressedData.append((unsigned char) 0); }
     public:
         RLEMetadata16Bit(void *data, unsigned int len) : RLEMetadata(data, len) { InitializeJumpTable(); }
         unsigned int GetCompressedLength() { return GetCompressedLengthHelper(2); }
