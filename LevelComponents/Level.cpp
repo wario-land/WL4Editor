@@ -283,7 +283,7 @@ namespace LevelComponents
         unsigned int roomTablePtr = WL4Constants::RoomDataTable + levelIndex * 4;
         unsigned int roomHeaderChunkSize = rooms.size() * sizeof(struct __RoomHeader);
         unsigned int doorTablePtr = WL4Constants::DoorTable + levelIndex * 4;
-        unsigned int doorChunkSize = doors.size() * sizeof(struct __DoorEntry);
+        unsigned int doorChunkSize = (doors.size() + 1) * sizeof(struct __DoorEntry);
         unsigned int LevelNamePtr = WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4;
 
         // Create the contiguous room header chunk
@@ -374,6 +374,7 @@ namespace LevelComponents
             entryStruct.LinkerDestination = indexMapping[doors[i]->GetDestinationDoor()];
             memcpy(doorChunk.data + i * sizeof(struct __DoorEntry), &entryStruct, sizeof(struct __DoorEntry));
         }
+        memset(doorChunk.data + doors.size() * sizeof(struct __DoorEntry), 0, sizeof(struct __DoorEntry));
 
         // Create the level name chunk
         struct ROMUtils::SaveData levelNameChunk =
@@ -391,9 +392,10 @@ namespace LevelComponents
         unsigned char *str = levelNameChunk.data + (26 - LevelName.size()) / 2;
         foreach(char c, LevelName)
         {
-            if(c <= 57) { c -= 48; }
+            if(c == ' ')                { c = '\xFF'; }
+            else if(c <= 57)            { c -= 48; }
             else if(c >= 65 && c <= 90) { c -= 55; }
-            else { c -= 61; }
+            else                        { c -= 61; }
             *str++ = c;
         }
 

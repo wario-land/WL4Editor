@@ -254,7 +254,7 @@ namespace ROMUtils
             if(STARmatch < 4)
             {
                 // STAR not found at current address
-                freeBytes += qMin(STARmatch, 1);
+                freeBytes += qMax(STARmatch, 1);
             }
             else
             {
