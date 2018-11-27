@@ -43,7 +43,7 @@ namespace DialogParams
         RoomConfigParams(LevelComponents::Room *room) :
             CurrentTilesetIndex(room->GetTilesetID()),
             Layer0Enable(room->GetLayer0MappingParam() != 0),
-            Layer0Alpha(room->IsLayer0ColorBlendingEnable()),
+            Layer0Alpha(room->IsLayer0ColorBlendingEnabled()),
             LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
             Layer0MappingTypeParam(room->GetLayer0MappingParam()),
             RoomWidth(room->GetWidth()),

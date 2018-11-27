@@ -106,7 +106,6 @@ void WL4EditorWindow::LoadRoomUIUpdate()
     // Render the screen
     RenderScreenFull();
     SetEditModeDockWidgetLayerEditability();
-    EditModeWidget->SetDifficultyRadioBox(1);
 }
 
 /// <summary>
@@ -171,6 +170,7 @@ void WL4EditorWindow::OpenROM()
         addDockWidget(Qt::RightDockWidgetArea, CameraControlWidget);
         CameraControlWidget->setVisible(false);
         EntitySetWidget->setVisible(false);
+        EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
         CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
         EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
@@ -186,7 +186,7 @@ void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
     EditModeWidget->SetLayersCheckBoxEnabled(1, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(2, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(3, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3)->IsEnabled());
-    EditModeWidget->SetLayersCheckBoxEnabled(7, CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnable());
+    EditModeWidget->SetLayersCheckBoxEnabled(7, CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnabled());
 }
 
 bool *WL4EditorWindow::GetLayersVisibilityArray()
@@ -196,7 +196,7 @@ bool *WL4EditorWindow::GetLayersVisibilityArray()
 
 void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity()
 {
-    ui->graphicsView->UnSelectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity();
 }
 
 /// <summary>
@@ -316,8 +316,7 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
     CurrentLevel->DeleteDoor(globalDoorIndex);
 
     // Decline the GlobalDoorId for the Doors indexed after the deleted Door
-    int afterDoornum = (int) CurrentLevel->GetDoors().size() - globalDoorIndex;
-    if(afterDoornum)
+    if(CurrentLevel->GetDoors().size() - globalDoorIndex)
     {
         for(unsigned int i = globalDoorIndex; i < CurrentLevel->GetDoors().size(); ++i)
         {
@@ -435,7 +434,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     }
 
     // unselect Door and Entity
-    ui->graphicsView->UnSelectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity();
 
     // Load the first level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
@@ -474,7 +473,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
         return;
     }
     // unselect Door and Entity
-    ui->graphicsView->UnSelectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity();
 
     // Load the previous room
     --selectedRoom;
@@ -504,7 +503,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
         return;
     }
     // unselect Door and Entity
-    ui->graphicsView->UnSelectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity();
 
     // Load the next room
     ++selectedRoom;
@@ -617,17 +616,25 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
 void WL4EditorWindow::on_actionNew_Door_triggered()
 {
     if(!firstROMLoaded) return;
-    LevelComponents::DoorType type = LevelComponents::Instant;
     LevelComponents::__DoorEntry newDoorEntry;
     memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
     newDoorEntry.DoorTypeByte = (unsigned char) 2;
     newDoorEntry.EntitySetID = (unsigned char) 1;
     newDoorEntry.RoomID = (unsigned char) selectedRoom;
-    LevelComponents::Door *newDoor = new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, type, 0, 0, 0, 0, CurrentLevel->GetDoors().size());
+    newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
+    LevelComponents::Door *newDoor = new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, CurrentLevel->GetDoors().size());
     newDoor->SetEntitySetID((unsigned char) 1);
-    newDoor->SetBGM((unsigned int) 0);
-    newDoor->SetDelta((unsigned int) 0, (unsigned int) 0);
+    newDoor->SetBGM(0);
+    newDoor->SetDelta(0, 0);
     newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
     CurrentLevel->AddDoor(newDoor);
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+}
+
+/// <summary>
+/// Call the function which saves the currently loaded level
+/// </summary>
+void WL4EditorWindow::on_actionSave_ROM_triggered()
+{
+    ROMUtils::SaveFile();
 }

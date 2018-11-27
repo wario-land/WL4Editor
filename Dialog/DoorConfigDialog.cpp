@@ -50,13 +50,13 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->TableView_EntityFilter->setModel(EntityFilterTable);
 
     // Distribute Doors into the temp CurrentRoom
-    tmpCurrentRoom->SetDoors(_level->GetRoomDoors(currentroom->GetRoomID()));
-    tmpDestinationRoom->SetDoors(_level->GetRoomDoors(currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()));
+    tmpCurrentRoom->SetDoorsVector(_level->GetRoomDoors(currentroom->GetRoomID()));
+    tmpDestinationRoom->SetDoorsVector(_level->GetRoomDoors(currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()));
 
     // Initialize UI elements
     ui->ComboBox_DoorType->addItems(DoortypeSet);
     LevelComponents::Door *currentdoor = tmpCurrentRoom->GetDoor(doorID);
-    ui->ComboBox_DoorType->setCurrentIndex(currentdoor->GetDoortypeNum() - 1);
+    ui->ComboBox_DoorType->setCurrentIndex(currentdoor->GetDoorTypeNum() - 1);
     ui->SpinBox_DoorX->setValue(currentdoor->GetX1());
     ui->SpinBox_DoorY->setValue(currentdoor->GetY1());
     int doorwidth = currentdoor->GetX2() - currentdoor->GetX1() + 1;
@@ -76,7 +76,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     doorofLevelSet << "Disable destination door";
     for(unsigned int i = 1; i < _level->GetDoors().size(); ++i)
     {
-        doorofLevelSet << _level->GetDoors()[i]->GetDoorname();
+        doorofLevelSet << _level->GetDoors()[i]->GetDoorName();
     }
     ui->ComboBox_DoorDestinationPicker->addItems(doorofLevelSet);
     ui->ComboBox_DoorDestinationPicker->setCurrentIndex(currentdoor->GetDestinationDoor()->GetGlobalDoorID());
@@ -373,7 +373,7 @@ void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int
 {
     delete tmpDestinationRoom;
     tmpDestinationRoom = new LevelComponents::Room(_currentLevel->GetRooms()[_currentLevel->GetDoors()[index]->GetRoomID()]);
-    tmpDestinationRoom->SetDoors(_currentLevel->GetRoomDoors((unsigned int) _currentLevel->GetDoors()[index]->GetRoomID()));
+    tmpDestinationRoom->SetDoorsVector(_currentLevel->GetRoomDoors((unsigned int) _currentLevel->GetDoors()[index]->GetRoomID()));
     _currentLevel->GetDoors()[index]->SetDestinationDoor(_currentLevel->GetDoors()[index]);
     if(index != 0)
     {
@@ -451,7 +451,7 @@ void DoorConfigDialog::on_ComboBox_DoorType_currentIndexChanged(int index)
 {
     if(!IsInitialized) return;
     LevelComponents::Door *currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
-    if((index == 0) && (currentdoor0->GetDoortypeNum() != 1))
+    if((index == 0) && (currentdoor0->GetDoorTypeNum() != 1))
     {
         QMessageBox::information(this, QString("Info"), QString("Unless you know what you are doing, don't put more than 1 Portal-type Door (vortex) in one level."));
     }

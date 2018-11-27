@@ -15,7 +15,7 @@ public:
     void mousePressEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
     int GetSelectedDoorID() { return SelectedDoorID; }
-    void UnSelectDoorAndEntity();
+    void DeselectDoorAndEntity();
 
 private:
     int SelectedDoorID = -1;

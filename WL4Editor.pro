@@ -47,6 +47,7 @@ SOURCES += \
     Dialog/DoorConfigDialog.cpp \
     LevelComponents/Entity.cpp \
     DockWidget/EntitySetDockWidget.cpp \
+    Compress.cpp \
     DockWidget/CameraControlDockWidget.cpp
 
 HEADERS += \
@@ -72,6 +73,7 @@ HEADERS += \
     Dialog/DoorConfigDialog.h \
     LevelComponents/Entity.h \
     DockWidget/EntitySetDockWidget.h \
+    Compress.h \
     DockWidget/CameraControlDockWidget.h
 
 FORMS += \
