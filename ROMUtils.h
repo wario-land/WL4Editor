@@ -23,7 +23,7 @@ namespace ROMUtils
     unsigned char *LayerRLEDecompress(int address, int outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
     int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
-    void SaveFile();
+    void SaveFile(QString fileName);
 
     enum SaveDataChunkType {
         NullType                = '\x00',
