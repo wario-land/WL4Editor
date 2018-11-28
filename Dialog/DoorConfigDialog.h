@@ -63,7 +63,8 @@ private slots:
 private:
     Ui::DoorConfigDialog *ui;
     LevelComponents::Level *_currentLevel;
-    LevelComponents::Room *tmpCurrentRoom = nullptr;
+    LevelComponents::Room *CurrentRoom = nullptr; // Use this to reset current Door
+    LevelComponents::Room *tmpCurrentRoom = nullptr; // Use this to render Door preview
     LevelComponents::Room *tmpDestinationRoom = nullptr;
     int DoorID = -1;
     bool IsInitialized = false;

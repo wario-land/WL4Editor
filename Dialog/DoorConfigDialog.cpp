@@ -22,6 +22,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     QDialog(parent),
     ui(new Ui::DoorConfigDialog),
     _currentLevel(_level),
+    CurrentRoom(currentroom),
     tmpCurrentRoom(new LevelComponents::Room(currentroom)),
     tmpDestinationRoom(new LevelComponents::Room(_level->GetRooms()[currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()])),
     DoorID(doorID)
@@ -202,6 +203,8 @@ void DoorConfigDialog::ResetDoorRect()
     LevelComponents::Door *currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
     currentdoor0->SetDoorPlace((unsigned char) ui->SpinBox_DoorX->value(), (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
                                (unsigned char) ui->SpinBox_DoorY->value(), (unsigned char) (ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1));
+    CurrentRoom->GetDoor(DoorID)->SetDoorPlace((unsigned char) ui->SpinBox_DoorX->value(), (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
+                                               (unsigned char) ui->SpinBox_DoorY->value(), (unsigned char) (ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1));
     int doorwidth = currentdoor0->GetX2() - currentdoor0->GetX1() + 1;
     int doorheight = currentdoor0->GetY2() - currentdoor0->GetY1() + 1;
     ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - doorwidth);
@@ -457,6 +460,7 @@ void DoorConfigDialog::on_ComboBox_DoorType_currentIndexChanged(int index)
     }
     // TODOs: need more auto-reset to some of the Door attributes when select DoorType 4 or 5.
     currentdoor0->SetDoorType(static_cast<LevelComponents::DoorType>(index + 1));
+    CurrentRoom->GetDoor(DoorID)->SetDoorType(static_cast<LevelComponents::DoorType>(index + 1));
 }
 
 /// <summary>
@@ -470,6 +474,7 @@ void DoorConfigDialog::on_SpinBox_WarioX_valueChanged(int arg1)
     (void) arg1;
     if(!IsInitialized) return;
     tmpCurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
+    CurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
 }
 
 /// <summary>
@@ -483,6 +488,7 @@ void DoorConfigDialog::on_SpinBox_WarioY_valueChanged(int arg1)
     (void) arg1;
     if(!IsInitialized) return;
     tmpCurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
+    CurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
 }
 
 /// <summary>
@@ -496,6 +502,7 @@ void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
     (void) arg1;
     if(!IsInitialized) return;
     tmpCurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) ui->SpinBox_BGM_ID->value());
+    CurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) ui->SpinBox_BGM_ID->value());
 }
 
 /// <summary>
@@ -506,8 +513,9 @@ void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
 /// </param>
 void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
 {
+    if(index == -1) return;
     int currentEntitySetId = tmpCurrentRoom->GetDoor(DoorID)->GetEntitySetID();
-    if(IsInitialized == true) currentEntitySetId = index;
+    if(IsInitialized == true) currentEntitySetId = ui->ComboBox_EntitySetID->currentText().toInt();
     ui->TextEdit_AllTheEntities->clear();
     std::vector<LevelComponents::EntitySetinfoTableElement> currentEntityTable = entitiessets[currentEntitySetId]->GetEntityTable();
     for(unsigned int i = 0; i < currentEntityTable.size(); ++i)
@@ -516,6 +524,8 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
         ui->TextEdit_AllTheEntities->append(currentname);
     }
     tmpCurrentRoom->GetDoor(DoorID)->SetEntitySetID((unsigned char) currentEntitySetId);
+    CurrentRoom->GetDoor(DoorID)->SetEntitySetID((unsigned char) currentEntitySetId);
+    CurrentRoom->SetCurrentEntitySet(currentEntitySetId);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------
