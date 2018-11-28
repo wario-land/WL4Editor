@@ -136,7 +136,7 @@ void WL4EditorWindow::OpenROM()
     std::string filePath = qFilePath.toStdString();
     if(!LoadROMFile(qFilePath))
     {
-        QMessageBox::critical(nullptr,QString("Load Error"),QString("You may load a wrong ROM!"));
+        QMessageBox::critical(nullptr, QString("Load Error"), QString("You may load a wrong ROM!"));
         return;
     }
 
@@ -411,11 +411,11 @@ void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned shor
 bool WL4EditorWindow::UnsavedChangesWarning()
 {
     return UnsavedChanges ? QMessageBox::warning(
-                                singleton,
-                                "Unsaved Changes",
-                                "There are unsaved changes. If you load another level, these will be lost. Load level anyway?",
-                                QMessageBox::Ok | QMessageBox::Cancel,
-                                QMessageBox::Cancel) == QMessageBox::Ok : true;
+        singleton,
+        "Unsaved Changes",
+        "There are unsaved changes. If you load another level, these will be lost. Load level anyway?",
+        QMessageBox::Ok | QMessageBox::Cancel,
+        QMessageBox::Cancel) == QMessageBox::Ok : true;
 }
 
 /// <summary>
@@ -631,9 +631,42 @@ void WL4EditorWindow::on_actionNew_Door_triggered()
 }
 
 /// <summary>
-/// Call the function which saves the currently loaded level
+/// Call the function which saves the currently loaded level.
 /// </summary>
 void WL4EditorWindow::on_actionSave_ROM_triggered()
 {
-    ROMUtils::SaveFile();
+    ROMUtils::SaveFile(ROMUtils::ROMFilePath);
+}
+
+/// <summary>
+/// Select a file, and save the modified ROM to the file.
+/// </summary>
+void WL4EditorWindow::on_actionSave_As_triggered()
+{
+    QString qFilePath = QFileDialog::getSaveFileName(
+        this,
+        tr("Save ROM file as"),
+        dialogInitialPath,
+        tr("GBA ROM files (*.gba)"));
+    if(qFilePath.compare(""))
+    {
+        ROMUtils::SaveFile(qFilePath);
+        std::string filePath = qFilePath.toStdString();
+        std::string fileName = filePath.substr(filePath.rfind('/') + 1);
+        setWindowTitle(fileName.c_str());
+    }
+}
+
+/// <summary>
+/// Show information about the editor.
+/// </summary>
+void WL4EditorWindow::on_actionAbout_triggered()
+{
+    QMessageBox::information(
+        singleton,
+        "About",
+        QString("WL4Editor by Goldensunboy, shinespeciall, xiazhanjian, and chanchancl") +
+            "\nVersion: " + WL4EDITOR_VERSION,
+        QMessageBox::Ok,
+        QMessageBox::Ok);
 }

@@ -1,6 +1,8 @@
 #ifndef WL4CONSTANTS_H
 #define WL4CONSTANTS_H
 
+#define WL4EDITOR_VERSION "beta-1"
+
 namespace WL4Constants
 {
     // Definitions for the beginning of tables

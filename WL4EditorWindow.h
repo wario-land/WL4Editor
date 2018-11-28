@@ -83,6 +83,8 @@ private slots:
     void on_actionRoom_Config_triggered();
     void on_actionNew_Door_triggered();
     void on_actionSave_ROM_triggered();
+    void on_actionAbout_triggered();
+    void on_actionSave_As_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H
