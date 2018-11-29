@@ -45,7 +45,7 @@ namespace ROMUtils
     /// </param>
     unsigned int IntFromData(int address)
     {
-        return *(unsigned int*) (CurrentFile + address); // This program is almost certainly executing on a little-endian architecture
+        return *(unsigned int*) (CurrentFile + address);
     }
 
     /// <summary>
@@ -424,6 +424,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
             file.close();
 
             // Set the CurrentFile to the copied CurrentFile data
+            free(CurrentFile);
             CurrentFile = TempFile;
             CurrentFileSize = TempLength;
 
@@ -460,8 +461,9 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
 
         // Clean up heap data and return
         success = true;
-error:  free(CurrentFile);
-        foreach(struct SaveData chunk, chunks)
+        goto noerr;
+error:  free(TempFile);
+noerr:  foreach(struct SaveData chunk, chunks)
         {
             if(chunk.ChunkType != SaveDataChunkType::NullType) free(chunk.data);
         }
