@@ -74,12 +74,16 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                             DoorConfigDialog _doorconfigdialog(singleton, room, i, singleton->GetCurrentLevel());
                             if(_doorconfigdialog.exec() == QDialog::Accepted)
                             {
+                                singleton->ResetEntitySetDockWidget();
                                 // TODO
                             }
                         }
                         else
                         {
                             SelectedDoorID = i;
+                            // Let the Entityset change with the last selected Door
+                            singleton->GetCurrentRoom()->SetCurrentEntitySet(singleton->GetCurrentRoom()->GetDoor(i)->GetEntitySetID());
+                            singleton->ResetEntitySetDockWidget();
                         }
                         goto DOOR_FOUND;
                     }

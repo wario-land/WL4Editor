@@ -140,7 +140,18 @@ namespace LevelComponents
         // Getters
         unsigned int CountDoors() { return doors.size(); }
         unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
-        std::vector<struct __CameraControlRecord*> GetCameraControlRecords() { return CameraControlRecords; }
+        std::vector<struct __CameraControlRecord*> GetCameraControlRecords(bool create_new_instances = false)
+        {
+            if(create_new_instances) return CameraControlRecords;
+            std::vector<struct __CameraControlRecord*> newCameraControlRecords;
+            for(unsigned int i = 0; i < CameraControlRecords.size(); ++i)
+            {
+                struct __CameraControlRecord *currentCameralimitator = new __CameraControlRecord;
+                memcpy(currentCameralimitator, CameraControlRecords[i], sizeof(struct __CameraControlRecord));
+                newCameraControlRecords.push_back(currentCameralimitator);
+            }
+            return newCameraControlRecords;
+        }
         enum __CameraControlType GetCameraControlType() { return CameraControlType; }
         std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
@@ -176,7 +187,7 @@ namespace LevelComponents
         void SetBGLayerAutoScrollEnabled(bool enability);
         void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }
         void SetCameraControlType(__CameraControlType new_control_type) { CameraControlType = new_control_type; RoomHeader.CameraControlType = (unsigned char) new_control_type; }
-        void SetCurrentEntitySetID(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; }
+        void SetCurrentEntitySet(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; ResetEntitySet(_currentEntitySetID); }
         void SetDoorsVector(std::vector<Door*> _doors) { doors = _doors; }
         void SetEntityListDirty(int difficulty, bool dirty) { EntityListDirty[difficulty] = dirty; }
         void SetEntityListPtr(int difficulty, unsigned int ptr) { (&RoomHeader.EntityTableHard)[difficulty] = ptr; }
