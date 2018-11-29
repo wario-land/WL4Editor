@@ -35,7 +35,9 @@ private:
     int selectedRoom = 0;
     bool UnsavedChanges = false;
     bool firstROMLoaded = false;
-    bool UnsavedChangesWarning();
+    void closeEvent (QCloseEvent *event);
+    static bool SaveCurrentFile() { return ROMUtils::SaveFile(ROMUtils::ROMFilePath); }
+    bool SaveCurrentFileAs();
 
 protected:
     void resizeEvent(QResizeEvent *event);

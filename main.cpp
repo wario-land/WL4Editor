@@ -123,8 +123,8 @@ int main(int argc, char *argv[])
     if(!strncmp(username, "ANDREW", strlen(username))) // Goldensunboy
     {
         // Andrew's tests
-        extern const char *dialogInitialPath;
-        dialogInitialPath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
+        extern QString dialogInitialPath;
+        dialogInitialPath = QString("C:\\Users\\Andrew\\Desktop\\WL4.gba");
         w.OpenROM();
     }
     else if(!strncmp(username, "ADMINISTRATOR", strlen(username))) // SSP
