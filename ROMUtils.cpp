@@ -281,10 +281,11 @@ namespace ROMUtils
     /// <summary>
     /// Save the currently loaded level to the ROM file.
     /// </summary>
-    void SaveFile(QString filePath)
+    bool SaveFile(QString filePath)
     {
         // Obtain the list of data chunks to save to the rom
         SaveDataIndex = 1;
+        bool success = false;
         QVector<struct SaveData> chunks;
         LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
         currentLevel->GetSaveChunks(chunks);
@@ -454,11 +455,16 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
             }
         }
 
+        // Set that there are no changes to the ROM now (so no save prompt is given)
+        singleton->SetUnsavedChanges(false);
+
         // Clean up heap data and return
+        success = true;
 error:  free(CurrentFile);
         foreach(struct SaveData chunk, chunks)
         {
             if(chunk.ChunkType != SaveDataChunkType::NullType) free(chunk.data);
         }
+        return success;
     }
 }
