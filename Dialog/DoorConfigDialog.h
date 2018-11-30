@@ -59,6 +59,7 @@ private slots:
     void on_SpinBox_WarioY_valueChanged(int arg1);
     void on_SpinBox_BGM_ID_valueChanged(int arg1);
     void on_ComboBox_EntitySetID_currentIndexChanged(int index);
+    void on_pushButton_DeselectAll_clicked();
 
 private:
     Ui::DoorConfigDialog *ui;
@@ -84,7 +85,7 @@ private:
     // TableView
     void UpdateTableView();
 
-    static LevelComponents::EntitySet *entitiessets[90];
+    static LevelComponents::EntitySet *entitiessets[83];
     static LevelComponents::Entity *entities[129];
 
     // visible in EntitySet ComboBox
@@ -92,6 +93,7 @@ private:
 public:
     explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level);
     ~DoorConfigDialog();
+    void UpdateCurrentDoorData();
     static void StaticInitialization();
     static void EntitySetsInitialization();
 

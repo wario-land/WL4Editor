@@ -106,6 +106,7 @@ namespace LevelComponents
     /// </remarks>
     Room::Room(Room *room)
     {
+        IsCopy = true;
         RoomID = room->GetRoomID();
         LevelID = room->GetLevelID();
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
@@ -217,6 +218,13 @@ namespace LevelComponents
             delete currentCameralimitator;
         }
         CameraControlRecords.clear();
+        if(IsCopy && doors.size())
+        {
+            for(auto iter = doors.begin(); iter != doors.end(); ++iter)
+            {
+                delete *iter; // Delete doors
+            }
+        }
         delete tileset;
     }
 

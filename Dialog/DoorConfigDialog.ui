@@ -47,25 +47,32 @@
      <property name="title">
       <string>EntitySet</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_6">
-      <item>
-       <widget class="QLabel" name="Label_EntitySetID">
-        <property name="text">
-         <string>EntitySet ID:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="ComboBox_EntitySetID"/>
-      </item>
-      <item>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="2" column="0">
        <widget class="QLabel" name="Label_EntityFilter">
         <property name="text">
          <string>Entity Filter:</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="pushButton_DeselectAll">
+        <property name="text">
+         <string>Deselect all Entities</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="Label_EntitySetID">
+        <property name="text">
+         <string>EntitySet ID:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QComboBox" name="ComboBox_EntitySetID"/>
+      </item>
+      <item row="3" column="0" colspan="2">
        <widget class="QTableView" name="TableView_EntityFilter">
         <property name="minimumSize">
          <size>
@@ -75,7 +82,7 @@
         </property>
        </widget>
       </item>
-      <item>
+      <item row="4" column="0" colspan="2">
        <widget class="QTextEdit" name="TextEdit_AllTheEntities">
         <property name="maximumSize">
          <size>

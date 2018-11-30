@@ -14,6 +14,20 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Deep copy constructor for Layer.
+    /// </summary>
+    /// <param name="layer">
+    /// The Layer object to deep copy from.
+    /// </param>
+    Door::Door(Door &door) :
+        RoomID(door.RoomID),
+        DestinationDoor(door.DestinationDoor),
+        is_vortex(door.is_vortex),
+        DoorID(door.DoorID),
+        DoorEntry(door.DoorEntry)
+    {    }
+
+    /// <summary>
     /// Generate Wario's original position (unit: pixel) when appear from the door.
     /// </summary>
     /// <return>

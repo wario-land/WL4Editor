@@ -288,7 +288,7 @@ namespace LevelComponents
     {
         unsigned short *tmpLayerData = new unsigned short[newWidth * newHeight];
         int boundX = qMin(Width, newWidth), boundY = qMin(Height, newHeight);
-        unsigned short defaultValue = 0x0040;
+        unsigned short defaultValue = 0x0000;
         for(int i = 0; i < boundY; ++i)
         {
             memcpy(tmpLayerData + i * newWidth, LayerData + i * Width, boundX * sizeof(short));
