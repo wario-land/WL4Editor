@@ -40,6 +40,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
             LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
             if(layer->IsEnabled() == false) return;
+            IsDrawing = true;
             int selectedTileIndex = tileX + tileY * room->GetWidth();
             if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
             struct OperationParams *params = new struct OperationParams();
@@ -108,6 +109,73 @@ DOOR_FOUND:     ;
         }
         // TODO add more cases for other edit mode types
     }
+}
+
+/// <summary>
+/// this function will be called when the graphic view in the main window is clicked and then mouse start moving.
+/// </summary>
+/// <param name="event">
+/// The mouse click event.
+/// </param>
+void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
+{
+    if(!singleton->FirstROMIsLoaded()) return;
+
+    // Get the ID of the tile that was clicked
+    unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
+    unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
+    unsigned int tileX = X / 32;
+    unsigned int tileY = Y / 32;
+
+    if((event->x() > (this->width() - 4)) || (event->y() > (this->height() - 4)))
+    {
+        IsDrawing = false;
+        return;
+    }
+
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    if(tileX < room->GetWidth() && tileY < room->GetHeight())
+    {
+        enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
+
+        if((editMode == Ui::LayerEditMode) && IsDrawing) // Change textmaps and layer graphic
+        {
+            unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
+            if(selectedTile == 0xFFFF) return;
+            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+            LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
+            if(layer->IsEnabled() == false) return;
+            int selectedTileIndex = tileX + tileY * room->GetWidth();
+            if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
+            struct OperationParams *params = new struct OperationParams();
+            params->type = ChangeTileOperation;
+            params->tileChangeParams.push_back(TileChangeParams::Create(
+                tileX,
+                tileY,
+                selectedLayer,
+                selectedTile,
+                layer->GetLayerData()[selectedTileIndex]
+            ));
+            ExecuteOperation(params);
+            // delete params; //shall we?
+        }
+    }
+    else
+    {
+        IsDrawing = false;
+    }
+}
+
+/// <summary>
+/// this function will be called when the graphic view in the main window is clicked then mouse release.
+/// </summary>
+/// <param name="event">
+/// The mouse click event.
+/// </param>
+void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
+{
+    (void) event;
+    IsDrawing = false;
 }
 
 /// <summary>
