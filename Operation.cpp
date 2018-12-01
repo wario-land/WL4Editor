@@ -141,6 +141,10 @@ void ResetUndoHistory()
 {
     for(unsigned int i = 0; i < 16; ++i)
     {
+        for(unsigned int j = 0; j < operationHistory[i].size(); ++j)
+        {
+            delete operationHistory[i][j];
+        }
         operationHistory[i].clear();
     }
     memset(operationIndex, 0, sizeof(operationIndex));
