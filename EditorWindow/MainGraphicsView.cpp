@@ -35,25 +35,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 
         if(editMode == Ui::LayerEditMode) // Change textmaps and layer graphic
         {
-            unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
-            if(selectedTile == 0xFFFF) return;
-            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
-            LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
-            if(layer->IsEnabled() == false) return;
-            IsDrawing = true;
-            int selectedTileIndex = tileX + tileY * room->GetWidth();
-            if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
-            struct OperationParams *params = new struct OperationParams();
-            params->type = ChangeTileOperation;
-            params->tileChangeParams.push_back(TileChangeParams::Create(
-                tileX,
-                tileY,
-                selectedLayer,
-                selectedTile,
-                layer->GetLayerData()[selectedTileIndex]
-            ));
-            ExecuteOperation(params);
-            // delete params; //shall we?
+            SetTile(tileX, tileY);
         }
         else if(editMode == Ui::DoorEditMode) // select a door
         {
@@ -107,7 +89,6 @@ DOOR_FOUND:     ;
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
         }
-        // TODO add more cases for other edit mode types
     }
 }
 
@@ -140,30 +121,45 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
         if((editMode == Ui::LayerEditMode) && IsDrawing) // Change textmaps and layer graphic
         {
-            unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
-            if(selectedTile == 0xFFFF) return;
-            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
-            LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
-            if(layer->IsEnabled() == false) return;
-            int selectedTileIndex = tileX + tileY * room->GetWidth();
-            if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
-            struct OperationParams *params = new struct OperationParams();
-            params->type = ChangeTileOperation;
-            params->tileChangeParams.push_back(TileChangeParams::Create(
-                tileX,
-                tileY,
-                selectedLayer,
-                selectedTile,
-                layer->GetLayerData()[selectedTileIndex]
-            ));
-            ExecuteOperation(params);
-            // delete params; //shall we?
+            SetTile(tileX, tileY);
         }
     }
     else
     {
         IsDrawing = false;
     }
+}
+
+/// <summary>
+/// This is a helper function for setting the tile at a tile position to the currently
+/// selected tile from the UI.
+/// </summary>
+/// <param name="tileX">
+/// The X position of the tile (unit: map16)
+/// </param>
+/// <param name="tileY">
+/// The Y position of the tile (unit: map16)
+/// </param>
+void MainGraphicsView::SetTile(int tileX, int tileY)
+{
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
+    if(selectedTile == 0xFFFF) return;
+    int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+    LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
+    if(layer->IsEnabled() == false) return;
+    int selectedTileIndex = tileX + tileY * room->GetWidth();
+    if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
+    struct OperationParams *params = new struct OperationParams();
+    params->type = ChangeTileOperation;
+    params->tileChangeParams.push_back(TileChangeParams::Create(
+        tileX,
+        tileY,
+        selectedLayer,
+        selectedTile,
+        layer->GetLayerData()[selectedTileIndex]
+    ));
+    ExecuteOperation(params);
 }
 
 /// <summary>

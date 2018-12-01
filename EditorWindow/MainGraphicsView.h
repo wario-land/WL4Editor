@@ -23,6 +23,8 @@ private:
     int SelectedDoorID = -1;
     int SelectedEntityID = -1;
     bool IsDrawing = false;
+
+    void SetTile(int tileX, int tileY);
 };
 
 #endif // MAINGRAPHICSVIEW_H
