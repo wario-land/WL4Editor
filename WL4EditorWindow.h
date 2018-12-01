@@ -35,7 +35,9 @@ private:
     int selectedRoom = 0;
     bool UnsavedChanges = false;
     bool firstROMLoaded = false;
-    bool UnsavedChangesWarning();
+    void closeEvent (QCloseEvent *event);
+    static bool SaveCurrentFile() { return ROMUtils::SaveFile(ROMUtils::ROMFilePath); }
+    bool SaveCurrentFileAs();
 
 protected:
     void resizeEvent(QResizeEvent *event);
@@ -83,6 +85,8 @@ private slots:
     void on_actionRoom_Config_triggered();
     void on_actionNew_Door_triggered();
     void on_actionSave_ROM_triggered();
+    void on_actionAbout_triggered();
+    void on_actionSave_As_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

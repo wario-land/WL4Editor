@@ -106,6 +106,7 @@ namespace LevelComponents
     /// </remarks>
     Room::Room(Room *room)
     {
+        IsCopy = true;
         RoomID = room->GetRoomID();
         LevelID = room->GetLevelID();
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
@@ -123,13 +124,9 @@ namespace LevelComponents
         // Set up the layer data
         Width = room->GetWidth();
         Height = room->GetHeight();
-        unsigned char *roomheader_charptr = (unsigned char*) &RoomHeader; //TODO: the following code need to be re-implemented, add deep copy constructor for Layer class
-        int *roomDataPtr = (int*) (&RoomHeader.Layer0Data);
         for(int i = 0; i < 4; ++i)
         {
-            enum LayerMappingType mappingType = static_cast<enum LayerMappingType>(roomheader_charptr[i + 1] & 0x30);
-            int layerPtr = roomDataPtr[i] & 0x7FFFFFF;
-            layers[i] = new Layer(layerPtr, mappingType);
+            layers[i] = new Layer(*(room->GetLayer(i)));
         }
 
         SetLayerPriorityAndAlphaAttributes((int) room->GetRoomHeader().LayerEffects);
@@ -139,8 +136,7 @@ namespace LevelComponents
         CameraControlType = room->GetCameraControlType();
         if(CameraControlType == LevelComponents::HasControlAttrs)
         {
-            std::vector<struct __CameraControlRecord*> tmpCameraControlRecord = room->GetCameraControlRecords();
-            CameraControlRecords.assign(tmpCameraControlRecord.begin(), tmpCameraControlRecord.end());
+            CameraControlRecords = room->GetCameraControlRecords(true);
         }
 
         // Load Entity list for each difficulty level
@@ -222,6 +218,13 @@ namespace LevelComponents
             delete currentCameralimitator;
         }
         CameraControlRecords.clear();
+        if(IsCopy && doors.size())
+        {
+            for(auto iter = doors.begin(); iter != doors.end(); ++iter)
+            {
+                delete *iter; // Delete doors
+            }
+        }
         delete tileset;
     }
 

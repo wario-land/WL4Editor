@@ -201,6 +201,15 @@ namespace LevelComponents
         }
     }
 
+    /// <summary>
+    /// Get the Doors data copy.
+    /// </summary>
+    /// <param name="roomId">
+    /// Room id of the Room the temp-Room copied from.
+    /// </param>
+    /// <remark>
+    /// only used to give data to the Room copy.
+    /// </remark>
     std::vector<Door *> Level::GetRoomDoors(unsigned int roomId)
     {
         std::vector<Door *> roomDoors;
@@ -208,7 +217,10 @@ namespace LevelComponents
         for(unsigned int i = 0; i < doors.size(); ++i)
         {
             if(doors[i]->GetRoomID() == (int) roomId)
-            roomDoors.push_back(doors[i]);
+            {
+                Door *newDoor = new Door(*doors[i]);
+                roomDoors.push_back(newDoor);
+            }
         }
         return roomDoors;
     }

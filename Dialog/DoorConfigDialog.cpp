@@ -9,7 +9,7 @@ constexpr const char *DoorConfigDialog::EntitynameSetData[128];
 static QStringList DoortypeSet;
 static QStringList EntitynameSet;
 
-LevelComponents::EntitySet *DoorConfigDialog::entitiessets[90];
+LevelComponents::EntitySet *DoorConfigDialog::entitiessets[83];
 LevelComponents::Entity *DoorConfigDialog::entities[129];
 
 /// <summary>
@@ -22,6 +22,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     QDialog(parent),
     ui(new Ui::DoorConfigDialog),
     _currentLevel(_level),
+    CurrentRoom(currentroom),
     tmpCurrentRoom(new LevelComponents::Room(currentroom)),
     tmpDestinationRoom(new LevelComponents::Room(_level->GetRooms()[currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()])),
     DoorID(doorID)
@@ -112,6 +113,26 @@ DoorConfigDialog::~DoorConfigDialog()
     delete tmpDestinationRoom;
     delete EntityFilterTable;
     delete ui;
+}
+
+/// <summary>
+/// All the changes in the dialog are made on the temp-created room,
+/// so the current Door needs to get data from the dialog only when user clicks okay,
+/// and this function get called.
+/// </summary>
+void DoorConfigDialog::UpdateCurrentDoorData()
+{
+    CurrentRoom->GetDoor(DoorID)->SetDoorType(static_cast<LevelComponents::DoorType>(ui->ComboBox_DoorType->currentIndex() + 1));
+    CurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
+    CurrentRoom->GetDoor(DoorID)->SetDoorPlace((unsigned char) ui->SpinBox_DoorX->value(), (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
+                                               (unsigned char) ui->SpinBox_DoorY->value(), (unsigned char) (ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1));
+    CurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) ui->SpinBox_BGM_ID->value());
+    int resetEntitysetId = tmpCurrentRoom->GetDoor(DoorID)->GetEntitySetID();
+    if(resetEntitysetId > 0)
+    {
+        CurrentRoom->GetDoor(DoorID)->SetEntitySetID((unsigned char) resetEntitysetId);
+        CurrentRoom->SetCurrentEntitySet(resetEntitysetId);
+    }
 }
 
 /// <summary>
@@ -322,10 +343,8 @@ void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
 
     if (item->checkState() == Qt::Checked)
     {
-
         for(auto &set : comboboxEntitySet)
         {
-
             if (set.visible && !entitiessets[set.id]->IsEntityInside(it.entity->GetEntityGlobalID()))
             {
                 set.visible = false;
@@ -506,8 +525,9 @@ void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
 /// </param>
 void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
 {
+    if(index == -1) return;
     int currentEntitySetId = tmpCurrentRoom->GetDoor(DoorID)->GetEntitySetID();
-    if(IsInitialized == true) currentEntitySetId = index;
+    if(IsInitialized == true) currentEntitySetId = ui->ComboBox_EntitySetID->currentText().toInt();
     ui->TextEdit_AllTheEntities->clear();
     std::vector<LevelComponents::EntitySetinfoTableElement> currentEntityTable = entitiessets[currentEntitySetId]->GetEntityTable();
     for(unsigned int i = 0; i < currentEntityTable.size(); ++i)
@@ -561,4 +581,19 @@ void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
                            entity->Render(),
                            true
                        });
+}
+
+/// <summary>
+/// Deselect All Entities.
+/// </summary>
+void DoorConfigDialog::on_pushButton_DeselectAll_clicked()
+{
+    EntityFilterTableModel *model =  static_cast<EntityFilterTableModel*>(ui->TableView_EntityFilter->model());
+    for(int i = 0; i < model->rowCount(); ++i)
+    {
+        if(model->item(i, 0)->checkState() == Qt::Checked)
+        {
+            model->item(i, 0)->setCheckState(Qt::Unchecked);
+        }
+    }
 }

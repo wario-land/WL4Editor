@@ -45,7 +45,7 @@ namespace ROMUtils
     /// </param>
     unsigned int IntFromData(int address)
     {
-        return *(unsigned int*) (CurrentFile + address); // This program is almost certainly executing on a little-endian architecture
+        return *(unsigned int*) (CurrentFile + address);
     }
 
     /// <summary>
@@ -281,10 +281,11 @@ namespace ROMUtils
     /// <summary>
     /// Save the currently loaded level to the ROM file.
     /// </summary>
-    void SaveFile()
+    bool SaveFile(QString filePath)
     {
         // Obtain the list of data chunks to save to the rom
         SaveDataIndex = 1;
+        bool success = false;
         QVector<struct SaveData> chunks;
         LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
         currentLevel->GetSaveChunks(chunks);
@@ -301,7 +302,7 @@ namespace ROMUtils
         }
 
         // Invalidate old chunk data
-        unsigned char *TempFile = new unsigned char[CurrentFileSize];
+        unsigned char *TempFile = (unsigned char*) malloc(CurrentFileSize);
         unsigned int TempLength = CurrentFileSize;
         memcpy(TempFile, CurrentFile, CurrentFileSize);
         foreach(struct SaveData chunk, chunks)
@@ -318,16 +319,50 @@ namespace ROMUtils
         }
 
         // Find space in the ROM for each chunk and assign addresses for the chunks
+        // also expand the ROM size as necessary (up to 32MB) to hold the new data.
         std::map<int, int> indexToChunkPtr;
         int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
         for(int i = 0; i < chunks.size(); ++i)
         {
             int chunkSize = chunks[i].size + 12 + (chunks[i].alignment ? 3 : 0);
-            int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
+findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
             if(chunks[i].alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
             if(!chunkAddr)
             {
-                assert(0 /* Could not find free space in ROM */);
+                // Expand ROM (double the size and align to 8MB)
+                unsigned int newSize = (TempLength << 1) & ~0x7FFFFF;
+                if(newSize <= 0x2000000)
+                {
+                    unsigned char *newTempFile = (unsigned char*) realloc(TempFile, newSize);
+                    if(!newTempFile)
+                    {
+                        // Realloc failed due to system memory constraints
+                        QMessageBox::warning(
+                            singleton,
+                            "Out of memory",
+                            "Unable to save changes because your computer is out of memory.",
+                            QMessageBox::Ok,
+                            QMessageBox::Ok);
+                        goto error;
+                    }
+                    TempFile = newTempFile;
+                    memset(TempFile + TempLength, 0xFF, newSize - TempLength);
+                    TempLength = newSize;
+                    goto findspace;
+                }
+                else
+                {
+                    // Size cannot exceed 32MB
+                    QMessageBox::warning(
+                        singleton,
+                        "ROM too large",
+                        QString("Unable to save changes because ") + chunkSize +
+                            " contiguous free bytes are necessary, but such a region could not be"
+                            " found, and the ROM file cannot be expanded larger than 32MB.",
+                        QMessageBox::Ok,
+                        QMessageBox::Ok);
+                    goto error;
+                }
             }
             indexToChunkPtr[chunks[i].index] = chunkAddr;
             startAddr = chunkAddr + chunkSize; // do not re-search old areas of the ROM
@@ -365,54 +400,73 @@ namespace ROMUtils
 
             // Write the data
             memcpy(destPtr + 12, chunk.data, chunkLen);
-
-            // Clean up the data since it has been copied
-            free(chunk.data);
         }
 
-        // Save the rom file from the CurrentFile copy
-        QFile file(ROMFilePath);
-        file.open(QIODevice::WriteOnly);
-        if (file.isOpen())
-        {
-            file.write((const char*) TempFile, TempLength);
-        }
-        else
-        {
-            assert(0 /* Can't open file to save ROM */);
-        }
-        file.close();
-
-        // Set the CurrentFile to the copied CurrentFile data (and clean up the old array)
-        free(CurrentFile);
-        CurrentFile = TempFile;
-        CurrentFileSize = TempLength;
-
-        // Set the new internal data pointer for LevelComponents objects, and mark dirty objects as clean
-        struct SaveData roomHeaderChunk = *std::find_if(chunks.begin(), chunks.end(), [](const struct SaveData &chunk) {
-            return chunk.ChunkType == SaveDataChunkType::RoomHeaderChunkType;
-        });
-        unsigned int roomHeaderInROM = indexToChunkPtr[roomHeaderChunk.index] + 12;
-        std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
-        for(unsigned int i = 0; i < rooms.size(); ++i)
-        {
-            struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
-                (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
-            unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
-            unsigned int *entityListPtrs = (unsigned int*) &roomHeader->EntityTableHard;
-            LevelComponents::Room *room = rooms[i];
-            room->SetCameraBoundaryDirty(false);
-            for(unsigned int j = 0; j < 4; ++j)
+        { // Prevent goto from crossing initialization of variables here
+            // Save the rom file from the CurrentFile copy
+            QFile file(filePath);
+            file.open(QIODevice::WriteOnly);
+            if (file.isOpen())
             {
-                LevelComponents::Layer *layer = room->GetLayer(j);
-                layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
-                layer->SetClean();
+                file.write((const char*) TempFile, TempLength);
             }
-            for(unsigned int j = 0; j < 3; ++j)
+            else
             {
-                room->SetEntityListDirty(j, false);
-                room->SetEntityListPtr(j, entityListPtrs[j] | 0x8000000);
+                // Couldn't open the file to save the ROM
+                QMessageBox::warning(
+                    singleton,
+                    "Could not save file",
+                    "Unable to write to or create the ROM file for saving.",
+                    QMessageBox::Ok,
+                    QMessageBox::Ok);
+                goto error;
+            }
+            file.close();
+
+            // Set the CurrentFile to the copied CurrentFile data
+            free(CurrentFile);
+            CurrentFile = TempFile;
+            CurrentFileSize = TempLength;
+
+            // Set the new internal data pointer for LevelComponents objects, and mark dirty objects as clean
+            struct SaveData roomHeaderChunk = *std::find_if(chunks.begin(), chunks.end(), [](const struct SaveData &chunk) {
+                return chunk.ChunkType == SaveDataChunkType::RoomHeaderChunkType;
+            });
+            unsigned int roomHeaderInROM = indexToChunkPtr[roomHeaderChunk.index] + 12;
+            std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
+            for(unsigned int i = 0; i < rooms.size(); ++i)
+            {
+                struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
+                    (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
+                unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
+                unsigned int *entityListPtrs = (unsigned int*) &roomHeader->EntityTableHard;
+                LevelComponents::Room *room = rooms[i];
+                room->SetCameraBoundaryDirty(false);
+                for(unsigned int j = 0; j < 4; ++j)
+                {
+                    LevelComponents::Layer *layer = room->GetLayer(j);
+                    layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
+                    layer->SetClean();
+                }
+                for(unsigned int j = 0; j < 3; ++j)
+                {
+                    room->SetEntityListDirty(j, false);
+                    room->SetEntityListPtr(j, entityListPtrs[j] | 0x8000000);
+                }
             }
         }
+
+        // Set that there are no changes to the ROM now (so no save prompt is given)
+        singleton->SetUnsavedChanges(false);
+
+        // Clean up heap data and return
+        success = true;
+        goto noerr;
+error:  free(TempFile);
+noerr:  foreach(struct SaveData chunk, chunks)
+        {
+            if(chunk.ChunkType != SaveDataChunkType::NullType) free(chunk.data);
+        }
+        return success;
     }
 }
