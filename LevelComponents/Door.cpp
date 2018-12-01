@@ -14,10 +14,10 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Deep copy constructor for Layer.
+    /// Deep copy constructor for Door.
     /// </summary>
-    /// <param name="layer">
-    /// The Layer object to deep copy from.
+    /// <param name="door">
+    /// The Door object to deep copy from.
     /// </param>
     Door::Door(Door &door) :
         RoomID(door.RoomID),
