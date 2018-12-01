@@ -35,6 +35,8 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 
         if(editMode == Ui::LayerEditMode) // Change textmaps and layer graphic
         {
+            drawingTileX = tileX;
+            drawingTileY = tileY;
             SetTile(tileX, tileY);
         }
         else if(editMode == Ui::DoorEditMode) // select a door
@@ -108,25 +110,28 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
     unsigned int tileX = X / 32;
     unsigned int tileY = Y / 32;
 
-    if((event->x() > (this->width() - 4)) || (event->y() > (this->height() - 4)))
+    // If we have moved within the same tile, do nothing
+    if(tileX == (unsigned int) drawingTileX && tileY == (unsigned int) drawingTileY)
     {
-        IsDrawing = false;
         return;
     }
 
+    // Draw the new tile
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     if(tileX < room->GetWidth() && tileY < room->GetHeight())
     {
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
-        if((editMode == Ui::LayerEditMode) && IsDrawing) // Change textmaps and layer graphic
+        if((editMode == Ui::LayerEditMode)) // Change textmaps and layer graphic
         {
+            drawingTileX = tileX;
+            drawingTileY = tileY;
             SetTile(tileX, tileY);
         }
     }
     else
     {
-        IsDrawing = false;
+        mouseReleaseEvent(event);
     }
 }
 
@@ -171,7 +176,8 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
 void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
     (void) event;
-    IsDrawing = false;
+    drawingTileX = -1;
+    drawingTileY = -1;
 }
 
 /// <summary>
