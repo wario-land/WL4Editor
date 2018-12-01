@@ -48,6 +48,7 @@ namespace LevelComponents
         // Constructors
         Door(__DoorEntry _DoorEntry, unsigned char _RoomID, int doorId) :
             RoomID(_RoomID), DoorID(doorId), DoorEntry(_DoorEntry) {}
+        Door(Door &door);
 
         // Getters
         unsigned short GetBGM_ID() { return DoorEntry.BGM_ID; }

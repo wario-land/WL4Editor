@@ -74,6 +74,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                             DoorConfigDialog _doorconfigdialog(singleton, room, i, singleton->GetCurrentLevel());
                             if(_doorconfigdialog.exec() == QDialog::Accepted)
                             {
+                                _doorconfigdialog.UpdateCurrentDoorData();
                                 singleton->ResetEntitySetDockWidget();
                                 // TODO
                             }

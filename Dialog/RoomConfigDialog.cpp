@@ -121,7 +121,7 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     }
     configParams.LayerPriorityAndAlphaAttr += (ui->ComboBox_AlphaBlendAttribute->currentIndex() << 2);
     configParams.BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
-    configParams.BackgroundLayerAutoScrollEnable = ui->CheckBox_BGLayerAutoScroll;
+    configParams.BackgroundLayerAutoScrollEnable = ui->CheckBox_BGLayerAutoScroll->isChecked();
     if(configParams.BackgroundLayerEnable)
     {
         configParams.BackgroundLayerDataPtr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);

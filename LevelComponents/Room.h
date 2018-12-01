@@ -125,6 +125,7 @@ namespace LevelComponents
         std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem *RenderedLayers[12]; // L0 - 3, E, D, C, A (may not exist)
         bool CameraBoundaryDirty = false;
+        bool IsCopy = false;
 
         // Helper functions
         void FreeDrawLayers();
@@ -188,7 +189,18 @@ namespace LevelComponents
         void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }
         void SetCameraControlType(__CameraControlType new_control_type) { CameraControlType = new_control_type; RoomHeader.CameraControlType = (unsigned char) new_control_type; }
         void SetCurrentEntitySet(int _currentEntitySetID) { CurrentEntitySetID = _currentEntitySetID; ResetEntitySet(_currentEntitySetID); }
-        void SetDoorsVector(std::vector<Door*> _doors) { doors = _doors; }
+        void SetDoorsVector(std::vector<Door*> _doors)
+        {
+            if(!IsCopy) return;
+            if(doors.size())
+            {
+                for(auto iter = doors.begin(); iter != doors.end(); ++iter)
+                {
+                    delete *iter; // Delete doors
+                }
+            }
+            doors = _doors;
+        }
         void SetEntityListDirty(int difficulty, bool dirty) { EntityListDirty[difficulty] = dirty; }
         void SetEntityListPtr(int difficulty, unsigned int ptr) { (&RoomHeader.EntityTableHard)[difficulty] = ptr; }
         void SetHeight(int _height) { Height = (unsigned int) _height; }
