@@ -91,7 +91,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     UpdateComboBoxEntitySet();
 
     // Initialize the entity list drop-down
-    for(unsigned int i = 1; i < sizeof(entities)/sizeof(entities[0]); ++i)
+    for(unsigned int i = 1; i < sizeof(entities) / sizeof(entities[0]); ++i)
     {
         EntityFilterTable->AddEntity(entities[i]);
     }
@@ -141,13 +141,13 @@ void DoorConfigDialog::UpdateCurrentDoorData()
 void DoorConfigDialog::StaticInitialization()
 {
     // Initialize the selections for the Door type
-    for(unsigned int i = 0; i < sizeof(DoortypeSetData)/sizeof(DoortypeSetData[0]); ++i)
+    for(unsigned int i = 0; i < sizeof(DoortypeSetData) / sizeof(DoortypeSetData[0]); ++i)
     {
         DoortypeSet << DoortypeSetData[i];
     }
 
     // Initialize the selections for the Entity name
-    for(unsigned int i = 0; i < sizeof(EntitynameSetData)/sizeof(EntitynameSetData[0]); ++i)
+    for(unsigned int i = 0; i < sizeof(EntitynameSetData) / sizeof(EntitynameSetData[0]); ++i)
     {
         EntitynameSet << EntitynameSetData[i];
     }
@@ -159,13 +159,13 @@ void DoorConfigDialog::StaticInitialization()
 void DoorConfigDialog::EntitySetsInitialization()
 {
     // Initialize all the entitysets
-    for(int i = 0; i < 90; ++i)
+    for(unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
     {
         entitiessets[i] = new LevelComponents::EntitySet(i, WL4Constants::UniversalSpritesPalette);
     }
 
     // Initialize all the Entity
-    for(int i = 0; i < 129; ++i)
+    for(unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
     {
         struct LevelComponents::EntitySetAndEntitylocalId tmpEntitysetAndEntitylocalId = LevelComponents::EntitySet::EntitySetFromEntityID(i);
         entities[i] = new LevelComponents::Entity(tmpEntitysetAndEntitylocalId.entitylocalId, i, entitiessets[tmpEntitysetAndEntitylocalId.entitysetId]);
@@ -550,13 +550,15 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
 /// </param>
 EntityFilterTableModel::EntityFilterTableModel(QWidget *_parent) : QStandardItemModel(_parent), parent(_parent)
 {
-    //TODO
+    // nothing
 }
 
+/// <summary>
+/// Perform cleanup for deconstruction of EntityFilterTableModel.
+/// </summary>
 EntityFilterTableModel::~EntityFilterTableModel()
 {
-    // TODO
-    for (auto& item : entities)
+    foreach(TableEntityItem item, entities)
     {
         // don't delete
         item.entity = NULL;
@@ -571,16 +573,12 @@ EntityFilterTableModel::~EntityFilterTableModel()
 /// </param>
 void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
 {
-    /*TableEntity item;
-    item.entity = entity;
-    item.entityName = DoorConfigDialog::EntitynameSetData[entity->GetEntityGlobalID()-1];
-    item.entityImage = */
     entities.push_back({
-                           entity,
-                           DoorConfigDialog::EntitynameSetData[entity->GetEntityGlobalID()-1],
-                           entity->Render(),
-                           true
-                       });
+        entity,
+        DoorConfigDialog::EntitynameSetData[entity->GetEntityGlobalID()-1],
+        entity->Render(),
+        true
+    });
 }
 
 /// <summary>
