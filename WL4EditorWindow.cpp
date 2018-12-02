@@ -496,7 +496,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
 
-    // Load the first level and render the screen
+    // Load the selected level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
     if(tmpdialog.exec() == QDialog::Accepted)
     {
@@ -538,9 +538,6 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     ResetEntitySetDockWidget();
     ResetCameraControlDockWidget();
-
-    // Set program control changes
-    ResetUndoHistory();
 }
 
 /// <summary>
@@ -562,9 +559,6 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     ResetEntitySetDockWidget();
     ResetCameraControlDockWidget();
-
-    // Set program control changes
-    ResetUndoHistory();
 }
 
 /// <summary>

@@ -35,25 +35,9 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 
         if(editMode == Ui::LayerEditMode) // Change textmaps and layer graphic
         {
-            unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
-            if(selectedTile == 0xFFFF) return;
-            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
-            LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
-            if(layer->IsEnabled() == false) return;
-            IsDrawing = true;
-            int selectedTileIndex = tileX + tileY * room->GetWidth();
-            if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
-            struct OperationParams *params = new struct OperationParams();
-            params->type = ChangeTileOperation;
-            params->tileChangeParams.push_back(TileChangeParams::Create(
-                tileX,
-                tileY,
-                selectedLayer,
-                selectedTile,
-                layer->GetLayerData()[selectedTileIndex]
-            ));
-            ExecuteOperation(params);
-            // delete params; //shall we?
+            drawingTileX = tileX;
+            drawingTileY = tileY;
+            SetTile(tileX, tileY);
         }
         else if(editMode == Ui::DoorEditMode) // select a door
         {
@@ -107,7 +91,6 @@ DOOR_FOUND:     ;
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
         }
-        // TODO add more cases for other edit mode types
     }
 }
 
@@ -127,43 +110,61 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
     unsigned int tileX = X / 32;
     unsigned int tileY = Y / 32;
 
-    if((event->x() > (this->width() - 4)) || (event->y() > (this->height() - 4)))
+    // If we have moved within the same tile, do nothing
+    if(tileX == (unsigned int) drawingTileX && tileY == (unsigned int) drawingTileY)
     {
-        IsDrawing = false;
         return;
     }
 
+    // Draw the new tile
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     if(tileX < room->GetWidth() && tileY < room->GetHeight())
     {
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
-        if((editMode == Ui::LayerEditMode) && IsDrawing) // Change textmaps and layer graphic
+        if((editMode == Ui::LayerEditMode)) // Change textmaps and layer graphic
         {
-            unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
-            if(selectedTile == 0xFFFF) return;
-            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
-            LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
-            if(layer->IsEnabled() == false) return;
-            int selectedTileIndex = tileX + tileY * room->GetWidth();
-            if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
-            struct OperationParams *params = new struct OperationParams();
-            params->type = ChangeTileOperation;
-            params->tileChangeParams.push_back(TileChangeParams::Create(
-                tileX,
-                tileY,
-                selectedLayer,
-                selectedTile,
-                layer->GetLayerData()[selectedTileIndex]
-            ));
-            ExecuteOperation(params);
-            // delete params; //shall we?
+            drawingTileX = tileX;
+            drawingTileY = tileY;
+            SetTile(tileX, tileY);
         }
     }
     else
     {
-        IsDrawing = false;
+        mouseReleaseEvent(event);
     }
+}
+
+/// <summary>
+/// This is a helper function for setting the tile at a tile position to the currently
+/// selected tile from the UI.
+/// </summary>
+/// <param name="tileX">
+/// The X position of the tile (unit: map16)
+/// </param>
+/// <param name="tileY">
+/// The Y position of the tile (unit: map16)
+/// </param>
+void MainGraphicsView::SetTile(int tileX, int tileY)
+{
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
+    if(selectedTile == 0xFFFF) return;
+    int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+    LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
+    if(layer->IsEnabled() == false) return;
+    int selectedTileIndex = tileX + tileY * room->GetWidth();
+    if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
+    struct OperationParams *params = new struct OperationParams();
+    params->type = ChangeTileOperation;
+    params->tileChangeParams.push_back(TileChangeParams::Create(
+        tileX,
+        tileY,
+        selectedLayer,
+        selectedTile,
+        layer->GetLayerData()[selectedTileIndex]
+    ));
+    ExecuteOperation(params);
 }
 
 /// <summary>
@@ -175,7 +176,8 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
     (void) event;
-    IsDrawing = false;
+    drawingTileX = -1;
+    drawingTileY = -1;
 }
 
 /// <summary>

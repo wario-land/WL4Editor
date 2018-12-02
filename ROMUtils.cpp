@@ -95,7 +95,7 @@ namespace ROMUtils
                 while(1)
                 {
                     int ctrl = CurrentFile[address++];
-                    if(ctrl == 0)
+                    if(!ctrl)
                     {
                         break;
                     }
@@ -135,7 +135,7 @@ namespace ROMUtils
                 {
                     int ctrl = ((int) CurrentFile[address] << 8) | CurrentFile[address + 1];
                     address += 2; // offset + 2
-                    if(ctrl == 0)
+                    if(!ctrl)
                     {
                         break;
                     }
@@ -461,9 +461,11 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
 
         // Clean up heap data and return
         success = true;
-        goto noerr;
-error:  free(TempFile);
-noerr:  foreach(struct SaveData chunk, chunks)
+        if(0)
+        {
+error:      free(TempFile);
+        }
+        foreach(struct SaveData chunk, chunks)
         {
             if(chunk.ChunkType != SaveDataChunkType::NullType) free(chunk.data);
         }
