@@ -77,7 +77,6 @@ private:
     void UpdateDoorLayerGraphicsView_Preview();
     void UpdateDoorLayerGraphicsView_DestinationDoor();
     void PopulateTable(LevelComponents::EntitySet entitySet);
-
     int GetSelectedComboBoxEntitySetID();
 
     // EntitySet

@@ -39,6 +39,8 @@ CameraControlDockWidget::~CameraControlDockWidget()
 void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *currentroom)
 {
     currentRoom = currentroom;
+    CurrentRoomWidth = (int) currentroom->GetWidth();
+    CurrentRoomHeight = (int) currentroom->GetHeight();
     ClearListView();
     if(ListViewItemModel)
     {
@@ -114,29 +116,43 @@ void CameraControlDockWidget::SetCurrentLimitator()
     if(SelectedLimitator > -1)
     {
         // Convey current_limitator_data the CurrentRoom
+        ui->TriggerBlockPositionX_spinBox->setMaximum(CurrentRoomWidth - 3);
+        ui->TriggerBlockPositionY_spinBox->setMaximum(CurrentRoomHeight - 3);
         LevelComponents::__CameraControlRecord current_limitator_data;
         current_limitator_data.TransboundaryControl = (unsigned char) 2;
         current_limitator_data.x1 = (unsigned char) ui->spinBox_x1->value();
+        ui->spinBox_width->setMaximum(CurrentRoomWidth - ui->spinBox_x1->value() - 2);
         current_limitator_data.y1 = (unsigned char) ui->spinBox_y1->value();
+        ui->spinBox_height->setMaximum(CurrentRoomHeight - ui->spinBox_y1->value() - 2);
         current_limitator_data.x2 = (unsigned char) (ui->spinBox_x1->value() + ui->spinBox_width->value() - 1);
+        ui->spinBox_x1->setMaximum(CurrentRoomWidth - 2 - 15);
         current_limitator_data.y2 = (unsigned char) (ui->spinBox_y1->value() + ui->spinBox_height->value() - 1);
+        ui->spinBox_y1->setMaximum(CurrentRoomHeight - 2 - 10);
         int limitator_type = ui->CameraLimitatorTypePicker_comboBox->currentIndex() - 1;
-        if(limitator_type > 0)
+        if(limitator_type >= 0)
         {
             current_limitator_data.ChangeValueOffset = (unsigned char) limitator_type;
             switch(limitator_type)
             {
             case 0: // Reset left side
                 current_limitator_data.ChangedValue = (unsigned char) (ui->spinBox_x1->value() + ui->LimitatorSideOffset_spinBox->value());
+                ui->LimitatorSideOffset_spinBox->setMinimum(2 - ui->spinBox_x1->value());
+                ui->LimitatorSideOffset_spinBox->setMaximum(ui->spinBox_width->value() - 15);
                 break;
             case 1: // Reset right side
                 current_limitator_data.ChangedValue = (unsigned char) (ui->spinBox_x1->value() + ui->spinBox_width->value() - 1 + ui->LimitatorSideOffset_spinBox->value());
+                ui->LimitatorSideOffset_spinBox->setMinimum(15 - ui->spinBox_width->value());
+                ui->LimitatorSideOffset_spinBox->setMaximum(CurrentRoomWidth - ui->spinBox_x1->value() - ui->spinBox_width->value() - 2);
                 break;
             case 2: // Reset upper side
                 current_limitator_data.ChangedValue = (unsigned char) (ui->spinBox_y1->value() + ui->LimitatorSideOffset_spinBox->value());
+                ui->LimitatorSideOffset_spinBox->setMinimum(2 - ui->spinBox_y1->value());
+                ui->LimitatorSideOffset_spinBox->setMaximum(ui->spinBox_height->value() - 10);
                 break;
             case 3: // Reset lower side
                 current_limitator_data.ChangedValue = (unsigned char) (ui->spinBox_y1->value() + ui->spinBox_height->value() - 1 + ui->LimitatorSideOffset_spinBox->value());
+                ui->LimitatorSideOffset_spinBox->setMinimum(10 - ui->spinBox_height->value());
+                ui->LimitatorSideOffset_spinBox->setMaximum(CurrentRoomHeight - ui->spinBox_y1->value() - ui->spinBox_height->value() - 2);
             }
             current_limitator_data.x3 = (unsigned char) ui->TriggerBlockPositionX_spinBox->value();
             current_limitator_data.y3 = (unsigned char) ui->TriggerBlockPositionY_spinBox->value();
@@ -245,6 +261,7 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
         ui->TriggerBlockPositionX_spinBox->setValue(0);
         ui->TriggerBlockPositionY_spinBox->setValue(0);
     }
+    SetCurrentLimitator(); // only used to set maximums for all the spinboxes
     ui->LimitatorSetting_groupBox->setEnabled(true);
     IsSavingData = true;
 }
