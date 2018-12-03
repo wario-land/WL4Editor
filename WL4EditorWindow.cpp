@@ -496,7 +496,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
 
-    // Load the first level and render the screen
+    // Load the selected level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
     if(tmpdialog.exec() == QDialog::Accepted)
     {
@@ -538,9 +538,6 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     ResetEntitySetDockWidget();
     ResetCameraControlDockWidget();
-
-    // Set program control changes
-    ResetUndoHistory();
 }
 
 /// <summary>
@@ -562,9 +559,6 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     ResetEntitySetDockWidget();
     ResetCameraControlDockWidget();
-
-    // Set program control changes
-    ResetUndoHistory();
 }
 
 /// <summary>
@@ -591,9 +585,10 @@ void WL4EditorWindow::on_actionLevel_Config_triggered()
     if(dialog.exec() == QDialog::Accepted)
     {
         CurrentLevel->SetLevelName(dialog.GetPaddedLevelName());
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int)dialog.GetHModeTimer());
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int)dialog.GetNModeTimer());
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int)dialog.GetSHModeTimer());
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int) dialog.GetHModeTimer());
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int) dialog.GetNModeTimer());
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int) dialog.GetSHModeTimer());
+        SetUnsavedChanges(true);
     }
 }
 
@@ -656,6 +651,7 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         RenderScreenFull();
         SetEditModeDockWidgetLayerEditability();
         EditModeWidget->SetDifficultyRadioBox(1);
+        SetUnsavedChanges(true);
     }
 }
 
@@ -732,8 +728,9 @@ void WL4EditorWindow::on_actionAbout_triggered()
     QMessageBox::information(
         singleton,
         "About",
-        QString("WL4Editor by Goldensunboy, shinespeciall, xiazhanjian, and chanchancl") +
-            "\nVersion: " + WL4EDITOR_VERSION,
+        QString("WL4Editor by Goldensunboy, shinespeciall, xiazhanjian, and chanchancl\n"
+            "Version: ") + WL4EDITOR_VERSION,
         QMessageBox::Ok,
-        QMessageBox::Ok);
+        QMessageBox::Ok
+    );
 }

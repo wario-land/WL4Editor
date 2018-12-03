@@ -22,7 +22,10 @@ public:
 private:
     int SelectedDoorID = -1;
     int SelectedEntityID = -1;
-    bool IsDrawing = false;
+    int drawingTileX = -1;
+    int drawingTileY = -1;
+
+    void SetTile(int tileX, int tileY);
 };
 
 #endif // MAINGRAPHICSVIEW_H

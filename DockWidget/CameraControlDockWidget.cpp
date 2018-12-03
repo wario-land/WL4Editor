@@ -40,7 +40,7 @@ void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *curren
 {
     currentRoom = currentroom;
     ClearListView();
-    if(ListViewItemModel != nullptr)
+    if(ListViewItemModel)
     {
         ListViewItemModel->removeRows(0,ListViewItemModel->rowCount());
         delete ListViewItemModel;
@@ -50,6 +50,8 @@ void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *curren
     ClearCurrentLimitatorSetting();
     ui->LimitatorSetting_groupBox->setEnabled(false);
     enum LevelComponents::__CameraControlType currentcameracontroltype = currentroom->GetCameraControlType();
+
+    // Enable/disable the appropriate radio button for the room's camera type
     if(currentcameracontroltype == LevelComponents::__CameraControlType::FixedY)
     {
         ui->CameraYFixed_radioButton->setChecked(true);
@@ -63,6 +65,7 @@ void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *curren
         ui->UseCameraLimitators_radioButton->setChecked(true);
     }
 
+    // Enable/disable the existing limitators groupbox depending on the room's camera type
     if(currentcameracontroltype != LevelComponents::__CameraControlType::HasControlAttrs)
     {
         ui->ExistingLimitators_groupBox->setEnabled(false);
@@ -158,10 +161,10 @@ void CameraControlDockWidget::SetCurrentLimitator()
 void CameraControlDockWidget::SetListviewItemText(int row)
 {
     QString string = "(" +
-            QString::number(ui->spinBox_x1->value(), 10) + ", " +
-            QString::number(ui->spinBox_y1->value(), 10) + ") - (" +
-            QString::number(ui->spinBox_x1->value() + ui->spinBox_width->value() - 1, 10) + ", " +
-            QString::number(ui->spinBox_y1->value() + ui->spinBox_height->value() - 1, 10) + ")";
+        QString::number(ui->spinBox_x1->value()) + ", " +
+        QString::number(ui->spinBox_y1->value()) + ") - (" +
+        QString::number(ui->spinBox_x1->value() + ui->spinBox_width->value() - 1) + ", " +
+        QString::number(ui->spinBox_y1->value() + ui->spinBox_height->value() - 1) + ")";
     ListViewItemModel->item(row, 0)->setText(string);
 }
 
@@ -179,10 +182,10 @@ void CameraControlDockWidget::PaintListView()
         for(int i = 0; i < (int) currentCameraLimitators.size(); ++i)
         {
             QString string = "(" +
-                    QString::number((int) currentCameraLimitators[i]->x1, 10) + ", " +
-                    QString::number((int) currentCameraLimitators[i]->y1, 10) + ") - (" +
-                    QString::number((int) currentCameraLimitators[i]->x2, 10) + ", " +
-                    QString::number((int) currentCameraLimitators[i]->y2, 10) + ")";
+                QString::number((int) currentCameraLimitators[i]->x1) + ", " +
+                QString::number((int) currentCameraLimitators[i]->y1) + ") - (" +
+                QString::number((int) currentCameraLimitators[i]->x2) + ", " +
+                QString::number((int) currentCameraLimitators[i]->y2) + ")";
             List_strs << string;
         }
         int nCount = List_strs.size();
@@ -224,7 +227,7 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
     int linenum = index.row();
     SelectedLimitator = linenum;
     LevelComponents::__CameraControlRecord *currentLimitator = currentCameraLimitators[linenum];
-    int currentLimitatorTypeid = (currentLimitator->ChangeValueOffset == 0xFF ? -1: currentLimitator->ChangeValueOffset);
+    int currentLimitatorTypeid = (currentLimitator->ChangeValueOffset == 0xFF ? -1 : currentLimitator->ChangeValueOffset);
     ui->CameraLimitatorTypePicker_comboBox->setCurrentIndex(currentLimitatorTypeid + 1);
     ui->spinBox_x1->setValue(currentLimitator->x1);
     ui->spinBox_y1->setValue(currentLimitator->y1);
@@ -260,7 +263,9 @@ void CameraControlDockWidget::on_CameraLimitatorTypePicker_comboBox_currentIndex
     ui->TriggerBlockPositionX_spinBox->setValue(0);
     ui->TriggerBlockPositionY_spinBox->setValue(0);
     SetCurrentLimitator();
+
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -275,8 +280,10 @@ void CameraControlDockWidget::on_spinBox_x1_valueChanged(int arg1)
     if(!IsSavingData) return;
     SetListviewItemText(SelectedLimitator);
     SetCurrentLimitator();
-    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
     // TODO: Reset the text in the listview
+
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -291,8 +298,10 @@ void CameraControlDockWidget::on_spinBox_y1_valueChanged(int arg1)
     if(!IsSavingData) return;
     SetListviewItemText(SelectedLimitator);
     SetCurrentLimitator();
-    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
     // TODO: Reset the text in the listview
+
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -307,8 +316,10 @@ void CameraControlDockWidget::on_spinBox_width_valueChanged(int arg1)
     if(!IsSavingData) return;
     SetListviewItemText(SelectedLimitator);
     SetCurrentLimitator();
-    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
     // TODO: Reset the text in the listview
+
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -323,8 +334,10 @@ void CameraControlDockWidget::on_spinBox_height_valueChanged(int arg1)
     if(!IsSavingData) return;
     SetListviewItemText(SelectedLimitator);
     SetCurrentLimitator();
-    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
     // TODO: Reset the text in the listview
+
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -338,7 +351,9 @@ void CameraControlDockWidget::on_LimitatorSideOffset_spinBox_valueChanged(int ar
     (void) arg1;
     if(!IsSavingData) return;
     SetCurrentLimitator();
+
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -352,7 +367,9 @@ void CameraControlDockWidget::on_TriggerBlockPositionX_spinBox_valueChanged(int 
     (void) arg1;
     if(!IsSavingData) return;
     SetCurrentLimitator();
+
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -366,7 +383,9 @@ void CameraControlDockWidget::on_TriggerBlockPositionY_spinBox_valueChanged(int 
     (void) arg1;
     if(!IsSavingData) return;
     SetCurrentLimitator();
+
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -388,7 +407,9 @@ void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
+
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -410,7 +431,9 @@ void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
+
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -432,7 +455,9 @@ void CameraControlDockWidget::on_UseCameraLimitators_radioButton_clicked(bool ch
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
+
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -443,7 +468,9 @@ void CameraControlDockWidget::on_AddCameraLimitator_pushButton_clicked()
     currentRoom->AddCameraLimitator();
     singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     PaintListView();
+
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -458,5 +485,7 @@ void CameraControlDockWidget::on_DeleteCameraLimitator_pushButton_clicked()
     ClearCurrentLimitatorSetting();
     singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     PaintListView();
+
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
 }

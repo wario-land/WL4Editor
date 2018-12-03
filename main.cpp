@@ -17,13 +17,11 @@
 #if _MSC_VER && !__INTEL_COMPILER
 #pragma comment(lib,"Advapi32.lib")
 #endif // _MSC_VER
-#endif // _WIN32
-
-#include "Compress.h"
-
-#ifdef linux
+#else // _WIN32 (else linux)
 #include <unistd.h>
 #endif
+
+#include "Compress.h"
 
 extern int selectedRoom;
 
@@ -111,8 +109,7 @@ int main(int argc, char *argv[])
         }
         username[i] = (char) (usernameTC[i] & 0xDF); // Makes username uppercase
     }
-#endif
-#ifdef linux
+#else
     username = new char[33]; // Maximum length is 32 (plus 1 for null termination)
     getlogin_r(username, 33);
     for(int i = 0; i < 32; ++i)
