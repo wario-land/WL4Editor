@@ -3,7 +3,7 @@
 
 #include <QGraphicsView>
 #include <QGraphicsPixmapItem>
-#include <Levelcomponents/Tileset.h>
+#include <LevelComponents/Tileset.h>
 #include <QLabel>
 
 namespace Ui {
