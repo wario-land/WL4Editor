@@ -102,11 +102,17 @@ void UndoOperation()
     if(operationIndex[currentRoomNumber] < operationHistory[currentRoomNumber].size())
     {
         BackTrackOperation(operationHistory[currentRoomNumber][operationIndex[currentRoomNumber]++]);
-        // If the entire operation history is undone, then there are no unsaved changes
-        if(operationIndex[currentRoomNumber] == operationHistory[currentRoomNumber].size())
+
+        // If the entire operation history is undone for all rooms, then there are no unsaved changes
+        for(unsigned int i = 0; i < sizeof(operationIndex) / sizeof(operationIndex[0]); ++i)
         {
-            singleton->SetUnsavedChanges(false);
+            if(operationIndex[currentRoomNumber] != operationHistory[currentRoomNumber].size())
+            {
+                return;
+            }
         }
+        // TODO uncomment this once all operations that change the level go through Operation.cpp
+        //singleton->SetUnsavedChanges(false);
     }
 }
 
@@ -126,6 +132,7 @@ void RedoOperation()
     if(operationIndex[currentRoomNumber])
     {
         PerformOperation(operationHistory[currentRoomNumber][--operationIndex[currentRoomNumber]]);
+
         // Performing a "redo" will make unsaved changes
         singleton->SetUnsavedChanges(true);
     }
@@ -139,13 +146,16 @@ void RedoOperation()
 /// </remarks>
 void ResetUndoHistory()
 {
-    for(unsigned int i = 0; i < 16; ++i)
+    for(unsigned int i = 0; i < sizeof(operationHistory) / sizeof(operationHistory[0]); ++i)
     {
+        // Deconstruct the dynamically allocated operation structs within the history queue
         for(unsigned int j = 0; j < operationHistory[i].size(); ++j)
         {
             delete operationHistory[i][j];
         }
         operationHistory[i].clear();
     }
+
+    // Re-initialize all the operation indexes to zero
     memset(operationIndex, 0, sizeof(operationIndex));
 }

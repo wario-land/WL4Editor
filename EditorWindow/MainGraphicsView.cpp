@@ -33,10 +33,9 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
     {
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
-        if(editMode == Ui::LayerEditMode) // Change textmaps and layer graphic
+        if(editMode == Ui::LayerEditMode)
         {
-            drawingTileX = tileX;
-            drawingTileY = tileY;
+            // Change textmaps and layer graphics
             SetTile(tileX, tileY);
         }
         else if(editMode == Ui::DoorEditMode) // select a door
@@ -54,18 +53,22 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     bool b4 = door->GetY2() >= (int) tileY;
                     if(b1 && b2 && b3 && b4)
                     {
+                        // Door "i" was selected
                         if((int) i == SelectedDoorID)
                         {
+                            // If the door that was clicked is already selected, open the door config dialog
                             DoorConfigDialog _doorconfigdialog(singleton, room, i, singleton->GetCurrentLevel());
                             if(_doorconfigdialog.exec() == QDialog::Accepted)
                             {
+                                // Apply changes from the door config dialog
                                 _doorconfigdialog.UpdateCurrentDoorData();
                                 singleton->ResetEntitySetDockWidget();
-                                // TODO
+                                singleton->SetUnsavedChanges(true);
                             }
                         }
                         else
                         {
+                            // If the door that was clicked was not already selected, then select it
                             SelectedDoorID = i;
                             // Let the Entityset change with the last selected Door
                             singleton->GetCurrentRoom()->SetCurrentEntitySet(singleton->GetCurrentRoom()->GetDoor(i)->GetEntitySetID());
@@ -84,10 +87,12 @@ DOOR_FOUND:     ;
             SelectedEntityID = room->FindEntity(tileX, tileY);
             if(SelectedEntityID == -1)
             {
+                // Add the new entity
                 bool success = room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
                 assert(success /* Failure to add entity */); // TODO: Show information if failure
                 int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
                 room->SetEntityListDirty(difficulty, true);
+                singleton->SetUnsavedChanges(true);
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
         }
@@ -122,10 +127,9 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
     {
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
-        if((editMode == Ui::LayerEditMode)) // Change textmaps and layer graphic
+        if((editMode == Ui::LayerEditMode))
         {
-            drawingTileX = tileX;
-            drawingTileY = tileY;
+            // Change textmaps and layer graphics
             SetTile(tileX, tileY);
         }
     }
@@ -147,6 +151,11 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 /// </param>
 void MainGraphicsView::SetTile(int tileX, int tileY)
 {
+    // Update which tile has last been drawn, for the tile painting functionality
+    drawingTileX = tileX;
+    drawingTileY = tileY;
+
+    // Create an execute a tile change operation for the changed tile
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
     if(selectedTile == 0xFFFF) return;
@@ -188,17 +197,22 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 /// </param>
 void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 {
+    // Delete selected entity if BSP or DEL is pressed
     if((SelectedEntityID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
     {
         singleton->DeleteEntity(SelectedEntityID);
         SelectedEntityID = -1;
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->SetUnsavedChanges(true);
     }
+
+    // Delete selected door if BSP or DEL is pressed
     else if((SelectedDoorID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
     {
         singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
         SelectedDoorID = -1;
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->SetUnsavedChanges(true);
     }
 }
 
