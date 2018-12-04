@@ -12,8 +12,6 @@
 #include <QTextEdit>
 #include <QCloseEvent>
 
-#include <QtNetwork>
-
 bool LoadROMFile(QString); // Prototype for main.cpp function
 
 // Variables used by WL4EditorWindow
