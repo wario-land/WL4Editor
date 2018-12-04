@@ -1035,7 +1035,8 @@ namespace LevelComponents
     {
         __CameraControlRecord *recordPtr = (struct __CameraControlRecord*) new __CameraControlRecord;
         memset(recordPtr, 0, sizeof(struct __CameraControlRecord));
-        recordPtr->TransboundaryControl = recordPtr->x1 = recordPtr->x2 = recordPtr->y1 = recordPtr->y2 = (unsigned char) 2;
+        recordPtr->TransboundaryControl = recordPtr->x1 = recordPtr->y1 = (unsigned char) 2;
+        recordPtr->x2 = (unsigned char) 16; recordPtr->y2 = (unsigned char) 11;
         recordPtr->ChangedValue = recordPtr->ChangeValueOffset = recordPtr->x3 = recordPtr->y3 = (unsigned char) 0xFF;
         CameraControlRecords.push_back(recordPtr);
     }

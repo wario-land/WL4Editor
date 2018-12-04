@@ -133,6 +133,9 @@ void DoorConfigDialog::UpdateCurrentDoorData()
         CurrentRoom->GetDoor(DoorID)->SetEntitySetID((unsigned char) resetEntitysetId);
         CurrentRoom->SetCurrentEntitySet(resetEntitysetId);
     }
+    int index = ui->ComboBox_DoorDestinationPicker->currentIndex();
+    CurrentRoom->GetDoor(DoorID)->SetLinkerDestination(index);
+    CurrentRoom->GetDoor(DoorID)->SetDestinationDoor(_currentLevel->GetDoors()[index]);
 }
 
 /// <summary>
@@ -396,7 +399,6 @@ void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int
     delete tmpDestinationRoom;
     tmpDestinationRoom = new LevelComponents::Room(_currentLevel->GetRooms()[_currentLevel->GetDoors()[index]->GetRoomID()]);
     tmpDestinationRoom->SetDoorsVector(_currentLevel->GetRoomDoors((unsigned int) _currentLevel->GetDoors()[index]->GetRoomID()));
-    _currentLevel->GetDoors()[index]->SetDestinationDoor(_currentLevel->GetDoors()[index]);
     if(index != 0)
     {
         RenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(index));
