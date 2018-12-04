@@ -1,7 +1,9 @@
 #include "Layer.h"
 #include "ROMUtils.h"
+
 #include <iostream>
 #include <cstring>
+#include <cassert>
 
 namespace LevelComponents
 {
@@ -128,7 +130,7 @@ namespace LevelComponents
     QPixmap Layer::RenderLayer(Tileset *tileset)
     {
         // Set the units we are drawing in (depending on the Tile type)
-        int units;
+        int units = -1;
         switch(MappingType)
         {
             case LayerDisabled:
@@ -138,6 +140,9 @@ namespace LevelComponents
                 break;
             case LayerTile8x8:
                 units = 8;
+                break;
+            default:
+                assert(0 /* Invalid tileset mapping type encountered in Layer::RenderLayer */);
         }
 
         // Create tiles

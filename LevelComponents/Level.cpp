@@ -246,7 +246,7 @@ namespace LevelComponents
     void Level::AddDoor(Door *newdoor)
     {
         doors.push_back(newdoor);
-        rooms[doors[doors.size() - 1]->GetRoomID()]->AddDoor(doors[doors.size() - 1]);
+        rooms[newdoor->GetRoomID()]->AddDoor(newdoor);
     }
 
     /// <summary>

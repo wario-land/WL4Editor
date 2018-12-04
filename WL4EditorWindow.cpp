@@ -9,7 +9,10 @@
 #include <QFileDialog>
 #include <QGraphicsScene>
 #include <QMessageBox>
+#include <QTextEdit>
 #include <QCloseEvent>
+
+#include <QtNetwork>
 
 bool LoadROMFile(QString); // Prototype for main.cpp function
 
@@ -668,12 +671,13 @@ void WL4EditorWindow::on_actionNew_Door_triggered()
     newDoorEntry.RoomID = (unsigned char) selectedRoom;
     newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
     LevelComponents::Door *newDoor = new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, CurrentLevel->GetDoors().size());
-    newDoor->SetEntitySetID((unsigned char) 1);
+    newDoor->SetEntitySetID((unsigned char) CurrentLevel->GetRooms()[selectedRoom]->GetCurrentEntitySetID());
     newDoor->SetBGM(0);
     newDoor->SetDelta(0, 0);
     newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
     CurrentLevel->AddDoor(newDoor);
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -704,7 +708,8 @@ bool WL4EditorWindow::SaveCurrentFileAs()
         this,
         tr("Save ROM file as"),
         dialogInitialPath,
-        tr("GBA ROM files (*.gba)"));
+        tr("GBA ROM files (*.gba)")
+    );
     if(qFilePath.compare(""))
     {
         if(ROMUtils::SaveFile(qFilePath))
@@ -725,12 +730,42 @@ bool WL4EditorWindow::SaveCurrentFileAs()
 /// </summary>
 void WL4EditorWindow::on_actionAbout_triggered()
 {
-    QMessageBox::information(
-        singleton,
-        "About",
-        QString("WL4Editor by Goldensunboy, shinespeciall, xiazhanjian, and chanchancl\n"
-            "Version: ") + WL4EDITOR_VERSION,
-        QMessageBox::Ok,
-        QMessageBox::Ok
-    );
+    // Show the about dialog
+    QMessageBox infoPrompt;
+    infoPrompt.setWindowTitle(tr("About"));
+    infoPrompt.setText(QString("WL4Editor by Goldensunboy, shinespeciall, xiazhanjian, and chanchancl\n"
+        "Special thanks: xTibor\n"
+        "Version: ") + WL4EDITOR_VERSION);
+    QPushButton *changelogButton = infoPrompt.addButton(tr("Ok"), QMessageBox::NoRole);
+    infoPrompt.exec();
+    /*
+    if(infoPrompt.clickedButton() == changelogButton)
+    {
+        // Get the changelog
+        const QString URI("https://raw.githubusercontent.com/Goldensunboy/WL4Editor/master/LICENSE");
+        QUrl URL = QUrl::fromEncoded(URI.toLocal8Bit());
+        QNetworkRequest request(URL);
+        QNetworkAccessManager manager;
+        QNetworkReply *reply = manager.get(request);
+        QString errorText = reply->errorString();
+        QByteArray data = reply->readAll();
+        QString changelogText = QString::fromUtf8(data.data(), data.size());
+        int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        QString statusString = QVariant(statusCode).toString();
+
+        // If the changelog button is clicked, show the changelog
+        QDialog changelogDialog(this);
+        changelogDialog.setWindowTitle("Changelog");
+        QHBoxLayout *layout = new QHBoxLayout();
+        QTextEdit *textArea = new QTextEdit();
+        textArea->setReadOnly(true);
+        layout->addWidget(textArea);
+        textArea->setText(statusString);
+        changelogDialog.setLayout(layout);
+        changelogDialog.exec();
+        delete textArea;
+        delete layout;
+    }
+    */
+    changelogButton = changelogButton;
 }
