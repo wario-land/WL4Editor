@@ -367,7 +367,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                 }
             }
             indexToChunkPtr[chunks[i].index] = chunkAddr;
-            startAddr = chunkAddr + chunkSize; // do not re-search old areas of the ROM
+            startAddr = chunkAddr + chunks[i].size + 12; // do not re-search old areas of the ROM
         }
 
         // Apply source pointer modifications
@@ -398,7 +398,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                     singleton,
                     "RATS chunk too large",
                     QString("Unable to save changes because ") + QString::number(chunk.size) +
-                        " contiguous free bytes are necessary for a save chunk with type " +
+                        " contiguous free bytes are necessary for some save chunk of type " +
                         QString::number(chunk.ChunkType) + ", but the editor currently"
                         " only supports up to size " + QString::number(0xFFFF) + ".",
                     QMessageBox::Ok,

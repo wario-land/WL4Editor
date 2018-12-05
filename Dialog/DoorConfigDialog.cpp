@@ -412,7 +412,7 @@ void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int
         QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
         if(oldScene)
         {
-            delete oldScene; // UI automaticcally update
+            delete oldScene; // UI automatically update
         }
     }
 }
