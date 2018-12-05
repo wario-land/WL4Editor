@@ -104,36 +104,35 @@ namespace LevelComponents
     /// <remarks>
     /// the new instance should only be used to render Room graphic temporarily, it is unsafe to add it to a Level.
     /// </remarks>
-    Room::Room(Room *room)
+    Room::Room(Room *room) :
+        CameraControlType(room->GetCameraControlType()),
+        RoomID(room->GetRoomID()),
+        LevelID(room->GetLevelID()),
+        Width(room->GetWidth()),
+        Height(room->GetHeight()),
+        RoomHeader(room->GetRoomHeader()),
+        CurrentEntitySetID(room->GetCurrentEntitySetID()),
+        IsCopy(true)
     {
-        IsCopy = true;
-        RoomID = room->GetRoomID();
-        LevelID = room->GetLevelID();
+        // Zero out the arrays
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
         memset(drawLayers, 0, sizeof(drawLayers));
         memset(EntityLayerZValue, 0, sizeof(EntityLayerZValue));
         memset(EntityListDirty, 0, sizeof(EntityListDirty));
-
-        // Copy the room header information
-        RoomHeader = room->GetRoomHeader();
 
         // Set up tileset, TODO: if we support Tileset changes in the editor, this need to be changed
         int tilesetPtr = WL4Constants::TilesetDataTable + RoomHeader.TilesetID * 36;
         tileset = new Tileset(tilesetPtr, RoomHeader.TilesetID);
 
         // Set up the layer data
-        Width = room->GetWidth();
-        Height = room->GetHeight();
         for(int i = 0; i < 4; ++i)
         {
-            layers[i] = new Layer(*(room->GetLayer(i)));
+            layers[i] = new Layer(*room->GetLayer(i));
         }
 
-        SetLayerPriorityAndAlphaAttributes((int) room->GetRoomHeader().LayerEffects);
+        SetLayerPriorityAndAlphaAttributes(room->GetRoomHeader().LayerEffects);
 
         // Set up camera control data
-        // TODO are there more types than 1, 2 and 3?
-        CameraControlType = room->GetCameraControlType();
         if(CameraControlType == LevelComponents::HasControlAttrs)
         {
             CameraControlRecords = room->GetCameraControlRecords(true);
@@ -146,7 +145,6 @@ namespace LevelComponents
         }
 
         // Deep Copy Entityset and Entities
-        CurrentEntitySetID = room->GetCurrentEntitySetID();
         ResetEntitySet(CurrentEntitySetID);
     }
 
@@ -212,10 +210,9 @@ namespace LevelComponents
         FreeDrawLayers();
         if(currentEntitySet) delete currentEntitySet;
         FreecurrentEntityListSource();
-        for(unsigned int i = 0; i < CameraControlRecords.size(); ++i)
+        foreach(struct __CameraControlRecord *C, CameraControlRecords)
         {
-            struct __CameraControlRecord *currentCameralimitator = CameraControlRecords[i];
-            delete currentCameralimitator;
+            delete C;
         }
         CameraControlRecords.clear();
         if(IsCopy && doors.size())
@@ -371,7 +368,7 @@ namespace LevelComponents
                     unsigned char EntityID = EntityList[currentDifficulty].at(i).EntityID;
                     // TODO this continue statement may not be addressing the underlying problem,
                     // if it is at all possible for out-of-range entity IDs to reach this point
-                    if((unsigned int) EntityID > currentEntityListSource.size()) continue;
+                    if((unsigned int) EntityID > currentEntityListSource.size() - 1) continue;
                     Entity *currententity = currentEntityListSource[EntityID];
                     // Use an alternative method to render the Entity in a not-so-bad place
                     if(Layer0ColorBlending && !Layer0ColorBlendCoefficient_EVB)

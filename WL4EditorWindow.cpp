@@ -164,6 +164,11 @@ void WL4EditorWindow::OpenROM()
         ui->loadLevelButton->setEnabled(true);
         ui->actionLevel_Config->setEnabled(true);
         ui->actionRoom_Config->setEnabled(true);
+        ui->actionSave_ROM->setEnabled(true);
+        ui->actionSave_As->setEnabled(true);
+        ui->menuAdd->setEnabled(true);
+        ui->actionRedo->setEnabled(true);
+        ui->actionUndo->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -661,18 +666,20 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionNew_Door_triggered()
 {
-    if(!firstROMLoaded) return;
+    // Create a new door struct with blank fields
     LevelComponents::__DoorEntry newDoorEntry;
     memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
+
+    // Initialize the fields
     newDoorEntry.DoorTypeByte = (unsigned char) 2;
     newDoorEntry.EntitySetID = (unsigned char) 1;
     newDoorEntry.RoomID = (unsigned char) selectedRoom;
     newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
     LevelComponents::Door *newDoor = new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, CurrentLevel->GetDoors().size());
     newDoor->SetEntitySetID((unsigned char) CurrentLevel->GetRooms()[selectedRoom]->GetCurrentEntitySetID());
-    newDoor->SetBGM(0);
-    newDoor->SetDelta(0, 0);
     newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
+
+    // Add the new door to the Level object and re-render the screen
     CurrentLevel->AddDoor(newDoor);
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     SetUnsavedChanges(true);
