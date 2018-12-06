@@ -123,7 +123,7 @@ DoorConfigDialog::~DoorConfigDialog()
 void DoorConfigDialog::UpdateCurrentDoorData()
 {
     CurrentRoom->GetDoor(DoorID)->SetDoorType(static_cast<LevelComponents::DoorType>(ui->ComboBox_DoorType->currentIndex() + 1));
-    CurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
+    CurrentRoom->GetDoor(DoorID)->SetDelta((signed char) ui->SpinBox_WarioX->value(), (signed char) ui->SpinBox_WarioY->value());
     CurrentRoom->GetDoor(DoorID)->SetDoorPlace(
         (unsigned char) ui->SpinBox_DoorX->value(),
         (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
@@ -497,7 +497,7 @@ void DoorConfigDialog::on_SpinBox_WarioX_valueChanged(int arg1)
 {
     (void) arg1;
     if(!IsInitialized) return;
-    tmpCurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
+    tmpCurrentRoom->GetDoor(DoorID)->SetDelta((signed char) ui->SpinBox_WarioX->value(), (signed char) ui->SpinBox_WarioY->value());
 }
 
 /// <summary>
@@ -510,7 +510,7 @@ void DoorConfigDialog::on_SpinBox_WarioY_valueChanged(int arg1)
 {
     (void) arg1;
     if(!IsInitialized) return;
-    tmpCurrentRoom->GetDoor(DoorID)->SetDelta((unsigned char) ui->SpinBox_WarioX->value(), (unsigned char) ui->SpinBox_WarioY->value());
+    tmpCurrentRoom->GetDoor(DoorID)->SetDelta((signed char) ui->SpinBox_WarioX->value(), (signed char) ui->SpinBox_WarioY->value());
 }
 
 /// <summary>

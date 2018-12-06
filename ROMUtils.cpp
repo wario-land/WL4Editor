@@ -288,6 +288,9 @@ namespace ROMUtils
         bool success = false;
         QVector<struct SaveData> chunks;
         LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
+        int levelHeaderOffset = WL4Constants::LevelHeaderIndexTable + currentLevel->GetPassage() * 24 + currentLevel->GetStage() * 4;
+        int levelHeaderIndex = ROMUtils::IntFromData(levelHeaderOffset);
+        int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
         currentLevel->GetSaveChunks(chunks);
 
         // Finding space for the chunks can be done faster if the chunks are ordered by size
@@ -417,6 +420,9 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
             // Write the data
             memcpy(destPtr + 12, chunk.data, chunkLen);
         }
+
+        // Write the level header to the ROM
+        memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
 
         { // Prevent goto from crossing initialization of variables here
             // Save the rom file from the CurrentFile copy
