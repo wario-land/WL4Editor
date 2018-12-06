@@ -588,7 +588,8 @@ void WL4EditorWindow::on_actionLevel_Config_triggered()
     );
 
     // If OK is pressed, then set the level attributes
-    if(dialog.exec() == QDialog::Accepted)
+    auto acc = dialog.exec();
+    if(acc == QDialog::Accepted)
     {
         CurrentLevel->SetLevelName(dialog.GetPaddedLevelName());
         CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int) dialog.GetHModeTimer());
