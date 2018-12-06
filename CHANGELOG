@@ -1,3 +1,7 @@
+beta-4:
+- Fix frog switch timers not saving
+- Fix Wario's appearance offset from destination door in DoorConfigDialog
+
 beta-3:
 - Disable most menu buttons before ROM is loaded
 - Fix changing the destination door in DoorConfigDialog intermittently crashes
