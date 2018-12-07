@@ -376,6 +376,8 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
         // Apply source pointer modifications
         foreach(struct SaveData chunk, chunks)
         {
+            if(chunk.ChunkType == SaveDataChunkType::NullType) continue; // skip NullType chunks
+
             unsigned char *ptrLoc = chunk.dest_index ?
                 // Source pointer is in another chunk
                 chunks[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr :

@@ -254,12 +254,18 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
         ui->LimitatorSideOffset_spinBox->setValue(currentLimitator->ChangedValue - *(((unsigned char *) &(currentLimitator->x1)) + currentLimitatorTypeid));
         ui->TriggerBlockPositionX_spinBox->setValue(currentLimitator->x3);
         ui->TriggerBlockPositionY_spinBox->setValue(currentLimitator->y3);
+        ui->LimitatorSideOffset_spinBox->setEnabled(true);
+        ui->TriggerBlockPositionX_spinBox->setEnabled(true);
+        ui->TriggerBlockPositionY_spinBox->setEnabled(true);
     }
     else
     {
         ui->LimitatorSideOffset_spinBox->setValue(0);
         ui->TriggerBlockPositionX_spinBox->setValue(0);
         ui->TriggerBlockPositionY_spinBox->setValue(0);
+        ui->LimitatorSideOffset_spinBox->setEnabled(false);
+        ui->TriggerBlockPositionX_spinBox->setEnabled(false);
+        ui->TriggerBlockPositionY_spinBox->setEnabled(false);
     }
     SetCurrentLimitator(); // only used to set maximums for all the spinboxes
     ui->LimitatorSetting_groupBox->setEnabled(true);
@@ -274,11 +280,22 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
 /// </param>
 void CameraControlDockWidget::on_CameraLimitatorTypePicker_comboBox_currentIndexChanged(int index)
 {
-    (void) index;
     if(!IsSavingData) return;
     ui->LimitatorSideOffset_spinBox->setValue(0);
     ui->TriggerBlockPositionX_spinBox->setValue(0);
     ui->TriggerBlockPositionY_spinBox->setValue(0);
+    if(index == 0)
+    {
+        ui->LimitatorSideOffset_spinBox->setEnabled(false);
+        ui->TriggerBlockPositionX_spinBox->setEnabled(false);
+        ui->TriggerBlockPositionY_spinBox->setEnabled(false);
+    }
+    else
+    {
+        ui->LimitatorSideOffset_spinBox->setEnabled(true);
+        ui->TriggerBlockPositionX_spinBox->setEnabled(true);
+        ui->TriggerBlockPositionY_spinBox->setEnabled(true);
+    }
     SetCurrentLimitator();
 
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
