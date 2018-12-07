@@ -26,7 +26,7 @@ namespace ROMUtils
     bool SaveFile(QString fileName);
 
     enum SaveDataChunkType {
-        NullType                = '\x00',
+        InvalidationChunk       = '\x00',
         RoomHeaderChunkType     = '\x01',
         DoorChunkType           = '\x02',
         LayerChunkType          = '\x03',

@@ -345,7 +345,7 @@ namespace LevelComponents
                 {
                     0, 0, nullptr, ROMUtils::SaveDataIndex++, false, 0,
                     cameraBoundaryListEntryPtr,
-                    ROMUtils::SaveDataChunkType::NullType
+                    ROMUtils::SaveDataChunkType::InvalidationChunk
                 };
                 chunks.append(invalidationEntry);
                 cameraBoundaryListEntryPtr += 4;
