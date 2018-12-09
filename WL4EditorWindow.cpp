@@ -148,6 +148,7 @@ void WL4EditorWindow::OpenROM()
 
     // Load the first level and render the screen
     if(CurrentLevel) delete CurrentLevel;
+    selectedLevel._PassageIndex = selectedLevel._LevelIndex = 0;
     CurrentLevel = new LevelComponents::Level(
         static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
         static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
@@ -177,10 +178,12 @@ void WL4EditorWindow::OpenROM()
         addDockWidget(Qt::RightDockWidgetArea, CameraControlWidget);
         CameraControlWidget->setVisible(false);
         EntitySetWidget->setVisible(false);
-        EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
-        Tile16SelecterWidget->SetTileset(tmpTilesetID);
-        CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
     }
+
+    // Modify UI every time time a ROM is loaded
+    EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
+    Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
 
     LoadRoomUIUpdate();
     DoorConfigDialog::EntitySetsInitialization();
