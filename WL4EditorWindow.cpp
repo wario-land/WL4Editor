@@ -64,6 +64,7 @@ WL4EditorWindow::~WL4EditorWindow()
     {
         delete CurrentLevel;
     }
+    DoorConfigDialog::EntitySetsDeconstruction();
 }
 
 /// <summary>
@@ -189,6 +190,9 @@ void WL4EditorWindow::OpenROM()
     DoorConfigDialog::EntitySetsInitialization();
 }
 
+/// <summary>
+/// Set whether the the UI elements for WL4Editor are enabled, based on layer properties.
+/// </summary>
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 {
     EditModeWidget->SetLayersCheckBoxEnabled(0, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled());
@@ -198,11 +202,9 @@ void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
     EditModeWidget->SetLayersCheckBoxEnabled(7, CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnabled());
 }
 
-bool *WL4EditorWindow::GetLayersVisibilityArray()
-{
-    return EditModeWidget->GetLayersVisibilityArray();
-}
-
+/// <summary>
+/// Deselect doors or entities that are currently selected.
+/// </summary>
 void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity()
 {
     ui->graphicsView->DeselectDoorAndEntity();

@@ -192,6 +192,9 @@ namespace LevelComponents
         return (a * 60 + b * 10 + c);
     }
 
+    /// <summary>
+    /// Distribute door data to every room.
+    /// </summary>
     void Level::RedistributeDoor()
     {
         // Distribute door data to every room

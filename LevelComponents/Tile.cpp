@@ -10,7 +10,7 @@
 
 #include <iostream>
 
-//#define NOCACHE
+#define NOCACHE
 
 namespace LevelComponents
 {
