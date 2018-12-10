@@ -212,7 +212,6 @@ namespace LevelComponents
         {
             delete C;
         }
-        CameraControlRecords.clear();
         if(IsCopy && doors.size())
         {
             for(auto iter = doors.begin(); iter != doors.end(); ++iter)

@@ -5,12 +5,11 @@
 
 #include <QGraphicsPixmapItem>
 #include <QTransform>
-#include <QPainter>
 #include <QPoint>
 
 #include <iostream>
 
-#define NOCACHE
+//#define NOCACHE
 
 namespace LevelComponents
 {
@@ -23,8 +22,8 @@ namespace LevelComponents
     /// Entire palette for the tileset this tile is a part of.
     /// </param>
     Tile8x8::Tile8x8(QVector<QRgb> *_palettes) : Tile(TileType8x8),
-        ImageData(new QImageW(8, 8, QImage::Format_Indexed8)),
-        palettes(_palettes)
+        palettes(_palettes),
+        ImageData(new QImageW(8, 8, QImage::Format_Indexed8))
     {
         ImageData->setColorTable(palettes[paletteIndex]);
     }
@@ -36,10 +35,13 @@ namespace LevelComponents
     /// Another Tile8x8 to copy image data from.
     /// </param>
     Tile8x8::Tile8x8(Tile8x8 *other) : Tile(TileType8x8),
-        palettes(other->palettes)
-    {
-        ImageData = GetCachedImageData(other->ImageData);
-    }
+        palettes(other->palettes),
+#ifndef NOCACHE
+        ImageData(GetCachedImageData(other->ImageData))
+#else
+        ImageData(new QImageW(other->ImageData->copy()))
+#endif
+            {}
 
     /// <summary>
     /// Construct an instance of Tile8x8.

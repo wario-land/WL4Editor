@@ -5,6 +5,8 @@
 #include <cstring>
 #include <cassert>
 
+#include <QString>
+
 namespace LevelComponents
 {
     /// <summary>
@@ -60,12 +62,12 @@ namespace LevelComponents
                 }
                 unsigned short *tmp = LayerData;
                 LayerData = rearranged;
-                delete[] tmp;
+                delete tmp;
             }
         }
 
         // Was layer decompression successful?
-        if(LayerData == nullptr)
+        if(!LayerData)
             std::cout << "Failed to decompress layer data: " << (layerDataPtr + 1) << std::endl;
     }
 
@@ -114,9 +116,9 @@ namespace LevelComponents
         // If it is map16 type, then they are just pointer copies and should be deconstructed in ~Tileset() only
         if(MappingType == LayerTile8x8)
         {
-            for(auto iter = tiles.begin(); iter != tiles.end(); ++iter)
+            foreach(Tile *t, tiles)
             {
-                delete(*iter); // TODO segfault here when deconstructing
+                delete t;
             }
         }
     }
@@ -152,10 +154,12 @@ namespace LevelComponents
         }
 
         // Create tiles
-        if(tiles.size() != 0) tiles.clear();
-        tiles = std::vector<Tile*>(Width * Height);
         if(MappingType == LayerMap16)
         {
+            // Re-initialize tile vector
+            if(tiles.size() != 0) tiles.clear();
+            tiles = std::vector<Tile*>(Width * Height);
+
             // For 16x16 tiles, just copy the tiles from the map16
             TileMap16 **map16 = tileset->GetMap16Data();
             for(int i = 0; i < Width * Height; ++i)
@@ -165,6 +169,11 @@ namespace LevelComponents
         }
         else if(MappingType == LayerTile8x8)
         {
+            // Re-initialize tile vector
+            DeconstructTiles();
+            if(tiles.size() != 0) tiles.clear();
+            tiles = std::vector<Tile*>(Width * Height);
+
             // For 8x8 tiles, we must use the copy constructor and set each tile's properties
             Tile8x8 **tile8x8 = tileset->GetTile8x8Data();
             for(int i = 0; i < Width * Height; ++i)
