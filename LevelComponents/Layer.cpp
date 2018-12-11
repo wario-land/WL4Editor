@@ -5,8 +5,6 @@
 #include <cstring>
 #include <cassert>
 
-#include <QString>
-
 namespace LevelComponents
 {
     /// <summary>
@@ -62,7 +60,7 @@ namespace LevelComponents
                 }
                 unsigned short *tmp = LayerData;
                 LayerData = rearranged;
-                delete tmp;
+                delete[] tmp;
             }
         }
 
@@ -104,7 +102,7 @@ namespace LevelComponents
     {
         if(!LayerData) return;
         DeconstructTiles();
-        delete LayerData;
+        delete[] LayerData;
     }
 
     /// <summary>
@@ -198,7 +196,6 @@ namespace LevelComponents
             {
                 Tile *t = tiles[j + i * Width];
                 t->DrawTile(&layerPixmap, j * units, i * units);
-                if(MappingType == LayerTile8x8) delete t;
             }
         }
 
