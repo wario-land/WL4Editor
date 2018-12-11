@@ -325,11 +325,11 @@ namespace ROMUtils
         // also expand the ROM size as necessary (up to 32MB) to hold the new data.
         std::map<int, int> indexToChunkPtr;
         int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
-        for(int i = 0; i < chunks.size(); ++i)
+        foreach(struct SaveData chunk, chunks)
         {
-            int chunkSize = chunks[i].size + 12 + (chunks[i].alignment ? 3 : 0);
+            int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
 findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
-            if(chunks[i].alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
+            if(chunk.alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
             if(!chunkAddr)
             {
                 // Expand ROM (double the size and align to 8MB)
@@ -369,13 +369,15 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                     goto error;
                 }
             }
-            indexToChunkPtr[chunks[i].index] = chunkAddr;
-            startAddr = chunkAddr + chunks[i].size + 12; // do not re-search old areas of the ROM
+            indexToChunkPtr[chunk.index] = chunkAddr;
+            startAddr = chunkAddr + chunk.size + 12; // do not re-search old areas of the ROM
         }
 
         // Apply source pointer modifications
         foreach(struct SaveData chunk, chunks)
         {
+            if(chunk.ChunkType == SaveDataChunkType::InvalidationChunk) continue;
+
             unsigned char *ptrLoc = chunk.dest_index ?
                 // Source pointer is in another chunk
                 chunks[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr :
@@ -389,7 +391,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
         // Write each chunk to TempFile
         foreach(struct SaveData chunk, chunks)
         {
-            if(chunk.ChunkType == SaveDataChunkType::NullType) continue; // skip NullType chunks
+            if(chunk.ChunkType == SaveDataChunkType::InvalidationChunk) continue;
 
             // Create the RATS tag
             unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
@@ -490,7 +492,7 @@ error:      free(TempFile);
         }
         foreach(struct SaveData chunk, chunks)
         {
-            if(chunk.ChunkType != SaveDataChunkType::NullType) free(chunk.data);
+            if(chunk.ChunkType != SaveDataChunkType::InvalidationChunk) free(chunk.data);
         }
         return success;
     }

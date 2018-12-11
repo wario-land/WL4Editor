@@ -165,14 +165,12 @@ namespace LevelComponents
     /// <summary>
     /// release Entity instances list in this Room.
     /// </summary>
-    void Room::FreecurrentEntityListSource()
+    void Room::FreeCurrentEntityListSource()
     {
-        int i = (int) currentEntityListSource.size();
-        if(i < 1) return;
-        for(int j = 0; j < i; ++j)
+        if(!currentEntityListSource.size()) return;
+        foreach(Entity *entity, currentEntityListSource)
         {
-            Entity *currententity = currentEntityListSource[j];
-            delete currententity;
+            delete entity;
         }
         currentEntityListSource.clear();
     }
@@ -185,8 +183,8 @@ namespace LevelComponents
     /// </param>
     void Room::ResetEntitySet(int entitysetId)
     {
-        if(currentEntitySet != nullptr) delete currentEntitySet;
-        FreecurrentEntityListSource();
+        if(currentEntitySet) delete currentEntitySet;
+        FreeCurrentEntityListSource();
         currentEntitySet = new EntitySet(entitysetId, tileset->GetUniversalSpritesTilesPalettePtr());
         for(int i = 0; i < 17; ++i)
         {
@@ -209,18 +207,21 @@ namespace LevelComponents
         // Free drawlayer elements
         FreeDrawLayers();
         if(currentEntitySet) delete currentEntitySet;
-        FreecurrentEntityListSource();
+        FreeCurrentEntityListSource();
         foreach(struct __CameraControlRecord *C, CameraControlRecords)
         {
             delete C;
         }
-        CameraControlRecords.clear();
         if(IsCopy && doors.size())
         {
             for(auto iter = doors.begin(); iter != doors.end(); ++iter)
             {
                 delete *iter; // Delete doors
             }
+        }
+        for(int i = 0; i < 4; ++i)
+        {
+            delete layers[i];
         }
         delete tileset;
     }

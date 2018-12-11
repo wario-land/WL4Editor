@@ -158,6 +158,16 @@ void DoorConfigDialog::StaticInitialization()
     {
         EntitynameSet << EntitynameSetData[i];
     }
+
+    // Initialize all the Entitysets and the Entities pointers with nullptr
+    for(unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
+    {
+        entitiessets[i] = nullptr;
+    }
+    for(unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
+    {
+        entities[i] = nullptr;
+    }
 }
 
 /// <summary>
@@ -165,6 +175,8 @@ void DoorConfigDialog::StaticInitialization()
 /// </summary>
 void DoorConfigDialog::EntitySetsInitialization()
 {
+    EntitySetsDeconstruction();
+
     // Initialize all the entitysets
     for(unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
     {
@@ -176,6 +188,24 @@ void DoorConfigDialog::EntitySetsInitialization()
     {
         struct LevelComponents::EntitySetAndEntitylocalId tmpEntitysetAndEntitylocalId = LevelComponents::EntitySet::EntitySetFromEntityID(i);
         entities[i] = new LevelComponents::Entity(tmpEntitysetAndEntitylocalId.entitylocalId, i, entitiessets[tmpEntitysetAndEntitylocalId.entitysetId]);
+    }
+}
+
+/// <summary>
+/// Perform static deconstruction of EntitySets and Entities for the dialog.
+/// </summary>
+void DoorConfigDialog::EntitySetsDeconstruction()
+{
+    // Initialize all the entitysets
+    for(unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
+    {
+        if(entitiessets[i]) delete entitiessets[i];
+    }
+
+    // Initialize all the Entity
+    for(unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
+    {
+        if(entities[i]) delete entities[i];
     }
 }
 

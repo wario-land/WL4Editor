@@ -96,6 +96,7 @@ public:
     void UpdateCurrentDoorData();
     static void StaticInitialization();
     static void EntitySetsInitialization();
+    static void EntitySetsDeconstruction();
 
     // Enumeration of Door type
     static constexpr const char *DoortypeSetData[5] =

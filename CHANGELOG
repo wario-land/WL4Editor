@@ -1,3 +1,9 @@
+beta-5:
+- Fix changing camera limitators then saving causes ROM to not boot
+- Fix some spinbox conditions for camera limitators
+- Fix loading a second ROM file doesn't work
+- Fix several memory leaks
+
 beta-4:
 - Fix frog switch timers not saving
 - Fix Wario's appearance offset from destination door in DoorConfigDialog

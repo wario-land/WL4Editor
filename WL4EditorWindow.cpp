@@ -64,6 +64,7 @@ WL4EditorWindow::~WL4EditorWindow()
     {
         delete CurrentLevel;
     }
+    DoorConfigDialog::EntitySetsDeconstruction();
 }
 
 /// <summary>
@@ -148,6 +149,7 @@ void WL4EditorWindow::OpenROM()
 
     // Load the first level and render the screen
     if(CurrentLevel) delete CurrentLevel;
+    selectedLevel._PassageIndex = selectedLevel._LevelIndex = 0;
     CurrentLevel = new LevelComponents::Level(
         static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
         static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
@@ -177,15 +179,20 @@ void WL4EditorWindow::OpenROM()
         addDockWidget(Qt::RightDockWidgetArea, CameraControlWidget);
         CameraControlWidget->setVisible(false);
         EntitySetWidget->setVisible(false);
-        EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
-        Tile16SelecterWidget->SetTileset(tmpTilesetID);
-        CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
     }
+
+    // Modify UI every time time a ROM is loaded
+    EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
+    Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
 
     LoadRoomUIUpdate();
     DoorConfigDialog::EntitySetsInitialization();
 }
 
+/// <summary>
+/// Set whether the the UI elements for WL4Editor are enabled, based on layer properties.
+/// </summary>
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 {
     EditModeWidget->SetLayersCheckBoxEnabled(0, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled());
@@ -195,11 +202,9 @@ void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
     EditModeWidget->SetLayersCheckBoxEnabled(7, CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnabled());
 }
 
-bool *WL4EditorWindow::GetLayersVisibilityArray()
-{
-    return EditModeWidget->GetLayersVisibilityArray();
-}
-
+/// <summary>
+/// Deselect doors or entities that are currently selected.
+/// </summary>
 void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity()
 {
     ui->graphicsView->DeselectDoorAndEntity();
@@ -289,7 +294,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetLayer0ColorBlendingEnabled(nextroomconfig->Layer0Alpha);
     currentRoom->SetLayerPriorityAndAlphaAttributes(nextroomconfig->LayerPriorityAndAlphaAttr);
     currentRoom->SetLayer2Enabled(nextroomconfig->Layer2Enable);
-    if(nextroomconfig->Layer0DataPtr != 0) currentRoom->SetLayerDataPtr(0, nextroomconfig->Layer0DataPtr);
+    if(nextroomconfig->Layer0DataPtr) currentRoom->SetLayerDataPtr(0, nextroomconfig->Layer0DataPtr);
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
     currentRoom->SetBGLayerAutoScrollEnabled(nextroomconfig->BackgroundLayerAutoScrollEnable);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);

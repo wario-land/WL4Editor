@@ -34,6 +34,14 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
 Tile16DockWidget::~Tile16DockWidget()
 {
     delete ui;
+    if(Tile16MAPScene)
+    {
+        delete Tile16MAPScene;
+    }
+    if(SelectedTileset)
+    {
+        delete SelectedTileset;
+    }
 }
 
 /// <summary>

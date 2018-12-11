@@ -129,7 +129,7 @@ namespace LevelComponents
 
         // Helper functions
         void FreeDrawLayers();
-        void FreecurrentEntityListSource();
+        void FreeCurrentEntityListSource();
         void ResetEntitySet(int entitysetId);
 
     public:

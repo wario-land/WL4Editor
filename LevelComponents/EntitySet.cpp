@@ -118,17 +118,14 @@ namespace LevelComponents
         }
 
         // Load 1024 sprites tiles, ignore the first 4 rows, they are wario tiles
-        BlankTile = Tile8x8::CreateBlankTile(palettes);
-        // Initialize all the tiles
-        for(int i = 0; i < (36 * 32); ++i) //TODO: Can we use memset here ?
-        {
-            tile8x8data[i] = BlankTile;
-        }
+        memset(tile8x8data, 0, sizeof(tile8x8data));
+
         // Load Basic Universal Entities' tile8x8s.
         int tiledataptr, tiledatalength;
         tiledataptr = WL4Constants::SpritesBasicElementTiles;
         tiledatalength = 0x3000;
         LoadSpritesTiles(tiledataptr, tiledatalength, 4);
+
         // Load Entities' tile8x8s which differ amongst all entitysets
         k = 0;
         int currentrow = 16;
@@ -151,16 +148,21 @@ namespace LevelComponents
             k++;
             lasttiledataptr = tiledataptr;
         } while(1);
+        for(unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
+        {
+            if(!tile8x8data[i]) tile8x8data[i] = Tile8x8::CreateBlankTile(palettes);
+        }
+
         // Load Treasure/CD Boxes tile8x8s when this Entityset is not a Boss Entityset
         if(!IncludeBossTiles())
         {
 //            tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable);
 //            tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable);
 //            LoadSpritesTiles(tiledataptr, tiledatalength, 30);
-            LoadSpritesTiles(0x352CF0, 2048, 30);
+            LoadSpritesTiles(WL4Constants::TreasureBoxGFXTiles, 2048, 30);
         }
 
-        // TODOs: set other entity informations
+        // TODO: set other entity information
     }
 
     /// <summary>
@@ -355,11 +357,7 @@ namespace LevelComponents
         // BlankTile may be disjoint in the array, so we skip over those and delete it afterward
         for(unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
         {
-            if(tile8x8data[i] != BlankTile)
-            {
-                delete tile8x8data[i];
-            }
+            delete tile8x8data[i];
         }
-        delete BlankTile;
     }
 }

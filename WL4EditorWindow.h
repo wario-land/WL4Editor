@@ -60,7 +60,7 @@ public:
     bool FirstROMIsLoaded() { return firstROMLoaded; }
     void OpenROM();
     void SetEditModeDockWidgetLayerEditability();
-    bool *GetLayersVisibilityArray();
+    bool *GetLayersVisibilityArray() { return EditModeWidget->GetLayersVisibilityArray(); }
     void Graphicsview_UnselectDoorAndEntity();
     void RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig, DialogParams::RoomConfigParams *nextroomconfig);
     void ShowEntitySetDockWidget() { EntitySetWidget->setVisible(true); }

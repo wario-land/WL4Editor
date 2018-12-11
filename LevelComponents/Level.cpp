@@ -192,6 +192,9 @@ namespace LevelComponents
         return (a * 60 + b * 10 + c);
     }
 
+    /// <summary>
+    /// Distribute door data to every room.
+    /// </summary>
     void Level::RedistributeDoor()
     {
         // Distribute door data to every room
@@ -345,7 +348,7 @@ namespace LevelComponents
                 {
                     0, 0, nullptr, ROMUtils::SaveDataIndex++, false, 0,
                     cameraBoundaryListEntryPtr,
-                    ROMUtils::SaveDataChunkType::NullType
+                    ROMUtils::SaveDataChunkType::InvalidationChunk
                 };
                 chunks.append(invalidationEntry);
                 cameraBoundaryListEntryPtr += 4;
