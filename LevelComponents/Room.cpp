@@ -876,8 +876,8 @@ namespace LevelComponents
                 for(unsigned int j = 0; j < EntityList[i].size(); ++j)
                 {
                     memcpy(entityListChunk.data + j * sizeof(struct EntityRoomAttribute), &EntityList[i][j], sizeof(struct EntityRoomAttribute));
-                    memset(entityListChunk.data + EntityList[i].size() * sizeof(struct EntityRoomAttribute), 0xFF, sizeof(struct EntityRoomAttribute));
                 }
+                memset(entityListChunk.data + EntityList[i].size() * sizeof(struct EntityRoomAttribute), 0xFF, sizeof(struct EntityRoomAttribute));
                 chunks.append(entityListChunk);
             }
             else
