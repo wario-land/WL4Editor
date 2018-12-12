@@ -1,3 +1,6 @@
+beta-6:
+- Fix merely deleting Entities cannot save Entitylist changes to the ROM.
+
 beta-5:
 - Fix changing camera limitators then saving causes ROM to not boot
 - Fix some spinbox conditions for camera limitators

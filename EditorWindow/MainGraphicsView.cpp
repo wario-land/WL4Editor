@@ -203,6 +203,8 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         singleton->DeleteEntity(SelectedEntityID);
         SelectedEntityID = -1;
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+        singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
         singleton->SetUnsavedChanges(true);
     }
 
