@@ -176,7 +176,7 @@
        <item>
         <widget class="QSpinBox" name="SpinBox_RoomWidth">
          <property name="minimum">
-          <number>18</number>
+          <number>19</number>
          </property>
          <property name="maximum">
           <number>255</number>

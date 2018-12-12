@@ -25,6 +25,8 @@ private:
     QStandardItemModel *ListViewItemModel = nullptr;
     void ClearCurrentLimitatorSetting();
     int SelectedLimitator = -1;
+    int CurrentRoomWidth = 0;
+    int CurrentRoomHeight = 0;
     bool IsSavingData = false;
     void SetCurrentLimitator();
     void SetListviewItemText(int row);

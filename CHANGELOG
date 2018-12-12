@@ -1,0 +1,27 @@
+beta-5:
+- Fix changing camera limitators then saving causes ROM to not boot
+- Fix some spinbox conditions for camera limitators
+- Fix loading a second ROM file doesn't work
+- Fix several memory leaks
+
+beta-4:
+- Fix frog switch timers not saving
+- Fix Wario's appearance offset from destination door in DoorConfigDialog
+
+beta-3:
+- Disable most menu buttons before ROM is loaded
+- Fix changing the destination door in DoorConfigDialog intermittently crashes
+- Fix rendering of certain entities in Room.cpp crashes editor
+
+beta-2:
+- Added changelog
+- Reorder difficulty timers by normal, hard, s.hard in level config dialog
+- Added upper/lower bounds to camera control spinboxes
+- Adding a new door now triggers the "unsaved changes" flag
+- Clarified a few ambiguous tileset names
+- Fix not being able to set any destination door
+- Fix not being able to set BGM values greater than 255
+- Fix DoorConfigDialog triggered from a new door crashes editor
+
+beta-1:
+- Initial release

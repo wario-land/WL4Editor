@@ -77,7 +77,6 @@ private:
     void UpdateDoorLayerGraphicsView_Preview();
     void UpdateDoorLayerGraphicsView_DestinationDoor();
     void PopulateTable(LevelComponents::EntitySet entitySet);
-
     int GetSelectedComboBoxEntitySetID();
 
     // EntitySet
@@ -90,12 +89,14 @@ private:
 
     // visible in EntitySet ComboBox
     QList<EntitySetItem> comboboxEntitySet;
+
 public:
     explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level);
     ~DoorConfigDialog();
     void UpdateCurrentDoorData();
     static void StaticInitialization();
     static void EntitySetsInitialization();
+    static void EntitySetsDeconstruction();
 
     // Enumeration of Door type
     static constexpr const char *DoortypeSetData[5] =
@@ -110,12 +111,12 @@ public:
     // Enumeration of Entity names
     static constexpr const char *EntitynameSetData[128] =
     {
-        "0x01 Box (top-right quadrant)",
-        "0x02 Box (bottom-right quadrant)",
-        "0x03 Box (bottom-left quadrant)",
-        "0x04 Box (top-left quadrant)",
+        "0x01 Gem box (top-right piece)",
+        "0x02 Gem box (bottom-right piece)",
+        "0x03 Gem box (bottom-left piece)",
+        "0x04 Gem box (top-left piece)",
         "0x05 CD box",
-        "0x06 Health box",
+        "0x06 Full health box",
         "0x07 Large diamond",
         "0x08 Frog switch",
         "0x09 Keyzer",
@@ -139,7 +140,7 @@ public:
         "0x1B Moguramen",
         "0x1C Harimen (100 points)",
         "0x1D Harimenzetto",
-        "0x1E Bobble",
+        "0x1E Bubble",
         "0x1F Togerobo",
         "0x20 Falling Snow",
         "0x21 Spiked Head",
@@ -218,7 +219,7 @@ public:
         "0x6A Hoggus",
         "0x6B Denden",
         "0x6C Butatabi",
-        "0x6D Unknow",
+        "0x6D Unknown",
         "0x6E Folding Door",
         "0x6F Purple Pencil",
         "0x70 Blue Pencil",

@@ -153,6 +153,14 @@ namespace LevelComponents
         {
             delete map16data[i];
         }
+
+
+        for(unsigned int i = 0; i < 16; ++i)
+        {
+            palettes[i].clear();
+        }
+
+
     }
 
     /// <summary>

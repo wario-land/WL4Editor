@@ -80,6 +80,9 @@ namespace LevelComponents
         void AddDoor(Door* newdoor);
         ~Level();
         void GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks);
+        struct __LevelHeader *GetLevelHeader() { return &LevelHeader; }
+        enum __passage GetPassage() { return passage; }
+        enum __stage GetStage() { return stage; }
     };
 }
 

@@ -1,7 +1,7 @@
 #ifndef TILE_H
 #define TILE_H
 
-#include <QImage>
+#include <QPainter>
 
 #define ROT(X) (((X)<<13)|((X)>>19))
 
@@ -29,6 +29,8 @@ namespace LevelComponents
     public:
         QImageW(int W, int H, QImage::Format F) : QImage(W, H, F) {}
         QImageW(const QImageW &img) : QImage(img) {}
+        QImageW(QImage img) : QImage(img) {}
+        ~QImageW() {}
 
         /// <summary>
         /// Inline equality comparison functionality to provide O(1) performance for QHash
@@ -96,8 +98,8 @@ namespace LevelComponents
     {
     private:
         Tile8x8(QVector<QRgb> *_palettes);
-        QImageW *ImageData;
         QVector<QRgb> *palettes;
+        QImageW *ImageData;
         int paletteIndex = 0;
         bool FlipX = false;
         bool FlipY = false;

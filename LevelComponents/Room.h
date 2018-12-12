@@ -129,7 +129,7 @@ namespace LevelComponents
 
         // Helper functions
         void FreeDrawLayers();
-        void FreecurrentEntityListSource();
+        void FreeCurrentEntityListSource();
         void ResetEntitySet(int entitysetId);
 
     public:
@@ -143,13 +143,16 @@ namespace LevelComponents
         unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
         std::vector<struct __CameraControlRecord*> GetCameraControlRecords(bool create_new_instances = false)
         {
-            if(create_new_instances) return CameraControlRecords;
+            if(!create_new_instances)
+            {
+                return CameraControlRecords;
+            }
             std::vector<struct __CameraControlRecord*> newCameraControlRecords;
             for(unsigned int i = 0; i < CameraControlRecords.size(); ++i)
             {
-                struct __CameraControlRecord *currentCameralimitator = new __CameraControlRecord;
-                memcpy(currentCameralimitator, CameraControlRecords[i], sizeof(struct __CameraControlRecord));
-                newCameraControlRecords.push_back(currentCameralimitator);
+                struct __CameraControlRecord *newCameraLimitator = new __CameraControlRecord();
+                memcpy(newCameraLimitator, CameraControlRecords[i], sizeof(struct __CameraControlRecord));
+                newCameraControlRecords.push_back(newCameraLimitator);
             }
             return newCameraControlRecords;
         }

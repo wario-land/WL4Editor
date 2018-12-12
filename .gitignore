@@ -58,3 +58,6 @@ UpgradeLog.htm
 *.vcxproj
 *.filters
 *.sln
+
+# Debugging
+vgcore.*

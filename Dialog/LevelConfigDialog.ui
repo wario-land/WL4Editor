@@ -60,21 +60,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_3">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Hard Mode; </string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="HModeTimer_TextBox"/>
-     </item>
-     <item>
       <widget class="QLabel" name="label_4">
        <property name="font">
         <font>
@@ -82,12 +67,27 @@
         </font>
        </property>
        <property name="text">
-        <string>Normal Mode: </string>
+        <string>Normal Mode:</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLineEdit" name="NModeTimer_TextBox"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Hard Mode:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="HModeTimer_TextBox"/>
      </item>
      <item>
       <widget class="QLabel" name="label_5">
@@ -97,7 +97,7 @@
         </font>
        </property>
        <property name="text">
-        <string>SHard Mode: </string>
+        <string>S-Hard Mode:</string>
        </property>
       </widget>
      </item>

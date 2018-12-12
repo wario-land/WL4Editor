@@ -55,7 +55,6 @@ namespace LevelComponents
         std::vector<EntitySetinfoTableElement> EntityinfoTable;
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
-        Tile8x8 *BlankTile = nullptr;
 
         static constexpr const int EntitiesFirstActionFrameSetsPtrsData[129] =
         {

@@ -13,6 +13,8 @@ class MainGraphicsView : public QGraphicsView
 public:
     MainGraphicsView(QWidget *param) : QGraphicsView(param) {}
     void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
     int GetSelectedDoorID() { return SelectedDoorID; }
     void DeselectDoorAndEntity();
@@ -20,6 +22,10 @@ public:
 private:
     int SelectedDoorID = -1;
     int SelectedEntityID = -1;
+    int drawingTileX = -1;
+    int drawingTileY = -1;
+
+    void SetTile(int tileX, int tileY);
 };
 
 #endif // MAINGRAPHICSVIEW_H

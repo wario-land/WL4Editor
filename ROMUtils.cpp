@@ -95,7 +95,7 @@ namespace ROMUtils
                 while(1)
                 {
                     int ctrl = CurrentFile[address++];
-                    if(ctrl == 0)
+                    if(!ctrl)
                     {
                         break;
                     }
@@ -135,7 +135,7 @@ namespace ROMUtils
                 {
                     int ctrl = ((int) CurrentFile[address] << 8) | CurrentFile[address + 1];
                     address += 2; // offset + 2
-                    if(ctrl == 0)
+                    if(!ctrl)
                     {
                         break;
                     }
@@ -288,6 +288,9 @@ namespace ROMUtils
         bool success = false;
         QVector<struct SaveData> chunks;
         LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
+        int levelHeaderOffset = WL4Constants::LevelHeaderIndexTable + currentLevel->GetPassage() * 24 + currentLevel->GetStage() * 4;
+        int levelHeaderIndex = ROMUtils::IntFromData(levelHeaderOffset);
+        int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
         currentLevel->GetSaveChunks(chunks);
 
         // Finding space for the chunks can be done faster if the chunks are ordered by size
@@ -322,11 +325,11 @@ namespace ROMUtils
         // also expand the ROM size as necessary (up to 32MB) to hold the new data.
         std::map<int, int> indexToChunkPtr;
         int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
-        for(int i = 0; i < chunks.size(); ++i)
+        foreach(struct SaveData chunk, chunks)
         {
-            int chunkSize = chunks[i].size + 12 + (chunks[i].alignment ? 3 : 0);
+            int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
 findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
-            if(chunks[i].alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
+            if(chunk.alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
             if(!chunkAddr)
             {
                 // Expand ROM (double the size and align to 8MB)
@@ -342,7 +345,8 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                             "Out of memory",
                             "Unable to save changes because your computer is out of memory.",
                             QMessageBox::Ok,
-                            QMessageBox::Ok);
+                            QMessageBox::Ok
+                        );
                         goto error;
                     }
                     TempFile = newTempFile;
@@ -356,21 +360,24 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                     QMessageBox::warning(
                         singleton,
                         "ROM too large",
-                        QString("Unable to save changes because ") + chunkSize +
+                        QString("Unable to save changes because ") + QString::number(chunkSize) +
                             " contiguous free bytes are necessary, but such a region could not be"
                             " found, and the ROM file cannot be expanded larger than 32MB.",
                         QMessageBox::Ok,
-                        QMessageBox::Ok);
+                        QMessageBox::Ok
+                    );
                     goto error;
                 }
             }
-            indexToChunkPtr[chunks[i].index] = chunkAddr;
-            startAddr = chunkAddr + chunkSize; // do not re-search old areas of the ROM
+            indexToChunkPtr[chunk.index] = chunkAddr;
+            startAddr = chunkAddr + chunk.size + 12; // do not re-search old areas of the ROM
         }
 
         // Apply source pointer modifications
         foreach(struct SaveData chunk, chunks)
         {
+            if(chunk.ChunkType == SaveDataChunkType::InvalidationChunk) continue;
+
             unsigned char *ptrLoc = chunk.dest_index ?
                 // Source pointer is in another chunk
                 chunks[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr :
@@ -384,12 +391,26 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
         // Write each chunk to TempFile
         foreach(struct SaveData chunk, chunks)
         {
-            if(chunk.ChunkType == SaveDataChunkType::NullType) continue; // skip NullType chunks
+            if(chunk.ChunkType == SaveDataChunkType::InvalidationChunk) continue;
 
             // Create the RATS tag
             unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
             strncpy((char*) destPtr, "STAR", 4);
-            assert(!(chunk.size & 0xFFFF0000) /* Chunk size must be a 16-bit value */);
+            if(chunk.size & 0xFFFF0000)
+            {
+                // Chunk size must be a 16-bit value
+                QMessageBox::warning(
+                    singleton,
+                    "RATS chunk too large",
+                    QString("Unable to save changes because ") + QString::number(chunk.size) +
+                        " contiguous free bytes are necessary for some save chunk of type " +
+                        QString::number(chunk.ChunkType) + ", but the editor currently"
+                        " only supports up to size " + QString::number(0xFFFF) + ".",
+                    QMessageBox::Ok,
+                    QMessageBox::Ok
+                );
+                goto error;
+            }
             unsigned short chunkLen = (unsigned short) chunk.size;
             *(unsigned short*) (destPtr + 4) = chunkLen;
             *(unsigned short*) (destPtr + 6) = ~chunkLen;
@@ -401,6 +422,9 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
             // Write the data
             memcpy(destPtr + 12, chunk.data, chunkLen);
         }
+
+        // Write the level header to the ROM
+        memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
 
         { // Prevent goto from crossing initialization of variables here
             // Save the rom file from the CurrentFile copy
@@ -418,7 +442,8 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                     "Could not save file",
                     "Unable to write to or create the ROM file for saving.",
                     QMessageBox::Ok,
-                    QMessageBox::Ok);
+                    QMessageBox::Ok
+                );
                 goto error;
             }
             file.close();
@@ -461,11 +486,13 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
 
         // Clean up heap data and return
         success = true;
-        goto noerr;
-error:  free(TempFile);
-noerr:  foreach(struct SaveData chunk, chunks)
+        if(0)
         {
-            if(chunk.ChunkType != SaveDataChunkType::NullType) free(chunk.data);
+error:      free(TempFile);
+        }
+        foreach(struct SaveData chunk, chunks)
+        {
+            if(chunk.ChunkType != SaveDataChunkType::InvalidationChunk) free(chunk.data);
         }
         return success;
     }
