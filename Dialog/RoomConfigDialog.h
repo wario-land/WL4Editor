@@ -228,7 +228,7 @@ private:
     };
 
     // Enumeration of the available BGs per tileset (RLE format)
-    static constexpr const int BGLayerdataPtrsData[166] =
+    static constexpr const unsigned int BGLayerdataPtrsData[166] =
     {
         0,                            // Tileset 0x00
         1, WL4Constants::BG_0x5FB2CC,

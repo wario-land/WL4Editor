@@ -20,20 +20,24 @@ static unsigned int operationIndex[16];
 /// </param>
 static void PerformOperation(struct OperationParams *operation)
 {
+    LevelComponents::Room *room;
     switch(operation->type)
     {
     case ChangeTileOperation:
-        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentRoom();
         for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
-            int index = tcp->tileX + tcp->tileY * room->GetWidth();
+            unsigned int index = tcp->tileX + tcp->tileY * room->GetWidth();
             layer->GetLayerData()[index] = tcp->newTile;
             // Re-render the tile
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile, tcp->targetLayer);
         }
-        break;
+    break;
+    case ChangeRoomConfigOperation:
+        singleton->RoomConfigReset(operation->lastRoomConfigParams, operation->newRoomConfigParams);
+    break;
     }
 }
 
@@ -48,20 +52,25 @@ static void PerformOperation(struct OperationParams *operation)
 /// </param>
 static void BackTrackOperation(struct OperationParams *operation)
 {
+    LevelComponents::Room *room;
     switch(operation->type)
     {
     case ChangeTileOperation:
-        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentRoom();
         for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
-            int index = tcp->tileX + tcp->tileY * room->GetWidth();
+            unsigned int index = tcp->tileX + tcp->tileY * room->GetWidth();
             layer->GetLayerData()[index] = tcp->oldTile;
             // Re-render the tile
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile, tcp->targetLayer);
         }
         break;
+    case ChangeRoomConfigOperation:
+        // new to last
+        singleton->RoomConfigReset(operation->newRoomConfigParams, operation->lastRoomConfigParams);
+    break;
     }
 }
 
