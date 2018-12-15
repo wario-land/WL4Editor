@@ -56,7 +56,7 @@ namespace LevelComponents
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
 
-        static constexpr const int EntitiesFirstActionFrameSetsPtrsData[129] =
+        static constexpr const unsigned int EntitiesFirstActionFrameSetsPtrsData[129] =
         {
             0,                               // 0x00
             WL4Constants::Entity01_0x3B4F94,

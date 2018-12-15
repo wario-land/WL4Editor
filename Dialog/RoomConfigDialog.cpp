@@ -8,7 +8,7 @@ constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
 constexpr const char *RoomConfigDialog::LayerPrioritySetData[3];
 constexpr const char *RoomConfigDialog::AlphaBlendAttrsSetData[12];
 constexpr const char *RoomConfigDialog::Layer0MappingTypeParamSetData[2];
-constexpr int RoomConfigDialog::BGLayerdataPtrsData[166];
+constexpr unsigned int RoomConfigDialog::BGLayerdataPtrsData[166];
 
 // static variables used by RoomConfigDialog
 static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet, Layer0MappingTypeParamSet;

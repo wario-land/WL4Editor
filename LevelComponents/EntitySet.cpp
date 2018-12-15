@@ -1,6 +1,6 @@
 #include "EntitySet.h"
 
-constexpr int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
+constexpr unsigned int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
 constexpr int LevelComponents::EntitySet::EntityPositinalOffset[258];
 
 namespace LevelComponents
