@@ -49,13 +49,12 @@ namespace LevelComponents
         QPixmap GetPixmap(int paletteId);
 
     private:
-        int EntitySetID; // from 0 to 89 inclusive
+        int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available
         QVector<QRgb> palettes[16];
         Tile8x8 *tile8x8data[0x480];
         std::vector<EntitySetinfoTableElement> EntityinfoTable;
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
-        Tile8x8 *BlankTile = nullptr;
 
         static constexpr const int EntitiesFirstActionFrameSetsPtrsData[129] =
         {

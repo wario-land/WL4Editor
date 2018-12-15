@@ -27,8 +27,8 @@ namespace LevelComponents
         unsigned char y1;
         unsigned char y2;
         unsigned char LinkerDestination;
-        unsigned char HorizontalDelta;
-        unsigned char VerticalDelta;
+        signed char HorizontalDelta;
+        signed char VerticalDelta;
         unsigned char EntitySetID;
         unsigned short BGM_ID;
     };
@@ -48,6 +48,7 @@ namespace LevelComponents
         // Constructors
         Door(__DoorEntry _DoorEntry, unsigned char _RoomID, int doorId) :
             RoomID(_RoomID), DoorID(doorId), DoorEntry(_DoorEntry) {}
+        Door(Door &door);
 
         // Getters
         unsigned short GetBGM_ID() { return DoorEntry.BGM_ID; }
@@ -74,7 +75,7 @@ namespace LevelComponents
         void SetEntitySetID(unsigned char _EntitySetID) { DoorEntry.EntitySetID =_EntitySetID; }
         void SetGlobalDoorID(int doorId) { DoorID = doorId; }
         void SetLinkerDestination(int dest_RoomId) { DoorEntry.LinkerDestination = (unsigned char) dest_RoomId; }
-        void SetDelta(unsigned char _DeltaX, unsigned char _DeltaY)
+        void SetDelta(signed char _DeltaX, signed char _DeltaY)
         {
             DoorEntry.HorizontalDelta = (signed char) _DeltaX;
             DoorEntry.VerticalDelta = (signed char) _DeltaY;

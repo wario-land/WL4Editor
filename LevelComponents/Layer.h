@@ -26,9 +26,11 @@ namespace LevelComponents
         int LayerPriority = 0;
         bool dirty = false;
         unsigned int DataPtr; // this pointer does not include the 0x8000000 bit
+        void DeconstructTiles();
 
     public:
         Layer(int layerDataPtr, enum LayerMappingType mappingType);
+        Layer(Layer &layer);
         QPixmap RenderLayer(Tileset *tileset);
         int GetLayerWidth() { return Width; }
         int GetLayerHeight() { return Height; }

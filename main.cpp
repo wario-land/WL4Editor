@@ -17,31 +17,37 @@
 #if _MSC_VER && !__INTEL_COMPILER
 #pragma comment(lib,"Advapi32.lib")
 #endif // _MSC_VER
-#endif // _WIN32
-
-#include "Compress.h"
-
-#ifdef linux
+#else // _WIN32 (else linux)
 #include <unistd.h>
 #endif
 
+#include "Compress.h"
+
 extern int selectedRoom;
 
+/// <summary>
+/// Load a ROM file into the data array in ROMUtils.cpp.
+/// </summary>
+/// <param name="filePath">
+/// The path to the file that will be read.
+/// </param>
 bool LoadROMFile(QString filePath)
 {
     // Read ROM file into current file array
     QFile file(filePath);
     file.open(QIODevice::ReadOnly);
+
     // To check OPEN file
     int length;
-    if(!file.isOpen() || (length = (int)file.size()) <= 0xB0)
+    if(!file.isOpen() || (length = (int) file.size()) <= 0xB0)
     {
         file.close();
         return false;
     }
+
     // Read data
-    unsigned char * ROMAddr = new unsigned char[length];
-    file.read((char *)ROMAddr, length);
+    unsigned char *ROMAddr = new unsigned char[length];
+    file.read((char*) ROMAddr, length);
     file.close();
 
     // To check ROM correct
@@ -54,12 +60,14 @@ bool LoadROMFile(QString filePath)
     {
         ROMUtils::CurrentFileSize = length;
         ROMUtils::ROMFilePath = filePath;
-        //strcpy(ROMUtils::ROMFilePath, filePath.toStdString().c_str());
-        ROMUtils::CurrentFile = (unsigned char*)ROMAddr;
+        ROMUtils::CurrentFile = (unsigned char*) ROMAddr;
         return true;
     }
 }
 
+/// <summary>
+/// Perform all static class initializations.
+/// </summary>
 static void StaticInitialization_BeforeROMLoading()
 {
     RoomConfigDialog::StaticComboBoxesInitialization();
@@ -70,8 +78,12 @@ static void StaticInitialization_BeforeROMLoading()
 /// <summary>
 /// Perform static initializations, and then create the main window for the application.
 /// </summary>
-/// <param name="argc">Number of command line arguments.</param>
-/// <param name="argv">Array of command line arguments.</param>
+/// <param name="argc">
+/// Number of command line arguments.
+/// </param>
+/// <param name="argv">
+/// Array of command line arguments.
+/// </param>
 int main(int argc, char *argv[])
 {
     StaticInitialization_BeforeROMLoading();
@@ -97,8 +109,7 @@ int main(int argc, char *argv[])
         }
         username[i] = (char) (usernameTC[i] & 0xDF); // Makes username uppercase
     }
-#endif
-#ifdef linux
+#else
     username = new char[33]; // Maximum length is 32 (plus 1 for null termination)
     getlogin_r(username, 33);
     for(int i = 0; i < 32; ++i)
@@ -109,8 +120,8 @@ int main(int argc, char *argv[])
     if(!strncmp(username, "ANDREW", strlen(username))) // Goldensunboy
     {
         // Andrew's tests
-        extern const char *dialogInitialPath;
-        dialogInitialPath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
+        extern QString dialogInitialPath;
+        dialogInitialPath = QString("C:\\Users\\Andrew\\Desktop\\WL4.gba");
         w.OpenROM();
     }
     else if(!strncmp(username, "ADMINISTRATOR", strlen(username))) // SSP

@@ -70,16 +70,19 @@ namespace LevelComponents
         Level(enum __passage passage, enum __stage stage);
         void SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int seconds);
         int GetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty);
-        std::vector<Door*> GetDoors() { return doors; }
+        std::vector<Door*> GetDoors() { return doors; } //get Doors without copying the data
         std::vector<Room*> GetRooms() { return rooms; }
         std::string GetLevelName() { return LevelName; }
         void SetLevelName(std::string newlevelname) { LevelName = newlevelname; }
         void RedistributeDoor();
-        std::vector<Door*> GetRoomDoors(unsigned int roomId);
+        std::vector<Door*> GetRoomDoors(unsigned int roomId); //get Doors and copy the data
         void DeleteDoor(int globalDoorIndex);
         void AddDoor(Door* newdoor);
         ~Level();
         void GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks);
+        struct __LevelHeader *GetLevelHeader() { return &LevelHeader; }
+        enum __passage GetPassage() { return passage; }
+        enum __stage GetStage() { return stage; }
     };
 }
 

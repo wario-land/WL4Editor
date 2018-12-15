@@ -6,8 +6,8 @@
 extern WL4EditorWindow *singleton;
 
 // Globals used by the undo system
-static std::deque<struct OperationParams*> operationHistory;
-static unsigned int operationIndex;
+static std::deque<struct OperationParams*> operationHistory[16];
+static unsigned int operationIndex[16];
 
 /// <summary>
 /// Perform an operation based on its parameters.
@@ -73,14 +73,16 @@ static void BackTrackOperation(struct OperationParams *operation)
 /// </param>
 void ExecuteOperation(struct OperationParams *operation)
 {
+    int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
+
     PerformOperation(operation);
     // If we perform an action after a series of undo, then delete the "undone" operations from history
-    while(operationIndex)
+    while(operationIndex[currentRoomNumber])
     {
-        --operationIndex;
-        operationHistory.pop_front();
+        --operationIndex[currentRoomNumber];
+        operationHistory[currentRoomNumber].pop_front();
     }
-    operationHistory.push_front(operation);
+    operationHistory[currentRoomNumber].push_front(operation);
     singleton->SetUnsavedChanges(true);
 }
 
@@ -94,15 +96,23 @@ void ExecuteOperation(struct OperationParams *operation)
 /// </remarks>
 void UndoOperation()
 {
+    int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
+
     // We cannot undo past the end of the deque
-    if(operationIndex < operationHistory.size())
+    if(operationIndex[currentRoomNumber] < operationHistory[currentRoomNumber].size())
     {
-        BackTrackOperation(operationHistory[operationIndex++]);
-        // If the entire operation history is undone, then there are no unsaved changes
-        if(operationIndex == operationHistory.size())
+        BackTrackOperation(operationHistory[currentRoomNumber][operationIndex[currentRoomNumber]++]);
+
+        // If the entire operation history is undone for all rooms, then there are no unsaved changes
+        for(unsigned int i = 0; i < sizeof(operationIndex) / sizeof(operationIndex[0]); ++i)
         {
-            singleton->SetUnsavedChanges(false);
+            if(operationIndex[currentRoomNumber] != operationHistory[currentRoomNumber].size())
+            {
+                return;
+            }
         }
+        // TODO uncomment this once all operations that change the level go through Operation.cpp
+        //singleton->SetUnsavedChanges(false);
     }
 }
 
@@ -116,10 +126,13 @@ void UndoOperation()
 /// </remarks>
 void RedoOperation()
 {
+    int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
+
     // We cannot redo past the front of the deque
-    if(operationIndex)
+    if(operationIndex[currentRoomNumber])
     {
-        PerformOperation(operationHistory[--operationIndex]);
+        PerformOperation(operationHistory[currentRoomNumber][--operationIndex[currentRoomNumber]]);
+
         // Performing a "redo" will make unsaved changes
         singleton->SetUnsavedChanges(true);
     }
@@ -133,6 +146,16 @@ void RedoOperation()
 /// </remarks>
 void ResetUndoHistory()
 {
-    operationHistory.clear();
-    operationIndex = 0;
+    for(unsigned int i = 0; i < sizeof(operationHistory) / sizeof(operationHistory[0]); ++i)
+    {
+        // Deconstruct the dynamically allocated operation structs within the history queue
+        for(unsigned int j = 0; j < operationHistory[i].size(); ++j)
+        {
+            delete operationHistory[i][j];
+        }
+        operationHistory[i].clear();
+    }
+
+    // Re-initialize all the operation indexes to zero
+    memset(operationIndex, 0, sizeof(operationIndex));
 }

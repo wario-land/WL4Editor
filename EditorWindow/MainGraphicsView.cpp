@@ -33,26 +33,10 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
     {
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
-        if(editMode == Ui::LayerEditMode) // Change textmaps and layer graphic
+        if(editMode == Ui::LayerEditMode)
         {
-            unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
-            if(selectedTile == 0xFFFF) return;
-            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
-            LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
-            if(layer->IsEnabled() == false) return;
-            int selectedTileIndex = tileX + tileY * room->GetWidth();
-            if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
-            struct OperationParams *params = new struct OperationParams();
-            params->type = ChangeTileOperation;
-            params->tileChangeParams.push_back(TileChangeParams::Create(
-                tileX,
-                tileY,
-                selectedLayer,
-                selectedTile,
-                layer->GetLayerData()[selectedTileIndex]
-            ));
-            ExecuteOperation(params);
-            // delete params; //shall we?
+            // Change textmaps and layer graphics
+            SetTile(tileX, tileY);
         }
         else if(editMode == Ui::DoorEditMode) // select a door
         {
@@ -69,17 +53,26 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     bool b4 = door->GetY2() >= (int) tileY;
                     if(b1 && b2 && b3 && b4)
                     {
+                        // Door "i" was selected
                         if((int) i == SelectedDoorID)
                         {
+                            // If the door that was clicked is already selected, open the door config dialog
                             DoorConfigDialog _doorconfigdialog(singleton, room, i, singleton->GetCurrentLevel());
                             if(_doorconfigdialog.exec() == QDialog::Accepted)
                             {
-                                // TODO
+                                // Apply changes from the door config dialog
+                                _doorconfigdialog.UpdateCurrentDoorData();
+                                singleton->ResetEntitySetDockWidget();
+                                singleton->SetUnsavedChanges(true);
                             }
                         }
                         else
                         {
+                            // If the door that was clicked was not already selected, then select it
                             SelectedDoorID = i;
+                            // Let the Entityset change with the last selected Door
+                            singleton->GetCurrentRoom()->SetCurrentEntitySet(singleton->GetCurrentRoom()->GetDoor(i)->GetEntitySetID());
+                            singleton->ResetEntitySetDockWidget();
                         }
                         goto DOOR_FOUND;
                     }
@@ -94,15 +87,106 @@ DOOR_FOUND:     ;
             SelectedEntityID = room->FindEntity(tileX, tileY);
             if(SelectedEntityID == -1)
             {
+                // Add the new entity
                 bool success = room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
                 assert(success /* Failure to add entity */); // TODO: Show information if failure
                 int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
                 room->SetEntityListDirty(difficulty, true);
+                singleton->SetUnsavedChanges(true);
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
         }
-        // TODO add more cases for other edit mode types
     }
+}
+
+/// <summary>
+/// this function will be called when the graphic view in the main window is clicked and then mouse start moving.
+/// </summary>
+/// <param name="event">
+/// The mouse click event.
+/// </param>
+void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
+{
+    if(!singleton->FirstROMIsLoaded()) return;
+
+    // Get the ID of the tile that was clicked
+    unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
+    unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
+    unsigned int tileX = X / 32;
+    unsigned int tileY = Y / 32;
+
+    // If we have moved within the same tile, do nothing
+    if(tileX == (unsigned int) drawingTileX && tileY == (unsigned int) drawingTileY)
+    {
+        return;
+    }
+
+    // Draw the new tile
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    if(tileX < room->GetWidth() && tileY < room->GetHeight())
+    {
+        enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
+
+        if((editMode == Ui::LayerEditMode))
+        {
+            // Change textmaps and layer graphics
+            SetTile(tileX, tileY);
+        }
+    }
+    else
+    {
+        mouseReleaseEvent(event);
+    }
+}
+
+/// <summary>
+/// This is a helper function for setting the tile at a tile position to the currently
+/// selected tile from the UI.
+/// </summary>
+/// <param name="tileX">
+/// The X position of the tile (unit: map16)
+/// </param>
+/// <param name="tileY">
+/// The Y position of the tile (unit: map16)
+/// </param>
+void MainGraphicsView::SetTile(int tileX, int tileY)
+{
+    // Update which tile has last been drawn, for the tile painting functionality
+    drawingTileX = tileX;
+    drawingTileY = tileY;
+
+    // Create an execute a tile change operation for the changed tile
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
+    if(selectedTile == 0xFFFF) return;
+    int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+    LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
+    if(layer->IsEnabled() == false) return;
+    int selectedTileIndex = tileX + tileY * room->GetWidth();
+    if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
+    struct OperationParams *params = new struct OperationParams();
+    params->type = ChangeTileOperation;
+    params->tileChangeParams.push_back(TileChangeParams::Create(
+        tileX,
+        tileY,
+        selectedLayer,
+        selectedTile,
+        layer->GetLayerData()[selectedTileIndex]
+    ));
+    ExecuteOperation(params);
+}
+
+/// <summary>
+/// this function will be called when the graphic view in the main window is clicked then mouse release.
+/// </summary>
+/// <param name="event">
+/// The mouse click event.
+/// </param>
+void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
+{
+    (void) event;
+    drawingTileX = -1;
+    drawingTileY = -1;
 }
 
 /// <summary>
@@ -113,17 +197,24 @@ DOOR_FOUND:     ;
 /// </param>
 void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 {
+    // Delete selected entity if BSP or DEL is pressed
     if((SelectedEntityID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
     {
         singleton->DeleteEntity(SelectedEntityID);
         SelectedEntityID = -1;
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+        singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+        singleton->SetUnsavedChanges(true);
     }
+
+    // Delete selected door if BSP or DEL is pressed
     else if((SelectedDoorID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
     {
         singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
         SelectedDoorID = -1;
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->SetUnsavedChanges(true);
     }
 }
 

@@ -25,6 +25,8 @@ private:
     QStandardItemModel *ListViewItemModel = nullptr;
     void ClearCurrentLimitatorSetting();
     int SelectedLimitator = -1;
+    int CurrentRoomWidth = 0;
+    int CurrentRoomHeight = 0;
     bool IsSavingData = false;
     void SetCurrentLimitator();
     void SetListviewItemText(int row);
@@ -45,7 +47,6 @@ private slots:
     void on_FollowWario_radioButton_clicked(bool checked);
     void on_UseCameraLimitators_radioButton_clicked(bool checked);
     void on_AddCameraLimitator_pushButton_clicked();
-
     void on_DeleteCameraLimitator_pushButton_clicked();
 
 public:

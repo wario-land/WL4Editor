@@ -9,6 +9,8 @@
 #include <QFileDialog>
 #include <QGraphicsScene>
 #include <QMessageBox>
+#include <QTextEdit>
+#include <QCloseEvent>
 
 bool LoadROMFile(QString); // Prototype for main.cpp function
 
@@ -19,7 +21,7 @@ bool editModeWidgetInitialized = false;
 // Global variables
 struct DialogParams::PassageAndLevelIndex selectedLevel = { 0, 0 };
 WL4EditorWindow *singleton;
-const char *dialogInitialPath = "";
+QString dialogInitialPath = QString("");
 
 /// <summary>
 /// Construct the instance of the WL4EditorWindow.
@@ -62,6 +64,7 @@ WL4EditorWindow::~WL4EditorWindow()
     {
         delete CurrentLevel;
     }
+    DoorConfigDialog::EntitySetsDeconstruction();
 }
 
 /// <summary>
@@ -136,7 +139,7 @@ void WL4EditorWindow::OpenROM()
     std::string filePath = qFilePath.toStdString();
     if(!LoadROMFile(qFilePath))
     {
-        QMessageBox::critical(nullptr,QString("Load Error"),QString("You may load a wrong ROM!"));
+        QMessageBox::critical(nullptr, QString("Load Error"), QString("You may load a wrong ROM!"));
         return;
     }
 
@@ -146,6 +149,7 @@ void WL4EditorWindow::OpenROM()
 
     // Load the first level and render the screen
     if(CurrentLevel) delete CurrentLevel;
+    selectedLevel._PassageIndex = selectedLevel._LevelIndex = 0;
     CurrentLevel = new LevelComponents::Level(
         static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
         static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
@@ -162,6 +166,11 @@ void WL4EditorWindow::OpenROM()
         ui->loadLevelButton->setEnabled(true);
         ui->actionLevel_Config->setEnabled(true);
         ui->actionRoom_Config->setEnabled(true);
+        ui->actionSave_ROM->setEnabled(true);
+        ui->actionSave_As->setEnabled(true);
+        ui->menuAdd->setEnabled(true);
+        ui->actionRedo->setEnabled(true);
+        ui->actionUndo->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -170,16 +179,20 @@ void WL4EditorWindow::OpenROM()
         addDockWidget(Qt::RightDockWidgetArea, CameraControlWidget);
         CameraControlWidget->setVisible(false);
         EntitySetWidget->setVisible(false);
-        EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
-        Tile16SelecterWidget->SetTileset(tmpTilesetID);
-        CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
-        EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
     }
+
+    // Modify UI every time time a ROM is loaded
+    EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
+    Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
 
     LoadRoomUIUpdate();
     DoorConfigDialog::EntitySetsInitialization();
 }
 
+/// <summary>
+/// Set whether the the UI elements for WL4Editor are enabled, based on layer properties.
+/// </summary>
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 {
     EditModeWidget->SetLayersCheckBoxEnabled(0, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled());
@@ -189,11 +202,9 @@ void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
     EditModeWidget->SetLayersCheckBoxEnabled(7, CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnabled());
 }
 
-bool *WL4EditorWindow::GetLayersVisibilityArray()
-{
-    return EditModeWidget->GetLayersVisibilityArray();
-}
-
+/// <summary>
+/// Deselect doors or entities that are currently selected.
+/// </summary>
 void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity()
 {
     ui->graphicsView->DeselectDoorAndEntity();
@@ -283,7 +294,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetLayer0ColorBlendingEnabled(nextroomconfig->Layer0Alpha);
     currentRoom->SetLayerPriorityAndAlphaAttributes(nextroomconfig->LayerPriorityAndAlphaAttr);
     currentRoom->SetLayer2Enabled(nextroomconfig->Layer2Enable);
-    if(nextroomconfig->Layer0DataPtr != 0) currentRoom->SetLayerDataPtr(0, nextroomconfig->Layer0DataPtr);
+    if(nextroomconfig->Layer0DataPtr) currentRoom->SetLayerDataPtr(0, nextroomconfig->Layer0DataPtr);
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
     currentRoom->SetBGLayerAutoScrollEnabled(nextroomconfig->BackgroundLayerAutoScrollEnable);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
@@ -404,19 +415,58 @@ void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned shor
 }
 
 /// <summary>
-/// Present the user with a warning if there are unsaved changes.
+/// Override the close window functionality so that a save prompt is offered if there are unsaved changes.
 /// </summary>
-/// <return>
-/// True if there are no unsaved changes, or the user clicks OK on the dialog.
-/// </return>
-bool WL4EditorWindow::UnsavedChangesWarning()
+/// <param name="event">
+/// Close window event information.
+/// </param>
+void WL4EditorWindow::closeEvent (QCloseEvent *event)
 {
-    return UnsavedChanges ? QMessageBox::warning(
-                                singleton,
-                                "Unsaved Changes",
-                                "There are unsaved changes. If you load another level, these will be lost. Load level anyway?",
-                                QMessageBox::Ok | QMessageBox::Cancel,
-                                QMessageBox::Cancel) == QMessageBox::Ok : true;
+    if(UnsavedChanges)
+    {
+        // Show save prompt
+        QMessageBox savePrompt;
+        savePrompt.setWindowTitle(tr("Unsaved changes"));
+        savePrompt.setText(tr("There are unsaved changes. Discard changes and quit anyway?"));
+        QPushButton *quitButton = savePrompt.addButton(tr("Discard"), QMessageBox::DestructiveRole);
+        QPushButton *cancelButton = savePrompt.addButton(tr("Cancel"), QMessageBox::NoRole);
+        QPushButton *saveButton = savePrompt.addButton(tr("Save"), QMessageBox::ApplyRole);
+        QPushButton *saveAsButton = savePrompt.addButton(tr("Save As"), QMessageBox::ApplyRole);
+        savePrompt.setDefaultButton(cancelButton);
+        savePrompt.exec();
+
+        if(savePrompt.clickedButton() == quitButton)
+        {
+            event->accept();
+            return;
+        }
+        else if(savePrompt.clickedButton() == saveButton)
+        {
+            // Do not exit if there was an issue saving the file
+            if(!SaveCurrentFile())
+            {
+                event->ignore();
+                return;
+            }
+        }
+        else if(savePrompt.clickedButton() == saveAsButton)
+        {
+            // Do not exit if the file cannot be saved, or the user cancels the save prompt
+            if(!SaveCurrentFileAs())
+            {
+                event->ignore();
+                return;
+            }
+        }
+        else
+        {
+            // If cancel is clicked, or X is clicked on the save prompt, then do nothing
+            event->ignore();
+        }
+    }
+
+    // No unsaved changes (quit)
+    event->accept();
 }
 
 /// <summary>
@@ -428,17 +478,39 @@ bool WL4EditorWindow::UnsavedChangesWarning()
 void WL4EditorWindow::on_loadLevelButton_clicked()
 {
     // Check for unsaved operations
-    if(!UnsavedChangesWarning())
+    if(UnsavedChanges)
     {
-        return;
+        // Show save prompt
+        QMessageBox savePrompt;
+        savePrompt.setWindowTitle(tr("Unsaved changes"));
+        savePrompt.setText(tr("There are unsaved changes. Discard changes and load level anyway?"));
+        QPushButton *discardButton = savePrompt.addButton(tr("Discard"), QMessageBox::DestructiveRole);
+        QPushButton *cancelButton = savePrompt.addButton(tr("Cancel"), QMessageBox::NoRole);
+        QPushButton *saveButton = savePrompt.addButton(tr("Save"), QMessageBox::ApplyRole);
+        savePrompt.setDefaultButton(cancelButton);
+        savePrompt.exec();
+
+        if(savePrompt.clickedButton() == saveButton)
+        {
+            // Do not load level if there was an issue saving the file
+            if(!SaveCurrentFile())
+            {
+                return;
+            }
+        }
+        else if(savePrompt.clickedButton() != discardButton)
+        {
+            return;
+        }
     }
 
-    // unselect Door and Entity
+    // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
 
-    // Load the first level and render the screen
+    // Load the selected level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
-    if(tmpdialog.exec() == QDialog::Accepted) {
+    if(tmpdialog.exec() == QDialog::Accepted)
+    {
         selectedLevel = tmpdialog.GetResult();
         if(CurrentLevel) delete CurrentLevel;
         CurrentLevel = new LevelComponents::Level(
@@ -467,12 +539,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
 /// </remarks>
 void WL4EditorWindow::on_roomDecreaseButton_clicked()
 {
-    // Check for unsaved operations
-    if(!UnsavedChangesWarning())
-    {
-        return;
-    }
-    // unselect Door and Entity
+    // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
 
     // Load the previous room
@@ -482,10 +549,6 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     ResetEntitySetDockWidget();
     ResetCameraControlDockWidget();
-
-    // Set program control changes
-    UnsavedChanges = false;
-    ResetUndoHistory();
 }
 
 /// <summary>
@@ -497,12 +560,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
 /// </remarks>
 void WL4EditorWindow::on_roomIncreaseButton_clicked()
 {
-    // Check for unsaved operations
-    if(!UnsavedChangesWarning())
-    {
-        return;
-    }
-    // unselect Door and Entity
+    // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
 
     // Load the next room
@@ -512,10 +570,6 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     ResetEntitySetDockWidget();
     ResetCameraControlDockWidget();
-
-    // Set program control changes
-    UnsavedChanges = false;
-    ResetUndoHistory();
 }
 
 /// <summary>
@@ -539,12 +593,14 @@ void WL4EditorWindow::on_actionLevel_Config_triggered()
     );
 
     // If OK is pressed, then set the level attributes
-    if(dialog.exec() == QDialog::Accepted)
+    auto acc = dialog.exec();
+    if(acc == QDialog::Accepted)
     {
         CurrentLevel->SetLevelName(dialog.GetPaddedLevelName());
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int)dialog.GetHModeTimer());
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int)dialog.GetNModeTimer());
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int)dialog.GetSHModeTimer());
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int) dialog.GetHModeTimer());
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int) dialog.GetNModeTimer());
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int) dialog.GetSHModeTimer());
+        SetUnsavedChanges(true);
     }
 }
 
@@ -607,6 +663,7 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         RenderScreenFull();
         SetEditModeDockWidgetLayerEditability();
         EditModeWidget->SetDifficultyRadioBox(1);
+        SetUnsavedChanges(true);
     }
 }
 
@@ -615,26 +672,111 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionNew_Door_triggered()
 {
-    if(!firstROMLoaded) return;
+    // Create a new door struct with blank fields
     LevelComponents::__DoorEntry newDoorEntry;
     memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
+
+    // Initialize the fields
     newDoorEntry.DoorTypeByte = (unsigned char) 2;
     newDoorEntry.EntitySetID = (unsigned char) 1;
     newDoorEntry.RoomID = (unsigned char) selectedRoom;
     newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
     LevelComponents::Door *newDoor = new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, CurrentLevel->GetDoors().size());
-    newDoor->SetEntitySetID((unsigned char) 1);
-    newDoor->SetBGM(0);
-    newDoor->SetDelta(0, 0);
+    newDoor->SetEntitySetID((unsigned char) CurrentLevel->GetRooms()[selectedRoom]->GetCurrentEntitySetID());
     newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
+
+    // Add the new door to the Level object and re-render the screen
     CurrentLevel->AddDoor(newDoor);
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    SetUnsavedChanges(true);
 }
 
 /// <summary>
-/// Call the function which saves the currently loaded level
+/// Call the function which saves the currently loaded level.
 /// </summary>
 void WL4EditorWindow::on_actionSave_ROM_triggered()
 {
-    ROMUtils::SaveFile();
+    SaveCurrentFile();
+}
+
+/// <summary>
+/// Select a file, and save the modified ROM to the file.
+/// </summary>
+void WL4EditorWindow::on_actionSave_As_triggered()
+{
+    SaveCurrentFileAs();
+}
+
+/// <summary>
+/// Select a file, and save the modified ROM to the file.
+/// </summary>
+/// <returns>
+/// True if the file was saved. False if the user declined, or was unable to save the file.
+/// </returns>
+bool WL4EditorWindow::SaveCurrentFileAs()
+{
+    QString qFilePath = QFileDialog::getSaveFileName(
+        this,
+        tr("Save ROM file as"),
+        dialogInitialPath,
+        tr("GBA ROM files (*.gba)")
+    );
+    if(qFilePath.compare(""))
+    {
+        if(ROMUtils::SaveFile(qFilePath))
+        {
+            // If successful in saving the file, set the window title to reflect the new file
+            dialogInitialPath = qFilePath;
+            std::string filePath = qFilePath.toStdString();
+            std::string fileName = filePath.substr(filePath.rfind('/') + 1);
+            setWindowTitle(fileName.c_str());
+            return true;
+        }
+    }
+    return false;
+}
+
+/// <summary>
+/// Show information about the editor.
+/// </summary>
+void WL4EditorWindow::on_actionAbout_triggered()
+{
+    // Show the about dialog
+    QMessageBox infoPrompt;
+    infoPrompt.setWindowTitle(tr("About"));
+    infoPrompt.setText(QString("WL4Editor by Goldensunboy, shinespeciall, xiazhanjian, and chanchancl\n"
+        "Special thanks: xTibor\n"
+        "Version: ") + WL4EDITOR_VERSION);
+    QPushButton *changelogButton = infoPrompt.addButton(tr("Ok"), QMessageBox::NoRole);
+    infoPrompt.exec();
+    /*
+    if(infoPrompt.clickedButton() == changelogButton)
+    {
+        // Get the changelog
+        const QString URI("https://raw.githubusercontent.com/Goldensunboy/WL4Editor/master/LICENSE");
+        QUrl URL = QUrl::fromEncoded(URI.toLocal8Bit());
+        QNetworkRequest request(URL);
+        QNetworkAccessManager manager;
+        QNetworkReply *reply = manager.get(request);
+        QString errorText = reply->errorString();
+        QByteArray data = reply->readAll();
+        QString changelogText = QString::fromUtf8(data.data(), data.size());
+        int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        QString statusString = QVariant(statusCode).toString();
+
+        // If the changelog button is clicked, show the changelog
+        QDialog changelogDialog(this);
+        changelogDialog.setWindowTitle("Changelog");
+        QHBoxLayout *layout = new QHBoxLayout();
+        QTextEdit *textArea = new QTextEdit();
+        textArea->setReadOnly(true);
+        layout->addWidget(textArea);
+        textArea->setText(statusString);
+        changelogDialog.setLayout(layout);
+        changelogDialog.exec();
+        delete textArea;
+        delete layout;
+    }
+    */
+    changelogButton = changelogButton;
 }

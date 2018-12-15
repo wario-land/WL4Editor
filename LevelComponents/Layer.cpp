@@ -1,7 +1,9 @@
 #include "Layer.h"
 #include "ROMUtils.h"
+
 #include <iostream>
 #include <cstring>
+#include <cassert>
 
 namespace LevelComponents
 {
@@ -32,7 +34,7 @@ namespace LevelComponents
             Height = ROMUtils::CurrentFile[layerDataPtr + 1];
 
             // Get the layer data
-            LayerData = (unsigned short *) ROMUtils::LayerRLEDecompress(layerDataPtr + 2, Width * Height * 2);
+            LayerData = (unsigned short*) ROMUtils::LayerRLEDecompress(layerDataPtr + 2, Width * Height * 2);
         }
         else if(mappingType == LayerTile8x8)
         {
@@ -41,7 +43,7 @@ namespace LevelComponents
             Height = (1 + ((ROMUtils::CurrentFile[layerDataPtr] >> 1) & 1)) << 5;
 
             // Get the layer data
-            LayerData = (unsigned short *) ROMUtils::LayerRLEDecompress(layerDataPtr + 1, Width * Height * 2);
+            LayerData = (unsigned short*) ROMUtils::LayerRLEDecompress(layerDataPtr + 1, Width * Height * 2);
 
             // Rearrange tile data for dimension type 1
             //   1 2 3 4 5 6    1 2 3 A B C
@@ -63,8 +65,34 @@ namespace LevelComponents
         }
 
         // Was layer decompression successful?
-        if(LayerData == nullptr)
+        if(!LayerData)
             std::cout << "Failed to decompress layer data: " << (layerDataPtr + 1) << std::endl;
+    }
+
+    /// <summary>
+    /// Deep copy constructor for Layer.
+    /// </summary>
+    /// <param name="layer">
+    /// The Layer object to deep copy from.
+    /// </param>
+    Layer::Layer(Layer &layer) :
+        MappingType(layer.MappingType),
+        Enabled(layer.Enabled),
+        Width(layer.Width),
+        Height(layer.Height),
+        LayerPriority(layer.LayerPriority),
+        dirty(layer.dirty),
+        DataPtr(layer.DataPtr)
+    {
+        int layerDataSize = Width * Height * 2;
+        LayerData = (unsigned short*) malloc(layerDataSize);
+        memcpy(LayerData, layer.LayerData, layerDataSize);
+        if(MappingType == LayerMappingType::LayerTile8x8)
+            foreach(Tile *tile, layer.tiles)
+                tiles.push_back(new Tile8x8((Tile8x8*) tile));
+        else // Map16 tiles are not deep copied
+            foreach(Tile *tile, layer.tiles)
+                tiles.push_back(tile);
     }
 
     /// <summary>
@@ -73,18 +101,24 @@ namespace LevelComponents
     Layer::~Layer()
     {
         if(!LayerData) return;
+        DeconstructTiles();
+        delete[] LayerData;
+    }
 
+    /// <summary>
+    /// Deconstruct the layer's tile
+    /// </summary>
+    void Layer::DeconstructTiles()
+    {
         // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
+        // If it is map16 type, then they are just pointer copies and should be deconstructed in ~Tileset() only
         if(MappingType == LayerTile8x8)
         {
-            for(auto iter = tiles.begin(); iter != tiles.end(); ++iter)
+            foreach(Tile *t, tiles)
             {
-                delete(*iter);
+                delete t;
             }
         }
-
-        // If it is map16 type, then they are just pointer copies and should be deconstructed in ~Tileset() only
-        delete[] LayerData;
     }
 
     /// <summary>
@@ -102,7 +136,7 @@ namespace LevelComponents
     QPixmap Layer::RenderLayer(Tileset *tileset)
     {
         // Set the units we are drawing in (depending on the Tile type)
-        int units;
+        int units = -1;
         switch(MappingType)
         {
             case LayerDisabled:
@@ -112,13 +146,18 @@ namespace LevelComponents
                 break;
             case LayerTile8x8:
                 units = 8;
+                break;
+            default:
+                assert(0 /* Invalid tileset mapping type encountered in Layer::RenderLayer */);
         }
 
         // Create tiles
-        if(tiles.size() != 0) tiles.clear();
-        tiles = std::vector<Tile*>(Width * Height);
         if(MappingType == LayerMap16)
         {
+            // Re-initialize tile vector
+            if(tiles.size() != 0) tiles.clear();
+            tiles = std::vector<Tile*>(Width * Height);
+
             // For 16x16 tiles, just copy the tiles from the map16
             TileMap16 **map16 = tileset->GetMap16Data();
             for(int i = 0; i < Width * Height; ++i)
@@ -128,6 +167,11 @@ namespace LevelComponents
         }
         else if(MappingType == LayerTile8x8)
         {
+            // Re-initialize tile vector
+            DeconstructTiles();
+            if(tiles.size() != 0) tiles.clear();
+            tiles = std::vector<Tile*>(Width * Height);
+
             // For 8x8 tiles, we must use the copy constructor and set each tile's properties
             Tile8x8 **tile8x8 = tileset->GetTile8x8Data();
             for(int i = 0; i < Width * Height; ++i)
@@ -150,7 +194,8 @@ namespace LevelComponents
         {
             for(int j = 0; j < Width; ++j)
             {
-                tiles[j + i * Width]->DrawTile(&layerPixmap, j * units, i * units);
+                Tile *t = tiles[j + i * Width];
+                t->DrawTile(&layerPixmap, j * units, i * units);
             }
         }
 
@@ -262,7 +307,7 @@ namespace LevelComponents
     {
         unsigned short *tmpLayerData = new unsigned short[newWidth * newHeight];
         int boundX = qMin(Width, newWidth), boundY = qMin(Height, newHeight);
-        unsigned short defaultValue = 0x0040;
+        unsigned short defaultValue = 0x0000;
         for(int i = 0; i < boundY; ++i)
         {
             memcpy(tmpLayerData + i * newWidth, LayerData + i * Width, boundX * sizeof(short));

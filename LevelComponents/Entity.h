@@ -13,6 +13,12 @@ namespace LevelComponents
         int deltaX;
         int deltaY;
         Tile8x8 *objTile;
+
+        // Deconstructor for the EntityTile struct
+        ~EntityTile()
+        {
+            delete objTile;
+        }
     };
 
     struct OAMTile
@@ -32,7 +38,6 @@ namespace LevelComponents
         {
             foreach(EntityTile *t, tile8x8)
             {
-                delete t->objTile;
                 delete t;
             }
         }
