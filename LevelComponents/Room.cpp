@@ -832,21 +832,28 @@ namespace LevelComponents
             Layer *layer = layers[i];
             if(layer->IsDirty())
             {
-                // Add the data for this layer, it must be compressed
-                unsigned int compressedSize;
-                unsigned char *compressedData = layer->GetCompressedLayerData(&compressedSize);
-                struct ROMUtils::SaveData layerChunk =
+                if(layer->GetMappingType() != LayerMappingType::LayerDisabled)
                 {
-                    RoomID * sizeof(struct __RoomHeader) + 8 + i * 4,
-                    compressedSize,
-                    compressedData,
-                    ROMUtils::SaveDataIndex++,
-                    true,
-                    headerChunk->index,
-                    layer->GetDataPtr(),
-                    ROMUtils::SaveDataChunkType::LayerChunkType
-                };
-                chunks.append(layerChunk);
+                    // Add the data for this layer, it must be compressed
+                    unsigned int compressedSize;
+                    unsigned char *compressedData = layer->GetCompressedLayerData(&compressedSize);
+                    struct ROMUtils::SaveData layerChunk =
+                    {
+                        RoomID * sizeof(struct __RoomHeader) + 8 + i * 4,
+                        compressedSize,
+                        compressedData,
+                        ROMUtils::SaveDataIndex++,
+                        true,
+                        headerChunk->index,
+                        layer->GetDataPtr(),
+                        ROMUtils::SaveDataChunkType::LayerChunkType
+                    };
+                    chunks.append(layerChunk);
+                }
+                else
+                {
+                    layerPtrs[i] = WL4Constants::BGLayerDefaultPtr | 0x8000000;
+                }
             }
             else
             {
