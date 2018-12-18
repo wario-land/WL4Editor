@@ -852,7 +852,15 @@ namespace LevelComponents
                 }
                 else
                 {
-                    layerPtrs[i] = WL4Constants::BGLayerDefaultPtr | 0x8000000;
+                    // Set the pointer as disabled, and invalidate the old layer save chunk
+                    layerPtrs[i] = (i == 3 ? WL4Constants::BGLayerDefaultPtr : WL4Constants::NormalLayerDefaultPtr) | 0x8000000;
+                    struct ROMUtils::SaveData invalidationChunk =
+                    {
+                        0, 0, nullptr, ROMUtils::SaveDataIndex++, false, 0,
+                        (unsigned int) GetLayerDataPtr(i),
+                        ROMUtils::SaveDataChunkType::InvalidationChunk
+                    };
+                    chunks.append(invalidationChunk);
                 }
             }
             else

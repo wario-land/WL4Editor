@@ -1,7 +1,9 @@
 beta-6:
-- Fix merely deleting Entities cannot save Entitylist changes to the ROM.
-- Fix build error C2398 when using msvc, change some type from int to uint.
-- Add Undo/Redo operation for RoomConfigDialog.
+- Fix merely deleting Entities cannot save Entitylist changes to the ROM
+- Fix build error C2398 when using msvc, change some type from int to uint
+- Add Undo/Redo operation for RoomConfigDialog
+- Fix being unable to save disabled layers
+- Fix layer changes in RoomConfigDialog not setting layers as "dirty"
 
 beta-5:
 - Fix changing camera limitators then saving causes ROM to not boot

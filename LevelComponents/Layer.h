@@ -45,7 +45,7 @@ namespace LevelComponents
         void CreateNewLayer_type0x10(int layerWidth, int layerHeight);
         void ChangeDimensions(int newWidth, int newHeight);
         bool IsDirty() { return dirty; }
-        void SetClean() { dirty = false; }
+        void SetDirty(bool _dirty) { dirty = _dirty; }
         unsigned char *GetCompressedLayerData(unsigned int *dataSize);
         ~Layer();
         unsigned int GetDataPtr() { return DataPtr; }

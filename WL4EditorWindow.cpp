@@ -298,6 +298,9 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
     currentRoom->SetBGLayerAutoScrollEnabled(nextroomconfig->BackgroundLayerAutoScrollEnable);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
+
+    // Mark the layers as dirty
+    for(unsigned int i = 0; i < 4; ++i) currentRoom->GetLayer(i)->SetDirty(true);
 }
 
 /// <summary>
@@ -701,7 +704,10 @@ void WL4EditorWindow::on_actionNew_Door_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionSave_ROM_triggered()
 {
-    SaveCurrentFile();
+    if(SaveCurrentFile())
+    {
+        statusBarLabel->setText("Saved!");
+    }
 }
 
 /// <summary>
@@ -709,7 +715,10 @@ void WL4EditorWindow::on_actionSave_ROM_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionSave_As_triggered()
 {
-    SaveCurrentFileAs();
+    if(SaveCurrentFileAs())
+    {
+        statusBarLabel->setText("Saved!");
+    }
 }
 
 /// <summary>

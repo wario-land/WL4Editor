@@ -471,7 +471,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                 {
                     LevelComponents::Layer *layer = room->GetLayer(j);
                     layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
-                    layer->SetClean();
+                    layer->SetDirty(false);
                 }
                 for(unsigned int j = 0; j < 3; ++j)
                 {
