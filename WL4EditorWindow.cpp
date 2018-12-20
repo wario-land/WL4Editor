@@ -652,7 +652,6 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     if(dialog.exec() == QDialog::Accepted)
     {
         DialogParams::RoomConfigParams configParams = dialog.GetConfigParams();
-        //RoomConfigReset(_currentRoomConfigParams, &configParams);
 
         // TODO: this should be done with the operation history
         OperationParams *operation = new OperationParams;
