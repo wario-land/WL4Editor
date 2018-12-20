@@ -664,11 +664,6 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         // Delete _currentRoomConfigParams
         delete _currentRoomConfigParams;
 
-        // UI update
-        RenderScreenFull();
-        SetEditModeDockWidgetLayerEditability();
-        EditModeWidget->SetDifficultyRadioBox(1);
-        SetUnsavedChanges(true);
     }
 }
 

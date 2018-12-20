@@ -73,6 +73,7 @@ public:
     void ResetCameraControlDockWidget() { CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]); }
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
     void DeleteDoor(int globalDoorIndex);
+    void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd);}
 
 private slots:
     void on_actionOpen_ROM_triggered();

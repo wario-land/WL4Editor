@@ -34,10 +34,14 @@ static void PerformOperation(struct OperationParams *operation)
             // Re-render the tile
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile, tcp->targetLayer);
         }
-    break;
+        break;
     case ChangeRoomConfigOperation:
         singleton->RoomConfigReset(operation->lastRoomConfigParams, operation->newRoomConfigParams);
-    break;
+        singleton->RenderScreenFull();
+        singleton->SetEditModeDockWidgetLayerEditability();
+        singleton->SetEditModeWidgetDifficultyRadioBox(1);
+        singleton->SetUnsavedChanges(true);
+        break;
     }
 }
 
@@ -70,7 +74,11 @@ static void BackTrackOperation(struct OperationParams *operation)
     case ChangeRoomConfigOperation:
         // new to last
         singleton->RoomConfigReset(operation->newRoomConfigParams, operation->lastRoomConfigParams);
-    break;
+        singleton->RenderScreenFull();
+        singleton->SetEditModeDockWidgetLayerEditability();
+        singleton->SetEditModeWidgetDifficultyRadioBox(1);
+        singleton->SetUnsavedChanges(true);
+        break;
     }
 }
 
