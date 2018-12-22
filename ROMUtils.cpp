@@ -222,7 +222,7 @@ namespace ROMUtils
         (*OutputCompressedData)[lowerLength + upperLength] = '\0';
 
         // Clean up
-        delete separatedBytes;
+        delete[] separatedBytes;
         return size;
     }
 
