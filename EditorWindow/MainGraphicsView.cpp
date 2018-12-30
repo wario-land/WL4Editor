@@ -35,8 +35,19 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 
         if(editMode == Ui::LayerEditMode)
         {
-            // Change textmaps and layer graphics
-            SetTile(tileX, tileY);
+            //If we use right click then copy the tile
+            if (event->button() == Qt::RightButton) {
+                int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+                LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
+                int selectedTileIndex = tileX + tileY * room->GetWidth();
+                unsigned short placedTile=layer->GetLayerData()[selectedTileIndex];
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile);
+
+            //Otherwise just place the tile
+            } else {
+                // Change textmaps and layer graphics
+                SetTile(tileX, tileY);
+            }
         }
         else if(editMode == Ui::DoorEditMode) // select a door
         {
