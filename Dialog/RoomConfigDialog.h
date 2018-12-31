@@ -72,9 +72,9 @@ namespace DialogParams
             }
         }
 
-        RoomConfigParams(const RoomConfigParams &other) {
+        /*RoomConfigParams(const RoomConfigParams &other) {
             memcpy(this, &other, sizeof(RoomConfigParams));
-            QMessageBox::information(NULL , "", "Copy Construct");
+            //QMessageBox::information(NULL , "", "Copy Construct");
             // Get Layer from room.
             for(int i=0; i < 3; i++){
                 // it is no needed to copy from other.
@@ -85,7 +85,7 @@ namespace DialogParams
 
         RoomConfigParams& operator=(const RoomConfigParams &other)
         {
-            QMessageBox::information(NULL , "", "assign Consturct");
+            //QMessageBox::information(NULL , "", "assign Consturct");
             memcpy(this, &other, sizeof(RoomConfigParams));
             // Get Layer from room.
             for(int i=0; i < 3; i++){
@@ -94,7 +94,7 @@ namespace DialogParams
                 NewLayerData[i] = nullptr;
             }
             return *this;
-        }
+        }*/
 
         ~RoomConfigParams(){
             // new and delete by myself.

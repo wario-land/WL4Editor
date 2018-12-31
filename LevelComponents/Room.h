@@ -10,8 +10,6 @@
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 
-#define RELEASE(ptr) do {if(ptr)delete ptr; ptr = nullptr;}while(0);
-
 namespace LevelComponents
 {
     class Room;
@@ -210,7 +208,7 @@ namespace LevelComponents
         void SetEntityListPtr(int difficulty, unsigned int ptr) { (&RoomHeader.EntityTableHard)[difficulty] = ptr; }
         void SetHeight(int _height) { Height = (unsigned int) _height; }
         void SetWidth(int _width) { Width = (unsigned int) _width; }
-        void SetLayer(int LayerID, Layer *newLayer) { RELEASE(layers[LayerID]); layers[LayerID] = newLayer; }
+        void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
         void SetLayer0ColorBlendingEnabled(bool enability) { Layer0ColorBlending = enability; }
         void SetLayer0MappingParam(int layer0MappingTypeParam) { RoomHeader.Layer0MappingType = layer0MappingTypeParam; }
         void SetLayer2Enabled(bool enability) { RoomHeader.Layer2MappingType = enability ? '\x10' : '\x00'; }

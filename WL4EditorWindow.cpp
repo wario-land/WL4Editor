@@ -281,20 +281,26 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         {
             if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
             {
-                // save previous Layer data
-                size_t datasize1 = currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
-                unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
-                memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
-                currentroomconfig->PreviousLayerData[i] = tmpLayerdata1;
+                if (currentroomconfig->PreviousLayerData[i] == nullptr) {
+                    // save previous Layer data
+                    size_t datasize1 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
+                    unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
+                    memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
+                    currentroomconfig->PreviousLayerData[i] = tmpLayerdata1;
 
-                // reset Layer size
-                currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+                    // reset Layer size
+                    currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
 
-                // save result Layer data
-                size_t datasize2 = nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
-                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
-                memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
-                currentroomconfig->NewLayerData[i] = tmpLayerdata2;
+                    // save result Layer data
+                    size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
+                    unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                    memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
+                    currentroomconfig->NewLayerData[i] = tmpLayerdata2;
+                }
+                else {
+                    //delete[] currentRoom->GetLayer(i)->GetLayerData();
+                    currentRoom->GetLayer(i)->SetLayerData(currentroomconfig->NewLayerData[i]);
+                }
             }
         }
     }
