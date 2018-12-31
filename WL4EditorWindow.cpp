@@ -299,6 +299,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                 }
                 else {
                     //delete[] currentRoom->GetLayer(i)->GetLayerData();
+                    currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
                     currentRoom->GetLayer(i)->SetLayerData(currentroomconfig->NewLayerData[i]);
                 }
             }
