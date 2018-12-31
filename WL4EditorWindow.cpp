@@ -281,17 +281,20 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         {
             if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
             {
-                QMessageBox::information(NULL , "", "here1");
-                currentroomconfig->LayerData[i] = new LevelComponents::Layer(*currentRoom->GetLayer(i));
+                // save previous Layer data
+                size_t datasize1 = currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
+                unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
+                memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
+                currentroomconfig->PreviousLayerData[i] = tmpLayerdata1;
 
-                if (nextroomconfig->LayerData[i] != nullptr) {
-                    currentRoom->SetLayer(i, nextroomconfig->LayerData[i]);
-                }
-                else{
-                    currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
-                    nextroomconfig->LayerData[i] = new LevelComponents::Layer(*currentRoom->GetLayer(i));
-                }
+                // reset Layer size
+                currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
 
+                // save result Layer data
+                size_t datasize2 = nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
+                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
+                currentroomconfig->NewLayerData[i] = tmpLayerdata2;
             }
         }
     }

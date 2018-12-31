@@ -33,7 +33,8 @@ namespace DialogParams
         bool BackgroundLayerEnable;
         bool BackgroundLayerAutoScrollEnable;
         int BackgroundLayerDataPtr;
-        LevelComponents::Layer* LayerData[3];
+        unsigned short *PreviousLayerData[3];
+        unsigned short *NewLayerData[3];
 
         // Default constructor
         RoomConfigParams()
@@ -56,7 +57,8 @@ namespace DialogParams
         {
             for(int i=0; i < 3; i++){
                 // it is no needed to copy from other.
-                LayerData[i] = nullptr;
+                PreviousLayerData[i] = nullptr;
+                NewLayerData[i] = nullptr;
             }
             if(BackgroundLayerEnable)
             {
@@ -76,7 +78,8 @@ namespace DialogParams
             // Get Layer from room.
             for(int i=0; i < 3; i++){
                 // it is no needed to copy from other.
-                LayerData[i] = nullptr;
+                PreviousLayerData[i] = nullptr;
+                NewLayerData[i] = nullptr;
             }
         }
 
@@ -87,7 +90,8 @@ namespace DialogParams
             // Get Layer from room.
             for(int i=0; i < 3; i++){
                 // it is no needed to copy from other.
-                LayerData[i] = nullptr;
+                PreviousLayerData[i] = nullptr;
+                NewLayerData[i] = nullptr;
             }
             return *this;
         }
@@ -95,8 +99,10 @@ namespace DialogParams
         ~RoomConfigParams(){
             // new and delete by myself.
             for(int i=0; i < 3; i++){
-                if (LayerData[i])
-                    delete LayerData[i];
+                if(PreviousLayerData[i])
+                    delete[] PreviousLayerData[i];
+                if(NewLayerData[i])
+                    delete[] NewLayerData[i];
             }
         }
     };
