@@ -8,6 +8,7 @@
 #include <QGraphicsPixmapItem>
 #include <QScrollBar>
 #include <QLabel>
+#include <QMessageBox>
 
 #include "WL4Constants.h"
 #include "ROMUtils.h"
@@ -32,6 +33,7 @@ namespace DialogParams
         bool BackgroundLayerEnable;
         bool BackgroundLayerAutoScrollEnable;
         int BackgroundLayerDataPtr;
+        LevelComponents::Layer* LayerData[3];
 
         // Default constructor
         RoomConfigParams()
@@ -52,6 +54,10 @@ namespace DialogParams
             Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayerDataPtr(0) : 0),
             BackgroundLayerEnable(room->IsBGLayerEnabled())
         {
+            for(int i=0; i < 3; i++){
+                // it is no needed to copy from other.
+                LayerData[i] = nullptr;
+            }
             if(BackgroundLayerEnable)
             {
                 BackgroundLayerDataPtr = room->GetLayerDataPtr(3);
@@ -61,6 +67,36 @@ namespace DialogParams
             {
                 BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
                 BackgroundLayerAutoScrollEnable = false;
+            }
+        }
+
+        RoomConfigParams(const RoomConfigParams &other) {
+            memcpy(this, &other, sizeof(RoomConfigParams));
+            QMessageBox::information(NULL , "", "Copy Construct");
+            // Get Layer from room.
+            for(int i=0; i < 3; i++){
+                // it is no needed to copy from other.
+                LayerData[i] = nullptr;
+            }
+        }
+
+        RoomConfigParams& operator=(const RoomConfigParams &other)
+        {
+            QMessageBox::information(NULL , "", "assign Consturct");
+            memcpy(this, &other, sizeof(RoomConfigParams));
+            // Get Layer from room.
+            for(int i=0; i < 3; i++){
+                // it is no needed to copy from other.
+                LayerData[i] = nullptr;
+            }
+            return *this;
+        }
+
+        ~RoomConfigParams(){
+            // new and delete by myself.
+            for(int i=0; i < 3; i++){
+                if (LayerData[i])
+                    delete LayerData[i];
             }
         }
     };

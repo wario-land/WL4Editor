@@ -1,6 +1,5 @@
 #include "Operation.h"
 #include "WL4EditorWindow.h"
-
 #include <deque>
 
 extern WL4EditorWindow *singleton;
@@ -34,6 +33,7 @@ static void PerformOperation(struct OperationParams *operation)
         }
     }
     if (operation->roomConfigChange) {
+        // change the width and height for all layers
         singleton->RoomConfigReset(operation->lastRoomConfigParams, operation->newRoomConfigParams);
         singleton->RenderScreenFull();
         singleton->SetEditModeDockWidgetLayerEditability();

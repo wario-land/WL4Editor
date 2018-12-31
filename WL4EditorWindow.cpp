@@ -275,14 +275,23 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         currentRoom->GetLayer(3)->SetDisabled();
     }
 
-    // change the width and height for all layers
     if(nextroomconfig->RoomWidth != currentroomconfig->RoomWidth || nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
     {
         for(int i = 0; i < 3; ++i)
         {
             if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
             {
-                currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+                QMessageBox::information(NULL , "", "here1");
+                currentroomconfig->LayerData[i] = new LevelComponents::Layer(*currentRoom->GetLayer(i));
+
+                if (nextroomconfig->LayerData[i] != nullptr) {
+                    currentRoom->SetLayer(i, nextroomconfig->LayerData[i]);
+                }
+                else{
+                    currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+                    nextroomconfig->LayerData[i] = new LevelComponents::Layer(*currentRoom->GetLayer(i));
+                }
+
             }
         }
     }
@@ -651,13 +660,12 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     RoomConfigDialog dialog(this, _currentRoomConfigParams);
     if(dialog.exec() == QDialog::Accepted)
     {
-        DialogParams::RoomConfigParams configParams = dialog.GetConfigParams();
-
         // TODO: this should be done with the operation history
         OperationParams *operation = new OperationParams;
         operation->type = ChangeRoomConfigOperation;
+        operation->roomConfigChange = true;
         operation->lastRoomConfigParams = new DialogParams::RoomConfigParams(*_currentRoomConfigParams);
-        operation->newRoomConfigParams = new DialogParams::RoomConfigParams(configParams);
+        operation->newRoomConfigParams = new DialogParams::RoomConfigParams(dialog.GetConfigParams());
         ExecuteOperation(operation);
 
         // Delete _currentRoomConfigParams
