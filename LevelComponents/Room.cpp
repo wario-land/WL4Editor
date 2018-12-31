@@ -991,6 +991,56 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Move an Entity from the current Entity List.
+    /// </summary>
+    /// <param name="XPos">
+    /// The new X position of the entity.
+    /// </param>
+    /// <param name="YPos">
+    /// The new Y position of the entity.
+    /// </param>
+    /// <param name="index">
+    /// The index of the Entity record in EntityList[currentDifficulty], count from 0.
+    /// <returns>
+    /// Always true (?)
+    /// </returns>
+    void Room::SetEntityPosition(int XPos, int YPos, int index)
+    {
+        if(EntityList[currentDifficulty].size() == (int) 47) return false;
+        EntityList[currentDifficulty].at(index).XPos=XPos;
+        EntityList[currentDifficulty].at(index).YPos=YPos;
+        return;
+    }
+
+    /// <summary>
+    /// Get the x position of an Entity from the current Entity List.
+    /// </summary>
+    /// <param name="index">
+    /// The index of the Entity record in EntityList[currentDifficulty], count from 0.
+    /// <returns>
+    /// The x position
+    /// </returns>
+    int Room::GetEntityX(int index)
+    {
+        if(EntityList[currentDifficulty].size() == (int) 47) return false;
+        return EntityList[currentDifficulty].at(index).XPos;;
+    }
+
+    /// <summary>
+    /// Get the y position of an Entity from the current Entity List.
+    /// </summary>
+    /// <param name="index">
+    /// The index of the Entity record in EntityList[currentDifficulty], count from 0.
+    /// <returns>
+    /// The y position
+    /// </returns>
+    int Room::GetEntityY(int index)
+    {
+        if(EntityList[currentDifficulty].size() == (int) 47) return false;
+        return EntityList[currentDifficulty].at(index).YPos;;
+    }
+
+    /// <summary>
     /// Delete an Entity from a Entity List.
     /// </summary>
     /// <param name="index">

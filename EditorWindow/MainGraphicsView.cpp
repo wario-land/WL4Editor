@@ -208,24 +208,82 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 /// </param>
 void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 {
-    // Delete selected entity if BSP or DEL is pressed
-    if((SelectedEntityID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
+    //If an entity is selected
+    if(SelectedEntityID != -1)
     {
-        singleton->DeleteEntity(SelectedEntityID);
-        SelectedEntityID = -1;
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
-        int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
-        singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
-        singleton->SetUnsavedChanges(true);
-    }
-
-    // Delete selected door if BSP or DEL is pressed
-    else if((SelectedDoorID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
+        switch (event->key())
+        {
+            // Delete selected entity if BSP or DEL is pressed
+            case Qt::Key_Backspace:
+            case Qt::Key_Delete:
+            {
+                singleton->DeleteEntity(SelectedEntityID);
+                SelectedEntityID = -1;
+                singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+                int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                singleton->SetUnsavedChanges(true);
+                break;
+            }
+            //Move selected entity when a direction key is pressed
+            case Qt::Key_Left ... Qt::Key_Down:
+            {
+                LevelComponents::Room* currentRoom=singleton->GetCurrentRoom();
+                int px=currentRoom->GetEntityX(SelectedEntityID);
+                int py=currentRoom->GetEntityY(SelectedEntityID);
+                if (event->key() == Qt::Key_Left)
+                {
+                    currentRoom->SetEntityPosition(px-1,py,SelectedEntityID);
+                } else if (event->key() == Qt::Key_Right)
+                {
+                    currentRoom->SetEntityPosition(px+1,py,SelectedEntityID);
+                } else if (event->key() == Qt::Key_Up)
+                {
+                    currentRoom->SetEntityPosition(px,py-1,SelectedEntityID);
+                } else if (event->key() == Qt::Key_Down)
+                {
+                    currentRoom->SetEntityPosition(px,py+1,SelectedEntityID);
+                }
+                singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
+                break;
+            }
+        }
+    //If a door is selected
+    } else if(SelectedDoorID != -1)
     {
-        singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
-        SelectedDoorID = -1;
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
-        singleton->SetUnsavedChanges(true);
+        switch (event->key())
+        {
+        // Delete selected door if BSP or DEL is pressed
+            case Qt::Key_Backspace:
+            case Qt::Key_Delete:
+                singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
+                SelectedDoorID = -1;
+                singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+                singleton->SetUnsavedChanges(true);
+                break;
+            //Move selected door when a direction key is pressed
+            case Qt::Key_Left ... Qt::Key_Down:
+                LevelComponents::Door* selectedDoor=singleton->GetCurrentRoom()->GetDoor(SelectedDoorID);
+                int px1=selectedDoor->GetX1();
+                int py1=selectedDoor->GetY1();
+                int px2=selectedDoor->GetX2();
+                int py2=selectedDoor->GetY2();
+                if (event->key() == Qt::Key_Left)
+                {
+                    selectedDoor->SetDoorPlace(px1-1,px2-1,py1,py2);
+                } else if (event->key() == Qt::Key_Right)
+                {
+                    selectedDoor->SetDoorPlace(px1+1,px2+1,py1,py2);
+                } else if (event->key() == Qt::Key_Up)
+                {
+                    selectedDoor->SetDoorPlace(px1,px2,py1-1,py2-1);
+                } else if (event->key() == Qt::Key_Down)
+                {
+                    selectedDoor->SetDoorPlace(px1,px2,py1+1,py2+1);
+                }
+                singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
+            break;
+        }
     }
 }
 
