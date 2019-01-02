@@ -175,6 +175,8 @@ namespace LevelComponents
         unsigned int GetRoomID() { return RoomID; }
         Tileset *GetTileset() { return tileset; }
         int GetTilesetID() { return RoomHeader.TilesetID; }
+        int GetEntityX(int index);
+        int GetEntityY(int index);
         bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == '\x07'; }
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
         bool IsCameraBoundaryDirty() { return CameraBoundaryDirty; }
@@ -215,6 +217,7 @@ namespace LevelComponents
         void SetLayerDataPtr(int LayerNum, int dataPtr);
         void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
         void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; RoomHeader.TilesetID = (unsigned char) tilesetID; }
+        void SetEntityPosition(int XPos, int YPos, int index);
 
         // Functions
         void AddCameraLimitator();
@@ -223,6 +226,8 @@ namespace LevelComponents
         void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk, ROMUtils::SaveData *cameraPointerTableChunk, unsigned int *cameraPointerTableIndex);
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
         void SetCameraLimitator(int index, __CameraControlRecord limitator_data);
+        bool IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2);
+        bool IsNewEntityPositionInsideRoom(int x, int y);
     };
 }
 
