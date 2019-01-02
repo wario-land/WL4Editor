@@ -1006,7 +1006,7 @@ namespace LevelComponents
     /// </returns>
     void Room::SetEntityPosition(int XPos, int YPos, int index)
     {
-        if(EntityList[currentDifficulty].size() == (int) 47) return false;
+        if(EntityList[currentDifficulty].size() == (int) 47) return;
         EntityList[currentDifficulty].at(index).XPos=XPos;
         EntityList[currentDifficulty].at(index).YPos=YPos;
         return;
@@ -1023,7 +1023,7 @@ namespace LevelComponents
     int Room::GetEntityX(int index)
     {
         if(EntityList[currentDifficulty].size() == (int) 47) return false;
-        return EntityList[currentDifficulty].at(index).XPos;;
+        return EntityList[currentDifficulty].at(index).XPos;
     }
 
     /// <summary>
@@ -1037,7 +1037,7 @@ namespace LevelComponents
     int Room::GetEntityY(int index)
     {
         if(EntityList[currentDifficulty].size() == (int) 47) return false;
-        return EntityList[currentDifficulty].at(index).YPos;;
+        return EntityList[currentDifficulty].at(index).YPos;
     }
 
     /// <summary>
@@ -1108,4 +1108,51 @@ namespace LevelComponents
     {
         memcpy(CameraControlRecords[index], &limitator_data, sizeof(__CameraControlRecord));
     }
+
+    /// <summary>
+    /// Check if the new Door position is in the Room.
+    /// </summary>
+    /// <param name="x1">
+    /// The new position x1 of the door
+    /// </param>
+    /// <param name="x2">
+    /// The new position x2 of the door
+    /// </param>
+    /// <param name="y1">
+    /// The new position y1 of the door
+    /// </param>
+    /// /// <param name="y2">
+    /// The new position y2 of the door
+    /// </param>
+    /// <returns>
+    /// True if the new Door position is inside the Room
+    /// </returns>
+    bool Room::IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2) {
+        if (x1 >= 0 && x2 < this->GetWidth() && y1 >=0 && y2 < this->GetHeight()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Check if the new Entity position is in the Room.
+    /// </summary>
+    /// <param name="x">
+    /// The new position x of the Entity
+    /// </param>
+    /// <param name="y">
+    /// The new position y of the Entity
+    /// </param>
+    /// <returns>
+    /// True if the new Entity position is inside the Room
+    /// </returns>
+    bool Room::IsNewEntityPositionInsideRoom(int x, int y) {
+        if (x >= 0 && x < this->GetWidth() && y >=0 && y < this->GetHeight()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

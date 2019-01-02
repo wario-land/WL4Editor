@@ -229,22 +229,28 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             case Qt::Key_Left ... Qt::Key_Down:
             {
                 LevelComponents::Room* currentRoom=singleton->GetCurrentRoom();
+
+                //The new positions
                 int px=currentRoom->GetEntityX(SelectedEntityID);
                 int py=currentRoom->GetEntityY(SelectedEntityID);
                 if (event->key() == Qt::Key_Left)
                 {
-                    currentRoom->SetEntityPosition(px-1,py,SelectedEntityID);
+                    px=px-1;
                 } else if (event->key() == Qt::Key_Right)
                 {
-                    currentRoom->SetEntityPosition(px+1,py,SelectedEntityID);
+                    px=px+1;
                 } else if (event->key() == Qt::Key_Up)
                 {
-                    currentRoom->SetEntityPosition(px,py-1,SelectedEntityID);
+                    py=py-1;
                 } else if (event->key() == Qt::Key_Down)
                 {
-                    currentRoom->SetEntityPosition(px,py+1,SelectedEntityID);
+                    py=py+1;
                 }
-                singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
+
+                if (currentRoom->IsNewEntityPositionInsideRoom(px,py)) {
+                    currentRoom->SetEntityPosition(px,py,SelectedEntityID);
+                    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
+                }
                 break;
             }
         }
@@ -263,25 +269,36 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 break;
             //Move selected door when a direction key is pressed
             case Qt::Key_Left ... Qt::Key_Down:
-                LevelComponents::Door* selectedDoor=singleton->GetCurrentRoom()->GetDoor(SelectedDoorID);
+                LevelComponents::Room* currentRoom=singleton->GetCurrentRoom();
+                LevelComponents::Door* selectedDoor=currentRoom->GetDoor(SelectedDoorID);
+
+                //The new positions
                 int px1=selectedDoor->GetX1();
                 int py1=selectedDoor->GetY1();
                 int px2=selectedDoor->GetX2();
                 int py2=selectedDoor->GetY2();
                 if (event->key() == Qt::Key_Left)
                 {
-                    selectedDoor->SetDoorPlace(px1-1,px2-1,py1,py2);
+                    px1=px1-1;
+                    px2=px2-1;
                 } else if (event->key() == Qt::Key_Right)
                 {
-                    selectedDoor->SetDoorPlace(px1+1,px2+1,py1,py2);
+                    px1=px1+1;
+                    px2=px2+1;
                 } else if (event->key() == Qt::Key_Up)
                 {
-                    selectedDoor->SetDoorPlace(px1,px2,py1-1,py2-1);
+                    py1=py1-1;
+                    py2=py2-1;
                 } else if (event->key() == Qt::Key_Down)
                 {
-                    selectedDoor->SetDoorPlace(px1,px2,py1+1,py2+1);
+                    py1=py1+1;
+                    py2=py2+1;
+
                 }
-                singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
+                if (currentRoom->IsNewDoorPositionInsideRoom(px1,px2,py1,py2)) {
+                   selectedDoor->SetDoorPlace(px1,px2,py1,py2);
+                   singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
+                }
             break;
         }
     }
