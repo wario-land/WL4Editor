@@ -41,7 +41,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
                 int selectedTileIndex = tileX + tileY * room->GetWidth();
                 unsigned short placedTile=layer->GetLayerData()[selectedTileIndex];
-                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile);
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile, true);
 
             //Otherwise just place the tile
             } else {
@@ -147,7 +147,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                 LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
                 int selectedTileIndex = tileX + tileY * room->GetWidth();
                 unsigned short placedTile=layer->GetLayerData()[selectedTileIndex];
-                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile);
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile, true);
 
             //Otherwise just place the tile
             } else {

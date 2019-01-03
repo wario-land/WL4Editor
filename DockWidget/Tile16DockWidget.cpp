@@ -107,7 +107,7 @@ void Tile16DockWidget::SetTileInfoText(QString str)
 /// <param name="tile">
 /// The map16 tile index that was selected in the graphics view.
 /// </param>
-void Tile16DockWidget::SetSelectedTile(unsigned short tile)
+void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
 {
     // Paint red Box to show selected Tile16
     int X = tile & 7;
@@ -124,4 +124,7 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile)
     QString infoText;
     infoText.sprintf("Tile ID: %d\nEvent ID: 0x%04X\nWario Animation Slot ID: %d", tile, eventIndex, tmpWarioAnimationSlotID);
     SetTileInfoText(infoText);
+
+    // Set vertical scrollbar of braphicview
+    if(resetscrollbar) ui->graphicsView->verticalScrollBar()->setValue(scalerate * 16 * (tile / 8));
 }

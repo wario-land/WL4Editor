@@ -29,7 +29,7 @@ void TileGraphicsView::mousePressEvent(QMouseEvent *event)
     int tileID = tileX + tileY * 8;
 
     // Set the selected tile location for the graphics view
-    Map16DockWidget->SetSelectedTile((unsigned short) tileID);
+    Map16DockWidget->SetSelectedTile((unsigned short) tileID, false);
 }
 
 /// <summary>

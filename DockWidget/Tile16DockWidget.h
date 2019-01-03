@@ -35,7 +35,7 @@ private:
 public:
     int SetTileset(int _tilesetIndex);
     LevelComponents::Tileset *GetSelectedTileset() { return SelectedTileset; }
-    void SetSelectedTile(unsigned short tile);
+    void SetSelectedTile(unsigned short tile, bool resetscrollbar);
     unsigned short GetSelectedTile() { return SelectedTile; }
 };
 
