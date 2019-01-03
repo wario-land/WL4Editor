@@ -18,7 +18,7 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
     ui(new Ui::Tile16DockWidget)
 {
     ui->setupUi(this);
-    int scalerate = ui->graphicsView->width() / (16 * 8 * 2);
+    scalerate = ui->graphicsView->width() / (16 * 8 * 2);
     ui->graphicsView->scale(scalerate, scalerate);
     ui->graphicsView->SetDockWidget(this);
 
@@ -109,9 +109,19 @@ void Tile16DockWidget::SetTileInfoText(QString str)
 /// </param>
 void Tile16DockWidget::SetSelectedTile(unsigned short tile)
 {
+    // Paint red Box to show selected Tile16
     int X = tile & 7;
     int Y = tile >> 3;
     SelectionBox->setPos(X * 16, Y * 16);
     SelectionBox->setVisible(true);
     SelectedTile = tile;
+
+    // Get the event information about the selected tile
+    unsigned short eventIndex = SelectedTileset->Map16EventTable[tile];
+    int tmpWarioAnimationSlotID = SelectedTileset->Map16WarioAnimationSlotIDTable[tile];
+
+    // Print information about the tile to the user
+    QString infoText;
+    infoText.sprintf("Tile ID: %d\nEvent ID: 0x%04X\nWario Animation Slot ID: %d", tile, eventIndex, tmpWarioAnimationSlotID);
+    SetTileInfoText(infoText);
 }
