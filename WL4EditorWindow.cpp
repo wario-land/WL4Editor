@@ -281,12 +281,12 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         {
             if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
             {
-                if (currentroomconfig->PreviousLayerData[i] == nullptr) {
+                if (currentroomconfig->LayerData[i] == nullptr) {
                     // save previous Layer data
                     size_t datasize1 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
                     unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
                     memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
-                    currentroomconfig->PreviousLayerData[i] = tmpLayerdata1;
+                    currentroomconfig->LayerData[i] = tmpLayerdata1;
 
                     // reset Layer size
                     currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
@@ -295,12 +295,15 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                     size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
                     unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
                     memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
-                    currentroomconfig->NewLayerData[i] = tmpLayerdata2;
+                    nextroomconfig->LayerData[i] = tmpLayerdata2;
                 }
                 else {
-                    //delete[] currentRoom->GetLayer(i)->GetLayerData();
                     currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
-                    currentRoom->GetLayer(i)->SetLayerData(currentroomconfig->NewLayerData[i]);
+                    delete[] currentRoom->GetLayer(i)->GetLayerData();
+                    size_t size = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
+                    unsigned short *tmpData = new unsigned short[size];
+                    memcpy(tmpData, nextroomconfig->LayerData[i], size);
+                    currentRoom->GetLayer(i)->SetLayerData(tmpData);
                 }
             }
         }

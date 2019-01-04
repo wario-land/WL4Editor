@@ -91,6 +91,8 @@ void ExecuteOperation(struct OperationParams *operation)
     while(operationIndex[currentRoomNumber])
     {
         --operationIndex[currentRoomNumber];
+        auto op = operationHistory[currentRoomNumber][operationIndex[currentRoomNumber]];
+        delete op;
         operationHistory[currentRoomNumber].pop_front();
     }
     operationHistory[currentRoomNumber].push_front(operation);

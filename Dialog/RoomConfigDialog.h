@@ -33,8 +33,7 @@ namespace DialogParams
         bool BackgroundLayerEnable;
         bool BackgroundLayerAutoScrollEnable;
         int BackgroundLayerDataPtr;
-        unsigned short *PreviousLayerData[3];
-        unsigned short *NewLayerData[3];
+        unsigned short *LayerData[3];
 
         // Default constructor
         RoomConfigParams()
@@ -57,8 +56,7 @@ namespace DialogParams
         {
             for(int i=0; i < 3; i++){
                 // it is no needed to copy from other.
-                PreviousLayerData[i] = nullptr;
-                NewLayerData[i] = nullptr;
+                LayerData[i] = nullptr;
             }
             if(BackgroundLayerEnable)
             {
@@ -99,10 +97,8 @@ namespace DialogParams
         ~RoomConfigParams(){
             // new and delete by myself.
             for(int i=0; i < 3; i++){
-                if(PreviousLayerData[i])
-                    delete[] PreviousLayerData[i];
-                if(NewLayerData[i])
-                    delete[] NewLayerData[i];
+                if(LayerData[i])
+                    delete[] LayerData[i];
             }
         }
     };
