@@ -41,7 +41,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
                 int selectedTileIndex = tileX + tileY * room->GetWidth();
                 unsigned short placedTile=layer->GetLayerData()[selectedTileIndex];
-                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile);
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile, true);
 
             //Otherwise just place the tile
             } else {
@@ -140,8 +140,20 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
         if((editMode == Ui::LayerEditMode))
         {
-            // Change textmaps and layer graphics
-            SetTile(tileX, tileY);
+            //If we hold right click then copy the tile
+            // event->button() cannot work, event->buttons() return the correct mouseState according to the Qt code
+            if (event->buttons() == Qt::RightButton) {
+                int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+                LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
+                int selectedTileIndex = tileX + tileY * room->GetWidth();
+                unsigned short placedTile=layer->GetLayerData()[selectedTileIndex];
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile, true);
+
+            //Otherwise just place the tile
+            } else {
+                // Change textmaps and layer graphics
+                SetTile(tileX, tileY);
+            }
         }
     }
     else
