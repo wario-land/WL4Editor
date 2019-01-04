@@ -889,7 +889,7 @@ namespace LevelComponents
         // Create camera boundary chunk, if it is the appropriate type
         if(cameraPointerTableChunk && CameraControlType == __CameraControlType::HasControlAttrs)
         {
-            unsigned int cameraChunkSize = 2 + CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
+            size_t cameraChunkSize = 2 + CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
             struct ROMUtils::SaveData cameraChunk =
             {
                 4 * (*cameraPointerTableIndex)++,

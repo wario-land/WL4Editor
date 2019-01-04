@@ -189,6 +189,7 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
     if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
     struct OperationParams *params = new struct OperationParams();
     params->type = ChangeTileOperation;
+    params->tileChange = true;
     params->tileChangeParams.push_back(TileChangeParams::Create(
         tileX,
         tileY,

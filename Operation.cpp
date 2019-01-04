@@ -21,9 +21,7 @@ static unsigned int operationIndex[16];
 static void PerformOperation(struct OperationParams *operation)
 {
     LevelComponents::Room *room;
-    switch(operation->type)
-    {
-    case ChangeTileOperation:
+    if (operation->tileChange) {
         room = singleton->GetCurrentRoom();
         for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
@@ -34,10 +32,14 @@ static void PerformOperation(struct OperationParams *operation)
             // Re-render the tile
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile, tcp->targetLayer);
         }
-    break;
-    case ChangeRoomConfigOperation:
+    }
+    if (operation->roomConfigChange) {
+        // change the width and height for all layers
         singleton->RoomConfigReset(operation->lastRoomConfigParams, operation->newRoomConfigParams);
-    break;
+        singleton->RenderScreenFull();
+        singleton->SetEditModeDockWidgetLayerEditability();
+        singleton->SetEditModeWidgetDifficultyRadioBox(1);
+        singleton->SetUnsavedChanges(true);
     }
 }
 
@@ -53,9 +55,7 @@ static void PerformOperation(struct OperationParams *operation)
 static void BackTrackOperation(struct OperationParams *operation)
 {
     LevelComponents::Room *room;
-    switch(operation->type)
-    {
-    case ChangeTileOperation:
+    if (operation->tileChange) {
         room = singleton->GetCurrentRoom();
         for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
@@ -66,11 +66,14 @@ static void BackTrackOperation(struct OperationParams *operation)
             // Re-render the tile
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile, tcp->targetLayer);
         }
-        break;
-    case ChangeRoomConfigOperation:
+    }
+    if (operation->roomConfigChange) {
         // new to last
         singleton->RoomConfigReset(operation->newRoomConfigParams, operation->lastRoomConfigParams);
-    break;
+        singleton->RenderScreenFull();
+        singleton->SetEditModeDockWidgetLayerEditability();
+        singleton->SetEditModeWidgetDifficultyRadioBox(1);
+        singleton->SetUnsavedChanges(true);
     }
 }
 
@@ -89,6 +92,8 @@ void ExecuteOperation(struct OperationParams *operation)
     while(operationIndex[currentRoomNumber])
     {
         --operationIndex[currentRoomNumber];
+        auto op = operationHistory[currentRoomNumber][operationIndex[currentRoomNumber]];
+        delete op;
         operationHistory[currentRoomNumber].pop_front();
     }
     operationHistory[currentRoomNumber].push_front(operation);
