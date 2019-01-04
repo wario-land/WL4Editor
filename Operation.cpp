@@ -1,5 +1,6 @@
 #include "Operation.h"
 #include "WL4EditorWindow.h"
+
 #include <deque>
 
 extern WL4EditorWindow *singleton;

@@ -8,7 +8,6 @@
 #include <QGraphicsPixmapItem>
 #include <QScrollBar>
 #include <QLabel>
-#include <QMessageBox>
 
 #include "WL4Constants.h"
 #include "ROMUtils.h"
@@ -69,30 +68,6 @@ namespace DialogParams
                 BackgroundLayerAutoScrollEnable = false;
             }
         }
-
-        /*RoomConfigParams(const RoomConfigParams &other) {
-            memcpy(this, &other, sizeof(RoomConfigParams));
-            //QMessageBox::information(NULL , "", "Copy Construct");
-            // Get Layer from room.
-            for(int i=0; i < 3; i++){
-                // it is no needed to copy from other.
-                PreviousLayerData[i] = nullptr;
-                NewLayerData[i] = nullptr;
-            }
-        }
-
-        RoomConfigParams& operator=(const RoomConfigParams &other)
-        {
-            //QMessageBox::information(NULL , "", "assign Consturct");
-            memcpy(this, &other, sizeof(RoomConfigParams));
-            // Get Layer from room.
-            for(int i=0; i < 3; i++){
-                // it is no needed to copy from other.
-                PreviousLayerData[i] = nullptr;
-                NewLayerData[i] = nullptr;
-            }
-            return *this;
-        }*/
 
         ~RoomConfigParams(){
             // new and delete by myself.
