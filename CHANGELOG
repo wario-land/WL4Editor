@@ -1,4 +1,6 @@
 beta-6:
+- Fix runtime error when rendering Rooms from Level "the big board" and accelerate the render speed
+- Support moving selected Door/Entity via direction keys 
 - Skip editing current layer when its MappingType is 0x20
 - Support reset current Tile16 by right click the Tile16 on the selected Layer
 - Fix merely deleting Entities cannot save Entitylist changes to the ROM
