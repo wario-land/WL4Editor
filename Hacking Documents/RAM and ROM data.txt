@@ -9,7 +9,7 @@
 28B234 - Hangar - Indexed bitmap - palette: 28B210 - width: 30
 28C730 - Intro hangar sprites - compressed - 4bit - palette: 28C570 index: 0,1,2 - width: 32
 28E880 - Legendary pyramid newspaper - compressed - 4bit - palette: 28E780 index: 0,1,2 - width: 32
-295954 - Wario logo - compressed - 4bit - palette: 2942FC (?) - width: 24
+295954 - Wario logo - compressed - 4bit - palette: 2943DC, 2943FC - width: 24
 29D4D0 - Wario sprites (1) - compressed - 4bit - palette: 2DDDA0 - width: 32
 2A37C0 - Hole - compressed - 4bit - palette: 2A37A0 - width: 16 
 2A4E3C - Wario sprites (2) - compressed - 4bit - palette: 2DDDA0 - width: 32
@@ -20,7 +20,7 @@
 368CF0 - Spoiled Rotten & cie - uncompressed - 4bit - palette: 3B1A70 - width: 32 - height: 16
 64C8C4 - All level and boss icons - uncompressed - 4bit - width: 32 - height: 30
 68CF5C - Pyramid - Indexed bitmap - palette: near 646358 somewhere
-6B4288 - CDroms player screen with icons - uncompressed -  4bit - width: 32 - height: 34
+6B4288 - CDroms player screen with icons - uncompressed - palette: 6B41E8 (From 6B4088 to 6B4288) - 4bit - width: 32 - height: 34
 73D764 - Menu - compressed - 4bit - w:32
 7409C0 - Menutext - compressed - 4bit - w:32
 74140C -      - || -
