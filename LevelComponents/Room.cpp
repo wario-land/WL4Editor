@@ -904,7 +904,7 @@ namespace LevelComponents
         // Create camera boundary chunk, if it is the appropriate type
         if(cameraPointerTableChunk && CameraControlType == __CameraControlType::HasControlAttrs)
         {
-            unsigned int cameraChunkSize = 2 + CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
+            size_t cameraChunkSize = 2 + CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
             struct ROMUtils::SaveData cameraChunk =
             {
                 4 * (*cameraPointerTableIndex)++,
@@ -1006,6 +1006,56 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Move an Entity from the current Entity List.
+    /// </summary>
+    /// <param name="XPos">
+    /// The new X position of the entity.
+    /// </param>
+    /// <param name="YPos">
+    /// The new Y position of the entity.
+    /// </param>
+    /// <param name="index">
+    /// The index of the Entity record in EntityList[currentDifficulty], count from 0.
+    /// <returns>
+    /// Always true (?)
+    /// </returns>
+    void Room::SetEntityPosition(int XPos, int YPos, int index)
+    {
+        if(EntityList[currentDifficulty].size() == (int) 47) return;
+        EntityList[currentDifficulty].at(index).XPos=XPos;
+        EntityList[currentDifficulty].at(index).YPos=YPos;
+        return;
+    }
+
+    /// <summary>
+    /// Get the x position of an Entity from the current Entity List.
+    /// </summary>
+    /// <param name="index">
+    /// The index of the Entity record in EntityList[currentDifficulty], count from 0.
+    /// <returns>
+    /// The x position
+    /// </returns>
+    int Room::GetEntityX(int index)
+    {
+        if(EntityList[currentDifficulty].size() == (int) 47) return false;
+        return EntityList[currentDifficulty].at(index).XPos;
+    }
+
+    /// <summary>
+    /// Get the y position of an Entity from the current Entity List.
+    /// </summary>
+    /// <param name="index">
+    /// The index of the Entity record in EntityList[currentDifficulty], count from 0.
+    /// <returns>
+    /// The y position
+    /// </returns>
+    int Room::GetEntityY(int index)
+    {
+        if(EntityList[currentDifficulty].size() == (int) 47) return false;
+        return EntityList[currentDifficulty].at(index).YPos;
+    }
+
+    /// <summary>
     /// Delete an Entity from a Entity List.
     /// </summary>
     /// <param name="index">
@@ -1073,4 +1123,51 @@ namespace LevelComponents
     {
         memcpy(CameraControlRecords[index], &limitator_data, sizeof(__CameraControlRecord));
     }
+
+    /// <summary>
+    /// Check if the new Door position is in the Room.
+    /// </summary>
+    /// <param name="x1">
+    /// The new position x1 of the door
+    /// </param>
+    /// <param name="x2">
+    /// The new position x2 of the door
+    /// </param>
+    /// <param name="y1">
+    /// The new position y1 of the door
+    /// </param>
+    /// /// <param name="y2">
+    /// The new position y2 of the door
+    /// </param>
+    /// <returns>
+    /// True if the new Door position is inside the Room
+    /// </returns>
+    bool Room::IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2) {
+        if (x1 >= 0 && x2 < this->GetWidth() && y1 >=0 && y2 < this->GetHeight()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Check if the new Entity position is in the Room.
+    /// </summary>
+    /// <param name="x">
+    /// The new position x of the Entity
+    /// </param>
+    /// <param name="y">
+    /// The new position y of the Entity
+    /// </param>
+    /// <returns>
+    /// True if the new Entity position is inside the Room
+    /// </returns>
+    bool Room::IsNewEntityPositionInsideRoom(int x, int y) {
+        if (x >= 0 && x < this->GetWidth() && y >=0 && y < this->GetHeight()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

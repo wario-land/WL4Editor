@@ -275,14 +275,36 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         currentRoom->GetLayer(3)->SetDisabled();
     }
 
-    // change the width and height for all layers
     if(nextroomconfig->RoomWidth != currentroomconfig->RoomWidth || nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
     {
         for(int i = 0; i < 3; ++i)
         {
             if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
             {
-                currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+                if (currentroomconfig->LayerData[i] == nullptr) {
+                    // save previous Layer data
+                    size_t datasize1 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
+                    unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
+                    memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
+                    currentroomconfig->LayerData[i] = tmpLayerdata1;
+
+                    // reset Layer size
+                    currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+
+                    // save result Layer data
+                    size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
+                    unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                    memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
+                    nextroomconfig->LayerData[i] = tmpLayerdata2;
+                }
+                else {
+                    currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+                    delete[] currentRoom->GetLayer(i)->GetLayerData();
+                    size_t size = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
+                    unsigned short *tmpData = new unsigned short[size];
+                    memcpy(tmpData, nextroomconfig->LayerData[i], size);
+                    currentRoom->GetLayer(i)->SetLayerData(tmpData);
+                }
             }
         }
     }
@@ -654,24 +676,17 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     RoomConfigDialog dialog(this, _currentRoomConfigParams);
     if(dialog.exec() == QDialog::Accepted)
     {
-        DialogParams::RoomConfigParams configParams = dialog.GetConfigParams();
-        //RoomConfigReset(_currentRoomConfigParams, &configParams);
-
         // TODO: this should be done with the operation history
         OperationParams *operation = new OperationParams;
         operation->type = ChangeRoomConfigOperation;
+        operation->roomConfigChange = true;
         operation->lastRoomConfigParams = new DialogParams::RoomConfigParams(*_currentRoomConfigParams);
-        operation->newRoomConfigParams = new DialogParams::RoomConfigParams(configParams);
+        operation->newRoomConfigParams = new DialogParams::RoomConfigParams(dialog.GetConfigParams());
         ExecuteOperation(operation);
 
         // Delete _currentRoomConfigParams
         delete _currentRoomConfigParams;
 
-        // UI update
-        RenderScreenFull();
-        SetEditModeDockWidgetLayerEditability();
-        EditModeWidget->SetDifficultyRadioBox(1);
-        SetUnsavedChanges(true);
     }
 }
 
