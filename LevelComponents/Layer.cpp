@@ -264,7 +264,8 @@ namespace LevelComponents
         delete[] LayerData;
         LayerData = nullptr;
         MappingType = LayerDisabled;
-        Enabled = dirty = false;
+        Enabled = false;
+        dirty = true;
         Width = Height = 0;
     }
 
@@ -341,20 +342,19 @@ namespace LevelComponents
         unsigned char *dataBuffer;
         unsigned int compressedSize = ROMUtils::LayerRLECompress(Width * Height, LayerData, &dataBuffer);
         unsigned int sizeInfoLen = MappingType == LayerMap16 ? 2 : 1;
-        dataBuffer = (unsigned char*) realloc(dataBuffer, sizeInfoLen + compressedSize);
+        unsigned char *dataChunk = new unsigned char[sizeInfoLen + compressedSize];
+        memcpy(dataChunk + sizeInfoLen, dataBuffer, compressedSize);
+        delete[] dataBuffer;
         if(MappingType == LayerMap16)
         {
-            memmove(dataBuffer + 2, dataBuffer, compressedSize);
-            dataBuffer[0] = (unsigned char) Width;
-            dataBuffer[1] = (unsigned char) Height;
+            dataChunk[0] = (unsigned char) Width;
+            dataChunk[1] = (unsigned char) Height;
         }
         else
         {
-            memmove(dataBuffer + 1, dataBuffer, compressedSize);
-            unsigned char sizeByte = (Width >> 6) | ((Height >> 6) << 1);
-            dataBuffer[0] = sizeByte;
+            dataChunk[0] = (unsigned char) ((Width >> 6) | ((Height >> 6) << 1));
         }
         *dataSize = sizeInfoLen + compressedSize;
-        return dataBuffer;
+        return dataChunk;
     }
 }

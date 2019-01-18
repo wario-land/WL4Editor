@@ -218,6 +218,7 @@ namespace LevelComponents
         void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
         void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; RoomHeader.TilesetID = (unsigned char) tilesetID; }
         void SetEntityPosition(int XPos, int YPos, int index);
+        void SetLayerDataInRoomHeader(int layerid, unsigned int value) { unsigned int *ptr = &(RoomHeader.Layer0Data); ptr[layerid] = value; }
 
         // Functions
         void AddCameraLimitator();

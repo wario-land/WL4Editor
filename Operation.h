@@ -40,10 +40,10 @@ struct OperationParams
 {
     // Fields
     enum OperationType type;
-    bool tileChange;
     std::vector<struct TileChangeParams*> tileChangeParams;
+    DialogParams::RoomConfigParams *newRoomConfigParams, *lastRoomConfigParams;
+    bool tileChange;
     bool roomConfigChange;
-    DialogParams::RoomConfigParams *lastRoomConfigParams, *newRoomConfigParams;
 
     OperationParams() : lastRoomConfigParams(nullptr), newRoomConfigParams(nullptr),
         tileChange(false), roomConfigChange(false)
