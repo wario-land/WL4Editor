@@ -264,7 +264,8 @@ namespace LevelComponents
         delete[] LayerData;
         LayerData = nullptr;
         MappingType = LayerDisabled;
-        Enabled = dirty = false;
+        Enabled = false;
+        dirty = true;
         Width = Height = 0;
     }
 
