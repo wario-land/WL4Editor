@@ -75,8 +75,8 @@ the GBA game use `Tile` to construct map, and each map we need a `Tileset` to in
 |4|pointer for background `Tile` graphic data|BG Tile data and Tile data save in different place|
 |5|length of BG `Tile` graphic data|-|
 |6|pointer for Block data|including information about the construction of 4 Tiles, if we should turn them around before loaded, and palette ID in used|
-|7|perhaps a controller for wario animations|each Block has a controller|
-|8|unknown|-|
+|7|wario animation controller table pointer|a flag table for controlling wario animations by different proc for every Tile16, it also can reset Layer0 color blending params|
+|8|event id table pointer|an id table of the event it trigger when wario knock into a Tile16|
 |9|palettes for basic element contained in every room|5 or 7 lines of palettes, need to be checked|
 
 ## About Tile and Block in WL4  

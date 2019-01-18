@@ -328,9 +328,9 @@ namespace LevelComponents
                             Z--;
                             QImage imageA = RenderedLayers[0]->pixmap().toImage();
                             QImage imageB = alphaPixmap.toImage();
-                            for(int j = 0; j < sceneHeight; ++j)
+                            for(int j = 0; j < qMin(sceneHeight, imageA.height()); ++j)
                             {
-                                for(int k = 0; k < sceneWidth; ++k)
+                                for(int k = 0; k < qMin(sceneWidth, imageA.width()); ++k)
                                 {
                                     QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
                                     int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16, 255);

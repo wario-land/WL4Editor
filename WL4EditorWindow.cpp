@@ -321,6 +321,19 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetBGLayerAutoScrollEnabled(nextroomconfig->BackgroundLayerAutoScrollEnable);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
 
+    // reset LayerDataPtr in RoomHeader because Layer::SetDisabled() cannot change the data in RoomHeader
+    for(int i = 0; i < 3; ++i)
+    {
+        if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerDisabled)
+        {
+            currentRoom->SetLayerDataInRoomHeader(i, WL4Constants::NormalLayerDefaultPtr);
+        }
+    }
+    if(currentRoom->GetLayer(3)->GetMappingType() == LevelComponents::LayerDisabled)
+    {
+        currentRoom->SetLayerDataInRoomHeader(3, WL4Constants::BGLayerDefaultPtr);
+    }
+
     // Mark the layers as dirty
     for(unsigned int i = 0; i < 4; ++i) currentRoom->GetLayer(i)->SetDirty(true);
 }
@@ -773,8 +786,15 @@ void WL4EditorWindow::on_actionAbout_triggered()
     // Show the about dialog
     QMessageBox infoPrompt;
     infoPrompt.setWindowTitle(tr("About"));
-    infoPrompt.setText(QString("WL4Editor by Goldensunboy, shinespeciall, xiazhanjian, and chanchancl\n"
-        "Special thanks: xTibor\n"
+    infoPrompt.setText(QString(
+        "WL4Editor code contributors:\n"
+        "    Goldensunboy\n"
+        "    shinespeciall\n"
+        "    xiazhanjian\n"
+        "    chanchancl\n"
+        "    Kleyment\n"
+        "Special thanks:\n"
+        "    xTibor\n"
         "Version: ") + WL4EDITOR_VERSION);
     QPushButton *changelogButton = infoPrompt.addButton(tr("Ok"), QMessageBox::NoRole);
     infoPrompt.exec();
