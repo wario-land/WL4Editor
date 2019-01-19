@@ -185,10 +185,12 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
     int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
     LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
     if(layer->IsEnabled() == false) return;
+    if(layer->GetMappingType() == LevelComponents::LayerTile8x8) return; //temporarity skip then condition when the current Layer's MappingType is 0x20 to avoid wrong rendering
     int selectedTileIndex = tileX + tileY * room->GetWidth();
     if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
     struct OperationParams *params = new struct OperationParams();
     params->type = ChangeTileOperation;
+    params->tileChange = true;
     params->tileChangeParams.push_back(TileChangeParams::Create(
         tileX,
         tileY,

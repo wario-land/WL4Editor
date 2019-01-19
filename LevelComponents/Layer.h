@@ -36,6 +36,7 @@ namespace LevelComponents
         int GetLayerHeight() { return Height; }
         enum LayerMappingType GetMappingType() { return MappingType; }
         unsigned short *GetLayerData() { return LayerData; }
+        void SetLayerData(unsigned short *ptr) { LayerData = ptr; }
         int GetLayerPriority() { return LayerPriority; }
         void SetLayerPriority(int priority) { LayerPriority = priority; }
         void ReRenderTile(int xpos, int ypos, unsigned short TileID, Tileset *tileset);
@@ -45,7 +46,7 @@ namespace LevelComponents
         void CreateNewLayer_type0x10(int layerWidth, int layerHeight);
         void ChangeDimensions(int newWidth, int newHeight);
         bool IsDirty() { return dirty; }
-        void SetClean() { dirty = false; }
+        void SetDirty(bool _dirty) { dirty = _dirty; }
         unsigned char *GetCompressedLayerData(unsigned int *dataSize);
         ~Layer();
         unsigned int GetDataPtr() { return DataPtr; }

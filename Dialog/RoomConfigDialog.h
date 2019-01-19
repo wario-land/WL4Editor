@@ -32,6 +32,7 @@ namespace DialogParams
         bool BackgroundLayerEnable;
         bool BackgroundLayerAutoScrollEnable;
         int BackgroundLayerDataPtr;
+        unsigned short *LayerData[3];
 
         // Default constructor
         RoomConfigParams()
@@ -52,6 +53,10 @@ namespace DialogParams
             Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayerDataPtr(0) : 0),
             BackgroundLayerEnable(room->IsBGLayerEnabled())
         {
+            for(int i=0; i < 3; i++){
+                // it is no needed to copy from other.
+                LayerData[i] = nullptr;
+            }
             if(BackgroundLayerEnable)
             {
                 BackgroundLayerDataPtr = room->GetLayerDataPtr(3);
@@ -61,6 +66,14 @@ namespace DialogParams
             {
                 BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
                 BackgroundLayerAutoScrollEnable = false;
+            }
+        }
+
+        ~RoomConfigParams(){
+            // new and delete by myself.
+            for(int i=0; i < 3; i++){
+                if(LayerData[i])
+                    delete[] LayerData[i];
             }
         }
     };

@@ -116,6 +116,7 @@ And there is a small list of memory addresses with a short description which can
 03000047 - 02(Losing coins) 03(Losing coins without coin counter) 04(hide coin counter) 10(fade to grayscale) 0F(no interaction between wario and enemies)
 03000060 - Current Room width (2 bytes)
 03000062 - Current Room height (2 bytes)
+03000074 - 030009F Current Room Header
 030000A8..030000B3 - Scroll BG position, copy to IO system
 030000d8 - Set layer (secret wall/water/darkness) alpha - 00(alpha=0%) 10(alpha=100%)
 030000d9 - Layer alpha
@@ -159,6 +160,9 @@ And there is a small list of memory addresses with a short description which can
 030019f4 - Wario position y (2 byte) [read only]
 030019f6 - Disable enemies and wario(2 byte) (until reach 0) - 00-ff
 030019f8 - Hide wario - 00(show) 01(hide)  (?)
+030031F4 - Tile16 construction information table for th current Tileset
+030031F8 - Wario animation controller table pointer for the current Tileset
+030031FC - Event id table pointer for the current Tileset
 0300320e - Camera DestX (2 bytes) //Wrong this is not my record
 03003210 - Camera DestY (2 bytes) //Wrong this is not my record
 03003213 - Camera panning style (1 byte) - 00(default) 05(don't limit camera on y axis)

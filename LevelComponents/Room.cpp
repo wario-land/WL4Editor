@@ -328,9 +328,9 @@ namespace LevelComponents
                             Z--;
                             QImage imageA = RenderedLayers[0]->pixmap().toImage();
                             QImage imageB = alphaPixmap.toImage();
-                            for(int j = 0; j < sceneHeight; ++j)
+                            for(int j = 0; j < qMin(sceneHeight, imageA.height()); ++j)
                             {
-                                for(int k = 0; k < sceneWidth; ++k)
+                                for(int k = 0; k < qMin(sceneWidth, imageA.width()); ++k)
                                 {
                                     QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
                                     int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 + (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16, 255);
@@ -832,21 +832,36 @@ namespace LevelComponents
             Layer *layer = layers[i];
             if(layer->IsDirty())
             {
-                // Add the data for this layer, it must be compressed
-                unsigned int compressedSize;
-                unsigned char *compressedData = layer->GetCompressedLayerData(&compressedSize);
-                struct ROMUtils::SaveData layerChunk =
+                if(layer->GetMappingType() != LayerMappingType::LayerDisabled)
                 {
-                    RoomID * sizeof(struct __RoomHeader) + 8 + i * 4,
-                    compressedSize,
-                    compressedData,
-                    ROMUtils::SaveDataIndex++,
-                    true,
-                    headerChunk->index,
-                    layer->GetDataPtr(),
-                    ROMUtils::SaveDataChunkType::LayerChunkType
-                };
-                chunks.append(layerChunk);
+                    // Add the data for this layer, it must be compressed
+                    unsigned int compressedSize;
+                    unsigned char *compressedData = layer->GetCompressedLayerData(&compressedSize);
+                    struct ROMUtils::SaveData layerChunk =
+                    {
+                        RoomID * sizeof(struct __RoomHeader) + 8 + i * 4,
+                        compressedSize,
+                        compressedData,
+                        ROMUtils::SaveDataIndex++,
+                        true,
+                        headerChunk->index,
+                        layer->GetDataPtr(),
+                        ROMUtils::SaveDataChunkType::LayerChunkType
+                    };
+                    chunks.append(layerChunk);
+                }
+                else
+                {
+                    // Set the pointer as disabled, and invalidate the old layer save chunk
+                    layerPtrs[i] = (i == 3 ? WL4Constants::BGLayerDefaultPtr : WL4Constants::NormalLayerDefaultPtr) | 0x8000000;
+                    struct ROMUtils::SaveData invalidationChunk =
+                    {
+                        0, 0, nullptr, ROMUtils::SaveDataIndex++, false, 0,
+                        (unsigned int) GetLayerDataPtr(i),
+                        ROMUtils::SaveDataChunkType::InvalidationChunk
+                    };
+                    chunks.append(invalidationChunk);
+                }
             }
             else
             {
@@ -889,7 +904,7 @@ namespace LevelComponents
         // Create camera boundary chunk, if it is the appropriate type
         if(cameraPointerTableChunk && CameraControlType == __CameraControlType::HasControlAttrs)
         {
-            unsigned int cameraChunkSize = 2 + CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
+            size_t cameraChunkSize = 2 + CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
             struct ROMUtils::SaveData cameraChunk =
             {
                 4 * (*cameraPointerTableIndex)++,

@@ -41,27 +41,30 @@ struct OperationParams
     // Fields
     enum OperationType type;
     std::vector<struct TileChangeParams*> tileChangeParams;
-    DialogParams::RoomConfigParams *lastRoomConfigParams, *newRoomConfigParams;
+    DialogParams::RoomConfigParams *newRoomConfigParams, *lastRoomConfigParams;
+    bool tileChange;
+    bool roomConfigChange;
 
-    OperationParams() : lastRoomConfigParams(nullptr), newRoomConfigParams(nullptr) {}
+    OperationParams() : lastRoomConfigParams(nullptr), newRoomConfigParams(nullptr),
+        tileChange(false), roomConfigChange(false)
+    {
+
+    }
 
     // Clean up the struct when it is deconstructed
     ~OperationParams()
     {
-        switch (type) {
-            case ChangeTileOperation:
-                for(unsigned int i = 0; i < tileChangeParams.size(); ++i)
-                {
-                    struct TileChangeParams *p = tileChangeParams[i];
-                    delete p;
-                }
-            break;
-            case ChangeRoomConfigOperation:
-                if(lastRoomConfigParams) delete lastRoomConfigParams;
-                if(newRoomConfigParams) delete newRoomConfigParams;
-            break;
+        if (tileChange){
+            for(unsigned int i = 0; i < tileChangeParams.size(); ++i)
+            {
+                struct TileChangeParams *p = tileChangeParams[i];
+                delete p;
+            }
         }
-
+        if (roomConfigChange){
+            if(lastRoomConfigParams) delete lastRoomConfigParams;
+            if(newRoomConfigParams) delete newRoomConfigParams;
+        }
     }
 };
 

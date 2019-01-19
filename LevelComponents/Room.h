@@ -86,7 +86,7 @@ namespace LevelComponents
         int tileX = 0;
         int tileY = 0;
         unsigned short tileID = 0;
-        unsigned int SelectedDoorID = (unsigned int) -1;
+        unsigned int SelectedDoorID = ~0u;
         int SelectedEntityID = -1;
         struct Ui::EditModeParams mode = {};
         RenderUpdateParams(enum RenderUpdateType _type) : type(_type) {}
@@ -139,8 +139,8 @@ namespace LevelComponents
         ~Room();
 
         // Getters
-        unsigned int CountDoors() { return doors.size(); }
-        unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
+        size_t CountDoors() { return doors.size(); }
+        size_t GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
         std::vector<struct __CameraControlRecord*> GetCameraControlRecords(bool create_new_instances = false)
         {
             if(!create_new_instances)
@@ -218,6 +218,7 @@ namespace LevelComponents
         void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
         void SetTileset(Tileset *newtileset, int tilesetID) { tileset = newtileset; RoomHeader.TilesetID = (unsigned char) tilesetID; }
         void SetEntityPosition(int XPos, int YPos, int index);
+        void SetLayerDataInRoomHeader(int layerid, unsigned int value) { unsigned int *ptr = &(RoomHeader.Layer0Data); ptr[layerid] = value; }
 
         // Functions
         void AddCameraLimitator();
