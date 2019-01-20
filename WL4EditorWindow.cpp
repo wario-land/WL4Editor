@@ -333,7 +333,9 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         uint *deleteLimitatorIdlist = new uint[limitatornum]();// set them all 0, index the limitator from 1
         for(uint i = 0; i < limitatornum; i++)
         {
-            if((limitatorlist[i]->x2 >= nxtRoomWidth) || (limitatorlist[i]->y2 >= nxtRoomHeight) || (limitatorlist[i]->x3 >= nxtRoomWidth) || (limitatorlist[i]->y3 >= nxtRoomHeight))
+            int x2_prime = (limitatorlist[i]->ChangeValueOffset == 1) ? (limitatorlist[i]->ChangedValue) : (limitatorlist[i]->x2);
+            int y2_prime = (limitatorlist[i]->ChangeValueOffset == 3) ? (limitatorlist[i]->ChangedValue) : (limitatorlist[i]->y2);
+            if((x2_prime >= nxtRoomWidth) || (y2_prime >= nxtRoomHeight))
             {
                 deleteLimitatorIdlist[k--] = i + 1; // the id list will be something like: 0 0 0 8 4 2
             }
@@ -455,11 +457,32 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 }
 
 /// <summary>
+/// this function will be called when key-press happens in the editor.
+/// </summary>
+/// <param name="event">
+/// The key-press event.
+/// </param>
+void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
+{
+    if(!firstROMLoaded) return;
+    if (event->key() == Qt::Key_PageDown)
+    {
+        if(selectedRoom < (CurrentLevel->GetRooms().size() - 1))
+            on_roomIncreaseButton_clicked();
+    } else if (event->key() == Qt::Key_PageUp)
+    {
+        if(selectedRoom > 0)
+            on_roomDecreaseButton_clicked();
+    }
+}
+
+/// <summary>
 /// Call the OpenROM function when the action for it is triggered in the main window.
 /// </summary>
 void WL4EditorWindow::on_actionOpen_ROM_triggered()
 {
     OpenROM();
+    this->setFocus(); // Enable keyPressEvent
 }
 
 /// <summary>
