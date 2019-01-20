@@ -1067,6 +1067,21 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Delete an Entity from a Entity List.
+    /// </summary>
+    /// <param name="difficulty">
+    /// Select a list by difficulty.
+    /// </param>
+    /// <param name="index">
+    /// The index of the Entity record in EntityList[currentDifficulty], count from 0.
+    /// </param>
+    void Room::DeleteEntity(int difficulty, int index)
+    {
+        if(difficulty > 2) return;
+        EntityList[difficulty].erase(EntityList[currentDifficulty].begin() + index);
+    }
+
+    /// <summary>
     /// Delete an Door from the Room.
     /// </summary>
     /// <param name="globalDoorIndex">

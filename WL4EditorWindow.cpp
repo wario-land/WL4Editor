@@ -277,6 +277,77 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
 
     if(nextroomconfig->RoomWidth != currentroomconfig->RoomWidth || nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
     {
+        // Deal with out-of-range Doors, Entities, Camera limitators
+        // TODO: support Undo/Redo on these elements
+        // -- Door --
+        int nxtRoomWidth = nextroomconfig->RoomWidth, nxtRoomHeight = nextroomconfig->RoomHeight;
+        std::vector<LevelComponents::Door*> doorlist = currentRoom->GetDoors();
+        size_t doornum = currentRoom->CountDoors(); size_t k = doornum - 1; size_t vortexdoorId_needResetPos = 0;
+        uint *deleteDoorIdlist = new uint[doornum](); // set them all 0, index the door from 1
+        for(uint i = 0; i < doornum; i++)
+        {
+            if((doorlist[i]->GetX2() >= nxtRoomWidth) || (doorlist[i]->GetY2() >= nxtRoomHeight))
+            {
+                if(doorlist[i]->IsVortex())
+                {
+                    vortexdoorId_needResetPos = i + 1;
+                    deleteDoorIdlist[k--] = i + 1;
+                } else {
+                    deleteDoorIdlist[k--] = i + 1; // the id list will be something like: 0 0 0 8 4 2
+                }
+            }
+        }
+        for(uint i = 0; i < doornum; i++)
+        {
+            if(deleteDoorIdlist[i] != 0)
+            {
+                if(deleteDoorIdlist[i] != vortexdoorId_needResetPos)
+                {
+                    currentRoom->DeleteDoor(deleteDoorIdlist[i] - 1);
+                }
+                else
+                {
+                    currentRoom->GetDoor(vortexdoorId_needResetPos - 1)->SetDoorPlace(nxtRoomWidth - 1, nxtRoomWidth - 1, nxtRoomHeight - 1, nxtRoomHeight - 1);
+                }
+            }
+        }
+        delete[] deleteDoorIdlist;
+
+        // -- Entity --
+        for(uint i = 0; i < 3; i++)
+        {
+            std::vector<struct LevelComponents::EntityRoomAttribute> entitylist = currentRoom->GetEntityListData(i);
+            size_t entitynum = entitylist.size();
+            for(uint j = entitynum; j > 0; j--)
+            {
+                if((entitylist[j - 1].XPos > (nxtRoomWidth - 1)) || (entitylist[j - 1].YPos > (nxtRoomHeight - 1)))
+                {
+                    currentRoom->DeleteEntity(i, j - 1);
+                }
+            }
+        }
+
+        // -- Camera limitator --
+        std::vector<struct LevelComponents::__CameraControlRecord*> limitatorlist = currentRoom->GetCameraControlRecords(false);
+        size_t limitatornum = limitatorlist.size(); k = limitatornum - 1;
+        uint *deleteLimitatorIdlist = new uint[limitatornum]();// set them all 0, index the limitator from 1
+        for(uint i = 0; i < limitatornum; i++)
+        {
+            if((limitatorlist[i]->x2 >= nxtRoomWidth) || (limitatorlist[i]->y2 >= nxtRoomHeight) || (limitatorlist[i]->x3 >= nxtRoomWidth) || (limitatorlist[i]->y3 >= nxtRoomHeight))
+            {
+                deleteLimitatorIdlist[k--] = i + 1; // the id list will be something like: 0 0 0 8 4 2
+            }
+        }
+        for(uint i = 0; i < doornum; i++)
+        {
+            if(deleteLimitatorIdlist[i] != 0)
+            {
+                currentRoom->DeleteCameraLimitator(deleteLimitatorIdlist[i] - 1);
+            }
+        }
+        delete[] deleteLimitatorIdlist;
+
+        // Reset Layers
         for(int i = 0; i < 3; ++i)
         {
             if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
@@ -326,7 +397,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     {
         if(currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerDisabled)
         {
-            currentRoom->SetLayerDataInRoomHeader(i, WL4Constants::NormalLayerDefaultPtr);
+            currentRoom->SetLayerDataInRoomHeader(i, WL4Constants::NormalLayerDefaultPtr); // TODO: need a fix for a Tileset in toxic landfill
         }
     }
     if(currentRoom->GetLayer(3)->GetMappingType() == LevelComponents::LayerDisabled)
