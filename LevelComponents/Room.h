@@ -159,7 +159,7 @@ namespace LevelComponents
         enum __CameraControlType GetCameraControlType() { return CameraControlType; }
         std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
-        LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
+        LevelComponents::Door *GetDoor(int _localdoorID) { return doors[_localdoorID]; }
         std::vector<Door*> GetDoors() { return doors; }
         std::vector<struct EntityRoomAttribute> GetEntityList(int difficulty_id) { return EntityList[difficulty_id]; }
         bool GetEntityListDirty(int difficulty) { return EntityListDirty[difficulty]; }

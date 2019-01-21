@@ -1078,7 +1078,7 @@ namespace LevelComponents
     void Room::DeleteEntity(int difficulty, int index)
     {
         if(difficulty > 2) return;
-        EntityList[difficulty].erase(EntityList[currentDifficulty].begin() + index);
+        EntityList[difficulty].erase(EntityList[difficulty].begin() + index);
     }
 
     /// <summary>

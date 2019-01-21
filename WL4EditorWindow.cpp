@@ -303,11 +303,13 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             {
                 if(deleteDoorIdlist[i] != vortexdoorId_needResetPos)
                 {
-                    currentRoom->DeleteDoor(deleteDoorIdlist[i] - 1);
+                    currentRoom->DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID());
+                    // Seems don't need to set Door dirty at least for now
                 }
                 else
                 {
                     currentRoom->GetDoor(vortexdoorId_needResetPos - 1)->SetDoorPlace(nxtRoomWidth - 1, nxtRoomWidth - 1, nxtRoomHeight - 1, nxtRoomHeight - 1);
+                    // Seems don't need to set Door dirty at least for now
                 }
             }
         }
@@ -323,6 +325,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                 if((entitylist[j - 1].XPos > (nxtRoomWidth - 1)) || (entitylist[j - 1].YPos > (nxtRoomHeight - 1)))
                 {
                     currentRoom->DeleteEntity(i, j - 1);
+                    currentRoom->SetEntityListDirty(i, true);
                 }
             }
         }
@@ -340,11 +343,12 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                 deleteLimitatorIdlist[k--] = i + 1; // the id list will be something like: 0 0 0 8 4 2
             }
         }
-        for(uint i = 0; i < doornum; i++)
+        for(uint i = 0; i < limitatornum; i++)
         {
             if(deleteLimitatorIdlist[i] != 0)
             {
                 currentRoom->DeleteCameraLimitator(deleteLimitatorIdlist[i] - 1);
+                currentRoom->SetCameraBoundaryDirty(true);
             }
         }
         delete[] deleteLimitatorIdlist;
