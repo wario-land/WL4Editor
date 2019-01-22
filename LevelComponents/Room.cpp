@@ -1157,12 +1157,9 @@ namespace LevelComponents
     /// <returns>
     /// True if the new Door position is inside the Room
     /// </returns>
-    bool Room::IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2) {
-        if (x1 >= 0 && x2 < this->GetWidth() && y1 >=0 && y2 < this->GetHeight()) {
-            return true;
-        } else {
-            return false;
-        }
+    bool Room::IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2)
+    {
+       return x1 >= 0 && x2 < this->GetWidth() && y1 >=0 && y2 < this->GetHeight();
     }
 
     /// <summary>
@@ -1177,12 +1174,8 @@ namespace LevelComponents
     /// <returns>
     /// True if the new Entity position is inside the Room
     /// </returns>
-    bool Room::IsNewEntityPositionInsideRoom(int x, int y) {
-        if (x >= 0 && x < this->GetWidth() && y >=0 && y < this->GetHeight()) {
-            return true;
-        } else {
-            return false;
-        }
+    bool Room::IsNewEntityPositionInsideRoom(int x, int y)
+    {
+        return x >= 0 && x < this->GetWidth() && y >=0 && y < this->GetHeight();
     }
-
 }
