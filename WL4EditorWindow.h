@@ -75,6 +75,9 @@ public:
     void DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd);}
 
+    // Events
+    void keyPressEvent(QKeyEvent *event);
+
 private slots:
     void on_actionOpen_ROM_triggered();
     void on_loadLevelButton_clicked();

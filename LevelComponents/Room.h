@@ -159,9 +159,11 @@ namespace LevelComponents
         enum __CameraControlType GetCameraControlType() { return CameraControlType; }
         std::vector<Entity*> GetCurrentEntityListSource() { return currentEntityListSource; }
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
-        LevelComponents::Door *GetDoor(int _doorID) { return doors[_doorID]; }
+        LevelComponents::Door *GetDoor(int _localdoorID) { return doors[_localdoorID]; }
+        std::vector<Door*> GetDoors() { return doors; }
         std::vector<struct EntityRoomAttribute> GetEntityList(int difficulty_id) { return EntityList[difficulty_id]; }
         bool GetEntityListDirty(int difficulty) { return EntityListDirty[difficulty]; }
+        std::vector<struct EntityRoomAttribute> GetEntityListData(int difficulty) { return EntityList[difficulty]; }
         int GetEVA() { return Layer0ColorBlendCoefficient_EVA; }
         int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
         unsigned int GetHeight() { return Height; }
@@ -189,6 +191,7 @@ namespace LevelComponents
         void DeleteCameraLimitator(int index);
         void DeleteDoor(int globalDoorIndex);
         void DeleteEntity(int index);
+        void DeleteEntity(int difficulty, int index);
         void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
         void SetBGLayerAutoScrollEnabled(bool enability);
         void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }
