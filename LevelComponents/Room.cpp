@@ -767,7 +767,7 @@ namespace LevelComponents
     /// <return>
     /// The normalized data pointer for the requested layer.
     /// </return>
-    int Room::GetLayerDataPtr(int LayerNum)
+    int Room::GetLayerDataPtr(unsigned int LayerNum)
     {
         assert(!(LayerNum & 0xFFFFFFFC) /* LayerNum must be within range [0, 4) */);
         return ((unsigned int*)(&RoomHeader.Layer0Data))[LayerNum] & 0x7FFFFFF;
@@ -826,13 +826,13 @@ namespace LevelComponents
     void Room::GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks, struct ROMUtils::SaveData *headerChunk, ROMUtils::SaveData *cameraPointerTableChunk, unsigned int *cameraPointerTableIndex)
     {
         // Populate layer chunks (uses chunk-relative addresses)
-        unsigned int *layerPtrs = (unsigned int*)(headerChunk->data + RoomID * sizeof(struct __RoomHeader) + 8);
+        unsigned int *layerPtrs = reinterpret_cast<unsigned int*>(headerChunk->data + RoomID * sizeof(struct __RoomHeader) + 8);
         for(unsigned int i = 0; i < 4; ++i)
         {
             Layer *layer = layers[i];
             if(layer->IsDirty())
             {
-                if(layer->GetMappingType() != LayerMappingType::LayerDisabled)
+                if(layer->GetMappingType() == LayerMappingType::LayerMap16)
                 {
                     // Add the data for this layer, it must be compressed
                     unsigned int compressedSize;
@@ -852,21 +852,26 @@ namespace LevelComponents
                 }
                 else
                 {
-                    // Set the pointer as disabled, and invalidate the old layer save chunk
-                    layerPtrs[i] = (i == 3 ? WL4Constants::BGLayerDefaultPtr : WL4Constants::NormalLayerDefaultPtr) | 0x8000000;
-                    struct ROMUtils::SaveData invalidationChunk =
+                    // Set the room header layer pointer from the data pointer, and invalidate the old layer save chunk
+                    layerPtrs[i] = (layer->GetMappingType() == LayerMappingType::LayerTile8x8 ?
+                        static_cast<unsigned int>(GetLayerDataPtr(i)) : // else LayerMappingType::LayerDisabled
+                        (i == 3 ? WL4Constants::BGLayerDefaultPtr : WL4Constants::NormalLayerDefaultPtr)) | 0x8000000;
+                    if(layer->GetMappingType() == LayerMappingType::LayerDisabled)
                     {
-                        0, 0, nullptr, ROMUtils::SaveDataIndex++, false, 0,
-                        (unsigned int) GetLayerDataPtr(i),
-                        ROMUtils::SaveDataChunkType::InvalidationChunk
-                    };
-                    chunks.append(invalidationChunk);
+                        struct ROMUtils::SaveData invalidationChunk =
+                        {
+                            0, 0, nullptr, ROMUtils::SaveDataIndex++, false, 0,
+                            static_cast<unsigned int>(GetLayerDataPtr(i)),
+                            ROMUtils::SaveDataChunkType::InvalidationChunk
+                        };
+                        chunks.append(invalidationChunk);
+                    }
                 }
             }
             else
             {
                 // Write the old layer data pointer to the header
-                layerPtrs[i] = GetLayerDataPtr(i) | 0x8000000;
+                layerPtrs[i] = static_cast<unsigned int>(GetLayerDataPtr(i)) | 0x8000000;
             }
         }
 
@@ -881,7 +886,7 @@ namespace LevelComponents
                 {
                     RoomID * sizeof(struct __RoomHeader) + 28 + i * 4,
                     entityListSize,
-                    (unsigned char*) malloc(entityListSize),
+                    reinterpret_cast<unsigned char*>(malloc(entityListSize)),
                     ROMUtils::SaveDataIndex++,
                     true,
                     headerChunk->index,
@@ -909,7 +914,7 @@ namespace LevelComponents
             {
                 4 * (*cameraPointerTableIndex)++,
                 cameraChunkSize,
-                (unsigned char*) malloc(cameraChunkSize),
+                reinterpret_cast<unsigned char*>(malloc(cameraChunkSize)),
                 ROMUtils::SaveDataIndex++,
                 true,
                 cameraPointerTableChunk->index,
@@ -918,8 +923,8 @@ namespace LevelComponents
             };
 
             // Populate camera boundary chunk with data
-            cameraChunk.data[0] = (unsigned char) RoomID;
-            cameraChunk.data[1] = (unsigned char) CameraControlRecords.size();
+            cameraChunk.data[0] = static_cast<unsigned char>(RoomID);
+            cameraChunk.data[1] = static_cast<unsigned char>(CameraControlRecords.size());
             for(unsigned int i = 0; i < CameraControlRecords.size(); ++i)
             {
                 struct __CameraControlRecord *ccr = CameraControlRecords[i];
@@ -996,7 +1001,7 @@ namespace LevelComponents
     /// </returns>
     bool Room::AddEntity(int XPos, int YPos, int localEntityId)
     {
-        if(EntityList[currentDifficulty].size() == (int) 47) return false;
+        if(EntityList[currentDifficulty].size() == 47) return false;
         EntityRoomAttribute newEntityattrs;
         newEntityattrs.XPos = XPos;
         newEntityattrs.YPos = YPos;
@@ -1021,7 +1026,7 @@ namespace LevelComponents
     /// </returns>
     void Room::SetEntityPosition(int XPos, int YPos, int index)
     {
-        if(EntityList[currentDifficulty].size() == (int) 47) return;
+        if(EntityList[currentDifficulty].size() == 47) return;
         EntityList[currentDifficulty].at(index).XPos=XPos;
         EntityList[currentDifficulty].at(index).YPos=YPos;
         return;
@@ -1037,7 +1042,7 @@ namespace LevelComponents
     /// </returns>
     int Room::GetEntityX(int index)
     {
-        if(EntityList[currentDifficulty].size() == (int) 47) return false;
+        if(EntityList[currentDifficulty].size() == 47) return false;
         return EntityList[currentDifficulty].at(index).XPos;
     }
 
@@ -1051,7 +1056,7 @@ namespace LevelComponents
     /// </returns>
     int Room::GetEntityY(int index)
     {
-        if(EntityList[currentDifficulty].size() == (int) 47) return false;
+        if(EntityList[currentDifficulty].size() == 47) return false;
         return EntityList[currentDifficulty].at(index).YPos;
     }
 
@@ -1117,11 +1122,12 @@ namespace LevelComponents
     /// </summary>
     void Room::AddCameraLimitator()
     {
-        __CameraControlRecord *recordPtr = (struct __CameraControlRecord*) new __CameraControlRecord;
+        __CameraControlRecord *recordPtr = new __CameraControlRecord;
         memset(recordPtr, 0, sizeof(struct __CameraControlRecord));
-        recordPtr->TransboundaryControl = recordPtr->x1 = recordPtr->y1 = (unsigned char) 2;
-        recordPtr->x2 = (unsigned char) 16; recordPtr->y2 = (unsigned char) 11;
-        recordPtr->ChangedValue = recordPtr->ChangeValueOffset = recordPtr->x3 = recordPtr->y3 = (unsigned char) 0xFF;
+        recordPtr->TransboundaryControl = recordPtr->x1 = recordPtr->y1 = 2;
+        recordPtr->x2 = 16;
+        recordPtr->y2 = 11;
+        recordPtr->ChangedValue = recordPtr->ChangeValueOffset = recordPtr->x3 = recordPtr->y3 = 0xFF;
         CameraControlRecords.push_back(recordPtr);
     }
 
@@ -1157,12 +1163,9 @@ namespace LevelComponents
     /// <returns>
     /// True if the new Door position is inside the Room
     /// </returns>
-    bool Room::IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2) {
-        if (x1 >= 0 && x2 < this->GetWidth() && y1 >=0 && y2 < this->GetHeight()) {
-            return true;
-        } else {
-            return false;
-        }
+    bool Room::IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2)
+    {
+       return x1 >= 0 && x2 < this->GetWidth() && y1 >=0 && y2 < this->GetHeight();
     }
 
     /// <summary>
@@ -1177,12 +1180,8 @@ namespace LevelComponents
     /// <returns>
     /// True if the new Entity position is inside the Room
     /// </returns>
-    bool Room::IsNewEntityPositionInsideRoom(int x, int y) {
-        if (x >= 0 && x < this->GetWidth() && y >=0 && y < this->GetHeight()) {
-            return true;
-        } else {
-            return false;
-        }
+    bool Room::IsNewEntityPositionInsideRoom(int x, int y)
+    {
+        return x >= 0 && x < this->GetWidth() && y >=0 && y < this->GetHeight();
     }
-
 }

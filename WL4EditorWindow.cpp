@@ -104,7 +104,7 @@ void WL4EditorWindow::LoadRoomUIUpdate()
     sprintf(tmpStr, "Level ID: %d-%d", selectedLevel._PassageIndex, selectedLevel._LevelIndex);
     statusBarLabel->setText(tmpStr);
     ui->roomDecreaseButton->setEnabled(selectedRoom);
-    ui->roomIncreaseButton->setEnabled((int) CurrentLevel->GetRooms().size() > selectedRoom + 1);
+    ui->roomIncreaseButton->setEnabled(CurrentLevel->GetRooms().size() > selectedRoom + 1);
 
     // Render the screen
     RenderScreenFull();
@@ -473,7 +473,8 @@ void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
     {
         if(selectedRoom < (CurrentLevel->GetRooms().size() - 1))
             on_roomIncreaseButton_clicked();
-    } else if (event->key() == Qt::Key_PageUp)
+    }
+    else if (event->key() == Qt::Key_PageUp)
     {
         if(selectedRoom > 0)
             on_roomDecreaseButton_clicked();

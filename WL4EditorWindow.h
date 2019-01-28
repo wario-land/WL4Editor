@@ -32,7 +32,7 @@ private:
     EntitySetDockWidget *EntitySetWidget;
     CameraControlDockWidget *CameraControlWidget;
     LevelComponents::Level *CurrentLevel = nullptr;
-    int selectedRoom = 0;
+    unsigned int selectedRoom = 0;
     bool UnsavedChanges = false;
     bool firstROMLoaded = false;
     void closeEvent (QCloseEvent *event);
