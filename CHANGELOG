@@ -1,10 +1,12 @@
 beta-6:
+- Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)
 - Support using page_up and page_down keys to go to different Rooms
 - Delete out-of-range Doors, Entities, Camera limitators when shrinking Room size
 - Fix runtime error when rendering Rooms from Level "the big board" and accelerate the render speed
 - Support moving selected Door/Entity via direction keys
 - Skip editing current layer when its MappingType is 0x20
 - Support choosing Map16 tile by right clicking on the selected Layer
+- Fix saving ROM after modifying room settings will save layer type 0x20 chunk data (it should only use existing data pointers)
 - Fix merely deleting Entities cannot save Entitylist changes to the ROM
 - Fix build error C2398 when using msvc, change some type from int to uint
 - Add Undo/Redo operation for RoomConfigDialog

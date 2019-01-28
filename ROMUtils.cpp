@@ -21,9 +21,9 @@ static inline int StrMatch(unsigned char *ptr, const char *pattern)
 // Helper function to validate RATS at an address
 static inline bool ValidRATS(unsigned char *ptr)
 {
-    if(strncmp((const char*) ptr, "STAR", 4)) return false;
-    short chunkLen = *(short*) (ptr + 4);
-    short chunkComp = *(short*) (ptr + 6);
+    if(strncmp(reinterpret_cast<const char*>(ptr), "STAR", 4)) return false;
+    short chunkLen = *reinterpret_cast<short*>(ptr + 4);
+    short chunkComp = *reinterpret_cast<short*>(ptr + 6);
     return chunkLen == ~chunkComp;
 }
 
@@ -45,7 +45,7 @@ namespace ROMUtils
     /// </param>
     unsigned int IntFromData(int address)
     {
-        return *(unsigned int*) (CurrentFile + address);
+        return *reinterpret_cast<unsigned int*>(CurrentFile + address);
     }
 
     /// <summary>
@@ -100,7 +100,7 @@ namespace ROMUtils
                         break;
                     }
 
-                    int temp = (int) (dst - OutputLayerData);
+                    int temp = reinterpret_cast<int>(dst - OutputLayerData);
                     if(temp > outputSize)
                     {
                         delete[] OutputLayerData;
@@ -133,14 +133,14 @@ namespace ROMUtils
             {
                 while(1)
                 {
-                    int ctrl = ((int) CurrentFile[address] << 8) | CurrentFile[address + 1];
+                    int ctrl = (static_cast<int>(CurrentFile[address]) << 8) | CurrentFile[address + 1];
                     address += 2; // offset + 2
                     if(!ctrl)
                     {
                         break;
                     }
 
-                    int temp = (int) (dst - OutputLayerData);
+                    int temp = reinterpret_cast<int>(dst - OutputLayerData);
                     if(temp > outputSize)
                     {
                         delete[] OutputLayerData;
@@ -197,8 +197,8 @@ namespace ROMUtils
         for(unsigned int i = 0; i < _layersize; ++i)
         {
             unsigned short s = LayerData[i];
-            separatedBytes[i] = (unsigned char) s;
-            separatedBytes[i + _layersize] = (unsigned char) (s >> 8);
+            separatedBytes[i] = static_cast<unsigned char>(s);
+            separatedBytes[i + _layersize] = static_cast<unsigned char>(s >> 8);
         }
 
         // Decide on 8 or 16 bit compression for the arrays
@@ -263,7 +263,7 @@ namespace ROMUtils
                 if(ValidRATS(ROMData + startAddr + freeBytes))
                 {
                     // Checksum pass: Restart the search at end of the chunk
-                    unsigned short chunkLen = *(unsigned short*) (ROMData + startAddr + freeBytes + 4);
+                    unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMData + startAddr + freeBytes + 4);
                     startAddr += freeBytes + 12 + chunkLen;
                     if(startAddr + chunkSize > ROMLength) return 0; // fail if not enough room in ROM
                     freeBytes = 0;
