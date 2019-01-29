@@ -486,6 +486,7 @@ void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
 /// </summary>
 void WL4EditorWindow::on_actionOpen_ROM_triggered()
 {
+    // TODO: check UnsavedChanges
     OpenROM();
     this->setFocus(); // Enable keyPressEvent
 }
@@ -788,17 +789,16 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     RoomConfigDialog dialog(this, _currentRoomConfigParams);
     if(dialog.exec() == QDialog::Accepted)
     {
-        // TODO: this should be done with the operation history
+        // Add changes into the operation history
         OperationParams *operation = new OperationParams;
         operation->type = ChangeRoomConfigOperation;
         operation->roomConfigChange = true;
         operation->lastRoomConfigParams = new DialogParams::RoomConfigParams(*_currentRoomConfigParams);
         operation->newRoomConfigParams = new DialogParams::RoomConfigParams(dialog.GetConfigParams());
-        ExecuteOperation(operation);
+        ExecuteOperation(operation); // Set change flag is done in it
 
         // Delete _currentRoomConfigParams
         delete _currentRoomConfigParams;
-
     }
 }
 
@@ -927,4 +927,92 @@ void WL4EditorWindow::on_actionAbout_triggered()
     }
     */
     changelogButton = changelogButton;
+}
+
+/// <summary>
+/// Swap the Layerdata for Layer_0 and Layer_1.
+/// </summary>
+void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
+{
+    // TODO: support swap a disabled Layer with a normal Layer
+    // swap Layerdata pointers if possible
+    if(!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled()))
+    {
+        statusBarLabel->setText("Swaping Layers failed!");
+        return;
+    }
+    if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
+    {
+        statusBarLabel->setText("Swaping Layers failed!");
+        return;
+    }
+    unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetLayerData();
+    unsigned short *dataptr2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->GetLayerData();
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->SetLayerData(dataptr2);
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->SetLayerData(dataptr1);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenFull();
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->SetDirty(true);
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->SetDirty(true);
+    SetUnsavedChanges(true);
+}
+
+void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
+{
+    // TODO: support swap a disabled Layer with a normal Layer
+    // swap Layerdata pointers if possible
+    if(!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled()))
+    {
+        statusBarLabel->setText("Swaping Layers failed!");
+        return;
+    }
+    unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->GetLayerData();
+    unsigned short *dataptr2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->GetLayerData();
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->SetLayerData(dataptr2);
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->SetLayerData(dataptr1);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenFull();
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->SetDirty(true);
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->SetDirty(true);
+    SetUnsavedChanges(true);
+}
+
+void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
+{
+    // TODO: support swap a disabled Layer with a normal Layer
+    // swap Layerdata pointers if possible
+    if(!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled()) || !(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled()))
+    {
+        statusBarLabel->setText("Swaping Layers failed!");
+        return;
+    }
+    if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
+    {
+        statusBarLabel->setText("Swaping Layers failed!");
+        return;
+    }
+    unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetLayerData();
+    unsigned short *dataptr2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->GetLayerData();
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->SetLayerData(dataptr2);
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->SetLayerData(dataptr1);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenFull();
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->SetDirty(true);
+    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->SetDirty(true);
+    SetUnsavedChanges(true);
 }
