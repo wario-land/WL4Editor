@@ -142,6 +142,9 @@
      <addaction name="actionNew_Door"/>
     </widget>
     <widget class="QMenu" name="menuSwap">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="title">
       <string>Swap</string>
      </property>

@@ -230,6 +230,7 @@ namespace LevelComponents
         void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk, ROMUtils::SaveData *cameraPointerTableChunk, unsigned int *cameraPointerTableIndex);
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
         void SetCameraLimitator(int index, __CameraControlRecord limitator_data);
+        void SwapEntityLists(int first_list_id, int second_list_id);
         bool IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2);
         bool IsNewEntityPositionInsideRoom(int x, int y);
     };

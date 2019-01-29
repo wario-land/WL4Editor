@@ -94,6 +94,9 @@ private slots:
     void on_action_swap_Layer_0_Layer_1_triggered();
     void on_action_swap_Layer_1_Layer_2_triggered();
     void on_action_swap_Layer_0_Layer_2_triggered();
+    void on_action_swap_Normal_Hard_triggered();
+    void on_action_swap_Hard_S_Hard_triggered();
+    void on_action_swap_Normal_S_Hard_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

@@ -169,6 +169,7 @@ void WL4EditorWindow::OpenROM()
         ui->actionSave_ROM->setEnabled(true);
         ui->actionSave_As->setEnabled(true);
         ui->menuAdd->setEnabled(true);
+        ui->menuSwap->setEnabled(true);
         ui->actionRedo->setEnabled(true);
         ui->actionUndo->setEnabled(true);
 
@@ -962,6 +963,9 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
     SetUnsavedChanges(true);
 }
 
+/// <summary>
+/// Swap the Layerdata for Layer_1 and Layer_2.
+/// </summary>
 void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
@@ -987,6 +991,9 @@ void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
     SetUnsavedChanges(true);
 }
 
+/// <summary>
+/// Swap the Layerdata for Layer_0 and Layer_2.
+/// </summary>
 void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
@@ -1014,5 +1021,62 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
     // Set Dirty and change flag
     CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->SetDirty(true);
     CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->SetDirty(true);
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Swap Normal and Hard Entity lists.
+/// </summary>
+void WL4EditorWindow::on_action_swap_Normal_Hard_triggered()
+{
+    // swap Entity lists
+    CurrentLevel->GetRooms()[selectedRoom]->SwapEntityLists(0, 1);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Swap Hard and S-Hard Entity lists.
+/// </summary>
+void WL4EditorWindow::on_action_swap_Hard_S_Hard_triggered()
+{
+    // swap Entity lists
+    CurrentLevel->GetRooms()[selectedRoom]->SwapEntityLists(0, 2);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Swap Normal and S-Hard Entity lists.
+/// </summary>
+void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
+{
+    // swap Entity lists
+    CurrentLevel->GetRooms()[selectedRoom]->SwapEntityLists(1, 2);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
     SetUnsavedChanges(true);
 }
