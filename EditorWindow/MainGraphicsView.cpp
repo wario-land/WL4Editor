@@ -264,6 +264,9 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 if (currentRoom->IsNewEntityPositionInsideRoom(px,py)) {
                     currentRoom->SetEntityPosition(px,py,SelectedEntityID);
                     singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                    singleton->SetUnsavedChanges(true);
                 }
                 break;
             }
