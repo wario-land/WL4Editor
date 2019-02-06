@@ -106,6 +106,16 @@ namespace LevelComponents
     }
 
     /// <summary>
+    ///Reset the Layer data on the heap.
+    /// </summary>
+    void Layer::ResetData()
+    {
+        dirty = Enabled = true;
+        memset(LayerData, 0, 2 * Width * Height);
+        dirty = true;
+    }
+
+    /// <summary>
     /// Deconstruct the layer's tile
     /// </summary>
     void Layer::DeconstructTiles()

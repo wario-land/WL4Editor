@@ -97,6 +97,12 @@ private slots:
     void on_action_swap_Normal_Hard_triggered();
     void on_action_swap_Hard_S_Hard_triggered();
     void on_action_swap_Normal_S_Hard_triggered();
+    void on_action_clear_Layer_0_triggered();
+    void on_action_clear_Layer_1_triggered();
+    void on_action_clear_Layer_2_triggered();
+    void on_action_clear_Normal_triggered();
+    void on_action_clear_Hard_triggered();
+    void on_action_clear_S_Hard_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H
