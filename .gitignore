@@ -48,6 +48,7 @@ ui_*
 *.autosave
 WL4Editor
 TEST/LoadROMFileTEST.cpp
+WL4Editor.pro.user*
 
 # Visual Studio user files
 Backup/

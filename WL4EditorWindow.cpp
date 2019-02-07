@@ -602,6 +602,7 @@ void WL4EditorWindow::closeEvent (QCloseEvent *event)
         {
             // If cancel is clicked, or X is clicked on the save prompt, then do nothing
             event->ignore();
+            return;
         }
     }
 
