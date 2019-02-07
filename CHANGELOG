@@ -1,6 +1,7 @@
 beta-7:
 - Fix moving Entities via direction keys cannot save
 - Support swapping Layers/Entity lists
+- Support clearing Layers/Entity lists
 
 beta-6:
 - Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)

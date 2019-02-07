@@ -51,6 +51,7 @@ namespace LevelComponents
         ~Layer();
         unsigned int GetDataPtr() { return DataPtr; }
         void SetDataPtr(unsigned int _dataPtr) { DataPtr = _dataPtr; }
+        void ResetData();
     };
 }
 

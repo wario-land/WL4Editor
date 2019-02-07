@@ -1061,7 +1061,7 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Delete an Entity from a Entity List.
+    /// Delete an Entity from an Entity List.
     /// </summary>
     /// <param name="index">
     /// The index of the Entity record in EntityList[currentDifficulty], count from 0.
@@ -1072,7 +1072,7 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Delete an Entity from a Entity List.
+    /// Delete an Entity from an Entity List.
     /// </summary>
     /// <param name="difficulty">
     /// Select a list by difficulty.
@@ -1084,6 +1084,18 @@ namespace LevelComponents
     {
         if(difficulty > 2) return;
         EntityList[difficulty].erase(EntityList[difficulty].begin() + index);
+    }
+
+    /// <summary>
+    /// Delete an Entity List.
+    /// </summary>
+    /// <param name="difficulty">
+    /// Select a list by difficulty.
+    /// </param>
+    void Room::ClearEntitylist(int difficulty)
+    {
+        if(difficulty > 2) return;
+        EntityList[difficulty].clear();
     }
 
     /// <summary>

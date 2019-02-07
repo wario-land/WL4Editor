@@ -192,6 +192,7 @@ namespace LevelComponents
         void DeleteDoor(int globalDoorIndex);
         void DeleteEntity(int index);
         void DeleteEntity(int difficulty, int index);
+        void ClearEntitylist(int difficulty);
         void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
         void SetBGLayerAutoScrollEnabled(bool enability);
         void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }

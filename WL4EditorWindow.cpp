@@ -170,6 +170,7 @@ void WL4EditorWindow::OpenROM()
         ui->actionSave_As->setEnabled(true);
         ui->menuAdd->setEnabled(true);
         ui->menuSwap->setEnabled(true);
+        ui->menuClear->setEnabled(true); ui->menu_clear_Layer->setEnabled(true); ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionRedo->setEnabled(true);
         ui->actionUndo->setEnabled(true);
 
@@ -1077,6 +1078,117 @@ void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
 
     // Set Dirty and change flag
     CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Clear Layer 0 for the current Room if condition permit.
+/// </summary>
+void WL4EditorWindow::on_action_clear_Layer_0_triggered()
+{
+    LevelComponents::Layer *layer0 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0);
+    if(layer0->GetMappingType() == LevelComponents::LayerMap16)
+    {
+        layer0->ResetData();
+    }
+    // TODO: add history record
+
+    // UI update
+    RenderScreenFull();
+
+    // Set change flag
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Clear Layer 1 for the current Room if condition permit.
+/// </summary>
+void WL4EditorWindow::on_action_clear_Layer_1_triggered()
+{
+    LevelComponents::Layer *layer1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1);
+    if(layer1->GetMappingType() == LevelComponents::LayerMap16)
+    {
+        layer1->ResetData();
+    }
+    // TODO: add history record
+
+    // UI update
+    RenderScreenFull();
+
+    // Set change flag
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Clear Layer 2 for the current Room if condition permit.
+/// </summary>
+void WL4EditorWindow::on_action_clear_Layer_2_triggered()
+{
+    LevelComponents::Layer *layer2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2);
+    if(layer2->GetMappingType() == LevelComponents::LayerMap16)
+    {
+        layer2->ResetData();
+    }
+    // TODO: add history record
+
+    // UI update
+    RenderScreenFull();
+
+    // Set change flag
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Clear Entity list 1 for the current Room.
+/// </summary>
+void WL4EditorWindow::on_action_clear_Normal_triggered()
+{
+    // Delete Entity list
+    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(1);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Clear Entity list 0 for the current Room.
+/// </summary>
+void WL4EditorWindow::on_action_clear_Hard_triggered()
+{
+    // Delete Entity list
+    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(0);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Clear Entity list 2 for the current Room.
+/// </summary>
+void WL4EditorWindow::on_action_clear_S_Hard_triggered()
+{
+    // Delete Entity list
+    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(2);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
     CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
     SetUnsavedChanges(true);
 }
