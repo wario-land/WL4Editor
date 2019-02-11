@@ -38,6 +38,7 @@ private:
     void closeEvent (QCloseEvent *event);
     static bool SaveCurrentFile() { return ROMUtils::SaveFile(ROMUtils::ROMFilePath); }
     bool SaveCurrentFileAs();
+    bool UnsavedChangesPrompt(QString str);
 
 protected:
     void resizeEvent(QResizeEvent *event);
