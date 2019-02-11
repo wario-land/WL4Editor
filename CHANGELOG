@@ -1,5 +1,6 @@
 beta-8:
 - Fix cannot delete out-of-range Doors when shrinking Room size.
+- Fix changing the tileset in Sapphire passage level 4 causes a crash.
 
 beta-7:
 - Fix moving Entities via direction keys cannot save
