@@ -123,6 +123,9 @@ void WL4EditorWindow::LoadRoomUIUpdate()
 /// </remarks>
 void WL4EditorWindow::OpenROM()
 {
+    // Check for unsaved operations
+    if(!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?"))) return;
+
     // Select a ROM file to open
     QString qFilePath = QFileDialog::getOpenFileName(
         this,
@@ -156,6 +159,7 @@ void WL4EditorWindow::OpenROM()
     );
     selectedRoom = 0;
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
+    UnsavedChanges = false;
 
     // Only modify UI on the first time a ROM is loaded
     if(!firstROMLoaded)
@@ -602,6 +606,7 @@ void WL4EditorWindow::closeEvent (QCloseEvent *event)
         {
             // If cancel is clicked, or X is clicked on the save prompt, then do nothing
             event->ignore();
+            return;
         }
     }
 
@@ -618,31 +623,7 @@ void WL4EditorWindow::closeEvent (QCloseEvent *event)
 void WL4EditorWindow::on_loadLevelButton_clicked()
 {
     // Check for unsaved operations
-    if(UnsavedChanges)
-    {
-        // Show save prompt
-        QMessageBox savePrompt;
-        savePrompt.setWindowTitle(tr("Unsaved changes"));
-        savePrompt.setText(tr("There are unsaved changes. Discard changes and load level anyway?"));
-        QPushButton *discardButton = savePrompt.addButton(tr("Discard"), QMessageBox::DestructiveRole);
-        QPushButton *cancelButton = savePrompt.addButton(tr("Cancel"), QMessageBox::NoRole);
-        QPushButton *saveButton = savePrompt.addButton(tr("Save"), QMessageBox::ApplyRole);
-        savePrompt.setDefaultButton(cancelButton);
-        savePrompt.exec();
-
-        if(savePrompt.clickedButton() == saveButton)
-        {
-            // Do not load level if there was an issue saving the file
-            if(!SaveCurrentFile())
-            {
-                return;
-            }
-        }
-        else if(savePrompt.clickedButton() != discardButton)
-        {
-            return;
-        }
-    }
+    if(!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load level anyway?"))) return;
 
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
@@ -668,6 +649,46 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         UnsavedChanges = false;
         ResetUndoHistory();
     }
+}
+
+/// <summary>
+/// Provide the user with a choice whether or not to save the ROM if there are unsaved changes.
+/// </summary>
+/// <param name="str">
+/// The message to display in the save prompt.
+/// </param>
+/// <returns>
+/// True if the user chose to continue with the save prompt.
+/// </returns>
+bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
+{
+    if(UnsavedChanges)
+    {
+        // Show save prompt
+        QMessageBox savePrompt;
+        savePrompt.setWindowTitle(tr("Unsaved changes"));
+        savePrompt.setText(str);
+        QPushButton *discardButton = savePrompt.addButton(tr("Discard"), QMessageBox::DestructiveRole);
+        QPushButton *cancelButton = savePrompt.addButton(tr("Cancel"), QMessageBox::NoRole);
+        QPushButton *saveButton = savePrompt.addButton(tr("Save"), QMessageBox::ApplyRole);
+        savePrompt.setDefaultButton(cancelButton);
+        savePrompt.exec();
+
+        if(savePrompt.clickedButton() == saveButton)
+        {
+            // Do not load level if there was an issue saving the file
+            if(!SaveCurrentFile())
+            {
+                return false;
+            }
+        }
+        else if(savePrompt.clickedButton() == discardButton)
+        {
+            return true;
+        }
+        else return false;
+    }
+    else return true;
 }
 
 /// <summary>
