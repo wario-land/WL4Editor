@@ -305,7 +305,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             {
                 if(deleteDoorIdlist[i] != vortexdoorId_needResetPos)
                 {
-                    currentRoom->DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID());
+                    DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID());
                     // Seems don't need to set Door dirty at least for now
                 }
                 else
