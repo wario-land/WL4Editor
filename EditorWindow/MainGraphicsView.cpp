@@ -239,8 +239,11 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 singleton->SetUnsavedChanges(true);
                 break;
             }
-            //Move selected entity when a direction key is pressed
-            case Qt::Key_Left ... Qt::Key_Down:
+                //Move selected entity when a direction key is pressed
+            case Qt::Key_Right:
+            case Qt::Key_Left:
+            case Qt::Key_Up:
+            case Qt::Key_Down:
             {
                 LevelComponents::Room* currentRoom=singleton->GetCurrentRoom();
 
@@ -279,13 +282,19 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         // Delete selected door if BSP or DEL is pressed
             case Qt::Key_Backspace:
             case Qt::Key_Delete:
+            {
                 singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
                 SelectedDoorID = -1;
                 singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
                 singleton->SetUnsavedChanges(true);
                 break;
+            }
             //Move selected door when a direction key is pressed
-            case Qt::Key_Left ... Qt::Key_Down:
+            case Qt::Key_Right:
+            case Qt::Key_Left:
+            case Qt::Key_Up:
+            case Qt::Key_Down:
+            {
                 LevelComponents::Room* currentRoom=singleton->GetCurrentRoom();
                 LevelComponents::Door* selectedDoor=currentRoom->GetDoor(SelectedDoorID);
 
@@ -317,6 +326,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                    singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
                 }
             break;
+            }
         }
     }
 }

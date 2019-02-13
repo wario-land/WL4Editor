@@ -20,7 +20,7 @@ namespace ROMUtils
     // Global functions
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
-    unsigned char *LayerRLEDecompress(int address, int outputSize);
+    unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
     int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
     bool SaveFile(QString fileName);

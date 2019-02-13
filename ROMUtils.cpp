@@ -82,7 +82,7 @@ namespace ROMUtils
     /// The predicted size of the output data.(unit: Byte)
     /// </param>
     /// <return>A pointer to decompressed data.</return>
-    unsigned char *LayerRLEDecompress(int address, int outputSize)
+    unsigned char *LayerRLEDecompress(int address, size_t outputSize)
     {
         unsigned char *OutputLayerData = new unsigned char[outputSize];
         int runData;
@@ -100,7 +100,7 @@ namespace ROMUtils
                         break;
                     }
 
-                    int temp = reinterpret_cast<int>(dst - OutputLayerData);
+                    size_t temp = dst - OutputLayerData;
                     if(temp > outputSize)
                     {
                         delete[] OutputLayerData;
@@ -140,7 +140,7 @@ namespace ROMUtils
                         break;
                     }
 
-                    int temp = reinterpret_cast<int>(dst - OutputLayerData);
+                    size_t temp = dst - OutputLayerData;
                     if(temp > outputSize)
                     {
                         delete[] OutputLayerData;
