@@ -3,6 +3,7 @@ beta-8:
 - Fix changing the tileset in Sapphire passage level 4 causes a crash.
 - Adjust the code of the program to let it be able to compile by MSVC64 C++ compiler.
 - Change an expression: from "Tile16 event id" to "terrain type id" in both ui/code.
+- Forbid users to delete the last Door in any Room.
 
 beta-7:
 - Fix moving Entities via direction keys cannot save
