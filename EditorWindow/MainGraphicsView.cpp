@@ -5,6 +5,7 @@
 
 #include <QScrollBar>
 #include <QMouseEvent>
+#include <QMessageBox>
 
 #include <iostream>
 #include <cassert>
@@ -239,8 +240,11 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 singleton->SetUnsavedChanges(true);
                 break;
             }
-            //Move selected entity when a direction key is pressed
-            case Qt::Key_Left ... Qt::Key_Down:
+                //Move selected entity when a direction key is pressed
+            case Qt::Key_Right:
+            case Qt::Key_Left:
+            case Qt::Key_Up:
+            case Qt::Key_Down:
             {
                 LevelComponents::Room* currentRoom=singleton->GetCurrentRoom();
 
@@ -249,22 +253,22 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 int py=currentRoom->GetEntityY(SelectedEntityID);
                 if (event->key() == Qt::Key_Left)
                 {
-                    px=px-1;
+                    px = px - 1;
                 } else if (event->key() == Qt::Key_Right)
                 {
-                    px=px+1;
+                    px = px + 1;
                 } else if (event->key() == Qt::Key_Up)
                 {
-                    py=py-1;
+                    py = py - 1;
                 } else if (event->key() == Qt::Key_Down)
                 {
-                    py=py+1;
+                    py = py + 1;
                 }
 
-                if (currentRoom->IsNewEntityPositionInsideRoom(px,py)) {
+                if (currentRoom->IsNewEntityPositionInsideRoom(px, py)) {
                     currentRoom->SetEntityPosition(px,py,SelectedEntityID);
                     singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
-                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams(). seleteddifficulty;
                     singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
                     singleton->SetUnsavedChanges(true);
                 }
@@ -279,44 +283,56 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         // Delete selected door if BSP or DEL is pressed
             case Qt::Key_Backspace:
             case Qt::Key_Delete:
+            {
+                if(singleton->GetCurrentRoom()->CountDoors() < 2)
+                {
+                    QMessageBox::critical(nullptr, QString("Error"), QString("Deleting the last Door in a Room is not allowed!"));
+                    break;
+                }
                 singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
                 SelectedDoorID = -1;
                 singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
                 singleton->SetUnsavedChanges(true);
                 break;
+            }
             //Move selected door when a direction key is pressed
-            case Qt::Key_Left ... Qt::Key_Down:
-                LevelComponents::Room* currentRoom=singleton->GetCurrentRoom();
-                LevelComponents::Door* selectedDoor=currentRoom->GetDoor(SelectedDoorID);
+            case Qt::Key_Right:
+            case Qt::Key_Left:
+            case Qt::Key_Up:
+            case Qt::Key_Down:
+            {
+                LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+                LevelComponents::Door *selectedDoor = currentRoom->GetDoor(SelectedDoorID);
 
                 //The new positions
-                int px1=selectedDoor->GetX1();
-                int py1=selectedDoor->GetY1();
-                int px2=selectedDoor->GetX2();
-                int py2=selectedDoor->GetY2();
+                int px1 = selectedDoor->GetX1();
+                int py1 = selectedDoor->GetY1();
+                int px2 = selectedDoor->GetX2();
+                int py2 = selectedDoor->GetY2();
                 if (event->key() == Qt::Key_Left)
                 {
-                    px1=px1-1;
-                    px2=px2-1;
+                    px1 = px1 - 1;
+                    px2 = px2 - 1;
                 } else if (event->key() == Qt::Key_Right)
                 {
-                    px1=px1+1;
-                    px2=px2+1;
+                    px1 = px1 + 1;
+                    px2 = px2 + 1;
                 } else if (event->key() == Qt::Key_Up)
                 {
-                    py1=py1-1;
-                    py2=py2-1;
+                    py1 = py1 - 1;
+                    py2 = py2 - 1;
                 } else if (event->key() == Qt::Key_Down)
                 {
-                    py1=py1+1;
-                    py2=py2+1;
+                    py1 = py1 + 1;
+                    py2 = py2 + 1;
 
                 }
-                if (currentRoom->IsNewDoorPositionInsideRoom(px1,px2,py1,py2)) {
-                   selectedDoor->SetDoorPlace(px1,px2,py1,py2);
+                if (currentRoom->IsNewDoorPositionInsideRoom(px1, px2, py1, py2)) {
+                   selectedDoor->SetDoorPlace(px1, px2, py1, py2);
                    singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
                 }
             break;
+            }
         }
     }
 }

@@ -126,7 +126,7 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     {
         configParams.BackgroundLayerDataPtr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
     }else{
-        configParams.BackgroundLayerDataPtr = WL4Constants::NormalLayerDefaultPtr;
+        configParams.BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
     }
     configParams.RoomHeight = ui->SpinBox_RoomHeight->value();
     configParams.RoomWidth = ui->SpinBox_RoomWidth->value();
@@ -262,10 +262,16 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         {
             elements << QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper();
         }
+        if(BGLayerdataPtrs[index].size() > 0)
+        {
+            ui->CheckBox_BGLayerEnable->setChecked(true);
+        }
+        else
+        {
+            ui->CheckBox_BGLayerEnable->setChecked(false);
+        }
         ui->ComboBox_BGLayerPicker->addItems(elements);
-
-        ui->CheckBox_BGLayerEnable->setChecked(true);
-        ui->CheckBox_Layer0Enable->setChecked(false); ui->CheckBox_Layer0Enable->setChecked(true);
+        ui->CheckBox_Layer0Enable->setChecked(false); ui->CheckBox_Layer0Enable->setChecked(true); //trigger on_CheckBox_Layer0Enable_stateChanged()
         ui->CheckBox_Layer2Enable->setChecked(true);
 
         // Extra UI changes for Toxic Landfill dust Layer0

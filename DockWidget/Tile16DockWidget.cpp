@@ -118,11 +118,11 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
 
     // Get the event information about the selected tile
     unsigned short eventIndex = SelectedTileset->Map16EventTable[tile];
-    int tmpWarioAnimationSlotID = SelectedTileset->Map16WarioAnimationSlotIDTable[tile];
+    int tmpTerrainTypeID = SelectedTileset->Map16TerrainTypeIDTable[tile];
 
     // Print information about the tile to the user
     QString infoText;
-    infoText.sprintf("Tile ID: %d\nEvent ID: 0x%04X\nWario Animation Slot ID: %d", tile, eventIndex, tmpWarioAnimationSlotID);
+    infoText.sprintf("Tile ID: %d\nEvent ID: 0x%04X\nTerrain type ID: %d", tile, eventIndex, tmpTerrainTypeID);
     SetTileInfoText(infoText);
 
     // Set vertical scrollbar of braphicview
