@@ -4,6 +4,8 @@ beta-8:
 - Adjust the code of the program to let it be able to compile by MSVC64 C++ compiler.
 - Change an expression: from "Tile16 event id" to "terrain type id" in both ui/code.
 - Forbid users to delete the last Door in any Room.
+- Fix an edge case bug: update entity list dock widget everytime if delete Door(s).
+- Support clearing CurrentRoom except camera settings with "Ctrl + Del"
 
 beta-7:
 - Fix moving Entities via direction keys cannot save

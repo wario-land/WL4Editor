@@ -292,6 +292,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
                 SelectedDoorID = -1;
                 singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+                singleton->ResetEntitySetDockWidget();
                 singleton->SetUnsavedChanges(true);
                 break;
             }

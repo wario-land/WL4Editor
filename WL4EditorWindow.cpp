@@ -475,15 +475,19 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
 {
     if(!firstROMLoaded) return;
-    if (event->key() == Qt::Key_PageDown)
+    if(event->key() == Qt::Key_PageDown)
     {
         if(selectedRoom < (CurrentLevel->GetRooms().size() - 1))
             on_roomIncreaseButton_clicked();
     }
-    else if (event->key() == Qt::Key_PageUp)
+    else if(event->key() == Qt::Key_PageUp)
     {
         if(selectedRoom > 0)
             on_roomDecreaseButton_clicked();
+    }
+    else if((event->modifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_Delete))
+    {
+        CurrentRoomClearEverything();
     }
 }
 
@@ -689,6 +693,105 @@ bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
         else return false;
     }
     else return true;
+}
+
+/// <summary>
+/// Clear eventhing in the current room.
+/// But at least one Door will be keeped.
+/// </summary>
+void WL4EditorWindow::CurrentRoomClearEverything()
+{
+    bool IfDeleteAllDoors = false;
+    // Show asking deleting Doors messagebox
+    QMessageBox IfDeleteDoors;
+    IfDeleteDoors.setWindowTitle(tr("WL4Editor"));
+    IfDeleteDoors.setText("Do you want to delete all the doors?\nThe program will keep one Door to let camera rectangle(s) render correctly.\nAlso not support deleting camera settings for now.");
+    QPushButton *discardButton = IfDeleteDoors.addButton(tr("Discard Clearing"), QMessageBox::DestructiveRole);
+    QPushButton *NoButton = IfDeleteDoors.addButton(tr("No"), QMessageBox::NoRole);
+    QPushButton *YesButton = IfDeleteDoors.addButton(tr("Yes"), QMessageBox::ApplyRole);
+    IfDeleteDoors.setDefaultButton(NoButton);
+    IfDeleteDoors.exec();
+
+    if(IfDeleteDoors.clickedButton() == YesButton)
+    {
+        IfDeleteAllDoors = true;
+    }
+    else if(IfDeleteDoors.clickedButton() == discardButton)
+    {
+        return;
+    }
+
+    // Clear Layer 0, 1, 2
+    LevelComponents::Layer *layer0 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0);
+    if(layer0->GetMappingType() == LevelComponents::LayerMap16)
+    {
+        layer0->ResetData();
+    }
+    LevelComponents::Layer *layer1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1);
+    if(layer1->GetMappingType() == LevelComponents::LayerMap16)
+    {
+        layer1->ResetData();
+    }
+    LevelComponents::Layer *layer2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2);
+    if(layer2->GetMappingType() == LevelComponents::LayerMap16)
+    {
+        layer2->ResetData();
+    }
+    // Delete Entity lists and set dirty
+    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(0);
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
+    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(1);
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
+    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(2);
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
+    // Delete most of the Doors
+    if(IfDeleteAllDoors)
+    {
+        LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
+        std::vector<LevelComponents::Door*> doorlist = currentRoom->GetDoors();
+        size_t doornum = currentRoom->CountDoors(); size_t k = doornum - 1; size_t vortexdoorId_needResetPos = 0;
+        uint *deleteDoorIdlist = new uint[doornum](); // set them all 0, index the door from 1
+        for(uint i = 0; i < doornum; i++)
+        {
+            if(doorlist[i]->IsVortex())
+            {
+                vortexdoorId_needResetPos = i + 1;
+                deleteDoorIdlist[k--] = i + 1;
+            } else {
+                deleteDoorIdlist[k--] = i + 1; // the id list will be something like: 0 0 0 8 4 2
+            }
+        }
+        for(uint i = 0; i < doornum; i++)
+        {
+            if(deleteDoorIdlist[i] != 0)
+            {
+                if(deleteDoorIdlist[i] != vortexdoorId_needResetPos)
+                {
+                    if((i == doornum - 1) && (vortexdoorId_needResetPos == 0)) //don't delete the last door if there is no vortex door in this Room
+                        break;
+                    if((i == doornum - 1) && (vortexdoorId_needResetPos != 0)) //delete the last door if there is a vortex door in this Room
+                        continue;
+                    DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID());
+                    // Seems don't need to set Door dirty at least for now
+                }
+                else
+                {
+                    currentRoom->GetDoor(vortexdoorId_needResetPos - 1)->SetDoorPlace(1, 1, 1, 1);
+                    // Seems don't need to set Door dirty at least for now
+                }
+            }
+        }
+        delete[] deleteDoorIdlist;
+    }
+
+    // TODO: add history record
+
+    // UI update
+    ResetEntitySetDockWidget();
+    RenderScreenFull();
+
+    // Set change flag
+    SetUnsavedChanges(true);
 }
 
 /// <summary>

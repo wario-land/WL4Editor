@@ -39,6 +39,7 @@ private:
     static bool SaveCurrentFile() { return ROMUtils::SaveFile(ROMUtils::ROMFilePath); }
     bool SaveCurrentFileAs();
     bool UnsavedChangesPrompt(QString str);
+    void CurrentRoomClearEverything();
 
 protected:
     void resizeEvent(QResizeEvent *event);
