@@ -202,6 +202,16 @@ namespace LevelComponents
         {
             rooms[doors[i]->GetRoomID()]->AddDoor(doors[i]);
         }
+
+        // Check if every Room have at least one Door, if not, set the entityset id to skip some problems
+        // the code is only for avoiding crash
+        for(unsigned int i = 0; i < rooms.size(); ++i)
+        {
+            if(rooms[i]->CountDoors() == 0)
+            {
+                rooms[i]->SetCurrentEntitySet(37);
+            }
+        }
     }
 
     /// <summary>

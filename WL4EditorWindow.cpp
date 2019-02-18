@@ -706,7 +706,7 @@ void WL4EditorWindow::CurrentRoomClearEverything()
     QMessageBox IfDeleteDoors;
     IfDeleteDoors.setWindowTitle(tr("WL4Editor"));
     IfDeleteDoors.setText("You just triggered the clearing-all accelerator for the current Room.\nDo you want to delete all the doors at the same time?\nThe program will keep one Door to let camera rectangle(s) render correctly.\nAlso it doesn't support deleting camera settings for now.");
-    QPushButton *discardButton = IfDeleteDoors.addButton(tr("Discard Clearing"), QMessageBox::DestructiveRole);
+    QPushButton *CancelClearingButton = IfDeleteDoors.addButton(tr("Cancel Clearing"), QMessageBox::DestructiveRole);
     QPushButton *NoButton = IfDeleteDoors.addButton(tr("No"), QMessageBox::NoRole);
     QPushButton *YesButton = IfDeleteDoors.addButton(tr("Yes"), QMessageBox::ApplyRole);
     IfDeleteDoors.setDefaultButton(NoButton);
@@ -716,7 +716,7 @@ void WL4EditorWindow::CurrentRoomClearEverything()
     {
         IfDeleteAllDoors = true;
     }
-    else if(IfDeleteDoors.clickedButton() == discardButton)
+    else if(IfDeleteDoors.clickedButton() == CancelClearingButton)
     {
         return;
     }
