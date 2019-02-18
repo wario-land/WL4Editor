@@ -9,7 +9,6 @@ beta-8:
 - Support clearing CurrentRoom except camera settings with "Ctrl + Del" (focus is bugged; click any top menu item then Ctrl+Del to trigger)
 
 beta-7:
-- Instability has NOT been fixed yet, please close and re-open the editor after saving
 - Fix moving Entities via direction keys cannot save
 - Support swapping Layers/Entity lists
 - Support clearing Layers/Entity lists
