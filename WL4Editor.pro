@@ -74,7 +74,8 @@ HEADERS += \
     LevelComponents/Entity.h \
     DockWidget/EntitySetDockWidget.h \
     Compress.h \
-    DockWidget/CameraControlDockWidget.h
+    DockWidget/CameraControlDockWidget.h \
+    WL4Application.h
 
 FORMS += \
     WL4EditorWindow.ui \
