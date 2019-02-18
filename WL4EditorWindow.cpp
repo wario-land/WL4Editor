@@ -475,17 +475,16 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
 {
     if(!firstROMLoaded) return;
+
     if(event->key() == Qt::Key_PageDown)
     {
-        if(selectedRoom < (CurrentLevel->GetRooms().size() - 1))
-            on_roomIncreaseButton_clicked();
+        on_roomIncreaseButton_clicked();
     }
     else if(event->key() == Qt::Key_PageUp)
     {
-        if(selectedRoom > 0)
-            on_roomDecreaseButton_clicked();
+        on_roomDecreaseButton_clicked();
     }
-    else if((event->modifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_Delete))
+    else if(event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_Delete)
     {
         CurrentRoomClearEverything();
     }
@@ -690,14 +689,14 @@ bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
         {
             return true;
         }
-        else return false;
+        return false;
     }
     else return true;
 }
 
 /// <summary>
 /// Clear eventhing in the current room.
-/// But at least one Door will be keeped.
+/// But at least one door will be kept.
 /// </summary>
 void WL4EditorWindow::CurrentRoomClearEverything()
 {
@@ -705,49 +704,43 @@ void WL4EditorWindow::CurrentRoomClearEverything()
     // Show asking deleting Doors messagebox
     QMessageBox IfDeleteDoors;
     IfDeleteDoors.setWindowTitle(tr("WL4Editor"));
-    IfDeleteDoors.setText("You just triggered the clearing-all accelerator for the current Room.\nDo you want to delete all the doors at the same time?\nThe program will keep one Door to let camera rectangle(s) render correctly.\nAlso it doesn't support deleting camera settings for now.");
-    QPushButton *CancelClearingButton = IfDeleteDoors.addButton(tr("Cancel Clearing"), QMessageBox::DestructiveRole);
+    IfDeleteDoors.setText("You just triggered the clear-all shortcut (current room).\nDo you want to delete all the doors, too?\n(One door will be kept to render camera boxes correctly.\nCamera settings will be unaffected regardless.)");
+    QPushButton *CancelClearingButton = IfDeleteDoors.addButton(tr("Cancel Clearing"), QMessageBox::RejectRole);
     QPushButton *NoButton = IfDeleteDoors.addButton(tr("No"), QMessageBox::NoRole);
     QPushButton *YesButton = IfDeleteDoors.addButton(tr("Yes"), QMessageBox::ApplyRole);
-    IfDeleteDoors.setDefaultButton(NoButton);
+    IfDeleteDoors.setDefaultButton(CancelClearingButton);
     IfDeleteDoors.exec();
 
     if(IfDeleteDoors.clickedButton() == YesButton)
     {
         IfDeleteAllDoors = true;
     }
-    else if(IfDeleteDoors.clickedButton() == CancelClearingButton)
+    else if(IfDeleteDoors.clickedButton() != NoButton)
     {
         return;
     }
 
     // Clear Layer 0, 1, 2
-    LevelComponents::Layer *layer0 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0);
-    if(layer0->GetMappingType() == LevelComponents::LayerMap16)
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
+    for(int i = 0 ; i < 3; ++i)
     {
-        layer0->ResetData();
+        LevelComponents::Layer *layer = currentRoom->GetLayer(i);
+        if(layer->GetMappingType() == LevelComponents::LayerMap16)
+        {
+            layer->ResetData();
+        }
     }
-    LevelComponents::Layer *layer1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1);
-    if(layer1->GetMappingType() == LevelComponents::LayerMap16)
-    {
-        layer1->ResetData();
-    }
-    LevelComponents::Layer *layer2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2);
-    if(layer2->GetMappingType() == LevelComponents::LayerMap16)
-    {
-        layer2->ResetData();
-    }
+
     // Delete Entity lists and set dirty
-    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(0);
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
-    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(1);
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
-    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(2);
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
+    for(int i = 0 ; i < 3; ++i)
+    {
+        currentRoom->ClearEntitylist(0);
+        currentRoom->SetEntityListDirty(0, true);
+    }
+
     // Delete most of the Doors
     if(IfDeleteAllDoors)
     {
-        LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
         std::vector<LevelComponents::Door*> doorlist = currentRoom->GetDoors();
         size_t doornum = currentRoom->CountDoors(); size_t k = doornum - 1; size_t vortexdoorId_needResetPos = 0;
         uint *deleteDoorIdlist = new uint[doornum](); // set them all 0, index the door from 1
@@ -803,6 +796,8 @@ void WL4EditorWindow::CurrentRoomClearEverything()
 /// </remarks>
 void WL4EditorWindow::on_roomDecreaseButton_clicked()
 {
+    if(!selectedRoom) return;
+
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
 
@@ -824,6 +819,8 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
 /// </remarks>
 void WL4EditorWindow::on_roomIncreaseButton_clicked()
 {
+    if(selectedRoom == (CurrentLevel->GetRooms().size() - 1)) return;
+
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
 
