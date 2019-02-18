@@ -36,9 +36,11 @@ private:
     bool UnsavedChanges = false; //state check bool only be used when user try loading another ROM, another Level or close the editor without saving changes
     bool firstROMLoaded = false;
     void closeEvent (QCloseEvent *event);
+    bool notify(QObject *receiver, QEvent *event);
     static bool SaveCurrentFile() { return ROMUtils::SaveFile(ROMUtils::ROMFilePath); }
     bool SaveCurrentFileAs();
     bool UnsavedChangesPrompt(QString str);
+    void CurrentRoomClearEverything();
 
 protected:
     void resizeEvent(QResizeEvent *event);

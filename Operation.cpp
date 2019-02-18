@@ -39,6 +39,7 @@ static void PerformOperation(struct OperationParams *operation)
         singleton->RenderScreenFull();
         singleton->SetEditModeDockWidgetLayerEditability();
         singleton->SetEditModeWidgetDifficultyRadioBox(1);
+        singleton->ResetEntitySetDockWidget();
         singleton->SetUnsavedChanges(true);
     }
 }
@@ -73,6 +74,7 @@ static void BackTrackOperation(struct OperationParams *operation)
         singleton->RenderScreenFull();
         singleton->SetEditModeDockWidgetLayerEditability();
         singleton->SetEditModeWidgetDifficultyRadioBox(1);
+        singleton->ResetEntitySetDockWidget();
         singleton->SetUnsavedChanges(true);
     }
 }

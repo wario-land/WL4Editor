@@ -1114,6 +1114,9 @@ namespace LevelComponents
                 return;
             }
         }
+
+        // Reset CurrentEntitySetID
+        CurrentEntitySetID = doors[0]->GetEntitySetID();
     }
 
     /// <summary>
