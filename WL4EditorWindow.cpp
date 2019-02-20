@@ -720,7 +720,7 @@ void WL4EditorWindow::CurrentRoomClearEverything()
         return;
     }
 
-    // Clear Layer 0, 1, 2
+    // Clear Layers 0, 1, 2
     LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
     for(int i = 0 ; i < 3; ++i)
     {
@@ -734,8 +734,8 @@ void WL4EditorWindow::CurrentRoomClearEverything()
     // Delete Entity lists and set dirty
     for(int i = 0 ; i < 3; ++i)
     {
-        currentRoom->ClearEntitylist(0);
-        currentRoom->SetEntityListDirty(0, true);
+        currentRoom->ClearEntitylist(i);
+        currentRoom->SetEntityListDirty(i, true);
     }
 
     // Delete most of the Doors
@@ -760,9 +760,9 @@ void WL4EditorWindow::CurrentRoomClearEverything()
             {
                 if(deleteDoorIdlist[i] != vortexdoorId_needResetPos)
                 {
-                    if((i == doornum - 1) && (vortexdoorId_needResetPos == 0)) //don't delete the last door if there is no vortex door in this Room
+                    if(i == doornum - 1 && !vortexdoorId_needResetPos) //don't delete the last door if there is no vortex door in this Room
                         break;
-                    if((i == doornum - 1) && (vortexdoorId_needResetPos != 0)) //delete the last door if there is a vortex door in this Room
+                    if(i == doornum - 1 && vortexdoorId_needResetPos) //delete the last door if there is a vortex door in this Room
                         continue;
                     DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID());
                     // Seems don't need to set Door dirty at least for now
