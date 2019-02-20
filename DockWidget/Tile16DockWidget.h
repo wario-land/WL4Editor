@@ -21,6 +21,7 @@ class Tile16DockWidget : public QDockWidget
 public:
     explicit Tile16DockWidget(QWidget *parent = 0);
     ~Tile16DockWidget();
+    void FocusInEvent(QFocusEvent *e);
 
 private:
     Ui::Tile16DockWidget *ui;
