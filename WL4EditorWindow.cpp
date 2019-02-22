@@ -288,7 +288,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         // -- Door --
         int nxtRoomWidth = nextroomconfig->RoomWidth, nxtRoomHeight = nextroomconfig->RoomHeight;
         std::vector<LevelComponents::Door*> doorlist = currentRoom->GetDoors();
-        size_t doornum = currentRoom->CountDoors(); size_t k = doornum - 1; size_t vortexdoorId_needResetPos = 0;
+        size_t doornum = currentRoom->CountDoors(); size_t k = doornum - 1; size_t vortexdoorId_needResetPos = 0; size_t doorcount = doornum;
         uint *deleteDoorIdlist = new uint[doornum](); // set them all 0, index the door from 1
         for(uint i = 0; i < doornum; i++)
         {
@@ -309,12 +309,24 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             {
                 if(deleteDoorIdlist[i] != vortexdoorId_needResetPos)
                 {
+                    if(i == doornum - 1 && doorcount == 1) //don't delete the last door if there is no vortex door in this Room
+                    {
+                        currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->SetDoorPlace(qMin(nxtRoomWidth - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX1()),
+                                                                                    qMin(nxtRoomWidth - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX2()),
+                                                                                    qMin(nxtRoomHeight - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY1()),
+                                                                                    qMin(nxtRoomHeight - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY2()));
+                        break;
+                    }
                     DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID());
+                    --doorcount;
                     // Seems don't need to set Door dirty at least for now
                 }
                 else
                 {
-                    currentRoom->GetDoor(vortexdoorId_needResetPos - 1)->SetDoorPlace(nxtRoomWidth - 1, nxtRoomWidth - 1, nxtRoomHeight - 1, nxtRoomHeight - 1);
+                    currentRoom->GetDoor(vortexdoorId_needResetPos - 1)->SetDoorPlace(qMin(nxtRoomWidth - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX1()),
+                                                                                      qMin(nxtRoomWidth - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX2()),
+                                                                                      qMin(nxtRoomHeight - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY1()),
+                                                                                      qMin(nxtRoomHeight - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY2()));
                     // Seems don't need to set Door dirty at least for now
                 }
             }
@@ -769,7 +781,10 @@ void WL4EditorWindow::CurrentRoomClearEverything()
                 }
                 else
                 {
-                    currentRoom->GetDoor(vortexdoorId_needResetPos - 1)->SetDoorPlace(1, 1, 1, 1);
+                    currentRoom->GetDoor(vortexdoorId_needResetPos - 1)->SetDoorPlace(qMin(currentRoom->GetWidth() - 1, (uint) currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX1()),
+                                                                                      qMin(currentRoom->GetWidth() - 1, (uint) currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX2()),
+                                                                                      qMin(currentRoom->GetHeight() - 1, (uint) currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY1()),
+                                                                                      qMin(currentRoom->GetHeight() - 1, (uint) currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY2()));
                     // Seems don't need to set Door dirty at least for now
                 }
             }
