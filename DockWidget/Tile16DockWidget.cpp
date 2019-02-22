@@ -45,6 +45,14 @@ Tile16DockWidget::~Tile16DockWidget()
 }
 
 /// <summary>
+/// This function will be triggered when the dock widget get focus.
+/// </summary>
+void Tile16DockWidget::FocusInEvent(QFocusEvent *e)
+{
+    SetSelectedTile(0, true);
+}
+
+/// <summary>
 /// Set the tileset for the dock widget.
 /// </summary>
 /// <remarks>
@@ -81,8 +89,7 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
     // Re-initialize other settings
-    SelectedTile = (unsigned short) 0xFFFF;
-    SetTileInfoText(QString()); // clear tile info text
+    SetSelectedTile(0, true);
 
     return 0;
 }
