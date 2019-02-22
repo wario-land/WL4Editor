@@ -1,6 +1,8 @@
 beta-9:
 - Fix clear-all only clears layer 0
 - Fix undo multiple times then placing a tile crashes the editor
+- find wrong max value setting of some spinboxes in door config dialog
+- fix shrinking the Room cannot protect you from deleting the last Door, optimize the auto-reset door position code
 
 beta-8:
 - Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)
