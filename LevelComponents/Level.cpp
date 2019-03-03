@@ -344,7 +344,7 @@ namespace LevelComponents
             cameraPointerTable->size = cameraPointerTableSize;
             cameraPointerTable->data = (unsigned char*) malloc(cameraPointerTableSize);
             cameraPointerTable->index = ROMUtils::SaveDataIndex++;
-            cameraPointerTable->alignment = false;
+            cameraPointerTable->alignment = true;
             cameraPointerTable->dest_index = 0;
             cameraPointerTable->old_chunk_addr = ROMUtils::PointerFromData(cameraPointerTablePtr);
             cameraPointerTable->ChunkType = ROMUtils::CameraPointerTableType;
