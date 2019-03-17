@@ -41,10 +41,10 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x29 "Vortex"                          -98 -98 0x3B505C 130 0 +p
 0x2A "purple Marumen"                  -100 -66 0x3C1270 2 0 +p
 0x2B "red Marumen"                     -100 -66 0x3C1270 2 1 +p
-0x2C "Boss: Spoiled Rotten"            -98 -66 (incorrect delta value) 0x3C302C 130 0 0
-0x2D  nothing
-0x2E "trigger push down 9 o'clock CW"  -98 -66 (incorrect delta value)0x3C48D4 3 0 +p
-0x2F "trigger push up 3 o'clock CCW"   -98 -66 (incorrect delta value)0x3C48F4 3 0 +p
+0x2C "Boss: Spoiled Rotten"            -98 -66 0x3C302C 130 0 0
+0x2D  nothing                          -98 -66 0x3C491C 1 0 +p
+0x2E "trigger push down 9 o'clock CW"  -98 -66 0x3C48D4 3 0 +p
+0x2F "trigger push up 3 o'clock CCW"   -98 -66 0x3C48F4 3 0 +p
 0x30 "4 dominoes go right"             -130 -66 0x3C4174 3 1 +p
 0x31 "4 dominoes go left"              -67 -66 0x3C41F4 3 1 +p
 0x32 "dominoes stares go right & down" -130 -66 0x3C4274 3 1 +p
@@ -59,15 +59,15 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x3B "dise block"                      -67 -66 0x3C959C 2 0 +p
 0x3C "Mayu Bird"                       -98 -66 0x3C4984 2 0 +p
 0x3D "Minicula"                        -98 -74 0x3C4CD8 0 0 +p
-0x3E "falling Spikeball"               -98 -66 (incorrect delta value) 0x3C4F20 2 0 +p
+0x3E "falling Spikeball"               -98 -66 0x3C4F20 2 0 +p
 0x3F "Y¨±rei"                           -98 -66 0x3C53B4 2 0 +p
 0x40 "Beezley"                         -100 -98 0x3C62FC 2 0 +p
 0x41 "Money Flowers"                   -98 -66 0x3C7034 2 0 +p
 0x42 "Imomushi"                        -98 -66 0x3C770C 2 0 +p
 0x43 "Triangle Toy Block"              -67 -66 0x3C798C 2 0 +p
-0x44  nothing
+0x44 "Triangle Toy Block Receptor"     -67 -66 0x3C798C 2 0 +p
 0x45 "Rectangle Toy Block"             -67 -66 0x3C799C 1 0 +p
-0x46 "Rolling Toy Block"               -67 -66 (is it correct ?) 0x3C79AC 2 0 +p
+0x46 "Rolling Toy Block"               -67 -66 0x3C79AC 2 0 +p
 0x47 "Toy Door"                        -67 -98 0x3C7A5C 2 0 +p
 0x48 "Menhanm¨¡"                        -100 -66 0x3C7DB0 2 0 +p
 0x49 "Men'ono"                         -101 -66 0x3C8278 2 0 +p
@@ -80,10 +80,10 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x50 "Steam Hammer 2rd"                -98 -66 0x3CA898 2 0 +p
 0x51 "Boss: Catbat"                    -98 -3 0x3CE468 130 0 0
 0x52 "Vortex, duplicated"              -98 -98 0x3B505C 130 0 +p
-0x53 "Swinging Platform"               -98 -66 (incorrect delta value) 0x3CFB58 2 0 +p
-0x54 "Swinging Platform 2rd"           -98 -66 (incorrect delta value) 0x3CFB48 2 0 +p
-0x55 "Auto-rotate Platform CW"         -98 -98 (incorrect delta value) 0x3B4534 2 0 +p
-0x56 "Auto-rotate Platform CCW"        -98 -98 (incorrect delta value) 0x3B4534 2 0 +p
+0x53 "Swinging Platform"               -98 -66 0x3CFB58 2 0 +p
+0x54 "Swinging Platform 2rd"           -98 -66 0x3CFB48 2 0 +p
+0x55 "Auto-rotate Platform CW"         -98 -98 0x3B4534 2 0 +p
+0x56 "Auto-rotate Platform CCW"        -98 -98 0x3B4534 2 0 +p
 0x57 "Pinball"                         -98 -66 0x3D0B08 2 0 +p
 0x58 "Pinball block upside open"       -67 -130 0x3D0938 1 0 +p
 0x59 "Pinball block downside open"     -67 -130 0x3D0988 1 0 +p
@@ -95,26 +95,27 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x5F "money sunflower disk"          -35 -130 0x3D0E94 2 0 +p
 0x60 "Yeti"                            -98 -66 0x3D155C 2 0 +p
 0x61 "Iwao"                            -100 -66 0x3D21E4 130 0 +p
-0x62 "spouting lava"                   -67 -380 0x3D2570 (0x3D2598 try which one is better) 2 0 +p
-0x63 "boss door 1"                     -98 -66 (incorrect) 0x3D27C8 3 0 +p
-0x64 "boss door 2"                     -98 -66 (incorrect) 0x3D2A0C 3 0 +p
-0x65 "boss door 3"                     -98 -66 (incorrect) 0x3D2BF0 3 0 +p
-0x66 "boss door 4"                     -98 -66 (incorrect) 0x3D2E1C 3 0 +p
-0x67 "boss door 5"                     -98 -66 (incorrect) 0x3D3048 3 0 +p
-0x68 "boss door 6"                     -98 -66 (incorrect) 0x3D3274 3 0 +p
+0x62 "spouting lava"                   -67 -66 0x3D2570 (0x3D2598 try which one is better) 2 0 +p
+0x63 "boss door 1"                     -98 -66 0x3D27C8 3 0 +p
+0x64 "boss door 2"                     -98 -66 0x3D2A0C 3 0 +p
+0x65 "boss door 3"                     -98 -66 0x3D2BF0 3 0 +p
+0x66 "boss door 4"                     -98 -66 0x3D2E1C 3 0 +p
+0x67 "boss door 5"                     -98 -66 0x3D3048 3 0 +p
+0x68 "boss door 6"                     -98 -66 0x3D3274 3 0 +p
 0x69 "Boss: Aerodent"                  -194 -321 0x3DABA0 130 0 0
 0x6A "Hoggus"                          -98 -66 0x3DC264 2 0 +p
 0x6B "Denden"                          -98 -66 0x3DC770 2 0 +p
 0x6C "Butatabi"                        -98 -66 0x3DCCBC 0 0 +p
+0x6D "Debur¨©na"                        -102 -34 0x3DD4CC 2 0 +p
 0x6E "folding door"                    -98 -66 0x3DD720 1 0 +7
 0x6F "perple pencil"                   -98 -66 0x3DD658 2 0 +p
 0x70 "blue pencil"                     -98 -66 0x3DD668 2 0 +p
 0x71 "red pencil"                      -98 -66 0x3DD678 2 0 +p
 0x72 "Robo Bird"                       -98 -66 0x3DDB14 2 0 +p
 0x73 "Utsuboank¨­"                      -98 -66 0x3DE0E0 2 0 +p
-0x74 "Togenobi"                        -98 -66 (incorrect delta value) 0x3DE320 2 0 +p
-0x75 "falling icicle"                  -98 -66 0x3DE498 1 0 +p
-0x76 "Boss: Cractus"                   -98 -66 (incorrect) 0x3DF2D0 2 0 0
+0x74 "Togenobi"                        -98 -66 0x3DE320 2 0 +p
+0x75 "falling icicle"                  -98 -66 0x3DE580 1 0 +p
+0x76 "Boss: Cractus"                   -98 -66 0x3DF2D0 2 0 0
 0x77 "Dice"                            -100 -66 0x3E0D68 2 0 +p
 0x78 "Toy Car 10 points"               -100 -66 0x3E1650 2 0 +p
 0x79 "Onom¨©"                           -101 -66 0x3E269C 2 0 +p
