@@ -1,3 +1,6 @@
+beta-10:
+- fix some entities rendering glitches caused by wrong tile loading
+
 beta-9:
 - Fix clear-all only clears layer 0
 - Fix undo multiple times then placing a tile crashes the editor
