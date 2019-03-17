@@ -178,7 +178,7 @@ public:
         "0x41 Money Flowers",
         "0x42 Imomushi",
         "0x43 Triangle Toy Block",
-        "0x44 cannot use",
+        "0x44 Triangle Toy Block Receptor",
         "0x45 Rectangle Toy Block",
         "0x46 Rolling Toy Block",
         "0x47 Toy Door",

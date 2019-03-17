@@ -65,7 +65,7 @@ note: test in level 0x00 room 0x0C, change the temp entity ID at 59BA16
 0x41 "Money Flowers"                   -98 -66 0x3C7034 2 0 +p
 0x42 "Imomushi"                        -98 -66 0x3C770C 2 0 +p
 0x43 "Triangle Toy Block"              -67 -66 0x3C798C 2 0 +p
-0x44 "Triangle Toy Block"              -67 -66 0x3C798C 2 0 +p
+0x44 "Triangle Toy Block Receptor"     -67 -66 0x3C798C 2 0 +p
 0x45 "Rectangle Toy Block"             -67 -66 0x3C799C 1 0 +p
 0x46 "Rolling Toy Block"               -67 -66 0x3C79AC 2 0 +p
 0x47 "Toy Door"                        -67 -98 0x3C7A5C 2 0 +p
