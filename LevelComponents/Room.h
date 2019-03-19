@@ -57,9 +57,10 @@ namespace LevelComponents
     // Enumeration of the types of camera control that a room may have
     enum __CameraControlType
     {
-        FixedY          = 1,
-        NoLimit         = 2,
-        HasControlAttrs = 3
+        FixedY              = 1,
+        NoLimit             = 2,
+        HasControlAttrs     = 3,
+        CameraControl_type4 = 4,
     };
 
     // This struct defines the attributes for a single entity record in RoomHeader EntityTable

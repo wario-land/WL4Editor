@@ -39,6 +39,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QRadioButton" name="VerticalSeperate_radioButton">
+         <property name="text">
+          <string>Vertical Seperate</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QRadioButton" name="UseCameraLimitators_radioButton">
          <property name="text">
           <string>Use Camera limitators</string>

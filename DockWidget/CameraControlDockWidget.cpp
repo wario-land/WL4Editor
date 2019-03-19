@@ -66,6 +66,10 @@ void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *curren
     {
         ui->UseCameraLimitators_radioButton->setChecked(true);
     }
+    else if(currentcameracontroltype == LevelComponents::__CameraControlType::CameraControl_type4)
+    {
+        ui->VerticalSeperate_radioButton->setChecked(true);
+    }
 
     // Enable/disable the existing limitators groupbox depending on the room's camera type
     if(currentcameracontroltype != LevelComponents::__CameraControlType::HasControlAttrs)
@@ -426,7 +430,7 @@ void CameraControlDockWidget::on_TriggerBlockPositionY_spinBox_valueChanged(int 
 /// Called when CameraYFixed_radioButton is clicked.
 /// </summary>
 /// <param name="checked">
-/// Show if CameraYFixed_radioButton is been checked.
+/// Rerender current Room if CameraYFixed_radioButton is been checked.
 /// </param>
 void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
 {
@@ -450,7 +454,7 @@ void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
 /// Called when FollowWario_radioButton is clicked.
 /// </summary>
 /// <param name="checked">
-/// Show if FollowWario_radioButton is been checked.
+/// Rerender current Room if FollowWario_radioButton is been checked.
 /// </param>
 void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
 {
@@ -474,7 +478,7 @@ void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
 /// Called when UseCameraLimitators_radioButton is clicked.
 /// </summary>
 /// <param name="checked">
-/// Show if UseCameraLimitators_radioButton is been checked.
+/// Rerender current Room if UseCameraLimitators_radioButton is been checked.
 /// </param>
 void CameraControlDockWidget::on_UseCameraLimitators_radioButton_clicked(bool checked)
 {
@@ -519,6 +523,30 @@ void CameraControlDockWidget::on_DeleteCameraLimitator_pushButton_clicked()
     ClearCurrentLimitatorSetting();
     singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     PaintListView();
+
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Called when VerticalSeperate_radioButton is clicked.
+/// </summary>
+/// <param name="checked">
+/// Rerender current Room if VerticalSeperate_radioButton is been checked.
+/// </param>
+void CameraControlDockWidget::on_VerticalSeperate_radioButton_clicked(bool checked)
+{
+    if(checked)
+    {
+        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::__CameraControlType::CameraControl_type4);
+        SelectedLimitator = -1;
+        ClearCurrentLimitatorSetting();
+        ClearListView();
+        ui->ExistingLimitators_groupBox->setEnabled(false);
+        ui->LimitatorSetting_groupBox->setEnabled(false);
+        // Rerender graphicview in MainWindow
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
 
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
     singleton->SetUnsavedChanges(true);
