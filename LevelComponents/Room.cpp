@@ -499,6 +499,17 @@ namespace LevelComponents
                         CameraY += 0x90;
                     }
                 }
+                else if(CameraControlType == LevelComponents::Vertical_Seperated)
+                {
+                    if(Height >= 14)
+                    {
+                        CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0xE0);
+                        if(Height >= 18)
+                        {
+                            CameraLimitationPainter.drawRect(0x20, (int) Height * 16 - 0x100, (int) Width * 16 - 0x40, 0xE0);
+                        }
+                    }
+                }
                 else if(CameraControlType == LevelComponents::NoLimit)
                 {
                     CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0x40);

@@ -122,6 +122,10 @@ And there is a small list of memory addresses with a short description which can
 030000d9 - Layer alpha
 030000D8 - Set lighting with transition - 00-10
 030000D9 - Lighting counter
+030000DE - camera X maximun
+030000E0 - camera X minimum
+030000E2 - camera Y minimun
+030000E4 - camera Y maximun
 03000121 - Catbat's/Cuckoo Condor's health
 0300014D - Spoiled Rotten's health
 03000179 - Aerodent's health
@@ -162,7 +166,7 @@ And there is a small list of memory addresses with a short description which can
 030019f6 - Disable enemies and wario(2 byte) (until reach 0) - 00-ff
 030019f8 - Hide wario - 00(show) 01(hide)  (?)
 030031F4 - Tile16 construction information table for th current Tileset
-030031F8 - Wario animation controller table pointer for the current Tileset
+030031F8 - Tile16s' terrain type table pointer for the current Tileset
 030031FC - Event id table pointer for the current Tileset
 0300320e - Camera DestX (2 bytes) //Wrong this is not my record
 03003210 - Camera DestY (2 bytes) //Wrong this is not my record
@@ -170,7 +174,7 @@ And there is a small list of memory addresses with a short description which can
 03003214 - Scroll background (1 byte) - 00(no) 01(yes)
 03003215 - A counter 
 03003216 - Background X position (1 byte)
-03003218 - Scroll foreground layer
+03003218 - Scroll foreground layer (1 byte) - 00(no) 02(yes)
 03003224..03003225 - Camera x position(realtime)
 03003226..03003227 - Camera y position(realtime)
 03003228 - Current Wario¡¯s horizontal velocity, go right [01, 08], go left [F8, FF]
