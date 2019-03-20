@@ -499,7 +499,7 @@ namespace LevelComponents
                         CameraY += 0x90;
                     }
                 }
-                else if(CameraControlType == LevelComponents::CameraControl_type4)
+                else if(CameraControlType == LevelComponents::Vertical_Seperated)
                 {
                     if(Height >= 14)
                     {

@@ -66,7 +66,7 @@ void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *curren
     {
         ui->UseCameraLimitators_radioButton->setChecked(true);
     }
-    else if(currentcameracontroltype == LevelComponents::__CameraControlType::CameraControl_type4)
+    else if(currentcameracontroltype == LevelComponents::__CameraControlType::Vertical_Seperated)
     {
         ui->VerticalSeperate_radioButton->setChecked(true);
     }
@@ -538,7 +538,7 @@ void CameraControlDockWidget::on_VerticalSeperate_radioButton_clicked(bool check
 {
     if(checked)
     {
-        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::__CameraControlType::CameraControl_type4);
+        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::__CameraControlType::Vertical_Seperated);
         SelectedLimitator = -1;
         ClearCurrentLimitatorSetting();
         ClearListView();

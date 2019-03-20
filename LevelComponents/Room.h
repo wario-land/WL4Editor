@@ -60,7 +60,7 @@ namespace LevelComponents
         FixedY              = 1,
         NoLimit             = 2,
         HasControlAttrs     = 3,
-        CameraControl_type4 = 4,
+        Vertical_Seperated = 4,
     };
 
     // This struct defines the attributes for a single entity record in RoomHeader EntityTable
