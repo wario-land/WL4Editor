@@ -38,7 +38,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     singleton = this;
-    ui->graphicsView->scale(2, 2);
+    ui->graphicsView->scale(graphicViewScalerate, graphicViewScalerate);
     statusBarLabel = new QLabel("Open a ROM file");
     statusBarLabel->setMargin(3);
     ui->statusBar->addWidget(statusBarLabel);
@@ -172,6 +172,7 @@ void WL4EditorWindow::OpenROM()
         ui->actionRoom_Config->setEnabled(true);
         ui->actionSave_ROM->setEnabled(true);
         ui->actionSave_As->setEnabled(true);
+        ui->actionSave_Room_s_graphic->setEnabled(true);
         ui->menuAdd->setEnabled(true);
         ui->menuSwap->setEnabled(true);
         ui->menuClear->setEnabled(true); ui->menu_clear_Layer->setEnabled(true); ui->menu_clear_Entity_list->setEnabled(true);
@@ -1327,4 +1328,33 @@ void WL4EditorWindow::on_action_clear_S_Hard_triggered()
     // Set Dirty and change flag
     CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
     SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Save graphic for the current Room.
+/// </summary>
+void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
+{
+    QString qFilePath = QFileDialog::getSaveFileName(
+        this,
+        tr("Save current Room graphic to new file"),
+        dialogInitialPath,
+        tr("PNG files (*.png)")
+    );
+    if(qFilePath.compare(""))
+    {
+        QPixmap currentRoompixmap;
+        uint CR_width, CR_height;
+        CR_width = CurrentLevel->GetRooms()[selectedRoom]->GetWidth();
+        CR_height = CurrentLevel->GetRooms()[selectedRoom]->GetHeight();
+        currentRoompixmap = QPixmap::grabWidget(ui->graphicsView,
+                                                0,
+                                                0,
+                                                CR_width * graphicViewScalerate * 16,
+                                                CR_height * graphicViewScalerate * 16);
+        currentRoompixmap = currentRoompixmap.scaled(CR_width * 16,
+                                                     CR_height * 16,
+                                                     Qt::KeepAspectRatio);
+        currentRoompixmap.save(qFilePath, "PNG", 100);
+    }
 }

@@ -95,7 +95,7 @@ bool *EditModeDockWidget::GetLayersVisibilityArray()
     LayersVisibilityArray[1] = ui->CheckBox_Layer1View->isChecked();
     LayersVisibilityArray[2] = ui->CheckBox_Layer2View->isChecked();
     LayersVisibilityArray[3] = ui->CheckBox_Layer3View->isChecked();
-    LayersVisibilityArray[4] = ui->CheckBox_EntityView->isChecked();
+    LayersVisibilityArray[4] = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
     LayersVisibilityArray[5] = ui->CheckBox_DoorView->isChecked();
     LayersVisibilityArray[6] = ui->CheckBox_CameraView->isChecked();
     LayersVisibilityArray[7] = ui->CheckBox_AlphaView->isChecked();
@@ -120,7 +120,8 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
     params.layersEnabled[1] = ui->CheckBox_Layer1View->isChecked();
     params.layersEnabled[2] = ui->CheckBox_Layer2View->isChecked();
     params.layersEnabled[3] = ui->CheckBox_Layer3View->isChecked();
-    params.entitiesEnabled = ui->CheckBox_EntityView->isChecked();
+    params.entitiesEnabled = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
+    params.entitiesboxesdisable = (ui->CheckBox_EntityView->checkState() == Qt::PartiallyChecked);
     params.doorsEnabled = ui->CheckBox_DoorView->isChecked();
     params.alphaBlendingEnabled = ui->CheckBox_AlphaView->isChecked();
     params.cameraAreasEnabled = ui->CheckBox_CameraView->isChecked();

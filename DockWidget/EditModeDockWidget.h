@@ -27,6 +27,7 @@ namespace Ui {
         bool cameraAreasEnabled = true;
         bool alphaBlendingEnabled = true;
         int seleteddifficulty = 0;
+        bool entitiesboxesdisable = false;
     };
 }
 

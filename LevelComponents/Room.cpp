@@ -625,7 +625,7 @@ namespace LevelComponents
                 // Enable the visibility of the sprite and editor overlay layers
                 if(RenderedLayers[4])
                 {
-                    RenderedLayers[4]->setVisible(layerVisibility->entitiesEnabled);
+                    RenderedLayers[4]->setVisible(!(layerVisibility->entitiesboxesdisable));
                     RenderedLayers[8]->setVisible(layerVisibility->entitiesEnabled);
                     RenderedLayers[9]->setVisible(layerVisibility->entitiesEnabled);
                     RenderedLayers[10]->setVisible(layerVisibility->entitiesEnabled);
