@@ -45,6 +45,11 @@ EditModeDockWidget::EditModeDockWidget(QWidget *parent) :
     difficultyGroup->addButton(ui->RadioButton_NMode);
     difficultyGroup->addButton(ui->RadioButton_HMode);
     difficultyGroup->addButton(ui->RadioButton_SHMode);
+
+    //Set the widget height
+    QFontMetrics fontMetrics(ui->CheckBox_AlphaView->font());
+    int rowHeight = fontMetrics.lineSpacing();
+    ui->dockWidgetContents->setFixedHeight(20 * rowHeight); // TODO: Make this exact, calculate using margins
 }
 
 /// <summary>
