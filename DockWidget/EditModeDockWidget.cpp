@@ -45,11 +45,6 @@ EditModeDockWidget::EditModeDockWidget(QWidget *parent) :
     difficultyGroup->addButton(ui->RadioButton_NMode);
     difficultyGroup->addButton(ui->RadioButton_HMode);
     difficultyGroup->addButton(ui->RadioButton_SHMode);
-
-    //Set the widget height
-    QFontMetrics fontMetrics(ui->CheckBox_AlphaView->font());
-    int rowHeight = fontMetrics.lineSpacing();
-    ui->dockWidgetContents->setFixedHeight(18 * rowHeight); // TODO: Make this exact, calculate using margins
 }
 
 /// <summary>
@@ -103,6 +98,14 @@ bool *EditModeDockWidget::GetLayersVisibilityArray()
 }
 
 /// <summary>
+/// Uncheck CheckBox_hiddencoinsView.
+/// </summary>
+void EditModeDockWidget::UncheckHiddencoinsViewCheckbox()
+{
+    ui->CheckBox_hiddencoinsView->setCheckState(Qt::Unchecked);
+}
+
+/// <summary>
 /// Retrieve the selected edit mode options as a structure.
 /// </summary>
 /// <return>
@@ -121,11 +124,12 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
     params.layersEnabled[2] = ui->CheckBox_Layer2View->isChecked();
     params.layersEnabled[3] = ui->CheckBox_Layer3View->isChecked();
     params.entitiesEnabled = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
-    params.entitiesboxesdisable = (ui->CheckBox_EntityView->checkState() == Qt::PartiallyChecked);
+    params.entitiesboxesDisabled = (ui->CheckBox_EntityView->checkState() == Qt::PartiallyChecked);
     params.doorsEnabled = ui->CheckBox_DoorView->isChecked();
     params.alphaBlendingEnabled = ui->CheckBox_AlphaView->isChecked();
     params.cameraAreasEnabled = ui->CheckBox_CameraView->isChecked();
     params.seleteddifficulty = difficultyIndices[selectedDifficultyButton];
+    params.hiddencoinsEnabled = ui->CheckBox_hiddencoinsView->isChecked();
     return params;
 }
 
@@ -332,6 +336,12 @@ void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
     }
 }
 
+/// <summary>
+/// Slot function for switcing to Camera control editing mode.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_CameraMode.
+/// </param>
 void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
 {
     if(checked)
@@ -340,4 +350,16 @@ void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
         singleton->HideTile16DockWidget();
         singleton->ShowCameraControlDockWidget();
     }
+}
+
+/// <summary>
+/// Show hidden coins layer when CheckBox_hiddencoinsView is toggled.
+/// </summary>
+/// <param name="arg1">
+/// Unused.
+/// </param>
+void EditModeDockWidget::on_CheckBox_hiddencoinsView_stateChanged(int arg1)
+{
+    (void) arg1;
+    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 }

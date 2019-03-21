@@ -3,6 +3,7 @@ beta-10:
 - Add another available Camera control type, Vertical Seperate
 - Support tristate for Entities Layers visibility checkbox to support not rendering position boxes for entities
 - Support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers
+= Support showing hidden coins in breakable blocks
 
 beta-9:
 - Fix clear-all only clears layer 0
