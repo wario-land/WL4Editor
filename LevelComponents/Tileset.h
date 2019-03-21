@@ -27,6 +27,8 @@ namespace LevelComponents
         ~Tileset();
         QPixmap Render(int columns);
         int GetUniversalSpritesTilesPalettePtr() { return UniversalSpritesTilesPalettePtr; }
+        unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }
+        unsigned short *GetEventTablePtr() { return Map16EventTable; }
     };
 }
 

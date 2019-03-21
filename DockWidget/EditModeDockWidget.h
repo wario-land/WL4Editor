@@ -27,6 +27,8 @@ namespace Ui {
         bool cameraAreasEnabled = true;
         bool alphaBlendingEnabled = true;
         int seleteddifficulty = 0;
+        bool entitiesboxesDisabled = false;
+        bool hiddencoinsEnabled = false;
     };
 }
 
@@ -52,6 +54,7 @@ public:
     void SetLayersCheckBoxEnabled(int index, bool usable);
     void SetDifficultyRadioBox(int modeid);
     bool *GetLayersVisibilityArray();
+    void UncheckHiddencoinsViewCheckbox();
 
 private slots:
     void on_CheckBox_Layer0View_stateChanged(int arg1);
@@ -69,6 +72,7 @@ private slots:
     void on_RadioButton_LayerMode_toggled(bool checked);
     void on_RadioButton_EntityMode_toggled(bool checked);
     void on_RadioButton_CameraMode_toggled(bool checked);
+    void on_CheckBox_hiddencoinsView_stateChanged(int arg1);
 };
 
 #endif // EDITMODEDOCKWIDGET_H

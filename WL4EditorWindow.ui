@@ -127,6 +127,7 @@
     <addaction name="actionOpen_ROM"/>
     <addaction name="actionSave_ROM"/>
     <addaction name="actionSave_As"/>
+    <addaction name="actionSave_Room_s_graphic"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -352,6 +353,14 @@
   <action name="action_clear_S_Hard">
    <property name="text">
     <string>S-Hard</string>
+   </property>
+  </action>
+  <action name="actionSave_Room_s_graphic">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save Room's graphic</string>
    </property>
   </action>
  </widget>

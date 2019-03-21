@@ -7,6 +7,7 @@
 #include <DockWidget/EditModeDockWidget.h>
 
 #include <vector>
+#include <algorithm> // find
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 
@@ -124,7 +125,7 @@ namespace LevelComponents
         Layer *layers[4];
         Tileset *tileset;
         std::vector<Door*> doors; // These Doors are deleted in the Level deconstructor
-        QGraphicsPixmapItem *RenderedLayers[12]; // L0 - 3, E, D, C, A (may not exist)
+        QGraphicsPixmapItem *RenderedLayers[13]; // L0 - 3, E(Entities boxes), D, C, A (may not exist), E0 - 3, hidden coins
         bool CameraBoundaryDirty = false;
         bool IsCopy = false;
 

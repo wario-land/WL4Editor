@@ -33,6 +33,7 @@ private:
     CameraControlDockWidget *CameraControlWidget;
     LevelComponents::Level *CurrentLevel = nullptr;
     unsigned int selectedRoom = 0;
+    uint graphicViewScalerate = 2;
     bool UnsavedChanges = false; //state check bool only be used when user try loading another ROM, another Level or close the editor without saving changes
     bool firstROMLoaded = false;
     void closeEvent (QCloseEvent *event);
@@ -106,6 +107,7 @@ private slots:
     void on_action_clear_Normal_triggered();
     void on_action_clear_Hard_triggered();
     void on_action_clear_S_Hard_triggered();
+    void on_actionSave_Room_s_graphic_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

@@ -46,6 +46,8 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             }
             else // Otherwise just place the tile
             {
+                // Uncheck hiddencoinsView Checkbox
+                singleton->GetEditModeWidgetPtr()->UncheckHiddencoinsViewCheckbox();
                 // Change textmaps and layer graphics
                 SetTile(tileX, tileY);
             }

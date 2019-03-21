@@ -261,6 +261,7 @@ namespace LevelComponents
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
         int sceneWidth = Width * 16, sceneHeight = Height * 16, Z = 0;
+        std::vector<int> eventidwithhiddencoin = {0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C}; // TODO: There perhaps will be more
         switch(renderParams->type)
         {
         case FullRender:
@@ -575,7 +576,7 @@ namespace LevelComponents
                     RenderedLayers[6]->setPixmap(CameraLimitationPixmap);
                 }
 
-                // TODO: Render Entities Boxes used for selecting
+                // Render Entities Boxes used for selecting
                 QPixmap EntityBoxPixmap(sceneWidth, sceneHeight);
                 EntityBoxPixmap.fill(Qt::transparent);
                 QPainter EntityBoxPainter(&EntityBoxPixmap);
@@ -596,7 +597,6 @@ namespace LevelComponents
                     {
                         EntityBoxPainter.drawRect(16 * EntityList[currentDifficulty][i].XPos, 16 * EntityList[currentDifficulty][i].YPos, 16, 16);
                     }
-
                 }
                 // Test: Render EntitySet Tiles in the front of the Layer RenderedLayers[4]
                 //EntityBoxPainter.drawPixmap(0, 0, currentEntitySet->GetPixmap(9));
@@ -611,7 +611,40 @@ namespace LevelComponents
                 {
                     RenderedLayers[4]->setPixmap(EntityBoxPixmap);
                 }
+
+                // Render hidden coins layer
+                QPixmap hiddencoinsPixmap(sceneWidth, sceneHeight);
+                hiddencoinsPixmap.fill(Qt::transparent);
+                QPainter hiddencoinsPainter(&hiddencoinsPixmap);
+                QPen hiddencionBoxPen = QPen(QBrush(QColor(255, 153, 18, 0xFF)), 2); // chrome yellow
+                hiddencionBoxPen.setJoinStyle(Qt::MiterJoin);
+                hiddencoinsPainter.setPen(hiddencionBoxPen);
+                unsigned short *Layer1data = layers[1]->GetLayerData();
+                unsigned short *eventtable = tileset->GetEventTablePtr();
+                for(uint j = 0; j < Height; ++j)
+                {
+                    for(uint i = 0; i < Width; ++i)
+                    {
+                        int val = eventtable[Layer1data[j * Width + i]];
+                        if(std::find(eventidwithhiddencoin.begin(), eventidwithhiddencoin.end(), val) != eventidwithhiddencoin.end())
+                        {
+                            hiddencoinsPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
+                        }
+                    }
+                }
+                QGraphicsPixmapItem *hiddencoinspixmapItem;
+                if(!RenderedLayers[12] || renderParams->type == FullRender)
+                {
+                    hiddencoinspixmapItem = scene->addPixmap(hiddencoinsPixmap);
+                    hiddencoinspixmapItem->setZValue(Z++);
+                    RenderedLayers[12] = hiddencoinspixmapItem;
+                }
+                else
+                {
+                    RenderedLayers[12]->setPixmap(hiddencoinsPixmap);
+                }
             }
+
             // Fall through to layer enable section
         case LayerEnable:
             {
@@ -625,7 +658,7 @@ namespace LevelComponents
                 // Enable the visibility of the sprite and editor overlay layers
                 if(RenderedLayers[4])
                 {
-                    RenderedLayers[4]->setVisible(layerVisibility->entitiesEnabled);
+                    RenderedLayers[4]->setVisible(!(layerVisibility->entitiesboxesDisabled));
                     RenderedLayers[8]->setVisible(layerVisibility->entitiesEnabled);
                     RenderedLayers[9]->setVisible(layerVisibility->entitiesEnabled);
                     RenderedLayers[10]->setVisible(layerVisibility->entitiesEnabled);
@@ -634,6 +667,7 @@ namespace LevelComponents
                 if(RenderedLayers[5]) RenderedLayers[5]->setVisible(layerVisibility->doorsEnabled);
                 if(RenderedLayers[6]) RenderedLayers[6]->setVisible(layerVisibility->cameraAreasEnabled);
                 if(RenderedLayers[7]) RenderedLayers[7]->setVisible(layerVisibility->alphaBlendingEnabled);
+                RenderedLayers[12]->setVisible(layerVisibility->hiddencoinsEnabled);
             }
             return scene;
         case SingleTile:
