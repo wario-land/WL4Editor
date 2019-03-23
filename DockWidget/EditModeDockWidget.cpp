@@ -129,7 +129,7 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
     params.layersEnabled[2] = ui->CheckBox_Layer2View->isChecked();
     params.layersEnabled[3] = ui->CheckBox_Layer3View->isChecked();
     params.entitiesEnabled = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
-    params.entitiesboxesDisabled = (ui->CheckBox_EntityView->checkState() == Qt::PartiallyChecked);
+    params.entitiesboxesDisabled = (ui->CheckBox_EntityView->checkState() != Qt::Checked);
     params.doorsEnabled = ui->CheckBox_DoorView->isChecked();
     params.alphaBlendingEnabled = ui->CheckBox_AlphaView->isChecked();
     params.cameraAreasEnabled = ui->CheckBox_CameraView->isChecked();
