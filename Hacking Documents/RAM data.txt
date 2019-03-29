@@ -173,7 +173,7 @@ And there is a small list of memory addresses with a short description which can
 030019f4 - Wario position y (2 byte) [read only]
 030019f6 - Disable enemies and wario(2 byte) (until reach 0) - 00-ff
 030019f8 - Hide wario - 00(show) 01(hide)  (?)
-030031F4 - Tile16 construction information table for th current Tileset
+030031F4 - Tile16 construction information table for the current Tileset
 030031F8 - Tile16s' terrain type table pointer for the current Tileset
 030031FC - Event id table pointer for the current Tileset
 0300320e - Camera DestX (2 bytes) //Wrong this is not my record
@@ -193,7 +193,8 @@ And there is a small list of memory addresses with a short description which can
 03000964: EntitySet information start from 03000964, each structure includes 3 Bytes, Y and X position, EntityID
 
 Enemy Slot #1
-03000104 - Walking direction - 03(left) 43(right) 
+03000104 - Walking direction - 03(left) 43(right)
+03000105 - if this item can hit another item - 01(yes) 00(no), wario grab an item can set it to 1, after it hit another item, it is set to 0 automatically, so in the game engine one item can only hit other items once
 03000108 - Final OAM data pointer
 0300010c - Position Y
 0300010e - Position X
