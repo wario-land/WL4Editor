@@ -1,0 +1,46 @@
+                E92D40F0    STMDB SP!, {R4-R7,LR}
+                E3A00003    MOV   R0, 3H
+                E1B00A00    MOVS  R0, R0, LSL #14H
+                E2800096    ADD   R0, R0, 96H
+                E1B00200    MOVS  R0, R0, LSL #4H
+                E2800004    ADD   R0, R0, 4H
+                E1A02000    MOV   R2, R0
+                E3A01000    MOV   R1, 0H
+                E3A07000    MOV   R7, 0H
+loop_1:         E0810002    ADD   R0, R1, R2
+                E5D00000    LDRB  R0, [R0]
+                E35000FF    CMP   R0, FFH
+                0A000002    BEQ   set_bytes
+                E2811003    ADD   R1, R1, 3H
+                E2877001    ADD   R7, R7, 1H
+                EAFFFFF8    B     loop_1
+set_bytes:      E3A01000    MOV   R1, 0H
+                E3A00003    MOV   R0, 3H
+                E1B00C00    MOVS  R0, R0, LSL #18H
+                E2805F41    ADD   R5, R0, 104H
+                E3A0602C    MOV   R6, 2CH
+loop_2:         E0000691    MUL   R0, R1, R6
+                E0854000    ADD   R4, R5, R0
+                E5D43017    LDRB  R3, [R4 + 17H] ;current entity global index
+                E2842001    ADD   R2, R4, 1H
+                E2811001    ADD   R1, R1, 1H
+                E3530015    CMP   R3, 15H ; if current entity is a rock
+                1A000001    BNE   skip
+				E3A00001    MOV   R0, 1H
+                E5C20000    STRB  R0, [R2]
+skip:           E1510007    CMP   R1, R7
+                BAFFFFF4    BLT   loop_2
+label_end:      E1A0700A    MOV   R7, R10
+                E1A06009    MOV   R6, R9
+                E1A05008    MOV   R5, R8
+                E3A00008    MOV   R0, 8H
+                E1B00600    MOVS  R0, R0, LSL #CH
+                E280001F    ADD   R0, R0, 1FH
+                E1B00400    MOVS  R0, R0, LSL #8H
+                E2800063    ADD   R0, R0, 63H
+                E1B00200    MOVS  R0, R0, LSL #4H
+                E2800001    ADD   R0, R0, 1H
+                E12FFF10    BX    R0
+
+all the code in Hex (inverted):
+F0402DE90300A0E3000AB0E1960080E20002B0E1040080E20020A0E10010A0E30070A0E3020081E00000D0E5FF0050E30200000A031081E2017087E2F8FFFFEA0010A0E30300A0E3000CB0E1415F80E22C60A0E3910600E0004085E01730D4E5012084E2011081E2150053E30100001A0100A0E30000C2E5070051E1F4FFFFBA0A70A0E10960A0E10850A0E10800A0E30006B0E11F0080E20004B0E1630080E20002B0E1010080E210FF2FE1

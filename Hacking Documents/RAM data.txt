@@ -191,10 +191,11 @@ And there is a small list of memory addresses with a short description which can
 
 == Enemies
 03000964: EntitySet information start from 03000964, each structure includes 3 Bytes, Y and X position, EntityID
+03000A24..03000A3F: the game engine processing entity RAM data one by one in the same place (here), then copy them back to the Enemy slots
 
 Enemy Slot #1
 03000104 - Walking direction - 03(left) 43(right)
-03000105 - if this item can hit another item - 01(yes) 00(no), wario grab an item can set it to 1, after it hit another item, it is set to 0 automatically, so in the game engine one item can only hit other items once
+03000105 - if this item can hit another item - 01(yes) 00(no), wario grab an item can set it to 1, after it hit another item, it is set to 0 automatically, so in the game engine one item can only hit other items once (perhapsa only correct for rocks)
 03000108 - Final OAM data pointer
 0300010c - Position Y
 0300010e - Position X
