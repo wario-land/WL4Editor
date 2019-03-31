@@ -1,3 +1,11 @@
+beta-10:
+- Fix some entities rendering glitches caused by wrong tile loading
+- Add another available Camera control type, Vertical Seperate
+- Support tristate for Entities Layers visibility checkbox to support not rendering position boxes for entities
+- Support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers
+- Support showing hidden coins in breakable blocks
+- Add Room size limitation
+
 beta-9:
 - Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)
 - Fix clear-all only clears hardmode entities

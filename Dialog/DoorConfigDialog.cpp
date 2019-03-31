@@ -223,7 +223,7 @@ void DoorConfigDialog::RenderGraphicsView_Preview()
     tparam.tileX = tparam.tileY = 0; tparam.tileID = (unsigned short) 0;
     tparam.SelectedDoorID = (unsigned int) DoorID; // ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
-    tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
+    tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false; tparam.mode.entitiesboxesDisabled = true;
     QGraphicsScene *scene = tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
     ui->GraphicsView_Preview->setScene(scene);
     ui->GraphicsView_Preview->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -246,7 +246,7 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
     tparam.tileX = tparam.tileY = 0; tparam.tileID = (unsigned short) 0;
     tparam.SelectedDoorID = (unsigned int) doorIDinRoom; // ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
-    tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
+    tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false; tparam.mode.entitiesboxesDisabled = true;
     QGraphicsScene *scene = tmpDestinationRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
     ui->GraphicsView_DestinationDoor->setScene(scene);
     ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -284,7 +284,7 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
     tparam.tileX = tparam.tileY = 0; tparam.tileID = (unsigned short) 0;
     tparam.SelectedDoorID = (unsigned int) DoorID; //ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
-    tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
+    tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false; tparam.mode.entitiesboxesDisabled = true;
     tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
 }
 
@@ -297,7 +297,7 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_DestinationDoor()
     tparam.tileX = tparam.tileY = 0; tparam.tileID = (unsigned short) 0;
     tparam.SelectedDoorID = (unsigned int) tmpDestinationRoom->GetLocalDoorID(ui->ComboBox_DoorDestinationPicker->currentIndex()); //ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
-    tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
+    tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false; tparam.mode.entitiesboxesDisabled = true;
     tmpDestinationRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
 }
 

@@ -103,7 +103,7 @@ namespace LevelComponents
             WL4Constants::Entity2A_0x3C1270,
             WL4Constants::Entity2B_0x3C1270,
             WL4Constants::Entity2C_0x3C302C,
-            0,
+            WL4Constants::Entity2D_0x3C491C,
             WL4Constants::Entity2E_0x3C48D4,
             WL4Constants::Entity2F_0x3C48F4,
             WL4Constants::Entity30_0x3C4174, // 0x30
@@ -126,7 +126,7 @@ namespace LevelComponents
             WL4Constants::Entity41_0x3C7034,
             WL4Constants::Entity42_0x3C770C,
             WL4Constants::Entity43_0x3C798C,
-            0,
+            WL4Constants::Entity44_0x3C798C,
             WL4Constants::Entity45_0x3C799C,
             WL4Constants::Entity46_0x3C79AC,
             WL4Constants::Entity47_0x3C7A5C,
@@ -167,7 +167,7 @@ namespace LevelComponents
             WL4Constants::Entity6A_0x3DC264,
             WL4Constants::Entity6B_0x3DC770,
             WL4Constants::Entity6C_0x3DCCBC,
-            0, //TODO: find the ptr for Entity6D
+            WL4Constants::Entity6D_0x3DD4CC,
             WL4Constants::Entity6E_0x3DD720,
             WL4Constants::Entity6F_0x3DD658,
             WL4Constants::Entity70_0x3DD668, // 0x70
@@ -175,7 +175,7 @@ namespace LevelComponents
             WL4Constants::Entity72_0x3DDB14,
             WL4Constants::Entity73_0x3DE0E0,
             WL4Constants::Entity74_0x3DE320,
-            WL4Constants::Entity75_0x3DE498,
+            WL4Constants::Entity75_0x3DE580,
             WL4Constants::Entity76_0x3DF2D0,
             WL4Constants::Entity77_0x3E0D68,
             WL4Constants::Entity78_0x3E1650,
@@ -236,7 +236,7 @@ namespace LevelComponents
             -100,  -66,
             -100,  -66,
              -98,  -66,
-               0,    0,
+             -98,  -66,
              -98,  -66,
              -98,  -66,
             -130,  -66, //0x30
@@ -259,7 +259,7 @@ namespace LevelComponents
              -98,  -66,
              -98,  -66,
              -67,  -66,
-               0,    0,
+             -67,  -66,
              -67,  -66,
              -67,  -66,
              -67,  -98,
@@ -289,7 +289,7 @@ namespace LevelComponents
              -35, -130,
              -98,  -66, //0x60
             -100,  -66,
-             -67,  -66, //-67, -380, fixed
+             -67,  -66,
              -98,  -66,
              -98,  -66,
              -98,  -66,
@@ -300,7 +300,7 @@ namespace LevelComponents
              -98,  -66,
              -98,  -66,
              -98,  -66,
-               0,    0,
+            -102,  -34,
              -98,  -66,
              -98,  -66,
              -98,  -66, //0x70

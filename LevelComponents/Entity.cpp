@@ -143,6 +143,9 @@ namespace LevelComponents
                     offsetID = tileID + y * 0x20 + x;
                     offsetPal = palNum;
                 }
+                // palette reset
+                if(EntityGlobalID == 0x44) offsetPal = 0;
+
                 Tile8x8 *newTile = new Tile8x8(tileData[offsetID]);
                 newTile->SetPaletteIndex(offsetPal);
                 entityTile->objTile = newTile;

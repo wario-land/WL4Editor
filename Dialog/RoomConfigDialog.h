@@ -102,6 +102,8 @@ private slots:
     void on_ComboBox_BGLayerPicker_currentIndexChanged(int index);
     void on_ComboBox_Layer0Picker_currentIndexChanged(int index);
     void on_ComboBox_LayerPriority_currentIndexChanged(int index);
+    void on_SpinBox_RoomWidth_valueChanged(int arg1);
+    void on_SpinBox_RoomHeight_valueChanged(int arg1);
 
 private:
     bool ComboBoxInitialized = false;
