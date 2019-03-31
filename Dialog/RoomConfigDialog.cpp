@@ -364,7 +364,16 @@ void RoomConfigDialog::on_ComboBox_LayerPriority_currentIndexChanged(int index)
 void RoomConfigDialog::on_SpinBox_RoomWidth_valueChanged(int arg1)
 {
     int heightmax = 0x1400 / arg1;
-    ui->SpinBox_RoomHeight->setMaximum(heightmax);
+    if(ui->SpinBox_RoomHeight->value() > heightmax)
+    {
+        ui->SpinBox_RoomWidth->setStyleSheet("background-color: red");
+        ui->SpinBox_RoomHeight->setStyleSheet("background-color: red");
+    }
+    else
+    {
+        ui->SpinBox_RoomWidth->setStyleSheet("background-color: white");
+        ui->SpinBox_RoomHeight->setStyleSheet("background-color: white");
+    }
 }
 
 /// <summary>
@@ -376,5 +385,14 @@ void RoomConfigDialog::on_SpinBox_RoomWidth_valueChanged(int arg1)
 void RoomConfigDialog::on_SpinBox_RoomHeight_valueChanged(int arg1)
 {
     int widthmax = 0x1400 / arg1;
-    ui->SpinBox_RoomWidth->setMaximum(widthmax);
+    if(ui->SpinBox_RoomWidth->value() > widthmax)
+    {
+        ui->SpinBox_RoomWidth->setStyleSheet("background-color: red");
+        ui->SpinBox_RoomHeight->setStyleSheet("background-color: red");
+    }
+    else
+    {
+        ui->SpinBox_RoomWidth->setStyleSheet("background-color: white");
+        ui->SpinBox_RoomHeight->setStyleSheet("background-color: white");
+    }
 }
