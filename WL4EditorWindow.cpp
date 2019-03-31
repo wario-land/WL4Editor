@@ -1345,18 +1345,14 @@ void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
     );
     if(qFilePath.compare(""))
     {
-        QPixmap currentRoompixmap;
-        uint CR_width, CR_height;
+        int CR_width, CR_height;
         CR_width = CurrentLevel->GetRooms()[selectedRoom]->GetWidth();
         CR_height = CurrentLevel->GetRooms()[selectedRoom]->GetHeight();
-        currentRoompixmap = QPixmap::grabWidget(ui->graphicsView,
-                                                0,
-                                                0,
-                                                CR_width * graphicViewScalerate * 16,
-                                                CR_height * graphicViewScalerate * 16);
-        currentRoompixmap = currentRoompixmap.scaled(CR_width * 16,
-                                                     CR_height * 16,
-                                                     Qt::KeepAspectRatio);
+        QGraphicsScene *tmpscene = ui->graphicsView->scene();
+        QPixmap currentRoompixmap(CR_width * 16, CR_height * 16);
+        QPainter tmppainter(&currentRoompixmap);
+        tmpscene->render(&tmppainter);
+        // The graphicscene has not been scaled, so don't need to scale it
         currentRoompixmap.save(qFilePath, "PNG", 100);
     }
 }
