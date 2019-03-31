@@ -1,12 +1,12 @@
 beta-9:
-- Fix clear-all only clears layer 0
+- Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)
+- Fix clear-all only clears hardmode entities
 - Fix undo multiple times then placing a tile crashes the editor
 - Find wrong max value setting of some spinboxes in door config dialog
 - Fix shrinking the Room cannot protect you from deleting the last Door, optimize the auto-reset door position code
 - Fix new camera limitators data does not work in-game
 
 beta-8:
-- Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)
 - Fix cannot delete out-of-range Doors when shrinking Room size.
 - Fix changing the tileset in Sapphire passage level 4 causes a crash.
 - Adjust the code of the program to let it be able to compile by MSVC64 C++ compiler.
