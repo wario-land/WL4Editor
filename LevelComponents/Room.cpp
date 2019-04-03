@@ -504,9 +504,13 @@ namespace LevelComponents
                 {
                     if(Height >= 14)
                     {
-                        CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0xE0);
-                        if(Height >= 18)
+                        if(Height < 18)
                         {
+                            CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0x40);
+                        }
+                        else
+                        {
+                            CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0xE0);
                             CameraLimitationPainter.drawRect(0x20, (int) Height * 16 - 0x100, (int) Width * 16 - 0x40, 0xE0);
                         }
                     }
