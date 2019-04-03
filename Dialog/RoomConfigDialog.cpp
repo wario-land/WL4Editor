@@ -8,7 +8,7 @@ constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
 constexpr const char *RoomConfigDialog::LayerPrioritySetData[3];
 constexpr const char *RoomConfigDialog::AlphaBlendAttrsSetData[12];
 constexpr const char *RoomConfigDialog::Layer0MappingTypeParamSetData[2];
-constexpr int RoomConfigDialog::BGLayerdataPtrsData[166];
+constexpr unsigned int RoomConfigDialog::BGLayerdataPtrsData[166];
 
 // static variables used by RoomConfigDialog
 static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet, Layer0MappingTypeParamSet;
@@ -126,7 +126,7 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     {
         configParams.BackgroundLayerDataPtr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
     }else{
-        configParams.BackgroundLayerDataPtr = WL4Constants::NormalLayerDefaultPtr;
+        configParams.BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
     }
     configParams.RoomHeight = ui->SpinBox_RoomHeight->value();
     configParams.RoomWidth = ui->SpinBox_RoomWidth->value();
@@ -262,10 +262,16 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         {
             elements << QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper();
         }
+        if(BGLayerdataPtrs[index].size() > 0)
+        {
+            ui->CheckBox_BGLayerEnable->setChecked(true);
+        }
+        else
+        {
+            ui->CheckBox_BGLayerEnable->setChecked(false);
+        }
         ui->ComboBox_BGLayerPicker->addItems(elements);
-
-        ui->CheckBox_BGLayerEnable->setChecked(true);
-        ui->CheckBox_Layer0Enable->setChecked(false); ui->CheckBox_Layer0Enable->setChecked(true);
+        ui->CheckBox_Layer0Enable->setChecked(false); ui->CheckBox_Layer0Enable->setChecked(true); //trigger on_CheckBox_Layer0Enable_stateChanged()
         ui->CheckBox_Layer2Enable->setChecked(true);
 
         // Extra UI changes for Toxic Landfill dust Layer0
@@ -340,8 +346,53 @@ void RoomConfigDialog::on_ComboBox_Layer0Picker_currentIndexChanged(int index)
     }
 }
 
+/// <summary>
+/// Slot function for ComboBox_LayerPriority_currentIndexChanged.
+/// </summary>
 void RoomConfigDialog::on_ComboBox_LayerPriority_currentIndexChanged(int index)
 {
     (void) index;
     if(ui->ComboBox_Layer0MappingType->currentIndex() == 1) ui->ComboBox_LayerPriority->setCurrentIndex(0);
+}
+
+/// <summary>
+/// Slot function for SpinBox_RoomWidth_valueChanged.
+/// </summary>
+/// <param name="arg1">
+/// The spinbox value.
+/// </param>
+void RoomConfigDialog::on_SpinBox_RoomWidth_valueChanged(int arg1)
+{
+    int heightmax = 0x1400 / arg1;
+    if(ui->SpinBox_RoomHeight->value() > heightmax)
+    {
+        ui->SpinBox_RoomWidth->setStyleSheet("background-color: red");
+        ui->SpinBox_RoomHeight->setStyleSheet("background-color: red");
+    }
+    else
+    {
+        ui->SpinBox_RoomWidth->setStyleSheet("background-color: white");
+        ui->SpinBox_RoomHeight->setStyleSheet("background-color: white");
+    }
+}
+
+/// <summary>
+/// Slot function for SpinBox_RoomHeight_valueChanged.
+/// </summary>
+/// <param name="arg1">
+/// The spinbox value.
+/// </param>
+void RoomConfigDialog::on_SpinBox_RoomHeight_valueChanged(int arg1)
+{
+    int widthmax = 0x1400 / arg1;
+    if(ui->SpinBox_RoomWidth->value() > widthmax)
+    {
+        ui->SpinBox_RoomWidth->setStyleSheet("background-color: red");
+        ui->SpinBox_RoomHeight->setStyleSheet("background-color: red");
+    }
+    else
+    {
+        ui->SpinBox_RoomWidth->setStyleSheet("background-color: white");
+        ui->SpinBox_RoomHeight->setStyleSheet("background-color: white");
+    }
 }

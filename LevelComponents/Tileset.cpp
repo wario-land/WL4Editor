@@ -128,7 +128,7 @@ namespace LevelComponents
         Map16EventTable = (unsigned short*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28));
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
-        Map16WarioAnimationSlotIDTable = (unsigned char*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24));
+        Map16TerrainTypeIDTable = (unsigned char*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24));
 
         // Get pointer of Universal Sprites tiles Palette
         UniversalSpritesTilesPalettePtr = ROMUtils::PointerFromData(tilesetPtr + 32);
@@ -153,6 +153,14 @@ namespace LevelComponents
         {
             delete map16data[i];
         }
+
+
+        for(unsigned int i = 0; i < 16; ++i)
+        {
+            palettes[i].clear();
+        }
+
+
     }
 
     /// <summary>

@@ -1,6 +1,6 @@
 #include "EntitySet.h"
 
-constexpr int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
+constexpr unsigned int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
 constexpr int LevelComponents::EntitySet::EntityPositinalOffset[258];
 
 namespace LevelComponents
@@ -21,6 +21,7 @@ namespace LevelComponents
     {
         for(int i = 0; i < paletteNum; ++i)
         {
+            if(palettes[i + startPaletteId].size()) palettes[i + startPaletteId].clear();
             // First color is transparent
             palettes[i + startPaletteId].push_back(0);
             int subPalettePtr = paletteSetPtr + i * 32;
@@ -91,7 +92,7 @@ namespace LevelComponents
                 lastpalettePtr = palettePtr;
             }
             k++;
-        } while((tmpEntityId != 0) && (currentpaletteID != 7));
+        } while((tmpEntityId != 0) && (currentpaletteID != 8));
         // Set palette before and not include 15 to be 0 if not exist
         if(currentpaletteID < 7)
         {
@@ -106,8 +107,8 @@ namespace LevelComponents
         // Load palette 3 - 7 for Basic Element used in the room
         LoadSubPalettes(3, 1, basicElementPalettePtr);
         LoadSubPalettes(4, 4, WL4Constants::UniversalSpritesPalette2);
-        // Load palette 15 for treasure boxes
-        LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable));
+        // Load palette 15 for treasure boxes if necessary
+        if(currentpaletteID <= 7) LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable));
         // Set palette 0 - 2 all to 0 for Wario Sprites only
         for(int i = 0; i < 3; ++i)
         {
@@ -118,17 +119,14 @@ namespace LevelComponents
         }
 
         // Load 1024 sprites tiles, ignore the first 4 rows, they are wario tiles
-        BlankTile = Tile8x8::CreateBlankTile(palettes);
-        // Initialize all the tiles
-        for(int i = 0; i < (36 * 32); ++i) //TODO: Can we use memset here ?
-        {
-            tile8x8data[i] = BlankTile;
-        }
+        memset(tile8x8data, 0, sizeof(tile8x8data));
+
         // Load Basic Universal Entities' tile8x8s.
         int tiledataptr, tiledatalength;
         tiledataptr = WL4Constants::SpritesBasicElementTiles;
         tiledatalength = 0x3000;
         LoadSpritesTiles(tiledataptr, tiledatalength, 4);
+
         // Load Entities' tile8x8s which differ amongst all entitysets
         k = 0;
         int currentrow = 16;
@@ -151,16 +149,21 @@ namespace LevelComponents
             k++;
             lasttiledataptr = tiledataptr;
         } while(1);
+        for(unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
+        {
+            if(!tile8x8data[i]) tile8x8data[i] = Tile8x8::CreateBlankTile(palettes);
+        }
+
         // Load Treasure/CD Boxes tile8x8s when this Entityset is not a Boss Entityset
-        if(!IncludeBossTiles())
+        if((!IncludeBossTiles()) && (currentrow < 31))
         {
 //            tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable);
 //            tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable);
 //            LoadSpritesTiles(tiledataptr, tiledatalength, 30);
-            LoadSpritesTiles(0x352CF0, 2048, 30);
+            LoadSpritesTiles(WL4Constants::TreasureBoxGFXTiles, 2048, 30);
         }
 
-        // TODOs: set other entity informations
+        // TODO: set other entity information
     }
 
     /// <summary>
@@ -355,11 +358,7 @@ namespace LevelComponents
         // BlankTile may be disjoint in the array, so we skip over those and delete it afterward
         for(unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
         {
-            if(tile8x8data[i] != BlankTile)
-            {
-                delete tile8x8data[i];
-            }
+            delete tile8x8data[i];
         }
-        delete BlankTile;
     }
 }

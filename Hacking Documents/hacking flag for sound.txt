@@ -3,10 +3,22 @@ rename the four bytes from B1 to B4
 break on read: 
 715A4   and   6C184
 ---------------------------------------------
-715A4: only for B1, change [03000037]£¬which is for waving background //only ??
+715A4: only for B1, change [03000037], which is for waving bg layer
 
-6C184: only for B3 B4, one halfword to control wave
+71B42: about B2, relate to [03000037] (waving background) value when it is set to 0x04, means B1 have to be set 1 or 2
 
-6C1E8£ºread when change music in game, in the same procedure with 6C184
+6C184: only for B3 B4, a u16 to control wave
 
-71AFA and 71B42£ºin 71AE8, only for B1, which is for waving background, the proc will use 2 different data segment for waving BG in some situation like Tiles in water£ºseg. 3F9F38-3F9F47 small wave and short cycle£¬seg. 3F9F48-3F9F67 big wave and longer cycle. only when B1==2 the proc. will use seg. 3F9F38-3F9F47.
+6C1E8: read when change music in game, in the same procedure with 6C184
+
+71AFA and 71B42: in 71AE8, only for B1, which is for waving background, the proc will use 2 different data segment for waving BG in some situation like Tiles in water: seg. 3F9F38-3F9F47 small wave and short cycle, data in 3F9F48-3F9F67 for waving background behind water with bigger range, which only happens when B1==2. other cases use 3F9F38-3F9F47, do the same thing but in a smaller range. in ROM, they use B1==1 for the other cases.
+
+71598: (unsigned) B1 can be 3, 6, 7 and some other value, this set [03000037]
+
+all case for B1 and B2: 
+B1=1, B2=1(can be 2), [03000037]==4, waving a part of the bg layer right behind water in layer 0
+B1=6, B2=24(30 in Room 3), [03000037]==7, appear in Room 0 in Wildflower Fields, only about the upper half of the background moving leftwards.
+B1=7, B2=13, [03000037]==8, appear in Room 1 in Wildflower Fields, only about the lower half of the background moving leftwards.
+B1=0, B2=26, [03000037]==0, in mystic lake, no proc in 71A2C for case [03000037]==0, perhaps just deprecated data
+B1=3, B2=255, [03000037]==6, in toxic landfill, waving forground layer 0
+if set [03000037]==12 or 13, then cannot render Room, also these value cannot be set, they are replaced by 4 at last in 71598, so all the cases are here.

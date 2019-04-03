@@ -1,0 +1,73 @@
+beta-10:
+- Fix some entities rendering glitches caused by wrong tile loading
+- Add another available Camera control type, Vertical Seperate
+- Support tristate for Entities Layers visibility checkbox to support not rendering position boxes for entities
+- Support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers
+- Support showing hidden coins in breakable blocks
+- Add Room size limitation
+
+beta-9:
+- Fix clear-all only clears layer 0
+- Fix undo multiple times then placing a tile crashes the editor
+- Find wrong max value setting of some spinboxes in door config dialog
+- Fix shrinking the Room cannot protect you from deleting the last Door, optimize the auto-reset door position code
+- Fix new camera limitators data does not work in-game
+
+beta-8:
+- Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)
+- Fix cannot delete out-of-range Doors when shrinking Room size.
+- Fix changing the tileset in Sapphire passage level 4 causes a crash.
+- Adjust the code of the program to let it be able to compile by MSVC64 C++ compiler.
+- Change an expression: from "Tile16 event id" to "terrain type id" in both ui/code.
+- Forbid users to delete the last Door in any Room.
+- Fix an edge case bug: update entity list dock widget everytime if delete Door(s).
+- Support clearing CurrentRoom except camera settings with "Ctrl + Del" (focus is bugged; click any top menu item then Ctrl+Del to trigger)
+
+beta-7:
+- Fix moving Entities via direction keys cannot save
+- Support swapping Layers/Entity lists
+- Support clearing Layers/Entity lists
+- Fix pressing "cancel" on editor close save prompt still closes the editor
+- Added a save prompt when loading a new ROM file
+
+beta-6:
+- Support using page_up and page_down keys to go to different Rooms
+- Delete out-of-range Doors, Entities, Camera limitators when shrinking Room size
+- Fix runtime error when rendering Rooms from Level "the big board" and accelerate the render speed
+- Support moving selected Door/Entity via direction keys
+- Skip editing current layer when its MappingType is 0x20
+- Support choosing Map16 tile by right clicking on the selected Layer
+- Fix saving ROM after modifying room settings will save layer type 0x20 chunk data (it should only use existing data pointers)
+- Fix merely deleting Entities cannot save Entitylist changes to the ROM
+- Fix build error C2398 when using msvc, change some type from int to uint
+- Add Undo/Redo operation for RoomConfigDialog
+- Fix being unable to save disabled layers
+- Fix layer changes in RoomConfigDialog not setting layers as "dirty"
+
+beta-5:
+- Fix changing camera limitators then saving causes ROM to not boot
+- Fix some spinbox conditions for camera limitators
+- Fix loading a second ROM file doesn't work
+- Fix several memory leaks
+
+beta-4:
+- Fix frog switch timers not saving
+- Fix Wario's appearance offset from destination door in DoorConfigDialog
+
+beta-3:
+- Disable most menu buttons before ROM is loaded
+- Fix changing the destination door in DoorConfigDialog intermittently crashes
+- Fix rendering of certain entities in Room.cpp crashes editor
+
+beta-2:
+- Added changelog
+- Reorder difficulty timers by normal, hard, s.hard in level config dialog
+- Added upper/lower bounds to camera control spinboxes
+- Adding a new door now triggers the "unsaved changes" flag
+- Clarified a few ambiguous tileset names
+- Fix not being able to set any destination door
+- Fix not being able to set BGM values greater than 255
+- Fix DoorConfigDialog triggered from a new door crashes editor
+
+beta-1:
+- Initial release

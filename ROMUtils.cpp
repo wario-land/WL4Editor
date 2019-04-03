@@ -21,9 +21,9 @@ static inline int StrMatch(unsigned char *ptr, const char *pattern)
 // Helper function to validate RATS at an address
 static inline bool ValidRATS(unsigned char *ptr)
 {
-    if(strncmp((const char*) ptr, "STAR", 4)) return false;
-    short chunkLen = *(short*) (ptr + 4);
-    short chunkComp = *(short*) (ptr + 6);
+    if(strncmp(reinterpret_cast<const char*>(ptr), "STAR", 4)) return false;
+    short chunkLen = *reinterpret_cast<short*>(ptr + 4);
+    short chunkComp = *reinterpret_cast<short*>(ptr + 6);
     return chunkLen == ~chunkComp;
 }
 
@@ -45,7 +45,7 @@ namespace ROMUtils
     /// </param>
     unsigned int IntFromData(int address)
     {
-        return *(unsigned int*) (CurrentFile + address);
+        return *reinterpret_cast<unsigned int*>(CurrentFile + address);
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ namespace ROMUtils
     /// The predicted size of the output data.(unit: Byte)
     /// </param>
     /// <return>A pointer to decompressed data.</return>
-    unsigned char *LayerRLEDecompress(int address, int outputSize)
+    unsigned char *LayerRLEDecompress(int address, size_t outputSize)
     {
         unsigned char *OutputLayerData = new unsigned char[outputSize];
         int runData;
@@ -100,7 +100,7 @@ namespace ROMUtils
                         break;
                     }
 
-                    int temp = (int) (dst - OutputLayerData);
+                    size_t temp = dst - OutputLayerData;
                     if(temp > outputSize)
                     {
                         delete[] OutputLayerData;
@@ -133,14 +133,14 @@ namespace ROMUtils
             {
                 while(1)
                 {
-                    int ctrl = ((int) CurrentFile[address] << 8) | CurrentFile[address + 1];
+                    int ctrl = (static_cast<int>(CurrentFile[address]) << 8) | CurrentFile[address + 1];
                     address += 2; // offset + 2
                     if(!ctrl)
                     {
                         break;
                     }
 
-                    int temp = (int) (dst - OutputLayerData);
+                    size_t temp = dst - OutputLayerData;
                     if(temp > outputSize)
                     {
                         delete[] OutputLayerData;
@@ -197,8 +197,8 @@ namespace ROMUtils
         for(unsigned int i = 0; i < _layersize; ++i)
         {
             unsigned short s = LayerData[i];
-            separatedBytes[i] = (unsigned char) s;
-            separatedBytes[i + _layersize] = (unsigned char) (s >> 8);
+            separatedBytes[i] = static_cast<unsigned char>(s);
+            separatedBytes[i + _layersize] = static_cast<unsigned char>(s >> 8);
         }
 
         // Decide on 8 or 16 bit compression for the arrays
@@ -222,7 +222,7 @@ namespace ROMUtils
         (*OutputCompressedData)[lowerLength + upperLength] = '\0';
 
         // Clean up
-        delete separatedBytes;
+        delete[] separatedBytes;
         return size;
     }
 
@@ -263,7 +263,7 @@ namespace ROMUtils
                 if(ValidRATS(ROMData + startAddr + freeBytes))
                 {
                     // Checksum pass: Restart the search at end of the chunk
-                    unsigned short chunkLen = *(unsigned short*) (ROMData + startAddr + freeBytes + 4);
+                    unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMData + startAddr + freeBytes + 4);
                     startAddr += freeBytes + 12 + chunkLen;
                     if(startAddr + chunkSize > ROMLength) return 0; // fail if not enough room in ROM
                     freeBytes = 0;
@@ -288,6 +288,9 @@ namespace ROMUtils
         bool success = false;
         QVector<struct SaveData> chunks;
         LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
+        int levelHeaderOffset = WL4Constants::LevelHeaderIndexTable + currentLevel->GetPassage() * 24 + currentLevel->GetStage() * 4;
+        int levelHeaderIndex = ROMUtils::IntFromData(levelHeaderOffset);
+        int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
         currentLevel->GetSaveChunks(chunks);
 
         // Finding space for the chunks can be done faster if the chunks are ordered by size
@@ -322,11 +325,11 @@ namespace ROMUtils
         // also expand the ROM size as necessary (up to 32MB) to hold the new data.
         std::map<int, int> indexToChunkPtr;
         int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
-        for(int i = 0; i < chunks.size(); ++i)
+        foreach(struct SaveData chunk, chunks)
         {
-            int chunkSize = chunks[i].size + 12 + (chunks[i].alignment ? 3 : 0);
+            int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
 findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
-            if(chunks[i].alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
+            if(chunk.alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
             if(!chunkAddr)
             {
                 // Expand ROM (double the size and align to 8MB)
@@ -366,13 +369,15 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                     goto error;
                 }
             }
-            indexToChunkPtr[chunks[i].index] = chunkAddr;
-            startAddr = chunkAddr + chunkSize; // do not re-search old areas of the ROM
+            indexToChunkPtr[chunk.index] = chunkAddr;
+            startAddr = chunkAddr + chunk.size + 12; // do not re-search old areas of the ROM
         }
 
         // Apply source pointer modifications
         foreach(struct SaveData chunk, chunks)
         {
+            if(chunk.ChunkType == SaveDataChunkType::InvalidationChunk) continue;
+
             unsigned char *ptrLoc = chunk.dest_index ?
                 // Source pointer is in another chunk
                 chunks[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr :
@@ -386,7 +391,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
         // Write each chunk to TempFile
         foreach(struct SaveData chunk, chunks)
         {
-            if(chunk.ChunkType == SaveDataChunkType::NullType) continue; // skip NullType chunks
+            if(chunk.ChunkType == SaveDataChunkType::InvalidationChunk) continue;
 
             // Create the RATS tag
             unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
@@ -398,7 +403,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                     singleton,
                     "RATS chunk too large",
                     QString("Unable to save changes because ") + QString::number(chunk.size) +
-                        " contiguous free bytes are necessary for a save chunk with type " +
+                        " contiguous free bytes are necessary for some save chunk of type " +
                         QString::number(chunk.ChunkType) + ", but the editor currently"
                         " only supports up to size " + QString::number(0xFFFF) + ".",
                     QMessageBox::Ok,
@@ -417,6 +422,9 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
             // Write the data
             memcpy(destPtr + 12, chunk.data, chunkLen);
         }
+
+        // Write the level header to the ROM
+        memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
 
         { // Prevent goto from crossing initialization of variables here
             // Save the rom file from the CurrentFile copy
@@ -463,7 +471,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                 {
                     LevelComponents::Layer *layer = room->GetLayer(j);
                     layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
-                    layer->SetClean();
+                    layer->SetDirty(false);
                 }
                 for(unsigned int j = 0; j < 3; ++j)
                 {
@@ -484,7 +492,7 @@ error:      free(TempFile);
         }
         foreach(struct SaveData chunk, chunks)
         {
-            if(chunk.ChunkType != SaveDataChunkType::NullType) free(chunk.data);
+            if(chunk.ChunkType != SaveDataChunkType::InvalidationChunk) free(chunk.data);
         }
         return success;
     }

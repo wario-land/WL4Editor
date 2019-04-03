@@ -6,9 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>251</width>
-    <height>229</height>
+    <width>312</width>
+    <height>320</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>312</width>
+    <height>320</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>312</width>
+    <height>320</height>
+   </size>
   </property>
   <property name="features">
    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
@@ -75,37 +87,17 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>102</height>
+       </size>
+      </property>
       <property name="title">
        <string>Visible Layers</string>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QCheckBox" name="CheckBox_Layer0View">
-         <property name="toolTip">
-          <string>Layer 0</string>
-         </property>
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="CheckBox_Layer1View">
-         <property name="toolTip">
-          <string>Layer 1</string>
-         </property>
-         <property name="text">
-          <string>1</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="2">
         <widget class="QCheckBox" name="CheckBox_Layer2View">
          <property name="toolTip">
           <string>Layer 2</string>
@@ -118,7 +110,88 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="CheckBox_Layer0View">
+         <property name="toolTip">
+          <string>Layer 0</string>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="6">
+        <widget class="QCheckBox" name="CheckBox_CameraView">
+         <property name="toolTip">
+          <string>Camera</string>
+         </property>
+         <property name="text">
+          <string>C</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="7">
+        <widget class="QCheckBox" name="CheckBox_AlphaView">
+         <property name="toolTip">
+          <string>Alpha</string>
+         </property>
+         <property name="text">
+          <string>A</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="QCheckBox" name="CheckBox_EntityView">
+         <property name="toolTip">
+          <string>Entities</string>
+         </property>
+         <property name="text">
+          <string>E</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="tristate">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5">
+        <widget class="QCheckBox" name="CheckBox_DoorView">
+         <property name="toolTip">
+          <string>Doors</string>
+         </property>
+         <property name="text">
+          <string>D</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QCheckBox" name="CheckBox_Layer1View">
+         <property name="toolTip">
+          <string>Layer 1</string>
+         </property>
+         <property name="text">
+          <string>1</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
         <widget class="QCheckBox" name="CheckBox_Layer3View">
          <property name="sizePolicy">
           <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
@@ -137,56 +210,32 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QCheckBox" name="CheckBox_EntityView">
-         <property name="toolTip">
-          <string>Entities</string>
+       <item row="1" column="0" colspan="8">
+        <widget class="QGroupBox" name="ExtraLayers_GroupBox">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>48</height>
+          </size>
          </property>
-         <property name="text">
-          <string>E</string>
+         <property name="title">
+          <string>Extra</string>
          </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="CheckBox_DoorView">
-         <property name="toolTip">
-          <string>Doors</string>
-         </property>
-         <property name="text">
-          <string>D</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="CheckBox_CameraView">
-         <property name="toolTip">
-          <string>Camera</string>
-         </property>
-         <property name="text">
-          <string>C</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="CheckBox_AlphaView">
-         <property name="toolTip">
-          <string>Alpha</string>
-         </property>
-         <property name="text">
-          <string>A</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QCheckBox" name="CheckBox_hiddencoinsView">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>view hidden coins</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>

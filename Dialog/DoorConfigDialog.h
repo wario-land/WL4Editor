@@ -96,6 +96,7 @@ public:
     void UpdateCurrentDoorData();
     static void StaticInitialization();
     static void EntitySetsInitialization();
+    static void EntitySetsDeconstruction();
 
     // Enumeration of Door type
     static constexpr const char *DoortypeSetData[5] =
@@ -154,7 +155,7 @@ public:
         "0x2A Purple Marumen",
         "0x2B Red Marumen",
         "0x2C Boss: Spoiled Rotten",
-        "0x2D nothing",
+        "0x2D cannot use",
         "0x2E Trigger Push Down 9 o'clock CW",
         "0x2F Trigger Push Up 3 o'clock CCW",
         "0x30 4 Dominoes go Right",
@@ -177,7 +178,7 @@ public:
         "0x41 Money Flowers",
         "0x42 Imomushi",
         "0x43 Triangle Toy Block",
-        "0x44 nothing",
+        "0x44 Triangle Toy Block Receptor",
         "0x45 Rectangle Toy Block",
         "0x46 Rolling Toy Block",
         "0x47 Toy Door",
@@ -218,7 +219,7 @@ public:
         "0x6A Hoggus",
         "0x6B Denden",
         "0x6C Butatabi",
-        "0x6D Unknown",
+        "0x6D Deburīna",
         "0x6E Folding Door",
         "0x6F Purple Pencil",
         "0x70 Blue Pencil",

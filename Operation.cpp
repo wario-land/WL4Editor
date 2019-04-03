@@ -20,20 +20,27 @@ static unsigned int operationIndex[16];
 /// </param>
 static void PerformOperation(struct OperationParams *operation)
 {
-    switch(operation->type)
-    {
-    case ChangeTileOperation:
-        LevelComponents::Room *room = singleton->GetCurrentRoom();
+    LevelComponents::Room *room;
+    if (operation->tileChange) {
+        room = singleton->GetCurrentRoom();
         for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
-            int index = tcp->tileX + tcp->tileY * room->GetWidth();
+            unsigned int index = tcp->tileX + tcp->tileY * room->GetWidth();
             layer->GetLayerData()[index] = tcp->newTile;
             // Re-render the tile
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile, tcp->targetLayer);
         }
-        break;
+    }
+    if (operation->roomConfigChange) {
+        // change the width and height for all layers
+        singleton->RoomConfigReset(operation->lastRoomConfigParams, operation->newRoomConfigParams);
+        singleton->RenderScreenFull();
+        singleton->SetEditModeDockWidgetLayerEditability();
+        singleton->SetEditModeWidgetDifficultyRadioBox(1);
+        singleton->ResetEntitySetDockWidget();
+        singleton->SetUnsavedChanges(true);
     }
 }
 
@@ -48,20 +55,29 @@ static void PerformOperation(struct OperationParams *operation)
 /// </param>
 static void BackTrackOperation(struct OperationParams *operation)
 {
-    switch(operation->type)
+    LevelComponents::Room *room;
+    if (operation->tileChange)
     {
-    case ChangeTileOperation:
-        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentRoom();
         for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
-            int index = tcp->tileX + tcp->tileY * room->GetWidth();
+            unsigned int index = tcp->tileX + tcp->tileY * room->GetWidth();
             layer->GetLayerData()[index] = tcp->oldTile;
             // Re-render the tile
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile, tcp->targetLayer);
         }
-        break;
+    }
+    if (operation->roomConfigChange)
+    {
+        // new to last
+        singleton->RoomConfigReset(operation->newRoomConfigParams, operation->lastRoomConfigParams);
+        singleton->RenderScreenFull();
+        singleton->SetEditModeDockWidgetLayerEditability();
+        singleton->SetEditModeWidgetDifficultyRadioBox(1);
+        singleton->ResetEntitySetDockWidget();
+        singleton->SetUnsavedChanges(true);
     }
 }
 
@@ -79,7 +95,10 @@ void ExecuteOperation(struct OperationParams *operation)
     // If we perform an action after a series of undo, then delete the "undone" operations from history
     while(operationIndex[currentRoomNumber])
     {
+        // Delete the front operation in the queue while decrementing the operation index until the index reaches 0
         --operationIndex[currentRoomNumber];
+        struct OperationParams *frontOP = operationHistory[currentRoomNumber][0];
+        delete frontOP;
         operationHistory[currentRoomNumber].pop_front();
     }
     operationHistory[currentRoomNumber].push_front(operation);

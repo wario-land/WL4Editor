@@ -116,7 +116,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>17</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -127,16 +127,78 @@
     <addaction name="actionOpen_ROM"/>
     <addaction name="actionSave_ROM"/>
     <addaction name="actionSave_As"/>
+    <addaction name="actionSave_Room_s_graphic"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
      <string>Edit</string>
     </property>
     <widget class="QMenu" name="menuAdd">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="title">
       <string>Add</string>
      </property>
      <addaction name="actionNew_Door"/>
+    </widget>
+    <widget class="QMenu" name="menuSwap">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>Swap</string>
+     </property>
+     <widget class="QMenu" name="menuLayers">
+      <property name="title">
+       <string>Layers</string>
+      </property>
+      <addaction name="action_swap_Layer_0_Layer_1"/>
+      <addaction name="action_swap_Layer_1_Layer_2"/>
+      <addaction name="action_swap_Layer_0_Layer_2"/>
+     </widget>
+     <widget class="QMenu" name="menuEntity_lists">
+      <property name="title">
+       <string>Entity lists</string>
+      </property>
+      <addaction name="action_swap_Normal_Hard"/>
+      <addaction name="action_swap_Hard_S_Hard"/>
+      <addaction name="action_swap_Normal_S_Hard"/>
+     </widget>
+     <addaction name="menuLayers"/>
+     <addaction name="menuEntity_lists"/>
+    </widget>
+    <widget class="QMenu" name="menuClear">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>Clear</string>
+     </property>
+     <widget class="QMenu" name="menu_clear_Layer">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="title">
+       <string>Layer</string>
+      </property>
+      <addaction name="action_clear_Layer_0"/>
+      <addaction name="action_clear_Layer_1"/>
+      <addaction name="action_clear_Layer_2"/>
+     </widget>
+     <widget class="QMenu" name="menu_clear_Entity_list">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="title">
+       <string>Entity list</string>
+      </property>
+      <addaction name="action_clear_Normal"/>
+      <addaction name="action_clear_Hard"/>
+      <addaction name="action_clear_S_Hard"/>
+     </widget>
+     <addaction name="menu_clear_Layer"/>
+     <addaction name="menu_clear_Entity_list"/>
     </widget>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
@@ -144,6 +206,8 @@
     <addaction name="actionLevel_Config"/>
     <addaction name="actionRoom_Config"/>
     <addaction name="menuAdd"/>
+    <addaction name="menuSwap"/>
+    <addaction name="menuClear"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -165,6 +229,9 @@
    </property>
   </action>
   <action name="actionSave_ROM">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Save ROM</string>
    </property>
@@ -181,6 +248,9 @@
    </property>
   </action>
   <action name="actionUndo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Undo</string>
    </property>
@@ -189,6 +259,9 @@
    </property>
   </action>
   <action name="actionRedo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Redo</string>
    </property>
@@ -215,8 +288,79 @@
    </property>
   </action>
   <action name="actionSave_As">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Save As...</string>
+   </property>
+  </action>
+  <action name="action_swap_Layer_0_Layer_1">
+   <property name="text">
+    <string>Layer_0 &lt;=&gt; Layer_1</string>
+   </property>
+  </action>
+  <action name="action_swap_Layer_1_Layer_2">
+   <property name="text">
+    <string>Layer_1 &lt;=&gt; Layer_2</string>
+   </property>
+  </action>
+  <action name="action_swap_Layer_0_Layer_2">
+   <property name="text">
+    <string>Layer_0 &lt;=&gt; Layer_2</string>
+   </property>
+  </action>
+  <action name="action_swap_Normal_Hard">
+   <property name="text">
+    <string>Normal &lt;=&gt; Hard</string>
+   </property>
+  </action>
+  <action name="action_swap_Hard_S_Hard">
+   <property name="text">
+    <string>Hard &lt;=&gt; S-Hard</string>
+   </property>
+  </action>
+  <action name="action_swap_Normal_S_Hard">
+   <property name="text">
+    <string>Normal &lt;=&gt; S-Hard</string>
+   </property>
+  </action>
+  <action name="action_clear_Layer_0">
+   <property name="text">
+    <string>Layer 0</string>
+   </property>
+  </action>
+  <action name="action_clear_Layer_1">
+   <property name="text">
+    <string>Layer 1</string>
+   </property>
+  </action>
+  <action name="action_clear_Layer_2">
+   <property name="text">
+    <string>Layer 2</string>
+   </property>
+  </action>
+  <action name="action_clear_Normal">
+   <property name="text">
+    <string>Normal</string>
+   </property>
+  </action>
+  <action name="action_clear_Hard">
+   <property name="text">
+    <string>Hard</string>
+   </property>
+  </action>
+  <action name="action_clear_S_Hard">
+   <property name="text">
+    <string>S-Hard</string>
+   </property>
+  </action>
+  <action name="actionSave_Room_s_graphic">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save Room's graphic</string>
    </property>
   </action>
  </widget>

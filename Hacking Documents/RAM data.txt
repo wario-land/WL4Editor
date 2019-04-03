@@ -114,13 +114,26 @@ And there is a small list of memory addresses with a short description which can
 03000033 - Connected with layers (?) -  01(topmost)
 03000037 - Waving background - 
 03000047 - 02(Losing coins) 03(Losing coins without coin counter) 04(hide coin counter) 10(fade to grayscale) 0F(no interaction between wario and enemies)
-03000060 - Current Room width (2 bytes)
-03000062 - Current Room height (2 bytes)
+03000054 - if(mapping_type == 0x10), then use 0x201C840, pointer point to the Layer 0 decompressed data
+03000058 - current Layer 0 width
+0300005A - current Layer 0 height
+0300005C - current Layer 1 decompressed data pointer, all the layer1 data in the level have been decompressed and the pointer table of them start from 0x02000000
+03000060 - Current Room width (2 bytes) == current Layer 1 width
+03000062 - Current Room height (2 bytes) == current Layer 1 height
+03000064 - if(mapping_type == 0x10), then use 0x201A040, pointer point to the Layer 2 decompressed data
+03000068 - current Layer 2 width
+0300006A - current Layer 2 height
+0300006C - 0300006F always zero
+03000074 - 030009F Current Room Header
 030000A8..030000B3 - Scroll BG position, copy to IO system
 030000d8 - Set layer (secret wall/water/darkness) alpha - 00(alpha=0%) 10(alpha=100%)
 030000d9 - Layer alpha
 030000D8 - Set lighting with transition - 00-10
 030000D9 - Lighting counter
+030000DE - camera X maximun
+030000E0 - camera X minimum
+030000E2 - camera Y minimun
+030000E4 - camera Y maximun
 03000121 - Catbat's/Cuckoo Condor's health
 0300014D - Spoiled Rotten's health
 03000179 - Aerodent's health
@@ -141,12 +154,13 @@ And there is a small list of memory addresses with a short description which can
        - ingame - 00(restart room) 01(fade) 03(lose level) 04(pause) 05(freeze) 06(lose level)  08(debug mode)      
 //03000c3a 00 + 03000c3c 23 = the end screen
 03001898 - Wario transformations - 00(normal) 01(swimming) 02(burning) 03(fat) 04(frozen) 05(zombie) 06(snowball) 07(spring) 08(floating) 09(bat) 0a(flat)   
-03001899 - Wario animations - 02(standby) 11(pipe up) 12(pipe down) 36,37,38,39(weightlifting) 0c(do rolling) 0e(rolling) 0f(rolling jump) 13,14(blinking) 16(wall breaking) 17(speeding) 1d(hit down) 1e(connected with swimming?) 24(put on something) 25(throw away) 28,29,2b,2c,2d(climbing) 35(fearing) 34(ducking)  3a(walk forward then enter) 3b(playing) 42(shows his back) 41(shows his biceps) 43(shows his biceps #2) 44(very fearing) 4c(got the key and points to the air) 4d(attack pose) 53(holds something+GAME CRASH) 54(jumping down) 5b(stand wierd) 
+03001899 - Wario animations - 01(turning around) 02(standby) 03(start jumping, diving) 04(jumping, swimming) 05(crouch, head up from the water) 11(pipe up) 12(pipe down) 36,37,38,39(weightlifting) 0c(do rolling) 0e(rolling) 0f(rolling jump) 13,14(blinking) 16(B dash) 17(speeding) 1A(R dash) 1B(ground pound) 1d(hit down on the ground) 1e(connected with swimming?) 24(put on something) 25(throw away) 28,29,2b,2c,2d(climbing) 35(fearing) 34(ducking)  3a(walk forward then enter) 3b(playing) 42(shows his back) 41(shows his biceps) 43(shows his biceps #2) 44(very fearing) 4c(got the key and points to the air) 4d(attack pose) 53(holds something+GAME CRASH) 54(jumping down) 5b(stand wierd) 
 030018aa - Wario position x (2 byte)
 030018ac - Wario position y (2 byte)
-030018ae - Momentum X (2 byte, signed)
-030018b0 - Momentum Y (2 byte, signed)
+030018ae - Wario X speed (2 byte, signed)
+030018b0 - Wario Y speed (2 byte, signed, go up is positive)
 030018a6 - Wario direction - 10(right) 20(left)
+030018D5 - Wario animation states (why there is another address) - 02(walking) 03(jumping in the air)
 03001910 - Wario's health - 01-08 00(kill wario)
 03001911 - Add health to wario (heart count)
 03001913 - Countdown before add health (default=8)
@@ -159,13 +173,16 @@ And there is a small list of memory addresses with a short description which can
 030019f4 - Wario position y (2 byte) [read only]
 030019f6 - Disable enemies and wario(2 byte) (until reach 0) - 00-ff
 030019f8 - Hide wario - 00(show) 01(hide)  (?)
+030031F4 - Tile16 construction information table for the current Tileset
+030031F8 - Tile16s' terrain type table pointer for the current Tileset
+030031FC - Event id table pointer for the current Tileset
 0300320e - Camera DestX (2 bytes) //Wrong this is not my record
 03003210 - Camera DestY (2 bytes) //Wrong this is not my record
 03003213 - Camera panning style (1 byte) - 00(default) 05(don't limit camera on y axis)
 03003214 - Scroll background (1 byte) - 00(no) 01(yes)
 03003215 - A counter 
 03003216 - Background X position (1 byte)
-03003218 - Scroll foreground layer
+03003218 - Scroll foreground layer (1 byte) - 00(no) 02(yes)
 03003224..03003225 - Camera x position(realtime)
 03003226..03003227 - Camera y position(realtime)
 03003228 - Current Wario¡¯s horizontal velocity, go right [01, 08], go left [F8, FF]
@@ -174,9 +191,11 @@ And there is a small list of memory addresses with a short description which can
 
 == Enemies
 03000964: EntitySet information start from 03000964, each structure includes 3 Bytes, Y and X position, EntityID
+03000A24..03000A3F: the game engine processing entity RAM data one by one in the same place (here), then copy them back to the Enemy slots
 
 Enemy Slot #1
-03000104 - Walking direction - 03(left) 43(right) 
+03000104 - Walking direction - 03(left) 43(right)
+03000105 - if this item can hit another item - 01(yes) 00(no), wario grab an item can set it to 1, after it hit another item, it is set to 0 automatically, so in the game engine one item can only hit other items once (perhapsa only correct for rocks)
 03000108 - Final OAM data pointer
 0300010c - Position Y
 0300010e - Position X

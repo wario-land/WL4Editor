@@ -66,6 +66,10 @@ void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *curren
     {
         ui->UseCameraLimitators_radioButton->setChecked(true);
     }
+    else if(currentcameracontroltype == LevelComponents::__CameraControlType::Vertical_Seperated)
+    {
+        ui->VerticalSeperate_radioButton->setChecked(true);
+    }
 
     // Enable/disable the existing limitators groupbox depending on the room's camera type
     if(currentcameracontroltype != LevelComponents::__CameraControlType::HasControlAttrs)
@@ -254,12 +258,18 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
         ui->LimitatorSideOffset_spinBox->setValue(currentLimitator->ChangedValue - *(((unsigned char *) &(currentLimitator->x1)) + currentLimitatorTypeid));
         ui->TriggerBlockPositionX_spinBox->setValue(currentLimitator->x3);
         ui->TriggerBlockPositionY_spinBox->setValue(currentLimitator->y3);
+        ui->LimitatorSideOffset_spinBox->setEnabled(true);
+        ui->TriggerBlockPositionX_spinBox->setEnabled(true);
+        ui->TriggerBlockPositionY_spinBox->setEnabled(true);
     }
     else
     {
         ui->LimitatorSideOffset_spinBox->setValue(0);
         ui->TriggerBlockPositionX_spinBox->setValue(0);
         ui->TriggerBlockPositionY_spinBox->setValue(0);
+        ui->LimitatorSideOffset_spinBox->setEnabled(false);
+        ui->TriggerBlockPositionX_spinBox->setEnabled(false);
+        ui->TriggerBlockPositionY_spinBox->setEnabled(false);
     }
     SetCurrentLimitator(); // only used to set maximums for all the spinboxes
     ui->LimitatorSetting_groupBox->setEnabled(true);
@@ -274,11 +284,22 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
 /// </param>
 void CameraControlDockWidget::on_CameraLimitatorTypePicker_comboBox_currentIndexChanged(int index)
 {
-    (void) index;
     if(!IsSavingData) return;
     ui->LimitatorSideOffset_spinBox->setValue(0);
     ui->TriggerBlockPositionX_spinBox->setValue(0);
     ui->TriggerBlockPositionY_spinBox->setValue(0);
+    if(index == 0)
+    {
+        ui->LimitatorSideOffset_spinBox->setEnabled(false);
+        ui->TriggerBlockPositionX_spinBox->setEnabled(false);
+        ui->TriggerBlockPositionY_spinBox->setEnabled(false);
+    }
+    else
+    {
+        ui->LimitatorSideOffset_spinBox->setEnabled(true);
+        ui->TriggerBlockPositionX_spinBox->setEnabled(true);
+        ui->TriggerBlockPositionY_spinBox->setEnabled(true);
+    }
     SetCurrentLimitator();
 
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
@@ -409,7 +430,7 @@ void CameraControlDockWidget::on_TriggerBlockPositionY_spinBox_valueChanged(int 
 /// Called when CameraYFixed_radioButton is clicked.
 /// </summary>
 /// <param name="checked">
-/// Show if CameraYFixed_radioButton is been checked.
+/// Rerender current Room if CameraYFixed_radioButton is been checked.
 /// </param>
 void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
 {
@@ -433,7 +454,7 @@ void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
 /// Called when FollowWario_radioButton is clicked.
 /// </summary>
 /// <param name="checked">
-/// Show if FollowWario_radioButton is been checked.
+/// Rerender current Room if FollowWario_radioButton is been checked.
 /// </param>
 void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
 {
@@ -457,7 +478,7 @@ void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
 /// Called when UseCameraLimitators_radioButton is clicked.
 /// </summary>
 /// <param name="checked">
-/// Show if UseCameraLimitators_radioButton is been checked.
+/// Rerender current Room if UseCameraLimitators_radioButton is been checked.
 /// </param>
 void CameraControlDockWidget::on_UseCameraLimitators_radioButton_clicked(bool checked)
 {
@@ -502,6 +523,30 @@ void CameraControlDockWidget::on_DeleteCameraLimitator_pushButton_clicked()
     ClearCurrentLimitatorSetting();
     singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     PaintListView();
+
+    singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
+    singleton->SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Called when VerticalSeperate_radioButton is clicked.
+/// </summary>
+/// <param name="checked">
+/// Rerender current Room if VerticalSeperate_radioButton is been checked.
+/// </param>
+void CameraControlDockWidget::on_VerticalSeperate_radioButton_clicked(bool checked)
+{
+    if(checked)
+    {
+        singleton->GetCurrentRoom()->SetCameraControlType(LevelComponents::__CameraControlType::Vertical_Seperated);
+        SelectedLimitator = -1;
+        ClearCurrentLimitatorSetting();
+        ClearListView();
+        ui->ExistingLimitators_groupBox->setEnabled(false);
+        ui->LimitatorSetting_groupBox->setEnabled(false);
+        // Rerender graphicview in MainWindow
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
 
     singleton->GetCurrentRoom()->SetCameraBoundaryDirty(true);
     singleton->SetUnsavedChanges(true);

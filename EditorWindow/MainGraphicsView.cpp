@@ -5,6 +5,7 @@
 
 #include <QScrollBar>
 #include <QMouseEvent>
+#include <QMessageBox>
 
 #include <iostream>
 #include <cassert>
@@ -35,8 +36,21 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 
         if(editMode == Ui::LayerEditMode)
         {
-            // Change textmaps and layer graphics
-            SetTile(tileX, tileY);
+            // If we use right click then copy the tile
+            if (event->button() == Qt::RightButton) {
+                int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+                LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
+                int selectedTileIndex = tileX + tileY * room->GetWidth();
+                unsigned short placedTile=layer->GetLayerData()[selectedTileIndex];
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile, true);
+            }
+            else // Otherwise just place the tile
+            {
+                // Uncheck hiddencoinsView Checkbox
+                singleton->GetEditModeWidgetPtr()->UncheckHiddencoinsViewCheckbox();
+                // Change textmaps and layer graphics
+                SetTile(tileX, tileY);
+            }
         }
         else if(editMode == Ui::DoorEditMode) // select a door
         {
@@ -94,7 +108,7 @@ DOOR_FOUND:     ;
                 room->SetEntityListDirty(difficulty, true);
                 singleton->SetUnsavedChanges(true);
             }
-            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, SelectedEntityID);
+            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, SelectedEntityID);
         }
     }
 }
@@ -129,8 +143,20 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
         if((editMode == Ui::LayerEditMode))
         {
-            // Change textmaps and layer graphics
-            SetTile(tileX, tileY);
+            // If we hold right click then copy the tile
+            // event->button() cannot work, event->buttons() return the correct mouseState according to the Qt code
+            if (event->buttons() == Qt::RightButton) {
+                int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+                LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
+                int selectedTileIndex = tileX + tileY * room->GetWidth();
+                unsigned short placedTile=layer->GetLayerData()[selectedTileIndex];
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile, true);
+            }
+            else // Otherwise just place the tile
+            {
+                // Change textmaps and layer graphics
+                SetTile(tileX, tileY);
+            }
         }
     }
     else
@@ -162,10 +188,12 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
     int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
     LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
     if(layer->IsEnabled() == false) return;
+    if(layer->GetMappingType() == LevelComponents::LayerTile8x8) return; // temporarily skip the condition when the current Layer's MappingType is 0x20 to avoid incorrect rendering
     int selectedTileIndex = tileX + tileY * room->GetWidth();
     if(layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
     struct OperationParams *params = new struct OperationParams();
     params->type = ChangeTileOperation;
+    params->tileChange = true;
     params->tileChangeParams.push_back(TileChangeParams::Create(
         tileX,
         tileY,
@@ -197,22 +225,127 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 /// </param>
 void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 {
-    // Delete selected entity if BSP or DEL is pressed
-    if((SelectedEntityID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
+    // If an entity is selected
+    if(SelectedEntityID != -1)
     {
-        singleton->DeleteEntity(SelectedEntityID);
-        SelectedEntityID = -1;
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
-        singleton->SetUnsavedChanges(true);
-    }
+        switch (event->key())
+        {
+            // Delete selected entity if BSP or DEL is pressed
+            case Qt::Key_Backspace:
+            case Qt::Key_Delete:
+            {
+                singleton->DeleteEntity(SelectedEntityID);
+                SelectedEntityID = -1;
+                singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+                int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                singleton->SetUnsavedChanges(true);
+                break;
+            }
 
-    // Delete selected door if BSP or DEL is pressed
-    else if((SelectedDoorID != -1) && ((event->key() == Qt::Key_Backspace) || (event->key() == Qt::Key_Delete)))
+            // Move selected entity when a direction key is pressed
+            case Qt::Key_Right:
+            case Qt::Key_Left:
+            case Qt::Key_Up:
+            case Qt::Key_Down:
+            {
+                LevelComponents::Room* currentRoom=singleton->GetCurrentRoom();
+
+                // The new positions
+                int px = currentRoom->GetEntityX(SelectedEntityID);
+                int py = currentRoom->GetEntityY(SelectedEntityID);
+                if (event->key() == Qt::Key_Left)
+                {
+                    px = px - 1;
+                }
+                else if (event->key() == Qt::Key_Right)
+                {
+                    px = px + 1;
+                }
+                else if (event->key() == Qt::Key_Up)
+                {
+                    py = py - 1;
+                }
+                else // Qt::Key_Down
+                {
+                    py = py + 1;
+                }
+
+                if (currentRoom->IsNewEntityPositionInsideRoom(px, py))
+                {
+                    currentRoom->SetEntityPosition(px, py, SelectedEntityID);
+                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, SelectedEntityID);
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                    singleton->SetUnsavedChanges(true);
+                }
+                break;
+            }
+        }
+    // If a door is selected
+    } else if(SelectedDoorID != -1)
     {
-        singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
-        SelectedDoorID = -1;
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
-        singleton->SetUnsavedChanges(true);
+        switch (event->key())
+        {
+            // Delete selected door if BSP or DEL is pressed
+            case Qt::Key_Backspace:
+            case Qt::Key_Delete:
+            {
+                if(singleton->GetCurrentRoom()->CountDoors() < 2)
+                {
+                    QMessageBox::critical(nullptr, QString("Error"), QString("Deleting the last Door in a Room is not allowed!"));
+                    break;
+                }
+                singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
+                SelectedDoorID = -1;
+                singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+                singleton->ResetEntitySetDockWidget();
+                singleton->SetUnsavedChanges(true);
+                break;
+            }
+            //Move selected door when a direction key is pressed
+            case Qt::Key_Right:
+            case Qt::Key_Left:
+            case Qt::Key_Up:
+            case Qt::Key_Down:
+            {
+                LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+                LevelComponents::Door *selectedDoor = currentRoom->GetDoor(SelectedDoorID);
+
+                //The new positions
+                int px1 = selectedDoor->GetX1();
+                int py1 = selectedDoor->GetY1();
+                int px2 = selectedDoor->GetX2();
+                int py2 = selectedDoor->GetY2();
+                if (event->key() == Qt::Key_Left)
+                {
+                    px1 = px1 - 1;
+                    px2 = px2 - 1;
+                }
+                else if (event->key() == Qt::Key_Right)
+                {
+                    px1 = px1 + 1;
+                    px2 = px2 + 1;
+                }
+                else if (event->key() == Qt::Key_Up)
+                {
+                    py1 = py1 - 1;
+                    py2 = py2 - 1;
+                }
+                else // Qt::Key_Down
+                {
+                    py1 = py1 + 1;
+                    py2 = py2 + 1;
+                }
+
+                if (currentRoom->IsNewDoorPositionInsideRoom(px1, px2, py1, py2))
+                {
+                   selectedDoor->SetDoorPlace(px1, px2, py1, py2);
+                   singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
+                }
+                break;
+            }
+        }
     }
 }
 
@@ -223,5 +356,5 @@ void MainGraphicsView::DeselectDoorAndEntity()
 {
     SelectedDoorID = -1;
     SelectedEntityID = -1;
-    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
 }

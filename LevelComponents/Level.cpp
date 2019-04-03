@@ -192,12 +192,25 @@ namespace LevelComponents
         return (a * 60 + b * 10 + c);
     }
 
+    /// <summary>
+    /// Distribute door data to every room.
+    /// </summary>
     void Level::RedistributeDoor()
     {
         // Distribute door data to every room
         for(unsigned int i = 0; i < doors.size(); ++i)
         {
             rooms[doors[i]->GetRoomID()]->AddDoor(doors[i]);
+        }
+
+        // Check if every Room have at least one Door, if not, set the entityset id to skip some problems
+        // the code is only for avoiding crash
+        for(unsigned int i = 0; i < rooms.size(); ++i)
+        {
+            if(rooms[i]->CountDoors() == 0)
+            {
+                rooms[i]->SetCurrentEntitySet(37);
+            }
         }
     }
 
@@ -246,7 +259,7 @@ namespace LevelComponents
     void Level::AddDoor(Door *newdoor)
     {
         doors.push_back(newdoor);
-        rooms[doors[doors.size() - 1]->GetRoomID()]->AddDoor(doors[doors.size() - 1]);
+        rooms[newdoor->GetRoomID()]->AddDoor(newdoor);
     }
 
     /// <summary>
@@ -331,7 +344,7 @@ namespace LevelComponents
             cameraPointerTable->size = cameraPointerTableSize;
             cameraPointerTable->data = (unsigned char*) malloc(cameraPointerTableSize);
             cameraPointerTable->index = ROMUtils::SaveDataIndex++;
-            cameraPointerTable->alignment = false;
+            cameraPointerTable->alignment = true;
             cameraPointerTable->dest_index = 0;
             cameraPointerTable->old_chunk_addr = ROMUtils::PointerFromData(cameraPointerTablePtr);
             cameraPointerTable->ChunkType = ROMUtils::CameraPointerTableType;
@@ -345,7 +358,7 @@ namespace LevelComponents
                 {
                     0, 0, nullptr, ROMUtils::SaveDataIndex++, false, 0,
                     cameraBoundaryListEntryPtr,
-                    ROMUtils::SaveDataChunkType::NullType
+                    ROMUtils::SaveDataChunkType::InvalidationChunk
                 };
                 chunks.append(invalidationEntry);
                 cameraBoundaryListEntryPtr += 4;

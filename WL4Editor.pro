@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -25,8 +25,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11 strict_c++
 
 SOURCES += \
-        main.cpp \
-        WL4EditorWindow.cpp \
+    main.cpp \
+    WL4EditorWindow.cpp \
     LevelComponents/Level.cpp \
     LevelComponents/Room.cpp \
     LevelComponents/Layer.cpp \
@@ -51,7 +51,7 @@ SOURCES += \
     DockWidget/CameraControlDockWidget.cpp
 
 HEADERS += \
-        WL4EditorWindow.h \
+    WL4EditorWindow.h \
     LevelComponents/Level.h \
     LevelComponents/Room.h \
     LevelComponents/Layer.h \
@@ -74,10 +74,11 @@ HEADERS += \
     LevelComponents/Entity.h \
     DockWidget/EntitySetDockWidget.h \
     Compress.h \
-    DockWidget/CameraControlDockWidget.h
+    DockWidget/CameraControlDockWidget.h \
+    WL4Application.h
 
 FORMS += \
-        WL4EditorWindow.ui \
+    WL4EditorWindow.ui \
     Dialog/ChooseLevelDialog.ui \
     DockWidget/Tile16DockWidget.ui \
     Dialog/LevelConfigDialog.ui \
