@@ -478,6 +478,9 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                     room->SetEntityListDirty(j, false);
                     room->SetEntityListPtr(j, entityListPtrs[j] | 0x8000000);
                 }
+                struct LevelComponents::__RoomHeader newroomheader;
+                memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
+                room->ResetRoomHeader(newroomheader);
             }
         }
 

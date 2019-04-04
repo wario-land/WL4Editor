@@ -1082,6 +1082,14 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// only used to reset the data of RoomHeader, won't do sub-reset to the member variables relative to RoomHeader.
+    /// </summary>
+    void Room::ResetRoomHeader(__RoomHeader newheader)
+    {
+        RoomHeader = newheader;
+    }
+
+    /// <summary>
     /// Get the x position of an Entity from the current Entity List.
     /// </summary>
     /// <param name="index">
