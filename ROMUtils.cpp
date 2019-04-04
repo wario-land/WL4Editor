@@ -476,11 +476,11 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                 for(unsigned int j = 0; j < 3; ++j)
                 {
                     room->SetEntityListDirty(j, false);
-                    room->SetEntityListPtr(j, entityListPtrs[j] | 0x8000000);
                 }
                 struct LevelComponents::__RoomHeader newroomheader;
                 memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
                 room->ResetRoomHeader(newroomheader);
+               // TODO: if more elements in the game are going to be support customizing in the editor, more pointers need to be reset here
             }
         }
 
