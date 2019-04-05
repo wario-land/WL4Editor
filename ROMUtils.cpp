@@ -464,7 +464,6 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                 struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
                     (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
                 unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
-                unsigned int *entityListPtrs = (unsigned int*) &roomHeader->EntityTableHard;
                 LevelComponents::Room *room = rooms[i];
                 room->SetCameraBoundaryDirty(false);
                 for(unsigned int j = 0; j < 4; ++j)
