@@ -1,4 +1,5 @@
 beta-10:
+- Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)
 - Fix some entities rendering glitches caused by wrong tile loading
 - Add another available Camera control type, Vertical Seperate
 - Support tristate for Entities Layers visibility checkbox to support not rendering position boxes for entities
@@ -7,7 +8,6 @@ beta-10:
 - Add Room size limitation
 
 beta-9:
-- Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)
 - Fix clear-all only clears hardmode entities
 - Fix undo multiple times then placing a tile crashes the editor
 - Find wrong max value setting of some spinboxes in door config dialog

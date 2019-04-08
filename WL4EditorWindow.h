@@ -108,6 +108,7 @@ private slots:
     void on_action_clear_Hard_triggered();
     void on_action_clear_S_Hard_triggered();
     void on_actionSave_Room_s_graphic_triggered();
+    void on_actionManager_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

@@ -116,7 +116,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>23</height>
+     <height>17</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -215,8 +215,15 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuPatches">
+    <property name="title">
+     <string>Patches</string>
+    </property>
+    <addaction name="actionManager"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuPatches"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -361,6 +368,11 @@
    </property>
    <property name="text">
     <string>Save Room's graphic</string>
+   </property>
+  </action>
+  <action name="actionManager">
+   <property name="text">
+    <string>Manager</string>
    </property>
   </action>
  </widget>

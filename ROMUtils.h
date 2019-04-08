@@ -17,14 +17,6 @@ namespace ROMUtils
     extern QString ROMFilePath;
     extern unsigned int SaveDataIndex;
 
-    // Global functions
-    unsigned int IntFromData(int address);
-    unsigned int PointerFromData(int address);
-    unsigned char *LayerRLEDecompress(int address, size_t outputSize);
-    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
-    int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
-    bool SaveFile(QString fileName);
-
     enum SaveDataChunkType {
         InvalidationChunk       = '\x00',
         RoomHeaderChunkType     = '\x01',
@@ -34,6 +26,8 @@ namespace ROMUtils
         EntityListChunk         = '\x05',
         CameraPointerTableType  = '\x06',
         CameraBoundaryChunkType = '\x07',
+        PatchListChunk          = '\x08',
+        PatchChunk              = '\x09'
     };
 
     struct SaveData {
@@ -46,6 +40,16 @@ namespace ROMUtils
         unsigned int old_chunk_addr; // address of the old chunk that was pointed to
         enum SaveDataChunkType ChunkType;
     };
+
+    // Global functions
+    unsigned int IntFromData(int address);
+    unsigned int PointerFromData(int address);
+    unsigned char *LayerRLEDecompress(int address, size_t outputSize);
+    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
+    int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
+    int FindChunkInROM(unsigned char *ROMData, int ROMLength, int startAddr, enum SaveDataChunkType chunkType);
+    QVector<int> FindAllChunksInROM(unsigned char *ROMData, int ROMLength, int startAddr, enum SaveDataChunkType chunkType);
+    bool SaveFile(QString fileName);
 }
 
 #endif // ROMUTILS_H

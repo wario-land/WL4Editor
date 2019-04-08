@@ -38,7 +38,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->TableView_EntityFilter->setColumnWidth(0, 30);
     ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->TableView_EntityFilter->resizeColumnsToContents();
-    // set rwo height
+    // set row height
     ui->TableView_EntityFilter->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->TableView_EntityFilter->resizeRowsToContents();
     IsInitialized = false;
@@ -378,7 +378,7 @@ void DoorConfigDialog::UpdateTableView()
 /// </param>
 void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
 {
-    EntityFilterTableModel *model =  static_cast<EntityFilterTableModel*>(ui->TableView_EntityFilter->model());
+    EntityFilterTableModel *model = static_cast<EntityFilterTableModel*>(ui->TableView_EntityFilter->model());
     const TableEntityItem &it = model->entities[item->row()];
 
     if (item->checkState() == Qt::Checked)
@@ -404,7 +404,7 @@ void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
                 continue;
 
             bool visible = true;
-            for(int i=0; i < model->rowCount(); ++i)
+            for(int i = 0; i < model->rowCount(); ++i)
             {
                 // the entity is checked
                 bool checked = model->item(i, 0)->checkState();

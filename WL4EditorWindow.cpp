@@ -2,6 +2,7 @@
 #include "ui_WL4EditorWindow.h"
 #include "ROMUtils.h"
 #include "Operation.h"
+#include "Dialog/PatchManagerDialog.h"
 
 #include <cstdio>
 #include <deque>
@@ -1355,4 +1356,13 @@ void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
         // The graphicscene has not been scaled, so don't need to scale it
         currentRoompixmap.save(qFilePath, "PNG", 100);
     }
+}
+
+/// <summary>
+/// Open the patch manager.
+/// </summary>
+void WL4EditorWindow::on_actionManager_triggered()
+{
+    PatchManagerDialog dialog(this);
+    auto result = dialog.exec();
 }

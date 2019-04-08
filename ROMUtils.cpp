@@ -279,6 +279,88 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Find the next chunk of a specific type.
+    /// </summary>
+    /// <param name="ROMData">
+    /// The pointer to the ROM data being processed.
+    /// </param>
+    /// <param name="ROMLength">
+    /// The length of the ROM data.
+    /// </param>
+    /// <param name="startAddr">
+    /// The start address to search from.
+    /// </param>
+    /// <param name="chunkType">
+    /// The chunk type to search for in the ROM.
+    /// </param>
+    /// <returns>
+    /// The next chunk of a specific type, or 0 if none exists.
+    /// </returns>
+    int FindChunkInROM(unsigned char *ROMData, int ROMLength, int startAddr, enum SaveDataChunkType chunkType)
+    {
+        if(startAddr >= ROMLength) return 0; // fail if not enough room in ROM
+        while(startAddr < ROMLength)
+        {
+            // Optimize search by incrementing more with partial matches
+            int STARmatch = StrMatch(ROMData + startAddr, "STAR");
+            if(STARmatch < 4)
+            {
+                // STAR not found at current address
+                startAddr += qMax(STARmatch, 1);
+            }
+            else
+            {
+                // STAR found at current address: validate the RATS checksum and chunk type
+                if(ValidRATS(ROMData + startAddr) && ROMData[startAddr + 8] == chunkType)
+                {
+                    return startAddr;
+                }
+                else
+                {
+                    // Invalid RATS or chunk type not found: advance
+                    startAddr += 4;
+                }
+            }
+        }
+        return 0;
+    }
+
+    /// <summary>
+    /// Find all chunks of a specific type.
+    /// </summary>
+    /// <param name="ROMData">
+    /// The pointer to the ROM data being processed.
+    /// </param>
+    /// <param name="ROMLength">
+    /// The length of the ROM data.
+    /// </param>
+    /// <param name="startAddr">
+    /// The start address to search from.
+    /// </param>
+    /// <param name="chunkType">
+    /// The chunk type to search for in the ROM.
+    /// </param>
+    /// <returns>
+    /// A list of all chunks of a specific type.
+    /// </returns>
+    QVector<int> FindAllChunksInROM(unsigned char *ROMData, int ROMLength, int startAddr, enum SaveDataChunkType chunkType)
+    {
+        QVector<int> chunks;
+        while(startAddr < ROMLength)
+        {
+            int chunk = FindChunkInROM(ROMData, ROMLength, startAddr, chunkType);
+            if(chunk)
+            {
+                chunks.append(chunk);
+                unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMData + startAddr + 4);
+                startAddr += chunkLen + 12;
+            }
+            else break;
+        }
+        return chunks;
+    }
+
+    /// <summary>
     /// Save the currently loaded level to the ROM file.
     /// </summary>
     bool SaveFile(QString filePath)
