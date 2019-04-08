@@ -504,9 +504,13 @@ namespace LevelComponents
                 {
                     if(Height >= 14)
                     {
-                        CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0xE0);
-                        if(Height >= 18)
+                        if(Height < 18)
                         {
+                            CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0x40);
+                        }
+                        else
+                        {
+                            CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0xE0);
                             CameraLimitationPainter.drawRect(0x20, (int) Height * 16 - 0x100, (int) Width * 16 - 0x40, 0xE0);
                         }
                     }
@@ -1075,6 +1079,14 @@ namespace LevelComponents
         EntityList[currentDifficulty].at(index).XPos=XPos;
         EntityList[currentDifficulty].at(index).YPos=YPos;
         return;
+    }
+
+    /// <summary>
+    /// only used to reset the data of RoomHeader, won't do sub-reset to the member variables relative to RoomHeader.
+    /// </summary>
+    void Room::ResetRoomHeader(__RoomHeader newheader)
+    {
+        RoomHeader = newheader;
     }
 
     /// <summary>
