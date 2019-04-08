@@ -5,9 +5,9 @@
 #include <QStandardItemModel>
 #include <PatchUtils.h>
 
-namespace Ui {
-    class PatchManagerTableView;
-}
+//namespace Ui {
+//    class PatchManagerTableView;
+//}   // it looks strange, that this should not include in the Ui namespace
 
 class PatchEntryTableModel : public QStandardItemModel
 {

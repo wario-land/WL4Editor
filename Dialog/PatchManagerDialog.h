@@ -16,9 +16,13 @@ public:
     explicit PatchManagerDialog(QWidget *parent = nullptr);
     ~PatchManagerDialog();
 
+private slots:
+    void on_patchManagerTableView_clicked(const QModelIndex &index);
+
 private:
-    PatchManagerTableView PatchTable;
+    PatchManagerTableView *PatchTable;
     Ui::PatchManagerDialog *ui;
+    int SelectedLine = -1;
 };
 
 #endif // PATCHMANAGERDIALOG_H
