@@ -188,7 +188,7 @@ void WL4EditorWindow::OpenROM()
         EntitySetWidget->setVisible(false);
     }
 
-    // Modify UI every time time a ROM is loaded
+    // Modify UI every time when a ROM is loaded
     EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);

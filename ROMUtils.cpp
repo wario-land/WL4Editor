@@ -464,7 +464,6 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                 struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
                     (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
                 unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
-                unsigned int *entityListPtrs = (unsigned int*) &roomHeader->EntityTableHard;
                 LevelComponents::Room *room = rooms[i];
                 room->SetCameraBoundaryDirty(false);
                 for(unsigned int j = 0; j < 4; ++j)
@@ -476,8 +475,11 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                 for(unsigned int j = 0; j < 3; ++j)
                 {
                     room->SetEntityListDirty(j, false);
-                    room->SetEntityListPtr(j, entityListPtrs[j] | 0x8000000);
                 }
+                struct LevelComponents::__RoomHeader newroomheader;
+                memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
+                room->ResetRoomHeader(newroomheader);
+               // TODO: if more elements in the game are going to be support customizing in the editor, more pointers need to be reset here
             }
         }
 
