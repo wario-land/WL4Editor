@@ -51,7 +51,8 @@ SOURCES += \
     DockWidget/CameraControlDockWidget.cpp \
     Dialog/PatchManagerDialog.cpp \
     Dialog/PatchManagerTableView.cpp \
-    PatchUtils.cpp
+    PatchUtils.cpp \
+    Dialog/PatchEditDialog.cpp
 
 HEADERS += \
     WL4EditorWindow.h \
@@ -81,7 +82,8 @@ HEADERS += \
     WL4Application.h \
     Dialog/PatchManagerDialog.h \
     Dialog/PatchManagerTableView.h \
-    PatchUtils.h
+    PatchUtils.h \
+    Dialog/PatchEditDialog.h
 
 FORMS += \
     WL4EditorWindow.ui \
@@ -93,4 +95,5 @@ FORMS += \
     Dialog/DoorConfigDialog.ui \
     DockWidget/EntitySetDockWidget.ui \
     DockWidget/CameraControlDockWidget.ui \
-    Dialog/PatchManagerDialog.ui
+    Dialog/PatchManagerDialog.ui \
+    Dialog/PatchEditDialog.ui

@@ -1,5 +1,6 @@
 #include "PatchManagerDialog.h"
 #include "ui_PatchManagerDialog.h"
+#include <QMessageBox>
 
 /// <summary>
 /// Construct an instance of the PatchManagerDialog.
@@ -32,7 +33,56 @@ PatchManagerDialog::~PatchManagerDialog()
 /// </summary>
 void PatchManagerDialog::on_patchManagerTableView_clicked(const QModelIndex &index)
 {
-    SelectedLine = index.row();
-    ui->removePatchButton->setEnabled(true);
-    ui->editPatchButton->setEnabled(true);
+    QItemSelectionModel *select = PatchTable->selectionModel();
+    QModelIndexList selectedRows = select->selectedRows();
+    bool selected = selectedRows.size();
+    ui->removePatchButton->setEnabled(selected);
+    ui->editPatchButton->setEnabled(selected);
+}
+
+/// <summary>
+/// This slot function will be triggered when clicking the "Add" button.
+/// </summary>
+void PatchManagerDialog::on_addPatchButton_clicked()
+{
+
+}
+
+/// <summary>
+/// This slot function will be triggered when clicking the "Edit" button.
+/// </summary>
+void PatchManagerDialog::on_editPatchButton_clicked()
+{
+    QItemSelectionModel *select = PatchTable->selectionModel();
+    QModelIndexList selectedRows = select->selectedRows();
+    if(selectedRows.size() == 1)
+    {
+
+    }
+    else
+    {
+        QMessageBox infoPrompt;
+        infoPrompt.setWindowTitle(tr("About"));
+        infoPrompt.setText(QString("You can only select 1 row at a time to edit"));
+        infoPrompt.addButton(tr("Ok"), QMessageBox::NoRole);
+        infoPrompt.exec();
+    }
+}
+
+/// <summary>
+/// This slot function will be triggered when clicking the "Remove" button.
+/// </summary>
+void PatchManagerDialog::on_removePatchButton_clicked()
+{
+    PatchTable->RemoveSelected();
+    ui->removePatchButton->setEnabled(false);
+    ui->editPatchButton->setEnabled(false);
+}
+
+/// <summary>
+/// This slot function will be triggered when clicking the "Save" button.
+/// </summary>
+void PatchManagerDialog::on_savePatchButton_clicked()
+{
+
 }

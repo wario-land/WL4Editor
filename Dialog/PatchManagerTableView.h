@@ -5,10 +5,6 @@
 #include <QStandardItemModel>
 #include <PatchUtils.h>
 
-//namespace Ui {
-//    class PatchManagerTableView;
-//}   // it looks strange, that this should not include in the Ui namespace
-
 class PatchEntryTableModel : public QStandardItemModel
 {
     Q_OBJECT
@@ -18,6 +14,7 @@ public:
     ~PatchEntryTableModel() { };
     void AddEntry(struct PatchEntryItem entry) { entries.append(entry); }
     QVector<PatchEntryItem> entries;
+    void RemoveEntries(QModelIndexList entries);
 
 private:
     QWidget *parent;
@@ -34,6 +31,8 @@ public:
     PatchManagerTableView(QWidget *param);
     ~PatchManagerTableView();
     void UpdateTableView();
+    void RemoveSelected();
+    struct PatchEntryItem GetSelectedEntry();
 };
 
 #endif // PATCHMANAGERTABLEVIEW_H

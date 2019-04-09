@@ -18,11 +18,15 @@ public:
 
 private slots:
     void on_patchManagerTableView_clicked(const QModelIndex &index);
+    void on_addPatchButton_clicked();
+    void on_editPatchButton_clicked();
+    void on_removePatchButton_clicked();
+    void on_savePatchButton_clicked();
 
 private:
     PatchManagerTableView *PatchTable;
     Ui::PatchManagerDialog *ui;
-    int SelectedLine = -1;
+    bool dirty = false;
 };
 
 #endif // PATCHMANAGERDIALOG_H

@@ -1,5 +1,6 @@
 #include "PatchManagerTableView.h"
 #include <cassert>
+#include <QModelIndex>
 
 /// <summary>
 /// Construct an instance of the PatchManagerTableView.
@@ -67,12 +68,58 @@ void PatchManagerTableView::UpdateTableView()
     }
 }
 
+/// <summary>
+/// Remove the selected patch entry from the table.
+/// </summary>
+void PatchManagerTableView::RemoveSelected()
+{
+    QItemSelectionModel *select = selectionModel();
+    QModelIndexList selectedRows = select->selectedRows();
+    entryTableModel.RemoveEntries(selectedRows);
+    UpdateTableView();
+}
+
+/// <summary>
+/// Get the selected patch entry from the table.
+/// </summary>
+/// <returns>
+/// The selected patch entry.
+/// </returns>
+struct PatchEntryItem PatchManagerTableView::GetSelectedEntry()
+{
+    QItemSelectionModel *select = selectionModel();
+    QModelIndexList selectedRows = select->selectedRows();
+    assert(selectedRows.size() == 1 /* PatchManagerTableView::GetSelectedEntry called when a single row is not selected */);
+    return entryTableModel.entries[selectedRows[0].row()];
+}
+
 //---------------------------------------------------------------------------------------------------------------------------
 // PatchEntryTableModel functions
 //---------------------------------------------------------------------------------------------------------------------------
 
+/// <summary>
+/// Construct an instance of the PatchEntryTableModel.
+/// </summary>
+/// <param name="parent">
+/// The parent QWidget.
+/// </param>
 PatchEntryTableModel::PatchEntryTableModel(QWidget *_parent) : QStandardItemModel(_parent), parent(_parent)
 {
     // Configure the model
     setColumnCount(3);
+}
+
+/// <summary>
+/// Remove entries from the table model.
+/// </summary>
+/// <param name="entries">
+/// The entries to remove.
+/// </param>
+void PatchEntryTableModel::RemoveEntries(QModelIndexList entryList)
+{
+    qSort(entryList.begin(), entryList.end(), qGreater<QModelIndex>()); // so that rows are removed from highest index
+    foreach (QModelIndex index, entryList)
+    {
+        entries.removeAt(index.row());
+    }
 }
