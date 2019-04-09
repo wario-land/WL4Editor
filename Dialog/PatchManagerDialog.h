@@ -15,6 +15,7 @@ class PatchManagerDialog : public QDialog
 public:
     explicit PatchManagerDialog(QWidget *parent = nullptr);
     ~PatchManagerDialog();
+    void SetButtonsEnabled(bool enable);
 
 private slots:
     void on_patchManagerTableView_clicked(const QModelIndex &index);

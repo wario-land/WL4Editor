@@ -6,6 +6,13 @@ PatchEditDialog::PatchEditDialog(QWidget *parent) :
     ui(new Ui::PatchEditDialog)
 {
     ui->setupUi(this);
+
+    // Initialize the items in comboBox_PatchType
+    QStringList PatchTypeNameSet;
+    PatchTypeNameSet <<
+        "Binary" << "Assembly" << "C";
+    ui->comboBox_PatchType->addItems(PatchTypeNameSet);
+    ui->comboBox_PatchType->setCurrentIndex(0);
 }
 
 PatchEditDialog::~PatchEditDialog()
