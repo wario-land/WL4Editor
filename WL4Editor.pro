@@ -24,6 +24,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11 strict_c++
 
+QMAKE_CXXFLAGS = -fpermissive
+
 SOURCES += \
     main.cpp \
     WL4EditorWindow.cpp \

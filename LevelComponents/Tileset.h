@@ -11,6 +11,7 @@ namespace LevelComponents
     class Tileset
     {
     private:
+        int tilesetPtr;
         Tile8x8 *tile8x8data[0x600];
         TileMap16 *map16data[0x300];
         QVector<QRgb> palettes[16];
@@ -19,6 +20,7 @@ namespace LevelComponents
 
     public:
         Tileset(int tilesetPtr, int __TilesetID);
+        int getTilesetPtr() { return tilesetPtr; }
         Tile8x8 **GetTile8x8Data() { return tile8x8data; }
         TileMap16 **GetMap16Data() { return map16data; }
         QVector<QRgb> *GetPalettes() { return palettes; }

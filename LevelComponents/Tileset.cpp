@@ -21,6 +21,9 @@ namespace LevelComponents
     /// </param>
     Tileset::Tileset(int tilesetPtr, int __TilesetID)
     {
+        //Save the ROM pointer into the tileset object
+        this->tilesetPtr=tilesetPtr;
+
         memset(tile8x8data, 0, sizeof(tile8x8data) / sizeof(tile8x8data[0]));
 
         // Create all 16 color palettes
@@ -126,6 +129,14 @@ namespace LevelComponents
 
         // Get pointer to the map16 event table
         Map16EventTable = (unsigned short*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28));
+
+        //[REMOVE] test
+        /*if (tilesetPtr == 0x3F2DD8) {
+            Map16EventTable[0]=0x01;
+            Map16EventTable[1]=0x02;
+            std::cout << "DONE" << std::endl;
+        }*/
+
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
         Map16TerrainTypeIDTable = (unsigned char*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24));
