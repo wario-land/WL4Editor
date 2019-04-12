@@ -426,6 +426,17 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
         // Write the level header to the ROM
         memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
 
+        // Overwrite every tileset of the ROM by the tileset in memory
+        std::vector<LevelComponents::Room*> rooms=currentLevel->GetRooms();
+
+        for(unsigned int i = 0; i < rooms.size(); ++i)
+        {
+            int tilesetPtr=rooms[i]->GetTileset()->getTilesetPtr();
+            unsigned short *Map16EventTable=rooms[i]->GetTileset()->GetEventTablePtr();
+            memcpy(TempFile+ROMUtils::PointerFromData(tilesetPtr + 28),(unsigned char*)Map16EventTable,1536);
+        }
+
+
         { // Prevent goto from crossing initialization of variables here
             // Save the rom file from the CurrentFile copy
             QFile file(filePath);
