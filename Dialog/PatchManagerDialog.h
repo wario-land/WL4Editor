@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "PatchManagerTableView.h"
+#include "PatchEditDialog.h"
 
 namespace Ui {
 class PatchManagerDialog;

@@ -47,8 +47,8 @@ namespace ROMUtils
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
     int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
-    int FindChunkInROM(unsigned char *ROMData, int ROMLength, int startAddr, enum SaveDataChunkType chunkType);
-    QVector<int> FindAllChunksInROM(unsigned char *ROMData, int ROMLength, int startAddr, enum SaveDataChunkType chunkType);
+    unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
+    QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
     bool SaveFile(QString fileName);
 }
 

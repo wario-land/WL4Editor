@@ -1,6 +1,7 @@
 #include "PatchManagerDialog.h"
 #include "ui_PatchManagerDialog.h"
 #include <QMessageBox>
+#include <QFile>
 
 /// <summary>
 /// Construct an instance of the PatchManagerDialog.
@@ -14,9 +15,8 @@ PatchManagerDialog::PatchManagerDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    this->setWindowTitle("Patch Manager");
+    setWindowTitle("Patch Manager");
     PatchTable = ui->patchManagerTableView;
-    // TODO
 }
 
 /// <summary>
@@ -24,7 +24,6 @@ PatchManagerDialog::PatchManagerDialog(QWidget *parent) :
 /// </summary>
 PatchManagerDialog::~PatchManagerDialog()
 {
-    // TODO
     delete ui;
 }
 
@@ -55,7 +54,49 @@ void PatchManagerDialog::on_patchManagerTableView_clicked(const QModelIndex &ind
 /// </summary>
 void PatchManagerDialog::on_addPatchButton_clicked()
 {
+    // Get a list of entries for validation later
+    QVector<struct PatchEntryItem> currentEntries = PatchTable->GetAllEntries();
+    struct PatchEntryItem entry;
 
+    // Execute the edit dialog
+    PatchEditDialog *editDialog = new PatchEditDialog(this);
+retry:
+    if(editDialog->exec() == QDialog::Accepted)
+    {
+        entry = editDialog->CreatePatchEntry();
+
+        // Validate that the entry can be added
+        QFile file(entry.FileName);
+        if(!file.exists())
+        {
+            QMessageBox::information(this, "About", QString("File does not exist: ") + entry.FileName);
+            goto error;
+        }
+        bool fileNameIsValid = !std::any_of(currentEntries.begin(), currentEntries.end(),
+            [entry](struct PatchEntryItem e){ return e.FileName == entry.FileName; });
+        if(!fileNameIsValid)
+        {
+            QMessageBox::information(this, "About", QString("Another entry already exists with the filename: ") + entry.FileName);
+            goto error;
+        }
+        bool hookIsValid = !entry.HookAddress || !std::any_of(currentEntries.begin(), currentEntries.end(),
+            [entry](struct PatchEntryItem e){ return e.HookAddress == entry.HookAddress; });
+        if(!hookIsValid)
+        {
+            QMessageBox::information(this, "About", QString("Another entry already exists with the hook address: ") + QString::number(entry.HookAddress));
+            goto error;
+        }
+
+        PatchTable->AddEntry(entry);
+    }
+    delete editDialog;
+    return;
+
+error:
+    // Re-run the edit dialog
+    delete editDialog;
+    editDialog = new PatchEditDialog(this, entry);
+    goto retry;
 }
 
 /// <summary>
@@ -63,19 +104,67 @@ void PatchManagerDialog::on_addPatchButton_clicked()
 /// </summary>
 void PatchManagerDialog::on_editPatchButton_clicked()
 {
+    // Validate that only one row is selected in the table
     QItemSelectionModel *select = PatchTable->selectionModel();
     QModelIndexList selectedRows = select->selectedRows();
     if(selectedRows.size() == 1)
     {
+        // Get list of entries, which does NOT include the selected entry, for validation later
+        QVector<struct PatchEntryItem> currentEntries = PatchTable->GetAllEntries();
+        struct PatchEntryItem selectedEntry = PatchTable->GetSelectedEntry();
+        struct PatchEntryItem entry;
+        int selectedIndex = -1;
+        std::find_if(currentEntries.begin(), currentEntries.end(),
+            [selectedEntry, &selectedIndex](struct PatchEntryItem e){ ++selectedIndex; return selectedEntry.FileName == e.FileName; });
+        currentEntries.remove(selectedIndex);
 
+        // Execute the edit dialog
+        PatchEditDialog *editDialog = new PatchEditDialog(this, selectedEntry);
+retry:
+        if(editDialog->exec() == QDialog::Accepted)
+        {
+            entry = editDialog->CreatePatchEntry();
+
+            // Validate that the entry can be added
+            QFile file(entry.FileName);
+            if(!file.exists())
+            {
+                QMessageBox::information(this, "About", QString("File does not exist: ") + entry.FileName);
+                goto error;
+            }
+            bool fileNameIsValid = !std::any_of(currentEntries.begin(), currentEntries.end(),
+                [entry](struct PatchEntryItem e){ return e.FileName == entry.FileName; });
+            if(!fileNameIsValid)
+            {
+                QMessageBox::information(this, "About", QString("Another entry already exists with the filename: ") + entry.FileName);
+                goto error;
+            }
+            bool hookIsValid = !entry.HookAddress || !std::any_of(currentEntries.begin(), currentEntries.end(),
+                [entry](struct PatchEntryItem e){ return e.HookAddress == entry.HookAddress; });
+            if(!hookIsValid)
+            {
+                QMessageBox::information(this, "About", QString("Another entry already exists with the hook address: ") + QString::number(entry.HookAddress));
+                goto error;
+            }
+
+            PatchTable->UpdateEntry(selectedIndex, entry);
+        }
+        delete editDialog;
+        return;
+
+error:
+        // Re-run the edit dialog
+        delete editDialog;
+        editDialog = new PatchEditDialog(this, entry);
+        goto retry;
+    }
+    else if(!selectedRows.size())
+    {
+        QMessageBox::information(this, "About", "You must select a row to edit.");
     }
     else
     {
-        QMessageBox infoPrompt;
-        infoPrompt.setWindowTitle(tr("About"));
-        infoPrompt.setText(QString("You can only select 1 row at a time to edit"));
-        infoPrompt.addButton(tr("Ok"), QMessageBox::NoRole);
-        infoPrompt.exec();
+        QMessageBox::information(this, "About", "You may only select 1 row at a time to edit.");
     }
 }
 
@@ -94,5 +183,5 @@ void PatchManagerDialog::on_removePatchButton_clicked()
 /// </summary>
 void PatchManagerDialog::on_savePatchButton_clicked()
 {
-
+    // TODO
 }

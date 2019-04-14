@@ -12,10 +12,11 @@ enum PatchType
 
 struct PatchEntryItem
 {
-    QString fileName;
-    enum PatchType patchType;
-    int hookAddress;
-    int patchAddress;
+    QString FileName;
+    enum PatchType PatchType;
+    int HookAddress;
+    bool StubFunction;
+    int PatchAddress;
 };
 
 QVector<struct PatchEntryItem> GetPatchesFromROM();

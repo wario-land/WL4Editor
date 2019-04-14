@@ -143,7 +143,7 @@ void DoorConfigDialog::UpdateCurrentDoorData()
 }
 
 /// <summary>
-/// Perform static initializtion of constant data structures for the dialog.
+/// Perform static initialization of constant data structures for the dialog.
 /// </summary>
 void DoorConfigDialog::StaticInitialization()
 {

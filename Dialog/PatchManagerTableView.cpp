@@ -23,10 +23,10 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
     }
 
     // TEST
-    struct PatchEntryItem TEST1 { QString("foo.c"), PatchType::C, 0x1111AF, 0x800000 };
-    struct PatchEntryItem TEST2 { QString("bar.c"), PatchType::C, 0x2222AF, 0x800001 };
-    struct PatchEntryItem TEST3 { QString("baz.asm"), PatchType::Assembly, 0x3333AF, 0x800002 };
-    struct PatchEntryItem TEST4 { QString("file.bin"), PatchType::Binary, 0x4444AF, 0x800003 };
+    struct PatchEntryItem TEST1 { QString("foo.c"), PatchType::C, 0x1111AF, false, 0x800000 };
+    struct PatchEntryItem TEST2 { QString("bar.c"), PatchType::C, 0x2222AF, false, 0x800001 };
+    struct PatchEntryItem TEST3 { QString("baz.asm"), PatchType::Assembly, 0x3333AF, true, 0x800002 };
+    struct PatchEntryItem TEST4 { QString("file.bin"), PatchType::Binary, 0x4444AF, true, 0x800003 };
     entryTableModel.AddEntry(TEST1);
     entryTableModel.AddEntry(TEST2);
     entryTableModel.AddEntry(TEST3);
@@ -49,22 +49,23 @@ PatchManagerTableView::~PatchManagerTableView()
 void PatchManagerTableView::UpdateTableView()
 {
     entryTableModel.clear();
-    entryTableModel.setHorizontalHeaderLabels(QStringList() << "File" << "Type" << "Hook Address" << "Patch Address");
+    entryTableModel.setHorizontalHeaderLabels(QStringList() << "File" << "Type" << "Hook Address" << "Patch Address" << "Stub");
     int row = 0;
     foreach(const struct PatchEntryItem patchEntry, entryTableModel.entries)
     {
-        entryTableModel.setItem(row, 0, new QStandardItem(patchEntry.fileName));
+        entryTableModel.setItem(row, 0, new QStandardItem(patchEntry.FileName));
         const char *typeStrings[3] =
         {
             "Binary",
             "Assembly",
             "C"
         };
-        assert(patchEntry.patchType < sizeof(typeStrings) / sizeof(typeStrings[0]) /* Patch entry type out of range */);
-        entryTableModel.setItem(row, 1, new QStandardItem(QString(typeStrings[patchEntry.patchType])));
-        entryTableModel.setItem(row, 2, new QStandardItem(!patchEntry.hookAddress ?
-            "none" : "0x" + QString::number(patchEntry.hookAddress, 16).toUpper()));
-        entryTableModel.setItem(row++, 3, new QStandardItem("0x" + QString::number(patchEntry.patchAddress, 16).toUpper()));
+        assert(patchEntry.PatchType < sizeof(typeStrings) / sizeof(typeStrings[0]) /* Patch entry type out of range */);
+        entryTableModel.setItem(row, 1, new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
+        entryTableModel.setItem(row, 2, new QStandardItem(!patchEntry.HookAddress ?
+            "none" : "0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
+        entryTableModel.setItem(row, 3, new QStandardItem("0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
+        entryTableModel.setItem(row++, 4, new QStandardItem(patchEntry.StubFunction ? "yes" : "no"));
     }
 }
 

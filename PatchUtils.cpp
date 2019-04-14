@@ -37,7 +37,7 @@ static QString UpgradePatchListContents(QString contents, int version)
 /// <returns>
 /// The updated patch list chunk's contents, regardless of the version in the ROM.
 /// </returns>
-static QString GetUpgradedPatchListChunkData(int chunkDataAddr)
+static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
 {
     unsigned short contentSize = *reinterpret_cast<unsigned short*>(ROMUtils::CurrentFile + chunkDataAddr + 4) - 1;
     QString contents = QString::fromLocal8Bit((const char*)(ROMUtils::CurrentFile + chunkDataAddr + 13), contentSize);
@@ -59,7 +59,7 @@ QVector<struct PatchEntryItem> GetPatchesFromROM()
 {
     // Obtain the patch list chunk, if it exists
     QVector<struct PatchEntryItem> patchEntries;
-    int patchListAddr = ROMUtils::FindChunkInROM(
+    unsigned int patchListAddr = ROMUtils::FindChunkInROM(
         ROMUtils::CurrentFile,
         ROMUtils::CurrentFileSize,
         WL4Constants::AvailableSpaceBeginningInROM,
@@ -68,7 +68,7 @@ QVector<struct PatchEntryItem> GetPatchesFromROM()
     if(patchListAddr)
     {
         // Obtain the patch chunks
-        QVector<int> patchChunks = ROMUtils::FindAllChunksInROM(
+        QVector<unsigned int> patchChunks = ROMUtils::FindAllChunksInROM(
             ROMUtils::CurrentFile,
             ROMUtils::CurrentFileSize,
             WL4Constants::AvailableSpaceBeginningInROM,
@@ -79,11 +79,11 @@ QVector<struct PatchEntryItem> GetPatchesFromROM()
         QString contents = GetUpgradedPatchListChunkData(patchListAddr);
         assert(contents > 0 /* ROM contains an empty patch list chunk */);
         QStringList patchTuples = contents.split(";");
-        assert(!(patchTuples.count() % 3) /* ROM contains a corrupted patch list chunk (field count is not a multiple of 3) */);
-        for(int i = 0; i < patchTuples.count(); i += 3)
+        assert(!(patchTuples.count() % 4) /* ROM contains a corrupted patch list chunk (field count is not a multiple of 4) */);
+        for(int i = 0; i < patchTuples.count(); i += 4)
         {
             // Validate that the chunks shown in the patch list chunk are in the ROM
-            int patchAddress = patchTuples[i + 3].toInt(Q_NULLPTR, 16);
+            unsigned int patchAddress = patchTuples[i + 3].toInt(Q_NULLPTR, 16);
             assert(patchChunks.contains(patchAddress) /* Patch chunk list refers to an invalid patch address */);
 
             // Add the patch entry
@@ -94,7 +94,8 @@ QVector<struct PatchEntryItem> GetPatchesFromROM()
                 patchTuples[i],
                 static_cast<enum PatchType>(patchType),
                 hookAddress,
-                patchAddress
+                false, // TODO this should be set somehow else
+                (int) patchAddress
             };
             patchEntries.append(entry);
         }

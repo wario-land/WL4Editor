@@ -296,7 +296,7 @@ namespace ROMUtils
     /// <returns>
     /// The next chunk of a specific type, or 0 if none exists.
     /// </returns>
-    int FindChunkInROM(unsigned char *ROMData, int ROMLength, int startAddr, enum SaveDataChunkType chunkType)
+    unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType)
     {
         if(startAddr >= ROMLength) return 0; // fail if not enough room in ROM
         while(startAddr < ROMLength)
@@ -343,12 +343,12 @@ namespace ROMUtils
     /// <returns>
     /// A list of all chunks of a specific type.
     /// </returns>
-    QVector<int> FindAllChunksInROM(unsigned char *ROMData, int ROMLength, int startAddr, enum SaveDataChunkType chunkType)
+    QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType)
     {
-        QVector<int> chunks;
+        QVector<unsigned int> chunks;
         while(startAddr < ROMLength)
         {
-            int chunk = FindChunkInROM(ROMData, ROMLength, startAddr, chunkType);
+            unsigned int chunk = FindChunkInROM(ROMData, ROMLength, startAddr, chunkType);
             if(chunk)
             {
                 chunks.append(chunk);

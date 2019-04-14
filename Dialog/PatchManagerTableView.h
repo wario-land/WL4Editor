@@ -13,7 +13,7 @@ public:
     PatchEntryTableModel(QWidget *_parent);
     ~PatchEntryTableModel() { };
     void AddEntry(struct PatchEntryItem entry) { entries.append(entry); }
-    QVector<PatchEntryItem> entries;
+    QVector<struct PatchEntryItem> entries;
     void RemoveEntries(QModelIndexList entries);
 
 private:
@@ -33,6 +33,14 @@ public:
     void UpdateTableView();
     void RemoveSelected();
     struct PatchEntryItem GetSelectedEntry();
+    QVector<struct PatchEntryItem> GetAllEntries() { return entryTableModel.entries; }
+    void AddEntry(struct PatchEntryItem entry) { entryTableModel.AddEntry(entry); UpdateTableView(); }
+    void UpdateEntry(int index, struct PatchEntryItem entry)
+    {
+        entryTableModel.entries[index] = entry;
+        UpdateTableView();
+        selectRow(index);
+    }
 };
 
 #endif // PATCHMANAGERTABLEVIEW_H
