@@ -88,7 +88,7 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
         {
             ui->comboBox_PatchType->setCurrentIndex(PatchType::C);
         }
-        if(qFilePath.endsWith(".s", Qt::CaseInsensitive) || qFilePath.endsWith(".asm", Qt::CaseInsensitive))
+        else if(qFilePath.endsWith(".s", Qt::CaseInsensitive) || qFilePath.endsWith(".asm", Qt::CaseInsensitive))
         {
             ui->comboBox_PatchType->setCurrentIndex(PatchType::Assembly);
         }
