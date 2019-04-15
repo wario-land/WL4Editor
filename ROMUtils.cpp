@@ -509,7 +509,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
         }
 
         // Perform post-processing before saving the file
-        PostProcessingCallback(TempFile, indexToChunkPtr);
+        if(PostProcessingCallback) PostProcessingCallback(TempFile, indexToChunkPtr);
 
         { // Prevent goto from crossing initialization of variables here
             // Save the rom file from the CurrentFile copy

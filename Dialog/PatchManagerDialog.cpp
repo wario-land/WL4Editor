@@ -219,5 +219,27 @@ void PatchManagerDialog::on_removePatchButton_clicked()
 /// </summary>
 void PatchManagerDialog::on_savePatchButton_clicked()
 {
-    // TODO
+    // TODO attempt to obtain this setting from WL4Editor.ini once it is implemented
+    QString missing;
+retry:
+    bool ok = PatchUtils::VerifyEABI(&missing);
+    if(!ok)
+    {
+
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------------
+// EABIPrompt functions
+//---------------------------------------------------------------------------------------------------------------------------
+
+/// <summary>
+/// Construct an instance of the EABIPrompt.
+/// </summary>
+/// <param name="parent">
+/// The parent QWidget.
+/// </param>
+EABIPrompt::EABIPrompt(QWidget *parent) : QDialog(parent)
+{
+    // TODO setup prompt
 }

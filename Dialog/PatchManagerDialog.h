@@ -9,6 +9,18 @@ namespace Ui {
 class PatchManagerDialog;
 }
 
+class EABIPrompt : public QDialog
+{
+    Q_OBJECT
+
+private:
+    QString EABI_Dir;
+
+public:
+    EABIPrompt(QWidget *parent);
+    ~EABIPrompt() {}
+};
+
 class PatchManagerDialog : public QDialog
 {
     Q_OBJECT

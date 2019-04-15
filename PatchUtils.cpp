@@ -2,8 +2,19 @@
 #include <ROMUtils.h>
 #include <QVector>
 #include <cassert>
+#include <QDir>
 
 #define PATCH_CHUNK_VERSION 0
+
+#ifdef _WIN32
+#define EABI_GCC     "arm-none-eabi-gcc.exe"
+#define EABI_AS      "arm-none-eabi-as.exe"
+#define EABI_OBJCOPY "arm-none-eabi-objcopy.exe"
+#else // _WIN32 (else linux)
+#define EABI_GCC     "arm-none-eabi-gcc"
+#define EABI_AS      "arm-none-eabi-as"
+#define EABI_OBJCOPY "arm-none-eabi-objcopy"
+#endif
 
 /// <summary>
 /// Upgrade the format of a patch list chunk by one version.
@@ -61,58 +72,100 @@ static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
     return contents;
 }
 
-/// <summary>
-/// Obtain the patch entries from the currently loaded ROM file.
-/// </summary>
-/// <returns>
-/// A list of all patch entries, which is empty if none exist.
-/// </returns>
-QVector<struct PatchEntryItem> GetPatchesFromROM()
+namespace PatchUtils
 {
-    // Obtain the patch list chunk, if it exists
-    QVector<struct PatchEntryItem> patchEntries;
-    unsigned int patchListAddr = ROMUtils::FindChunkInROM(
-        ROMUtils::CurrentFile,
-        ROMUtils::CurrentFileSize,
-        WL4Constants::AvailableSpaceBeginningInROM,
-        ROMUtils::SaveDataChunkType::PatchListChunk
-    );
-    if(patchListAddr)
+    QString EABI_INSTALLATION = "C:\\Program Files (x86)\\GNU Tools ARM Embedded\\8 2018-q4-major\\bin";
+
+    /// <summary>
+    /// Obtain the patch entries from the currently loaded ROM file.
+    /// </summary>
+    /// <returns>
+    /// A list of all patch entries, which is empty if none exist.
+    /// </returns>
+    QVector<struct PatchEntryItem> GetPatchesFromROM()
     {
-        // Obtain the patch chunks
-        QVector<unsigned int> patchChunks = ROMUtils::FindAllChunksInROM(
+        // Obtain the patch list chunk, if it exists
+        QVector<struct PatchEntryItem> patchEntries;
+        unsigned int patchListAddr = ROMUtils::FindChunkInROM(
             ROMUtils::CurrentFile,
             ROMUtils::CurrentFileSize,
             WL4Constants::AvailableSpaceBeginningInROM,
             ROMUtils::SaveDataChunkType::PatchListChunk
         );
-
-        // Get the patch list information
-        QString contents = GetUpgradedPatchListChunkData(patchListAddr);
-        assert(contents.length() > 0 /* ROM contains an empty patch list chunk */);
-        QStringList patchTuples = contents.split(";");
-        assert(!(patchTuples.count() % 4) /* ROM contains a corrupted patch list chunk (field count is not a multiple of 4) */);
-        for(int i = 0; i < patchTuples.count(); i += 4)
+        if(patchListAddr)
         {
-            // Add the patch entry
-            int patchType = patchTuples[i + 1].toInt(Q_NULLPTR, 16);
-            unsigned int hookAddress = static_cast<unsigned int>(patchTuples[i + 2].toInt(Q_NULLPTR, 16));
-            unsigned int patchAddress = static_cast<unsigned int>(patchTuples[i + 3].toInt(Q_NULLPTR, 16));
-            assert(patchChunks.contains(patchAddress) /* Patch chunk list refers to an invalid patch address */);
-            bool stubFunction = patchTuples[i + 4] != "0";
-            bool thumbMode = patchTuples[i + 5] != "0";
-            struct PatchEntryItem entry
+            // Obtain the patch chunks
+            QVector<unsigned int> patchChunks = ROMUtils::FindAllChunksInROM(
+                ROMUtils::CurrentFile,
+                ROMUtils::CurrentFileSize,
+                WL4Constants::AvailableSpaceBeginningInROM,
+                ROMUtils::SaveDataChunkType::PatchListChunk
+            );
+
+            // Get the patch list information
+            QString contents = GetUpgradedPatchListChunkData(patchListAddr);
+            assert(contents.length() > 0 /* ROM contains an empty patch list chunk */);
+            QStringList patchTuples = contents.split(";");
+            assert(!(patchTuples.count() % 4) /* ROM contains a corrupted patch list chunk (field count is not a multiple of 4) */);
+            for(int i = 0; i < patchTuples.count(); i += 4)
             {
-                patchTuples[i],
-                static_cast<enum PatchType>(patchType),
-                hookAddress,
-                stubFunction,
-                thumbMode,
-                patchAddress,
-                patchTuples[i + 6]
-            };
-            patchEntries.append(entry);
+                // Add the patch entry
+                int patchType = patchTuples[i + 1].toInt(Q_NULLPTR, 16);
+                unsigned int hookAddress = static_cast<unsigned int>(patchTuples[i + 2].toInt(Q_NULLPTR, 16));
+                unsigned int patchAddress = static_cast<unsigned int>(patchTuples[i + 3].toInt(Q_NULLPTR, 16));
+                assert(patchChunks.contains(patchAddress) /* Patch chunk list refers to an invalid patch address */);
+                bool stubFunction = patchTuples[i + 4] != "0";
+                bool thumbMode = patchTuples[i + 5] != "0";
+                struct PatchEntryItem entry
+                {
+                    patchTuples[i],
+                    static_cast<enum PatchType>(patchType),
+                    hookAddress,
+                    stubFunction,
+                    thumbMode,
+                    patchAddress,
+                    patchTuples[i + 6]
+                };
+                patchEntries.append(entry);
+            }
         }
+        return patchEntries;
     }
-    return patchEntries;
+
+    /// <summary>
+    /// Verify that the required files are found in the EABI installation bin directory.
+    /// </summary>
+    /// <param name="missing">
+    /// The name of the first missing element encountered in verification.
+    /// </param>
+    /// <returns>
+    /// True if the directory exists and the required binaries are found.
+    /// </returns>
+    bool VerifyEABI(QString *missing)
+    {
+        QDir eabiBinDir(EABI_INSTALLATION);
+        if(!eabiBinDir.exists())
+        {
+            goto error;
+        }
+        if(!eabiBinDir.exists(EABI_GCC)) // compiling C
+        {
+            eabiBinDir.cd(EABI_GCC);
+            goto error;
+        }
+        if(!eabiBinDir.exists(EABI_AS)) // assembling ARM/Thumb
+        {
+            eabiBinDir.cd(EABI_AS);
+            goto error;
+        }
+        if(!eabiBinDir.exists(EABI_OBJCOPY)) // extracting binary from object file
+        {
+            eabiBinDir.cd(EABI_OBJCOPY);
+            goto error;
+        }
+        return true;
+error:
+        *missing = eabiBinDir.absolutePath();
+        return false;
+    }
 }

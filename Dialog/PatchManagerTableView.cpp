@@ -16,7 +16,7 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
     setSelectionBehavior(SelectionBehavior::SelectRows);
 
     // Populate the table
-    QVector<struct PatchEntryItem> patches = GetPatchesFromROM();
+    QVector<struct PatchEntryItem> patches = PatchUtils::GetPatchesFromROM();
     foreach(struct PatchEntryItem patch, patches)
     {
         EntryTableModel.AddEntry(patch);

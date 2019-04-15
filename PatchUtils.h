@@ -21,6 +21,11 @@ struct PatchEntryItem
     QString SubstitutedBytes;
 };
 
-QVector<struct PatchEntryItem> GetPatchesFromROM();
+namespace PatchUtils
+{
+    extern QString EABI_INSTALLATION;
+    QVector<struct PatchEntryItem> GetPatchesFromROM();
+    bool VerifyEABI(QString *missing);
+}
 
 #endif // PATCHUTILS_H
