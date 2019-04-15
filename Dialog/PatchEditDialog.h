@@ -14,7 +14,7 @@ class PatchEditDialog : public QDialog
 
 public:
     PatchEditDialog(QWidget *parent) :
-        PatchEditDialog(parent, { "", PatchType::C, 0, false, 0 }) {} // default UI values
+        PatchEditDialog(parent, { "", PatchType::C, 0, false, true, 0, "" }) {} // default UI values
     PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEntry);
     ~PatchEditDialog();
     struct PatchEntryItem CreatePatchEntry();

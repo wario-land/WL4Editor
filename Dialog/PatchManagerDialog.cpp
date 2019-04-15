@@ -2,6 +2,8 @@
 #include "ui_PatchManagerDialog.h"
 #include <QMessageBox>
 #include <QFile>
+#include <QDir>
+#include <ROMUtils.h>
 
 /// <summary>
 /// Construct an instance of the PatchManagerDialog.
@@ -50,6 +52,26 @@ void PatchManagerDialog::on_patchManagerTableView_clicked(const QModelIndex &ind
 }
 
 /// <summary>
+/// Obtain the part of a file path which is relative to the currently opened ROM file.
+/// </summary>
+/// <param name="filePath">
+/// The absolute path to the file.
+/// </param>
+static QString GetPathRelativeToROM(const QString &filePath)
+{
+    QDir ROMdir(ROMUtils::ROMFilePath);
+    ROMdir.cdUp();
+    if(filePath.startsWith(ROMdir.absolutePath()))
+    {
+        return filePath.right(filePath.length() - ROMdir.absolutePath().length() - 1);
+    }
+    else
+    {
+        return "";
+    }
+}
+
+/// <summary>
 /// This slot function will be triggered when clicking the "Add" button.
 /// </summary>
 void PatchManagerDialog::on_addPatchButton_clicked()
@@ -72,6 +94,13 @@ retry:
             QMessageBox::information(this, "About", QString("File does not exist: ") + entry.FileName);
             goto error;
         }
+        QString relativeFN = GetPathRelativeToROM(entry.FileName);
+        if(relativeFN == "")
+        {
+            QMessageBox::information(this, "About", QString("File must be within directory subtree of ROM file: ") + ROMUtils::ROMFilePath);
+            goto error;
+        }
+        entry.FileName = relativeFN;
         bool fileNameIsValid = !std::any_of(currentEntries.begin(), currentEntries.end(),
             [entry](struct PatchEntryItem e){ return e.FileName == entry.FileName; });
         if(!fileNameIsValid)
@@ -132,6 +161,13 @@ retry:
                 QMessageBox::information(this, "About", QString("File does not exist: ") + entry.FileName);
                 goto error;
             }
+            QString relativeFN = GetPathRelativeToROM(entry.FileName);
+            if(relativeFN == "")
+            {
+                QMessageBox::information(this, "About", QString("File must be within directory subtree of ROM file: ") + ROMUtils::ROMFilePath);
+                goto error;
+            }
+            entry.FileName = relativeFN;
             bool fileNameIsValid = !std::any_of(currentEntries.begin(), currentEntries.end(),
                 [entry](struct PatchEntryItem e){ return e.FileName == entry.FileName; });
             if(!fileNameIsValid)

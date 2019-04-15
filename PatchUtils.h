@@ -14,9 +14,11 @@ struct PatchEntryItem
 {
     QString FileName;
     enum PatchType PatchType;
-    int HookAddress;
+    unsigned int HookAddress;
     bool StubFunction;
-    int PatchAddress;
+    bool ThumbMode;
+    unsigned int PatchAddress;
+    QString SubstitutedBytes;
 };
 
 QVector<struct PatchEntryItem> GetPatchesFromROM();

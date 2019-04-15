@@ -8,6 +8,17 @@
 /// <summary>
 /// Upgrade the format of a patch list chunk by one version.
 /// </summary>
+/// <remarks>
+/// Version 0:
+///   Semicolon-delimited (7 fields):
+///     0: Filename
+///     1: Patch type (int)
+///     2: Hook address (hex string)
+///     3: Patch address (hex string)
+///     4: Stub function (0 or 1)
+///     5: ARM/Thumb (0 or 1)
+///     6: Substituted bytes (hex string)
+/// </remarks>
 /// <param name="contents">
 /// The patch list chunk contents to upgrade.
 /// </param>
@@ -40,13 +51,14 @@ static QString UpgradePatchListContents(QString contents, int version)
 static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
 {
     unsigned short contentSize = *reinterpret_cast<unsigned short*>(ROMUtils::CurrentFile + chunkDataAddr + 4) - 1;
-    QString contents = QString::fromLocal8Bit((const char*)(ROMUtils::CurrentFile + chunkDataAddr + 13), contentSize);
+    QString contents = QString::fromLocal8Bit(reinterpret_cast<const char*>(ROMUtils::CurrentFile + chunkDataAddr + 13), contentSize);
     int chunkVersion = ROMUtils::CurrentFile[chunkDataAddr + 12];
     assert(chunkVersion <= PATCH_CHUNK_VERSION /* Patch list chunk either corrupt or this verison of WL4Editor is old and doesn't support the saved format */);
     while(chunkVersion < PATCH_CHUNK_VERSION)
     {
         contents = UpgradePatchListContents(contents, chunkVersion++);
     }
+    return contents;
 }
 
 /// <summary>
@@ -77,25 +89,27 @@ QVector<struct PatchEntryItem> GetPatchesFromROM()
 
         // Get the patch list information
         QString contents = GetUpgradedPatchListChunkData(patchListAddr);
-        assert(contents > 0 /* ROM contains an empty patch list chunk */);
+        assert(contents.length() > 0 /* ROM contains an empty patch list chunk */);
         QStringList patchTuples = contents.split(";");
         assert(!(patchTuples.count() % 4) /* ROM contains a corrupted patch list chunk (field count is not a multiple of 4) */);
         for(int i = 0; i < patchTuples.count(); i += 4)
         {
-            // Validate that the chunks shown in the patch list chunk are in the ROM
-            unsigned int patchAddress = patchTuples[i + 3].toInt(Q_NULLPTR, 16);
-            assert(patchChunks.contains(patchAddress) /* Patch chunk list refers to an invalid patch address */);
-
             // Add the patch entry
             int patchType = patchTuples[i + 1].toInt(Q_NULLPTR, 16);
-            int hookAddress = patchTuples[i + 2].toInt(Q_NULLPTR, 16);
+            unsigned int hookAddress = static_cast<unsigned int>(patchTuples[i + 2].toInt(Q_NULLPTR, 16));
+            unsigned int patchAddress = static_cast<unsigned int>(patchTuples[i + 3].toInt(Q_NULLPTR, 16));
+            assert(patchChunks.contains(patchAddress) /* Patch chunk list refers to an invalid patch address */);
+            bool stubFunction = patchTuples[i + 4] != "0";
+            bool thumbMode = patchTuples[i + 5] != "0";
             struct PatchEntryItem entry
             {
                 patchTuples[i],
                 static_cast<enum PatchType>(patchType),
                 hookAddress,
-                false, // TODO this should be set somehow else
-                (int) patchAddress
+                stubFunction,
+                thumbMode,
+                patchAddress,
+                patchTuples[i + 6]
             };
             patchEntries.append(entry);
         }

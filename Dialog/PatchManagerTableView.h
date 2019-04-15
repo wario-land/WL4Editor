@@ -25,7 +25,7 @@ class PatchManagerTableView : public QTableView
     Q_OBJECT
 
 private:
-    PatchEntryTableModel entryTableModel;
+    PatchEntryTableModel EntryTableModel;
 
 public:
     PatchManagerTableView(QWidget *param);
@@ -33,14 +33,9 @@ public:
     void UpdateTableView();
     void RemoveSelected();
     struct PatchEntryItem GetSelectedEntry();
-    QVector<struct PatchEntryItem> GetAllEntries() { return entryTableModel.entries; }
-    void AddEntry(struct PatchEntryItem entry) { entryTableModel.AddEntry(entry); UpdateTableView(); }
-    void UpdateEntry(int index, struct PatchEntryItem entry)
-    {
-        entryTableModel.entries[index] = entry;
-        UpdateTableView();
-        selectRow(index);
-    }
+    QVector<struct PatchEntryItem> GetAllEntries() { return EntryTableModel.entries; }
+    void AddEntry(struct PatchEntryItem entry);
+    void UpdateEntry(int index, struct PatchEntryItem entry);
 };
 
 #endif // PATCHMANAGERTABLEVIEW_H

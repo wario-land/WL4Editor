@@ -361,20 +361,22 @@ namespace ROMUtils
     }
 
     /// <summary>
-    /// Save the currently loaded level to the ROM file.
+    /// Save a list of chunks to the ROM file.
     /// </summary>
-    bool SaveFile(QString filePath)
+    /// <param name="filePath">
+    /// The file name to use when saving the ROM.
+    /// </param>
+    /// <param name="chunks">
+    /// The chunks to save to the ROM.
+    /// </param>
+    /// <param name="PostProcessingCallback">
+    /// Post-processing to perform after writing the save chunks, but before saving the file itself.
+    /// </param>
+    /// <returns>
+    /// True if the save was successful.
+    /// </returns>
+    bool SaveFile(QString filePath, QVector<struct SaveData> chunks, std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
-        // Obtain the list of data chunks to save to the rom
-        SaveDataIndex = 1;
-        bool success = false;
-        QVector<struct SaveData> chunks;
-        LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
-        int levelHeaderOffset = WL4Constants::LevelHeaderIndexTable + currentLevel->GetPassage() * 24 + currentLevel->GetStage() * 4;
-        int levelHeaderIndex = ROMUtils::IntFromData(levelHeaderOffset);
-        int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-        currentLevel->GetSaveChunks(chunks);
-
         // Finding space for the chunks can be done faster if the chunks are ordered by size
         std::sort(chunks.begin(), chunks.end(), [](const struct SaveData& a, const struct SaveData& b)
         {
@@ -405,6 +407,7 @@ namespace ROMUtils
 
         // Find space in the ROM for each chunk and assign addresses for the chunks
         // also expand the ROM size as necessary (up to 32MB) to hold the new data.
+        bool success = false;
         std::map<int, int> indexToChunkPtr;
         int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
         foreach(struct SaveData chunk, chunks)
@@ -467,7 +470,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                 TempFile + chunk.ptr_addr;
 
             // We add 12 to the pointer location because the chunk ptr starts at the chunk's RATS tag
-            *(unsigned int*) ptrLoc = (indexToChunkPtr[chunk.index] + 12) | 0x8000000;
+            *reinterpret_cast<unsigned int*>(ptrLoc) = static_cast<unsigned int>((indexToChunkPtr[chunk.index] + 12) | 0x8000000);
         }
 
         // Write each chunk to TempFile
@@ -477,7 +480,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
 
             // Create the RATS tag
             unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
-            strncpy((char*) destPtr, "STAR", 4);
+            strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
             if(chunk.size & 0xFFFF0000)
             {
                 // Chunk size must be a 16-bit value
@@ -494,19 +497,19 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
                 goto error;
             }
             unsigned short chunkLen = (unsigned short) chunk.size;
-            *(unsigned short*) (destPtr + 4) = chunkLen;
-            *(unsigned short*) (destPtr + 6) = ~chunkLen;
+            *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
+            *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
 
             // Write the chunk metadata
-            *(unsigned int*) (destPtr + 8) = 0;
+            *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
             destPtr[8] = chunk.ChunkType;
 
             // Write the data
             memcpy(destPtr + 12, chunk.data, chunkLen);
         }
 
-        // Write the level header to the ROM
-        memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
+        // Perform post-processing before saving the file
+        PostProcessingCallback(TempFile, indexToChunkPtr);
 
         { // Prevent goto from crossing initialization of variables here
             // Save the rom file from the CurrentFile copy
@@ -514,7 +517,7 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
             file.open(QIODevice::WriteOnly);
             if (file.isOpen())
             {
-                file.write((const char*) TempFile, TempLength);
+                file.write(reinterpret_cast<const char*>(TempFile), TempLength);
             }
             else
             {
@@ -534,35 +537,6 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
             free(CurrentFile);
             CurrentFile = TempFile;
             CurrentFileSize = TempLength;
-
-            // Set the new internal data pointer for LevelComponents objects, and mark dirty objects as clean
-            struct SaveData roomHeaderChunk = *std::find_if(chunks.begin(), chunks.end(), [](const struct SaveData &chunk) {
-                return chunk.ChunkType == SaveDataChunkType::RoomHeaderChunkType;
-            });
-            unsigned int roomHeaderInROM = indexToChunkPtr[roomHeaderChunk.index] + 12;
-            std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
-            for(unsigned int i = 0; i < rooms.size(); ++i)
-            {
-                struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
-                    (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
-                unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
-                LevelComponents::Room *room = rooms[i];
-                room->SetCameraBoundaryDirty(false);
-                for(unsigned int j = 0; j < 4; ++j)
-                {
-                    LevelComponents::Layer *layer = room->GetLayer(j);
-                    layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
-                    layer->SetDirty(false);
-                }
-                for(unsigned int j = 0; j < 3; ++j)
-                {
-                    room->SetEntityListDirty(j, false);
-                }
-                struct LevelComponents::__RoomHeader newroomheader;
-                memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
-                room->ResetRoomHeader(newroomheader);
-               // TODO: if more elements in the game are going to be support customizing in the editor, more pointers need to be reset here
-            }
         }
 
         // Set that there are no changes to the ROM now (so no save prompt is given)
@@ -579,5 +553,72 @@ error:      free(TempFile);
             if(chunk.ChunkType != SaveDataChunkType::InvalidationChunk) free(chunk.data);
         }
         return success;
+    }
+
+    /// <summary>
+    /// Save the currently loaded level to the ROM file.
+    /// </summary>
+    /// <param name="filePath">
+    /// The file name to use when saving the ROM.
+    /// </param>
+    /// <returns>
+    /// True if the save was successful.
+    /// </returns>
+    bool SaveLevel(QString filePath)
+    {
+        SaveDataIndex = 1;
+        QVector<struct SaveData> chunks;
+
+        // Get save chunks for the level
+        LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
+        int levelHeaderOffset = WL4Constants::LevelHeaderIndexTable + currentLevel->GetPassage() * 24 + currentLevel->GetStage() * 4;
+        int levelHeaderIndex = ROMUtils::IntFromData(levelHeaderOffset);
+        int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
+        currentLevel->GetSaveChunks(chunks);
+
+        // Isolate the room header chunk for post-processing
+        struct SaveData roomHeaderChunk = *std::find_if(chunks.begin(), chunks.end(), [](const struct SaveData &chunk) {
+            return chunk.ChunkType == SaveDataChunkType::RoomHeaderChunkType;
+        });
+        unsigned int roomHeaderInROM;
+
+        // Save the level
+        bool ret = SaveFile(filePath, chunks,
+            [levelHeaderPointer, currentLevel, roomHeaderChunk, &roomHeaderInROM]
+            (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
+            {
+                // Capture pointer to new room header location
+                roomHeaderInROM = static_cast<unsigned int>(indexToChunkPtr[roomHeaderChunk.index] + 12);
+
+                // Write the level header to the ROM
+                memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
+            });
+        if(!ret) return false;
+
+        // Set the new internal data pointer for LevelComponents objects, and mark dirty objects as clean
+        std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
+        for(unsigned int i = 0; i < rooms.size(); ++i)
+        {
+            struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
+                (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
+            unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
+            LevelComponents::Room *room = rooms[i];
+            room->SetCameraBoundaryDirty(false);
+            for(unsigned int j = 0; j < 4; ++j)
+            {
+                LevelComponents::Layer *layer = room->GetLayer(j);
+                layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
+                layer->SetDirty(false);
+            }
+            for(unsigned int j = 0; j < 3; ++j)
+            {
+                room->SetEntityListDirty(j, false);
+            }
+            struct LevelComponents::__RoomHeader newroomheader;
+            memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
+            room->ResetRoomHeader(newroomheader);
+           // TODO: if more elements in the game are going to be support customizing in the editor, more pointers need to be reset here
+        }
+        return true;
     }
 }

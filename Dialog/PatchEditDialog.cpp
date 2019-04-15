@@ -1,6 +1,7 @@
 #include "PatchEditDialog.h"
 #include "ui_PatchEditDialog.h"
 #include <QFileDialog>
+#include <ROMUtils.h>
 
 /// <summary>
 /// Construct an instance of the PatchEditDialog.
@@ -23,7 +24,7 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     ui->comboBox_PatchType->addItems(PatchTypeNameSet);
 
     // Set Validator for lineEdit_HookAddress
-    QRegExp regExp("[a-fA-F0-9]{8}");
+    QRegExp regExp("[a-fA-F0-9]{6}");
     ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegExpValidator(regExp, this));
 
     // Initialize the components with the patch entry item
@@ -52,6 +53,7 @@ void PatchEditDialog::InitializeComponents(struct PatchEntryItem patchEntry)
     QString hookText = patchEntry.HookAddress ? QString::number(patchEntry.HookAddress, 16) : "";
     ui->lineEdit_HookAddress->setText(hookText);
     ui->checkBox_StubCallingFunction->setChecked(patchEntry.StubFunction);
+    (patchEntry.ThumbMode ? ui->radioButton_CompileInThumbMode : ui->radioButton_CompileInARMMode)->setChecked(true);
 }
 
 /// <summary>
@@ -66,9 +68,11 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
     {
         ui->lineEdit_FilePath->text(),
         static_cast<enum PatchType>(ui->comboBox_PatchType->currentIndex()),
-        ui->lineEdit_HookAddress->text().toInt(Q_NULLPTR, 16),
+        static_cast<unsigned int>(ui->lineEdit_HookAddress->text().toInt(Q_NULLPTR, 16)),
         ui->checkBox_StubCallingFunction->isChecked(),
-        0 // this should be calculated later by saving
+        ui->radioButton_CompileInThumbMode->isChecked(),
+        // These should be calculated later by saving
+        0, ""
     };
 }
 
@@ -82,7 +86,7 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
         this,
         tr("Open patch file"),
         QString(""),
-        tr("C source files (*.c);;ARM assembly files (*.s *.asm);;Binary files (*.o *.bin)")
+        tr("C source files (*.c);;ARM assembly files (*.s *.asm);;Binary files (*.bin)")
     );
     if(qFilePath != "")
     {
@@ -109,7 +113,10 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
 /// </summary>
 void PatchEditDialog::on_lineEdit_HookAddress_textChanged(const QString &arg1)
 {
-    ui->groupBox_HookConfig->setEnabled(arg1.length());
-    ui->checkBox_StubCallingFunction->setChecked(arg1.length());
-    ui->radioButton_CompileInThumbMode->setChecked(arg1.length());
+    int hookValue = 0;
+    if(arg1.length())
+    {
+        hookValue = arg1.toInt(Q_NULLPTR, 16);
+    }
+    ui->groupBox_HookConfig->setEnabled(hookValue);
 }

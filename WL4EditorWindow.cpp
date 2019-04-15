@@ -1006,7 +1006,7 @@ bool WL4EditorWindow::SaveCurrentFileAs()
     );
     if(qFilePath.compare(""))
     {
-        if(ROMUtils::SaveFile(qFilePath))
+        if(ROMUtils::SaveLevel(qFilePath))
         {
             // If successful in saving the file, set the window title to reflect the new file
             dialogInitialPath = qFilePath;

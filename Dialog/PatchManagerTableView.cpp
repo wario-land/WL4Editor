@@ -9,28 +9,28 @@
 /// The parent QWidget.
 /// </param>
 PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param),
-    entryTableModel(this)
+    EntryTableModel(this)
 {
     // Configure the table
-    setModel(&entryTableModel);
+    setModel(&EntryTableModel);
     setSelectionBehavior(SelectionBehavior::SelectRows);
 
     // Populate the table
     QVector<struct PatchEntryItem> patches = GetPatchesFromROM();
     foreach(struct PatchEntryItem patch, patches)
     {
-        entryTableModel.AddEntry(patch);
+        EntryTableModel.AddEntry(patch);
     }
 
     // TEST
-    struct PatchEntryItem TEST1 { QString("foo.c"), PatchType::C, 0x1111AF, false, 0x800000 };
-    struct PatchEntryItem TEST2 { QString("bar.c"), PatchType::C, 0x2222AF, false, 0x800001 };
-    struct PatchEntryItem TEST3 { QString("baz.asm"), PatchType::Assembly, 0x3333AF, true, 0x800002 };
-    struct PatchEntryItem TEST4 { QString("file.bin"), PatchType::Binary, 0x4444AF, true, 0x800003 };
-    entryTableModel.AddEntry(TEST1);
-    entryTableModel.AddEntry(TEST2);
-    entryTableModel.AddEntry(TEST3);
-    entryTableModel.AddEntry(TEST4);
+    struct PatchEntryItem TEST1 { QString("foo.c"), PatchType::C, 0x1111AF, false, false, 0x800000, "01020304" };
+    struct PatchEntryItem TEST2 { QString("bar.c"), PatchType::C, 0x2222AF, false, true, 0x800001, "01020304" };
+    struct PatchEntryItem TEST3 { QString("baz.asm"), PatchType::Assembly, 0x3333AF, true, false, 0x800002, "01020304" };
+    struct PatchEntryItem TEST4 { QString("file.bin"), PatchType::Binary, 0x4444AF, true, true, 0x800003, "01020304" };
+    EntryTableModel.AddEntry(TEST1);
+    EntryTableModel.AddEntry(TEST2);
+    EntryTableModel.AddEntry(TEST3);
+    EntryTableModel.AddEntry(TEST4);
 
     UpdateTableView();
 }
@@ -48,12 +48,13 @@ PatchManagerTableView::~PatchManagerTableView()
 /// </summary>
 void PatchManagerTableView::UpdateTableView()
 {
-    entryTableModel.clear();
-    entryTableModel.setHorizontalHeaderLabels(QStringList() << "File" << "Type" << "Hook Address" << "Patch Address" << "Stub");
+    EntryTableModel.clear();
+    EntryTableModel.setHorizontalHeaderLabels(QStringList() <<
+        "File" << "Type" << "Hook Address" << "Patch Address" << "Stub" << "Architecture");
     int row = 0;
-    foreach(const struct PatchEntryItem patchEntry, entryTableModel.entries)
+    foreach(const struct PatchEntryItem patchEntry, EntryTableModel.entries)
     {
-        entryTableModel.setItem(row, 0, new QStandardItem(patchEntry.FileName));
+        EntryTableModel.setItem(row, 0, new QStandardItem(patchEntry.FileName));
         const char *typeStrings[3] =
         {
             "Binary",
@@ -61,11 +62,13 @@ void PatchManagerTableView::UpdateTableView()
             "C"
         };
         assert(patchEntry.PatchType < sizeof(typeStrings) / sizeof(typeStrings[0]) /* Patch entry type out of range */);
-        entryTableModel.setItem(row, 1, new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
-        entryTableModel.setItem(row, 2, new QStandardItem(!patchEntry.HookAddress ?
+        EntryTableModel.setItem(row, 1, new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
+        EntryTableModel.setItem(row, 2, new QStandardItem(!patchEntry.HookAddress ?
             "none" : "0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
-        entryTableModel.setItem(row, 3, new QStandardItem("0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
-        entryTableModel.setItem(row++, 4, new QStandardItem(patchEntry.StubFunction ? "yes" : "no"));
+        EntryTableModel.setItem(row, 3, new QStandardItem(!patchEntry.PatchAddress ?
+            "pending" : "0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
+        EntryTableModel.setItem(row, 4, new QStandardItem(patchEntry.StubFunction ? "yes" : "no"));
+        EntryTableModel.setItem(row++, 5, new QStandardItem(patchEntry.ThumbMode ? "Thumb" : "ARM"));
     }
 }
 
@@ -76,7 +79,7 @@ void PatchManagerTableView::RemoveSelected()
 {
     QItemSelectionModel *select = selectionModel();
     QModelIndexList selectedRows = select->selectedRows();
-    entryTableModel.RemoveEntries(selectedRows);
+    EntryTableModel.RemoveEntries(selectedRows);
     UpdateTableView();
 }
 
@@ -91,7 +94,35 @@ struct PatchEntryItem PatchManagerTableView::GetSelectedEntry()
     QItemSelectionModel *select = selectionModel();
     QModelIndexList selectedRows = select->selectedRows();
     assert(selectedRows.size() == 1 /* PatchManagerTableView::GetSelectedEntry called when a single row is not selected */);
-    return entryTableModel.entries[selectedRows[0].row()];
+    return EntryTableModel.entries[selectedRows[0].row()];
+}
+
+/// <summary>
+/// Add an entry to the table.
+/// </summary>
+/// <param name="entry">
+/// The entry to add to the table.
+/// </param>
+void PatchManagerTableView::AddEntry(struct PatchEntryItem entry)
+{
+    EntryTableModel.AddEntry(entry);
+    UpdateTableView();
+}
+
+/// <summary>
+/// Replace an entry in the table with an updated patch entry struct.
+/// </summary>
+/// <param name="index">
+/// The index to update.
+/// </param>
+/// <param name="entry">
+/// The entry to replace at the index.
+/// </param>
+void PatchManagerTableView::UpdateEntry(int index, struct PatchEntryItem entry)
+{
+    EntryTableModel.entries[index] = entry;
+    UpdateTableView();
+    selectRow(index);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------

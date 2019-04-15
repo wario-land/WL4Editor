@@ -6,6 +6,8 @@
 #include <cstdio>  //include definition for FILE
 #include <cstring>
 #include <QString>
+#include <map>
+#include <functional>
 
 #include "WL4Constants.h"
 
@@ -49,7 +51,8 @@ namespace ROMUtils
     int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
-    bool SaveFile(QString fileName);
+    bool SaveFile(QString fileName, QVector<struct SaveData> chunks, std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback);
+    bool SaveLevel(QString fileName);
 }
 
 #endif // ROMUTILS_H
