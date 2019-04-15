@@ -21,10 +21,12 @@ public:
 
 private slots:
     void on_pushButton_Browse_clicked();
+    void on_lineEdit_HookAddress_textChanged(const QString &arg1);
 
 private:
     Ui::PatchEditDialog *ui;
     void InitializeComponents(struct PatchEntryItem patchEntry);
+    QRegExpValidator *addressvalidator;
 };
 
 #endif // PATCHEDITDIALOG_H

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>168</height>
+    <height>237</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -90,10 +90,69 @@
     </layout>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox_StubCallingFunction">
-     <property name="text">
-      <string>stub calling function</string>
+    <widget class="QGroupBox" name="groupBox_HookConfig">
+     <property name="enabled">
+      <bool>false</bool>
      </property>
+     <property name="title">
+      <string>Hook Configuration:</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QCheckBox" name="checkBox_StubCallingFunction">
+        <property name="text">
+         <string>stub calling function</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <property name="topMargin">
+         <number>10</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label_CompileMode">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Mode:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_CompileInARMMode">
+          <property name="text">
+           <string>ARM</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_CompileInThumbMode">
+          <property name="text">
+           <string>Thumb</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>

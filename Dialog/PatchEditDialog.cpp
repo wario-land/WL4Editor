@@ -22,6 +22,10 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     PatchTypeNameSet << "Binary" << "Assembly" << "C";
     ui->comboBox_PatchType->addItems(PatchTypeNameSet);
 
+    // Set Validator for lineEdit_HookAddress
+    QRegExp regExp("[a-fA-F0-9]{8}");
+    ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegExpValidator(regExp, this));
+
     // Initialize the components with the patch entry item
     InitializeComponents(patchEntry);
 }
@@ -31,6 +35,7 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
 /// </summary>
 PatchEditDialog::~PatchEditDialog()
 {
+    delete addressvalidator;
     delete ui;
 }
 
@@ -97,4 +102,14 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
             ui->comboBox_PatchType->setCurrentIndex(PatchType::Binary);
         }
     }
+}
+
+/// <summary>
+/// This slot function will be triggered when text changed in lineEdit_HookAddress.
+/// </summary>
+void PatchEditDialog::on_lineEdit_HookAddress_textChanged(const QString &arg1)
+{
+    ui->groupBox_HookConfig->setEnabled(arg1.length());
+    ui->checkBox_StubCallingFunction->setChecked(arg1.length());
+    ui->radioButton_CompileInThumbMode->setChecked(arg1.length());
 }
