@@ -5,6 +5,8 @@
 #include <QLabel>
 #include <QButtonGroup>
 
+#include "SettingsUtils.h"
+
 #include "LevelComponents/Level.h"
 #include "LevelComponents/Room.h"
 #include "Dialog/ChooseLevelDialog.h"
