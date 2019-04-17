@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <fstream>
 #include "ROMUtils.h"
+#include "SettingsUtils.h"
 #include "LevelComponents/Level.h"
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/DoorConfigDialog.h"
@@ -74,6 +75,7 @@ static void StaticInitialization_BeforeROMLoading()
     RoomConfigDialog::StaticComboBoxesInitialization();
     DoorConfigDialog::StaticInitialization();
     CameraControlDockWidget::StaticInitialization();
+    SettingsUtils::InitProgramSetupPath();
 }
 
 /// <summary>

@@ -38,6 +38,8 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     singleton = this;
+
+    // UI Initialization
     ui->graphicsView->scale(graphicViewScalerate, graphicViewScalerate);
     statusBarLabel = new QLabel("Open a ROM file");
     statusBarLabel->setMargin(3);
