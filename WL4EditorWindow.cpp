@@ -145,7 +145,7 @@ void WL4EditorWindow::OpenROM()
     std::string filePath = qFilePath.toStdString();
     if(!LoadROMFile(qFilePath))
     {
-        QMessageBox::critical(nullptr, QString("Load Error"), QString("You may load a wrong ROM!"));
+        QMessageBox::critical(nullptr, QString("Load Error"), QString("You may have loaded an invalid ROM!"));
         return;
     }
 

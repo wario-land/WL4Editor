@@ -8,9 +8,9 @@ namespace SettingsUtils
     /// <summary>
     /// Initialize ini file path and check the ini file.
     /// </summary>
-    void InitProgramSetupPath()
+    void InitProgramSetupPath(QCoreApplication &application)
     {
-        ProgramSettingFilePath = QCoreApplication::applicationDirPath();
+        ProgramSettingFilePath = application.applicationDirPath();
         ProgramSettingFilePath += QString("/WL4Editor.ini");
 
         // Check INI file

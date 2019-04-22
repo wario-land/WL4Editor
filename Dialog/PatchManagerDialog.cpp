@@ -4,6 +4,8 @@
 #include <QFile>
 #include <QDir>
 #include <ROMUtils.h>
+#include <SettingsUtils.h>
+#include <QFileDialog>
 
 /// <summary>
 /// Construct an instance of the PatchManagerDialog.
@@ -219,27 +221,45 @@ void PatchManagerDialog::on_removePatchButton_clicked()
 /// </summary>
 void PatchManagerDialog::on_savePatchButton_clicked()
 {
-    // TODO attempt to obtain this setting from WL4Editor.ini once it is implemented
-    QString EABIpath;
-retry:
-    bool ok = PatchUtils::VerifyEABI(&EABIpath);
-    if(!ok)
+    // First, ensure that the EABI directory is valid
+    QString invalidDir;
+    QString oldPath = GetKey(SettingsUtils::IniKeys::eabi_binfile_path);
+    PatchUtils::EABI_INSTALLATION = oldPath;
+    bool ok = PatchUtils::VerifyEABI(&invalidDir);
+    while(!ok)
     {
+        // Prompt the user to download EABI
+        QString msg = !invalidDir.length() ? QString("") :
+            QString("Invalid EABI folder selected: " + invalidDir + " (required binaries not found)<br>");
+        QString URL = "https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads";
+        QMessageBox::information(this, "Select EABI installation",
+            msg + "You must select the \"bin\" folder of a valid EABI installation.<br>" +
+            "Download: <a href=\"" + URL + "\">" + URL + "</a>");
 
+        // Choose folder for EABI bin directory
+        QString selectedDir = QFileDialog::getExistingDirectory(
+            this,
+            tr("Select EABI installation"),
+            invalidDir,
+            QFileDialog::ShowDirsOnly
+        );
+        if(selectedDir == "")
+        {
+            return; // canceled
+        }
+
+        PatchUtils::EABI_INSTALLATION = selectedDir;
+        ok = PatchUtils::VerifyEABI(&invalidDir);
     }
-}
+    if(PatchUtils::EABI_INSTALLATION != oldPath)
+    {
+        SettingsUtils::SetKey(SettingsUtils::IniKeys::eabi_binfile_path, PatchUtils::EABI_INSTALLATION);
+    }
 
-//---------------------------------------------------------------------------------------------------------------------------
-// EABIPrompt functions
-//---------------------------------------------------------------------------------------------------------------------------
-
-/// <summary>
-/// Construct an instance of the EABIPrompt.
-/// </summary>
-/// <param name="parent">
-/// The parent QWidget.
-/// </param>
-EABIPrompt::EABIPrompt(QWidget *parent) : QDialog(parent)
-{
-    // TODO setup prompt
+    // Generate the save chunks and write them to the ROM
+    bool success = PatchUtils::SavePatchesToROM(PatchTable->GetAllEntries());
+    if(success)
+    {
+        // TODO close the patch manager dialog
+    }
 }

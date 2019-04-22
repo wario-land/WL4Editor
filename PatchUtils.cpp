@@ -3,6 +3,7 @@
 #include <QVector>
 #include <cassert>
 #include <QDir>
+#include <SettingsUtils.h>
 
 #define PATCH_CHUNK_VERSION 0
 
@@ -72,9 +73,57 @@ static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
     return contents;
 }
 
+/// <summary>
+/// Compile a C file into an assembly file.
+/// </summary>
+/// <param name="cfile">
+/// The C file to compile.
+/// </param>
+static void CompileCFile(QString cfile)
+{
+    assert(cfile.endsWith(".c") /* C file does not have correct extension (should be .c) */);
+    QString outfile(cfile);
+    outfile.chop(1);
+    outfile += "s";
+
+    // TODO
+}
+
+/// <summary>
+/// Assemble an ASM file into an object file.
+/// </summary>
+/// <param name="sfile">
+/// The ASM file to assemble.
+/// </param>
+static void AssembleSFile(QString sfile)
+{
+    assert(sfile.endsWith(".s") /* ASM file does not have correct extension (should be .s) */);
+    QString outfile(sfile);
+    outfile.chop(1);
+    outfile += "o";
+
+    // TODO
+}
+
+/// <summary>
+/// Extract the binary from an object file.
+/// </summary>
+/// <param name="ofile">
+/// The object file from which to extract the binary.
+/// </param>
+static void ExtractOFile(QString ofile)
+{
+    assert(ofile.endsWith(".o") /* Object file does not have correct extension (should be .o) */);
+    QString outfile(ofile);
+    outfile.chop(1);
+    outfile += "bin";
+
+    // TODO
+}
+
 namespace PatchUtils
 {
-    QString EABI_INSTALLATION = "C:\\Program Files (x86)\\GNU Tools ARM Embedded\\8 2018-q4-major\\bin";
+    QString EABI_INSTALLATION;
 
     /// <summary>
     /// Obtain the patch entries from the currently loaded ROM file.
@@ -133,6 +182,24 @@ namespace PatchUtils
     }
 
     /// <summary>
+    /// Save the list of path entries to the ROM.
+    /// </summary>
+    /// <param name="entries">
+    /// The patch entries to save to the ROM.
+    /// </param>
+    bool SavePatchesToROM(QVector<struct PatchEntryItem> entries)
+    {
+        // TODO Create binaries from C and asm
+
+        // For all entries, if the binary does not match the existing save chunk,
+        // create a neww save chunk and invalidate the old one
+
+        // Create the save chunk for the PatchListChunk
+
+        // Save the chunks to the ROM
+    }
+
+    /// <summary>
     /// Verify that the required files are found in the EABI installation bin directory.
     /// </summary>
     /// <param name="missing">
@@ -165,7 +232,7 @@ namespace PatchUtils
         }
         return true;
 error:
-        *missing = eabiBinDir.absolutePath();
+        *missing = EABI_INSTALLATION == "" ? "" : eabiBinDir.absolutePath();
         return false;
     }
 }

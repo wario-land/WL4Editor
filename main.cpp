@@ -75,7 +75,6 @@ static void StaticInitialization_BeforeROMLoading()
     RoomConfigDialog::StaticComboBoxesInitialization();
     DoorConfigDialog::StaticInitialization();
     CameraControlDockWidget::StaticInitialization();
-    SettingsUtils::InitProgramSetupPath();
 }
 
 /// <summary>
@@ -92,6 +91,7 @@ int main(int argc, char *argv[])
     StaticInitialization_BeforeROMLoading();
 
     QApplication application(argc, argv);
+    SettingsUtils::InitProgramSetupPath(application);
     WL4EditorWindow window;
     window.show();
 

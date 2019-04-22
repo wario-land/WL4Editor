@@ -44,7 +44,7 @@ namespace SettingsUtils
         "history/RecentROMPath_4",
     };
 
-    void InitProgramSetupPath();
+    void InitProgramSetupPath(QCoreApplication &application);
     void SetKey(enum IniKeys key, QString value);
     QString GetKey(enum IniKeys key);
 };
