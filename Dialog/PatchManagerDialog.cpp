@@ -220,9 +220,9 @@ void PatchManagerDialog::on_removePatchButton_clicked()
 void PatchManagerDialog::on_savePatchButton_clicked()
 {
     // TODO attempt to obtain this setting from WL4Editor.ini once it is implemented
-    QString missing;
+    QString EABIpath;
 retry:
-    bool ok = PatchUtils::VerifyEABI(&missing);
+    bool ok = PatchUtils::VerifyEABI(&EABIpath);
     if(!ok)
     {
 

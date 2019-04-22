@@ -52,7 +52,8 @@ SOURCES += \
     Dialog/PatchManagerDialog.cpp \
     Dialog/PatchManagerTableView.cpp \
     PatchUtils.cpp \
-    Dialog/PatchEditDialog.cpp
+    Dialog/PatchEditDialog.cpp \
+    SettingsUtils.cpp
 
 HEADERS += \
     WL4EditorWindow.h \
@@ -83,7 +84,8 @@ HEADERS += \
     Dialog/PatchManagerDialog.h \
     Dialog/PatchManagerTableView.h \
     PatchUtils.h \
-    Dialog/PatchEditDialog.h
+    Dialog/PatchEditDialog.h \
+    SettingsUtils.h
 
 FORMS += \
     WL4EditorWindow.ui \
