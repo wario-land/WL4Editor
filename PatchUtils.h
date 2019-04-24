@@ -25,7 +25,7 @@ namespace PatchUtils
 {
     extern QString EABI_INSTALLATION;
     QVector<struct PatchEntryItem> GetPatchesFromROM();
-    bool SavePatchesToROM(QVector<struct PatchEntryItem> entries);
+    QString SavePatchesToROM(QVector<struct PatchEntryItem> entries);
     bool VerifyEABI(QString *missing);
 }
 

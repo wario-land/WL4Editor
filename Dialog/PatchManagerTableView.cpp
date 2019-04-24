@@ -23,14 +23,21 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
     }
 
     // TEST
+    /*
     struct PatchEntryItem TEST1 { QString("foo.c"), PatchType::C, 0x1111AF, false, false, 0x800000, "01020304" };
     struct PatchEntryItem TEST2 { QString("bar.c"), PatchType::C, 0x2222AF, false, true, 0x800001, "01020304" };
-    struct PatchEntryItem TEST3 { QString("baz.asm"), PatchType::Assembly, 0x3333AF, true, false, 0x800002, "01020304" };
+    struct PatchEntryItem TEST3 { QString("baz.s"), PatchType::Assembly, 0x3333AF, true, false, 0x800002, "01020304" };
     struct PatchEntryItem TEST4 { QString("file.bin"), PatchType::Binary, 0x4444AF, true, true, 0x800003, "01020304" };
     EntryTableModel.AddEntry(TEST1);
     EntryTableModel.AddEntry(TEST2);
     EntryTableModel.AddEntry(TEST3);
     EntryTableModel.AddEntry(TEST4);
+    */
+
+    struct PatchEntryItem TEST1 { QString("PatchCode/testfunc.c"), PatchType::C, 0x1111AF, false, false, 0x800000, "01020304" };
+    struct PatchEntryItem TEST2 { QString("PatchCode/UnlimitedRockBouncing.c"), PatchType::C, 0x2222AF, false, true, 0x800001, "01020304" };
+    EntryTableModel.AddEntry(TEST1);
+    EntryTableModel.AddEntry(TEST2);
 
     UpdateTableView();
 }

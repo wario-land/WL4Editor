@@ -257,9 +257,13 @@ void PatchManagerDialog::on_savePatchButton_clicked()
     }
 
     // Generate the save chunks and write them to the ROM
-    bool success = PatchUtils::SavePatchesToROM(PatchTable->GetAllEntries());
-    if(success)
+    QString errorStr = PatchUtils::SavePatchesToROM(PatchTable->GetAllEntries());
+    if(errorStr == "")
     {
         // TODO close the patch manager dialog
+    }
+    else
+    {
+        QMessageBox::information(this, "Error saving patches", errorStr);
     }
 }

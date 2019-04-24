@@ -4,6 +4,8 @@
 #include <cassert>
 #include <QDir>
 #include <SettingsUtils.h>
+#include <QProcess>
+#include <cstring>
 
 #define PATCH_CHUNK_VERSION 0
 
@@ -16,6 +18,17 @@
 #define EABI_AS      "arm-none-eabi-as"
 #define EABI_OBJCOPY "arm-none-eabi-objcopy"
 #endif
+
+#define REPLACE_EXT(qstr,fromstr,tostr) do { \
+    QString tempstr(qstr);                   \
+    tempstr.chop(strlen(fromstr));             \
+    qstr = tempstr + tostr;                  \
+} while(0)
+
+struct CompileEntry {
+    QString FileName;
+    enum PatchType Type;
+};
 
 /// <summary>
 /// Upgrade the format of a patch list chunk by one version.
@@ -79,14 +92,23 @@ static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
 /// <param name="cfile">
 /// The C file to compile.
 /// </param>
-static void CompileCFile(QString cfile)
+static QString CompileCFile(QString cfile)
 {
+    // Create args
     assert(cfile.endsWith(".c") /* C file does not have correct extension (should be .c) */);
     QString outfile(cfile);
-    outfile.chop(1);
-    outfile += "s";
+    REPLACE_EXT(outfile, ".c", ".s");
+    QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_GCC);
+    QStringList args;
+    args << "-MMD" << "-MP" << "-MF" << "-g" << "-Wall" << "-mcpu=arm7tdmi" << "-mtune=arm7tdmi" <<
+        "-fomit-frame-pointer" << "-ffast-math" << "-mthumb" << "-mthumb-interwork" << "-S" <<
+        cfile << "-o" << outfile;
 
-    // TODO
+    // Run GCC
+    QProcess process;
+    process.start(executable, args);
+    process.waitForFinished();
+    return !process.exitCode() ? "" : QString(process.readAllStandardError());
 }
 
 /// <summary>
@@ -95,14 +117,21 @@ static void CompileCFile(QString cfile)
 /// <param name="sfile">
 /// The ASM file to assemble.
 /// </param>
-static void AssembleSFile(QString sfile)
+static QString AssembleSFile(QString sfile)
 {
+    // Create args
     assert(sfile.endsWith(".s") /* ASM file does not have correct extension (should be .s) */);
     QString outfile(sfile);
-    outfile.chop(1);
-    outfile += "o";
+    REPLACE_EXT(outfile, ".s", ".o");
+    QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_AS);
+    QStringList args;
+    args << sfile << "-o" << outfile;
 
-    // TODO
+    // Run GCC
+    QProcess process;
+    process.start(executable, args);
+    process.waitForFinished();
+    return !process.exitCode() ? "" : QString(process.readAllStandardError());
 }
 
 /// <summary>
@@ -111,14 +140,21 @@ static void AssembleSFile(QString sfile)
 /// <param name="ofile">
 /// The object file from which to extract the binary.
 /// </param>
-static void ExtractOFile(QString ofile)
+static QString ExtractOFile(QString ofile)
 {
+    // Create args
     assert(ofile.endsWith(".o") /* Object file does not have correct extension (should be .o) */);
     QString outfile(ofile);
-    outfile.chop(1);
-    outfile += "bin";
+    REPLACE_EXT(outfile, ".o", ".bin");
+    QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_OBJCOPY);
+    QStringList args;
+    args << "-O" << "binary" << "--only-section=.text" << ofile << outfile;
 
-    // TODO
+    // Run GCC
+    QProcess process;
+    process.start(executable, args);
+    process.waitForFinished();
+    return !process.exitCode() ? "" : QString(process.readAllStandardError());
 }
 
 namespace PatchUtils
@@ -187,16 +223,69 @@ namespace PatchUtils
     /// <param name="entries">
     /// The patch entries to save to the ROM.
     /// </param>
-    bool SavePatchesToROM(QVector<struct PatchEntryItem> entries)
+    /// <returns>
+    /// The error string if saving failed, or empty if successful.
+    /// </returns>
+    QString SavePatchesToROM(QVector<struct PatchEntryItem> entries)
     {
-        // TODO Create binaries from C and asm
+        QDir ROMdir(ROMUtils::ROMFilePath);
+        ROMdir.cdUp();
+
+        // Create binaries from C and asm
+        QVector<struct CompileEntry> compileEntries;
+        foreach(struct PatchEntryItem entry, entries)
+        {
+            QString fname(entry.FileName);
+            switch(entry.PatchType)
+            {
+            case PatchType::C:
+                compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::C});
+            case PatchType::Assembly:
+                REPLACE_EXT(fname, ".c", ".s");
+                compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Assembly});
+                REPLACE_EXT(fname, ".s", ".o");
+                compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Binary});
+            }
+        }
+        std::sort(compileEntries.begin(), compileEntries.end(),
+            [](const struct CompileEntry& c1, const struct CompileEntry& c2){ return c1.Type > c2.Type; });
+        foreach(struct CompileEntry entry, compileEntries)
+        {
+            QString output;
+            switch(entry.Type)
+            {
+            case PatchType::C:
+                if((output = CompileCFile(entry.FileName)) != "")
+                {
+                    return QString("Compiler error: ") + output;
+                }
+                break;
+            case PatchType::Assembly:
+                if((output = AssembleSFile(entry.FileName)) != "")
+                {
+                    return QString("Assembler error: ") + output;
+                }
+                break;
+            case PatchType::Binary:
+                if((output = ExtractOFile(entry.FileName)) != "")
+                {
+                    return QString("ObjCopy error: ") + output;
+                }
+            }
+        }
 
         // For all entries, if the binary does not match the existing save chunk,
-        // create a neww save chunk and invalidate the old one
+        // create a new save chunk and invalidate the old one
+
 
         // Create the save chunk for the PatchListChunk
 
+
         // Save the chunks to the ROM
+
+
+        // Success
+        return "";
     }
 
     /// <summary>

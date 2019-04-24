@@ -86,7 +86,7 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
         this,
         tr("Open patch file"),
         QString(""),
-        tr("C source files (*.c);;ARM assembly files (*.s *.asm);;Binary files (*.bin)")
+        tr("C source files (*.c);;ARM assembly files (*.s);;Binary files (*.bin)")
     );
     if(qFilePath != "")
     {
@@ -97,7 +97,7 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
         {
             ui->comboBox_PatchType->setCurrentIndex(PatchType::C);
         }
-        else if(qFilePath.endsWith(".s", Qt::CaseInsensitive) || qFilePath.endsWith(".asm", Qt::CaseInsensitive))
+        else if(qFilePath.endsWith(".s", Qt::CaseInsensitive))
         {
             ui->comboBox_PatchType->setCurrentIndex(PatchType::Assembly);
         }
