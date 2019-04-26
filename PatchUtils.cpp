@@ -385,7 +385,7 @@ namespace PatchUtils
                     static_cast<unsigned int>(binFile.size()),
                     data,
                     ROMUtils::SaveDataIndex++,
-                    false,
+                    true,
                     0,
                     saveChunkExists ? existingPatch->PatchAddress : 0,
                     ROMUtils::SaveDataChunkType::PatchChunk
@@ -450,7 +450,11 @@ namespace PatchUtils
             []
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
+                // TODO Restore substituted data to ROM for patches that have been removed
+
+
                 // TODO Write hooks to ROM
+
 
             }
         );
