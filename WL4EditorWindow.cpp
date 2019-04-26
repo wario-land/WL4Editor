@@ -40,15 +40,38 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
     ui->setupUi(this);
     singleton = this;
 
-    // UI Initialization
+    // MainWindow UI Initialization
     ui->graphicsView->scale(graphicViewScalerate, graphicViewScalerate);
     statusBarLabel = new QLabel("Open a ROM file");
     statusBarLabel->setMargin(3);
     ui->statusBar->addWidget(statusBarLabel);
+
+    // Create DockWidgets
     EditModeWidget = new EditModeDockWidget();
     Tile16SelecterWidget = new Tile16DockWidget();
     EntitySetWidget = new EntitySetDockWidget();
     CameraControlWidget = new CameraControlDockWidget();
+
+    // Add Recent ROM QAction
+    QMenu *filemenu = ui->menuRecent_ROM;
+    for(uint i = 0; i < sizeof(RecentROMs) / sizeof(RecentROMs[0]); i++)
+    {
+        recentROMnum = i;
+        QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + 1));
+        if(!filepath.length())
+        {
+            if(i == 0)
+            {
+                RecentROMs[0] = new QAction("-/-", this);
+                filemenu->addAction(RecentROMs[0]);
+                connect(RecentROMs[0], SIGNAL(triggered()), this, SLOT(openRecentROM()));
+            }
+            break;
+        }
+        RecentROMs[i] = new QAction(filepath, this);
+        filemenu->addAction(RecentROMs[i]);
+        connect(RecentROMs[i], SIGNAL(triggered()), this, SLOT(openRecentROM()));
+    }
 }
 
 /// <summary>
@@ -164,6 +187,14 @@ void WL4EditorWindow::OpenROM()
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     UnsavedChanges = false;
 
+    UIStartUp(tmpTilesetID);
+}
+
+/// <summary>
+/// Update the UI after loading a ROM.
+/// </summary>
+void WL4EditorWindow::UIStartUp(int currentTilesetID)
+{
     // Only modify UI on the first time a ROM is loaded
     if(!firstROMLoaded)
     {
@@ -193,9 +224,61 @@ void WL4EditorWindow::OpenROM()
 
     // Modify UI every time when a ROM is loaded
     EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
-    Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    Tile16SelecterWidget->SetTileset(currentTilesetID);
     CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
 
+    // Modify Recent ROM menu
+    int findedInRecentFile = -1; // start by 0
+    if(recentROMnum > 0)
+    {
+        for(uint i = 0; i < recentROMnum; i++)
+        {
+            QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + 1));
+            if(filepath == ROMUtils::ROMFilePath)
+            {
+                findedInRecentFile = i;
+                break;
+            }
+        }
+    }
+    QMenu *filemenu = ui->menuRecent_ROM;
+    if(findedInRecentFile == -1)
+    {
+        if(recentROMnum > 0)
+        {
+            if(recentROMnum < (sizeof(RecentROMs) / sizeof(RecentROMs[0])))
+            {
+                RecentROMs[recentROMnum] = new QAction(RecentROMs[recentROMnum - 1]->text(), this);
+                filemenu->addAction(RecentROMs[recentROMnum]);
+                connect(RecentROMs[recentROMnum], SIGNAL(triggered()), this, SLOT(openRecentROM()));
+            }
+            for(uint i = ((recentROMnum < (sizeof(RecentROMs) / sizeof(RecentROMs[0]) - 1) ? recentROMnum : (sizeof(RecentROMs) / sizeof(RecentROMs[0]) - 1))); i > 0 ; i--)
+            {
+                QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i));
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), filepath);
+                RecentROMs[i]->setText(filepath);
+            }
+        }
+        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFilePath);
+        RecentROMs[0]->setText(ROMUtils::ROMFilePath);
+        recentROMnum++;
+    }
+    else
+    {
+        if(findedInRecentFile > 0)
+        {
+            for(int i = findedInRecentFile; i > -1; i--)
+            {
+                QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i));
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), filepath);
+                RecentROMs[i]->setText(filepath);
+            }
+            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFilePath);
+            RecentROMs[0]->setText(ROMUtils::ROMFilePath);
+        }
+    }
+
+    // UI update
     LoadRoomUIUpdate();
     DoorConfigDialog::EntitySetsInitialization();
 }
@@ -507,11 +590,54 @@ void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
 }
 
 /// <summary>
+/// Slot function to load a ROM.
+/// </summary>
+void WL4EditorWindow::openRecentROM()
+{
+    QString filepath;
+    QAction *action = qobject_cast<QAction *>(sender());
+    if(action)
+    {
+        filepath = action->text();
+    }
+    // TODO: Check if address is invalid
+    if(filepath == "-/-" || filepath == "") return;
+
+    // Check for unsaved operations
+    if(!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?"))) return;
+
+    // Load the ROM file
+    std::string cfilePath = filepath.toStdString();
+    if(!LoadROMFile(filepath))
+    {
+        QMessageBox::critical(nullptr, QString("Load Error"), QString("You may have loaded an invalid ROM!"));
+        return;
+    }
+
+    // Set the program title
+    std::string fileName = cfilePath.substr(cfilePath.rfind('/') + 1);
+    setWindowTitle(fileName.c_str());
+
+    // Load the first level and render the screen
+    if(CurrentLevel) delete CurrentLevel;
+    selectedLevel._PassageIndex = selectedLevel._LevelIndex = 0;
+    CurrentLevel = new LevelComponents::Level(
+        static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
+        static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
+    );
+    selectedRoom = 0;
+    int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
+    UnsavedChanges = false;
+
+    UIStartUp(tmpTilesetID);
+    this->setFocus(); // Enable keyPressEvent
+}
+
+/// <summary>
 /// Call the OpenROM function when the action for it is triggered in the main window.
 /// </summary>
 void WL4EditorWindow::on_actionOpen_ROM_triggered()
 {
-    // TODO: check UnsavedChanges
     OpenROM();
     this->setFocus(); // Enable keyPressEvent
 }

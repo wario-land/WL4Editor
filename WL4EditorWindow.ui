@@ -116,17 +116,25 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>17</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuRecent_ROM">
+     <property name="title">
+      <string>Recent ROM</string>
+     </property>
+    </widget>
     <addaction name="separator"/>
     <addaction name="actionOpen_ROM"/>
+    <addaction name="menuRecent_ROM"/>
+    <addaction name="separator"/>
     <addaction name="actionSave_ROM"/>
     <addaction name="actionSave_As"/>
+    <addaction name="separator"/>
     <addaction name="actionSave_Room_s_graphic"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -373,6 +381,11 @@
   <action name="actionManager">
    <property name="text">
     <string>Manager</string>
+   </property>
+  </action>
+  <action name="actionClear">
+   <property name="text">
+    <string>Clear</string>
    </property>
   </action>
  </widget>

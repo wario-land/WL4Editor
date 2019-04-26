@@ -34,10 +34,14 @@ private:
     EntitySetDockWidget *EntitySetWidget;
     CameraControlDockWidget *CameraControlWidget;
     LevelComponents::Level *CurrentLevel = nullptr;
+    QAction *RecentROMs[5];
+    uint recentROMnum = 0;
+
     unsigned int selectedRoom = 0;
     uint graphicViewScalerate = 2;
     bool UnsavedChanges = false; //state check bool only be used when user try loading another ROM, another Level or close the editor without saving changes
     bool firstROMLoaded = false;
+
     void closeEvent (QCloseEvent *event);
     bool notify(QObject *receiver, QEvent *event);
     static bool SaveCurrentFile() { return ROMUtils::SaveLevel(ROMUtils::ROMFilePath); }
@@ -65,6 +69,7 @@ public:
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
     bool FirstROMIsLoaded() { return firstROMLoaded; }
     void OpenROM();
+    void UIStartUp(int currentTilesetID);
     void SetEditModeDockWidgetLayerEditability();
     bool *GetLayersVisibilityArray() { return EditModeWidget->GetLayersVisibilityArray(); }
     void Graphicsview_UnselectDoorAndEntity();
@@ -85,6 +90,10 @@ public:
     void keyPressEvent(QKeyEvent *event);
 
 private slots:
+    // called slots
+    void openRecentROM();
+
+    // Auto-generated
     void on_actionOpen_ROM_triggered();
     void on_loadLevelButton_clicked();
     void on_roomDecreaseButton_clicked();
