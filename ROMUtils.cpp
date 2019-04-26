@@ -375,7 +375,9 @@ namespace ROMUtils
     /// <returns>
     /// True if the save was successful.
     /// </returns>
-    bool SaveFile(QString filePath, QVector<struct SaveData> chunks, std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback)
+    bool SaveFile(QString filePath, QVector<struct SaveData> chunks,
+        std::function<void(QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
+        std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
         std::sort(chunks.begin(), chunks.end(), [](const struct SaveData& a, const struct SaveData& b)
@@ -409,54 +411,68 @@ namespace ROMUtils
         // also expand the ROM size as necessary (up to 32MB) to hold the new data.
         bool success = false;
         std::map<int, int> indexToChunkPtr;
-        int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
-        foreach(struct SaveData chunk, chunks)
-        {
-            int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
-findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
-            if(chunk.alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
-            if(!chunkAddr)
+        QVector<struct SaveData> chunksToAdd(chunks);
+        do {
+            int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
+            foreach(struct SaveData chunk, chunksToAdd)
             {
-                // Expand ROM (double the size and align to 8MB)
-                unsigned int newSize = (TempLength << 1) & ~0x7FFFFF;
-                if(newSize <= 0x2000000)
+                int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
+findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
+                if(chunk.alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
+                if(!chunkAddr)
                 {
-                    unsigned char *newTempFile = (unsigned char*) realloc(TempFile, newSize);
-                    if(!newTempFile)
+                    // Expand ROM (double the size and align to 8MB)
+                    unsigned int newSize = (TempLength << 1) & ~0x7FFFFF;
+                    if(newSize <= 0x2000000)
                     {
-                        // Realloc failed due to system memory constraints
+                        unsigned char *newTempFile = (unsigned char*) realloc(TempFile, newSize);
+                        if(!newTempFile)
+                        {
+                            // Realloc failed due to system memory constraints
+                            QMessageBox::warning(
+                                singleton,
+                                "Out of memory",
+                                "Unable to save changes because your computer is out of memory.",
+                                QMessageBox::Ok,
+                                QMessageBox::Ok
+                            );
+                            goto error;
+                        }
+                        TempFile = newTempFile;
+                        memset(TempFile + TempLength, 0xFF, newSize - TempLength);
+                        TempLength = newSize;
+                        goto findspace;
+                    }
+                    else
+                    {
+                        // Size cannot exceed 32MB
                         QMessageBox::warning(
                             singleton,
-                            "Out of memory",
-                            "Unable to save changes because your computer is out of memory.",
+                            "ROM too large",
+                            QString("Unable to save changes because ") + QString::number(chunkSize) +
+                                " contiguous free bytes are necessary, but such a region could not be"
+                                " found, and the ROM file cannot be expanded larger than 32MB.",
                             QMessageBox::Ok,
                             QMessageBox::Ok
                         );
                         goto error;
                     }
-                    TempFile = newTempFile;
-                    memset(TempFile + TempLength, 0xFF, newSize - TempLength);
-                    TempLength = newSize;
-                    goto findspace;
+                }
+                indexToChunkPtr[chunk.index] = chunkAddr;
+                startAddr = chunkAddr + chunk.size + 12; // do not re-search old areas of the ROM
+
+                // Perform chunk allocation callback
+                if(ChunkAllocationCallback)
+                {
+                    ChunkAllocationCallback(chunksToAdd, indexToChunkPtr);
+                    chunks.append(chunksToAdd); // Add any additional chunks created in the callback
                 }
                 else
                 {
-                    // Size cannot exceed 32MB
-                    QMessageBox::warning(
-                        singleton,
-                        "ROM too large",
-                        QString("Unable to save changes because ") + QString::number(chunkSize) +
-                            " contiguous free bytes are necessary, but such a region could not be"
-                            " found, and the ROM file cannot be expanded larger than 32MB.",
-                        QMessageBox::Ok,
-                        QMessageBox::Ok
-                    );
-                    goto error;
+                    chunksToAdd.clear();
                 }
             }
-            indexToChunkPtr[chunk.index] = chunkAddr;
-            startAddr = chunkAddr + chunk.size + 12; // do not re-search old areas of the ROM
-        }
+        } while(!chunksToAdd.empty());
 
         // Apply source pointer modifications
         foreach(struct SaveData chunk, chunks)
@@ -509,7 +525,10 @@ findspace:  int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chun
         }
 
         // Perform post-processing before saving the file
-        if(PostProcessingCallback) PostProcessingCallback(TempFile, indexToChunkPtr);
+        if(PostProcessingCallback)
+        {
+            PostProcessingCallback(TempFile, indexToChunkPtr);
+        }
 
         { // Prevent goto from crossing initialization of variables here
             // Save the rom file from the CurrentFile copy
@@ -583,7 +602,7 @@ error:      free(TempFile);
         unsigned int roomHeaderInROM;
 
         // Save the level
-        bool ret = SaveFile(filePath, chunks,
+        bool ret = SaveFile(filePath, chunks, nullptr,
             [levelHeaderPointer, currentLevel, roomHeaderChunk, &roomHeaderInROM]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {

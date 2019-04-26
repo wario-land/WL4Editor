@@ -3,6 +3,7 @@
 #include <QVector>
 #include <cassert>
 #include <QDir>
+#include <QFile>
 #include <SettingsUtils.h>
 #include <QProcess>
 #include <cstring>
@@ -157,6 +158,67 @@ static QString ExtractOFile(QString ofile)
     return !process.exitCode() ? "" : QString(process.readAllStandardError());
 }
 
+/// <summary>
+/// Determine if a binary file's contents match a region in the currently loaded ROM.
+/// </summary>
+/// <param name="file">
+/// The binary file to compare (relative path).
+/// </param>
+/// <param name="startAddr">
+/// The starting address in the ROM data.
+/// </param>
+/// <param name="length">
+/// The length of the data in the ROM.
+/// </param>
+/// <returns>
+/// True if the contents of the binary file match the region in the currently loaded ROM.
+/// </returns>
+static bool BinaryMatchWithROM(QString file, unsigned int startAddr, unsigned int length)
+{
+    assert(length <= 0xFFFF /* Corrupted length value was passed to BinaryMatchWithROM function */);
+    if(startAddr + length > ROMUtils::CurrentFileSize) return false;
+    QFile binFile(file);
+    binFile.open(QIODevice::ReadOnly);
+    bool ret = false;
+    if(binFile.size() == length)
+    {
+        QByteArray binContents = binFile.readAll();
+        ret = !memcmp(binContents.constData(), ROMUtils::CurrentFile + startAddr, length);
+    }
+    binFile.close();
+    return ret;
+}
+
+/// <summary>
+/// Create the data for a patch list chunk.
+/// </summary>
+/// <param name="entries">
+/// The patch entries used to create the patch list chunk.
+/// </param>
+/// <returns>
+/// The data as an allocated char array.
+/// </returns>
+static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
+{
+    QString contents;
+    bool first = true;
+    foreach(struct PatchEntryItem entry, entries)
+    {
+        // Delimit entries with semicolon
+        if(first) first = false; else contents += ";";
+
+        // Format matches description from UpgradePatchListContents
+        contents += entry.FileName + ";";
+        contents += QString::number(entry.PatchType) + ";";
+        contents += QString::number(entry.HookAddress, 16).toUpper() + ";";
+        contents += QString::number(entry.PatchAddress, 16).toUpper() + ";";
+        contents += QString(entry.StubFunction ? "1" : "0") + ";";
+        contents += QString(entry.ThumbMode ? "1" : "0") + ";";
+        contents += entry.SubstitutedBytes;
+    }
+    return contents;
+}
+
 namespace PatchUtils
 {
     QString EABI_INSTALLATION;
@@ -274,18 +336,127 @@ namespace PatchUtils
             }
         }
 
-        // For all entries, if the binary does not match the existing save chunk,
-        // create a new save chunk and invalidate the old one
+        /* For all entries:
+         *   1. Save chunk does not exist:
+         *     Create save chunk
+         *   2. Save chunk exists, but does not match binary contents of entry:
+         *     Invalidate save chunk, create new one
+         *   3. Save chunk exists, and matches binary contents of entry:
+         *     Do not invalidate save chunk, but still re-write hook in post-processing
+         */
+        ROMUtils::SaveDataIndex = 1;
+        QVector<struct ROMUtils::SaveData> chunks;
+        std::map<int, int> chunkIndexToEntryIndex;
+        QVector<struct PatchEntryItem> existingPatches = GetPatchesFromROM();
+        for(int i = 0; i < entries.size(); ++i)
+        {
+            struct PatchEntryItem entry = entries[i];
+            QString binName(entry.FileName);
+            binName.chop(1);
+            binName += "bin";
 
+            // Determine if the patch already exists in the ROM
+            struct PatchEntryItem *existingPatch = std::find_if(existingPatches.begin(), existingPatches.end(),
+                [entry](struct PatchEntryItem e){ return e.FileName == entry.FileName; });
+            bool mustCreateChunk, saveChunkExists = existingPatch != existingPatches.end();
 
-        // Create the save chunk for the PatchListChunk
+            // Determine if we must create a new save chunk
+            if(!(mustCreateChunk = !saveChunkExists))
+            {
+                // Save chunk exists: check to see if content matches bin contents
+                unsigned short chunkLen = *reinterpret_cast<unsigned short*>(existingPatch->PatchAddress + 4);
+                mustCreateChunk = !BinaryMatchWithROM(entry.FileName, existingPatch->PatchAddress + 12, chunkLen);
+            }
 
+            // Create the save chunk
+            if(mustCreateChunk)
+            {
+                // Get data from bin file
+                QFile binFile(binName);
+                binFile.open(QIODevice::ReadOnly);
+                QByteArray binContents = binFile.readAll();
+                unsigned char *data = new unsigned char[binFile.size()];
+                memcpy(data, binContents.constData(), binFile.size());
+
+                // Create the save chunk
+                struct ROMUtils::SaveData patchChunk =
+                {
+                    0,
+                    static_cast<unsigned int>(binFile.size()),
+                    data,
+                    ROMUtils::SaveDataIndex++,
+                    false,
+                    0,
+                    saveChunkExists ? existingPatch->PatchAddress : 0,
+                    ROMUtils::SaveDataChunkType::PatchChunk
+                };
+                chunks.append(patchChunk);
+                chunkIndexToEntryIndex[patchChunk.index] = i;
+            }
+        }
 
         // Save the chunks to the ROM
+        bool firstCallback = true;
+        bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, chunks,
+            // ChunkAllocationCallback
+            [firstCallback, entries, chunkIndexToEntryIndex]
+            (QVector<struct ROMUtils::SaveData> addedChunks, std::map<int, int> indexToChunkPtr) mutable
+            {
+                // Create and add PatchListChunk after patch chunk locations have been allocated by SaveFile()
+                if(firstCallback)
+                {
+                    // Update entry structs with information from the added chunks
+                    foreach(struct ROMUtils::SaveData chunk, addedChunks)
+                    {
+                        int entryIndex = chunkIndexToEntryIndex[chunk.index];
+                        entries[entryIndex].PatchAddress = indexToChunkPtr[chunk.index];
 
+                        // TODO Capture data from hook address for the entry's substituted bytes (depends on size of hook)
+
+                    }
+                    addedChunks.clear();
+
+                    // Create the save chunk for the PatchListChunk
+                    unsigned int patchListAddr = ROMUtils::FindChunkInROM(
+                        ROMUtils::CurrentFile,
+                        ROMUtils::CurrentFileSize,
+                        WL4Constants::AvailableSpaceBeginningInROM,
+                        ROMUtils::SaveDataChunkType::PatchListChunk
+                    );
+                    QString patchListChunkContents = CreatePatchListChunkData(entries);
+                    unsigned char *data = new unsigned char[patchListChunkContents.length()];
+                    memcpy(data, patchListChunkContents.toLocal8Bit().constData(), patchListChunkContents.length());
+                    struct ROMUtils::SaveData patchListChunk =
+                    {
+                        0,
+                        static_cast<unsigned int>(patchListChunkContents.length()),
+                        data,
+                        ROMUtils::SaveDataIndex++,
+                        false,
+                        0,
+                        patchListAddr, // will be 0 if it does not already exist
+                        ROMUtils::SaveDataChunkType::PatchListChunk
+                    };
+                    addedChunks.append(patchListChunk);
+
+                    firstCallback = false;
+                }
+                else
+                {
+                    addedChunks.clear();
+                }
+            },
+            // PostProcessingCallback
+            []
+            (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
+            {
+                // TODO Write hooks to ROM
+
+            }
+        );
 
         // Success
-        return "";
+        return ret ? "" : "Error saving ROM file";
     }
 
     /// <summary>

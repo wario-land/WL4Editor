@@ -51,7 +51,9 @@ namespace ROMUtils
     int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
-    bool SaveFile(QString fileName, QVector<struct SaveData> chunks, std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback);
+    bool SaveFile(QString fileName, QVector<struct SaveData> chunks,
+        std::function<void(QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
+        std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback);
     bool SaveLevel(QString fileName);
 }
 
