@@ -52,7 +52,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) :
     EntitySetWidget = new EntitySetDockWidget();
     CameraControlWidget = new CameraControlDockWidget();
 
-    // Add Recent ROM QAction
+    // Add Recent ROM QAction according to the INI file
     QMenu *filemenu = ui->menuRecent_ROM;
     for(uint i = 0; i < sizeof(RecentROMs) / sizeof(RecentROMs[0]); i++)
     {
@@ -600,8 +600,41 @@ void WL4EditorWindow::openRecentROM()
     {
         filepath = action->text();
     }
-    // TODO: Check if address is invalid
+    // Check if it is a valid slot function call
     if(filepath == "-/-" || filepath == "") return;
+
+    // Check if the file exist, if not, modify the Recent ROM QAction list
+    QFile file(filepath);
+    if(!file.exists())
+    {
+        if(recentROMnum == 1)
+        {
+            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), "");
+            RecentROMs[0]->setText("-/-");
+        }
+        if(recentROMnum > 1)
+        {
+            int deletelinenum = -1;
+            for(int i = 0; i < 5; i++)
+            {
+                if(RecentROMs[i]->text() == filepath)
+                {
+                    deletelinenum = i;
+                    break;
+                }
+            }
+            for(int i = deletelinenum; i < (recentROMnum - 1); i++)
+            {
+                RecentROMs[i]->setText(RecentROMs[i+1]->text());
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), RecentROMs[i+1]->text());
+            }
+            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentROMnum), "");
+            delete RecentROMs[recentROMnum - 1];
+        }
+        recentROMnum--;
+        QMessageBox::critical(nullptr, QString("Load Error"), QString("This ROM no longer exists!"));
+        return;
+    }
 
     // Check for unsaved operations
     if(!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?"))) return;
