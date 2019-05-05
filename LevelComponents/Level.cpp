@@ -202,6 +202,16 @@ namespace LevelComponents
         {
             rooms[doors[i]->GetRoomID()]->AddDoor(doors[i]);
         }
+
+        // Check if every Room have at least one Door, if not, set the entityset id to skip some problems
+        // the code is only for avoiding crash
+        for(unsigned int i = 0; i < rooms.size(); ++i)
+        {
+            if(rooms[i]->CountDoors() == 0)
+            {
+                rooms[i]->SetCurrentEntitySet(37);
+            }
+        }
     }
 
     /// <summary>
@@ -334,7 +344,7 @@ namespace LevelComponents
             cameraPointerTable->size = cameraPointerTableSize;
             cameraPointerTable->data = (unsigned char*) malloc(cameraPointerTableSize);
             cameraPointerTable->index = ROMUtils::SaveDataIndex++;
-            cameraPointerTable->alignment = false;
+            cameraPointerTable->alignment = true;
             cameraPointerTable->dest_index = 0;
             cameraPointerTable->old_chunk_addr = ROMUtils::PointerFromData(cameraPointerTablePtr);
             cameraPointerTable->ChunkType = ROMUtils::CameraPointerTableType;

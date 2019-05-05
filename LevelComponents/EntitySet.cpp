@@ -21,6 +21,7 @@ namespace LevelComponents
     {
         for(int i = 0; i < paletteNum; ++i)
         {
+            if(palettes[i + startPaletteId].size()) palettes[i + startPaletteId].clear();
             // First color is transparent
             palettes[i + startPaletteId].push_back(0);
             int subPalettePtr = paletteSetPtr + i * 32;
@@ -91,7 +92,7 @@ namespace LevelComponents
                 lastpalettePtr = palettePtr;
             }
             k++;
-        } while((tmpEntityId != 0) && (currentpaletteID != 7));
+        } while((tmpEntityId != 0) && (currentpaletteID != 8));
         // Set palette before and not include 15 to be 0 if not exist
         if(currentpaletteID < 7)
         {
@@ -106,8 +107,8 @@ namespace LevelComponents
         // Load palette 3 - 7 for Basic Element used in the room
         LoadSubPalettes(3, 1, basicElementPalettePtr);
         LoadSubPalettes(4, 4, WL4Constants::UniversalSpritesPalette2);
-        // Load palette 15 for treasure boxes
-        LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable));
+        // Load palette 15 for treasure boxes if necessary
+        if(currentpaletteID <= 7) LoadSubPalettes(15, 1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable));
         // Set palette 0 - 2 all to 0 for Wario Sprites only
         for(int i = 0; i < 3; ++i)
         {
@@ -154,7 +155,7 @@ namespace LevelComponents
         }
 
         // Load Treasure/CD Boxes tile8x8s when this Entityset is not a Boss Entityset
-        if(!IncludeBossTiles())
+        if((!IncludeBossTiles()) && (currentrow < 31))
         {
 //            tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable);
 //            tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable);

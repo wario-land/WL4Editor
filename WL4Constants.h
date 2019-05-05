@@ -1,7 +1,7 @@
 #ifndef WL4CONSTANTS_H
 #define WL4CONSTANTS_H
 
-#define WL4EDITOR_VERSION "beta-6"
+#define WL4EDITOR_VERSION "beta-9"
 
 namespace WL4Constants
 {
@@ -20,7 +20,7 @@ namespace WL4Constants
 
     // Miscellaneous definitions
     const unsigned int CameraRecordSentinel        = 0x3F9D58;
-    const unsigned int SpritesBasicElementTiles    = 0x400AE8; //0x3000 bytes in length
+    const unsigned int SpritesBasicElementTiles    = 0x400AE8; // 0x3000 bytes in length
     const unsigned int BGLayerDefaultPtr           = 0x58DA7C;
     const unsigned int NormalLayerDefaultPtr       = 0x3F2263;
     const unsigned int ToxicLandfillDustyLayer0Ptr = 0x601854;
@@ -131,7 +131,8 @@ namespace WL4Constants
     const unsigned int Entity29_0x3B505C = 0x3B505C;
     const unsigned int Entity2A_0x3C1270 = 0x3C1270;
     const unsigned int Entity2B_0x3C1270 = 0x3C1270;
-    const unsigned int Entity2C_0x3C302C = 0x3C302C; // Notice: 0x2D - I cannot render anything in game
+    const unsigned int Entity2C_0x3C302C = 0x3C302C;
+    const unsigned int Entity2D_0x3C491C = 0x3C491C; // Notice: 0x2D - I cannot render anything in game
     const unsigned int Entity2E_0x3C48D4 = 0x3C48D4;
     const unsigned int Entity2F_0x3C48F4 = 0x3C48F4;
     const unsigned int Entity30_0x3C4174 = 0x3C4174;
@@ -153,7 +154,8 @@ namespace WL4Constants
     const unsigned int Entity40_0x3C62FC = 0x3C62FC;
     const unsigned int Entity41_0x3C7034 = 0x3C7034;
     const unsigned int Entity42_0x3C770C = 0x3C770C;
-    const unsigned int Entity43_0x3C798C = 0x3C798C; // Notice: 0x44 - I cannot render anything in game
+    const unsigned int Entity43_0x3C798C = 0x3C798C;
+    const unsigned int Entity44_0x3C798C = 0x3C798C; // Notice: 0x44 - I cannot render anything in game
     const unsigned int Entity45_0x3C799C = 0x3C799C;
     const unsigned int Entity46_0x3C79AC = 0x3C79AC;
     const unsigned int Entity47_0x3C7A5C = 0x3C7A5C;
@@ -194,6 +196,7 @@ namespace WL4Constants
     const unsigned int Entity6A_0x3DC264 = 0x3DC264;
     const unsigned int Entity6B_0x3DC770 = 0x3DC770;
     const unsigned int Entity6C_0x3DCCBC = 0x3DCCBC;
+    const unsigned int Entity6D_0x3DD4CC = 0x3DD4CC;
     const unsigned int Entity6E_0x3DD720 = 0x3DD720;
     const unsigned int Entity6F_0x3DD658 = 0x3DD658;
     const unsigned int Entity70_0x3DD668 = 0x3DD668;
@@ -201,7 +204,7 @@ namespace WL4Constants
     const unsigned int Entity72_0x3DDB14 = 0x3DDB14;
     const unsigned int Entity73_0x3DE0E0 = 0x3DE0E0;
     const unsigned int Entity74_0x3DE320 = 0x3DE320;
-    const unsigned int Entity75_0x3DE498 = 0x3DE498;
+    const unsigned int Entity75_0x3DE580 = 0x3DE580;
     const unsigned int Entity76_0x3DF2D0 = 0x3DF2D0;
     const unsigned int Entity77_0x3E0D68 = 0x3E0D68;
     const unsigned int Entity78_0x3E1650 = 0x3E1650;

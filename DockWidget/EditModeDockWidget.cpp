@@ -49,7 +49,7 @@ EditModeDockWidget::EditModeDockWidget(QWidget *parent) :
     //Set the widget height
     QFontMetrics fontMetrics(ui->CheckBox_AlphaView->font());
     int rowHeight = fontMetrics.lineSpacing();
-    ui->dockWidgetContents->setFixedHeight(18 * rowHeight); // TODO: Make this exact, calculate using margins
+    ui->dockWidgetContents->setFixedHeight(20 * rowHeight); // TODO: Make this exact, calculate using margins
 }
 
 /// <summary>
@@ -95,11 +95,19 @@ bool *EditModeDockWidget::GetLayersVisibilityArray()
     LayersVisibilityArray[1] = ui->CheckBox_Layer1View->isChecked();
     LayersVisibilityArray[2] = ui->CheckBox_Layer2View->isChecked();
     LayersVisibilityArray[3] = ui->CheckBox_Layer3View->isChecked();
-    LayersVisibilityArray[4] = ui->CheckBox_EntityView->isChecked();
+    LayersVisibilityArray[4] = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
     LayersVisibilityArray[5] = ui->CheckBox_DoorView->isChecked();
     LayersVisibilityArray[6] = ui->CheckBox_CameraView->isChecked();
     LayersVisibilityArray[7] = ui->CheckBox_AlphaView->isChecked();
     return LayersVisibilityArray;
+}
+
+/// <summary>
+/// Uncheck CheckBox_hiddencoinsView.
+/// </summary>
+void EditModeDockWidget::UncheckHiddencoinsViewCheckbox()
+{
+    ui->CheckBox_hiddencoinsView->setCheckState(Qt::Unchecked);
 }
 
 /// <summary>
@@ -120,11 +128,13 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
     params.layersEnabled[1] = ui->CheckBox_Layer1View->isChecked();
     params.layersEnabled[2] = ui->CheckBox_Layer2View->isChecked();
     params.layersEnabled[3] = ui->CheckBox_Layer3View->isChecked();
-    params.entitiesEnabled = ui->CheckBox_EntityView->isChecked();
+    params.entitiesEnabled = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
+    params.entitiesboxesDisabled = (ui->CheckBox_EntityView->checkState() != Qt::Checked);
     params.doorsEnabled = ui->CheckBox_DoorView->isChecked();
     params.alphaBlendingEnabled = ui->CheckBox_AlphaView->isChecked();
     params.cameraAreasEnabled = ui->CheckBox_CameraView->isChecked();
     params.seleteddifficulty = difficultyIndices[selectedDifficultyButton];
+    params.hiddencoinsEnabled = ui->CheckBox_hiddencoinsView->isChecked();
     return params;
 }
 
@@ -306,6 +316,8 @@ void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
         singleton->HideCameraControlDockWidget();
         singleton->ShowTile16DockWidget();
     }
+    QFocusEvent *tmp = nullptr;
+    singleton->GetTile16DockWidgetPtr()->FocusInEvent(tmp);
 }
 
 /// <summary>
@@ -329,6 +341,12 @@ void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
     }
 }
 
+/// <summary>
+/// Slot function for switcing to Camera control editing mode.
+/// </summary>
+/// <param name="checked">
+/// show the check state of the RadioButton_CameraMode.
+/// </param>
 void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
 {
     if(checked)
@@ -337,4 +355,16 @@ void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
         singleton->HideTile16DockWidget();
         singleton->ShowCameraControlDockWidget();
     }
+}
+
+/// <summary>
+/// Show hidden coins layer when CheckBox_hiddencoinsView is toggled.
+/// </summary>
+/// <param name="arg1">
+/// Unused.
+/// </param>
+void EditModeDockWidget::on_CheckBox_hiddencoinsView_stateChanged(int arg1)
+{
+    (void) arg1;
+    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 }

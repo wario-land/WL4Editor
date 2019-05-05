@@ -1,8 +1,10 @@
 #include "WL4EditorWindow.h"
+#include "WL4Application.h"
 #include <QApplication>
 #include <QMessageBox>
 #include <fstream>
 #include "ROMUtils.h"
+#include "SettingsUtils.h"
 #include "LevelComponents/Level.h"
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/DoorConfigDialog.h"
@@ -73,6 +75,7 @@ static void StaticInitialization_BeforeROMLoading()
     RoomConfigDialog::StaticComboBoxesInitialization();
     DoorConfigDialog::StaticInitialization();
     CameraControlDockWidget::StaticInitialization();
+    SettingsUtils::InitProgramSetupPath();
 }
 
 /// <summary>
@@ -88,9 +91,9 @@ int main(int argc, char *argv[])
 {
     StaticInitialization_BeforeROMLoading();
 
-    QApplication a(argc, argv);
-    WL4EditorWindow w;
-    w.show();
+    QApplication application(argc, argv);
+    WL4EditorWindow window;
+    window.show();
 
     // Quickly test or debug by automatically loading the ROM without UI
     //-------------------------------------------------------------------
@@ -122,7 +125,7 @@ int main(int argc, char *argv[])
         // Andrew's tests
         extern QString dialogInitialPath;
         dialogInitialPath = QString("C:\\Users\\Andrew\\Desktop\\WL4.gba");
-        w.OpenROM();
+        window.OpenROM();
     }
     else if(!strncmp(username, "ADMINISTRATOR", strlen(username))) // SSP
     {
@@ -143,5 +146,5 @@ int main(int argc, char *argv[])
     delete[] username;
     //-------------------------------------------------------------------
 
-    return a.exec();
+    return application.exec();
 }

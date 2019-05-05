@@ -48,7 +48,8 @@ SOURCES += \
     LevelComponents/Entity.cpp \
     DockWidget/EntitySetDockWidget.cpp \
     Compress.cpp \
-    DockWidget/CameraControlDockWidget.cpp
+    DockWidget/CameraControlDockWidget.cpp \
+    SettingsUtils.cpp
 
 HEADERS += \
     WL4EditorWindow.h \
@@ -74,7 +75,9 @@ HEADERS += \
     LevelComponents/Entity.h \
     DockWidget/EntitySetDockWidget.h \
     Compress.h \
-    DockWidget/CameraControlDockWidget.h
+    DockWidget/CameraControlDockWidget.h \
+    WL4Application.h \
+    SettingsUtils.h
 
 FORMS += \
     WL4EditorWindow.ui \

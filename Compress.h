@@ -22,7 +22,7 @@ namespace ROMUtils
     public:
         virtual unsigned int GetCompressedLength() = 0;
         void *GetCompressedData();
-        virtual ~RLEMetadata() { delete JumpTable; }
+        virtual ~RLEMetadata() { delete[] JumpTable; }
     };
 
     class RLEMetadata8Bit : public RLEMetadata

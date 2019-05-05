@@ -39,6 +39,7 @@ static void PerformOperation(struct OperationParams *operation)
         singleton->RenderScreenFull();
         singleton->SetEditModeDockWidgetLayerEditability();
         singleton->SetEditModeWidgetDifficultyRadioBox(1);
+        singleton->ResetEntitySetDockWidget();
         singleton->SetUnsavedChanges(true);
     }
 }
@@ -55,7 +56,8 @@ static void PerformOperation(struct OperationParams *operation)
 static void BackTrackOperation(struct OperationParams *operation)
 {
     LevelComponents::Room *room;
-    if (operation->tileChange) {
+    if (operation->tileChange)
+    {
         room = singleton->GetCurrentRoom();
         for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
@@ -67,12 +69,14 @@ static void BackTrackOperation(struct OperationParams *operation)
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile, tcp->targetLayer);
         }
     }
-    if (operation->roomConfigChange) {
+    if (operation->roomConfigChange)
+    {
         // new to last
         singleton->RoomConfigReset(operation->newRoomConfigParams, operation->lastRoomConfigParams);
         singleton->RenderScreenFull();
         singleton->SetEditModeDockWidgetLayerEditability();
         singleton->SetEditModeWidgetDifficultyRadioBox(1);
+        singleton->ResetEntitySetDockWidget();
         singleton->SetUnsavedChanges(true);
     }
 }
@@ -91,9 +95,10 @@ void ExecuteOperation(struct OperationParams *operation)
     // If we perform an action after a series of undo, then delete the "undone" operations from history
     while(operationIndex[currentRoomNumber])
     {
+        // Delete the front operation in the queue while decrementing the operation index until the index reaches 0
         --operationIndex[currentRoomNumber];
-        auto op = operationHistory[currentRoomNumber][operationIndex[currentRoomNumber]];
-        delete op;
+        struct OperationParams *frontOP = operationHistory[currentRoomNumber][0];
+        delete frontOP;
         operationHistory[currentRoomNumber].pop_front();
     }
     operationHistory[currentRoomNumber].push_front(operation);

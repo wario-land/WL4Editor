@@ -23,10 +23,12 @@ namespace LevelComponents
         TileMap16 **GetMap16Data() { return map16data; }
         QVector<QRgb> *GetPalettes() { return palettes; }
         unsigned short *Map16EventTable;
-        unsigned char *Map16WarioAnimationSlotIDTable;
+        unsigned char *Map16TerrainTypeIDTable;
         ~Tileset();
         QPixmap Render(int columns);
         int GetUniversalSpritesTilesPalettePtr() { return UniversalSpritesTilesPalettePtr; }
+        unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }
+        unsigned short *GetEventTablePtr() { return Map16EventTable; }
     };
 }
 
