@@ -15,6 +15,31 @@
 2D8390 - The End + push start - compressed - 4bit - palette: 2D830E (?) index: 0,1,3 - width: 32
 2D9D18 - Intense mode (probably unused) - 4bit - palette: 2D9C78
 368CF0 - Spoiled Rotten & cie - uncompressed - 4bit - palette: 3B1A70 - width: 32 - height: 16
+~371C30 - Object from Block Tower
+3754F0 - palette: 3B1D90
+400CE8 - Empty health bar - (all health bar) palette: 400AC8
+405288 - Empty health bar (2)
+405388 - 1 heart health bar
+405488 - 2 heart health bar
+405588 - 3 heart health bar
+405688 - 4 heart health bar
+405788 - 5 heart health bar
+405888 - 6 heart health bar
+405988 - 7 heart health bar
+405A88 - 8 heart health bar (Full)
+405B88 - Blinking 1 heart health bar
+405C88 - Empty health fragment bar
+405D88 - 1 health fragment bar
+405E88 - 2 health fragment bar
+405F88 - 3 health fragment bar
+406088 - 4 health fragment bar
+406188 - 5 health fragment bar
+406288 - 6 health fragment bar
+406388 - 7 health fragment bar
+406388 - 8 health fragment bar (Full)
+(Palette in RAM 050002E0)
+
+~47D87C - Tileset of Block Tower
 64C8C4 - All level and boss icons - uncompressed - 4bit - width: 32 - height: 30
 68CF5C - Pyramid - Indexed bitmap - palette: near 646358 somewhere
 6B4288 - CDroms player screen with icons - uncompressed - palette: 6B41E8 (From 6B4088 to 6B4288) - 4bit - width: 32 - height: 34
@@ -23,6 +48,7 @@
 74140C -      - || -
 741D00 -      - || -
 7430FC, 745350, 745B58
+74C3D0 - End Paintings
 
 == Palettes:
 2DDDA0,2DDFA0,2DE918,2DE3A0 - Wario
