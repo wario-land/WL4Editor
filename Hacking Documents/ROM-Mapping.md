@@ -31,4 +31,17 @@
 | 0x7430FC | Menutext(4) | - | - | - | - | -
 | 0x745350 | Menutext(5) | - | - | - | - | -
 | 0x745B58 | Menutext(6) | - | - | - | - | -
-| 0x74C3D0 | End Paintings | - | - | - | - | -
+| 0x74C3D0 | End Paintings (Cractus) | uncompressed 4bit | 0x74C3B0 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Cractus.png)
+| 0x74FFF0 | End Paintings (Forest Apple) | uncompressed 4bit | 0x74FFD0 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Forest-Apple.png)
+| 0x753C10 | End Paintings (Wario swimming) | uncompressed 4bit | 0x753BF0 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Swimming.png)
+| 0x757830 | End Paintings (Wario holding monster) | uncompressed 4bit | 0x757810 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Holding-Monster.png)
+| 0x75B450 | End Paintings (Wario crescent moon village) | uncompressed 4bit | 0x75B430 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Crescent-Moon-Village.png)
+| 0x75F070 | End Paintings (Wario sleep moon) | uncompressed 4bit | 0x75F050 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Sleep-Moon.png)
+| 0x762C90 | End Paintings (Wario toy) | uncompressed 4bit | 0x762C70 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Toy.png)
+| 0x7668B0 | End Paintings (Wario Hoggus) | uncompressed 4bit | 0x766890 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Hoggus.png)
+| 0x76A4D0 | End Paintings (Wario GBA) | uncompressed 4bit | 0x76A4B0 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-GBA.png)
+| 0x76E0F0 | End Paintings (Wario Robot) | uncompressed 4bit | 0x76E0D0 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Robot.png)
+| 0x771D10 | End Paintings (Wario space rocket) | uncompressed 4bit | 0x771CF0 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Space-Rocket.png)
+| 0x775930 | End Paintings (Wario Cuckoo Condor) | uncompressed 4bit | 0x775910 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Cuckoo-Condor.png)
+| 0x779550 | End Paintings (Wario Sport Car) | uncompressed 4bit | 0x779530 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Sport-Car.png)
+| 0x77D170 | End Paintings (Wario two women) | uncompressed 4bit | 0x77D150 | 32 | 15 | ![Image](/images/rom-mapping/End-Painting-Wario-Two-Women.png)
