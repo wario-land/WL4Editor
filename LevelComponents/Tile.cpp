@@ -4,8 +4,8 @@
 #include <cassert>
 
 #include <QGraphicsPixmapItem>
-#include <QTransform>
 #include <QPoint>
+#include <QTransform>
 
 #include <iostream>
 
@@ -13,7 +13,7 @@
 
 namespace LevelComponents
 {
-    QHash<QImageW*, int> Tile8x8::ImageDataCache;
+    QHash<QImageW *, int> Tile8x8::ImageDataCache;
 
     /// <summary>
     /// Construct an instance of Tile8x8 with uninitialized data. (private constructor)
@@ -21,9 +21,9 @@ namespace LevelComponents
     /// <param name="_palettes">
     /// Entire palette for the tileset this tile is a part of.
     /// </param>
-    Tile8x8::Tile8x8(QVector<QRgb> *_palettes) : Tile(TileType8x8),
-        palettes(_palettes),
-        ImageData(new QImageW(8, 8, QImage::Format_Indexed8))
+    Tile8x8::Tile8x8(QVector<QRgb> *_palettes) :
+            Tile(TileType8x8), palettes(_palettes),
+            ImageData(new QImageW(8, 8, QImage::Format_Indexed8))
     {
         ImageData->setColorTable(palettes[paletteIndex]);
     }
@@ -34,14 +34,14 @@ namespace LevelComponents
     /// <param name="other">
     /// Another Tile8x8 to copy image data from.
     /// </param>
-    Tile8x8::Tile8x8(Tile8x8 *other) : Tile(TileType8x8),
-        palettes(other->palettes),
+    Tile8x8::Tile8x8(Tile8x8 *other) :
+            Tile(TileType8x8), palettes(other->palettes),
 #ifndef NOCACHE
-        ImageData(GetCachedImageData(other->ImageData))
+            ImageData(GetCachedImageData(other->ImageData))
 #else
-        ImageData(new QImageW(other->ImageData->copy()))
+            ImageData(new QImageW(other->ImageData->copy()))
 #endif
-            {}
+    {}
 
     /// <summary>
     /// Construct an instance of Tile8x8.
@@ -58,8 +58,10 @@ namespace LevelComponents
     Tile8x8::Tile8x8(int dataPtr, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
     {
         // Initialize the QImage data from ROM
-        for(int i = 0; i < 8; ++i) {
-            for(int j = 0; j < 4; ++j) {
+        for (int i = 0; i < 8; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
                 unsigned char val = ROMUtils::CurrentFile[dataPtr + i * 4 + j];
                 ImageData->setPixel(j * 2, i, (unsigned char) (val & 0xF));
                 ImageData->setPixel(j * 2 + 1, i, (unsigned char) ((val >> 4) & 0xF));
@@ -69,7 +71,7 @@ namespace LevelComponents
 #ifndef NOCACHE
         // Cache the QImage
         QImageW *cached = GetCachedImageData(ImageData);
-        if(cached != ImageData)
+        if (cached != ImageData)
         {
             delete ImageData;
             ImageData = cached;
@@ -90,7 +92,8 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// This is a static helper function to create the transparent blank tile object for the Tileset class.
+    /// This is a static helper function to create the transparent blank tile object for the Tileset
+    /// class.
     /// </summary>
     /// <param name="_palettes">
     /// Entire palette for the tileset this tile is a part of.
@@ -101,18 +104,15 @@ namespace LevelComponents
     Tile8x8 *Tile8x8::CreateBlankTile(QVector<QRgb> *_palettes)
     {
         Tile8x8 *t = new Tile8x8(_palettes);
-        for(int i = 0; i < 8; ++i)
+        for (int i = 0; i < 8; ++i)
         {
-            for(int j  = 0; j < 8; ++j)
-            {
-                t->ImageData->setPixel(i, j, 0);
-            }
+            for (int j = 0; j < 8; ++j) { t->ImageData->setPixel(i, j, 0); }
         }
 
 #ifndef NOCACHE
         // Cache the QImage
         QImageW *cached = GetCachedImageData(t->ImageData);
-        if(cached != t->ImageData)
+        if (cached != t->ImageData)
         {
             delete t->ImageData;
             t->ImageData = cached;
@@ -160,7 +160,7 @@ namespace LevelComponents
         ImageData = newImage;
 #ifndef NOCACHE
         QImageW *cached = GetCachedImageData(ImageData);
-        if(cached != ImageData)
+        if (cached != ImageData)
         {
             delete ImageData;
             ImageData = cached;
@@ -236,7 +236,7 @@ namespace LevelComponents
     /// </returns>
     QImageW *Tile8x8::GetCachedImageData(QImageW *image)
     {
-        if(ImageDataCache.value(image, 0))
+        if (ImageDataCache.value(image, 0))
         {
             ++ImageDataCache[image];
             return ImageDataCache.find(image).key();
@@ -259,11 +259,8 @@ namespace LevelComponents
     void Tile8x8::DeleteCachedImageData(QImageW *image)
     {
         int references = ImageDataCache.value(image, 0);
-        if(references > 1)
-        {
-            --ImageDataCache[image];
-        }
-        else if(references == 1)
+        if (references > 1) { --ImageDataCache[image]; }
+        else if (references == 1)
         {
             ImageDataCache.take(image);
             delete image;
@@ -273,4 +270,4 @@ namespace LevelComponents
             assert(0 /* Cached QImage with 0 references */);
         }
     }
-}
+} // namespace LevelComponents

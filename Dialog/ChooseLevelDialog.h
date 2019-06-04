@@ -11,9 +11,10 @@ namespace DialogParams
         int _LevelIndex;
     };
 
-}
+} // namespace DialogParams
 
-namespace Ui {
+namespace Ui
+{
     class ChooseLevelDialog;
 }
 
@@ -22,7 +23,8 @@ class ChooseLevelDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ChooseLevelDialog(struct DialogParams::PassageAndLevelIndex currentSelection, QWidget *parent = 0);
+    explicit ChooseLevelDialog(struct DialogParams::PassageAndLevelIndex currentSelection,
+                               QWidget *parent = 0);
     ~ChooseLevelDialog();
 
 private slots:

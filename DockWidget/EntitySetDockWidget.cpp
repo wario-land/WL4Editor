@@ -2,17 +2,13 @@
 #include "ui_EntitySetDockWidget.h"
 
 EntitySetDockWidget::EntitySetDockWidget(QWidget *parent) :
-    QDockWidget(parent),
-    ui(new Ui::EntitySetDockWidget)
+        QDockWidget(parent), ui(new Ui::EntitySetDockWidget)
 {
     ui->setupUi(this);
     ui->graphicsView_CurrentEntity->scale(2, 2);
 }
 
-EntitySetDockWidget::~EntitySetDockWidget()
-{
-    delete ui;
-}
+EntitySetDockWidget::~EntitySetDockWidget() { delete ui; }
 
 /// <summary>
 /// Reset EntitySet in the Dock Widget.
@@ -23,7 +19,8 @@ EntitySetDockWidget::~EntitySetDockWidget()
 void EntitySetDockWidget::ResetEntitySet(LevelComponents::Room *currentroom)
 {
     currentRoom = currentroom;
-    ui->label_EntitySetID->setText("EntitySet ID: " + QString::number(currentroom->GetCurrentEntitySetID(), 10));
+    ui->label_EntitySetID->setText("EntitySet ID: " +
+                                   QString::number(currentroom->GetCurrentEntitySetID(), 10));
     EntityAmount = currentroom->GetCurrentEntityListSource().size() - 1;
     currentEntityId = 1;
     RenderEntityAndResetInfo();
@@ -36,10 +33,11 @@ void EntitySetDockWidget::ResetEntitySet(LevelComponents::Room *currentroom)
 /// </summary>
 void EntitySetDockWidget::RenderEntityAndResetInfo()
 {
-    //Render Entity
+    // Render Entity
     QGraphicsScene *scene = ui->graphicsView_CurrentEntity->scene();
-    if(scene) { delete scene; }
-    LevelComponents::Entity *currentEntityPtr = currentRoom->GetCurrentEntityListSource()[currentEntityId];
+    if (scene) { delete scene; }
+    LevelComponents::Entity *currentEntityPtr =
+        currentRoom->GetCurrentEntityListSource()[currentEntityId];
     QImage EntityImage = currentEntityPtr->Render();
     int Entitywidth, Entityheight;
     Entitywidth = EntityImage.width();
@@ -56,17 +54,22 @@ void EntitySetDockWidget::RenderEntityAndResetInfo()
     QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0xFF)), 2);
     EntityBoxPen.setJoinStyle(Qt::MiterJoin);
     EntityBoxPainter.setPen(EntityBoxPen);
-    LevelComponents::EntityPositionalOffset position = LevelComponents::EntitySet::GetEntityPositionalOffset(currentEntityPtr->GetEntityGlobalID());
-    EntityBoxPainter.drawRect(-((position.XOffset + 98) / 4 + currentEntityPtr->GetXOffset() + 8), -((position.YOffset + 66) / 4 + currentEntityPtr->GetYOffset() + 16), 16, 16);
+    LevelComponents::EntityPositionalOffset position =
+        LevelComponents::EntitySet::GetEntityPositionalOffset(
+            currentEntityPtr->GetEntityGlobalID());
+    EntityBoxPainter.drawRect(-((position.XOffset + 98) / 4 + currentEntityPtr->GetXOffset() + 8),
+                              -((position.YOffset + 66) / 4 + currentEntityPtr->GetYOffset() + 16),
+                              16, 16);
     scene->addPixmap(pixmap);
     scene->addPixmap(pixmap2);
     ui->graphicsView_CurrentEntity->setScene(scene);
     ui->graphicsView_CurrentEntity->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
-    //Reset Info
+    // Reset Info
     ui->textEdit_EntityInfo->clear();
     ui->textEdit_EntityInfo->append("Entity local Id: " + QString::number(currentEntityId));
-    ui->textEdit_EntityInfo->append("Entity global Id: " + QString::number(currentEntityPtr->GetEntityGlobalID()));
+    ui->textEdit_EntityInfo->append("Entity global Id: " +
+                                    QString::number(currentEntityPtr->GetEntityGlobalID()));
 }
 
 /// <summary>
@@ -79,10 +82,10 @@ void EntitySetDockWidget::RenderEntityAndResetInfo()
 void EntitySetDockWidget::on_pushButton_PreviousEntity_clicked()
 {
     ui->pushButton_NextEntity->setEnabled(true);
-    if(currentEntityId == 1) return;
+    if (currentEntityId == 1) return;
     --currentEntityId;
     RenderEntityAndResetInfo();
-    if(currentEntityId == 1) ui->pushButton_PreviousEntity->setEnabled(false);
+    if (currentEntityId == 1) ui->pushButton_PreviousEntity->setEnabled(false);
 }
 
 /// <summary>
@@ -95,8 +98,8 @@ void EntitySetDockWidget::on_pushButton_PreviousEntity_clicked()
 void EntitySetDockWidget::on_pushButton_NextEntity_clicked()
 {
     ui->pushButton_PreviousEntity->setEnabled(true);
-    if(EntityAmount == currentEntityId) return;
+    if (EntityAmount == currentEntityId) return;
     ++currentEntityId;
     RenderEntityAndResetInfo();
-    if(EntityAmount == currentEntityId) ui->pushButton_NextEntity->setEnabled(false);
+    if (EntityAmount == currentEntityId) ui->pushButton_NextEntity->setEnabled(false);
 }

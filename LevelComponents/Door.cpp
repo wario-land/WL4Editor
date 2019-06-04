@@ -8,10 +8,7 @@ namespace LevelComponents
     /// <return>
     /// it return a QPoint(xpos, ypos).
     /// </return>
-    bool Door::IsUnused()
-    {
-        return DoorEntry.DoorTypeByte != Portal && DestinationDoor == nullptr;
-    }
+    bool Door::IsUnused() { return DoorEntry.DoorTypeByte != Portal && DestinationDoor == nullptr; }
 
     /// <summary>
     /// Deep copy constructor for Door.
@@ -20,12 +17,9 @@ namespace LevelComponents
     /// The Door object to deep copy from.
     /// </param>
     Door::Door(Door &door) :
-        RoomID(door.RoomID),
-        DestinationDoor(door.DestinationDoor),
-        is_vortex(door.is_vortex),
-        DoorID(door.DoorID),
-        DoorEntry(door.DoorEntry)
-    {    }
+            RoomID(door.RoomID), DestinationDoor(door.DestinationDoor), is_vortex(door.is_vortex),
+            DoorID(door.DoorID), DoorEntry(door.DoorEntry)
+    {}
 
     /// <summary>
     /// Generate Wario's original position (unit: pixel) when appear from the door.
@@ -36,11 +30,12 @@ namespace LevelComponents
     QPoint Door::GetWarioOriginalPosition_x4()
     {
         int ypos, xpos;
-        if(DoorEntry.DoorTypeByte == NormalDoor)
+        if (DoorEntry.DoorTypeByte == NormalDoor)
         {
             xpos = ((DoorEntry.x1 + 1) << 6) - 1;
             ypos = (DoorEntry.y2 + 1) << 6;
-            // The ypos is related to current Wario animations, we only generate case for standing Wario
+            // The ypos is related to current Wario animations, we only generate case for standing
+            // Wario
         }
         else
         {
@@ -52,4 +47,4 @@ namespace LevelComponents
         WarioLeftTopPosition.setY(ypos);
         return WarioLeftTopPosition;
     }
-}
+} // namespace LevelComponents
