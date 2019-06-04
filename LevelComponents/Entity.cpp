@@ -2,11 +2,23 @@
 
 #include <QPainter>
 
+// clang-format off
 // tuples of (width, height) in 8x8 tiles; see TONC table. Row major: size attribute
 static const int OAMDimensions[24] = {
     1, 1, // size * 3 + shape (tuples of OAM width and height in 8x8 tiles)
-    2, 1, 1, 2, 2, 2, 4, 1, 1, 4, 4, 4, 4, 2, 2, 4, 8, 8, 8, 4, 4, 8
+    2, 1,
+    1, 2,
+    2, 2,
+    4, 1,
+    1, 4,
+    4, 4,
+    4, 2,
+    2, 4,
+    8, 8,
+    8, 4,
+    4, 8
 };
+//clang-format on
 
 namespace LevelComponents
 {
