@@ -6,7 +6,7 @@
 extern WL4EditorWindow *singleton;
 
 // Globals used by the undo system
-static std::deque<struct OperationParams*> operationHistory[16];
+static std::deque<struct OperationParams *> operationHistory[16];
 static unsigned int operationIndex[16];
 
 /// <summary>
@@ -21,19 +21,23 @@ static unsigned int operationIndex[16];
 static void PerformOperation(struct OperationParams *operation)
 {
     LevelComponents::Room *room;
-    if (operation->tileChange) {
+    if (operation->tileChange)
+    {
         room = singleton->GetCurrentRoom();
-        for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
+        for (auto iter = operation->tileChangeParams.begin();
+             iter != operation->tileChangeParams.end(); ++iter)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
             unsigned int index = tcp->tileX + tcp->tileY * room->GetWidth();
             layer->GetLayerData()[index] = tcp->newTile;
             // Re-render the tile
-            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile, tcp->targetLayer);
+            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile,
+                                              tcp->targetLayer);
         }
     }
-    if (operation->roomConfigChange) {
+    if (operation->roomConfigChange)
+    {
         // change the width and height for all layers
         singleton->RoomConfigReset(operation->lastRoomConfigParams, operation->newRoomConfigParams);
         singleton->RenderScreenFull();
@@ -48,7 +52,8 @@ static void PerformOperation(struct OperationParams *operation)
 /// Backtrack an operation based on its parameters.
 /// </summary>
 /// <remarks>
-/// This function does not take into consideration the undo deque. It only resets the effect of an operation.
+/// This function does not take into consideration the undo deque. It only resets the effect of an
+/// operation.
 /// </remarks>
 /// <param name="operation">
 /// The operation to backtrack.
@@ -59,14 +64,16 @@ static void BackTrackOperation(struct OperationParams *operation)
     if (operation->tileChange)
     {
         room = singleton->GetCurrentRoom();
-        for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
+        for (auto iter = operation->tileChangeParams.begin();
+             iter != operation->tileChangeParams.end(); ++iter)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
             unsigned int index = tcp->tileX + tcp->tileY * room->GetWidth();
             layer->GetLayerData()[index] = tcp->oldTile;
             // Re-render the tile
-            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile, tcp->targetLayer);
+            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile,
+                                              tcp->targetLayer);
         }
     }
     if (operation->roomConfigChange)
@@ -92,10 +99,12 @@ void ExecuteOperation(struct OperationParams *operation)
     int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
 
     PerformOperation(operation);
-    // If we perform an action after a series of undo, then delete the "undone" operations from history
-    while(operationIndex[currentRoomNumber])
+    // If we perform an action after a series of undo, then delete the "undone" operations from
+    // history
+    while (operationIndex[currentRoomNumber])
     {
-        // Delete the front operation in the queue while decrementing the operation index until the index reaches 0
+        // Delete the front operation in the queue while decrementing the operation index until the
+        // index reaches 0
         --operationIndex[currentRoomNumber];
         struct OperationParams *frontOP = operationHistory[currentRoomNumber][0];
         delete frontOP;
@@ -118,20 +127,20 @@ void UndoOperation()
     int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
 
     // We cannot undo past the end of the deque
-    if(operationIndex[currentRoomNumber] < operationHistory[currentRoomNumber].size())
+    if (operationIndex[currentRoomNumber] < operationHistory[currentRoomNumber].size())
     {
-        BackTrackOperation(operationHistory[currentRoomNumber][operationIndex[currentRoomNumber]++]);
+        BackTrackOperation(
+            operationHistory[currentRoomNumber][operationIndex[currentRoomNumber]++]);
 
-        // If the entire operation history is undone for all rooms, then there are no unsaved changes
-        for(unsigned int i = 0; i < sizeof(operationIndex) / sizeof(operationIndex[0]); ++i)
+        // If the entire operation history is undone for all rooms, then there are no unsaved
+        // changes
+        for (unsigned int i = 0; i < sizeof(operationIndex) / sizeof(operationIndex[0]); ++i)
         {
-            if(operationIndex[currentRoomNumber] != operationHistory[currentRoomNumber].size())
-            {
-                return;
-            }
+            if (operationIndex[currentRoomNumber] != operationHistory[currentRoomNumber].size())
+            { return; }
         }
         // TODO uncomment this once all operations that change the level go through Operation.cpp
-        //singleton->SetUnsavedChanges(false);
+        // singleton->SetUnsavedChanges(false);
     }
 }
 
@@ -148,7 +157,7 @@ void RedoOperation()
     int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
 
     // We cannot redo past the front of the deque
-    if(operationIndex[currentRoomNumber])
+    if (operationIndex[currentRoomNumber])
     {
         PerformOperation(operationHistory[currentRoomNumber][--operationIndex[currentRoomNumber]]);
 
@@ -165,13 +174,11 @@ void RedoOperation()
 /// </remarks>
 void ResetUndoHistory()
 {
-    for(unsigned int i = 0; i < sizeof(operationHistory) / sizeof(operationHistory[0]); ++i)
+    for (unsigned int i = 0; i < sizeof(operationHistory) / sizeof(operationHistory[0]); ++i)
     {
         // Deconstruct the dynamically allocated operation structs within the history queue
-        for(unsigned int j = 0; j < operationHistory[i].size(); ++j)
-        {
-            delete operationHistory[i][j];
-        }
+        for (unsigned int j = 0; j < operationHistory[i].size(); ++j)
+        { delete operationHistory[i][j]; }
         operationHistory[i].clear();
     }
 

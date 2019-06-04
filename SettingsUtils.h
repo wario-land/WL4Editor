@@ -2,9 +2,9 @@
 #define SETTINGSUTILS_H
 
 #include <QCoreApplication>
-#include <QString>
 #include <QFileInfo>
 #include <QSettings>
+#include <QString>
 #include <QVector>
 
 namespace SettingsUtils
@@ -26,27 +26,22 @@ namespace SettingsUtils
     enum IniKeys
     {
         eabi_binfile_path = 0,
-        RecentROMPath_0   = 1,
-        RecentROMPath_1   = 2,
-        RecentROMPath_2   = 3,
-        RecentROMPath_3   = 4,
-        RecentROMPath_4   = 5,
+        RecentROMPath_0 = 1,
+        RecentROMPath_1 = 2,
+        RecentROMPath_2 = 3,
+        RecentROMPath_3 = 4,
+        RecentROMPath_4 = 5,
     };
 
     // Static Key QString set
-    static QVector<QString> KeyStringSet =
-    {
-        "patch/eabi_binfile_path",
-        "history/RecentROMPath_0",
-        "history/RecentROMPath_1",
-        "history/RecentROMPath_2",
-        "history/RecentROMPath_3",
-        "history/RecentROMPath_4",
+    static QVector<QString> KeyStringSet = {
+        "patch/eabi_binfile_path", "history/RecentROMPath_0", "history/RecentROMPath_1",
+        "history/RecentROMPath_2", "history/RecentROMPath_3", "history/RecentROMPath_4",
     };
 
     void InitProgramSetupPath();
     void SetKey(enum IniKeys key, QString value);
     QString GetKey(enum IniKeys key);
-};
+}; // namespace SettingsUtils
 
 #endif // SETTINGSUTILS_H

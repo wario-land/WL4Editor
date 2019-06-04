@@ -14,8 +14,7 @@
 /// The parent QWidget.
 /// </param>
 Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
-    QDockWidget(parent),
-    ui(new Ui::Tile16DockWidget)
+        QDockWidget(parent), ui(new Ui::Tile16DockWidget)
 {
     ui->setupUi(this);
     scalerate = ui->graphicsView->width() / (16 * 8 * 2);
@@ -25,7 +24,8 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
     // Set the fixed height of the info box
     QFontMetrics fontMetrics(ui->tileInfoTextBox->font());
     int rowHeight = fontMetrics.lineSpacing();
-    ui->tileInfoGroupBox->setFixedHeight(6 * rowHeight); // TODO: Make this exact, calculate using margins
+    ui->tileInfoGroupBox->setFixedHeight(
+        6 * rowHeight); // TODO: Make this exact, calculate using margins
 }
 
 /// <summary>
@@ -34,23 +34,14 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
 Tile16DockWidget::~Tile16DockWidget()
 {
     delete ui;
-    if(Tile16MAPScene)
-    {
-        delete Tile16MAPScene;
-    }
-    if(SelectedTileset)
-    {
-        delete SelectedTileset;
-    }
+    if (Tile16MAPScene) { delete Tile16MAPScene; }
+    if (SelectedTileset) { delete SelectedTileset; }
 }
 
 /// <summary>
 /// This function will be triggered when the dock widget get focus.
 /// </summary>
-void Tile16DockWidget::FocusInEvent(QFocusEvent *e)
-{
-    SetSelectedTile(0, true);
-}
+void Tile16DockWidget::FocusInEvent(QFocusEvent *e) { SetSelectedTile(0, true); }
 
 /// <summary>
 /// Set the tileset for the dock widget.
@@ -58,7 +49,8 @@ void Tile16DockWidget::FocusInEvent(QFocusEvent *e)
 /// <remarks>
 /// Clean up heap objects from last time this funcction was called.
 /// Set up and draw the graphics for the selectable map16 tiles.
-/// Add the semi-transparent square used to highlight the selected tile (initialized to an invisible position)
+/// Add the semi-transparent square used to highlight the selected tile (initialized to an invisible
+/// position)
 /// </remarks>
 /// <param name="_tilesetIndex">
 /// The index of the tileset to display.
@@ -66,8 +58,8 @@ void Tile16DockWidget::FocusInEvent(QFocusEvent *e)
 int Tile16DockWidget::SetTileset(int _tilesetIndex)
 {
     // Clean up heap objects from previous invocations
-    if(SelectedTileset) { delete SelectedTileset; }
-    if(Tile16MAPScene) { delete Tile16MAPScene; }
+    if (SelectedTileset) { delete SelectedTileset; }
+    if (Tile16MAPScene) { delete Tile16MAPScene; }
 
     // Set up tileset
     int _tilesetPtr = WL4Constants::TilesetDataTable + _tilesetIndex * 36;
@@ -100,16 +92,15 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
 /// <param name="str">
 /// The string to display in the text box.
 /// </param>
-void Tile16DockWidget::SetTileInfoText(QString str)
-{
-    ui->tileInfoTextBox->setText(str);
-}
+void Tile16DockWidget::SetTileInfoText(QString str) { ui->tileInfoTextBox->setText(str); }
 
 /// <summary>
-/// Set the selected tile index for the dock widget, and update the position of the highlight square.
+/// Set the selected tile index for the dock widget, and update the position of the highlight
+/// square.
 /// </summary>
 /// <remarks>
-/// The SelectedTile instance variable must be set so it can be obtained when writing tiles to the main graphics view.
+/// The SelectedTile instance variable must be set so it can be obtained when writing tiles to the
+/// main graphics view.
 /// </remarks>
 /// <param name="tile">
 /// The map16 tile index that was selected in the graphics view.
@@ -129,9 +120,11 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
 
     // Print information about the tile to the user
     QString infoText;
-    infoText.sprintf("Tile ID: %d\nEvent ID: 0x%04X\nTerrain type ID: %d", tile, eventIndex, tmpTerrainTypeID);
+    infoText.sprintf("Tile ID: %d\nEvent ID: 0x%04X\nTerrain type ID: %d", tile, eventIndex,
+                     tmpTerrainTypeID);
     SetTileInfoText(infoText);
 
     // Set vertical scrollbar of braphicview
-    if(resetscrollbar) ui->graphicsView->verticalScrollBar()->setValue(scalerate * 16 * (tile / 8));
+    if (resetscrollbar)
+        ui->graphicsView->verticalScrollBar()->setValue(scalerate * 16 * (tile / 8));
 }

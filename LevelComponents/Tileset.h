@@ -1,8 +1,8 @@
 #ifndef TILESET_H
 #define TILESET_H
 
-#include <QVector>
 #include <QColor>
+#include <QVector>
 
 #include "Tile.h"
 
@@ -30,6 +30,6 @@ namespace LevelComponents
         unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }
         unsigned short *GetEventTablePtr() { return Map16EventTable; }
     };
-}
+} // namespace LevelComponents
 
 #endif // TILESET_H

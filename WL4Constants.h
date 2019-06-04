@@ -6,27 +6,27 @@
 namespace WL4Constants
 {
     // Definitions for the beginning of tables
-    const unsigned int TilesetDataTable          = 0x3F2298;
-    const unsigned int LevelHeaderTable          = 0x639068;
-    const unsigned int LevelHeaderIndexTable     = 0x6391C4;
-    const unsigned int LevelNamePointerTable     = 0x63A3AC;
-    const unsigned int DoorTable                 = 0x78F21C;
-    const unsigned int RoomDataTable             = 0x78F280;
+    const unsigned int TilesetDataTable = 0x3F2298;
+    const unsigned int LevelHeaderTable = 0x639068;
+    const unsigned int LevelHeaderIndexTable = 0x6391C4;
+    const unsigned int LevelNamePointerTable = 0x63A3AC;
+    const unsigned int DoorTable = 0x78F21C;
+    const unsigned int RoomDataTable = 0x78F280;
     const unsigned int CameraControlPointerTable = 0x78F540;
     const unsigned int EntitySetInfoPointerTable = 0x78EF78;
     const unsigned int EntityTilesetPointerTable = 0x78EBF0;
     const unsigned int EntityPalettePointerTable = 0x78EDB4;
-    const unsigned int EntityTilesetLengthTable  = 0x3B2C90;
+    const unsigned int EntityTilesetLengthTable = 0x3B2C90;
 
     // Miscellaneous definitions
-    const unsigned int CameraRecordSentinel        = 0x3F9D58;
-    const unsigned int SpritesBasicElementTiles    = 0x400AE8; // 0x3000 bytes in length
-    const unsigned int BGLayerDefaultPtr           = 0x58DA7C;
-    const unsigned int NormalLayerDefaultPtr       = 0x3F2263;
+    const unsigned int CameraRecordSentinel = 0x3F9D58;
+    const unsigned int SpritesBasicElementTiles = 0x400AE8; // 0x3000 bytes in length
+    const unsigned int BGLayerDefaultPtr = 0x58DA7C;
+    const unsigned int NormalLayerDefaultPtr = 0x3F2263;
     const unsigned int ToxicLandfillDustyLayer0Ptr = 0x601854;
-    const unsigned int UniversalSpritesPalette     = 0x556DDC;
-    const unsigned int UniversalSpritesPalette2    = 0x400A68;
-    const unsigned int TreasureBoxGFXTiles         = 0x352CF0;
+    const unsigned int UniversalSpritesPalette = 0x556DDC;
+    const unsigned int UniversalSpritesPalette2 = 0x400A68;
+    const unsigned int TreasureBoxGFXTiles = 0x352CF0;
 
     // Other
     const unsigned int AvailableSpaceBeginningInROM = 0x78F970;
@@ -86,7 +86,7 @@ namespace WL4Constants
     const unsigned int BG_0x60E96C = 0x60E96C;
     const unsigned int BG_0x60ED78 = 0x60ED78;
 
-    //Entity OAM default action frames data pointers
+    // Entity OAM default action frames data pointers
     /*
      * Generated using c code.
      * src: Hacking Documents\DataExtraction.cpp
@@ -114,7 +114,9 @@ namespace WL4Constants
     const unsigned int Entity19_0x3BB0E8 = 0x3BB0E8;
     const unsigned int Entity1A_0x3BB63C = 0x3BB63C;
     const unsigned int Entity1B_0x3BBD6C = 0x3BBD6C;
-    const unsigned int Entity1B_0x3BBDF4 = 0x3BBDF4; // Notice: there are two different entities here but indexed the same number, they use different palettes so render them carefully
+    const unsigned int Entity1B_0x3BBDF4 =
+        0x3BBDF4; // Notice: there are two different entities here but indexed the same number, they
+                  // use different palettes so render them carefully
     const unsigned int Entity1C_0x3BC570 = 0x3BC570;
     const unsigned int Entity1D_0x3BC570 = 0x3BC570;
     const unsigned int Entity1E_0x3BC8E4 = 0x3BC8E4;
@@ -132,7 +134,8 @@ namespace WL4Constants
     const unsigned int Entity2A_0x3C1270 = 0x3C1270;
     const unsigned int Entity2B_0x3C1270 = 0x3C1270;
     const unsigned int Entity2C_0x3C302C = 0x3C302C;
-    const unsigned int Entity2D_0x3C491C = 0x3C491C; // Notice: 0x2D - I cannot render anything in game
+    const unsigned int Entity2D_0x3C491C =
+        0x3C491C; // Notice: 0x2D - I cannot render anything in game
     const unsigned int Entity2E_0x3C48D4 = 0x3C48D4;
     const unsigned int Entity2F_0x3C48F4 = 0x3C48F4;
     const unsigned int Entity30_0x3C4174 = 0x3C4174;
@@ -155,7 +158,8 @@ namespace WL4Constants
     const unsigned int Entity41_0x3C7034 = 0x3C7034;
     const unsigned int Entity42_0x3C770C = 0x3C770C;
     const unsigned int Entity43_0x3C798C = 0x3C798C;
-    const unsigned int Entity44_0x3C798C = 0x3C798C; // Notice: 0x44 - I cannot render anything in game
+    const unsigned int Entity44_0x3C798C =
+        0x3C798C; // Notice: 0x44 - I cannot render anything in game
     const unsigned int Entity45_0x3C799C = 0x3C799C;
     const unsigned int Entity46_0x3C79AC = 0x3C79AC;
     const unsigned int Entity47_0x3C7A5C = 0x3C7A5C;
@@ -216,6 +220,6 @@ namespace WL4Constants
     const unsigned int Entity7E_0x3F0F04 = 0x3F0F04;
     const unsigned int Entity7F_0x3F122C = 0x3F122C;
     const unsigned int Entity80_0x3F1AA0 = 0x3F1AA0;
-}
+} // namespace WL4Constants
 
 #endif // WL4CONSTANTS_H
