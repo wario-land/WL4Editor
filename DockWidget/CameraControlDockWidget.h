@@ -56,6 +56,7 @@ public:
     void SetCameraControlInfo(LevelComponents::Room *currentroom);
     static void StaticInitialization();
 
+    // clang-format off
     static constexpr const char *CameraLimitatorResetSideTypeNameData[5] =
     {
         "Fixed",
@@ -64,6 +65,7 @@ public:
         "2: Can reset upper side",
         "3: Can reset lower side"
     };
+    // clang-format on
 };
 
 #endif // CAMERACONTROLDOCKWIDGET_H

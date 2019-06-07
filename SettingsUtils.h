@@ -34,6 +34,7 @@ namespace SettingsUtils
     };
 
     // Static Key QString set
+    // clang-format off
     static QVector<QString> KeyStringSet =
     {
         "patch/eabi_binfile_path",
@@ -43,6 +44,7 @@ namespace SettingsUtils
         "history/RecentROMPath_3",
         "history/RecentROMPath_4",
     };
+    // clang-format on
 
     void InitProgramSetupPath();
     void SetKey(enum IniKeys key, QString value);
