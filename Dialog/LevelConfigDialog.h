@@ -2,12 +2,13 @@
 #define LEVELCONFIGDIALOG_H
 
 #include <QDialog>
-#include <string>
 #include <QString>
 #include <QValidator> // include <QRegExp> and <QRegExpValidator>
+#include <string>
 
-namespace Ui {
-class LevelConfigDialog;
+namespace Ui
+{
+    class LevelConfigDialog;
 }
 
 class LevelConfigDialog : public QDialog
