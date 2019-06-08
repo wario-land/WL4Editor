@@ -1072,6 +1072,8 @@ void WL4EditorWindow::on_actionAbout_triggered()
     changelogButton = changelogButton;
 }
 
+static const char *layerSwapFailureMsg = "Swapping Layers failed!";
+
 /// <summary>
 /// Swap the Layerdata for Layer_0 and Layer_1.
 /// </summary>
@@ -1081,12 +1083,12 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
     // swap Layerdata pointers if possible
     if(!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled()))
     {
-        statusBarLabel->setText("Swaping Layers failed!");
+        statusBarLabel->setText(tr(layerSwapFailureMsg));
         return;
     }
     if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
     {
-        statusBarLabel->setText("Swaping Layers failed!");
+        statusBarLabel->setText(tr(layerSwapFailureMsg));
         return;
     }
     unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetLayerData();
@@ -1114,7 +1116,7 @@ void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
     // swap Layerdata pointers if possible
     if(!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled()))
     {
-        statusBarLabel->setText("Swaping Layers failed!");
+        statusBarLabel->setText(tr(layerSwapFailureMsg));
         return;
     }
     unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->GetLayerData();
@@ -1142,12 +1144,12 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
     // swap Layerdata pointers if possible
     if(!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled()) || !(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled()))
     {
-        statusBarLabel->setText("Swaping Layers failed!");
+        statusBarLabel->setText(tr(layerSwapFailureMsg));
         return;
     }
     if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
     {
-        statusBarLabel->setText("Swaping Layers failed!");
+        statusBarLabel->setText(tr(layerSwapFailureMsg));
         return;
     }
     unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetLayerData();

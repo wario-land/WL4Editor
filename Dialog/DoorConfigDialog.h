@@ -99,6 +99,7 @@ public:
     static void EntitySetsDeconstruction();
 
     // Enumeration of Door type
+    // clang-format off
     static constexpr const char *DoortypeSetData[5] =
     {
         "1: Portal",
@@ -240,6 +241,7 @@ public:
         "0x7F Crumbling Platform",
         "0x80 Arewo Shitain-Hakase"
     };
+    // clang-format on
 };
 
 #endif // DOORCONFIGDIALOG_H
