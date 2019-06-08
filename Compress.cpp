@@ -21,12 +21,17 @@ namespace ROMUtils
 
         // Populate R backwards in the jump table
         for (unsigned int i = data_len - 1; i >= 1; --i)
-        { R[i - 1] = (R[i] == jumpLimit || data[i] != data[i - 1]) ? 1 : R[i] + 1; }
+        {
+            R[i - 1] = (R[i] == jumpLimit || data[i] != data[i - 1]) ? 1 : R[i] + 1;
+        }
 
         // Populate C forwards in the jump table
         for (unsigned int i = 0; i < data_len; ++i)
         {
-            if (R[i] < minrun && cons < jumpLimit) { ++cons; }
+            if (R[i] < minrun && cons < jumpLimit)
+            {
+                ++cons;
+            }
             else
             {
                 C[i - cons] = cons;
@@ -34,7 +39,10 @@ namespace ROMUtils
                 i += R[i] - 1;
             }
         }
-        if (cons) { C[data_len - cons] = cons; }
+        if (cons)
+        {
+            C[data_len - cons] = cons;
+        }
 
         JumpTable = R; // set the jump table since it has been populated
     }
@@ -84,14 +92,20 @@ namespace ROMUtils
             bool runmode = R[i] >= minrun;
             unsigned short len = runmode ? R[i] : C[i];
             AddOpcode(compressedData, len, runmode);
-            for (int j = 0; j < (runmode ? 1 : len); ++j) { compressedData.append(data[i + j]); }
+            for (int j = 0; j < (runmode ? 1 : len); ++j)
+            {
+                compressedData.append(data[i + j]);
+            }
             i += len;
         }
         AddOpcode(compressedData, 0, false);
 
         // Create the dynamically allocated char array
         unsigned char *compressed = new unsigned char[compressedData.size()];
-        for (int i = 0; i < compressedData.size(); ++i) { compressed[i] = compressedData[i]; }
+        for (int i = 0; i < compressedData.size(); ++i)
+        {
+            compressed[i] = compressedData[i];
+        }
         return compressed;
     }
 } // namespace ROMUtils

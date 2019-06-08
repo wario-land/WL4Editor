@@ -21,7 +21,8 @@ namespace LevelComponents
     {
         for (int i = 0; i < paletteNum; ++i)
         {
-            if (palettes[i + startPaletteId].size()) palettes[i + startPaletteId].clear();
+            if (palettes[i + startPaletteId].size())
+                palettes[i + startPaletteId].clear();
             // First color is transparent
             palettes[i + startPaletteId].push_back(0);
             int subPalettePtr = paletteSetPtr + i * 32;
@@ -52,7 +53,9 @@ namespace LevelComponents
     void EntitySet::LoadSpritesTiles(int tileaddress, int datalength, int startrow)
     {
         for (int i = 0; i < (datalength / 32); ++i)
-        { tile8x8data[i + startrow * 32] = new Tile8x8(tileaddress + i * 32, palettes); }
+        {
+            tile8x8data[i + startrow * 32] = new Tile8x8(tileaddress + i * 32, palettes);
+        }
     }
 
     /// <summary>
@@ -99,7 +102,10 @@ namespace LevelComponents
         {
             for (int i = (8 + currentpaletteID); i < 15; ++i)
             {
-                for (int j = 0; j < 16; ++j) { palettes[i].push_back(0); }
+                for (int j = 0; j < 16; ++j)
+                {
+                    palettes[i].push_back(0);
+                }
             }
         }
         // Load palette 3 - 7 for Basic Element used in the room
@@ -111,7 +117,10 @@ namespace LevelComponents
         // Set palette 0 - 2 all to 0 for Wario Sprites only
         for (int i = 0; i < 3; ++i)
         {
-            for (int j = 0; j < 16; ++j) { palettes[i].push_back(0); }
+            for (int j = 0; j < 16; ++j)
+            {
+                palettes[i].push_back(0);
+            }
         }
 
         // Load 1024 sprites tiles, ignore the first 4 rows, they are wario tiles
@@ -130,7 +139,8 @@ namespace LevelComponents
         do
         {
             tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
-            if (tmpEntityId == 0) break;
+            if (tmpEntityId == 0)
+                break;
             EntitySetinfoTableElement Tmp_entitytableElement;
             Tmp_entitytableElement.Global_EntityID = tmpEntityId;
             Tmp_entitytableElement.paletteOffset = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
@@ -147,7 +157,8 @@ namespace LevelComponents
         } while (1);
         for (unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
         {
-            if (!tile8x8data[i]) tile8x8data[i] = Tile8x8::CreateBlankTile(palettes);
+            if (!tile8x8data[i])
+                tile8x8data[i] = Tile8x8::CreateBlankTile(palettes);
         }
 
         // Load Treasure/CD Boxes tile8x8s when this Entityset is not a Boss Entityset
@@ -174,7 +185,9 @@ namespace LevelComponents
     int EntitySet::GetEntityPaletteOffset(int _entityID, int entityglobalId)
     {
         if (_entityID == -1) // TODO: find what the game does
-        { return 0; }
+        {
+            return 0;
+        }
         else
         {
             int Paloffset = EntityinfoTable[_entityID].paletteOffset + 8;
@@ -185,8 +198,13 @@ namespace LevelComponents
                 (entityglobalId == 0x33) || (entityglobalId == 0x34) || (entityglobalId == 0x35) ||
                 (entityglobalId == 0x36) || (entityglobalId == 0x37) || (entityglobalId == 0x38) ||
                 (entityglobalId == 0x39))
-            { Paloffset++; }
-            if (entityglobalId == 0x13) { Paloffset += 2; }
+            {
+                Paloffset++;
+            }
+            if (entityglobalId == 0x13)
+            {
+                Paloffset += 2;
+            }
 
             return Paloffset;
         }
@@ -201,7 +219,9 @@ namespace LevelComponents
     int EntitySet::GetEntityTileIdOffset(int _entityID)
     {
         if (_entityID == -1) // TODO: find what the game does
-        { return 0; }
+        {
+            return 0;
+        }
         else
         {
             return 64 * (EntityinfoTable[_entityID].paletteOffset);
@@ -216,10 +236,14 @@ namespace LevelComponents
     /// </param>
     bool EntitySet::IsEntityInside(int entityglobalId)
     {
-        if (entityglobalId >= 0 && entityglobalId <= 0x10) return true;
+        if (entityglobalId >= 0 && entityglobalId <= 0x10)
+            return true;
         for (unsigned int i = 0; i < EntityinfoTable.size(); ++i)
         {
-            if (EntityinfoTable[i].Global_EntityID == entityglobalId) { return true; }
+            if (EntityinfoTable[i].Global_EntityID == entityglobalId)
+            {
+                return true;
+            }
         }
         return false;
     }
@@ -334,6 +358,9 @@ namespace LevelComponents
     {
         // Delete Tile8x8 information
         // BlankTile may be disjoint in the array, so we skip over those and delete it afterward
-        for (unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i) { delete tile8x8data[i]; }
+        for (unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
+        {
+            delete tile8x8data[i];
+        }
     }
 } // namespace LevelComponents

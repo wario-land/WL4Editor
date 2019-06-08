@@ -33,7 +33,10 @@ void EntitySetDockWidget::RenderEntityAndResetInfo()
 {
     // Render Entity
     QGraphicsScene *scene = ui->graphicsView_CurrentEntity->scene();
-    if (scene) { delete scene; }
+    if (scene)
+    {
+        delete scene;
+    }
     LevelComponents::Entity *currentEntityPtr = currentRoom->GetCurrentEntityListSource()[currentEntityId];
     QImage EntityImage = currentEntityPtr->Render();
     int Entitywidth, Entityheight;
@@ -76,10 +79,12 @@ void EntitySetDockWidget::RenderEntityAndResetInfo()
 void EntitySetDockWidget::on_pushButton_PreviousEntity_clicked()
 {
     ui->pushButton_NextEntity->setEnabled(true);
-    if (currentEntityId == 1) return;
+    if (currentEntityId == 1)
+        return;
     --currentEntityId;
     RenderEntityAndResetInfo();
-    if (currentEntityId == 1) ui->pushButton_PreviousEntity->setEnabled(false);
+    if (currentEntityId == 1)
+        ui->pushButton_PreviousEntity->setEnabled(false);
 }
 
 /// <summary>
@@ -92,8 +97,10 @@ void EntitySetDockWidget::on_pushButton_PreviousEntity_clicked()
 void EntitySetDockWidget::on_pushButton_NextEntity_clicked()
 {
     ui->pushButton_PreviousEntity->setEnabled(true);
-    if (EntityAmount == currentEntityId) return;
+    if (EntityAmount == currentEntityId)
+        return;
     ++currentEntityId;
     RenderEntityAndResetInfo();
-    if (EntityAmount == currentEntityId) ui->pushButton_NextEntity->setEnabled(false);
+    if (EntityAmount == currentEntityId)
+        ui->pushButton_NextEntity->setEnabled(false);
 }

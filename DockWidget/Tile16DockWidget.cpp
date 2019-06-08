@@ -32,8 +32,14 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) : QDockWidget(parent), ui(ne
 Tile16DockWidget::~Tile16DockWidget()
 {
     delete ui;
-    if (Tile16MAPScene) { delete Tile16MAPScene; }
-    if (SelectedTileset) { delete SelectedTileset; }
+    if (Tile16MAPScene)
+    {
+        delete Tile16MAPScene;
+    }
+    if (SelectedTileset)
+    {
+        delete SelectedTileset;
+    }
 }
 
 /// <summary>
@@ -55,8 +61,14 @@ void Tile16DockWidget::FocusInEvent(QFocusEvent *e) { SetSelectedTile(0, true); 
 int Tile16DockWidget::SetTileset(int _tilesetIndex)
 {
     // Clean up heap objects from previous invocations
-    if (SelectedTileset) { delete SelectedTileset; }
-    if (Tile16MAPScene) { delete Tile16MAPScene; }
+    if (SelectedTileset)
+    {
+        delete SelectedTileset;
+    }
+    if (Tile16MAPScene)
+    {
+        delete Tile16MAPScene;
+    }
 
     // Set up tileset
     int _tilesetPtr = WL4Constants::TilesetDataTable + _tilesetIndex * 36;
@@ -119,5 +131,6 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
     SetTileInfoText(infoText);
 
     // Set vertical scrollbar of braphicview
-    if (resetscrollbar) ui->graphicsView->verticalScrollBar()->setValue(scalerate * 16 * (tile / 8));
+    if (resetscrollbar)
+        ui->graphicsView->verticalScrollBar()->setValue(scalerate * 16 * (tile / 8));
 }

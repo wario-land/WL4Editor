@@ -104,7 +104,10 @@ namespace LevelComponents
         Tile8x8 *t = new Tile8x8(_palettes);
         for (int i = 0; i < 8; ++i)
         {
-            for (int j = 0; j < 8; ++j) { t->ImageData->setPixel(i, j, 0); }
+            for (int j = 0; j < 8; ++j)
+            {
+                t->ImageData->setPixel(i, j, 0);
+            }
         }
 
 #ifndef NOCACHE
@@ -257,7 +260,10 @@ namespace LevelComponents
     void Tile8x8::DeleteCachedImageData(QImageW *image)
     {
         int references = ImageDataCache.value(image, 0);
-        if (references > 1) { --ImageDataCache[image]; }
+        if (references > 1)
+        {
+            --ImageDataCache[image];
+        }
         else if (references == 1)
         {
             ImageDataCache.take(image);

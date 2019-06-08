@@ -25,8 +25,8 @@ SpaceBeforeCtorInitializerColon: true
 Cpp11BracedListStyle: false
 AllowShortBlocksOnASingleLine: true
 AllowShortFunctionsOnASingleLine: All
-AllowShortIfStatementsOnASingleLine: true
-AllowShortLoopsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
 
 PointerAlignment: Right
 AlignTrailingComments: true

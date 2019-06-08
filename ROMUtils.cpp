@@ -13,7 +13,8 @@ static inline int StrMatch(unsigned char *ptr, const char *pattern)
     int matched = 0;
     do
     {
-        if (ptr[matched] != *pattern) break;
+        if (ptr[matched] != *pattern)
+            break;
         ++matched;
     } while (*++pattern);
     return matched;
@@ -22,7 +23,8 @@ static inline int StrMatch(unsigned char *ptr, const char *pattern)
 // Helper function to validate RATS at an address
 static inline bool ValidRATS(unsigned char *ptr)
 {
-    if (strncmp(reinterpret_cast<const char *>(ptr), "STAR", 4)) return false;
+    if (strncmp(reinterpret_cast<const char *>(ptr), "STAR", 4))
+        return false;
     short chunkLen = *reinterpret_cast<short *>(ptr + 4);
     short chunkComp = *reinterpret_cast<short *>(ptr + 6);
     return chunkLen == ~chunkComp;
@@ -93,7 +95,10 @@ namespace ROMUtils
                 while (1)
                 {
                     int ctrl = CurrentFile[address++];
-                    if (!ctrl) { break; }
+                    if (!ctrl)
+                    {
+                        break;
+                    }
 
                     size_t temp = dst - OutputLayerData;
                     if (temp > outputSize)
@@ -105,13 +110,19 @@ namespace ROMUtils
                     else if (ctrl & 0x80)
                     {
                         runData = ctrl & 0x7F;
-                        for (int j = 0; j < runData; j++) { dst[2 * j] = CurrentFile[address]; }
+                        for (int j = 0; j < runData; j++)
+                        {
+                            dst[2 * j] = CurrentFile[address];
+                        }
                         address++;
                     }
                     else
                     {
                         runData = ctrl;
-                        for (int j = 0; j < runData; j++) { dst[2 * j] = CurrentFile[address + j]; }
+                        for (int j = 0; j < runData; j++)
+                        {
+                            dst[2 * j] = CurrentFile[address + j];
+                        }
                         address += runData;
                     }
 
@@ -124,7 +135,10 @@ namespace ROMUtils
                 {
                     int ctrl = (static_cast<int>(CurrentFile[address]) << 8) | CurrentFile[address + 1];
                     address += 2; // offset + 2
-                    if (!ctrl) { break; }
+                    if (!ctrl)
+                    {
+                        break;
+                    }
 
                     size_t temp = dst - OutputLayerData;
                     if (temp > outputSize)
@@ -136,13 +150,19 @@ namespace ROMUtils
                     if (ctrl & 0x8000)
                     {
                         runData = ctrl & 0x7FFF;
-                        for (int j = 0; j < runData; j++) { dst[2 * j] = CurrentFile[address]; }
+                        for (int j = 0; j < runData; j++)
+                        {
+                            dst[2 * j] = CurrentFile[address];
+                        }
                         address++;
                     }
                     else
                     {
                         runData = ctrl;
-                        for (int j = 0; j < runData; j++) { dst[2 * j] = CurrentFile[address + j]; }
+                        for (int j = 0; j < runData; j++)
+                        {
+                            dst[2 * j] = CurrentFile[address + j];
+                        }
                         address += runData;
                     }
 
@@ -229,8 +249,9 @@ namespace ROMUtils
     /// </returns>
     int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize)
     {
-        int freeBytes = 0;                               // number of free bytes found from startAddr
-        if (startAddr + chunkSize > ROMLength) return 0; // fail if not enough room in ROM
+        int freeBytes = 0; // number of free bytes found from startAddr
+        if (startAddr + chunkSize > ROMLength)
+            return 0; // fail if not enough room in ROM
         while (freeBytes < chunkSize)
         {
             // Optimize search by incrementing more with partial matches
@@ -248,7 +269,8 @@ namespace ROMUtils
                     // Checksum pass: Restart the search at end of the chunk
                     unsigned short chunkLen = *reinterpret_cast<unsigned short *>(ROMData + startAddr + freeBytes + 4);
                     startAddr += freeBytes + 12 + chunkLen;
-                    if (startAddr + chunkSize > ROMLength) return 0; // fail if not enough room in ROM
+                    if (startAddr + chunkSize > ROMLength)
+                        return 0; // fail if not enough room in ROM
                     freeBytes = 0;
                 }
                 else
@@ -281,7 +303,10 @@ namespace ROMUtils
         std::sort(chunks.begin(), chunks.end(),
                   [](const struct SaveData &a, const struct SaveData &b) { return a.size < b.size; });
         std::map<int, int> chunkIDtoIndex;
-        for (int i = 0; i < chunks.size(); ++i) { chunkIDtoIndex[chunks[i].index] = i; }
+        for (int i = 0; i < chunks.size(); ++i)
+        {
+            chunkIDtoIndex[chunks[i].index] = i;
+        }
 
         // Invalidate old chunk data
         unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
@@ -292,7 +317,10 @@ namespace ROMUtils
             if (chunk.old_chunk_addr > WL4Constants::AvailableSpaceBeginningInROM)
             {
                 unsigned char *RATSaddr = TempFile + chunk.old_chunk_addr - 12;
-                if (ValidRATS(RATSaddr)) { strncpy((char *) RATSaddr, "STAR_INV", 8); }
+                if (ValidRATS(RATSaddr))
+                {
+                    strncpy((char *) RATSaddr, "STAR_INV", 8);
+                }
                 else
                     std::cout << "Invalid RATS identifier for existing chunk, index " << chunk.index << std::endl;
             }
@@ -307,7 +335,8 @@ namespace ROMUtils
             int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
         findspace:
             int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
-            if (chunk.alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
+            if (chunk.alignment)
+                chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
             if (!chunkAddr)
             {
                 // Expand ROM (double the size and align to 8MB)
@@ -346,7 +375,8 @@ namespace ROMUtils
         // Apply source pointer modifications
         foreach (struct SaveData chunk, chunks)
         {
-            if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk) continue;
+            if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk)
+                continue;
 
             unsigned char *ptrLoc = chunk.dest_index ?
                                                      // Source pointer is in another chunk
@@ -362,7 +392,8 @@ namespace ROMUtils
         // Write each chunk to TempFile
         foreach (struct SaveData chunk, chunks)
         {
-            if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk) continue;
+            if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk)
+                continue;
 
             // Create the RATS tag
             unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
@@ -400,7 +431,10 @@ namespace ROMUtils
             // Save the rom file from the CurrentFile copy
             QFile file(filePath);
             file.open(QIODevice::WriteOnly);
-            if (file.isOpen()) { file.write((const char *) TempFile, TempLength); }
+            if (file.isOpen())
+            {
+                file.write((const char *) TempFile, TempLength);
+            }
             else
             {
                 // Couldn't open the file to save the ROM
@@ -439,7 +473,10 @@ namespace ROMUtils
                     layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
                     layer->SetDirty(false);
                 }
-                for (unsigned int j = 0; j < 3; ++j) { room->SetEntityListDirty(j, false); }
+                for (unsigned int j = 0; j < 3; ++j)
+                {
+                    room->SetEntityListDirty(j, false);
+                }
                 struct LevelComponents::__RoomHeader newroomheader;
                 memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
                 room->ResetRoomHeader(newroomheader);
@@ -460,7 +497,8 @@ namespace ROMUtils
         }
         foreach (struct SaveData chunk, chunks)
         {
-            if (chunk.ChunkType != SaveDataChunkType::InvalidationChunk) free(chunk.data);
+            if (chunk.ChunkType != SaveDataChunkType::InvalidationChunk)
+                free(chunk.data);
         }
         return success;
     }

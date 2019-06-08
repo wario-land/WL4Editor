@@ -146,7 +146,10 @@ namespace LevelComponents
         size_t GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
         std::vector<struct __CameraControlRecord *> GetCameraControlRecords(bool create_new_instances = false)
         {
-            if (!create_new_instances) { return CameraControlRecords; }
+            if (!create_new_instances)
+            {
+                return CameraControlRecords;
+            }
             std::vector<struct __CameraControlRecord *> newCameraControlRecords;
             for (unsigned int i = 0; i < CameraControlRecords.size(); ++i)
             {
@@ -208,7 +211,8 @@ namespace LevelComponents
         }
         void SetDoorsVector(std::vector<Door *> _doors)
         {
-            if (!IsCopy) return;
+            if (!IsCopy)
+                return;
             if (doors.size())
             {
                 for (auto iter = doors.begin(); iter != doors.end(); ++iter)

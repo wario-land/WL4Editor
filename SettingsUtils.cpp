@@ -18,7 +18,8 @@ namespace SettingsUtils
         if (!fileInfo.isFile())
         {
             QSettings WL4EditorIni(ProgramSettingFilePath, QSettings::IniFormat);
-            for (int i = 0; i < KeyStringSet.size(); i++) WL4EditorIni.setValue(KeyStringSet[i], "");
+            for (int i = 0; i < KeyStringSet.size(); i++)
+                WL4EditorIni.setValue(KeyStringSet[i], "");
         }
     }
 

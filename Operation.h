@@ -63,8 +63,10 @@ struct OperationParams
         }
         if (roomConfigChange)
         {
-            if (lastRoomConfigParams) delete lastRoomConfigParams;
-            if (newRoomConfigParams) delete newRoomConfigParams;
+            if (lastRoomConfigParams)
+                delete lastRoomConfigParams;
+            if (newRoomConfigParams)
+                delete newRoomConfigParams;
         }
     }
 };

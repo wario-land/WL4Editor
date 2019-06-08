@@ -89,14 +89,20 @@ namespace LevelComponents
             ++currentDoornum;
         }
         // Assign the destinations for the doors
-        for (unsigned int i = 0; i < doors.size(); ++i) { doors[i]->SetDestinationDoor(doors[destinations[i]]); }
+        for (unsigned int i = 0; i < doors.size(); ++i)
+        {
+            doors[i]->SetDestinationDoor(doors[destinations[i]]);
+        }
         // Set the first Door be Vortex Door
         doors[0]->SetAsVortex();
 
         // Load the room data
         int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + LevelID * 4);
         int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
-        for (int i = 0; i < roomCount; i++) { rooms.push_back(new Room(roomTableAddress + i * 0x2C, i, LevelID)); }
+        for (int i = 0; i < roomCount; i++)
+        {
+            rooms.push_back(new Room(roomTableAddress + i * 0x2C, i, LevelID));
+        }
 
         // Distribute door data to every room
         RedistributeDoor();
@@ -192,13 +198,19 @@ namespace LevelComponents
     void Level::RedistributeDoor()
     {
         // Distribute door data to every room
-        for (unsigned int i = 0; i < doors.size(); ++i) { rooms[doors[i]->GetRoomID()]->AddDoor(doors[i]); }
+        for (unsigned int i = 0; i < doors.size(); ++i)
+        {
+            rooms[doors[i]->GetRoomID()]->AddDoor(doors[i]);
+        }
 
         // Check if every Room have at least one Door, if not, set the entityset id to skip some problems
         // the code is only for avoiding crash
         for (unsigned int i = 0; i < rooms.size(); ++i)
         {
-            if (rooms[i]->CountDoors() == 0) { rooms[i]->SetCurrentEntitySet(37); }
+            if (rooms[i]->CountDoors() == 0)
+            {
+                rooms[i]->SetCurrentEntitySet(37);
+            }
         }
     }
 
@@ -261,7 +273,10 @@ namespace LevelComponents
         for (int i = 0; i < 26; i++)
         {
             unsigned char chr = ROMUtils::CurrentFile[address + i];
-            if (chr <= 0x09) { LevelName.append(1, chr + 48); }
+            if (chr <= 0x09)
+            {
+                LevelName.append(1, chr + 48);
+            }
             else if (chr >= 0x0A && chr <= 0x23)
             {
                 LevelName.append(1, chr + 55);
@@ -371,7 +386,10 @@ namespace LevelComponents
 
         // Populate door chunk data
         std::map<Door *, int> indexMapping;
-        for (unsigned int i = 0; i < doors.size(); ++i) { indexMapping[doors[i]] = i; }
+        for (unsigned int i = 0; i < doors.size(); ++i)
+        {
+            indexMapping[doors[i]] = i;
+        }
         for (unsigned int i = 0; i < doors.size(); ++i)
         {
             struct __DoorEntry entryStruct = doors[i]->GetEntryStruct();
@@ -393,7 +411,10 @@ namespace LevelComponents
         for (unsigned int i = 0; i < 26; ++i)
         {
             char c = LevelName[i];
-            if (c == ' ') { c = '\xFF'; }
+            if (c == ' ')
+            {
+                c = '\xFF';
+            }
             else if (c <= 57)
             {
                 c -= 48;

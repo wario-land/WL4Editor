@@ -47,14 +47,23 @@ namespace LevelComponents
         {
             QVector<QRgb> pal1 = colorTable();
             QVector<QRgb> pal2 = other.colorTable();
-            if (pal1.size() != pal2.size()) { return false; }
+            if (pal1.size() != pal2.size())
+            {
+                return false;
+            }
             for (int i = 0; i < pal1.size(); ++i)
             {
-                if (pal1[i] != pal2[i]) { return false; }
+                if (pal1[i] != pal2[i])
+                {
+                    return false;
+                }
             }
             int size1 = width() * height();
             int size2 = other.width() * other.height();
-            if (size1 != size2) { return false; }
+            if (size1 != size2)
+            {
+                return false;
+            }
             QImageW *ptr = (QImageW *) &other;
             return !memcmp(data_ptr(), ptr->data_ptr(), size1);
         }
@@ -73,10 +82,16 @@ namespace LevelComponents
         /// </returns>
         inline uint qHash(const QImageW *img, uint seed)
         {
-            for (QRgb rgb : img->colorTable()) { seed = ROT(seed ^ (uint) rgb); }
+            for (QRgb rgb : img->colorTable())
+            {
+                seed = ROT(seed ^ (uint) rgb);
+            }
             const int bytes = img->width() * img->height() * img->depth() / 32;
             unsigned int *data = (unsigned int *) img->constBits();
-            for (int i = 0; i < bytes; ++i) { seed = ROT(seed ^ data[i]); }
+            for (int i = 0; i < bytes; ++i)
+            {
+                seed = ROT(seed ^ data[i]);
+            }
             return seed;
         }
     };

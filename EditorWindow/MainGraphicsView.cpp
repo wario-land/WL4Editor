@@ -20,7 +20,8 @@ extern WL4EditorWindow *singleton;
 /// </param>
 void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 {
-    if (!singleton->FirstROMIsLoaded()) return;
+    if (!singleton->FirstROMIsLoaded())
+        return;
 
     // Get the ID of the tile that was clicked
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
@@ -124,7 +125,8 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 /// </param>
 void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 {
-    if (!singleton->FirstROMIsLoaded()) return;
+    if (!singleton->FirstROMIsLoaded())
+        return;
 
     // Get the ID of the tile that was clicked
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
@@ -133,7 +135,10 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
     unsigned int tileY = Y / 32;
 
     // If we have moved within the same tile, do nothing
-    if (tileX == (unsigned int) drawingTileX && tileY == (unsigned int) drawingTileY) { return; }
+    if (tileX == (unsigned int) drawingTileX && tileY == (unsigned int) drawingTileY)
+    {
+        return;
+    }
 
     // Draw the new tile
     LevelComponents::Room *room = singleton->GetCurrentRoom();
@@ -185,15 +190,18 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
     // Create an execute a tile change operation for the changed tile
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
-    if (selectedTile == 0xFFFF) return;
+    if (selectedTile == 0xFFFF)
+        return;
     int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
     LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
-    if (layer->IsEnabled() == false) return;
+    if (layer->IsEnabled() == false)
+        return;
     if (layer->GetMappingType() == LevelComponents::LayerTile8x8)
         return; // temporarily skip the condition when the current Layer's MappingType is 0x20 to avoid incorrect
                 // rendering
     int selectedTileIndex = tileX + tileY * room->GetWidth();
-    if (layer->GetLayerData()[selectedTileIndex] == selectedTile) return;
+    if (layer->GetLayerData()[selectedTileIndex] == selectedTile)
+        return;
     struct OperationParams *params = new struct OperationParams();
     params->type = ChangeTileOperation;
     params->tileChange = true;
@@ -252,7 +260,10 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             // The new positions
             int px = currentRoom->GetEntityX(SelectedEntityID);
             int py = currentRoom->GetEntityY(SelectedEntityID);
-            if (event->key() == Qt::Key_Left) { px = px - 1; }
+            if (event->key() == Qt::Key_Left)
+            {
+                px = px - 1;
+            }
             else if (event->key() == Qt::Key_Right)
             {
                 px = px + 1;

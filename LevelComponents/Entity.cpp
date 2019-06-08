@@ -165,7 +165,8 @@ namespace LevelComponents
                     offsetPal = palNum;
                 }
                 // palette reset
-                if (EntityGlobalID == 0x44) offsetPal = 0;
+                if (EntityGlobalID == 0x44)
+                    offsetPal = 0;
 
                 Tile8x8 *newTile = new Tile8x8(tileData[offsetID]);
                 newTile->SetPaletteIndex(offsetPal);
@@ -210,7 +211,10 @@ namespace LevelComponents
         int width = maxX - xOffset, height = maxY - yOffset;
         QPixmap pm(width, height);
         pm.fill(Qt::transparent);
-        if (UnusedEntity) { return pm.toImage(); }
+        if (UnusedEntity)
+        {
+            return pm.toImage();
+        }
         QPainter p(&pm);
         // OAM tiles must be rendered in reverse order as per the GBA graphical specifications
         for (auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
@@ -237,7 +241,10 @@ namespace LevelComponents
                 ++nowframe;
                 continue;
             }
-            for (int i = 0; i < objectnum; ++i) { OAMtoTiles(u16_attribute + i * 3 + 1); }
+            for (int i = 0; i < objectnum; ++i)
+            {
+                OAMtoTiles(u16_attribute + i * 3 + 1);
+            }
             break;
         }
     }

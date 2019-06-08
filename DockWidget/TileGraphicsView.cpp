@@ -23,7 +23,8 @@ void TileGraphicsView::mousePressEvent(QMouseEvent *event)
     // Get the ID of the tile that was clicked
     int X = event->x() + horizontalScrollBar()->sliderPosition();
     int Y = event->y() + verticalScrollBar()->sliderPosition();
-    if (X > 32 * 8 || Y > 32 * 0x60) return;
+    if (X > 32 * 8 || Y > 32 * 0x60)
+        return;
     int tileX = X / 32;
     int tileY = Y / 32;
     int tileID = tileX + tileY * 8;

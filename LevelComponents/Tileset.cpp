@@ -44,7 +44,10 @@ namespace LevelComponents
         // Initialize the 8x8 tiles by setting all the tiles to blank tiles
         blankTile = Tile8x8::CreateBlankTile(palettes);
         int tile8x8size = sizeof(tile8x8data) / sizeof(tile8x8data[0]);
-        for (int i = 0; i < tile8x8size; ++i) { tile8x8data[i] = blankTile; }
+        for (int i = 0; i < tile8x8size; ++i)
+        {
+            tile8x8data[i] = blankTile;
+        }
 
         // Load the animated tiles
         int tmpAnimatedTilesHeaderPtr;
@@ -69,14 +72,18 @@ namespace LevelComponents
             tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
             if ((ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x03') ||
                 (ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x06'))
-            { tmpoffset -= 1; }
+            {
+                tmpoffset -= 1;
+            }
             else
             {
                 tmpoffset = 0;
             }
             tmpoffset *= 128;
             for (int i = 0; i < 4; ++i)
-            { tile8x8data[i + 4 * v1] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes); }
+            {
+                tile8x8data[i + 4 * v1] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes);
+            }
         }
 
         // Load the 8x8 tile graphics
@@ -87,12 +94,17 @@ namespace LevelComponents
 
         // Foreground
         int fgGFXcount = fgGFXlen / 32;
-        for (int i = 0; i < fgGFXcount; ++i) { tile8x8data[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes); }
+        for (int i = 0; i < fgGFXcount; ++i)
+        {
+            tile8x8data[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes);
+        }
 
         // Background
         int bgGFXcount = bgGFXlen / 32;
         for (int i = 0; i < bgGFXcount; ++i)
-        { tile8x8data[tile8x8size - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes); }
+        {
+            tile8x8data[tile8x8size - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes);
+        }
 
         // Load the map16 data
         int map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
@@ -135,12 +147,21 @@ namespace LevelComponents
         for (unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
         {
             // The blank tile entry must be deleted separately
-            if (tile8x8data[i] != blankTile) { delete tile8x8data[i]; }
+            if (tile8x8data[i] != blankTile)
+            {
+                delete tile8x8data[i];
+            }
         }
         delete blankTile;
-        for (unsigned int i = 0; i < sizeof(map16data) / sizeof(map16data[0]); ++i) { delete map16data[i]; }
+        for (unsigned int i = 0; i < sizeof(map16data) / sizeof(map16data[0]); ++i)
+        {
+            delete map16data[i];
+        }
 
-        for (unsigned int i = 0; i < 16; ++i) { palettes[i].clear(); }
+        for (unsigned int i = 0; i < 16; ++i)
+        {
+            palettes[i].clear();
+        }
     }
 
     /// <summary>
@@ -165,7 +186,9 @@ namespace LevelComponents
             for (int i = 0; i < tileCountY; ++i)
             {
                 for (int j = 0; j < 8; ++j)
-                { map16data[(c * tileCountY + i) * 8 + j]->DrawTile(&pixmap, (c * 8 + j) * 16, i * 16); }
+                {
+                    map16data[(c * tileCountY + i) * 8 + j]->DrawTile(&pixmap, (c * 8 + j) * 16, i * 16);
+                }
             }
         }
         return pixmap;

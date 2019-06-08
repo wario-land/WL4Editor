@@ -65,7 +65,10 @@ namespace LevelComponents
             for (int i = 0; i < 16; i++)
             {
                 int CurrentPointer = ROMUtils::PointerFromData(pLevelCameraControlPointerTable + i * 4);
-                if (CurrentPointer == WL4Constants::CameraRecordSentinel) { break; }
+                if (CurrentPointer == WL4Constants::CameraRecordSentinel)
+                {
+                    break;
+                }
                 if (ROMUtils::CurrentFile[CurrentPointer] == _RoomID)
                 {
                     int RecordNum = ROMUtils::CurrentFile[CurrentPointer + 1];
@@ -120,16 +123,24 @@ namespace LevelComponents
         tileset = new Tileset(tilesetPtr, RoomHeader.TilesetID);
 
         // Set up the layer data
-        for (int i = 0; i < 4; ++i) { layers[i] = new Layer(*room->GetLayer(i)); }
+        for (int i = 0; i < 4; ++i)
+        {
+            layers[i] = new Layer(*room->GetLayer(i));
+        }
 
         SetLayerPriorityAndAlphaAttributes(room->GetRoomHeader().LayerEffects);
 
         // Set up camera control data
         if (CameraControlType == LevelComponents::HasControlAttrs)
-        { CameraControlRecords = room->GetCameraControlRecords(true); }
+        {
+            CameraControlRecords = room->GetCameraControlRecords(true);
+        }
 
         // Load Entity list for each difficulty level
-        for (int i = 0; i < 3; i++) { EntityList[i] = room->GetEntityList(i); }
+        for (int i = 0; i < 3; i++)
+        {
+            EntityList[i] = room->GetEntityList(i);
+        }
 
         // Deep Copy Entityset and Entities
         ResetEntitySet(CurrentEntitySetID);
@@ -142,7 +153,10 @@ namespace LevelComponents
     {
         for (unsigned int i = 0; i < sizeof(drawLayers) / sizeof(drawLayers[0]); ++i)
         {
-            if (drawLayers[i]) { delete drawLayers[i]; }
+            if (drawLayers[i])
+            {
+                delete drawLayers[i];
+            }
         }
     }
 
@@ -151,7 +165,8 @@ namespace LevelComponents
     /// </summary>
     void Room::FreeCurrentEntityListSource()
     {
-        if (!currentEntityListSource.size()) return;
+        if (!currentEntityListSource.size())
+            return;
         foreach (Entity *entity, currentEntityListSource)
         {
             delete entity;
@@ -167,7 +182,8 @@ namespace LevelComponents
     /// </param>
     void Room::ResetEntitySet(int entitysetId)
     {
-        if (currentEntitySet) delete currentEntitySet;
+        if (currentEntitySet)
+            delete currentEntitySet;
         FreeCurrentEntityListSource();
         currentEntitySet = new EntitySet(entitysetId, tileset->GetUniversalSpritesTilesPalettePtr());
         for (int i = 0; i < 17; ++i)
@@ -190,7 +206,8 @@ namespace LevelComponents
     {
         // Free drawlayer elements
         FreeDrawLayers();
-        if (currentEntitySet) delete currentEntitySet;
+        if (currentEntitySet)
+            delete currentEntitySet;
         FreeCurrentEntityListSource();
         foreach (struct __CameraControlRecord *C, CameraControlRecords)
         {
@@ -203,7 +220,10 @@ namespace LevelComponents
                 delete *iter; // Delete doors
             }
         }
-        for (int i = 0; i < 4; ++i) { delete layers[i]; }
+        for (int i = 0; i < 4; ++i)
+        {
+            delete layers[i];
+        }
         delete tileset;
     }
 
@@ -266,7 +286,10 @@ namespace LevelComponents
             });
 
             // Create a graphics scene with the layers added in order of priority
-            if (scene) { delete scene; } // Make a new graphics scene to draw to
+            if (scene)
+            {
+                delete scene;
+            } // Make a new graphics scene to draw to
             scene = new QGraphicsScene(0, 0, qMax(sceneWidth, 16 * this->GetLayer(0)->GetLayerWidth()), sceneHeight);
 
             // This represents the EVA alpha layer, which will be rendered in passes before the alpha layer is finalized
@@ -364,7 +387,8 @@ namespace LevelComponents
                 unsigned char EntityID = EntityList[currentDifficulty].at(i).EntityID;
                 // TODO this continue statement may not be addressing the underlying problem,
                 // if it is at all possible for out-of-range entity IDs to reach this point
-                if ((unsigned int) EntityID > currentEntityListSource.size() - 1) continue;
+                if ((unsigned int) EntityID > currentEntityListSource.size() - 1)
+                    continue;
                 Entity *currententity = currentEntityListSource[EntityID];
                 // Use an alternative method to render the Entity in a not-so-bad place
                 if (Layer0ColorBlending && !Layer0ColorBlendCoefficient_EVB)
@@ -500,7 +524,10 @@ namespace LevelComponents
                 CameraY = CameraY / 4;
 
                 // Get the first Camera limitator Y value
-                while (CameraY > 0xA0) { CameraY -= 0x90; }
+                while (CameraY > 0xA0)
+                {
+                    CameraY -= 0x90;
+                }
 
                 // Draw Camera Limitation
                 while ((CameraY + 0xA0) < (int) (Height * 16))
@@ -631,7 +658,9 @@ namespace LevelComponents
                     int val = eventtable[Layer1data[j * Width + i]];
                     if (std::find(eventidwithhiddencoin.begin(), eventidwithhiddencoin.end(), val) !=
                         eventidwithhiddencoin.end())
-                    { hiddencoinsPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8); }
+                    {
+                        hiddencoinsPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
+                    }
                 }
             }
             QGraphicsPixmapItem *hiddencoinspixmapItem;
@@ -652,7 +681,10 @@ namespace LevelComponents
         {
             // Enable visibility of the foreground and background layers
             Ui::EditModeParams *layerVisibility = &(renderParams->mode);
-            for (int i = 0; i < 4; ++i) { RenderedLayers[i]->setVisible(layerVisibility->layersEnabled[i]); }
+            for (int i = 0; i < 4; ++i)
+            {
+                RenderedLayers[i]->setVisible(layerVisibility->layersEnabled[i]);
+            }
 
             // Enable the visibility of the sprite and editor overlay layers
             if (RenderedLayers[4])
@@ -663,9 +695,12 @@ namespace LevelComponents
                 RenderedLayers[10]->setVisible(layerVisibility->entitiesEnabled);
                 RenderedLayers[11]->setVisible(layerVisibility->entitiesEnabled);
             }
-            if (RenderedLayers[5]) RenderedLayers[5]->setVisible(layerVisibility->doorsEnabled);
-            if (RenderedLayers[6]) RenderedLayers[6]->setVisible(layerVisibility->cameraAreasEnabled);
-            if (RenderedLayers[7]) RenderedLayers[7]->setVisible(layerVisibility->alphaBlendingEnabled);
+            if (RenderedLayers[5])
+                RenderedLayers[5]->setVisible(layerVisibility->doorsEnabled);
+            if (RenderedLayers[6])
+                RenderedLayers[6]->setVisible(layerVisibility->cameraAreasEnabled);
+            if (RenderedLayers[7])
+                RenderedLayers[7]->setVisible(layerVisibility->alphaBlendingEnabled);
             RenderedLayers[12]->setVisible(layerVisibility->hiddencoinsEnabled);
         }
             return scene;
@@ -673,7 +708,8 @@ namespace LevelComponents
         {
             // Re-render the QImage for the changed tile
             Layer *layer = layers[renderParams->mode.selectedLayer];
-            if (layer->IsEnabled() == false) return scene;
+            if (layer->IsEnabled() == false)
+                return scene;
             layer->ReRenderTile(renderParams->tileX, renderParams->tileY, renderParams->tileID, tileset);
 
             // Obtain the old QPixmap from the previously-rendered graphic layers
@@ -704,7 +740,10 @@ namespace LevelComponents
                 std::sort(layerlist.begin(), layerlist.end(), [](Layer *layera, Layer *layerb) {
                     return layera->GetLayerPriority() < layerb->GetLayerPriority();
                 });
-                for (int i = 0; i < 4; i++) { layerqueue[i] = layerlist.at(3 - i); }
+                for (int i = 0; i < 4; i++)
+                {
+                    layerqueue[i] = layerlist.at(3 - i);
+                }
 
                 QPixmap alphaPixmapTemp = alphalayeritem->pixmap();
                 QPainter alphaPainterTemp(&alphaPixmapTemp);
@@ -868,7 +907,10 @@ namespace LevelComponents
     /// </summary>
     void Room::SetBGLayerAutoScrollEnabled(bool enability)
     {
-        if (enability) { RoomHeader.Layer3Scrolling = '\x07'; }
+        if (enability)
+        {
+            RoomHeader.Layer3Scrolling = '\x07';
+        }
         else
         {
             RoomHeader.Layer3Scrolling = RoomHeader.Layer3MappingType ? '\x01' : '\x03';
@@ -885,7 +927,8 @@ namespace LevelComponents
     {
         for (unsigned int i = 0; i < doors.size(); ++i)
         {
-            if (doors[i]->GetGlobalDoorID() == globalDoorId) return i;
+            if (doors[i]->GetGlobalDoorID() == globalDoorId)
+                return i;
         }
         assert(0 /* globalDoorId must match one of the door's global ID */); // TODO: Error handling
         return 0xFFFFFFFF;
@@ -1075,7 +1118,8 @@ namespace LevelComponents
     /// </returns>
     bool Room::AddEntity(int XPos, int YPos, int localEntityId)
     {
-        if (EntityList[currentDifficulty].size() == 47) return false;
+        if (EntityList[currentDifficulty].size() == 47)
+            return false;
         EntityRoomAttribute newEntityattrs;
         newEntityattrs.XPos = XPos;
         newEntityattrs.YPos = YPos;
@@ -1100,7 +1144,8 @@ namespace LevelComponents
     /// </returns>
     void Room::SetEntityPosition(int XPos, int YPos, int index)
     {
-        if (EntityList[currentDifficulty].size() == 47) return;
+        if (EntityList[currentDifficulty].size() == 47)
+            return;
         EntityList[currentDifficulty].at(index).XPos = XPos;
         EntityList[currentDifficulty].at(index).YPos = YPos;
         return;
@@ -1121,7 +1166,8 @@ namespace LevelComponents
     /// </returns>
     int Room::GetEntityX(int index)
     {
-        if (EntityList[currentDifficulty].size() == 47) return false;
+        if (EntityList[currentDifficulty].size() == 47)
+            return false;
         return EntityList[currentDifficulty].at(index).XPos;
     }
 
@@ -1135,7 +1181,8 @@ namespace LevelComponents
     /// </returns>
     int Room::GetEntityY(int index)
     {
-        if (EntityList[currentDifficulty].size() == 47) return false;
+        if (EntityList[currentDifficulty].size() == 47)
+            return false;
         return EntityList[currentDifficulty].at(index).YPos;
     }
 
@@ -1161,7 +1208,8 @@ namespace LevelComponents
     /// </param>
     void Room::DeleteEntity(int difficulty, int index)
     {
-        if (difficulty > 2) return;
+        if (difficulty > 2)
+            return;
         EntityList[difficulty].erase(EntityList[difficulty].begin() + index);
     }
 
@@ -1173,7 +1221,8 @@ namespace LevelComponents
     /// </param>
     void Room::ClearEntitylist(int difficulty)
     {
-        if (difficulty > 2) return;
+        if (difficulty > 2)
+            return;
         EntityList[difficulty].clear();
     }
 

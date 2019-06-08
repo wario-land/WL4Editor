@@ -17,7 +17,9 @@ ChooseLevelDialog::ChooseLevelDialog(struct DialogParams::PassageAndLevelIndex c
     ui->comboBox_Passage->setCurrentIndex(currentSelection._PassageIndex);
     int SelectItemID;
     if (currentSelection._PassageIndex == 0 || currentSelection._PassageIndex == 5)
-    { SelectItemID = (currentSelection._LevelIndex == 0) ? 0 : 1; }
+    {
+        SelectItemID = (currentSelection._LevelIndex == 0) ? 0 : 1;
+    }
     else
     {
         SelectItemID = currentSelection._LevelIndex;
@@ -39,7 +41,9 @@ void ChooseLevelDialog::ConfigureLevelComboBox(int level)
               << "Boss Level";
     ui->comboBox_Level->clear();
     if (ui->comboBox_Passage->currentIndex() == 0 || ui->comboBox_Passage->currentIndex() == 5)
-    { ui->comboBox_Level->addItems(LevelSet2); }
+    {
+        ui->comboBox_Level->addItems(LevelSet2);
+    }
     else
     {
         ui->comboBox_Level->addItems(LevelSet1);
@@ -60,7 +64,9 @@ DialogParams::PassageAndLevelIndex ChooseLevelDialog::GetResult()
     tmpRetStruct._LevelIndex = ui->comboBox_Level->currentIndex();
     if ((ui->comboBox_Passage->currentIndex() == 0 || ui->comboBox_Passage->currentIndex() == 5) &&
         ui->comboBox_Level->currentIndex() == 1)
-    { tmpRetStruct._LevelIndex = 4; }
+    {
+        tmpRetStruct._LevelIndex = 4;
+    }
 
     return tmpRetStruct;
 }

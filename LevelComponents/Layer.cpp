@@ -22,7 +22,10 @@ namespace LevelComponents
     Layer::Layer(int layerDataPtr, enum LayerMappingType mappingType) :
             MappingType(mappingType), Enabled(mappingType != LayerDisabled), DataPtr(layerDataPtr)
     {
-        if (mappingType == LayerDisabled) { return; }
+        if (mappingType == LayerDisabled)
+        {
+            return;
+        }
 
         // Get the layer dimensions
         if (mappingType == LayerMap16)
@@ -66,7 +69,8 @@ namespace LevelComponents
         }
 
         // Was layer decompression successful?
-        if (!LayerData) std::cout << "Failed to decompress layer data: " << (layerDataPtr + 1) << std::endl;
+        if (!LayerData)
+            std::cout << "Failed to decompress layer data: " << (layerDataPtr + 1) << std::endl;
     }
 
     /// <summary>
@@ -82,7 +86,8 @@ namespace LevelComponents
         int layerDataSize = Width * Height * 2;
         LayerData = (unsigned short *) malloc(layerDataSize);
         memcpy(LayerData, layer.LayerData, layerDataSize);
-        if (MappingType == LayerMappingType::LayerTile8x8) foreach (Tile *tile, layer.tiles)
+        if (MappingType == LayerMappingType::LayerTile8x8)
+            foreach (Tile *tile, layer.tiles)
                 tiles.push_back(new Tile8x8((Tile8x8 *) tile));
         else // Map16 tiles are not deep copied
             foreach (Tile *tile, layer.tiles)
@@ -94,7 +99,8 @@ namespace LevelComponents
     /// </summary>
     Layer::~Layer()
     {
-        if (!LayerData) return;
+        if (!LayerData)
+            return;
         DeconstructTiles();
         delete[] LayerData;
     }
@@ -159,18 +165,23 @@ namespace LevelComponents
         if (MappingType == LayerMap16)
         {
             // Re-initialize tile vector
-            if (tiles.size() != 0) tiles.clear();
+            if (tiles.size() != 0)
+                tiles.clear();
             tiles = std::vector<Tile *>(Width * Height);
 
             // For 16x16 tiles, just copy the tiles from the map16
             TileMap16 **map16 = tileset->GetMap16Data();
-            for (int i = 0; i < Width * Height; ++i) { tiles[i] = map16[LayerData[i]]; }
+            for (int i = 0; i < Width * Height; ++i)
+            {
+                tiles[i] = map16[LayerData[i]];
+            }
         }
         else if (MappingType == LayerTile8x8)
         {
             // Re-initialize tile vector
             DeconstructTiles();
-            if (tiles.size() != 0) tiles.clear();
+            if (tiles.size() != 0)
+                tiles.clear();
             tiles = std::vector<Tile *>(Width * Height);
 
             // For 8x8 tiles, we must use the copy constructor and set each tile's properties
@@ -249,11 +260,15 @@ namespace LevelComponents
     /// </summary>
     void Layer::SetDisabled()
     {
-        if (!LayerData) return;
+        if (!LayerData)
+            return;
         if (MappingType ==
             LayerTile8x8) // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
         {
-            for (auto iter = tiles.begin(); iter != tiles.end(); ++iter) { delete (*iter); }
+            for (auto iter = tiles.begin(); iter != tiles.end(); ++iter)
+            {
+                delete (*iter);
+            }
         }
         else
         {
@@ -284,7 +299,10 @@ namespace LevelComponents
         Height = layerHeight;
         dirty = Enabled = true;
         MappingType = LayerMap16;
-        if (LayerData) { delete[] LayerData; }
+        if (LayerData)
+        {
+            delete[] LayerData;
+        }
         LayerData = new unsigned short[layerWidth * layerHeight];
         memset(LayerData, 0, 2 * layerWidth * layerHeight);
     }
@@ -309,9 +327,15 @@ namespace LevelComponents
         for (int i = 0; i < boundY; ++i)
         {
             memcpy(tmpLayerData + i * newWidth, LayerData + i * Width, boundX * sizeof(short));
-            for (int j = boundX; j < newWidth; ++j) { tmpLayerData[i * newWidth + j] = defaultValue; }
+            for (int j = boundX; j < newWidth; ++j)
+            {
+                tmpLayerData[i * newWidth + j] = defaultValue;
+            }
         }
-        for (int i = boundY * newWidth; i < newWidth * newHeight; ++i) { tmpLayerData[i] = defaultValue; }
+        for (int i = boundY * newWidth; i < newWidth * newHeight; ++i)
+        {
+            tmpLayerData[i] = defaultValue;
+        }
         Width = newWidth;
         Height = newHeight;
         delete LayerData;

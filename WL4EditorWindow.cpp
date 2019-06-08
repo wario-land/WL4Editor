@@ -60,7 +60,10 @@ WL4EditorWindow::~WL4EditorWindow()
     delete EntitySetWidget;
     delete CameraControlWidget;
     delete statusBarLabel;
-    if (CurrentLevel) { delete CurrentLevel; }
+    if (CurrentLevel)
+    {
+        delete CurrentLevel;
+    }
     DoorConfigDialog::EntitySetsDeconstruction();
 }
 
@@ -122,12 +125,16 @@ void WL4EditorWindow::LoadRoomUIUpdate()
 void WL4EditorWindow::OpenROM()
 {
     // Check for unsaved operations
-    if (!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?"))) return;
+    if (!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?")))
+        return;
 
     // Select a ROM file to open
     QString qFilePath =
         QFileDialog::getOpenFileName(this, tr("Open ROM file"), dialogInitialPath, tr("GBA ROM files (*.gba)"));
-    if (!qFilePath.compare("")) { return; }
+    if (!qFilePath.compare(""))
+    {
+        return;
+    }
 
     // Load the ROM file
     std::string filePath = qFilePath.toStdString();
@@ -142,7 +149,8 @@ void WL4EditorWindow::OpenROM()
     setWindowTitle(fileName.c_str());
 
     // Load the first level and render the screen
-    if (CurrentLevel) delete CurrentLevel;
+    if (CurrentLevel)
+        delete CurrentLevel;
     selectedLevel._PassageIndex = selectedLevel._LevelIndex = 0;
     CurrentLevel = new LevelComponents::Level(static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
                                               static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex));
@@ -232,7 +240,9 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
 
     // refresh the Layer 2, 0, 3 instances
     if (nextroomconfig->Layer2Enable && !currentroomconfig->Layer2Enable)
-    { currentRoom->GetLayer(2)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight); }
+    {
+        currentRoom->GetLayer(2)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+    }
     else if (currentroomconfig->Layer2Enable && !nextroomconfig->Layer2Enable)
     {
         currentRoom->GetLayer(2)->SetDisabled();
@@ -241,7 +251,9 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     if (!currentroomconfig->Layer0Enable && nextroomconfig->Layer0Enable)
     {
         if ((nextroomconfig->Layer0MappingTypeParam & 0x30) == 0x10)
-        { currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight); }
+        {
+            currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+        }
         else
         {
             LevelComponents::Layer *currentLayer0 = currentRoom->GetLayer(0);
@@ -414,7 +426,8 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetLayer0ColorBlendingEnabled(nextroomconfig->Layer0Alpha);
     currentRoom->SetLayerPriorityAndAlphaAttributes(nextroomconfig->LayerPriorityAndAlphaAttr);
     currentRoom->SetLayer2Enabled(nextroomconfig->Layer2Enable);
-    if (nextroomconfig->Layer0DataPtr) currentRoom->SetLayerDataPtr(0, nextroomconfig->Layer0DataPtr);
+    if (nextroomconfig->Layer0DataPtr)
+        currentRoom->SetLayerDataPtr(0, nextroomconfig->Layer0DataPtr);
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
     currentRoom->SetBGLayerAutoScrollEnabled(nextroomconfig->BackgroundLayerAutoScrollEnable);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
@@ -429,10 +442,13 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         }
     }
     if (currentRoom->GetLayer(3)->GetMappingType() == LevelComponents::LayerDisabled)
-    { currentRoom->SetLayerDataInRoomHeader(3, WL4Constants::BGLayerDefaultPtr); }
+    {
+        currentRoom->SetLayerDataInRoomHeader(3, WL4Constants::BGLayerDefaultPtr);
+    }
 
     // Mark the layers as dirty
-    for (unsigned int i = 0; i < 4; ++i) currentRoom->GetLayer(i)->SetDirty(true);
+    for (unsigned int i = 0; i < 4; ++i)
+        currentRoom->GetLayer(i)->SetDirty(true);
 }
 
 /// <summary>
@@ -444,7 +460,8 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
 void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 {
     // You cannot delete the vortex, it is always the first Door.
-    if (globalDoorIndex == 0) return;
+    if (globalDoorIndex == 0)
+        return;
 
     // Delete the Door from the Room Door list
     CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()]->DeleteDoor(globalDoorIndex);
@@ -453,7 +470,9 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
     for (unsigned int i = 0; i < CurrentLevel->GetDoors().size(); ++i)
     {
         if (CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID() == globalDoorIndex)
-        { CurrentLevel->GetDoors()[i]->SetDestinationDoor(CurrentLevel->GetDoors()[0]); }
+        {
+            CurrentLevel->GetDoors()[i]->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
+        }
     }
 
     // Delete the Door from the Level Door list
@@ -463,7 +482,9 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
     if (CurrentLevel->GetDoors().size() - globalDoorIndex)
     {
         for (unsigned int i = globalDoorIndex; i < CurrentLevel->GetDoors().size(); ++i)
-        { CurrentLevel->GetDoors()[i]->GlobalDoorIdDec(); }
+        {
+            CurrentLevel->GetDoors()[i]->GlobalDoorIdDec();
+        }
     }
 
     // Correct the LinkerDestination in DoorEntry for each Door
@@ -485,9 +506,13 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 /// </param>
 void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
 {
-    if (!firstROMLoaded) return;
+    if (!firstROMLoaded)
+        return;
 
-    if (event->key() == Qt::Key_PageDown) { on_roomIncreaseButton_clicked(); }
+    if (event->key() == Qt::Key_PageDown)
+    {
+        on_roomIncreaseButton_clicked();
+    }
     else if (event->key() == Qt::Key_PageUp)
     {
         on_roomDecreaseButton_clicked();
@@ -515,7 +540,10 @@ void WL4EditorWindow::RenderScreenFull()
 {
     // Delete the old scene, if it exists
     QGraphicsScene *oldScene = ui->graphicsView->scene();
-    if (oldScene) { delete oldScene; }
+    if (oldScene)
+    {
+        delete oldScene;
+    }
 
     // Perform a full render of the screen
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::FullRender);
@@ -634,7 +662,8 @@ void WL4EditorWindow::closeEvent(QCloseEvent *event)
 void WL4EditorWindow::on_loadLevelButton_clicked()
 {
     // Check for unsaved operations
-    if (!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load level anyway?"))) return;
+    if (!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load level anyway?")))
+        return;
 
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
@@ -644,7 +673,8 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     if (tmpdialog.exec() == QDialog::Accepted)
     {
         selectedLevel = tmpdialog.GetResult();
-        if (CurrentLevel) delete CurrentLevel;
+        if (CurrentLevel)
+            delete CurrentLevel;
         CurrentLevel =
             new LevelComponents::Level(static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
                                        static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex));
@@ -687,7 +717,10 @@ bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
         if (savePrompt.clickedButton() == saveButton)
         {
             // Do not load level if there was an issue saving the file
-            if (!SaveCurrentFile()) { return false; }
+            if (!SaveCurrentFile())
+            {
+                return false;
+            }
         }
         else if (savePrompt.clickedButton() == discardButton)
         {
@@ -718,7 +751,10 @@ void WL4EditorWindow::CurrentRoomClearEverything()
     IfDeleteDoors.setDefaultButton(CancelClearingButton);
     IfDeleteDoors.exec();
 
-    if (IfDeleteDoors.clickedButton() == YesButton) { IfDeleteAllDoors = true; }
+    if (IfDeleteDoors.clickedButton() == YesButton)
+    {
+        IfDeleteAllDoors = true;
+    }
     else if (IfDeleteDoors.clickedButton() != NoButton)
     {
         return;
@@ -729,7 +765,10 @@ void WL4EditorWindow::CurrentRoomClearEverything()
     for (int i = 0; i < 3; ++i)
     {
         LevelComponents::Layer *layer = currentRoom->GetLayer(i);
-        if (layer->GetMappingType() == LevelComponents::LayerMap16) { layer->ResetData(); }
+        if (layer->GetMappingType() == LevelComponents::LayerMap16)
+        {
+            layer->ResetData();
+        }
     }
 
     // Delete Entity lists and set dirty
@@ -811,7 +850,8 @@ void WL4EditorWindow::CurrentRoomClearEverything()
 /// </remarks>
 void WL4EditorWindow::on_roomDecreaseButton_clicked()
 {
-    if (!selectedRoom) return;
+    if (!selectedRoom)
+        return;
 
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
@@ -834,7 +874,8 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
 /// </remarks>
 void WL4EditorWindow::on_roomIncreaseButton_clicked()
 {
-    if (selectedRoom == (CurrentLevel->GetRooms().size() - 1)) return;
+    if (selectedRoom == (CurrentLevel->GetRooms().size() - 1))
+        return;
 
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity();
@@ -891,7 +932,10 @@ void WL4EditorWindow::on_actionLevel_Config_triggered()
 void WL4EditorWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);
-    if (firstROMLoaded) { resizeDocks({ EditModeWidget }, { 1 }, Qt::Vertical); }
+    if (firstROMLoaded)
+    {
+        resizeDocks({ EditModeWidget }, { 1 }, Qt::Vertical);
+    }
 }
 
 /// <summary>
@@ -969,7 +1013,10 @@ void WL4EditorWindow::on_actionNew_Door_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionSave_ROM_triggered()
 {
-    if (SaveCurrentFile()) { statusBarLabel->setText("Saved!"); }
+    if (SaveCurrentFile())
+    {
+        statusBarLabel->setText("Saved!");
+    }
 }
 
 /// <summary>
@@ -977,7 +1024,10 @@ void WL4EditorWindow::on_actionSave_ROM_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionSave_As_triggered()
 {
-    if (SaveCurrentFileAs()) { statusBarLabel->setText("Saved!"); }
+    if (SaveCurrentFileAs())
+    {
+        statusBarLabel->setText("Saved!");
+    }
 }
 
 /// <summary>
@@ -1217,7 +1267,10 @@ void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
 void WL4EditorWindow::on_action_clear_Layer_0_triggered()
 {
     LevelComponents::Layer *layer0 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0);
-    if (layer0->GetMappingType() == LevelComponents::LayerMap16) { layer0->ResetData(); }
+    if (layer0->GetMappingType() == LevelComponents::LayerMap16)
+    {
+        layer0->ResetData();
+    }
     // TODO: add history record
 
     // UI update
@@ -1233,7 +1286,10 @@ void WL4EditorWindow::on_action_clear_Layer_0_triggered()
 void WL4EditorWindow::on_action_clear_Layer_1_triggered()
 {
     LevelComponents::Layer *layer1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1);
-    if (layer1->GetMappingType() == LevelComponents::LayerMap16) { layer1->ResetData(); }
+    if (layer1->GetMappingType() == LevelComponents::LayerMap16)
+    {
+        layer1->ResetData();
+    }
     // TODO: add history record
 
     // UI update
@@ -1249,7 +1305,10 @@ void WL4EditorWindow::on_action_clear_Layer_1_triggered()
 void WL4EditorWindow::on_action_clear_Layer_2_triggered()
 {
     LevelComponents::Layer *layer2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2);
-    if (layer2->GetMappingType() == LevelComponents::LayerMap16) { layer2->ResetData(); }
+    if (layer2->GetMappingType() == LevelComponents::LayerMap16)
+    {
+        layer2->ResetData();
+    }
     // TODO: add history record
 
     // UI update

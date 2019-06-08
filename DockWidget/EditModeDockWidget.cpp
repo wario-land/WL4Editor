@@ -268,7 +268,10 @@ void EditModeDockWidget::on_CheckBox_AlphaView_stateChanged(int arg1)
 /// </param>
 void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
 {
-    if (!checked) { singleton->Graphicsview_UnselectDoorAndEntity(); }
+    if (!checked)
+    {
+        singleton->Graphicsview_UnselectDoorAndEntity();
+    }
 }
 
 /// <summary>
@@ -279,7 +282,10 @@ void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
 {
-    if (!checked) { singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1); }
+    if (!checked)
+    {
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
 }
 
 /// <summary>
@@ -290,7 +296,10 @@ void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 {
-    if (!checked) { singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1); }
+    if (!checked)
+    {
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
 }
 
 /// <summary>
@@ -301,7 +310,10 @@ void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
 {
-    if (!checked) { singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1); }
+    if (!checked)
+    {
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    }
 }
 
 /// <summary>

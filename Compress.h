@@ -35,7 +35,8 @@ namespace ROMUtils
         int GetMinimumRunSize() { return 3; }
         void AddOpcode(QVector<unsigned char> &compressedData, unsigned short opcode, bool runmode)
         {
-            if (runmode) opcode |= 0x80;
+            if (runmode)
+                opcode |= 0x80;
             compressedData.append((unsigned char) opcode);
         }
 
@@ -52,7 +53,8 @@ namespace ROMUtils
         int GetMinimumRunSize() { return 5; }
         void AddOpcode(QVector<unsigned char> &compressedData, unsigned short opcode, bool runmode)
         {
-            if (runmode) opcode |= 0x8000;
+            if (runmode)
+                opcode |= 0x8000;
             compressedData.append((unsigned char) (opcode >> 8));
             compressedData.append((unsigned char) opcode);
         }
