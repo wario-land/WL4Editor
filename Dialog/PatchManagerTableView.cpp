@@ -34,8 +34,8 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
     EntryTableModel.AddEntry(TEST4);
     */
 
-    struct PatchEntryItem TEST1 { QString("PatchCode/testfunc.c"), PatchType::C, 0x1111AF, false, false, 0x800000, "01020304" };
-    struct PatchEntryItem TEST2 { QString("PatchCode/UnlimitedRockBouncing.c"), PatchType::C, 0x2222AF, false, true, 0x800001, "01020304" };
+    struct PatchEntryItem TEST1 { QString("PatchCode/testfunc.c"), PatchType::C, 0x1F628, false, true, 0, "" };
+    struct PatchEntryItem TEST2 { QString("PatchCode/UnlimitedRockBouncing.c"), PatchType::C, 4, false, false, 0, "" };
     EntryTableModel.AddEntry(TEST1);
     EntryTableModel.AddEntry(TEST2);
 

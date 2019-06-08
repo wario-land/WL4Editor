@@ -22,7 +22,7 @@
 
 #define REPLACE_EXT(qstr,fromstr,tostr) do { \
     QString tempstr(qstr);                   \
-    tempstr.chop(strlen(fromstr));             \
+    tempstr.chop(strlen(fromstr));           \
     qstr = tempstr + tostr;                  \
 } while(0)
 
@@ -102,8 +102,8 @@ static QString CompileCFile(QString cfile)
     QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_GCC);
     QStringList args;
     args << "-MMD" << "-MP" << "-MF" << "-g" << "-Wall" << "-mcpu=arm7tdmi" << "-mtune=arm7tdmi" <<
-        "-fomit-frame-pointer" << "-ffast-math" << "-mthumb" << "-mthumb-interwork" << "-S" <<
-        cfile << "-o" << outfile;
+        "-fomit-frame-pointer" << "-ffast-math" << "-mthumb" << "-mthumb-interwork" <<
+        "-mgeneral-regs-only" << "-S" << cfile << "-o" << outfile;
 
     // Run GCC
     QProcess process;
@@ -217,6 +217,29 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
         contents += entry.SubstitutedBytes;
     }
     return contents;
+}
+
+/// <summary>
+/// Create the data for a hook.
+/// </summary>
+/// <param name="hookAddr">
+/// The address to place the hook.
+/// </param>
+/// <param name="patchAddr">
+/// The address that the hook will branch to.
+/// </param>
+/// <param name="stubFunction">
+/// If true, stub the function by returning early.
+/// </param>
+/// <param name="thumbMode">
+/// If true, specify that the code being hooked is in thumb mode.
+/// </param>
+/// <returns>
+/// The hook payload.
+/// </returns>
+static QByteArray CreateHook(unsigned int hookAddr, unsigned int patchAddr, bool stubFunction, bool thumbMode)
+{
+
 }
 
 namespace PatchUtils

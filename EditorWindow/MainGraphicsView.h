@@ -1,10 +1,10 @@
 #ifndef MAINGRAPHICSVIEW_H
 #define MAINGRAPHICSVIEW_H
 
-#include <QGraphicsView>
-#include "WL4EditorWindow.h"
-#include "LevelComponents/Level.h"
 #include "Dialog/DoorConfigDialog.h"
+#include "LevelComponents/Level.h"
+#include "WL4EditorWindow.h"
+#include <QGraphicsView>
 
 class MainGraphicsView : public QGraphicsView
 {

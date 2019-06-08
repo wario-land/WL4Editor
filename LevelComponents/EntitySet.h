@@ -1,14 +1,14 @@
 #ifndef ENTITYSET_H
 #define ENTITYSET_H
 
-#include "WL4Constants.h"
 #include "ROMUtils.h"
 #include "Tile.h"
+#include "WL4Constants.h"
 
-#include <vector>
-#include <QVector>
 #include <QColor>
 #include <QPixmap>
+#include <QVector>
+#include <vector>
 
 namespace LevelComponents
 {
@@ -56,6 +56,7 @@ namespace LevelComponents
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
 
+        // clang-format off
         static constexpr const unsigned int EntitiesFirstActionFrameSetsPtrsData[129] =
         {
             0,                               // 0x00
@@ -321,7 +322,8 @@ namespace LevelComponents
              -98,  -98,
              -98,  -66  //0x80
         };
+        // clang-format on
     };
-}
+} // namespace LevelComponents
 
 #endif // ENTITYSET_H

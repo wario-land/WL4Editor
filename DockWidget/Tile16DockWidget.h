@@ -2,15 +2,16 @@
 #define TILE16DOCKWIDGET_H
 
 #include <QDockWidget>
+#include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QPixmap>
-#include <QGraphicsPixmapItem>
 
-#include "WL4Constants.h"
-#include "ROMUtils.h"
 #include "LevelComponents/Tileset.h"
+#include "ROMUtils.h"
+#include "WL4Constants.h"
 
-namespace Ui {
+namespace Ui
+{
     class Tile16DockWidget;
 }
 

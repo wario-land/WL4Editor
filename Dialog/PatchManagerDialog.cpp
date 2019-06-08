@@ -90,6 +90,12 @@ retry:
         entry = editDialog->CreatePatchEntry();
 
         // Validate that the entry can be added
+        if(
+            entry.ThumbMode && (entry.HookAddress & 1) ||
+            !entry.ThumbMode && (entry.HookAddress & 3)
+        ){
+            QMessageBox::information(this, "About", QString("Misaligned hook address: ") + QString("%1").arg(entry.HookAddress, 0, 16));
+        }
         QFile file(entry.FileName);
         if(!file.exists())
         {
