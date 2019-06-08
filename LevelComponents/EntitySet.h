@@ -56,6 +56,7 @@ namespace LevelComponents
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
 
+        // clang-format off
         static constexpr const unsigned int EntitiesFirstActionFrameSetsPtrsData[129] =
         {
             0,                               // 0x00
@@ -321,6 +322,7 @@ namespace LevelComponents
              -98,  -98,
              -98,  -66  //0x80
         };
+        // clang-format on
     };
 }
 

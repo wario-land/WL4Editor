@@ -114,6 +114,7 @@ private:
     LevelComponents::Tileset *currentTileset = nullptr;
 
     // Enumeration of the available tilesets
+    // clang-format off
     static constexpr const char *TilesetNamesSetData[0x5C] =
     {
         "00  Debug room",
@@ -338,6 +339,7 @@ private:
         0,
         0
     };
+    // clang-format on
 };
 
 #endif // ROOMCONFIGDIALOG_H
