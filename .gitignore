@@ -62,3 +62,6 @@ UpgradeLog.htm
 
 # Debugging
 vgcore.*
+
+# Visual Studio Code files
+.vscode

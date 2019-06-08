@@ -13,9 +13,7 @@
 /// <param name="parent">
 /// The parent QWidget.
 /// </param>
-Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
-    QDockWidget(parent),
-    ui(new Ui::Tile16DockWidget)
+Tile16DockWidget::Tile16DockWidget(QWidget *parent) : QDockWidget(parent), ui(new Ui::Tile16DockWidget)
 {
     ui->setupUi(this);
     scalerate = ui->graphicsView->width() / (16 * 8 * 2);
@@ -34,23 +32,14 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) :
 Tile16DockWidget::~Tile16DockWidget()
 {
     delete ui;
-    if(Tile16MAPScene)
-    {
-        delete Tile16MAPScene;
-    }
-    if(SelectedTileset)
-    {
-        delete SelectedTileset;
-    }
+    if (Tile16MAPScene) { delete Tile16MAPScene; }
+    if (SelectedTileset) { delete SelectedTileset; }
 }
 
 /// <summary>
 /// This function will be triggered when the dock widget get focus.
 /// </summary>
-void Tile16DockWidget::FocusInEvent(QFocusEvent *e)
-{
-    SetSelectedTile(0, true);
-}
+void Tile16DockWidget::FocusInEvent(QFocusEvent *e) { SetSelectedTile(0, true); }
 
 /// <summary>
 /// Set the tileset for the dock widget.
@@ -66,8 +55,8 @@ void Tile16DockWidget::FocusInEvent(QFocusEvent *e)
 int Tile16DockWidget::SetTileset(int _tilesetIndex)
 {
     // Clean up heap objects from previous invocations
-    if(SelectedTileset) { delete SelectedTileset; }
-    if(Tile16MAPScene) { delete Tile16MAPScene; }
+    if (SelectedTileset) { delete SelectedTileset; }
+    if (Tile16MAPScene) { delete Tile16MAPScene; }
 
     // Set up tileset
     int _tilesetPtr = WL4Constants::TilesetDataTable + _tilesetIndex * 36;
@@ -100,10 +89,7 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
 /// <param name="str">
 /// The string to display in the text box.
 /// </param>
-void Tile16DockWidget::SetTileInfoText(QString str)
-{
-    ui->tileInfoTextBox->setText(str);
-}
+void Tile16DockWidget::SetTileInfoText(QString str) { ui->tileInfoTextBox->setText(str); }
 
 /// <summary>
 /// Set the selected tile index for the dock widget, and update the position of the highlight square.
@@ -133,5 +119,5 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
     SetTileInfoText(infoText);
 
     // Set vertical scrollbar of braphicview
-    if(resetscrollbar) ui->graphicsView->verticalScrollBar()->setValue(scalerate * 16 * (tile / 8));
+    if (resetscrollbar) ui->graphicsView->verticalScrollBar()->setValue(scalerate * 16 * (tile / 8));
 }

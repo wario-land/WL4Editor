@@ -15,11 +15,10 @@ namespace SettingsUtils
 
         // Check INI file
         QFileInfo fileInfo(ProgramSettingFilePath);
-        if(!fileInfo.isFile())
+        if (!fileInfo.isFile())
         {
             QSettings WL4EditorIni(ProgramSettingFilePath, QSettings::IniFormat);
-            for(int i = 0; i < KeyStringSet.size(); i++)
-                WL4EditorIni.setValue(KeyStringSet[i], "");
+            for (int i = 0; i < KeyStringSet.size(); i++) WL4EditorIni.setValue(KeyStringSet[i], "");
         }
     }
 
@@ -52,4 +51,4 @@ namespace SettingsUtils
         QSettings WL4EditorIni(ProgramSettingFilePath, QSettings::IniFormat);
         return WL4EditorIni.value(KeyStringSet[key]).toString();
     }
-}
+} // namespace SettingsUtils

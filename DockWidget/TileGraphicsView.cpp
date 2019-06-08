@@ -1,8 +1,8 @@
 #include "TileGraphicsView.h"
 #include "LevelComponents/Tileset.h"
 
-#include <QScrollBar>
 #include <QMouseEvent>
+#include <QScrollBar>
 #include <QTextStream>
 
 static bool initialized = false; // Used to allow the vertical scrollbar to initialize to the top once.
@@ -23,7 +23,7 @@ void TileGraphicsView::mousePressEvent(QMouseEvent *event)
     // Get the ID of the tile that was clicked
     int X = event->x() + horizontalScrollBar()->sliderPosition();
     int Y = event->y() + verticalScrollBar()->sliderPosition();
-    if(X > 32 * 8 || Y > 32 * 0x60) return;
+    if (X > 32 * 8 || Y > 32 * 0x60) return;
     int tileX = X / 32;
     int tileY = Y / 32;
     int tileID = tileX + tileY * 8;
@@ -44,7 +44,7 @@ void TileGraphicsView::mousePressEvent(QMouseEvent *event)
 void TileGraphicsView::showEvent(QShowEvent *event)
 {
     QGraphicsView::showEvent(event);
-    if(!initialized)
+    if (!initialized)
     {
         initialized = true;
         verticalScrollBar()->setValue(0);
