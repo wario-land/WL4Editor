@@ -6,7 +6,7 @@
 extern WL4EditorWindow *singleton;
 
 // Globals used by the undo system
-static std::deque<struct OperationParams*> operationHistory[16];
+static std::deque<struct OperationParams *> operationHistory[16];
 static unsigned int operationIndex[16];
 
 /// <summary>
@@ -18,12 +18,13 @@ static unsigned int operationIndex[16];
 /// <param name="operation">
 /// The operation to perform.
 /// </param>
-static void PerformOperation(struct OperationParams *operation)
+void PerformOperation(struct OperationParams *operation)
 {
     LevelComponents::Room *room;
-    if (operation->tileChange) {
+    if (operation->tileChange)
+    {
         room = singleton->GetCurrentRoom();
-        for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
+        for (auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
@@ -33,7 +34,8 @@ static void PerformOperation(struct OperationParams *operation)
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile, tcp->targetLayer);
         }
     }
-    if (operation->roomConfigChange) {
+    if (operation->roomConfigChange)
+    {
         // change the width and height for all layers
         singleton->RoomConfigReset(operation->lastRoomConfigParams, operation->newRoomConfigParams);
         singleton->RenderScreenFull();
@@ -41,6 +43,46 @@ static void PerformOperation(struct OperationParams *operation)
         singleton->SetEditModeWidgetDifficultyRadioBox(1);
         singleton->ResetEntitySetDockWidget();
         singleton->SetUnsavedChanges(true);
+    }
+    if (operation->objectPositionChange)
+    {
+        struct ObjectMoveParams *om=operation->objectMoveParams;
+        /*om->previousPositionX = pX;
+        om->previousPositionY = pY;*/
+        if (om->type == ObjectMoveParams::DOOR_TYPE) {
+            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+            LevelComponents::Door *selectedDoor = currentRoom->GetDoor(om->objectID);
+
+            // Calculating the deltas
+            int px1 = selectedDoor->GetX1();
+            int py1 = selectedDoor->GetY1();
+            int deltaX = selectedDoor->GetX2()-px1;
+            int deltaY = selectedDoor->GetY2()-py1;
+
+            // If the door exists and if it is still in the room
+            if (om->objectID != -1 && selectedDoor) {
+                if (currentRoom->IsNewDoorPositionInsideRoom(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY+deltaY))
+                {
+                    selectedDoor->SetDoorPlace(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY+deltaY);
+                    singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
+                }
+            }
+        } else if (om->type == ObjectMoveParams::ENTITY_TYPE) {
+            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+
+            // If the entity exists
+            if (om->objectID != -1) {
+                if (currentRoom->IsNewEntityPositionInsideRoom(om->nextPositionX, om->nextPositionY))
+                {
+                    currentRoom->SetEntityPosition(om->nextPositionX, om->nextPositionY, om->objectID);
+                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                    singleton->SetUnsavedChanges(true);
+                }
+            }
+        }
+
     }
 }
 
@@ -53,13 +95,13 @@ static void PerformOperation(struct OperationParams *operation)
 /// <param name="operation">
 /// The operation to backtrack.
 /// </param>
-static void BackTrackOperation(struct OperationParams *operation)
+void BackTrackOperation(struct OperationParams *operation)
 {
     LevelComponents::Room *room;
     if (operation->tileChange)
     {
         room = singleton->GetCurrentRoom();
-        for(auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
+        for (auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
@@ -79,6 +121,48 @@ static void BackTrackOperation(struct OperationParams *operation)
         singleton->ResetEntitySetDockWidget();
         singleton->SetUnsavedChanges(true);
     }
+    if (operation->objectPositionChange)
+    {
+        struct ObjectMoveParams *om=operation->objectMoveParams;
+        /*om->previousPositionX = pX;
+        om->previousPositionY = pY;*/
+        if (om->type == ObjectMoveParams::DOOR_TYPE) {
+            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+            LevelComponents::Door *selectedDoor = currentRoom->GetDoor(om->objectID);
+
+            // Calculating the deltas
+            int px1 = selectedDoor->GetX1();
+            int py1 = selectedDoor->GetY1();
+            int deltaX = selectedDoor->GetX2()-px1;
+            int deltaY = selectedDoor->GetY2()-py1;
+
+            // If the door exists and if it is still in the room
+            if (om->objectID != -1)
+            {
+                if (currentRoom->IsNewDoorPositionInsideRoom(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY+deltaY))
+                {
+                    selectedDoor->SetDoorPlace(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY+deltaY);
+                    singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
+                }
+            }
+        } else if (om->type == ObjectMoveParams::ENTITY_TYPE) {
+            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+
+            // If the entity exists and if it is still in the room
+            if (om->objectID != -1)
+            {
+                if (currentRoom->IsNewEntityPositionInsideRoom(om->previousPositionX, om->previousPositionY))
+                {
+                    currentRoom->SetEntityPosition(om->previousPositionX, om->previousPositionY, om->objectID);
+                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                    singleton->SetUnsavedChanges(true);
+                }
+            }
+        }
+
+    }
 }
 
 /// <summary>
@@ -93,7 +177,7 @@ void ExecuteOperation(struct OperationParams *operation)
 
     PerformOperation(operation);
     // If we perform an action after a series of undo, then delete the "undone" operations from history
-    while(operationIndex[currentRoomNumber])
+    while (operationIndex[currentRoomNumber])
     {
         // Delete the front operation in the queue while decrementing the operation index until the index reaches 0
         --operationIndex[currentRoomNumber];
@@ -118,20 +202,20 @@ void UndoOperation()
     int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
 
     // We cannot undo past the end of the deque
-    if(operationIndex[currentRoomNumber] < operationHistory[currentRoomNumber].size())
+    if (operationIndex[currentRoomNumber] < operationHistory[currentRoomNumber].size())
     {
         BackTrackOperation(operationHistory[currentRoomNumber][operationIndex[currentRoomNumber]++]);
 
         // If the entire operation history is undone for all rooms, then there are no unsaved changes
-        for(unsigned int i = 0; i < sizeof(operationIndex) / sizeof(operationIndex[0]); ++i)
+        for (unsigned int i = 0; i < sizeof(operationIndex) / sizeof(operationIndex[0]); ++i)
         {
-            if(operationIndex[currentRoomNumber] != operationHistory[currentRoomNumber].size())
+            if (operationIndex[currentRoomNumber] != operationHistory[currentRoomNumber].size())
             {
                 return;
             }
         }
         // TODO uncomment this once all operations that change the level go through Operation.cpp
-        //singleton->SetUnsavedChanges(false);
+        // singleton->SetUnsavedChanges(false);
     }
 }
 
@@ -148,7 +232,7 @@ void RedoOperation()
     int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
 
     // We cannot redo past the front of the deque
-    if(operationIndex[currentRoomNumber])
+    if (operationIndex[currentRoomNumber])
     {
         PerformOperation(operationHistory[currentRoomNumber][--operationIndex[currentRoomNumber]]);
 
@@ -165,10 +249,10 @@ void RedoOperation()
 /// </remarks>
 void ResetUndoHistory()
 {
-    for(unsigned int i = 0; i < sizeof(operationHistory) / sizeof(operationHistory[0]); ++i)
+    for (unsigned int i = 0; i < sizeof(operationHistory) / sizeof(operationHistory[0]); ++i)
     {
         // Deconstruct the dynamically allocated operation structs within the history queue
-        for(unsigned int j = 0; j < operationHistory[i].size(); ++j)
+        for (unsigned int j = 0; j < operationHistory[i].size(); ++j)
         {
             delete operationHistory[i][j];
         }

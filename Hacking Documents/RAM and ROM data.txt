@@ -54,6 +54,8 @@
 2DDDA0,2DDFA0,2DE918,2DE3A0 - Wario
 28C566 - Intro
 
+3F2F92 Music ID for Hall of Hieroglyph Level (0x02A0 => 672)
+
 === RAM
 
 The most interesting I found in the RAM is a debug mode. (03000c3c 08)

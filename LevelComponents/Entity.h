@@ -3,8 +3,8 @@
 
 #include <QVector>
 
-#include "ROMUtils.h"
 #include "LevelComponents/EntitySet.h"
+#include "ROMUtils.h"
 
 namespace LevelComponents
 {
@@ -15,10 +15,7 @@ namespace LevelComponents
         Tile8x8 *objTile;
 
         // Deconstructor for the EntityTile struct
-        ~EntityTile()
-        {
-            delete objTile;
-        }
+        ~EntityTile() { delete objTile; }
     };
 
     struct OAMTile
@@ -29,14 +26,14 @@ namespace LevelComponents
         int OAMheight;
         bool xFlip;
         bool yFlip;
-        QVector<EntityTile*> tile8x8;
+        QVector<EntityTile *> tile8x8;
 
         QImage Render();
 
         // Deconstructor for the OAMTile struct
         ~OAMTile()
         {
-            foreach(EntityTile *t, tile8x8)
+            foreach (EntityTile *t, tile8x8)
             {
                 delete t;
             }
@@ -50,7 +47,10 @@ namespace LevelComponents
         ~Entity();
         QImage Render();
         int GetPriority() { return Priority; }
-        EntityPositionalOffset GetLevelComponents() { return currentEntityset->GetEntityPositionalOffset(EntityGlobalID); }
+        EntityPositionalOffset GetLevelComponents()
+        {
+            return currentEntityset->GetEntityPositionalOffset(EntityGlobalID);
+        }
         int GetEntityID() { return EntityID; }
         int GetEntityGlobalID() { return EntityGlobalID; }
         int GetXOffset() { return xOffset; }
@@ -68,11 +68,11 @@ namespace LevelComponents
         int PaletteOffset = 0;
         bool SemiTransparent = false;
         bool UnusedEntity = false;
-        QVector<OAMTile*> OAMTiles;
+        QVector<OAMTile *> OAMTiles;
         EntitySet *currentEntityset;
         void OAMtoTiles(unsigned short *singleOAM);
         void ExtractSpritesTiles(int spritesFrameDataPtr, int frame);
     };
-}
+} // namespace LevelComponents
 
 #endif // ENTITY_H

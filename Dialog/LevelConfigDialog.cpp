@@ -15,9 +15,7 @@ QRegExp TimerRegx("^[0-9]:[0-5][0-9]$");
 /// <param name="parent">
 /// The parent QWidget.
 /// </param>
-LevelConfigDialog::LevelConfigDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::LevelConfigDialog)
+LevelConfigDialog::LevelConfigDialog(QWidget *parent) : QDialog(parent), ui(new Ui::LevelConfigDialog)
 {
     ui->setupUi(this);
 
@@ -34,10 +32,7 @@ LevelConfigDialog::LevelConfigDialog(QWidget *parent) :
 /// <summary>
 /// Deconstruct the Level Config Dialog.
 /// </summary>
-LevelConfigDialog::~LevelConfigDialog()
-{
-    delete ui;
-}
+LevelConfigDialog::~LevelConfigDialog() { delete ui; }
 
 /// <summary>
 /// Initialize the dialog's text boxes with a level name, and level frog timer values.
@@ -66,11 +61,17 @@ void LevelConfigDialog::InitTextBoxes(std::string _levelname, int HModeTimer, in
 
     // Parse and Show Timers
     int a, b, c;
-    a = HModeTimer / 60; b = (HModeTimer - 60 * a) / 10; c = HModeTimer - 60 * a - 10 * b;
+    a = HModeTimer / 60;
+    b = (HModeTimer - 60 * a) / 10;
+    c = HModeTimer - 60 * a - 10 * b;
     ui->HModeTimer_TextBox->setText(QString::number(a, 10) + ":" + QString::number(b, 10) + QString::number(c, 10));
-    a = NModeTimer / 60; b = (NModeTimer - 60 * a) / 10; c = NModeTimer - 60 * a - 10 * b;
+    a = NModeTimer / 60;
+    b = (NModeTimer - 60 * a) / 10;
+    c = NModeTimer - 60 * a - 10 * b;
     ui->NModeTimer_TextBox->setText(QString::number(a, 10) + ":" + QString::number(b, 10) + QString::number(c, 10));
-    a = SHModeTimer / 60; b = (SHModeTimer - 60 * a) / 10; c = SHModeTimer - 60 * a - 10 * b;
+    a = SHModeTimer / 60;
+    b = (SHModeTimer - 60 * a) / 10;
+    c = SHModeTimer - 60 * a - 10 * b;
     ui->SHModeTimer_TextBox->setText(QString::number(a, 10) + ":" + QString::number(b, 10) + QString::number(c, 10));
 }
 
@@ -105,9 +106,9 @@ std::string LevelConfigDialog::GetPaddedLevelName()
 int LevelConfigDialog::GetHModeTimer()
 {
     int a, b, c;
-    a = (int)(ui->HModeTimer_TextBox->text().at(0).unicode()) - 48;
-    b = (int)(ui->HModeTimer_TextBox->text().at(2).unicode()) - 48;
-    c = (int)(ui->HModeTimer_TextBox->text().at(3).unicode()) - 48;
+    a = (int) (ui->HModeTimer_TextBox->text().at(0).unicode()) - 48;
+    b = (int) (ui->HModeTimer_TextBox->text().at(2).unicode()) - 48;
+    c = (int) (ui->HModeTimer_TextBox->text().at(3).unicode()) - 48;
     return (60 * a + 10 * b + c);
 }
 
@@ -120,9 +121,9 @@ int LevelConfigDialog::GetHModeTimer()
 int LevelConfigDialog::GetNModeTimer()
 {
     int a, b, c;
-    a = (int)(ui->NModeTimer_TextBox->text().at(0).unicode()) - 48;
-    b = (int)(ui->NModeTimer_TextBox->text().at(2).unicode()) - 48;
-    c = (int)(ui->NModeTimer_TextBox->text().at(3).unicode()) - 48;
+    a = (int) (ui->NModeTimer_TextBox->text().at(0).unicode()) - 48;
+    b = (int) (ui->NModeTimer_TextBox->text().at(2).unicode()) - 48;
+    c = (int) (ui->NModeTimer_TextBox->text().at(3).unicode()) - 48;
     return (60 * a + 10 * b + c);
 }
 
@@ -135,9 +136,9 @@ int LevelConfigDialog::GetNModeTimer()
 int LevelConfigDialog::GetSHModeTimer()
 {
     int a, b, c;
-    a = (int)(ui->SHModeTimer_TextBox->text().at(0).unicode()) - 48;
-    b = (int)(ui->SHModeTimer_TextBox->text().at(2).unicode()) - 48;
-    c = (int)(ui->SHModeTimer_TextBox->text().at(3).unicode()) - 48;
+    a = (int) (ui->SHModeTimer_TextBox->text().at(0).unicode()) - 48;
+    b = (int) (ui->SHModeTimer_TextBox->text().at(2).unicode()) - 48;
+    c = (int) (ui->SHModeTimer_TextBox->text().at(3).unicode()) - 48;
     return (60 * a + 10 * b + c);
 }
 
@@ -151,15 +152,15 @@ int LevelConfigDialog::GetSHModeTimer()
 /// <param name="okButton">
 /// The OK button which will be enabled or disabled based on the text boxes' validator states.
 /// </param>
-void SetOKButtonEnable(QVector<QLineEdit*> textBoxes, QPushButton *okButton)
+void SetOKButtonEnable(QVector<QLineEdit *> textBoxes, QPushButton *okButton)
 {
     bool allValid = true;
-    for(auto iter = textBoxes.begin(); iter != textBoxes.end(); ++iter)
+    for (auto iter = textBoxes.begin(); iter != textBoxes.end(); ++iter)
     {
         QLineEdit *line = *iter;
         auto variable = line->text();
         int pos = 0;
-        if(line->validator()->validate(variable, pos) != QValidator::State::Acceptable)
+        if (line->validator()->validate(variable, pos) != QValidator::State::Acceptable)
         {
             allValid = false;
             break;
@@ -169,7 +170,8 @@ void SetOKButtonEnable(QVector<QLineEdit*> textBoxes, QPushButton *okButton)
 }
 
 /// <summary>
-/// Enable or disable the OK button depending on the validity of the input fields, when the super hard timer text box is changed.
+/// Enable or disable the OK button depending on the validity of the input fields, when the super hard timer text box is
+/// changed.
 /// </summary>
 /// <param name="arg1">
 /// Unused.
@@ -177,7 +179,7 @@ void SetOKButtonEnable(QVector<QLineEdit*> textBoxes, QPushButton *okButton)
 void LevelConfigDialog::on_SHModeTimer_TextBox_textChanged(const QString &arg1)
 {
     (void) arg1;
-    QVector<QLineEdit*> textBoxes;
+    QVector<QLineEdit *> textBoxes;
     textBoxes.append(ui->LevelName_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
@@ -186,7 +188,8 @@ void LevelConfigDialog::on_SHModeTimer_TextBox_textChanged(const QString &arg1)
 }
 
 /// <summary>
-/// Enable or disable the OK button depending on the validity of the input fields, when the normal timer text box is changed.
+/// Enable or disable the OK button depending on the validity of the input fields, when the normal timer text box is
+/// changed.
 /// </summary>
 /// <param name="arg1">
 /// Unused.
@@ -194,7 +197,7 @@ void LevelConfigDialog::on_SHModeTimer_TextBox_textChanged(const QString &arg1)
 void LevelConfigDialog::on_NModeTimer_TextBox_textChanged(const QString &arg1)
 {
     (void) arg1;
-    QVector<QLineEdit*> textBoxes;
+    QVector<QLineEdit *> textBoxes;
     textBoxes.append(ui->LevelName_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
@@ -203,7 +206,8 @@ void LevelConfigDialog::on_NModeTimer_TextBox_textChanged(const QString &arg1)
 }
 
 /// <summary>
-/// Enable or disable the OK button depending on the validity of the input fields, when the hard timer text box is changed.
+/// Enable or disable the OK button depending on the validity of the input fields, when the hard timer text box is
+/// changed.
 /// </summary>
 /// <param name="arg1">
 /// Unused.
@@ -211,7 +215,7 @@ void LevelConfigDialog::on_NModeTimer_TextBox_textChanged(const QString &arg1)
 void LevelConfigDialog::on_HModeTimer_TextBox_textChanged(const QString &arg1)
 {
     (void) arg1;
-    QVector<QLineEdit*> textBoxes;
+    QVector<QLineEdit *> textBoxes;
     textBoxes.append(ui->LevelName_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
@@ -220,7 +224,8 @@ void LevelConfigDialog::on_HModeTimer_TextBox_textChanged(const QString &arg1)
 }
 
 /// <summary>
-/// Enable or disable the OK button depending on the validity of the input fields, when the level name text box is changed.
+/// Enable or disable the OK button depending on the validity of the input fields, when the level name text box is
+/// changed.
 /// </summary>
 /// <param name="arg1">
 /// Unused.
@@ -228,7 +233,7 @@ void LevelConfigDialog::on_HModeTimer_TextBox_textChanged(const QString &arg1)
 void LevelConfigDialog::on_LevelName_TextBox_textChanged(const QString &arg1)
 {
     (void) arg1;
-    QVector<QLineEdit*> textBoxes;
+    QVector<QLineEdit *> textBoxes;
     textBoxes.append(ui->LevelName_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);

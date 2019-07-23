@@ -1,10 +1,10 @@
 #ifndef MAINGRAPHICSVIEW_H
 #define MAINGRAPHICSVIEW_H
 
-#include <QGraphicsView>
-#include "WL4EditorWindow.h"
-#include "LevelComponents/Level.h"
 #include "Dialog/DoorConfigDialog.h"
+#include "LevelComponents/Level.h"
+#include "WL4EditorWindow.h"
+#include <QGraphicsView>
 
 class MainGraphicsView : public QGraphicsView
 {
@@ -24,8 +24,12 @@ private:
     int SelectedEntityID = -1;
     int drawingTileX = -1;
     int drawingTileY = -1;
+    int objectInitialX = -1;
+    int objectInitialY = -1;
+    int holdingEntityOrDoor = false;
 
     void SetTile(int tileX, int tileY);
+    void CopyTile(int tileX, int tileY);
 };
 
 #endif // MAINGRAPHICSVIEW_H
