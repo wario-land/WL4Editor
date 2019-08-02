@@ -3,18 +3,18 @@
 
 #include <QDialog>
 
-#include <QGraphicsScene>
-#include <QPixmap>
 #include <QGraphicsPixmapItem>
-#include <QScrollBar>
+#include <QGraphicsScene>
 #include <QLabel>
+#include <QPixmap>
+#include <QScrollBar>
 
-#include "WL4Constants.h"
-#include "ROMUtils.h"
 #include "LevelComponents/Layer.h"
-#include "LevelComponents/Tileset.h"
 #include "LevelComponents/Room.h"
+#include "LevelComponents/Tileset.h"
+#include "ROMUtils.h"
 #include "RoomPreviewGraphicsView.h"
+#include "WL4Constants.h"
 
 namespace DialogParams
 {
@@ -35,29 +35,24 @@ namespace DialogParams
         unsigned short *LayerData[3];
 
         // Default constructor
-        RoomConfigParams()
-        {
-            memset(this, 0, sizeof(struct RoomConfigParams));
-        }
+        RoomConfigParams() { memset(this, 0, sizeof(struct RoomConfigParams)); }
 
         // Construct this param struct using a Room object
         RoomConfigParams(LevelComponents::Room *room) :
-            CurrentTilesetIndex(room->GetTilesetID()),
-            Layer0Enable(room->GetLayer0MappingParam() != 0),
-            Layer0Alpha(room->IsLayer0ColorBlendingEnabled()),
-            LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
-            Layer0MappingTypeParam(room->GetLayer0MappingParam()),
-            RoomWidth(room->GetWidth()),
-            RoomHeight(room->GetHeight()),
-            Layer2Enable(room->IsLayer2Enabled()),
-            Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayerDataPtr(0) : 0),
-            BackgroundLayerEnable(room->IsBGLayerEnabled())
+                CurrentTilesetIndex(room->GetTilesetID()), Layer0Enable(room->GetLayer0MappingParam() != 0),
+                Layer0Alpha(room->IsLayer0ColorBlendingEnabled()),
+                LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
+                Layer0MappingTypeParam(room->GetLayer0MappingParam()), RoomWidth(room->GetWidth()),
+                RoomHeight(room->GetHeight()), Layer2Enable(room->IsLayer2Enabled()),
+                Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayerDataPtr(0) : 0),
+                BackgroundLayerEnable(room->IsBGLayerEnabled())
         {
-            for(int i=0; i < 3; i++){
+            for (int i = 0; i < 3; i++)
+            {
                 // it is no needed to copy from other.
                 LayerData[i] = nullptr;
             }
-            if(BackgroundLayerEnable)
+            if (BackgroundLayerEnable)
             {
                 BackgroundLayerDataPtr = room->GetLayerDataPtr(3);
                 BackgroundLayerAutoScrollEnable = room->IsBGLayerAutoScrollEnabled();
@@ -69,18 +64,20 @@ namespace DialogParams
             }
         }
 
-        ~RoomConfigParams(){
+        ~RoomConfigParams()
+        {
             // new and delete by myself.
-            for(int i=0; i < 3; i++){
-                if(LayerData[i])
-                    delete[] LayerData[i];
+            for (int i = 0; i < 3; i++)
+            {
+                if (LayerData[i]) delete[] LayerData[i];
             }
         }
     };
-}
+} // namespace DialogParams
 
-namespace Ui {
-class RoomConfigDialog;
+namespace Ui
+{
+    class RoomConfigDialog;
 }
 
 class RoomConfigDialog : public QDialog
@@ -114,6 +111,7 @@ private:
     LevelComponents::Tileset *currentTileset = nullptr;
 
     // Enumeration of the available tilesets
+    // clang-format off
     static constexpr const char *TilesetNamesSetData[0x5C] =
     {
         "00  Debug room",
@@ -338,6 +336,7 @@ private:
         0,
         0
     };
+    // clang-format on
 };
 
 #endif // ROOMCONFIGDIALOG_H

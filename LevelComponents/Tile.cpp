@@ -4,8 +4,8 @@
 #include <cassert>
 
 #include <QGraphicsPixmapItem>
-#include <QTransform>
 #include <QPoint>
+#include <QTransform>
 
 #include <iostream>
 
@@ -13,7 +13,7 @@
 
 namespace LevelComponents
 {
-    QHash<QImageW*, int> Tile8x8::ImageDataCache;
+    QHash<QImageW *, int> Tile8x8::ImageDataCache;
 
     /// <summary>
     /// Construct an instance of Tile8x8 with uninitialized data. (private constructor)
@@ -21,9 +21,8 @@ namespace LevelComponents
     /// <param name="_palettes">
     /// Entire palette for the tileset this tile is a part of.
     /// </param>
-    Tile8x8::Tile8x8(QVector<QRgb> *_palettes) : Tile(TileType8x8),
-        palettes(_palettes),
-        ImageData(new QImageW(8, 8, QImage::Format_Indexed8))
+    Tile8x8::Tile8x8(QVector<QRgb> *_palettes) :
+            Tile(TileType8x8), palettes(_palettes), ImageData(new QImageW(8, 8, QImage::Format_Indexed8))
     {
         ImageData->setColorTable(palettes[paletteIndex]);
     }
@@ -34,14 +33,14 @@ namespace LevelComponents
     /// <param name="other">
     /// Another Tile8x8 to copy image data from.
     /// </param>
-    Tile8x8::Tile8x8(Tile8x8 *other) : Tile(TileType8x8),
-        palettes(other->palettes),
+    Tile8x8::Tile8x8(Tile8x8 *other) :
+            Tile(TileType8x8), palettes(other->palettes),
 #ifndef NOCACHE
-        ImageData(GetCachedImageData(other->ImageData))
+            ImageData(GetCachedImageData(other->ImageData))
 #else
-        ImageData(new QImageW(other->ImageData->copy()))
+            ImageData(new QImageW(other->ImageData->copy()))
 #endif
-            {}
+    {}
 
     /// <summary>
     /// Construct an instance of Tile8x8.
@@ -58,8 +57,10 @@ namespace LevelComponents
     Tile8x8::Tile8x8(int dataPtr, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
     {
         // Initialize the QImage data from ROM
-        for(int i = 0; i < 8; ++i) {
-            for(int j = 0; j < 4; ++j) {
+        for (int i = 0; i < 8; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
                 unsigned char val = ROMUtils::CurrentFile[dataPtr + i * 4 + j];
                 ImageData->setPixel(j * 2, i, (unsigned char) (val & 0xF));
                 ImageData->setPixel(j * 2 + 1, i, (unsigned char) ((val >> 4) & 0xF));
@@ -69,7 +70,7 @@ namespace LevelComponents
 #ifndef NOCACHE
         // Cache the QImage
         QImageW *cached = GetCachedImageData(ImageData);
-        if(cached != ImageData)
+        if (cached != ImageData)
         {
             delete ImageData;
             ImageData = cached;
@@ -101,9 +102,9 @@ namespace LevelComponents
     Tile8x8 *Tile8x8::CreateBlankTile(QVector<QRgb> *_palettes)
     {
         Tile8x8 *t = new Tile8x8(_palettes);
-        for(int i = 0; i < 8; ++i)
+        for (int i = 0; i < 8; ++i)
         {
-            for(int j  = 0; j < 8; ++j)
+            for (int j = 0; j < 8; ++j)
             {
                 t->ImageData->setPixel(i, j, 0);
             }
@@ -112,7 +113,7 @@ namespace LevelComponents
 #ifndef NOCACHE
         // Cache the QImage
         QImageW *cached = GetCachedImageData(t->ImageData);
-        if(cached != t->ImageData)
+        if (cached != t->ImageData)
         {
             delete t->ImageData;
             t->ImageData = cached;
@@ -160,13 +161,14 @@ namespace LevelComponents
         ImageData = newImage;
 #ifndef NOCACHE
         QImageW *cached = GetCachedImageData(ImageData);
-        if(cached != ImageData)
+        if (cached != ImageData)
         {
             delete ImageData;
             ImageData = cached;
         }
 #endif
     }
+
 
     /// <summary>
     /// Construct an instance of TileMap16.
@@ -226,6 +228,25 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Get a pointer to a Tile8x8 at current position
+    /// <param name="position">
+    /// The position (TileMap16::TILE8_TOPLEFT : 0, TileMap16::TILE8_TOPLEFT : 1, TileMap16::TILE8_BOTTOMLEFT : 2, TileMap16::TILE8_BOTTOMRIGHT : 3)
+    /// </param>
+    Tile8x8* TileMap16::GetTile8X8(int position)
+    {
+        if (position == TileMap16::TILE8_TOPLEFT) {
+            return TileData[0];
+        } else if (position == TileMap16::TILE8_TOPRIGHT) {
+            return TileData[1];
+        } else if (position == TileMap16::TILE8_BOTTOMLEFT) {
+            return TileData[2];
+        } else {
+            return TileData[3];
+        }
+    }
+
+
+    /// <summary>
     /// Cache and/or return the cached copy of existing image data in the global cache.
     /// </summary>
     /// <param name="image">
@@ -236,7 +257,7 @@ namespace LevelComponents
     /// </returns>
     QImageW *Tile8x8::GetCachedImageData(QImageW *image)
     {
-        if(ImageDataCache.value(image, 0))
+        if (ImageDataCache.value(image, 0))
         {
             ++ImageDataCache[image];
             return ImageDataCache.find(image).key();
@@ -259,11 +280,11 @@ namespace LevelComponents
     void Tile8x8::DeleteCachedImageData(QImageW *image)
     {
         int references = ImageDataCache.value(image, 0);
-        if(references > 1)
+        if (references > 1)
         {
             --ImageDataCache[image];
         }
-        else if(references == 1)
+        else if (references == 1)
         {
             ImageDataCache.take(image);
             delete image;
@@ -273,4 +294,28 @@ namespace LevelComponents
             assert(0 /* Cached QImage with 0 references */);
         }
     }
-}
+
+    /// <summary>
+    /// Get the two byte corresponding to the tile8 in ROM.
+    /// </summary>
+    unsigned short Tile8x8::GetValue()
+    {
+        // First set the 10 first byte that represent the index of the tile8
+        unsigned short tile8Data=this->GetIndex() & 0x3FF;
+
+        // Set the flipX and flipY bit if present (11th and 12th bits)
+        if (this->GetFlipX()) {
+            tile8Data |= 1 << 10;
+        }
+
+        if (this->GetFlipY()) {
+            tile8Data |= 1 << 11;
+        }
+
+        // Set the last 4 bits to the palette bits.
+        tile8Data |= this->GetPaletteIndex() << 12;
+
+        return tile8Data;
+    }
+
+} // namespace LevelComponents

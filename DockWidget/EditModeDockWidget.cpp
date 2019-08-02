@@ -13,16 +13,14 @@ extern WL4EditorWindow *singleton;
 /// <param name="parent">
 /// The parent QWidget.
 /// </param>
-EditModeDockWidget::EditModeDockWidget(QWidget *parent) :
-    QDockWidget(parent),
-    ui(new Ui::EditModeDockWidget)
+EditModeDockWidget::EditModeDockWidget(QWidget *parent) : QDockWidget(parent), ui(new Ui::EditModeDockWidget)
 {
     ui->setupUi(this);
 
     // Set up internal data structures
-    modeEnums[ui->RadioButton_LayerMode]  = Ui::LayerEditMode;
+    modeEnums[ui->RadioButton_LayerMode] = Ui::LayerEditMode;
     modeEnums[ui->RadioButton_EntityMode] = Ui::EntityEditMode;
-    modeEnums[ui->RadioButton_DoorMode]   = Ui::DoorEditMode;
+    modeEnums[ui->RadioButton_DoorMode] = Ui::DoorEditMode;
     modeEnums[ui->RadioButton_CameraMode] = Ui::CameraEditMode;
     layerIndices[ui->RadioButton_EditOnLayer0] = 0;
     layerIndices[ui->RadioButton_EditOnLayer1] = 1;
@@ -46,7 +44,7 @@ EditModeDockWidget::EditModeDockWidget(QWidget *parent) :
     difficultyGroup->addButton(ui->RadioButton_HMode);
     difficultyGroup->addButton(ui->RadioButton_SHMode);
 
-    //Set the widget height
+    // Set the widget height
     QFontMetrics fontMetrics(ui->CheckBox_AlphaView->font());
     int rowHeight = fontMetrics.lineSpacing();
     ui->dockWidgetContents->setFixedHeight(20 * rowHeight); // TODO: Make this exact, calculate using margins
@@ -55,19 +53,31 @@ EditModeDockWidget::EditModeDockWidget(QWidget *parent) :
 /// <summary>
 /// Deconstruct the EditModeDockWidget and clean up its instance objects on the heap.
 /// </summary>
-EditModeDockWidget::~EditModeDockWidget()
-{
-    delete ui;
-}
+EditModeDockWidget::~EditModeDockWidget() { delete ui; }
 
 void EditModeDockWidget::SetLayersCheckBoxEnabled(int index, bool usable)
 {
-    switch(index)
+    switch (index)
     {
-        case 0: ui->CheckBox_Layer0View->setEnabled(usable); ui->CheckBox_Layer0View->setChecked(usable); ui->RadioButton_EditOnLayer0->setEnabled(usable); break;
-        case 2: ui->CheckBox_Layer2View->setEnabled(usable); ui->CheckBox_Layer2View->setChecked(usable); ui->RadioButton_EditOnLayer2->setEnabled(usable); break;
-        case 3: ui->CheckBox_Layer3View->setEnabled(usable); ui->CheckBox_Layer3View->setChecked(usable); ui->RadioButton_EditOnLayer3->setEnabled(usable); break;
-        case 7: ui->CheckBox_AlphaView->setEnabled(usable); ui->CheckBox_AlphaView->setChecked(usable); break;
+    case 0:
+        ui->CheckBox_Layer0View->setEnabled(usable);
+        ui->CheckBox_Layer0View->setChecked(usable);
+        ui->RadioButton_EditOnLayer0->setEnabled(usable);
+        break;
+    case 2:
+        ui->CheckBox_Layer2View->setEnabled(usable);
+        ui->CheckBox_Layer2View->setChecked(usable);
+        ui->RadioButton_EditOnLayer2->setEnabled(usable);
+        break;
+    case 3:
+        ui->CheckBox_Layer3View->setEnabled(usable);
+        ui->CheckBox_Layer3View->setChecked(usable);
+        ui->RadioButton_EditOnLayer3->setEnabled(usable);
+        break;
+    case 7:
+        ui->CheckBox_AlphaView->setEnabled(usable);
+        ui->CheckBox_AlphaView->setChecked(usable);
+        break;
     }
     ui->RadioButton_EditOnLayer1->setChecked(true);
 }
@@ -80,11 +90,16 @@ void EditModeDockWidget::SetLayersCheckBoxEnabled(int index, bool usable)
 /// </param>
 void EditModeDockWidget::SetDifficultyRadioBox(int modeid)
 {
-    switch(modeid)
+    switch (modeid)
     {
-        case 0: ui->RadioButton_HMode->setChecked(true); break;
-        case 2: ui->RadioButton_SHMode->setChecked(true); break;
-        default: ui->RadioButton_NMode->setChecked(true); // case 1
+    case 0:
+        ui->RadioButton_HMode->setChecked(true);
+        break;
+    case 2:
+        ui->RadioButton_SHMode->setChecked(true);
+        break;
+    default:
+        ui->RadioButton_NMode->setChecked(true); // case 1
     }
 }
 
@@ -147,7 +162,7 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
 void EditModeDockWidget::on_CheckBox_Layer0View_stateChanged(int arg1)
 {
     (void) arg1;
-    if(ui->CheckBox_Layer0View->isChecked() && singleton->GetCurrentRoom()->IsLayer0ColorBlendingEnabled())
+    if (ui->CheckBox_Layer0View->isChecked() && singleton->GetCurrentRoom()->IsLayer0ColorBlendingEnabled())
     {
 
         ui->CheckBox_AlphaView->setChecked(true);
@@ -159,7 +174,6 @@ void EditModeDockWidget::on_CheckBox_Layer0View_stateChanged(int arg1)
         ui->CheckBox_AlphaView->setEnabled(false);
     }
     singleton->RenderScreenVisibilityChange();
-
 }
 
 /// <summary>
@@ -254,7 +268,7 @@ void EditModeDockWidget::on_CheckBox_AlphaView_stateChanged(int arg1)
 /// </param>
 void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
 {
-    if(!checked)
+    if (!checked)
     {
         singleton->Graphicsview_UnselectDoorAndEntity();
     }
@@ -268,7 +282,7 @@ void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
 {
-    if(!checked)
+    if (!checked)
     {
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
@@ -282,7 +296,7 @@ void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 {
-    if(!checked)
+    if (!checked)
     {
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
@@ -296,7 +310,7 @@ void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
 {
-    if(!checked)
+    if (!checked)
     {
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
@@ -310,7 +324,7 @@ void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
 {
-    if(checked)
+    if (checked)
     {
         singleton->HideEntitySetDockWidget();
         singleton->HideCameraControlDockWidget();
@@ -328,11 +342,11 @@ void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
 {
-    if(checked)
+    if (checked)
     {
         singleton->HideTile16DockWidget();
         singleton->HideCameraControlDockWidget();
-//        singleton->ResetEntitySetDockWidget();
+        //        singleton->ResetEntitySetDockWidget();
         singleton->ShowEntitySetDockWidget();
     }
     else
@@ -349,7 +363,7 @@ void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
 {
-    if(checked)
+    if (checked)
     {
         singleton->HideEntitySetDockWidget();
         singleton->HideTile16DockWidget();

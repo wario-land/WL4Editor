@@ -1,7 +1,7 @@
 #include "RoomPreviewGraphicsView.h"
 
-#include <QScrollBar>
 #include <LevelComponents/Layer.h>
+#include <QScrollBar>
 #include <cstring>
 
 /// <summary>
@@ -13,15 +13,12 @@
 /// <param name="parent">
 /// The parent QWidget.
 /// </param>
-RoomPreviewGraphicsView::RoomPreviewGraphicsView(QWidget *param) : QGraphicsView(param),
-    displayPixmap(0)
+RoomPreviewGraphicsView::RoomPreviewGraphicsView(QWidget *param) : QGraphicsView(param), displayPixmap(0)
 {
     memset(dataPointers, 0, sizeof(dataPointers));
     QGraphicsScene *scene = new QGraphicsScene();
-    for(unsigned int i = 0; i < sizeof(pixmapItems) / sizeof(pixmapItems[0]); ++i)
-    {
-        pixmapItems[i] = scene->addPixmap(QPixmap());
-    }
+    for (unsigned int i = 0; i < sizeof(pixmapItems) / sizeof(pixmapItems[0]); ++i)
+    { pixmapItems[i] = scene->addPixmap(QPixmap()); }
     EnableSelectedPixmap();
     setScene(scene);
     setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -43,10 +40,8 @@ RoomPreviewGraphicsView::~RoomPreviewGraphicsView()
 /// </remarks>
 void RoomPreviewGraphicsView::EnableSelectedPixmap()
 {
-    for(unsigned int i = 0; i < sizeof(pixmapItems) / sizeof(pixmapItems[0]); ++i)
-    {
-        pixmapItems[i]->setVisible(displayPixmap == i);
-    }
+    for (unsigned int i = 0; i < sizeof(pixmapItems) / sizeof(pixmapItems[0]); ++i)
+    { pixmapItems[i]->setVisible(displayPixmap == i); }
 }
 
 /// <summary>
@@ -54,10 +49,7 @@ void RoomPreviewGraphicsView::EnableSelectedPixmap()
 /// </summary>
 void RoomPreviewGraphicsView::DisplayNextPixmap()
 {
-    if(displayPixmap > 2 || !dataPointers[++displayPixmap])
-    {
-        displayPixmap = 0;
-    }
+    if (displayPixmap > 2 || !dataPointers[++displayPixmap]) { displayPixmap = 0; }
     EnableSelectedPixmap();
 }
 
@@ -65,7 +57,8 @@ void RoomPreviewGraphicsView::DisplayNextPixmap()
 /// Swap between different viewing modes.
 /// </summary>
 /// <remarks>
-/// If the current options for the graphics view do not include layer 0 with mapping type 0x20, it will not be a viewing option.
+/// If the current options for the graphics view do not include layer 0 with mapping type 0x20, it will not be a viewing
+/// option.
 /// </remarks>
 /// <param name="event">
 /// The object from which the mouse press position can be obtained.
@@ -74,7 +67,7 @@ void RoomPreviewGraphicsView::mousePressEvent(QMouseEvent *event)
 {
     (void) event;
     DisplayNextPixmap();
-    switch(displayPixmap)
+    switch (displayPixmap)
     {
     case 0:
         infoLabel->setText("Tileset:");
@@ -101,7 +94,7 @@ void RoomPreviewGraphicsView::mousePressEvent(QMouseEvent *event)
 void RoomPreviewGraphicsView::showEvent(QShowEvent *event)
 {
     QGraphicsView::showEvent(event);
-    if(!initialized)
+    if (!initialized)
     {
         initialized = true;
         verticalScrollBar()->setValue(0);
@@ -127,7 +120,7 @@ void RoomPreviewGraphicsView::showEvent(QShowEvent *event)
 void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tileset, int BGptr, int L0ptr)
 {
     // Update tilset
-    if(tileset != dataPointers[0])
+    if (tileset != dataPointers[0])
     {
         dataPointers[0] = tileset;
         QPixmap tilesetPixmap = tileset->Render(3);
@@ -135,9 +128,9 @@ void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tile
     }
 
     // Update BG layer preview
-    if(BGptr != (long) dataPointers[1])
+    if (BGptr != (long) dataPointers[1])
     {
-        if((dataPointers[1] = (void*) BGptr))
+        if ((dataPointers[1] = (void *) BGptr))
         {
             LevelComponents::Layer BGlayer(BGptr, LevelComponents::LayerTile8x8);
             QPixmap layerPixmap = BGlayer.RenderLayer(tileset);
@@ -146,9 +139,9 @@ void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tile
     }
 
     // Update layer 0 preview
-    if(L0ptr != (long) dataPointers[2])
+    if (L0ptr != (long) dataPointers[2])
     {
-        if((dataPointers[2] = (void*) L0ptr))
+        if ((dataPointers[2] = (void *) L0ptr))
         {
             LevelComponents::Layer L0layer(L0ptr, LevelComponents::LayerTile8x8);
             QPixmap layerPixmap = L0layer.RenderLayer(tileset);
@@ -157,9 +150,6 @@ void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tile
     }
 
     // Make sure the selected layer is viewable
-    if(!dataPointers[displayPixmap])
-    {
-        displayPixmap = 0;
-    }
+    if (!dataPointers[displayPixmap]) { displayPixmap = 0; }
     EnableSelectedPixmap();
 }

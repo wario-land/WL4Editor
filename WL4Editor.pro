@@ -51,7 +51,8 @@ SOURCES += \
     DockWidget/EntitySetDockWidget.cpp \
     Compress.cpp \
     DockWidget/CameraControlDockWidget.cpp \
-    Dialog/TilesetEditDialog.cpp
+    Dialog/TilesetEditDialog.cpp \
+    SettingsUtils.cpp
 
 HEADERS += \
     WL4EditorWindow.h \
@@ -79,7 +80,8 @@ HEADERS += \
     Compress.h \
     DockWidget/CameraControlDockWidget.h \
     WL4Application.h \
-    Dialog/TilesetEditDialog.h
+    Dialog/TilesetEditDialog.h \
+    SettingsUtils.h
 
 FORMS += \
     WL4EditorWindow.ui \
