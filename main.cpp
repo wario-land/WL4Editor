@@ -48,7 +48,7 @@ bool LoadROMFile(QString filePath)
     }
 
     // Read data
-    unsigned char *ROMAddr = new unsigned char[length];
+    unsigned char *ROMAddr = new unsigned char[0x1000000];  // set it to be 16 MB to let the data can be write freely
     file.read((char *) ROMAddr, length);
     file.close();
 

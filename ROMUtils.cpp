@@ -554,8 +554,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             file.close();
 
             // Set the CurrentFile to the copied CurrentFile data
-            free(CurrentFile);
-            CurrentFile = TempFile;
+            memcpy(CurrentFile, TempFile, CurrentFileSize);
             CurrentFileSize = TempLength;
         }
 
