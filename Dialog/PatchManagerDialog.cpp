@@ -32,16 +32,6 @@ PatchManagerDialog::~PatchManagerDialog()
 }
 
 /// <summary>
-/// Deconstruct the PatchManagerDialog and clean up its instance objects on the heap.
-/// </summary>
-void PatchManagerDialog::SetButtonsEnabled(bool enable)
-{
-    ui->removePatchButton->setEnabled(enable);
-    ui->editPatchButton->setEnabled(enable);
-    ui->savePatchButton->setEnabled(enable);
-}
-
-/// <summary>
 /// This slot function will be triggered when clicking the TableView.
 /// </summary>
 void PatchManagerDialog::on_patchManagerTableView_clicked(const QModelIndex &index)
@@ -49,8 +39,9 @@ void PatchManagerDialog::on_patchManagerTableView_clicked(const QModelIndex &ind
     (void) index;
     QItemSelectionModel *select = PatchTable->selectionModel();
     QModelIndexList selectedRows = select->selectedRows();
-    bool selected = selectedRows.size();
-    SetButtonsEnabled(selected);
+    int num_of_select_rows = selectedRows.size();
+    ui->removePatchButton->setEnabled(num_of_select_rows);
+    ui->editPatchButton->setEnabled(num_of_select_rows == 1);
 }
 
 /// <summary>
