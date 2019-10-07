@@ -212,7 +212,7 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
         contents += QString::number(entry.PatchType) + ";";
         contents += QString::number(entry.HookAddress, 16).toUpper() + ";";
         contents += QString::number(entry.PatchAddress, 16).toUpper() + ";";
-        contents += QString(entry.StubFunction ? "1" : "0") + ";";
+        contents += QString(entry.FunctionPointerReplacementMode ? "1" : "0") + ";";
         contents += QString(entry.ThumbMode ? "1" : "0") + ";";
         contents += entry.SubstitutedBytes;
     }
@@ -506,7 +506,7 @@ namespace PatchUtils
                     {
                         // For each patch chunk, convert its index to entry index to get matching entry info
                         PatchEntryItem entry = entries[chunkIndexToEntryIndex.at(i)];
-                        QByteArray hookCode = CreateHook(entry.PatchAddress, entry.StubFunction, entry.ThumbMode);
+                        QByteArray hookCode = CreateHook(entry.PatchAddress, entry.FunctionPointerReplacementMode, entry.ThumbMode);
                         assert(entry.PatchAddress + hookCode.size() < ROMUtils::CurrentFileSize /* Hook code outside valid ROM area */);
                         memcpy(TempFile + entry.PatchAddress, hookCode.data(), hookCode.size());
                     }

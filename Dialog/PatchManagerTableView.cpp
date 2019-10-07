@@ -57,7 +57,7 @@ void PatchManagerTableView::UpdateTableView()
 {
     EntryTableModel.clear();
     EntryTableModel.setHorizontalHeaderLabels(QStringList() <<
-        "File" << "Type" << "Hook Address" << "Patch Address" << "Stub" << "Architecture");
+        "File" << "Type" << "Hook Address" << "Patch Address" << "Function Pointer Replacement Mode" << "Architecture");
     int row = 0;
     foreach(const struct PatchEntryItem patchEntry, EntryTableModel.entries)
     {
@@ -74,7 +74,7 @@ void PatchManagerTableView::UpdateTableView()
             "none" : "0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
         EntryTableModel.setItem(row, 3, new QStandardItem(!patchEntry.PatchAddress ?
             "pending" : "0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
-        EntryTableModel.setItem(row, 4, new QStandardItem(patchEntry.StubFunction ? "yes" : "no"));
+        EntryTableModel.setItem(row, 4, new QStandardItem(patchEntry.FunctionPointerReplacementMode ? "yes" : "no"));
         EntryTableModel.setItem(row++, 5, new QStandardItem(patchEntry.ThumbMode ? "Thumb" : "ARM"));
     }
 }

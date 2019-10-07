@@ -90,21 +90,21 @@
     </layout>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_HookConfig">
+    <widget class="QCheckBox" name="checkBox_FunctionPointerReplacementMode">
+     <property name="text">
+      <string>Function Pointer Replacement Mode</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_CompileConfig">
      <property name="enabled">
       <bool>false</bool>
      </property>
      <property name="title">
-      <string>Hook Configuration:</string>
+      <string>Compile Configuration:</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QCheckBox" name="checkBox_StubCallingFunction">
-        <property name="text">
-         <string>stub calling function</string>
-        </property>
-       </widget>
-      </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <property name="topMargin">

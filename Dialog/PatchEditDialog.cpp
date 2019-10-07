@@ -52,7 +52,7 @@ void PatchEditDialog::InitializeComponents(struct PatchEntryItem patchEntry)
     ui->comboBox_PatchType->setCurrentIndex(patchEntry.PatchType);
     QString hookText = patchEntry.HookAddress ? QString::number(patchEntry.HookAddress, 16) : "";
     ui->lineEdit_HookAddress->setText(hookText);
-    ui->checkBox_StubCallingFunction->setChecked(patchEntry.StubFunction);
+    ui->checkBox_FunctionPointerReplacementMode->setChecked(patchEntry.FunctionPointerReplacementMode);
     (patchEntry.ThumbMode ? ui->radioButton_CompileInThumbMode : ui->radioButton_CompileInARMMode)->setChecked(true);
 }
 
@@ -69,7 +69,7 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
         ui->lineEdit_FilePath->text(),
         static_cast<enum PatchType>(ui->comboBox_PatchType->currentIndex()),
         static_cast<unsigned int>(ui->lineEdit_HookAddress->text().toInt(Q_NULLPTR, 16)),
-        ui->checkBox_StubCallingFunction->isChecked(),
+        ui->checkBox_FunctionPointerReplacementMode->isChecked(),
         ui->radioButton_CompileInThumbMode->isChecked(),
         // These should be calculated later by saving
         0, ""
@@ -109,14 +109,9 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
 }
 
 /// <summary>
-/// This slot function will be triggered when text changed in lineEdit_HookAddress.
+/// This slot function will be triggered when change the selection in comboBox_PatchType.
 /// </summary>
-void PatchEditDialog::on_lineEdit_HookAddress_textChanged(const QString &arg1)
+void PatchEditDialog::on_comboBox_PatchType_currentIndexChanged(int index)
 {
-    int hookValue = 0;
-    if(arg1.length())
-    {
-        hookValue = arg1.toInt(Q_NULLPTR, 16);
-    }
-    ui->groupBox_HookConfig->setEnabled(hookValue);
+    ui->groupBox_CompileConfig->setEnabled(index != PatchType::Binary);
 }

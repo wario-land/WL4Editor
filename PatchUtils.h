@@ -15,7 +15,7 @@ struct PatchEntryItem
     QString FileName;
     enum PatchType PatchType;
     unsigned int HookAddress;
-    bool StubFunction;
+    bool FunctionPointerReplacementMode;
     bool ThumbMode;
     unsigned int PatchAddress;
     QString SubstitutedBytes;

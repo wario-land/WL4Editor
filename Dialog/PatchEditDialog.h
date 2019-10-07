@@ -21,7 +21,7 @@ public:
 
 private slots:
     void on_pushButton_Browse_clicked();
-    void on_lineEdit_HookAddress_textChanged(const QString &arg1);
+    void on_comboBox_PatchType_currentIndexChanged(int index);
 
 private:
     Ui::PatchEditDialog *ui;
