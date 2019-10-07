@@ -485,11 +485,11 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                 continue;
 
             unsigned char *ptrLoc = chunk.dest_index ?
-                                                     // Source pointer is in another chunk
-                                        chunks[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr
-                                                     :
-                                                     // Source pointer is in main ROM
-                                        TempFile + chunk.ptr_addr;
+                // Source pointer is in another chunk
+                chunks[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr
+                    :
+                // Source pointer is in main ROM
+                TempFile + chunk.ptr_addr;
 
             // We add 12 to the pointer location because the chunk ptr starts at the chunk's RATS tag
             *reinterpret_cast<unsigned int*>(ptrLoc) = static_cast<unsigned int>((indexToChunkPtr[chunk.index] + 12) | 0x8000000);
@@ -508,13 +508,13 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             {
                 // Chunk size must be a 16-bit value
                 QMessageBox::warning(singleton, "RATS chunk too large",
-                                     QString("Unable to save changes because ") + QString::number(chunk.size) +
-                                         " contiguous free bytes are necessary for some save chunk of type " +
-                                         QString::number(chunk.ChunkType) +
-                                         ", but the editor currently"
-                                         " only supports up to size " +
-                                         QString::number(0xFFFF) + ".",
-                                     QMessageBox::Ok, QMessageBox::Ok);
+                     QString("Unable to save changes because ") + QString::number(chunk.size) +
+                         " contiguous free bytes are necessary for some save chunk of type " +
+                         QString::number(chunk.ChunkType) +
+                         ", but the editor currently"
+                         " only supports up to size " +
+                         QString::number(0xFFFF) + ".",
+                     QMessageBox::Ok, QMessageBox::Ok);
                 goto error;
             }
             unsigned short chunkLen = (unsigned short) chunk.size;
@@ -547,8 +547,8 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             {
                 // Couldn't open the file to save the ROM
                 QMessageBox::warning(singleton, "Could not save file",
-                                     "Unable to write to or create the ROM file for saving.", QMessageBox::Ok,
-                                     QMessageBox::Ok);
+                     "Unable to write to or create the ROM file for saving.", QMessageBox::Ok,
+                     QMessageBox::Ok);
                 goto error;
             }
             file.close();

@@ -222,9 +222,6 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
 /// <summary>
 /// Create the data for a hook.
 /// </summary>
-/// <param name="hookAddr">
-/// The address to place the hook.
-/// </param>
 /// <param name="patchAddr">
 /// The address that the hook will branch to.
 /// </param>
@@ -237,9 +234,26 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
 /// <returns>
 /// The hook payload.
 /// </returns>
-static QByteArray CreateHook(unsigned int hookAddr, unsigned int patchAddr, bool stubFunction, bool thumbMode)
+static QByteArray CreateHook(unsigned int patchAddr, bool stubFunction, bool thumbMode)
 {
-
+    if(thumbMode)
+    {
+        const char thumbHook[14] = {
+            '\x01', '\xB5', // PUSH R0, LR
+            '\x01', '\x48', // LDR R0, 4
+            '\x80', '\x47', // BLX R0
+            '\x01', '\xE0', // B 4
+            '\0', '\0', '\0', '\0', // hook address goes here
+            '\x00', '\xBD'  // POP LR
+        };
+        QByteArray hook(thumbHook, sizeof(thumbHook));
+        *(unsigned int*)(hook.data() + 8) = patchAddr | 0x8000000;
+        return hook;
+    }
+    else
+    {
+        return QByteArray();
+    }
 }
 
 namespace PatchUtils
@@ -470,15 +484,33 @@ namespace PatchUtils
                 }
             },
             // PostProcessingCallback
-            []
+            [chunks, entries, chunkIndexToEntryIndex]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
-                // TODO Restore substituted data to ROM for patches that have been removed
+                // Restore substituted data to ROM for patches that have been removed
+                for(int i = 0; i < chunks.size(); ++i)
+                {
+                    struct ROMUtils::SaveData chunk = chunks[i];
+                    if(chunk.ChunkType == ROMUtils::SaveDataChunkType::InvalidationChunk)
+                    {
+                        int hookSize = CreateHook(0, false, false).size();
+                        // TODO
+                    }
+                }
 
-
-                // TODO Write hooks to ROM
-
-
+                // Write hooks to ROM
+                for(int i = 0; i < chunks.size(); ++i)
+                {
+                    struct ROMUtils::SaveData chunk = chunks[i];
+                    if(chunk.ChunkType == ROMUtils::SaveDataChunkType::PatchChunk)
+                    {
+                        // For each patch chunk, convert its index to entry index to get matching entry info
+                        PatchEntryItem entry = entries[chunkIndexToEntryIndex.at(i)];
+                        QByteArray hookCode = CreateHook(entry.PatchAddress, entry.StubFunction, entry.ThumbMode);
+                        assert(entry.PatchAddress + hookCode.size() < ROMUtils::CurrentFileSize /* Hook code outside valid ROM area */);
+                        memcpy(TempFile + entry.PatchAddress, hookCode.data(), hookCode.size());
+                    }
+                }
             }
         );
 
