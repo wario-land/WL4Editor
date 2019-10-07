@@ -1,5 +1,5 @@
 beta-10:
-- Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)
+- Stability after saving has improved
 - Added INI program settings, Support Opening Recent ROM in File menu.
 - Fix some entities rendering glitches caused by wrong tile loading
 - Add another available Camera control type, Vertical Seperate
@@ -7,6 +7,7 @@ beta-10:
 - Support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers
 - Support showing hidden coins in breakable blocks
 - Add Room size limitation
+- Fix incorrect EVA/EVB option being displayed by Room Config Dialog
 
 beta-9:
 - Fix clear-all only clears hardmode entities
