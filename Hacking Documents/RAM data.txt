@@ -204,7 +204,7 @@ Enemy Slot #1
 0300011d - something can be directly add with [0300011F], so it perhaps is the offset for palette.
 0300011e - layer - 00-04
 0300011f - Colour
-03000120 - Anim - 10(walk) 11(turn back) 00(turn into weird colours) 12,14(turning back) 56,58(wario is holding left,right)
+03000120 - Anim - 10(walk) 11, 12, 14, 0F(speed down, reach ground edge, turning, speed up) 00(turn into weird colours) 12, 14(turning back) 19, 1A(flip back after struggling animation group) 21, 22(B-dash-killed by Wario animation group: trigger, framing) 33, 34, 45, 46(knock down by an earthquake action group: move a little, y flip, throw up, drop)3D, 3E(bouncing animation group: bounce triger, bounce up) 35, 36, 43, 44, 37(stamp on the top animation group: x, x, x, x, y flip and bounce up, y flip and bounce up) 4B, 4C(turning state caused by Wario's mild ground pound) 56, 58(wario is holding left,right) 5B, 5C(horizontal throw rightwards animation group) 59, 5A(horizontal throw leftwards animation group)
 03000123 - Decreasing counter, enemy can't touch you while it's counting
 
 Enemy Slot #2 = Enemy Slot #1 + 2C
