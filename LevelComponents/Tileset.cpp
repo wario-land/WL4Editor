@@ -169,7 +169,27 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Render the tileset as a pixmap.
+    /// Render the tileset by Tile8 as a pixmap.
+    /// </summary>
+    QPixmap Tileset::RenderTile8x8()
+    {
+        int lineNum = 0x600 / 32;
+        QPixmap pixmap(8 * 32, 8 * lineNum);
+        pixmap.fill(Qt::transparent);
+
+        // drawing
+        for (int i = 0; i < lineNum; ++i)
+        {
+            for (int j = 0; j < 32; ++j)
+            {
+                tile8x8data[i * 32 + j]->DrawTile(&pixmap, j * 8, i * 8);
+            }
+        }
+        return pixmap;
+    }
+
+    /// <summary>
+    /// Render the tileset by Tile16 as a pixmap.
     /// </summary>
     /// <param name="columns">
     /// The number of columns to divide the graphics into.
@@ -177,7 +197,7 @@ namespace LevelComponents
     /// <returns>
     /// The tileset rendered at a pixmap.
     /// </returns>
-    QPixmap Tileset::Render(int columns)
+    QPixmap Tileset::RenderTile16(int columns)
     {
         // Initialize the pixmap with transparency
         int tileCountY = 96 / columns;

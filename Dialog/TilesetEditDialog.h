@@ -2,8 +2,10 @@
 #define TILESETEDITDIALOG_H
 
 #include <QDialog>
+#include <QString>
 #include <QSpinBox>
 #include <QCheckBox>
+#include <QScrollBar>
 #include "LevelComponents/Layer.h"
 #include "LevelComponents/Room.h"
 #include "LevelComponents/Tileset.h"
@@ -11,7 +13,6 @@
 #include "ROMUtils.h"
 #include "RoomPreviewGraphicsView.h"
 #include "WL4Constants.h"
-#include <iostream>
 
 namespace DialogParams
 {
@@ -19,7 +20,6 @@ namespace DialogParams
     {
         int currentTilesetIndex;
         LevelComponents::Tileset *selectedTileset = nullptr;
-        int selectedTile;
 
         // Default constructor
         TilesetEditParams() { memset(this, 0, sizeof(struct TilesetEditParams)); }
@@ -28,7 +28,6 @@ namespace DialogParams
         TilesetEditParams(LevelComponents::Room *room) {
                 currentTilesetIndex=room->GetTilesetID();
                 selectedTileset=room->GetTileset();
-                selectedTile=0;
         }
         ~TilesetEditParams(){};
     };
@@ -49,7 +48,6 @@ class TilesetEditDialog : public QDialog
     Q_OBJECT
 
 public:
-    DialogParams::TilesetEditParams* tilesetEditParams;
     explicit TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditParams *tilesetEditParams);
     void setSelectedTile16(int tile16ID);
     void setTile8x8OnSpinBox(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
@@ -82,6 +80,18 @@ private slots:
 
 private:
     Ui::TilesetEditDialog *ui;
+
+    // members
+    DialogParams::TilesetEditParams* tilesetEditParams;
+
+    QGraphicsScene *Tile8x8MAPScene = nullptr;
+    QGraphicsPixmapItem *SelectionBox_Tile8x8 = nullptr;
+    unsigned short SelectedTile8x8 = 0;
+    unsigned short SelectedTile16 = 0;
+
+    // functions
+    void RenderAllTile8x8();
+    void SetSelectedTile8x8(unsigned short tileId, bool resetscrollbar);
 };
 
 #endif // TILESETEDITDIALOG_H

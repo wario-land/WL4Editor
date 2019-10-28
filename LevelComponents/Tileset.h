@@ -27,7 +27,8 @@ namespace LevelComponents
         unsigned short *Map16EventTable;
         unsigned char *Map16TerrainTypeIDTable;
         ~Tileset();
-        QPixmap Render(int columns);
+        QPixmap RenderTile8x8();
+        QPixmap RenderTile16(int columns);
         int GetUniversalSpritesTilesPalettePtr() { return UniversalSpritesTilesPalettePtr; }
         unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }
         unsigned short *GetEventTablePtr() { return Map16EventTable; }
