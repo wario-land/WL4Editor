@@ -1,19 +1,18 @@
 #ifndef EDITMODEDOCKWIDGET_H
 #define EDITMODEDOCKWIDGET_H
 
-#include <QAbstractButton>
 #include <QDockWidget>
+#include <QAbstractButton>
 
-namespace Ui
-{
+namespace Ui {
     class EditModeDockWidget;
 
     // Enumeration of the edit modes supported by the main window
     enum EditMode
     {
-        LayerEditMode = 0,
+        LayerEditMode  = 0,
         EntityEditMode = 1,
-        DoorEditMode = 2,
+        DoorEditMode   = 2,
         CameraEditMode = 3
     };
 
@@ -31,7 +30,7 @@ namespace Ui
         bool entitiesboxesDisabled = false;
         bool hiddencoinsEnabled = false;
     };
-} // namespace Ui
+}
 
 class EditModeDockWidget : public QDockWidget
 {
@@ -41,15 +40,15 @@ private:
     Ui::EditModeDockWidget *ui;
 
     // Internal structures used to quickly obtain the selected options as a struct
-    std::map<QAbstractButton *, enum Ui::EditMode> modeEnums;
-    std::map<QAbstractButton *, int> layerIndices;
-    std::map<QAbstractButton *, int> difficultyIndices;
+    std::map<QAbstractButton*, enum Ui::EditMode> modeEnums;
+    std::map<QAbstractButton*, int> layerIndices;
+    std::map<QAbstractButton*, int> difficultyIndices;
     QButtonGroup *modeGroup;
     QButtonGroup *layerGroup;
     QButtonGroup *difficultyGroup;
 
 public:
-    explicit EditModeDockWidget(QWidget *parent = 0);
+    explicit EditModeDockWidget(QWidget *parent = 0);    
     struct Ui::EditModeParams GetEditModeParams();
     ~EditModeDockWidget();
     void SetLayersCheckBoxEnabled(int index, bool usable);

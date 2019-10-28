@@ -1,19 +1,18 @@
 #ifndef CAMERACONTROLDOCKWIDGET_H
 #define CAMERACONTROLDOCKWIDGET_H
 
-#include <QDockWidget>
-#include <QModelIndex>
+#include <QString>
 #include <QStandardItem>
 #include <QStandardItemModel>
-#include <QString>
+#include <QModelIndex>
+#include <QDockWidget>
 
 #include <vector>
 
 #include "LevelComponents/Room.h"
 
-namespace Ui
-{
-    class CameraControlDockWidget;
+namespace Ui {
+class CameraControlDockWidget;
 }
 
 class CameraControlDockWidget : public QDockWidget

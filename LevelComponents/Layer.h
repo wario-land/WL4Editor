@@ -11,8 +11,8 @@ namespace LevelComponents
     enum LayerMappingType
     {
         LayerDisabled = 0x00,
-        LayerMap16 = 0x10,
-        LayerTile8x8 = 0x20
+        LayerMap16    = 0x10,
+        LayerTile8x8  = 0x20
     };
 
     class Layer
@@ -20,7 +20,7 @@ namespace LevelComponents
     private:
         enum LayerMappingType MappingType;
         bool Enabled = false;
-        std::vector<Tile *> tiles;
+        std::vector<Tile*> tiles;
         int Width = 0, Height = 0;
         unsigned short *LayerData = nullptr;
         int LayerPriority = 0;
@@ -40,7 +40,7 @@ namespace LevelComponents
         int GetLayerPriority() { return LayerPriority; }
         void SetLayerPriority(int priority) { LayerPriority = priority; }
         void ReRenderTile(int xpos, int ypos, unsigned short TileID, Tileset *tileset);
-        std::vector<Tile *> GetTiles() { return tiles; }
+        std::vector<Tile*> GetTiles() { return tiles; }
         bool IsEnabled() { return Enabled; }
         void SetDisabled();
         void CreateNewLayer_type0x10(int layerWidth, int layerHeight);
@@ -53,6 +53,6 @@ namespace LevelComponents
         void SetDataPtr(unsigned int _dataPtr) { DataPtr = _dataPtr; }
         void ResetData();
     };
-} // namespace LevelComponents
+}
 
 #endif // LAYER_H

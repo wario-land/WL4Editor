@@ -1,25 +1,25 @@
-#include "Dialog/DoorConfigDialog.h"
-#include "Dialog/RoomConfigDialog.h"
-#include "DockWidget/CameraControlDockWidget.h"
-#include "LevelComponents/Level.h"
+#include "WL4EditorWindow.h"
+#include "WL4Application.h"
+#include <QApplication>
+#include <QMessageBox>
+#include <fstream>
 #include "ROMUtils.h"
 #include "SettingsUtils.h"
-#include "WL4Application.h"
-#include "WL4EditorWindow.h"
-#include <QApplication>
-#include <QFile>
-#include <QMessageBox>
-#include <cstring>
-#include <fstream>
+#include "LevelComponents/Level.h"
+#include "Dialog/RoomConfigDialog.h"
+#include "Dialog/DoorConfigDialog.h"
+#include "DockWidget/CameraControlDockWidget.h"
 #include <iostream>
+#include <cstring>
+#include <QFile>
 
 #ifdef _WIN32
-#include <lmcons.h>
 #include <windows.h>
+#include <lmcons.h>
 #if _MSC_VER && !__INTEL_COMPILER
-#pragma comment(lib, "Advapi32.lib")
+#pragma comment(lib,"Advapi32.lib")
 #endif // _MSC_VER
-#else  // _WIN32 (else linux)
+#else // _WIN32 (else linux)
 #include <unistd.h>
 #endif
 
@@ -41,7 +41,7 @@ bool LoadROMFile(QString filePath)
 
     // To check OPEN file
     int length;
-    if (!file.isOpen() || (length = (int) file.size()) <= 0xB0)
+    if(!file.isOpen() || (length = (int) file.size()) <= 0xB0)
     {
         file.close();
         return false;
@@ -49,12 +49,12 @@ bool LoadROMFile(QString filePath)
 
     // Read data
     unsigned char *ROMAddr = new unsigned char[length];
-    file.read((char *) ROMAddr, length);
+    file.read((char*) ROMAddr, length);
     file.close();
 
     // To check ROM correct
-    if (strncmp((const char *) (ROMAddr + 0xA0), "WARIOLANDE", 10))
-    { // if loaded a wrong ROM
+    if(strncmp((const char*)(ROMAddr + 0xA0), "WARIOLANDE", 10))
+    { //if loaded a wrong ROM
         delete[] ROMAddr;
         return false;
     }
@@ -62,7 +62,7 @@ bool LoadROMFile(QString filePath)
     {
         ROMUtils::CurrentFileSize = length;
         ROMUtils::ROMFilePath = filePath;
-        ROMUtils::CurrentFile = (unsigned char *) ROMAddr;
+        ROMUtils::CurrentFile = (unsigned char*) ROMAddr;
         return true;
     }
 }
@@ -101,11 +101,11 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
     TCHAR usernameTC[UNLEN + 1];
     DWORD size = UNLEN + 1;
-    GetUserName((TCHAR *) usernameTC, &size);
+    GetUserName((TCHAR*)usernameTC, &size);
     username = new char[UNLEN + 1];
-    for (int i = 0; i < UNLEN; ++i)
+    for(int i = 0; i < UNLEN; ++i)
     {
-        if (!usernameTC[i])
+        if(!usernameTC[i])
         {
             username[i] = '\0';
             break;
@@ -115,19 +115,19 @@ int main(int argc, char *argv[])
 #else
     username = new char[33]; // Maximum length is 32 (plus 1 for null termination)
     getlogin_r(username, 33);
-    for (int i = 0; i < 32; ++i)
+    for(int i = 0; i < 32; ++i)
     {
         username[i] &= '\xDF'; // Make username uppercase
     }
 #endif
-    if (!strncmp(username, "ANDREW", strlen(username))) // Goldensunboy
+    if(!strncmp(username, "ANDREW", strlen(username))) // Goldensunboy
     {
         // Andrew's tests
         extern QString dialogInitialPath;
         dialogInitialPath = QString("C:\\Users\\Andrew\\Desktop\\WL4.gba");
         window.OpenROM();
     }
-    else if (!strncmp(username, "ADMINISTRATOR", strlen(username))) // SSP
+    else if(!strncmp(username, "ADMINISTRATOR", strlen(username))) // SSP
     {
         /*
         std::string filePath = "E:\\Wario Harker\\0169 - Wario Land 4.gba";

@@ -1,14 +1,14 @@
 #ifndef ENTITYSET_H
 #define ENTITYSET_H
 
+#include "WL4Constants.h"
 #include "ROMUtils.h"
 #include "Tile.h"
-#include "WL4Constants.h"
 
+#include <vector>
+#include <QVector>
 #include <QColor>
 #include <QPixmap>
-#include <QVector>
-#include <vector>
 
 namespace LevelComponents
 {
@@ -324,6 +324,6 @@ namespace LevelComponents
         };
         // clang-format on
     };
-} // namespace LevelComponents
+}
 
 #endif // ENTITYSET_H

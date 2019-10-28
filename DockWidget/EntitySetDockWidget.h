@@ -5,9 +5,8 @@
 
 #include "LevelComponents/Room.h"
 
-namespace Ui
-{
-    class EntitySetDockWidget;
+namespace Ui {
+class EntitySetDockWidget;
 }
 
 class EntitySetDockWidget : public QDockWidget
@@ -28,7 +27,7 @@ private:
     Ui::EntitySetDockWidget *ui;
     LevelComponents::Room *currentRoom = nullptr;
     int EntityAmount = 0;
-    int currentEntityId = 1; // local Entity id, start from 1
+    int currentEntityId = 1; //local Entity id, start from 1
     void RenderEntityAndResetInfo();
 };
 

@@ -1,8 +1,8 @@
 #ifndef OPERATION_H
 #define OPERATION_H
 
-#include "Dialog/RoomConfigDialog.h"
 #include "LevelComponents/Tile.h"
+#include "Dialog/RoomConfigDialog.h"
 
 // Enumerate the type of operations that can be performed and undone
 enum OperationType
@@ -86,7 +86,7 @@ struct OperationParams
     {
         if (tileChange)
         {
-            for (unsigned int i = 0; i < tileChangeParams.size(); ++i)
+            for(unsigned int i = 0; i < tileChangeParams.size(); ++i)
             {
                 struct TileChangeParams *p = tileChangeParams[i];
                 delete p;
@@ -94,10 +94,8 @@ struct OperationParams
         }
         if (roomConfigChange)
         {
-            if (lastRoomConfigParams)
-                delete lastRoomConfigParams;
-            if (newRoomConfigParams)
-                delete newRoomConfigParams;
+            if(lastRoomConfigParams) delete lastRoomConfigParams;
+            if(newRoomConfigParams) delete newRoomConfigParams;
         }
     }
 };

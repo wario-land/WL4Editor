@@ -1,8 +1,8 @@
 #ifndef TILEGRAPHICSVIEW_H
 #define TILEGRAPHICSVIEW_H
 
-#include "Tile16DockWidget.h"
 #include <QGraphicsView>
+#include "Tile16DockWidget.h"
 
 class TileGraphicsView : public QGraphicsView
 {

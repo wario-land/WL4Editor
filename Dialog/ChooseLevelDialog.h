@@ -11,10 +11,9 @@ namespace DialogParams
         int _LevelIndex;
     };
 
-} // namespace DialogParams
+}
 
-namespace Ui
-{
+namespace Ui {
     class ChooseLevelDialog;
 }
 
