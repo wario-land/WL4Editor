@@ -1,9 +1,9 @@
 #ifndef DOOR_H
 #define DOOR_H
 
-#include <memory>
 #include <QPoint>
 #include <QString>
+#include <memory>
 
 namespace LevelComponents
 {
@@ -11,11 +11,11 @@ namespace LevelComponents
     // The integers correspond to the real values the games uses internally to represent a door.
     enum DoorType
     {
-        Portal     = 1, // A special type just for the level's portal
-        Instant    = 2, // Automatically "enter" the door. For example, the edge of a room leading to another one
+        Portal = 1,     // A special type just for the level's portal
+        Instant = 2,    // Automatically "enter" the door. For example, the edge of a room leading to another one
         NormalDoor = 3, // A door with normal "door"-like behavior. Press up to enter
-        TYPE_04    = 4, // unknown
-        TYPE_05    = 5  // unknown
+        TYPE_04 = 4,    // unknown
+        TYPE_05 = 5     // unknown
     };
 
     struct __DoorEntry
@@ -47,7 +47,8 @@ namespace LevelComponents
     public:
         // Constructors
         Door(__DoorEntry _DoorEntry, unsigned char _RoomID, int doorId) :
-            RoomID(_RoomID), DoorID(doorId), DoorEntry(_DoorEntry) {}
+                RoomID(_RoomID), DoorID(doorId), DoorEntry(_DoorEntry)
+        {}
         Door(Door &door);
 
         // Getters
@@ -55,7 +56,10 @@ namespace LevelComponents
         int GetDeltaX() { return DoorEntry.HorizontalDelta; }
         int GetDeltaY() { return DoorEntry.VerticalDelta; }
         Door *GetDestinationDoor() { return DestinationDoor; }
-        QString GetDoorName() { return "Room " + QString::number((int) RoomID, 16) + " Door " + QString::number(DoorID, 10); }
+        QString GetDoorName()
+        {
+            return "Room " + QString::number((int) RoomID, 16) + " Door " + QString::number(DoorID, 10);
+        }
         int GetDoorTypeNum() { return DoorEntry.DoorTypeByte; }
         int GetEntitySetID() { return DoorEntry.EntitySetID; }
         struct __DoorEntry GetEntryStruct() { return DoorEntry; }
@@ -70,9 +74,12 @@ namespace LevelComponents
         // Setters
         void SetAsVortex() { is_vortex = true; }
         void SetBGM(unsigned short _BGM_ID) { DoorEntry.BGM_ID = _BGM_ID; }
-        void SetDestinationDoor(Door *otherDoor) { DestinationDoor = otherDoor; } // Note: Set DestinationDoor Disabled by setting DestinationDoor point to the vortex Door
+        void SetDestinationDoor(Door *otherDoor)
+        {
+            DestinationDoor = otherDoor;
+        } // Note: Set DestinationDoor Disabled by setting DestinationDoor point to the vortex Door
         void SetDoorType(enum DoorType _DoorType) { DoorEntry.DoorTypeByte = (unsigned char) _DoorType; }
-        void SetEntitySetID(unsigned char _EntitySetID) { DoorEntry.EntitySetID =_EntitySetID; }
+        void SetEntitySetID(unsigned char _EntitySetID) { DoorEntry.EntitySetID = _EntitySetID; }
         void SetGlobalDoorID(int doorId) { DoorID = doorId; }
         void SetLinkerDestination(int dest_RoomId) { DoorEntry.LinkerDestination = (unsigned char) dest_RoomId; }
         void SetDelta(signed char _DeltaX, signed char _DeltaY)
@@ -94,6 +101,6 @@ namespace LevelComponents
         bool IsVortex() { return is_vortex; }
         bool IsDestinationDoorDisabled() { return DestinationDoor->IsVortex(); }
     };
-}
+} // namespace LevelComponents
 
 #endif // DOOR_H

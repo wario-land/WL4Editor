@@ -1,25 +1,26 @@
 #ifndef DOORCONFIGDIALOG_H
 #define DOORCONFIGDIALOG_H
 
-#include <QDialog>
-#include <QString>
-#include <QMessageBox>
 #include <QAbstractTableModel>
+#include <QDialog>
+#include <QMessageBox>
 #include <QStandardItemModel>
+#include <QString>
 #include <vector>
 
 #include "LevelComponents/Level.h"
 
-namespace Ui {
-class DoorConfigDialog;
+namespace Ui
+{
+    class DoorConfigDialog;
 }
 
 struct TableEntityItem
 {
-    LevelComponents::Entity *entity;    // pointer to entity
-    QString entityName;                 // name of entity
-    QImage entityImage;                 // image of entity
-    bool visible; // unused
+    LevelComponents::Entity *entity; // pointer to entity
+    QString entityName;              // name of entity
+    QImage entityImage;              // image of entity
+    bool visible;                    // unused
 };
 
 class EntityFilterTableModel : public QStandardItemModel
@@ -38,17 +39,16 @@ private:
 
 struct EntitySetItem
 {
-    int id;         // id of entity set
-    bool visible;   // visible in ComboBox
+    int id;       // id of entity set
+    bool visible; // visible in ComboBox
 };
-
 
 class DoorConfigDialog : public QDialog
 {
     Q_OBJECT
 
 private slots:
-    void on_TableView_Checkbox_stateChanged(QStandardItem * item);
+    void on_TableView_Checkbox_stateChanged(QStandardItem *item);
     void on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index);
     void on_SpinBox_DoorX_valueChanged(int arg1);
     void on_SpinBox_DoorY_valueChanged(int arg1);
@@ -64,7 +64,7 @@ private slots:
 private:
     Ui::DoorConfigDialog *ui;
     LevelComponents::Level *_currentLevel;
-    LevelComponents::Room *CurrentRoom = nullptr; // Use this to reset current Door
+    LevelComponents::Room *CurrentRoom = nullptr;    // Use this to reset current Door
     LevelComponents::Room *tmpCurrentRoom = nullptr; // Use this to render Door preview
     LevelComponents::Room *tmpDestinationRoom = nullptr;
     int DoorID = -1;
@@ -91,7 +91,8 @@ private:
     QList<EntitySetItem> comboboxEntitySet;
 
 public:
-    explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID, LevelComponents::Level *_level);
+    explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID,
+                              LevelComponents::Level *_level);
     ~DoorConfigDialog();
     void UpdateCurrentDoorData();
     static void StaticInitialization();

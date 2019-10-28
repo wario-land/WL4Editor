@@ -1,0 +1,36 @@
+ColumnLimit: 120
+
+UseTab: Never
+IndentWidth: 4
+AccessModifierOffset: -4
+NamespaceIndentation: Inner
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterNamespace: true
+  AfterEnum: true
+  AfterStruct: true
+  AfterClass: true
+  SplitEmptyFunction: false
+  AfterControlStatement: true
+  AfterFunction: true
+  AfterUnion: true
+  BeforeElse: true
+
+
+AlwaysBreakTemplateDeclarations: true
+BreakConstructorInitializers: AfterColon
+ConstructorInitializerIndentWidth: 8
+SpaceBeforeCtorInitializerColon: true
+Cpp11BracedListStyle: false
+AllowShortBlocksOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+PointerAlignment: Right
+AlignTrailingComments: true
+NamespaceIndentation: All
+
+SpaceAfterCStyleCast: true
+CommentPragmas: '^ NO-FORMAT:'

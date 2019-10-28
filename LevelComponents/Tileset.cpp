@@ -28,14 +28,14 @@ namespace LevelComponents
 
         // Create all 16 color palettes
         int palettePtr = ROMUtils::PointerFromData(tilesetPtr + 8);
-        for(int i = 0; i < 16; ++i)
+        for (int i = 0; i < 16; ++i)
         {
             // First color is transparent
             palettes[i].push_back(0);
             int subPalettePtr = palettePtr + i * 32;
-            for(int j = 1; j < 16; ++j)
+            for (int j = 1; j < 16; ++j)
             {
-                unsigned short color555 = *(unsigned short*) (ROMUtils::CurrentFile + subPalettePtr + j * 2);
+                unsigned short color555 = *(unsigned short *) (ROMUtils::CurrentFile + subPalettePtr + j * 2);
                 int r = ((color555 << 3) & 0xF8) | ((color555 >> 2) & 3);
                 int g = ((color555 >> 2) & 0xF8) | ((color555 >> 7) & 3);
                 int b = ((color555 >> 7) & 0xF8) | ((color555 >> 13) & 3);
@@ -47,7 +47,7 @@ namespace LevelComponents
         // Initialize the 8x8 tiles by setting all the tiles to blank tiles
         blankTile = Tile8x8::CreateBlankTile(palettes);
         int tile8x8size = sizeof(tile8x8data) / sizeof(tile8x8data[0]);
-        for(int i = 0; i < tile8x8size; ++i)
+        for (int i = 0; i < tile8x8size; ++i)
         {
             tile8x8data[i] = blankTile;
         }
@@ -56,22 +56,25 @@ namespace LevelComponents
         int tmpAnimatedTilesHeaderPtr;
         int tmpoffset;
         int tmpAnimatedTilesdataPtr;
-        for(int v1 = 0; v1 < 16; ++v1)
+        for (int v1 = 0; v1 < 16; ++v1)
         {
             /*
              * the reason why not using this is that it will cause problem and worse in some situation,
              * so before we know what the first case really used for, we should just use the simple one.
              * TODO: find the usage of the first case
-            //[0300002E..03000032] are all set to zero at 6B8FA and the arrange just contains all the values the table start from 0x3F8C18 have
-            if(ROMUtils::CurrentFile[0x3F8C18 + __TilesetID * 16 + v1] & 1)
-                tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F91D8)));
-            else
-                tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
+            //[0300002E..03000032] are all set to zero at 6B8FA and the arrange just contains all the values the table
+            start from 0x3F8C18 have if(ROMUtils::CurrentFile[0x3F8C18 + __TilesetID * 16 + v1] & 1)
+                tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile +
+            __TilesetID * 32 + 2 * v1 + 0x3F91D8))); else tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned
+            short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
             */
-            tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
+            tmpAnimatedTilesHeaderPtr =
+                0x3F7828 +
+                (int) (8 * (*(unsigned short *) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
             tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
             tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
-            if((ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x03') || (ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x06'))
+            if ((ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x03') ||
+                (ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x06'))
             {
                 tmpoffset -= 1;
             }
@@ -80,7 +83,7 @@ namespace LevelComponents
                 tmpoffset = 0;
             }
             tmpoffset *= 128;
-            for(int i = 0; i < 4; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 tile8x8data[i + 4 * v1] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes);
             }
@@ -94,14 +97,14 @@ namespace LevelComponents
 
         // Foreground
         int fgGFXcount = fgGFXlen / 32;
-        for(int i = 0; i < fgGFXcount; ++i)
+        for (int i = 0; i < fgGFXcount; ++i)
         {
             tile8x8data[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes);
         }
 
         // Background
         int bgGFXcount = bgGFXlen / 32;
-        for(int i = 0; i < bgGFXcount; ++i)
+        for (int i = 0; i < bgGFXcount; ++i)
         {
             tile8x8data[tile8x8size - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes);
         }
@@ -109,11 +112,11 @@ namespace LevelComponents
         // Load the map16 data
         int map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
         int map16size = sizeof(map16data) / sizeof(map16data[0]);
-        for(int i = 0; i < map16size; ++i)
+        for (int i = 0; i < map16size; ++i)
         {
-            unsigned short *map16tilePtr = (unsigned short*) (ROMUtils::CurrentFile + map16ptr + i * 8);
+            unsigned short *map16tilePtr = (unsigned short *) (ROMUtils::CurrentFile + map16ptr + i * 8);
             Tile8x8 *tiles[4];
-            for(int j = 0; j < 4; ++j)
+            for (int j = 0; j < 4; ++j)
             {
                 int index = map16tilePtr[j] & 0x3FF;
                 bool FlipX = (map16tilePtr[j] & (1 << 10)) != 0;
@@ -129,10 +132,11 @@ namespace LevelComponents
         }
 
         // Get pointer to the map16 event table
-        Map16EventTable = (unsigned short*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28));
+        Map16EventTable = (unsigned short *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28));
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
-        Map16TerrainTypeIDTable = (unsigned char*) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24));
+        Map16TerrainTypeIDTable =
+            (unsigned char *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24));
 
         // Get pointer of Universal Sprites tiles Palette
         UniversalSpritesTilesPalettePtr = ROMUtils::PointerFromData(tilesetPtr + 32);
@@ -144,27 +148,24 @@ namespace LevelComponents
     Tileset::~Tileset()
     {
         // Deconstruct tile8x8 data
-        for(unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
+        for (unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
         {
             // The blank tile entry must be deleted separately
-            if(tile8x8data[i] != blankTile)
+            if (tile8x8data[i] != blankTile)
             {
                 delete tile8x8data[i];
             }
         }
         delete blankTile;
-        for(unsigned int i = 0; i <  sizeof(map16data) / sizeof(map16data[0]); ++i)
+        for (unsigned int i = 0; i < sizeof(map16data) / sizeof(map16data[0]); ++i)
         {
             delete map16data[i];
         }
 
-
-        for(unsigned int i = 0; i < 16; ++i)
+        for (unsigned int i = 0; i < 16; ++i)
         {
             palettes[i].clear();
         }
-
-
     }
 
     /// <summary>
@@ -184,11 +185,11 @@ namespace LevelComponents
         pixmap.fill(Qt::transparent);
 
         // Iterate by 8-tile wide column, then row, then tile horizontally within column
-        for(int c = 0; c < columns; ++c)
+        for (int c = 0; c < columns; ++c)
         {
-            for(int i = 0; i < tileCountY; ++i)
+            for (int i = 0; i < tileCountY; ++i)
             {
-                for(int j = 0; j < 8; ++j)
+                for (int j = 0; j < 8; ++j)
                 {
                     map16data[(c * tileCountY + i) * 8 + j]->DrawTile(&pixmap, (c * 8 + j) * 16, i * 16);
                 }
@@ -196,4 +197,4 @@ namespace LevelComponents
         }
         return pixmap;
     }
-}
+} // namespace LevelComponents
