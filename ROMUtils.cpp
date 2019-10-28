@@ -502,34 +502,7 @@ namespace ROMUtils
                 }
                 struct LevelComponents::__RoomHeader newroomheader;
                 memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
-
-                // Load the next room
                 room->ResetRoomHeader(newroomheader);
-
-
-                // [Temporary bug fix]
-                // One way to fix the following segfault (when increasing room after save rom) :
-                // !! LevelComponents::Room RenderGraphicsScene
-                // !! unsigned short *eventtable = tileset->GetEventTablePtr();
-                // !!for (uint j = 0; j < Height; ++j)
-                // !! {
-                // !!   for (uint i = 0; i < Width; ++i)
-                // !!  {
-                // !!      int val = eventtable[Layer1data[j * Width + i]]; //->segfault
-                // !! ..
-                room->ResetTileSet();
-
-                // [Temporary bug fix]
-                // One way (maybe not the best) to fix the following segfault (when clicking on the panel or copying a tile after save rom) :
-                // !! Tile16DockWidget::SetSelectedTile
-                // !! unsigned short eventIndex = SelectedTileset->Map16EventTable[tile]; //->segfault
-
-
-                //int tmpTilesetID = currentLevel->GetRooms()[0]->GetTilesetID();
-                singleton->GetTile16DockWidgetPtr()->SetTileset(singleton->GetCurrentRoom()->GetTilesetID());
-                /*singleton->LoadRoomUIUpdate();
-                singleton->ResetEntitySetDockWidget();
-                singleton->ResetCameraControlDockWidget();*/
 
                 // TODO: if more elements in the game are going to be support customizing in the editor, more pointers
                 // need to be reset here

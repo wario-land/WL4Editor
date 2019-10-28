@@ -16,13 +16,11 @@
 | 0x2D8390 | The End + push start | compressed 4bit | 0x2D830E (?) index: 0,1,3 | 32 | - | -
 | 0x2D9D18 | Intense mode (probably unused) | 4bit | 0x2D9C78 | - | - | -
 | 0x368CF0 | Spoiled Rotten & cie | uncompressed 4bit | 0x3B1A70 | 32 | 16 | ![Image](/images/rom-mapping/Spoiled-Rotten-1.png)
-
 | ~0x371C30| Object from Block Tower (1) | - | - | - | - | -
 | 0x3754F0 | Object from Block Tower (2) | - | 0x3B1D90 | - | - | -
 | 0x400CE8 | Empty health bar |  uncompressed 4bit |0x400AC8 | 8 | 1 | ![Image](/images/rom-mapping/Empty-Health.png)
-| 0x405288 | Health bar | uncompressed 4bit | 0x400AC8 | 8 | 19 | ![Image](/images/rom-mapping/Health-Bar.png)
-Palette of blue crystal (10) first occurence 00583E7C
-| ~0x418A1C | Tileset of Hall of Hieroglyph | uncompressed 4bit | 0x583DDC Pipe of Hall of Hieroglyph palette | | |
+| 0x405288 | Health bar | uncompressed 4bit | 0x400AC8 | 8 | 19 | ![Image](/images/rom-mapping/Health-Bar.png) Palette of blue crystal (10) first occurence 00583E7C
+| ~0x418A1C | Tileset of Hall of Hieroglyph | uncompressed 4bit | 0x583DDC Pipe of Hall of Hieroglyph palette | - | - | -
 | ~0x47D87C | Tileset of Block Tower | uncompressed 4bit | - | - | - | -
 | 0x6428D8 | Overworld with passages icons | uncompressed 4bit | First passage palette 6429F8 | - | - | -
 | 0x64C8C4 | All level and boss icons | uncompressed 4bit | 6A0A48 (level selection) 65EE1C (starting level) 6A0E08 (level selection black and white) 6616DC (starting level black and white) [? 6617BC 69FF88 6A0188 6A0388 6A0588 6A0788 6A0988 74287C] 1st Level  | 32 | 30 | -

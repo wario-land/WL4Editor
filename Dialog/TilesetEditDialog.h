@@ -61,41 +61,23 @@ public:
 
 private slots:
     void on_spinBox_valueChanged(int arg1);
-
     void on_spinBox_EventId_valueChanged(int arg1);
-
     void on_spinBox_TerrainId_valueChanged(int arg1);
-
     void on_spinBox_TopLeftTileId_valueChanged(int arg1);
-
     void on_spinBox_TopRightTileId_valueChanged(int arg1);
-
     void on_spinBox_BottomLeftTileId_valueChanged(int arg1);
-
     void on_spinBox_BottomRightTileId_valueChanged(int arg1);
-
     void on_spinBox_TopLeftpaletteId_valueChanged(int arg1);
-
     void on_spinBox_TopRightpaletteId_valueChanged(int arg1);
-
     void on_spinBox_BottomLeftpaletteId_valueChanged(int arg1);
-
     void on_spinBox_BottomRightpaletteId_valueChanged(int arg1);
-
     void on_checkBox_TopLeftHFlip_toggled(bool checked);
-
     void on_checkBox_TopRightHFlip_toggled(bool checked);
-
     void on_checkBox_BottomLeftHFlip_toggled(bool checked);
-
     void on_checkBox_BottomRightHFlip_toggled(bool checked);
-
     void on_checkBox_TopLeftVFlip_toggled(bool checked);
-
     void on_checkBox_TopRightVFlip_toggled(bool checked);
-
     void on_checkBox_BottomLeftVFlip_toggled(bool checked);
-
     void on_checkBox_BottomRightVFlip_toggled(bool checked);
 
 private:
