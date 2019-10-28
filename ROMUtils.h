@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "WL4Constants.h"
+#include "LevelComponents/Tileset.h"
 
 namespace ROMUtils
 {
@@ -16,6 +17,7 @@ namespace ROMUtils
     extern unsigned int CurrentFileSize;
     extern QString ROMFilePath;
     extern unsigned int SaveDataIndex;
+    extern LevelComponents::Tileset *singletonTilesets[92];
 
     // Global functions
     unsigned int IntFromData(int address);

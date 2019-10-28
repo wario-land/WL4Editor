@@ -36,6 +36,7 @@ namespace ROMUtils
     unsigned int CurrentFileSize;
     QString ROMFilePath;
     unsigned int SaveDataIndex;
+    LevelComponents::Tileset *singletonTilesets[92];
 
     /// <summary>
     /// Get a 4-byte, little-endian integer from ROM data.

@@ -37,8 +37,7 @@ namespace LevelComponents
         memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
 
         // Set up tileset
-        int tilesetPtr = WL4Constants::TilesetDataTable + RoomHeader.TilesetID * 36;
-        tileset = new Tileset(tilesetPtr, RoomHeader.TilesetID);
+        tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
 
         // Set up the layer data
         int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
@@ -119,8 +118,7 @@ namespace LevelComponents
         memset(EntityListDirty, 0, sizeof(EntityListDirty));
 
         // Set up tileset, TODO: if we support Tileset changes in the editor, this need to be changed
-        int tilesetPtr = WL4Constants::TilesetDataTable + RoomHeader.TilesetID * 36;
-        tileset = new Tileset(tilesetPtr, RoomHeader.TilesetID);
+        tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
 
         // Set up the layer data
         for (int i = 0; i < 4; ++i)
@@ -205,8 +203,7 @@ namespace LevelComponents
     /// </summary>
     void Room::ResetTileSet()
     {
-        int tilesetPtr = WL4Constants::TilesetDataTable + RoomHeader.TilesetID * 36;
-        tileset = new Tileset(tilesetPtr, RoomHeader.TilesetID);
+        tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
     }
 
     /// <summary>
@@ -234,7 +231,6 @@ namespace LevelComponents
         {
             delete layers[i];
         }
-        delete tileset;
     }
 
     /// <summary>

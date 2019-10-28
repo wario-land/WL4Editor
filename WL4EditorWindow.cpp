@@ -46,6 +46,9 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     Tile16SelecterWidget = new Tile16DockWidget();
     EntitySetWidget = new EntitySetDockWidget();
     CameraControlWidget = new CameraControlDockWidget();
+
+    // Memory Initialization
+    memset(ROMUtils::singletonTilesets, 0, sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0]));
 }
 
 /// <summary>
@@ -60,6 +63,13 @@ WL4EditorWindow::~WL4EditorWindow()
     delete EntitySetWidget;
     delete CameraControlWidget;
     delete statusBarLabel;
+
+    // Decomstruct all Tileset singletons
+    for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
+    {
+        delete ROMUtils::singletonTilesets[i];
+    }
+
     if (CurrentLevel)
     {
         delete CurrentLevel;
@@ -128,6 +138,16 @@ void WL4EditorWindow::OpenROM()
     if (!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?")))
         return;
 
+    if (CurrentLevel)
+    {
+        delete CurrentLevel;
+        // Decomstruct all Tileset singletons
+        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
+        {
+            delete ROMUtils::singletonTilesets[i];
+        }
+    }
+
     // Select a ROM file to open
     QString qFilePath =
         QFileDialog::getOpenFileName(this, tr("Open ROM file"), dialogInitialPath, tr("GBA ROM files (*.gba)"));
@@ -148,9 +168,14 @@ void WL4EditorWindow::OpenROM()
     std::string fileName = filePath.substr(filePath.rfind('/') + 1);
     setWindowTitle(fileName.c_str());
 
+    // Load all Tilesets as singletons
+    for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
+    {
+        int tilesetPtr = WL4Constants::TilesetDataTable + i * 36;
+        ROMUtils::singletonTilesets[i] = new LevelComponents::Tileset(tilesetPtr, i);
+    }
+
     // Load the first level and render the screen
-    if (CurrentLevel)
-        delete CurrentLevel;
     selectedLevel._PassageIndex = selectedLevel._LevelIndex = 0;
     CurrentLevel = new LevelComponents::Level(static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
                                               static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex));
@@ -231,11 +256,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
     if (nextroomconfig->CurrentTilesetIndex != currentroomconfig->CurrentTilesetIndex)
     {
-        LevelComponents::Tileset *currentTileset = currentRoom->GetTileset();
-        delete currentTileset;
-        int tilesetPtr = WL4Constants::TilesetDataTable + nextroomconfig->CurrentTilesetIndex * 36;
-        currentTileset = new LevelComponents::Tileset(tilesetPtr, nextroomconfig->CurrentTilesetIndex);
-        currentRoom->SetTileset(currentTileset, nextroomconfig->CurrentTilesetIndex);
+        currentRoom->SetTileset(ROMUtils::singletonTilesets[nextroomconfig->CurrentTilesetIndex], nextroomconfig->CurrentTilesetIndex);
         Tile16SelecterWidget->SetTileset(nextroomconfig->CurrentTilesetIndex);
     }
 
