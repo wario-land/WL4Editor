@@ -49,7 +49,7 @@ class TilesetEditDialog : public QDialog
 
 public:
     explicit TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditParams *tilesetEditParams);
-    void setSelectedTile16(int tile16ID);
+    void setSelectedTile16(int tile16ID, bool resetscrollbar);
     void setTile8x8OnSpinBox(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
     void setTile8x8TileID(LevelComponents::Tile8x8* tile8, int tileID);
     void setTile8x8PaletteID(LevelComponents::Tile8x8* tile8, int paletteIndex);
@@ -86,11 +86,15 @@ private:
 
     QGraphicsScene *Tile8x8MAPScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Tile8x8 = nullptr;
+    QGraphicsPixmapItem *Tile8x8mapping = nullptr;
+    QGraphicsScene *Tile16MAPScene = nullptr;
+    QGraphicsPixmapItem *SelectionBox_Tile16 = nullptr;
+    QGraphicsPixmapItem *Tile16mapping = nullptr;
     unsigned short SelectedTile8x8 = 0;
     unsigned short SelectedTile16 = 0;
 
     // functions
-    void RenderAllTile8x8();
+    void RenderInitialization();
     void SetSelectedTile8x8(unsigned short tileId, bool resetscrollbar);
 };
 

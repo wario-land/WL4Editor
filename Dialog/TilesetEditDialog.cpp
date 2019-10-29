@@ -11,13 +11,16 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
     ui->label_TilesetID->setText("Tileset ID" + QString::number(tilesetEditParam->currentTilesetIndex, 10));
 
     // render
-    RenderAllTile8x8();
+    RenderInitialization();
 
     //re-initialize widgets
     SetSelectedTile8x8(0, true);
-    setSelectedTile16(0);
+    setSelectedTile16(0, true);
 }
 
+/// <summary>
+/// Deconstructor of TilesetEditDialog class.
+/// </summary>
 TilesetEditDialog::~TilesetEditDialog()
 {
     delete ui;
@@ -29,8 +32,25 @@ TilesetEditDialog::~TilesetEditDialog()
 /// <param name="tile16ID">
 /// The tile16ID index.
 /// </param>
-void TilesetEditDialog::setSelectedTile16(int tile16ID)
+/// <param name="resetscrollbar">
+/// Set this to true if you want the editor to set the scrollbar automatically.
+/// </param>
+void TilesetEditDialog::setSelectedTile16(int tile16ID, bool resetscrollbar)
 {
+    // Paint red Box to show selected Tile16
+    int X = tile16ID & 7;
+    int Y = tile16ID >> 3;
+    SelectionBox_Tile16->setPos(X * 16, Y * 16);
+    SelectionBox_Tile16->setVisible(true);
+    SelectedTile16 = tile16ID;
+
+    // Set vertical scrollbar of braphicview
+    if (resetscrollbar)
+    {
+        ui->graphicsView_TilesetAllTile16->verticalScrollBar()->setValue(16 * (tile16ID / 16));
+        ui->graphicsView_TilesetAllTile16->horizontalScrollBar()->setValue(0);
+    }
+
     ui->spinBox_EventId->setValue(tilesetEditParams->selectedTileset->GetEventTablePtr()[tile16ID]);
     ui->spinBox_TerrainId->setValue(tilesetEditParams->selectedTileset->GetTerrainTypeIDTablePtr()[tile16ID]);
     LevelComponents::TileMap16* tile16Data=tilesetEditParams->selectedTileset->GetMap16Data()[tile16ID];
@@ -73,7 +93,7 @@ void TilesetEditDialog::setTile8x8OnSpinBox(LevelComponents::Tile8x8* tile8, QSp
 
 void TilesetEditDialog::on_spinBox_valueChanged(int arg1)
 {
-    setSelectedTile16(arg1);
+    setSelectedTile16(arg1, true);
 }
 
 void TilesetEditDialog::on_spinBox_EventId_valueChanged(int arg1)
@@ -219,21 +239,42 @@ void TilesetEditDialog::on_checkBox_BottomRightVFlip_toggled(bool checked)
     setTile8x8VFlip(tile8_BR, checked);
 }
 
-void TilesetEditDialog::RenderAllTile8x8()
+/// <summary>
+/// Render All Tile8x8 into graphicsView_TilesetAllTile8x8.
+/// </summary>
+void TilesetEditDialog::RenderInitialization()
 {
-    // Set up scene
-    Tile8x8MAPScene = new QGraphicsScene(0, 0, 8 * 32, 0x600 / 4);
-    Tile8x8MAPScene->addPixmap(tilesetEditParams->selectedTileset->RenderTile8x8());
+    // draw pixmaps
+    QPixmap Tile8x8Pixmap(8 * 16, 0x600 / 2);
+    QPainter Tile8x8PixmapPainter(&Tile8x8Pixmap);
+    Tile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->selectedTileset->RenderTile8x8().toImage());
+    QPixmap Tile16Pixmap(16 * 8, 0x300 * 2);
+    QPainter Tile16PixmapPainter(&Tile16Pixmap);
+    Tile16PixmapPainter.drawImage(0, 0, tilesetEditParams->selectedTileset->RenderTile16(1).toImage());
+
+    // Set up scenes
+    Tile8x8MAPScene = new QGraphicsScene(0, 0, 8 * 16, 0x600 / 2);
+    Tile8x8mapping = Tile8x8MAPScene->addPixmap(Tile8x8Pixmap);
+    Tile16MAPScene = new QGraphicsScene(0, 0, 16 * 8, 0x300 * 2);
+    Tile16mapping = Tile16MAPScene->addPixmap(Tile16Pixmap);
 
     // Add the highlighted tile rectangle
-    QPixmap selectionPixmap(8, 8);
+    QPixmap selectionPixmap(8, 8), selectionPixmap2(16, 16);
     const QColor highlightColor(0xFF, 0, 0, 0x7F);
     selectionPixmap.fill(highlightColor);
+    selectionPixmap2.fill(highlightColor);
     SelectionBox_Tile8x8 = Tile8x8MAPScene->addPixmap(selectionPixmap);
     SelectionBox_Tile8x8->setVisible(false);
+    SelectionBox_Tile16 = Tile16MAPScene->addPixmap(selectionPixmap2);
+    SelectionBox_Tile16->setVisible(false);
 
+    // show Rneder
     ui->graphicsView_TilesetAllTile8x8->setScene(Tile8x8MAPScene);
     ui->graphicsView_TilesetAllTile8x8->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_TilesetAllTile8x8->scale(2, 2);
+    ui->graphicsView_TilesetAllTile16->setScene(Tile16MAPScene);
+    ui->graphicsView_TilesetAllTile16->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_TilesetAllTile16->scale(2, 2);
 }
 
 /// <summary>
@@ -242,16 +283,22 @@ void TilesetEditDialog::RenderAllTile8x8()
 /// <param name="tileId">
 /// The tile8x8 index that was selected in the graphicsView_Tile8x8Editor.
 /// </param>
+/// <param name="resetscrollbar">
+/// Set this to true if you want the editor to set the scrollbar automatically.
+/// </param>
 void TilesetEditDialog::SetSelectedTile8x8(unsigned short tileId, bool resetscrollbar)
 {
     // Paint red Box to show selected Tile16
     int X = tileId & 7;
     int Y = tileId >> 3;
-    SelectionBox_Tile8x8->setPos(X * 16, Y * 16);
+    SelectionBox_Tile8x8->setPos(X * 8, Y * 8);
     SelectionBox_Tile8x8->setVisible(true);
     SelectedTile8x8 = tileId;
 
     // Set vertical scrollbar of braphicview
     if (resetscrollbar)
+    {
         ui->graphicsView_TilesetAllTile8x8->verticalScrollBar()->setValue(8 * (tileId / 32));
+        ui->graphicsView_TilesetAllTile8x8->horizontalScrollBar()->setValue(0);
+    }
 }
