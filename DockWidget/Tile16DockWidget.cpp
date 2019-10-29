@@ -113,8 +113,8 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
     SelectedTile = tile;
 
     // Get the event information about the selected tile
-    unsigned short eventIndex = SelectedTileset->Map16EventTable[tile];
-    int tmpTerrainTypeID = SelectedTileset->Map16TerrainTypeIDTable[tile];
+    unsigned short eventIndex = SelectedTileset->GetEventTablePtr()[tile];
+    int tmpTerrainTypeID = SelectedTileset->GetTerrainTypeIDTablePtr()[tile];
 
     // Print information about the tile to the user
     QString infoText;
