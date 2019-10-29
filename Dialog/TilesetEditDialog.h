@@ -26,8 +26,8 @@ namespace DialogParams
 
         // Construct this param struct using a Room object
         TilesetEditParams(LevelComponents::Room *room) {
-                currentTilesetIndex=room->GetTilesetID();
-                selectedTileset=room->GetTileset();
+                currentTilesetIndex = room->GetTilesetID();
+                selectedTileset = new LevelComponents::Tileset(room->GetTileset(), room->GetTilesetID());
         }
         ~TilesetEditParams(){};
     };
@@ -49,7 +49,7 @@ class TilesetEditDialog : public QDialog
 
 public:
     explicit TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditParams *tilesetEditParams);
-    void setSelectedTile16(int tile16ID, bool resetscrollbar);
+    void SetSelectedTile16(int tile16ID, bool resetscrollbar);
     void setTile8x8OnSpinBox(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
     void setTile8x8TileID(LevelComponents::Tile8x8* tile8, int tileID);
     void setTile8x8PaletteID(LevelComponents::Tile8x8* tile8, int paletteIndex);

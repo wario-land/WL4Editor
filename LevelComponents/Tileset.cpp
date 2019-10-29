@@ -142,7 +142,7 @@ namespace LevelComponents
 
         // Get pointer of Universal Sprites tiles Palette
         TilesetPaletteData = new unsigned short[16 * 16];
-        memcpy(TilesetPaletteData, (unsigned short *) (ROMUtils::PointerFromData(tilesetPtr + 32)), 16 * 16 * sizeof(unsigned short));
+        memcpy(TilesetPaletteData, (unsigned short *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 32)), 16 * 16 * sizeof(unsigned short));
     }
 
     /// <summary>
@@ -151,132 +151,41 @@ namespace LevelComponents
     /// <remarks>
     /// the new instance should only be used when editing Tileset, it should be delete after this period.
     /// </remarks>
-    Tileset::Tileset(Tileset *existing_tileset, int __TilesetID)
+    Tileset::Tileset(Tileset *old_tileset, int __TilesetID)
     {
-        Isbackup = true;
+        IsNewTileset = true;
         tile8x8data = new Tile8x8* [0x600];
         map16data = new TileMap16* [0x300];
 
         //Save the ROM pointer into the tileset object
-        this->tilesetPtr = existing_tileset->getTilesetPtr();
+        this->tilesetPtr = old_tileset->getTilesetPtr();
 
         memset(tile8x8data, 0, Tile8x8DefaultNum * sizeof(tile8x8data[0]));
         memset(map16data, 0, Tile16DefaultNum * sizeof(map16data[0]));
 
         // Create all 16 color palettes
-        int palettePtr = ROMUtils::PointerFromData(tilesetPtr + 8);
-        for (int i = 0; i < 16; ++i)
+        for (unsigned int i = 0; i < 16; ++i)
         {
-            // First color is transparent
-            palettes[i].push_back(0);
-            int subPalettePtr = palettePtr + i * 32;
-            for (int j = 1; j < 16; ++j)
-            {
-                unsigned short color555 = *(unsigned short *) (ROMUtils::CurrentFile + subPalettePtr + j * 2);
-                int r = ((color555 << 3) & 0xF8) | ((color555 >> 2) & 3);
-                int g = ((color555 >> 2) & 0xF8) | ((color555 >> 7) & 3);
-                int b = ((color555 >> 7) & 0xF8) | ((color555 >> 13) & 3);
-                int a = 0xFF;
-                palettes[i].push_back(QColor(r, g, b, a).rgba());
-            }
+            palettes[i] = old_tileset->GetPalettes()[i];
         }
 
-        // Initialize the 8x8 tiles by setting all the tiles to blank tiles
-        blankTile = Tile8x8::CreateBlankTile(palettes);
-        for (int i = 0; i < Tile8x8DefaultNum; ++i)
-        {
-            tile8x8data[i] = blankTile;
-        }
+        // Copy all the Tile8x8
+        // TODO
 
-        // Load the animated tiles
-        int tmpAnimatedTilesHeaderPtr;
-        int tmpoffset;
-        int tmpAnimatedTilesdataPtr;
-        for (int v1 = 0; v1 < 16; ++v1)
-        {
-            /*
-             * the reason why not using this is that it will cause problem and worse in some situation,
-             * so before we know what the first case really used for, we should just use the simple one.
-             * TODO: find the usage of the first case
-            //[0300002E..03000032] are all set to zero at 6B8FA and the arrange just contains all the values the table
-            start from 0x3F8C18 have if(ROMUtils::CurrentFile[0x3F8C18 + __TilesetID * 16 + v1] & 1)
-                tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile +
-            __TilesetID * 32 + 2 * v1 + 0x3F91D8))); else tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned
-            short*) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
-            */
-            tmpAnimatedTilesHeaderPtr =
-                0x3F7828 +
-                (int) (8 * (*(unsigned short *) (ROMUtils::CurrentFile + __TilesetID * 32 + 2 * v1 + 0x3F8098)));
-            tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
-            tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
-            if ((ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x03') ||
-                (ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x06'))
-            {
-                tmpoffset -= 1;
-            }
-            else
-            {
-                tmpoffset = 0;
-            }
-            tmpoffset *= 128;
-            for (int i = 0; i < 4; ++i)
-            {
-                tile8x8data[i + 4 * v1] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes);
-            }
-        }
-
-        // Load the 8x8 tile graphics
-        int fgGFXptr = ROMUtils::PointerFromData(tilesetPtr);
-        int fgGFXlen = ROMUtils::IntFromData(tilesetPtr + 4);
-        int bgGFXptr = ROMUtils::PointerFromData(tilesetPtr + 12);
-        int bgGFXlen = ROMUtils::IntFromData(tilesetPtr + 16);
-
-        // Foreground
-        int fgGFXcount = fgGFXlen / 32;
-        for (int i = 0; i < fgGFXcount; ++i)
-        {
-            tile8x8data[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes);
-        }
-
-        // Background
-        int bgGFXcount = bgGFXlen / 32;
-        for (int i = 0; i < bgGFXcount; ++i)
-        {
-            tile8x8data[Tile8x8DefaultNum - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes);
-        }
-
-        // Load the map16 data
-        int map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
-        for (int i = 0; i < Tile16DefaultNum; ++i)
-        {
-            unsigned short *map16tilePtr = (unsigned short *) (ROMUtils::CurrentFile + map16ptr + i * 8);
-            Tile8x8 *tiles[4];
-            for (int j = 0; j < 4; ++j)
-            {
-                int index = map16tilePtr[j] & 0x3FF;
-                bool FlipX = (map16tilePtr[j] & (1 << 10)) != 0;
-                bool FlipY = (map16tilePtr[j] & (1 << 11)) != 0;
-                int paletteIndex = map16tilePtr[j] >> 12;
-                tiles[j] = new Tile8x8(tile8x8data[index]);
-                tiles[j]->SetIndex(index);
-                tiles[j]->SetFlipX(FlipX);
-                tiles[j]->SetFlipY(FlipY);
-                tiles[j]->SetPaletteIndex(paletteIndex);
-            }
-            map16data[i] = new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]);
-        }
+        // Copy all the Tile16
+        // TODO
 
         // Get pointer to the map16 event table
         Map16EventTable = new unsigned short[0x300];
-        memcpy(Map16EventTable, (unsigned short *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28)), Tile16DefaultNum * sizeof(unsigned short));
+        memcpy(Map16EventTable, old_tileset->GetEventTablePtr(), Tile16DefaultNum * sizeof(unsigned short));
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
         Map16TerrainTypeIDTable = new unsigned char[0x300];
-        memcpy(Map16TerrainTypeIDTable, (unsigned char *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24)), Tile16DefaultNum * sizeof(unsigned char));
+        memcpy(Map16TerrainTypeIDTable, old_tileset->GetTerrainTypeIDTablePtr(), Tile16DefaultNum * sizeof(unsigned char));
 
         // Get pointer of Universal Sprites tiles Palette
         TilesetPaletteData = new unsigned short[16 * 16];
-        memcpy(TilesetPaletteData, (unsigned short *) (ROMUtils::PointerFromData(tilesetPtr + 32)), 16 * 16 * sizeof(unsigned short));
+        memcpy(TilesetPaletteData, old_tileset->GetTilesetPaletteDataPtr(), 16 * 16 * sizeof(unsigned short));
     }
 
     /// <summary>
@@ -284,8 +193,6 @@ namespace LevelComponents
     /// </summary>
     Tileset::~Tileset()
     {
-        if(!DeleteEverythingOnDeconstruction && Isbackup) return;
-
         // Deconstruct tile8x8 data
         for (unsigned int i = 0; i < Tile8x8DefaultNum; ++i)
         {
@@ -316,16 +223,16 @@ namespace LevelComponents
     /// </summary>
     QPixmap Tileset::RenderTile8x8()
     {
-        int lineNum = 0x600 / 32;
-        QPixmap pixmap(8 * 32, 8 * lineNum);
+        int lineNum = 0x600 / 16;
+        QPixmap pixmap(8 * 16, 8 * lineNum);
         pixmap.fill(Qt::transparent);
 
         // drawing
         for (int i = 0; i < lineNum; ++i)
         {
-            for (int j = 0; j < 32; ++j)
+            for (int j = 0; j < 16; ++j)
             {
-                tile8x8data[i * 32 + j]->DrawTile(&pixmap, j * 8, i * 8);
+                tile8x8data[i * 16 + j]->DrawTile(&pixmap, j * 8, i * 8);
             }
         }
         return pixmap;
@@ -359,54 +266,5 @@ namespace LevelComponents
             }
         }
         return pixmap;
-    }
-
-    /// <summary>
-    /// This function should be used by the original Tileset which accepts chanegs.
-    /// </summary>
-    /// <param name="backup_tileset">
-    /// backup_Tileset pointer Created by Tileset Editor Dialog.
-    /// </param>
-    void Tileset::OverwriteAllData(Tileset *backup_tileset)
-    {
-        // CLean up
-        for (unsigned int i = 0; i < Tile8x8DefaultNum; ++i)
-        {
-            // The blank tile entry must be deleted separately
-            if (tile8x8data[i] != blankTile)
-            {
-                delete tile8x8data[i];
-            }
-        }
-        delete blankTile;
-        for (unsigned int i = 0; i < Tile16DefaultNum; ++i)
-        {
-            delete map16data[i];
-        }
-
-        for (unsigned int i = 0; i < 16; ++i)
-        {
-            palettes[i].clear();
-        }
-        memset(tile8x8data, 0, Tile8x8DefaultNum * sizeof(tile8x8data[0]));
-        blankTile = nullptr;
-        memset(map16data, 0, Tile16DefaultNum * sizeof(map16data[0]));
-        delete Map16EventTable;
-        delete Map16TerrainTypeIDTable;
-        delete TilesetPaletteData;
-
-        // Copy back all the data
-        tilesetPtr = backup_tileset->getTilesetPtr();
-        tile8x8data = backup_tileset->GetTile8x8Data();
-        map16data = backup_tileset->GetMap16Data();
-        for (unsigned int i = 0; i < 16; ++i)
-        {
-            palettes[i] = backup_tileset->GetPalettes()[i];
-        }
-        blankTile = backup_tileset->GetblankTile();
-        UniversalSpritesTilesPalettePtr = backup_tileset->GetUniversalSpritesTilesPalettePtr();
-        Map16EventTable = backup_tileset->GetEventTablePtr();
-        Map16TerrainTypeIDTable = backup_tileset->GetTerrainTypeIDTablePtr();
-        TilesetPaletteData = backup_tileset->GetTilesetPaletteDataPtr();
     }
 } // namespace LevelComponents

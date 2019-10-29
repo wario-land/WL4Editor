@@ -15,7 +15,7 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
 
     //re-initialize widgets
     SetSelectedTile8x8(0, true);
-    setSelectedTile16(0, true);
+    SetSelectedTile16(0, true);
 }
 
 /// <summary>
@@ -35,7 +35,7 @@ TilesetEditDialog::~TilesetEditDialog()
 /// <param name="resetscrollbar">
 /// Set this to true if you want the editor to set the scrollbar automatically.
 /// </param>
-void TilesetEditDialog::setSelectedTile16(int tile16ID, bool resetscrollbar)
+void TilesetEditDialog::SetSelectedTile16(int tile16ID, bool resetscrollbar)
 {
     // Paint red Box to show selected Tile16
     int X = tile16ID & 7;
@@ -93,7 +93,7 @@ void TilesetEditDialog::setTile8x8OnSpinBox(LevelComponents::Tile8x8* tile8, QSp
 
 void TilesetEditDialog::on_spinBox_valueChanged(int arg1)
 {
-    setSelectedTile16(arg1, true);
+    SetSelectedTile16(arg1, true);
 }
 
 void TilesetEditDialog::on_spinBox_EventId_valueChanged(int arg1)
