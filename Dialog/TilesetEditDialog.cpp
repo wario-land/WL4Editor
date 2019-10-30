@@ -17,6 +17,7 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
     //re-initialize widgets
     SetSelectedTile8x8(0, true);
     SetSelectedTile16(0, true);
+    SetSelectedColorId(0);
 
     HasInitialized = true;
 }
@@ -58,7 +59,7 @@ void TilesetEditDialog::SetSelectedTile16(int tile16ID, bool resetscrollbar)
 
     ui->spinBox_EventId->setValue(tilesetEditParams->newTileset->GetEventTablePtr()[tile16ID]);
     ui->spinBox_TerrainId->setValue(tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr()[tile16ID]);
-    LevelComponents::TileMap16* tile16Data=tilesetEditParams->newTileset->GetMap16Data()[tile16ID];
+    LevelComponents::TileMap16* tile16Data=tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID];
     LevelComponents::Tile8x8* tile8_TL=tile16Data->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPLEFT);
     LevelComponents::Tile8x8* tile8_TR=tile16Data->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPRIGHT);
     LevelComponents::Tile8x8* tile8_BL=tile16Data->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMLEFT);
@@ -287,13 +288,25 @@ void TilesetEditDialog::RenderInitialization()
     QPixmap Tile8x8Pixmap(8 * 16, 0x600 / 2);
     Tile8x8Pixmap.fill(Qt::transparent);
     QPainter Tile8x8PixmapPainter(&Tile8x8Pixmap);
-    Tile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderTile8x8().toImage());
+    Tile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderTile8x8(0).toImage());
     QPixmap Tile16Pixmap(16 * 8, 0x300 * 2);
     Tile16Pixmap.fill(Qt::transparent);
     QPainter Tile16PixmapPainter(&Tile16Pixmap);
     Tile16PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderTile16(1).toImage());
 
+    // draw palette Bar
+    QPixmap PaletteBarpixmap(8 * 16, 16);
+    PaletteBarpixmap.fill(Qt::transparent);
+    QPainter PaletteBarPainter(&PaletteBarpixmap);
+    QVector<QRgb> *palettetable = tilesetEditParams->newTileset->GetPalettes();
+    for(int i = 1; i < 16; ++i)
+    {
+        PaletteBarPainter.fillRect(8 * i, 0, 8, 16, palettetable[0][i]);
+    }
+
     // Set up scenes
+    PaletteBarScene = new QGraphicsScene(0, 0, 16 * 8, 16);
+    PaletteBarScene->addPixmap(PaletteBarpixmap);
     Tile8x8MAPScene = new QGraphicsScene(0, 0, 8 * 16, 0x600 / 2);
     Tile8x8mapping = Tile8x8MAPScene->addPixmap(Tile8x8Pixmap);
     Tile16MAPScene = new QGraphicsScene(0, 0, 16 * 8, 0x300 * 2);
@@ -308,6 +321,13 @@ void TilesetEditDialog::RenderInitialization()
     SelectionBox_Tile8x8->setVisible(false);
     SelectionBox_Tile16 = Tile16MAPScene->addPixmap(selectionPixmap2);
     SelectionBox_Tile16->setVisible(false);
+    QPixmap selectionPixmap3(8, 16);
+    selectionPixmap3.fill(Qt::transparent);
+    QPainter SelectionBoxRectPainter(&selectionPixmap3);
+    SelectionBoxRectPainter.setPen(QPen(QBrush(Qt::blue), 2));
+    SelectionBoxRectPainter.drawRect(1, 1, 7, 15);
+    SelectionBox_Color = PaletteBarScene->addPixmap(selectionPixmap3);
+    SelectionBox_Color->setVisible(false);
 
     // show Rneder
     ui->graphicsView_TilesetAllTile8x8->setScene(Tile8x8MAPScene);
@@ -316,6 +336,43 @@ void TilesetEditDialog::RenderInitialization()
     ui->graphicsView_TilesetAllTile16->setScene(Tile16MAPScene);
     ui->graphicsView_TilesetAllTile16->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     ui->graphicsView_TilesetAllTile16->scale(2, 2);
+    ui->graphicsView_paletteBar->setScene(PaletteBarScene);
+    ui->graphicsView_paletteBar->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_paletteBar->scale(2, 2);
+}
+
+/// <summary>
+/// Reset Palette Bar.
+/// </summary>
+void TilesetEditDialog::ResetPaletteBarGraphicView(int paletteId)
+{
+    delete PaletteBarScene;
+    PaletteBarScene = new QGraphicsScene(0, 0, 16 * 8, 16);
+
+    // draw palette Bar
+    QPixmap PaletteBarpixmap(8 * 16, 16);
+    PaletteBarpixmap.fill(Qt::transparent);
+    QPainter PaletteBarPainter(&PaletteBarpixmap);
+    QVector<QRgb> *palettetable = tilesetEditParams->newTileset->GetPalettes();
+    for(int i = 1; i < 16; ++i)
+    {
+        PaletteBarPainter.fillRect(8 * i, 0, 8, 16, palettetable[paletteId][i]);
+    }
+    PaletteBarScene->addPixmap(PaletteBarpixmap);
+
+    // Add the highlighted tile rectangle in SelectionBox_Color
+    QPixmap selectionPixmap3(8, 16);
+    selectionPixmap3.fill(Qt::transparent);
+    const QColor highlightColor(0xFF, 0, 0, 0x7F);
+    QPainter SelectionBoxRectPainter(&selectionPixmap3);
+    SelectionBoxRectPainter.setPen(QPen(QBrush(Qt::blue), 2));
+    SelectionBoxRectPainter.drawRect(1, 1, 7, 15);
+    SelectionBox_Color = PaletteBarScene->addPixmap(selectionPixmap3);
+    SelectionBox_Color->setVisible(false);
+
+    // show Rneder
+    ui->graphicsView_paletteBar->setScene(PaletteBarScene);
+    ui->graphicsView_paletteBar->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
 /// <summary>
@@ -344,9 +401,33 @@ void TilesetEditDialog::ReRenderTile16Map()
     // show Rneder
     ui->graphicsView_TilesetAllTile16->setScene(Tile16MAPScene);
     ui->graphicsView_TilesetAllTile16->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    ui->graphicsView_TilesetAllTile16->scale(2, 2);
 
     SetSelectedTile16(0, true);
+}
+
+void TilesetEditDialog::ReRenderTile8x8Map(int paletteId)
+{
+    // draw pixmaps
+    QPixmap Tile8x8Pixmap(8 * 16, 0x600 / 2);
+    Tile8x8Pixmap.fill(Qt::transparent);
+    QPainter Tile8x8PixmapPainter(&Tile8x8Pixmap);
+    Tile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderTile8x8(paletteId).toImage());
+
+    // Set up scenes
+    delete Tile8x8MAPScene;
+    Tile8x8MAPScene = new QGraphicsScene(0, 0, 8 * 16, 0x600 / 2);
+    Tile8x8mapping = Tile8x8MAPScene->addPixmap(Tile8x8Pixmap);
+
+    // Add the highlighted tile rectangle
+    QPixmap selectionPixmap(16, 16);
+    const QColor highlightColor(0xFF, 0, 0, 0x7F);
+    selectionPixmap.fill(highlightColor);
+    SelectionBox_Tile16 = Tile16MAPScene->addPixmap(selectionPixmap);
+    SelectionBox_Tile16->setVisible(false);
+
+    // show Rneder
+    ui->graphicsView_TilesetAllTile8x8->setScene(Tile8x8MAPScene);
+    ui->graphicsView_TilesetAllTile8x8->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
 /// <summary>
@@ -370,14 +451,14 @@ void TilesetEditDialog::CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile1
     SelectedTile16 = (unsigned short) To_Tile16;
 
     // Update Data
-    LevelComponents::TileMap16* from_tile16Data = tilesetEditParams->newTileset->GetMap16Data()[from_Tile16];
-    LevelComponents::TileMap16* to_tile16Data = tilesetEditParams->newTileset->GetMap16Data()[To_Tile16];
+    LevelComponents::TileMap16* from_tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[from_Tile16];
+    LevelComponents::TileMap16* to_tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[To_Tile16];
     delete to_tile16Data;
     to_tile16Data = new LevelComponents::TileMap16(from_tile16Data, from_tile16Data->GetPalette());
 
     // Update Graphic
     QPixmap pm(Tile16mapping->pixmap());
-    tilesetEditParams->newTileset->GetMap16Data()[SelectedTile16]->DrawTile(&pm, (SelectedTile16 & 7) << 4, (SelectedTile16 >> 3) << 4);
+    tilesetEditParams->newTileset->GetMap16arrayPtr()[SelectedTile16]->DrawTile(&pm, (SelectedTile16 & 7) << 4, (SelectedTile16 >> 3) << 4);
     Tile16mapping->setPixmap(pm);
 
     // Update UI
@@ -419,12 +500,12 @@ void TilesetEditDialog::CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile1
 void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip)
 {
     // Update Data
-    LevelComponents::TileMap16* tile16Data = tilesetEditParams->newTileset->GetMap16Data()[SelectedTile16];
-    tile16Data->ResetTile8x8(tilesetEditParams->newTileset->GetTile8x8Data()[newTile8x8_Id], position & 3, new_paletteIndex, xflip, yflip);
+    LevelComponents::TileMap16* tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[SelectedTile16];
+    tile16Data->ResetTile8x8(tilesetEditParams->newTileset->GetTile8x8arrayPtr()[newTile8x8_Id], position & 3, new_paletteIndex, xflip, yflip);
 
     // Update Graphic
     QPixmap pm(Tile16mapping->pixmap());
-    tilesetEditParams->newTileset->GetMap16Data()[SelectedTile16]->DrawTile(&pm, (SelectedTile16 & 7) << 4, (SelectedTile16 >> 3) << 4);
+    tilesetEditParams->newTileset->GetMap16arrayPtr()[SelectedTile16]->DrawTile(&pm, (SelectedTile16 & 7) << 4, (SelectedTile16 >> 3) << 4);
     Tile16mapping->setPixmap(pm);
 }
 
@@ -452,4 +533,35 @@ void TilesetEditDialog::SetSelectedTile8x8(unsigned short tileId, bool resetscro
         ui->graphicsView_TilesetAllTile8x8->verticalScrollBar()->setValue(8 * (tileId / 32));
         ui->graphicsView_TilesetAllTile8x8->horizontalScrollBar()->setValue(0);
     }
+}
+
+/// <summary>
+/// Set Selected Color Id, also update the Selection box in the palette bar.
+/// </summary>
+/// <param name="newcolorId">
+/// new selected color Id.
+/// </param>
+void TilesetEditDialog::SetSelectedColorId(int newcolorId)
+{
+    // Paint red Box to show selected Color
+    int X = newcolorId * 8;
+    int Y = 0;
+    SelectionBox_Color->setPos(X * 8, Y * 8);
+    SelectionBox_Color->setVisible(true);
+    SelectedColorId = newcolorId;
+}
+
+/// <summary>
+/// This function will be called when slider moving.
+/// </summary>
+/// <param name="value">
+/// slider value gives automatically.
+/// </param>
+void TilesetEditDialog::on_horizontalSlider_valueChanged(int value)
+{
+    if(!HasInitialized) return;
+    ReRenderTile8x8Map(value);
+    ResetPaletteBarGraphicView(value);
+    SetSelectedTile8x8(0, true);
+    SetSelectedColorId(0);
 }

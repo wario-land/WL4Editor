@@ -40,7 +40,7 @@ namespace LevelComponents
 #else
         ImageData(new QImageW(other->ImageData->copy())),
 #endif
-        FlipX(other->GetFlipX()), FlipY(other->GetFlipY()), index(other->GetIndex()), paletteIndex(other->GetPaletteIndex())
+        index(other->index), paletteIndex(other->paletteIndex), FlipX(other->FlipX), FlipY(other->FlipY)
     {}
 
     /// <summary>
@@ -56,7 +56,7 @@ namespace LevelComponents
 #else
         ImageData(new QImageW(other->ImageData->copy())),
 #endif
-        FlipX(other->GetFlipX()), FlipY(other->GetFlipY()), index(other->GetIndex()), paletteIndex(other->GetPaletteIndex())
+        index(other->index), paletteIndex(other->paletteIndex), FlipX(other->FlipX), FlipY(other->FlipY)
     {}
 
     /// <summary>

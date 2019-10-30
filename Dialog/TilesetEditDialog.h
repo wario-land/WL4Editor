@@ -74,6 +74,7 @@ private slots:
     void on_checkBox_TopRightVFlip_toggled(bool checked);
     void on_checkBox_BottomLeftVFlip_toggled(bool checked);
     void on_checkBox_BottomRightVFlip_toggled(bool checked);
+    void on_horizontalSlider_valueChanged(int value);
 
 private:
     Ui::TilesetEditDialog *ui;
@@ -81,6 +82,8 @@ private:
     // members
     DialogParams::TilesetEditParams* tilesetEditParams;
     bool HasInitialized = false;
+    QGraphicsScene *PaletteBarScene = nullptr;
+    QGraphicsPixmapItem *SelectionBox_Color = nullptr;
     QGraphicsScene *Tile8x8MAPScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Tile8x8 = nullptr;
     QGraphicsPixmapItem *Tile8x8mapping = nullptr;
@@ -90,12 +93,16 @@ private:
     unsigned short SelectedTile8x8 = 0;
     unsigned short SelectedTile16 = 0;
     bool IsSelectingTile16 = false;
+    int SelectedColorId = 0;
 
     // functions
     void RenderInitialization();
+    void ResetPaletteBarGraphicView(int paletteId);
     void ReRenderTile16Map();
+    void ReRenderTile8x8Map(int paletteId);
     void UpdateATile8x8ForSelectedTile16InTilesetData(int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip);
     void SetSelectedTile8x8(unsigned short tileId, bool resetscrollbar);
+    void SetSelectedColorId(int newcolorId);
 };
 
 #endif // TILESETEDITDIALOG_H

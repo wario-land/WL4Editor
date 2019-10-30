@@ -24,13 +24,13 @@ namespace LevelComponents
         //Save the ROM pointer into the tileset object
         this->tilesetPtr=tilesetPtr;
 
-        tile8x8data = new Tile8x8* [0x600];
-        map16data = new TileMap16* [0x300];
-        memset(tile8x8data, 0, Tile8x8DefaultNum * sizeof(tile8x8data[0]));
-        memset(map16data, 0, Tile16DefaultNum * sizeof(map16data[0]));
+        tile8x8array = new Tile8x8* [0x600];
+        map16array = new TileMap16* [0x300];
+        memset(tile8x8array, 0, Tile8x8DefaultNum * sizeof(tile8x8array[0]));
+        memset(map16array, 0, Tile16DefaultNum * sizeof(map16array[0]));
 
         // Create all 16 color palettes
-        int palettePtr = ROMUtils::PointerFromData(tilesetPtr + 8);
+        palettePtr = ROMUtils::PointerFromData(tilesetPtr + 8);
         for (int i = 0; i < 16; ++i)
         {
             // First color is transparent
@@ -51,7 +51,7 @@ namespace LevelComponents
         blankTile = Tile8x8::CreateBlankTile(palettes);
         for (int i = 0; i < Tile8x8DefaultNum; ++i)
         {
-            tile8x8data[i] = blankTile;
+            tile8x8array[i] = blankTile;
         }
 
         // Load the animated tiles
@@ -87,32 +87,32 @@ namespace LevelComponents
             tmpoffset *= 128;
             for (int i = 0; i < 4; ++i)
             {
-                tile8x8data[i + 4 * v1] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes);
+                tile8x8array[i + 4 * v1] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes);
             }
         }
 
         // Load the 8x8 tile graphics
-        int fgGFXptr = ROMUtils::PointerFromData(tilesetPtr);
-        int fgGFXlen = ROMUtils::IntFromData(tilesetPtr + 4);
-        int bgGFXptr = ROMUtils::PointerFromData(tilesetPtr + 12);
-        int bgGFXlen = ROMUtils::IntFromData(tilesetPtr + 16);
+        fgGFXptr = ROMUtils::PointerFromData(tilesetPtr);
+        fgGFXlen = ROMUtils::IntFromData(tilesetPtr + 4);
+        bgGFXptr = ROMUtils::PointerFromData(tilesetPtr + 12);
+        bgGFXlen = ROMUtils::IntFromData(tilesetPtr + 16);
 
         // Foreground
         int fgGFXcount = fgGFXlen / 32;
         for (int i = 0; i < fgGFXcount; ++i)
         {
-            tile8x8data[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes);
+            tile8x8array[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes);
         }
 
         // Background
         int bgGFXcount = bgGFXlen / 32;
         for (int i = 0; i < bgGFXcount; ++i)
         {
-            tile8x8data[Tile8x8DefaultNum - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes);
+            tile8x8array[Tile8x8DefaultNum - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes);
         }
 
         // Load the map16 data
-        int map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
+        map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
         for (int i = 0; i < Tile16DefaultNum; ++i)
         {
             unsigned short *map16tilePtr = (unsigned short *) (ROMUtils::CurrentFile + map16ptr + i * 8);
@@ -123,13 +123,13 @@ namespace LevelComponents
                 bool FlipX = (map16tilePtr[j] & (1 << 10)) != 0;
                 bool FlipY = (map16tilePtr[j] & (1 << 11)) != 0;
                 int paletteIndex = map16tilePtr[j] >> 12;
-                tiles[j] = new Tile8x8(tile8x8data[index]);
+                tiles[j] = new Tile8x8(tile8x8array[index]);
                 tiles[j]->SetIndex(index);
                 tiles[j]->SetFlipX(FlipX);
                 tiles[j]->SetFlipY(FlipY);
                 tiles[j]->SetPaletteIndex(paletteIndex);
             }
-            map16data[i] = new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]);
+            map16array[i] = new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]);
         }
 
         // Get pointer to the map16 event table
@@ -151,17 +151,23 @@ namespace LevelComponents
     /// <remarks>
     /// the new instance should only be used when editing Tileset, it should be delete after this period.
     /// </remarks>
-    Tileset::Tileset(Tileset *old_tileset, int __TilesetID)
+    Tileset::Tileset(Tileset *old_tileset, int __TilesetID) :
+        palettePtr(old_tileset->palettePtr),
+        fgGFXptr(old_tileset->fgGFXptr),
+        fgGFXlen(old_tileset->fgGFXlen),
+        bgGFXptr(old_tileset->bgGFXptr),
+        bgGFXlen(old_tileset->bgGFXlen),
+        map16ptr(old_tileset->map16ptr)
     {
         IsNewTileset = true;
-        tile8x8data = new Tile8x8* [0x600];
-        map16data = new TileMap16* [0x300];
+        tile8x8array = new Tile8x8* [0x600];
+        map16array = new TileMap16* [0x300];
 
         //Save the ROM pointer into the tileset object
         this->tilesetPtr = old_tileset->getTilesetPtr();
 
-        memset(tile8x8data, 0, Tile8x8DefaultNum * sizeof(tile8x8data[0]));
-        memset(map16data, 0, Tile16DefaultNum * sizeof(map16data[0]));
+        memset(tile8x8array, 0, Tile8x8DefaultNum * sizeof(tile8x8array[0]));
+        memset(map16array, 0, Tile16DefaultNum * sizeof(map16array[0]));
 
         // Create all 16 color palettes
         for (unsigned int i = 0; i < 16; ++i)
@@ -170,17 +176,17 @@ namespace LevelComponents
         }
 
         // Copy all the Tile8x8
-        Tile8x8 **oldTile8x8Data = old_tileset->GetTile8x8Data();
+        Tile8x8 **oldTile8x8Data = old_tileset->GetTile8x8arrayPtr();
         for (unsigned int i = 0; i < Tile8x8DefaultNum; ++i)
         {
-            tile8x8data[i] = new Tile8x8(oldTile8x8Data[i], palettes);
+            tile8x8array[i] = new Tile8x8(oldTile8x8Data[i], palettes);
         }
 
         // Copy all the Tile16
-        TileMap16 **oldTileMap16Data = old_tileset->GetMap16Data();
+        TileMap16 **oldTileMap16Data = old_tileset->GetMap16arrayPtr();
         for (unsigned int i = 0; i < Tile16DefaultNum; ++i)
         {
-            map16data[i] = new TileMap16(oldTileMap16Data[i], palettes);
+            map16array[i] = new TileMap16(oldTileMap16Data[i], palettes);
         }
 
         // Get pointer to the map16 event table
@@ -205,15 +211,15 @@ namespace LevelComponents
         for (unsigned int i = 0; i < Tile8x8DefaultNum; ++i)
         {
             // The blank tile entry must be deleted separately
-            if (tile8x8data[i] != blankTile)
+            if (tile8x8array[i] != blankTile)
             {
-                delete tile8x8data[i];
+                delete tile8x8array[i];
             }
         }
         delete blankTile;
         for (unsigned int i = 0; i < Tile16DefaultNum; ++i)
         {
-            delete map16data[i];
+            delete map16array[i];
         }
 
         for (unsigned int i = 0; i < 16; ++i)
@@ -229,7 +235,7 @@ namespace LevelComponents
     /// <summary>
     /// Render the tileset by Tile8 as a pixmap.
     /// </summary>
-    QPixmap Tileset::RenderTile8x8()
+    QPixmap Tileset::RenderTile8x8(int paletteId)
     {
         int lineNum = 0x600 / 16;
         QPixmap pixmap(8 * 16, 8 * lineNum);
@@ -240,7 +246,8 @@ namespace LevelComponents
         {
             for (int j = 0; j < 16; ++j)
             {
-                tile8x8data[i * 16 + j]->DrawTile(&pixmap, j * 8, i * 8);
+                tile8x8array[i * 16 + j]->SetPaletteIndex(paletteId);
+                tile8x8array[i * 16 + j]->DrawTile(&pixmap, j * 8, i * 8);
             }
         }
         return pixmap;
@@ -269,7 +276,7 @@ namespace LevelComponents
             {
                 for (int j = 0; j < 8; ++j)
                 {
-                    map16data[(c * tileCountY + i) * 8 + j]->DrawTile(&pixmap, (c * 8 + j) * 16, i * 16);
+                    map16array[(c * tileCountY + i) * 8 + j]->DrawTile(&pixmap, (c * 8 + j) * 16, i * 16);
                 }
             }
         }

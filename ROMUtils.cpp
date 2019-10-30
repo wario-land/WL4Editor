@@ -441,7 +441,7 @@ namespace ROMUtils
             memcpy(TempFile+ROMUtils::PointerFromData(tilesetPtr + 24),(unsigned char*)Map16TerrainTypeIDTable,768);
 
             // Saves Map16Data
-            LevelComponents::TileMap16** map16data=room->GetTileset()->GetMap16Data();
+            LevelComponents::TileMap16** map16data=room->GetTileset()->GetMap16arrayPtr();
             unsigned short map16tilePtr[768*4];
             for (int j = 0; j < 768; ++j)
             {

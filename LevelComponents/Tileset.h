@@ -14,8 +14,8 @@ namespace LevelComponents
         int tilesetPtr;
         int Tile8x8DefaultNum = 0x600;
         int Tile16DefaultNum = 0x300;
-        Tile8x8 **tile8x8data = nullptr;
-        TileMap16 **map16data = nullptr;
+        Tile8x8 **tile8x8array = nullptr;
+        TileMap16 **map16array = nullptr;
         QVector<QRgb> palettes[16];
         Tile8x8 *blankTile = nullptr;
         int UniversalSpritesTilesPalettePtr = 0;
@@ -23,16 +23,17 @@ namespace LevelComponents
         unsigned char *Map16TerrainTypeIDTable = nullptr;
         unsigned short *TilesetPaletteData = nullptr;
         bool IsNewTileset = false;
+        int palettePtr, fgGFXptr, fgGFXlen, bgGFXptr, bgGFXlen, map16ptr;
 
     public:
         Tileset(int tilesetPtr, int __TilesetID);
         Tileset(Tileset *old_tileset, int __TilesetID);
         int getTilesetPtr() { return tilesetPtr; }
-        Tile8x8 **GetTile8x8Data() { return tile8x8data; }
-        TileMap16 **GetMap16Data() { return map16data; }
+        Tile8x8 **GetTile8x8arrayPtr() { return tile8x8array; }
+        TileMap16 **GetMap16arrayPtr() { return map16array; }
         QVector<QRgb> *GetPalettes() { return palettes; }
         ~Tileset();
-        QPixmap RenderTile8x8();
+        QPixmap RenderTile8x8(int paletteId);
         QPixmap RenderTile16(int columns);
         int GetUniversalSpritesTilesPalettePtr() { return UniversalSpritesTilesPalettePtr; }
         unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }
