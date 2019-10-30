@@ -170,10 +170,18 @@ namespace LevelComponents
         }
 
         // Copy all the Tile8x8
-        // TODO
+        Tile8x8 **oldTile8x8Data = old_tileset->GetTile8x8Data();
+        for (unsigned int i = 0; i < Tile8x8DefaultNum; ++i)
+        {
+            tile8x8data[i] = new Tile8x8(oldTile8x8Data[i]);
+        }
 
         // Copy all the Tile16
-        // TODO
+        TileMap16 **oldTileMap16Data = old_tileset->GetMap16Data();
+        for (unsigned int i = 0; i < Tile16DefaultNum; ++i)
+        {
+            map16data[i] = new TileMap16(oldTileMap16Data[i]);
+        }
 
         // Get pointer to the map16 event table
         Map16EventTable = new unsigned short[0x300];

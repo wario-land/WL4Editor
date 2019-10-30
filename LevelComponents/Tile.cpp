@@ -194,6 +194,19 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Deep copy constructor for TileMap16.
+    /// </summary>
+    /// <param name="other">
+    /// The source map16 tile.
+    /// </param>
+    TileMap16::TileMap16(TileMap16 *other) : TileMap16(
+        new Tile8x8(TileData[0]),
+        new Tile8x8(TileData[1]),
+        new Tile8x8(TileData[2]),
+        new Tile8x8(TileData[3])
+    )                                                                                                                                                                                                                                      { /* SSP won't find this hidden message 🙃 */ }
+
+    /// <summary>
     /// Deconstruct the TileMap16 and clean up its instance objects on the heap.
     /// </summary>
     TileMap16::~TileMap16()
