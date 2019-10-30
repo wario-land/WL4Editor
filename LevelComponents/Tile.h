@@ -114,6 +114,7 @@ namespace LevelComponents
     public:
         Tile8x8(int dataPtr, QVector<QRgb> *_palettes);
         Tile8x8(Tile8x8 *other);
+        Tile8x8(Tile8x8 *other, QVector<QRgb> *_palettes);
         void DrawTile(QPixmap *layerPixmap, int x, int y);
         static Tile8x8 *CreateBlankTile(QVector<QRgb> *_palettes);
         void SetIndex(int _index) {index=_index;}
@@ -123,6 +124,7 @@ namespace LevelComponents
         bool GetFlipX() {return FlipX;}
         bool GetFlipY() {return FlipY;}
         void SetPaletteIndex(int index);
+        QVector<QRgb> *GetPalette() { return palettes; }
         int GetPaletteIndex() {return paletteIndex;}
         unsigned short GetValue();
         ~Tile8x8();
@@ -136,13 +138,15 @@ namespace LevelComponents
     public:
         TileMap16() : Tile(TileTypeMap16) {}
         TileMap16(Tile8x8 *t0, Tile8x8 *t1, Tile8x8 *t2, Tile8x8 *t3);
-        TileMap16(TileMap16 *other);
+        TileMap16(TileMap16 *other, QVector<QRgb> *newpalettes);
         void DrawTile(QPixmap *layerPixmap, int x, int y);
         Tile8x8* GetTile8X8(int position);
         const static int TILE8_TOPLEFT=0;
         const static int TILE8_TOPRIGHT=1;
         const static int TILE8_BOTTOMLEFT=2;
         const static int TILE8_BOTTOMRIGHT=3;
+        void ResetTile8x8(Tile8x8 *other, int position, int new_paletteIndex, bool xflip, bool yflip);
+        QVector<QRgb> *GetPalette() { return TileData[0]->GetPalette(); }
         ~TileMap16();
     };
 } // namespace LevelComponents

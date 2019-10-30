@@ -28,18 +28,35 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Copy constructor for Tile8x8
+    /// Copy constructor for Tile8x8, used only in current Tileset
     /// </summary>
     /// <param name="other">
     /// Another Tile8x8 to copy image data from.
     /// </param>
     Tile8x8::Tile8x8(Tile8x8 *other) :
-            Tile(TileType8x8), palettes(other->palettes),
+        Tile(TileType8x8), palettes(other->palettes),
 #ifndef NOCACHE
-            ImageData(GetCachedImageData(other->ImageData))
+        ImageData(GetCachedImageData(other->ImageData)),
 #else
-            ImageData(new QImageW(other->ImageData->copy()))
+        ImageData(new QImageW(other->ImageData->copy())),
 #endif
+        FlipX(other->GetFlipX()), FlipY(other->GetFlipY()), index(other->GetIndex()), paletteIndex(other->GetPaletteIndex())
+    {}
+
+    /// <summary>
+    /// Deep Copy constructor for Tile8x8, use this to create new Tile8x8 for new Tileset
+    /// </summary>
+    /// <param name="other">
+    /// Another Tile8x8 to copy image data from.
+    /// </param>
+    Tile8x8::Tile8x8(Tile8x8 *other, QVector<QRgb> *_palettes) :
+        Tile(TileType8x8), palettes(_palettes),
+#ifndef NOCACHE
+        ImageData(GetCachedImageData(other->ImageData)),
+#else
+        ImageData(new QImageW(other->ImageData->copy())),
+#endif
+        FlipX(other->GetFlipX()), FlipY(other->GetFlipY()), index(other->GetIndex()), paletteIndex(other->GetPaletteIndex())
     {}
 
     /// <summary>
@@ -199,12 +216,12 @@ namespace LevelComponents
     /// <param name="other">
     /// The source map16 tile.
     /// </param>
-    TileMap16::TileMap16(TileMap16 *other) : TileMap16(
-        new Tile8x8(TileData[0]),
-        new Tile8x8(TileData[1]),
-        new Tile8x8(TileData[2]),
-        new Tile8x8(TileData[3])
-    )                                                                                                                                                                                                                                      { /* SSP won't find this hidden message 🙃 */ }
+    TileMap16::TileMap16(TileMap16 *other, QVector<QRgb> *newpalettes) : TileMap16(
+        new Tile8x8(other->GetTile8X8(TILE8_TOPLEFT), newpalettes),
+        new Tile8x8(other->GetTile8X8(TILE8_TOPRIGHT), newpalettes),
+        new Tile8x8(other->GetTile8X8(TILE8_BOTTOMLEFT), newpalettes),
+        new Tile8x8(other->GetTile8X8(TILE8_BOTTOMRIGHT), newpalettes))
+    { }
 
     /// <summary>
     /// Deconstruct the TileMap16 and clean up its instance objects on the heap.
@@ -247,17 +264,36 @@ namespace LevelComponents
     /// </param>
     Tile8x8* TileMap16::GetTile8X8(int position)
     {
-        if (position == TileMap16::TILE8_TOPLEFT) {
-            return TileData[0];
-        } else if (position == TileMap16::TILE8_TOPRIGHT) {
-            return TileData[1];
-        } else if (position == TileMap16::TILE8_BOTTOMLEFT) {
-            return TileData[2];
-        } else {
-            return TileData[3];
-        }
+        return TileData[position & 3];
     }
 
+    /// <summary>
+    /// Change one of the TIle8x8 in TileMap16
+    /// </summary>
+    /// <param name="other">
+    /// an Tile8x8 used as copy referance
+    /// </param>
+    /// <param name="position">
+    /// The position (TileMap16::TILE8_TOPLEFT : 0, TileMap16::TILE8_TOPLEFT : 1, TileMap16::TILE8_BOTTOMLEFT : 2, TileMap16::TILE8_BOTTOMRIGHT : 3)
+    /// </param>
+    /// <param name="new_paletteIndex">
+    /// set a new palette index
+    /// </param>
+    /// <param name="xflip">
+    /// set xflip bit
+    /// </param>
+    /// <param name="yflip">
+    /// set yflip bit
+    /// </param>
+    void TileMap16::ResetTile8x8(Tile8x8 *other, int position, int new_paletteIndex, bool xflip, bool yflip)
+    {
+        int pos = position & 3;
+        delete TileData[pos];
+        TileData[pos] = new Tile8x8(other);
+        TileData[pos]->SetFlipX(xflip);
+        TileData[pos]->SetFlipY(yflip);
+        TileData[pos]->SetPaletteIndex(new_paletteIndex);
+    }
 
     /// <summary>
     /// Cache and/or return the cached copy of existing image data in the global cache.

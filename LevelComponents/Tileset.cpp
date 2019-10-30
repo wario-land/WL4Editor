@@ -173,14 +173,14 @@ namespace LevelComponents
         Tile8x8 **oldTile8x8Data = old_tileset->GetTile8x8Data();
         for (unsigned int i = 0; i < Tile8x8DefaultNum; ++i)
         {
-            tile8x8data[i] = new Tile8x8(oldTile8x8Data[i]);
+            tile8x8data[i] = new Tile8x8(oldTile8x8Data[i], palettes);
         }
 
         // Copy all the Tile16
         TileMap16 **oldTileMap16Data = old_tileset->GetMap16Data();
         for (unsigned int i = 0; i < Tile16DefaultNum; ++i)
         {
-            map16data[i] = new TileMap16(oldTileMap16Data[i]);
+            map16data[i] = new TileMap16(oldTileMap16Data[i], palettes);
         }
 
         // Get pointer to the map16 event table

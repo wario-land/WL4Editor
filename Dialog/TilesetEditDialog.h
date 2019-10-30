@@ -19,7 +19,7 @@ namespace DialogParams
     struct TilesetEditParams
     {
         int currentTilesetIndex;
-        LevelComponents::Tileset *selectedTileset = nullptr;
+        LevelComponents::Tileset *newTileset = nullptr;
 
         // Default constructor
         TilesetEditParams() { memset(this, 0, sizeof(struct TilesetEditParams)); }
@@ -27,7 +27,7 @@ namespace DialogParams
         // Construct this param struct using a Room object
         TilesetEditParams(LevelComponents::Room *room) {
                 currentTilesetIndex = room->GetTilesetID();
-                selectedTileset = new LevelComponents::Tileset(room->GetTileset(), room->GetTilesetID());
+                newTileset = new LevelComponents::Tileset(room->GetTileset(), room->GetTilesetID());
         }
         ~TilesetEditParams(){};
     };
@@ -50,11 +50,8 @@ class TilesetEditDialog : public QDialog
 public:
     explicit TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditParams *tilesetEditParams);
     void SetSelectedTile16(int tile16ID, bool resetscrollbar);
-    void setTile8x8OnSpinBox(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
-    void setTile8x8TileID(LevelComponents::Tile8x8* tile8, int tileID);
-    void setTile8x8PaletteID(LevelComponents::Tile8x8* tile8, int paletteIndex);
-    void setTile8x8HFlip(LevelComponents::Tile8x8* tile8, bool hFlip);
-    void setTile8x8VFlip(LevelComponents::Tile8x8* tile8, bool vFlip);
+    void CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile16);
+    void SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
     ~TilesetEditDialog();
 
 private slots:
@@ -83,7 +80,7 @@ private:
 
     // members
     DialogParams::TilesetEditParams* tilesetEditParams;
-
+    bool HasInitialized = false;
     QGraphicsScene *Tile8x8MAPScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Tile8x8 = nullptr;
     QGraphicsPixmapItem *Tile8x8mapping = nullptr;
@@ -92,9 +89,12 @@ private:
     QGraphicsPixmapItem *Tile16mapping = nullptr;
     unsigned short SelectedTile8x8 = 0;
     unsigned short SelectedTile16 = 0;
+    bool IsSelectingTile16 = false;
 
     // functions
     void RenderInitialization();
+    void ReRenderTile16Map();
+    void UpdateATile8x8ForSelectedTile16InTilesetData(int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip);
     void SetSelectedTile8x8(unsigned short tileId, bool resetscrollbar);
 };
 

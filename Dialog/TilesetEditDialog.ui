@@ -127,7 +127,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QGraphicsView" name="graphicsView_TilesetAllTile16"/>
+        <widget class="TilesetEditor_Tile16MapGraphicView" name="graphicsView_TilesetAllTile16"/>
        </item>
       </layout>
      </item>
@@ -416,6 +416,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TilesetEditor_Tile16MapGraphicView</class>
+   <extends>QGraphicsView</extends>
+   <header>Dialog/TilesetEditor_Tile16MapGraphicView.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
