@@ -19,6 +19,7 @@ public:
 
 private:
     TilesetEditDialog *TilesetEditor = nullptr;
+    bool Inmouseslotfunction = false;
     int mouseX_Press = 0;
     int mouseY_Press = 0;
     int mouseX_Release = 0;

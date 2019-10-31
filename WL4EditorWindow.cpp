@@ -1018,7 +1018,28 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
     TilesetEditDialog dialog(this, _currentRoomTilesetEditParams);
     if (dialog.exec() == QDialog::Accepted)
     {
-        // Do nothing for now
+        int currentTilesetId = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
+        delete ROMUtils::singletonTilesets[currentTilesetId];
+        ROMUtils::singletonTilesets[currentTilesetId] = _currentRoomTilesetEditParams->newTileset;
+
+        // Update Rooms's Tileset in CurrentLevel
+        int roomnum = CurrentLevel->GetRooms().size();
+        for(int i = 0; i < roomnum; ++i)
+        {
+            if(CurrentLevel->GetRooms()[i]->GetTilesetID() == currentTilesetId)
+            {
+                CurrentLevel->GetRooms()[i]->SetTileset(_currentRoomTilesetEditParams->newTileset, currentTilesetId);
+            }
+        }
+
+        // Update current room rendering
+        RenderScreenFull();
+
+        // Update Tile16Dockwidget
+        Tile16SelecterWidget->SetTileset(currentTilesetId);
+
+        // Push Operation
+        // TODO
     }
 }
 

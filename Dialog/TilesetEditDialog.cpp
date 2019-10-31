@@ -450,15 +450,34 @@ void TilesetEditDialog::CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile1
     SelectionBox_Tile16->setVisible(true);
     SelectedTile16 = (unsigned short) To_Tile16;
 
-    // Update Data
+    // Update Tile graphic in Tileset
     LevelComponents::TileMap16* from_tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[from_Tile16];
     LevelComponents::TileMap16* to_tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[To_Tile16];
-    delete to_tile16Data;
-    to_tile16Data = new LevelComponents::TileMap16(from_tile16Data, from_tile16Data->GetPalette());
+    for(int i = 0; i < 4; ++i)
+    {
+        to_tile16Data->ResetTile8x8(from_tile16Data->GetTile8X8(i),
+                                    i,
+                                    from_tile16Data->GetTile8X8(i)->GetPaletteIndex(),
+                                    from_tile16Data->GetTile8X8(i)->GetFlipX(),
+                                    from_tile16Data->GetTile8X8(i)->GetFlipY());
+    }
 
-    // Update Graphic
+    // Update Tile16 generating data in Tileset
+    for(int i = 0; i < 4; ++i)
+    {
+        LevelComponents::Tile8x8* tile8tmp = from_tile16Data->GetTile8X8(i);
+        tilesetEditParams->newTileset->ResetATile8x8MapDataInTile16Data(To_Tile16,
+                                                                        i,
+                                                                        tile8tmp->GetIndex(),
+                                                                        tile8tmp->GetFlipX(),
+                                                                        tile8tmp->GetFlipY(),
+                                                                        tile8tmp->GetPaletteIndex());
+    }
+
+    // Update Graphicview
     QPixmap pm(Tile16mapping->pixmap());
-    tilesetEditParams->newTileset->GetMap16arrayPtr()[SelectedTile16]->DrawTile(&pm, (SelectedTile16 & 7) << 4, (SelectedTile16 >> 3) << 4);
+    LevelComponents::TileMap16 *newtile16 = tilesetEditParams->newTileset->GetMap16arrayPtr()[To_Tile16];
+    newtile16->DrawTile(&pm, (To_Tile16 & 7) << 4, (To_Tile16 >> 3) << 4);
     Tile16mapping->setPixmap(pm);
 
     // Update UI
@@ -507,6 +526,9 @@ void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int newTile
     QPixmap pm(Tile16mapping->pixmap());
     tilesetEditParams->newTileset->GetMap16arrayPtr()[SelectedTile16]->DrawTile(&pm, (SelectedTile16 & 7) << 4, (SelectedTile16 >> 3) << 4);
     Tile16mapping->setPixmap(pm);
+
+    // Update Tile16 generating data in Tileset
+    tilesetEditParams->newTileset->ResetATile8x8MapDataInTile16Data(SelectedTile16, position, newTile8x8_Id, xflip, yflip, new_paletteIndex);
 }
 
 /// <summary>

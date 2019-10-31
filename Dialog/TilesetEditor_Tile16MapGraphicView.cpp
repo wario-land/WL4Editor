@@ -2,12 +2,17 @@
 
 void TilesetEditor_Tile16MapGraphicView::mousePressEvent(QMouseEvent *event)
 {
-     mouseX_Press = event->x() + horizontalScrollBar()->sliderPosition();
-     mouseY_Press = event->y() + verticalScrollBar()->sliderPosition();
+    if(Inmouseslotfunction) return;
+    Inmouseslotfunction = true;
+    mouseX_Press = event->x() + horizontalScrollBar()->sliderPosition();
+    mouseY_Press = event->y() + verticalScrollBar()->sliderPosition();
+    Inmouseslotfunction = false;
 }
 
 void TilesetEditor_Tile16MapGraphicView::mouseReleaseEvent(QMouseEvent *event)
 {
+    if(Inmouseslotfunction) return;
+    Inmouseslotfunction = true;
     mouseX_Release = event->x() + horizontalScrollBar()->sliderPosition();
     mouseY_Release = event->y() + verticalScrollBar()->sliderPosition();
     int Tile16Id_first = (mouseX_Press >> 5) + ((mouseY_Press >> 5) << 3);
@@ -20,4 +25,5 @@ void TilesetEditor_Tile16MapGraphicView::mouseReleaseEvent(QMouseEvent *event)
     {
         TilesetEditor->CopyTile16AndUpdateGraphic(Tile16Id_first, Tile16Id_second);
     }
+    Inmouseslotfunction = false;
 }

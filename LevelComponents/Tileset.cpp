@@ -26,8 +26,12 @@ namespace LevelComponents
 
         tile8x8array = new Tile8x8* [0x600];
         map16array = new TileMap16* [0x300];
+        statictile8x8data = new unsigned char[(1024 - 64 - 2) * 32];
+        tile16data = new unsigned char[0x300 * 8];
         memset(tile8x8array, 0, Tile8x8DefaultNum * sizeof(tile8x8array[0]));
         memset(map16array, 0, Tile16DefaultNum * sizeof(map16array[0]));
+        memset(statictile8x8data, 0, (1024 - 64 - 2) * 32);
+        memset(tile16data, 0, Tile16DefaultNum * 8);
 
         // Create all 16 color palettes
         palettePtr = ROMUtils::PointerFromData(tilesetPtr + 8);
@@ -97,6 +101,9 @@ namespace LevelComponents
         bgGFXptr = ROMUtils::PointerFromData(tilesetPtr + 12);
         bgGFXlen = ROMUtils::IntFromData(tilesetPtr + 16);
 
+        memcpy(statictile8x8data, ROMUtils::CurrentFile + fgGFXptr, fgGFXlen);
+        memcpy(statictile8x8data + (1023 - 64 - 2) * 32 - bgGFXlen, ROMUtils::CurrentFile + bgGFXptr, bgGFXlen);
+
         // Foreground
         int fgGFXcount = fgGFXlen / 32;
         for (int i = 0; i < fgGFXcount; ++i)
@@ -132,6 +139,8 @@ namespace LevelComponents
             map16array[i] = new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]);
         }
 
+        memcpy(tile16data, ROMUtils::CurrentFile + map16ptr, Tile16DefaultNum * 8);
+
         // Get pointer to the map16 event table
         Map16EventTable = new unsigned short[0x300];
         memcpy(Map16EventTable, (unsigned short *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28)), Tile16DefaultNum * sizeof(unsigned short));
@@ -162,6 +171,12 @@ namespace LevelComponents
         IsNewTileset = true;
         tile8x8array = new Tile8x8* [0x600];
         map16array = new TileMap16* [0x300];
+        statictile8x8data = new unsigned char[(1024 - 64 - 2) * 32];
+        tile16data = new unsigned char[0x300 * 8];
+        memset(statictile8x8data, 0, (1024 - 64 - 2) * 32);
+        memset(tile16data, 0, Tile16DefaultNum * 8);
+        memcpy(statictile8x8data, old_tileset->statictile8x8data, (1024 - 64 - 2) * 32);
+        memcpy(tile16data, old_tileset->tile16data, Tile16DefaultNum * 8);
 
         //Save the ROM pointer into the tileset object
         this->tilesetPtr = old_tileset->getTilesetPtr();
@@ -227,6 +242,8 @@ namespace LevelComponents
             palettes[i].clear();
         }
 
+        delete statictile8x8data;
+        delete tile16data;
         delete Map16EventTable;
         delete Map16TerrainTypeIDTable;
         delete TilesetPaletteData;
@@ -281,5 +298,33 @@ namespace LevelComponents
             }
         }
         return pixmap;
+    }
+
+    /// <summary>
+    /// Reset a tile8x8 mapping data in tile16data.
+    /// </summary>
+    /// <param name="tile16Id">
+    /// Id of tile16 need to change.
+    /// </param>
+    /// <param name="position">
+    /// tile8x8 position in Tile16, from 1 to 3.
+    /// </param>
+    /// <param name="newtile8x8Id">
+    /// Id of new set tile8x8.
+    /// </param>
+    /// <param name="xflip">
+    /// set xflip.
+    /// </param>
+    /// <param name="yflip">
+    /// set yflip.
+    /// </param>
+    /// <param name="paletteId">
+    /// set tile8x8's palette.
+    /// </param>
+    void Tileset::ResetATile8x8MapDataInTile16Data(int tile16Id, int position, int newtile8x8Id, bool xflip, bool yflip, int paletteId)
+    {
+        unsigned short tile8x8id = newtile8x8Id & 0x3FF;
+        unsigned short *map16tilecurrentAddr = (unsigned short *)tile16data + tile16Id * 4 + position;
+        *map16tilecurrentAddr = tile8x8id + ((xflip? 1: 0) << 10) + ((yflip? 1: 0) << 11) + ((paletteId & 15) << 12);
     }
 } // namespace LevelComponents
