@@ -50,6 +50,8 @@ class TilesetEditDialog : public QDialog
 public:
     explicit TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditParams *tilesetEditParams);
     void SetSelectedTile16(int tile16ID, bool resetscrollbar);
+    void SetSelectedTile8x8(unsigned short tileId, bool resetscrollbar);
+    void SetSelectedColorId(int newcolorId);
     void CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile16);
     void SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
     ~TilesetEditDialog();
@@ -90,6 +92,7 @@ private:
     QGraphicsScene *Tile16MAPScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Tile16 = nullptr;
     QGraphicsPixmapItem *Tile16mapping = nullptr;
+
     unsigned short SelectedTile8x8 = 0;
     unsigned short SelectedTile16 = 0;
     bool IsSelectingTile16 = false;
@@ -107,8 +110,6 @@ private:
     void ReRenderTile16Map();
     void ReRenderTile8x8Map(int paletteId);
     void UpdateATile8x8ForSelectedTile16InTilesetData(int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip);
-    void SetSelectedTile8x8(unsigned short tileId, bool resetscrollbar);
-    void SetSelectedColorId(int newcolorId);
 };
 
 #endif // TILESETEDITDIALOG_H

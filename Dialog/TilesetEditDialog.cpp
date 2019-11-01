@@ -10,6 +10,7 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
     this->tilesetEditParams = tilesetEditParam;
     ui->label_TilesetID->setText("Tileset ID" + QString::number(tilesetEditParam->currentTilesetIndex, 10));
     ui->graphicsView_TilesetAllTile16->SetCurrentTilesetEditor(this);
+    ui->graphicsView_TilesetAllTile8x8->SetCurrentTilesetEditor(this);
 
     // render
     RenderInitialization();
@@ -57,6 +58,7 @@ void TilesetEditDialog::SetSelectedTile16(int tile16ID, bool resetscrollbar)
         ui->graphicsView_TilesetAllTile16->horizontalScrollBar()->setValue(0);
     }
 
+    ui->spinBox->setValue(tile16ID);
     ui->spinBox_EventId->setValue(tilesetEditParams->newTileset->GetEventTablePtr()[tile16ID]);
     ui->spinBox_TerrainId->setValue(tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr()[tile16ID]);
     LevelComponents::TileMap16* tile16Data=tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID];
@@ -109,13 +111,13 @@ void TilesetEditDialog::on_spinBox_valueChanged(int arg1)
 void TilesetEditDialog::on_spinBox_EventId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    tilesetEditParams->newTileset->GetEventTablePtr()[ui->spinBox_EventId->value()] = (unsigned short) arg1;
+    tilesetEditParams->newTileset->GetEventTablePtr()[SelectedTile16] = (unsigned short) arg1;
 }
 
 void TilesetEditDialog::on_spinBox_TerrainId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr()[ui->spinBox_TerrainId->value()] = (unsigned char) arg1;
+    tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr()[SelectedTile16] = (unsigned char) arg1;
 }
 
 void TilesetEditDialog::on_spinBox_TopLeftTileId_valueChanged(int arg1)
@@ -249,7 +251,8 @@ void TilesetEditDialog::RenderInitialization()
     Tile16mapping = Tile16MAPScene->addPixmap(Tile16Pixmap);
 
     // Add the highlighted tile rectangle
-    QPixmap selectionPixmap(8, 8), selectionPixmap2(16, 16);
+    QPixmap selectionPixmap(8, 8);
+    QPixmap selectionPixmap2(16, 16);
     const QColor highlightColor(0xFF, 0, 0, 0x7F);
     selectionPixmap.fill(highlightColor);
     selectionPixmap2.fill(highlightColor);
@@ -355,11 +358,11 @@ void TilesetEditDialog::ReRenderTile8x8Map(int paletteId)
     Tile8x8mapping = Tile8x8MAPScene->addPixmap(Tile8x8Pixmap);
 
     // Add the highlighted tile rectangle
-    QPixmap selectionPixmap(16, 16);
+    QPixmap selectionPixmap(8, 8);
     const QColor highlightColor(0xFF, 0, 0, 0x7F);
     selectionPixmap.fill(highlightColor);
-    SelectionBox_Tile16 = Tile16MAPScene->addPixmap(selectionPixmap);
-    SelectionBox_Tile16->setVisible(false);
+    SelectionBox_Tile8x8 = Tile8x8MAPScene->addPixmap(selectionPixmap);
+    SelectionBox_Tile8x8->setVisible(false);
 
     // show Rneder
     ui->graphicsView_TilesetAllTile8x8->setScene(Tile8x8MAPScene);
@@ -386,28 +389,26 @@ void TilesetEditDialog::CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile1
     SelectionBox_Tile16->setVisible(true);
     SelectedTile16 = (unsigned short) To_Tile16;
 
-    // Update Tile graphic in Tileset
     LevelComponents::TileMap16* from_tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[from_Tile16];
     LevelComponents::TileMap16* to_tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[To_Tile16];
     for(int i = 0; i < 4; ++i)
     {
-        to_tile16Data->ResetTile8x8(from_tile16Data->GetTile8X8(i),
+        // Update Tile8x8 data in Tile16
+        LevelComponents::Tile8x8* oldtile = from_tile16Data->GetTile8X8(i);
+        to_tile16Data->ResetTile8x8(oldtile,
                                     i,
-                                    from_tile16Data->GetTile8X8(i)->GetPaletteIndex(),
-                                    from_tile16Data->GetTile8X8(i)->GetFlipX(),
-                                    from_tile16Data->GetTile8X8(i)->GetFlipY());
-    }
+                                    oldtile->GetIndex(),
+                                    oldtile->GetPaletteIndex(),
+                                    oldtile->GetFlipX(),
+                                    oldtile->GetFlipY());
 
-    // Update Tile16 generating data in Tileset
-    for(int i = 0; i < 4; ++i)
-    {
-        LevelComponents::Tile8x8* tile8tmp = from_tile16Data->GetTile8X8(i);
+        // Update Tile16 generating data in Tileset
         tilesetEditParams->newTileset->ResetATile8x8MapDataInTile16Data(To_Tile16,
                                                                         i,
-                                                                        tile8tmp->GetIndex(),
-                                                                        tile8tmp->GetFlipX(),
-                                                                        tile8tmp->GetFlipY(),
-                                                                        tile8tmp->GetPaletteIndex());
+                                                                        oldtile->GetIndex(),
+                                                                        oldtile->GetFlipX(),
+                                                                        oldtile->GetFlipY(),
+                                                                        oldtile->GetPaletteIndex());
     }
 
     // Update Graphicview
@@ -479,8 +480,8 @@ void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int newTile
 void TilesetEditDialog::SetSelectedTile8x8(unsigned short tileId, bool resetscrollbar)
 {
     // Paint red Box to show selected Tile16
-    int X = tileId & 7;
-    int Y = tileId >> 3;
+    int X = tileId & 15;
+    int Y = tileId >> 4;
     SelectionBox_Tile8x8->setPos(X * 8, Y * 8);
     SelectionBox_Tile8x8->setVisible(true);
     SelectedTile8x8 = tileId;
@@ -491,6 +492,7 @@ void TilesetEditDialog::SetSelectedTile8x8(unsigned short tileId, bool resetscro
         ui->graphicsView_TilesetAllTile8x8->verticalScrollBar()->setValue(8 * (tileId / 32));
         ui->graphicsView_TilesetAllTile8x8->horizontalScrollBar()->setValue(0);
     }
+    ui->label_Tile8x8_ID->setText("Selected Tile8x8 Id: " + QString::number(tileId));
 }
 
 /// <summary>
@@ -503,8 +505,7 @@ void TilesetEditDialog::SetSelectedColorId(int newcolorId)
 {
     // Paint red Box to show selected Color
     int X = newcolorId * 8;
-    int Y = 0;
-    SelectionBox_Color->setPos(X * 8, Y * 8);
+    SelectionBox_Color->setPos(X * 8, 0);
     SelectionBox_Color->setVisible(true);
     SelectedColorId = newcolorId;
 }
