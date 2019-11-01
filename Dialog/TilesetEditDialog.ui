@@ -226,7 +226,7 @@
                <number>1023</number>
               </property>
               <property name="displayIntegerBase">
-               <number>16</number>
+               <number>10</number>
               </property>
              </widget>
             </item>
@@ -281,7 +281,7 @@
                <number>1023</number>
               </property>
               <property name="displayIntegerBase">
-               <number>16</number>
+               <number>10</number>
               </property>
              </widget>
             </item>
@@ -291,7 +291,7 @@
                <number>1023</number>
               </property>
               <property name="displayIntegerBase">
-               <number>16</number>
+               <number>10</number>
               </property>
              </widget>
             </item>
@@ -357,7 +357,7 @@
                <number>1023</number>
               </property>
               <property name="displayIntegerBase">
-               <number>16</number>
+               <number>10</number>
               </property>
              </widget>
             </item>

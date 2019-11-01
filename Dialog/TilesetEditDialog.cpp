@@ -109,174 +109,110 @@ void TilesetEditDialog::on_spinBox_valueChanged(int arg1)
 void TilesetEditDialog::on_spinBox_EventId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    tilesetEditParams->newTileset->GetEventTablePtr()[ui->spinBox->text().toInt()] = (unsigned short) arg1;
+    tilesetEditParams->newTileset->GetEventTablePtr()[ui->spinBox_EventId->value()] = (unsigned short) arg1;
 }
 
 void TilesetEditDialog::on_spinBox_TerrainId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr()[ui->spinBox->text().toInt()] = (unsigned char) arg1;
+    tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr()[ui->spinBox_TerrainId->value()] = (unsigned char) arg1;
 }
 
 void TilesetEditDialog::on_spinBox_TopLeftTileId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopLeftTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_TOPLEFT,
-                                                 ui->spinBox_TopLeftpaletteId->value(),
-                                                 ui->checkBox_TopLeftHFlip->isChecked(),
-                                                 ui->checkBox_TopLeftVFlip->isChecked());
+    TLTile8x8Reset();
 }
 
 void TilesetEditDialog::on_spinBox_TopRightTileId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopRightTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_TOPRIGHT,
-                                                 ui->spinBox_TopRightpaletteId->value(),
-                                                 ui->checkBox_TopRightHFlip->isChecked(),
-                                                 ui->checkBox_TopRightVFlip->isChecked());
+    TRTile8x8Reset();
 }
 
 void TilesetEditDialog::on_spinBox_BottomLeftTileId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomLeftTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_BOTTOMLEFT,
-                                                 ui->spinBox_BottomLeftpaletteId->value(),
-                                                 ui->checkBox_BottomLeftHFlip->isChecked(),
-                                                 ui->checkBox_BottomLeftVFlip->isChecked());
+    BLTile8x8Reset();
 }
 
 void TilesetEditDialog::on_spinBox_BottomRightTileId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomRightTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_BOTTOMRIGHT,
-                                                 ui->spinBox_BottomRightpaletteId->value(),
-                                                 ui->checkBox_BottomRightHFlip->isChecked(),
-                                                 ui->checkBox_BottomRightVFlip->isChecked());
+    BRTile8x8Reset();
 }
 
 void TilesetEditDialog::on_spinBox_TopLeftpaletteId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopLeftTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_TOPLEFT,
-                                                 ui->spinBox_TopLeftpaletteId->value(),
-                                                 ui->checkBox_TopLeftHFlip->isChecked(),
-                                                 ui->checkBox_TopLeftVFlip->isChecked());
+    TLTile8x8Reset();
 }
 
 void TilesetEditDialog::on_spinBox_TopRightpaletteId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopRightTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_TOPRIGHT,
-                                                 ui->spinBox_TopRightpaletteId->value(),
-                                                 ui->checkBox_TopRightHFlip->isChecked(),
-                                                 ui->checkBox_TopRightVFlip->isChecked());
+    TRTile8x8Reset();
 }
 
 void TilesetEditDialog::on_spinBox_BottomLeftpaletteId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomLeftTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_BOTTOMLEFT,
-                                                 ui->spinBox_BottomLeftpaletteId->value(),
-                                                 ui->checkBox_BottomLeftHFlip->isChecked(),
-                                                 ui->checkBox_BottomLeftVFlip->isChecked());
+    BLTile8x8Reset();
 }
 
 void TilesetEditDialog::on_spinBox_BottomRightpaletteId_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomRightTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_BOTTOMRIGHT,
-                                                 ui->spinBox_BottomRightpaletteId->value(),
-                                                 ui->checkBox_BottomRightHFlip->isChecked(),
-                                                 ui->checkBox_BottomRightVFlip->isChecked());
+    BRTile8x8Reset();
 }
 
 void TilesetEditDialog::on_checkBox_TopLeftHFlip_toggled(bool checked)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopLeftTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_TOPLEFT,
-                                                 ui->spinBox_TopLeftpaletteId->value(),
-                                                 ui->checkBox_TopLeftHFlip->isChecked(),
-                                                 ui->checkBox_TopLeftVFlip->isChecked());
+    TLTile8x8Reset();
 }
 
 void TilesetEditDialog::on_checkBox_TopRightHFlip_toggled(bool checked)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopRightTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_TOPRIGHT,
-                                                 ui->spinBox_TopRightpaletteId->value(),
-                                                 ui->checkBox_TopRightHFlip->isChecked(),
-                                                 ui->checkBox_TopRightVFlip->isChecked());
+    TRTile8x8Reset();
 }
 
 void TilesetEditDialog::on_checkBox_BottomLeftHFlip_toggled(bool checked)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomLeftTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_BOTTOMLEFT,
-                                                 ui->spinBox_BottomLeftpaletteId->value(),
-                                                 ui->checkBox_BottomLeftHFlip->isChecked(),
-                                                 ui->checkBox_BottomLeftVFlip->isChecked());
+    BLTile8x8Reset();
 }
 
 void TilesetEditDialog::on_checkBox_BottomRightHFlip_toggled(bool checked)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomRightTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_BOTTOMRIGHT,
-                                                 ui->spinBox_BottomRightpaletteId->value(),
-                                                 ui->checkBox_BottomRightHFlip->isChecked(),
-                                                 ui->checkBox_BottomRightVFlip->isChecked());
+    BRTile8x8Reset();
 }
 
 
 void TilesetEditDialog::on_checkBox_TopLeftVFlip_toggled(bool checked)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopLeftTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_TOPLEFT,
-                                                 ui->spinBox_TopLeftpaletteId->value(),
-                                                 ui->checkBox_TopLeftHFlip->isChecked(),
-                                                 ui->checkBox_TopLeftVFlip->isChecked());
+    TLTile8x8Reset();
 }
 
 void TilesetEditDialog::on_checkBox_TopRightVFlip_toggled(bool checked)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopRightTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_TOPRIGHT,
-                                                 ui->spinBox_TopRightpaletteId->value(),
-                                                 ui->checkBox_TopRightHFlip->isChecked(),
-                                                 ui->checkBox_TopRightVFlip->isChecked());
+    TRTile8x8Reset();
 }
 
 void TilesetEditDialog::on_checkBox_BottomLeftVFlip_toggled(bool checked)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomLeftTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_BOTTOMLEFT,
-                                                 ui->spinBox_BottomLeftpaletteId->value(),
-                                                 ui->checkBox_BottomLeftHFlip->isChecked(),
-                                                 ui->checkBox_BottomLeftVFlip->isChecked());
+    BLTile8x8Reset();
 }
 
 void TilesetEditDialog::on_checkBox_BottomRightVFlip_toggled(bool checked)
 {
     if(!HasInitialized || IsSelectingTile16) return;
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomRightTileId->value(),
-                                                 LevelComponents::TileMap16::TILE8_BOTTOMRIGHT,
-                                                 ui->spinBox_BottomRightpaletteId->value(),
-                                                 ui->checkBox_BottomRightHFlip->isChecked(),
-                                                 ui->checkBox_BottomRightVFlip->isChecked());
+    BRTile8x8Reset();
 }
 
 /// <summary>
@@ -520,7 +456,7 @@ void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int newTile
 {
     // Update Data
     LevelComponents::TileMap16* tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[SelectedTile16];
-    tile16Data->ResetTile8x8(tilesetEditParams->newTileset->GetTile8x8arrayPtr()[newTile8x8_Id], position & 3, new_paletteIndex, xflip, yflip);
+    tile16Data->ResetTile8x8(tilesetEditParams->newTileset->GetTile8x8arrayPtr()[newTile8x8_Id], position & 3, newTile8x8_Id, new_paletteIndex, xflip, yflip);
 
     // Update Graphic
     QPixmap pm(Tile16mapping->pixmap());
@@ -586,4 +522,40 @@ void TilesetEditDialog::on_horizontalSlider_valueChanged(int value)
     ResetPaletteBarGraphicView(value);
     SetSelectedTile8x8(0, true);
     SetSelectedColorId(0);
+}
+
+void TilesetEditDialog::TLTile8x8Reset()
+{
+    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopLeftTileId->value(),
+                                                 LevelComponents::TileMap16::TILE8_TOPLEFT,
+                                                 ui->spinBox_TopLeftpaletteId->value(),
+                                                 ui->checkBox_TopLeftHFlip->isChecked(),
+                                                 ui->checkBox_TopLeftVFlip->isChecked());
+}
+
+void TilesetEditDialog::TRTile8x8Reset()
+{
+    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopRightTileId->value(),
+                                                 LevelComponents::TileMap16::TILE8_TOPRIGHT,
+                                                 ui->spinBox_TopRightpaletteId->value(),
+                                                 ui->checkBox_TopRightHFlip->isChecked(),
+                                                 ui->checkBox_TopRightVFlip->isChecked());
+}
+
+void TilesetEditDialog::BLTile8x8Reset()
+{
+    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomLeftTileId->value(),
+                                                 LevelComponents::TileMap16::TILE8_BOTTOMLEFT,
+                                                 ui->spinBox_BottomLeftpaletteId->value(),
+                                                 ui->checkBox_BottomLeftHFlip->isChecked(),
+                                                 ui->checkBox_BottomLeftVFlip->isChecked());
+}
+
+void TilesetEditDialog::BRTile8x8Reset()
+{
+    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomRightTileId->value(),
+                                                 LevelComponents::TileMap16::TILE8_BOTTOMRIGHT,
+                                                 ui->spinBox_BottomRightpaletteId->value(),
+                                                 ui->checkBox_BottomRightHFlip->isChecked(),
+                                                 ui->checkBox_BottomRightVFlip->isChecked());
 }

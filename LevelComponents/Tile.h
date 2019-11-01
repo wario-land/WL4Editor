@@ -145,7 +145,7 @@ namespace LevelComponents
         const static int TILE8_TOPRIGHT=1;
         const static int TILE8_BOTTOMLEFT=2;
         const static int TILE8_BOTTOMRIGHT=3;
-        void ResetTile8x8(Tile8x8 *other, int position, int new_paletteIndex, bool xflip, bool yflip);
+        void ResetTile8x8(Tile8x8 *other, int position, int new_index, int new_paletteIndex, bool xflip, bool yflip);
         QVector<QRgb> *GetPalette() { return TileData[0]->GetPalette(); }
         ~TileMap16();
     };

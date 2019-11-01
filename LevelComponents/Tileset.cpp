@@ -325,6 +325,6 @@ namespace LevelComponents
     {
         unsigned short tile8x8id = newtile8x8Id & 0x3FF;
         unsigned short *map16tilecurrentAddr = (unsigned short *)tile16data + tile16Id * 4 + position;
-        *map16tilecurrentAddr = tile8x8id + ((xflip? 1: 0) << 10) + ((yflip? 1: 0) << 11) + ((paletteId & 15) << 12);
+        *map16tilecurrentAddr = (unsigned short)(tile8x8id + ((xflip? 1: 0) << 10) + ((yflip? 1: 0) << 11) + ((paletteId & 15) << 12));
     }
 } // namespace LevelComponents

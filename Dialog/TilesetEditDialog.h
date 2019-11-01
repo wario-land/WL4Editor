@@ -95,6 +95,12 @@ private:
     bool IsSelectingTile16 = false;
     int SelectedColorId = 0;
 
+    // Setters for Selected Tile16
+    void TLTile8x8Reset();
+    void TRTile8x8Reset();
+    void BLTile8x8Reset();
+    void BRTile8x8Reset();
+
     // functions
     void RenderInitialization();
     void ResetPaletteBarGraphicView(int paletteId);

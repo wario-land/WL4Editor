@@ -276,6 +276,9 @@ namespace LevelComponents
     /// <param name="position">
     /// The position (TileMap16::TILE8_TOPLEFT : 0, TileMap16::TILE8_TOPLEFT : 1, TileMap16::TILE8_BOTTOMLEFT : 2, TileMap16::TILE8_BOTTOMRIGHT : 3)
     /// </param>
+    /// <param name="new_index">
+    /// new index of tile8x8
+    /// </param>
     /// <param name="new_paletteIndex">
     /// set a new palette index
     /// </param>
@@ -285,11 +288,12 @@ namespace LevelComponents
     /// <param name="yflip">
     /// set yflip bit
     /// </param>
-    void TileMap16::ResetTile8x8(Tile8x8 *other, int position, int new_paletteIndex, bool xflip, bool yflip)
+    void TileMap16::ResetTile8x8(Tile8x8 *other, int position, int new_index, int new_paletteIndex, bool xflip, bool yflip)
     {
         int pos = position & 3;
         delete TileData[pos];
         TileData[pos] = new Tile8x8(other);
+        TileData[pos]->SetIndex(new_index);
         TileData[pos]->SetFlipX(xflip);
         TileData[pos]->SetFlipY(yflip);
         TileData[pos]->SetPaletteIndex(new_paletteIndex);
