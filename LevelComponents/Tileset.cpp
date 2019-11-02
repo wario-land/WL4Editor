@@ -168,7 +168,7 @@ namespace LevelComponents
         bgGFXlen(old_tileset->bgGFXlen),
         map16ptr(old_tileset->map16ptr)
     {
-        IsNewTileset = true;
+        newtileset = true;
         tile8x8array = new Tile8x8* [0x600];
         map16array = new TileMap16* [0x300];
         statictile8x8data = new unsigned char[(1024 - 64 - 2) * 32];

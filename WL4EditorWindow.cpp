@@ -1021,6 +1021,7 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
         int currentTilesetId = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
         delete ROMUtils::singletonTilesets[currentTilesetId];
         ROMUtils::singletonTilesets[currentTilesetId] = _currentRoomTilesetEditParams->newTileset;
+        _currentRoomTilesetEditParams->newTileset->SetChanged();
 
         // Update Rooms's Tileset in CurrentLevel
         int roomnum = CurrentLevel->GetRooms().size();

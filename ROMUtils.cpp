@@ -429,28 +429,36 @@ namespace ROMUtils
 
         { // Prevent goto from crossing initialization of variables here
 
-            // Test for saving current room tileset
-            LevelComponents::Room * room=singleton->GetCurrentRoom();
-            // Saves Map16EventTable
-            int tilesetPtr=room->GetTileset()->getTilesetPtr();
-            unsigned short *Map16EventTable=room->GetTileset()->GetEventTablePtr();
-            memcpy(TempFile+ROMUtils::PointerFromData(tilesetPtr + 28),(unsigned char*)Map16EventTable,1536);
-
-            // Saves Map16TerrainType
-            unsigned char *Map16TerrainTypeIDTable=room->GetTileset()->GetTerrainTypeIDTablePtr();
-            memcpy(TempFile+ROMUtils::PointerFromData(tilesetPtr + 24),(unsigned char*)Map16TerrainTypeIDTable,768);
-
-            // Saves Map16Data
-            LevelComponents::TileMap16** map16data=room->GetTileset()->GetMap16arrayPtr();
-            unsigned short map16tilePtr[768*4];
-            for (int j = 0; j < 768; ++j)
+            // TODO: implement Tileset saving code
+            // Save Tile16 map new data in old address
+            // -----------------TEMP------------------
+            for(int i = 0; i < 92; ++i)
             {
-                map16tilePtr[j*4] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPLEFT)->GetValue();
-                map16tilePtr[j*4+1] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPRIGHT)->GetValue();
-                map16tilePtr[j*4+2] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMLEFT)->GetValue();
-                map16tilePtr[j*4+3] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMRIGHT)->GetValue();
+                if(singletonTilesets[i]->IsNewTileset())
+                {
+                    int tilesetPtr = singletonTilesets[i]->getTilesetPtr();
+                    // Saves Map16EventTable
+                    unsigned short *Map16EventTable = singletonTilesets[i]->GetEventTablePtr();
+                    memcpy(TempFile + ROMUtils::PointerFromData(tilesetPtr + 28), (unsigned char*)Map16EventTable, 0x600);
+
+                    // Saves Map16TerrainType
+                    unsigned char *Map16TerrainTypeIDTable = singletonTilesets[i]->GetTerrainTypeIDTablePtr();
+                    memcpy(TempFile + ROMUtils::PointerFromData(tilesetPtr + 24), (unsigned char*)Map16TerrainTypeIDTable, 0x300);
+
+                    // Saves Map16Data
+                    LevelComponents::TileMap16** map16data = singletonTilesets[i]->GetMap16arrayPtr();
+                    unsigned short map16tilePtr[0x300 * 4];
+                    for (int j = 0; j < 0x300; ++j)
+                    {
+                        map16tilePtr[j * 4] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPLEFT)->GetValue();
+                        map16tilePtr[j * 4 + 1] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPRIGHT)->GetValue();
+                        map16tilePtr[j * 4 + 2] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMLEFT)->GetValue();
+                        map16tilePtr[j * 4 + 3] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMRIGHT)->GetValue();
+                    }
+                    memcpy(TempFile + ROMUtils::PointerFromData(tilesetPtr + 20), (unsigned char*)map16tilePtr, 0x300 * 8);
+                }
             }
-            memcpy(TempFile+ROMUtils::PointerFromData(tilesetPtr + 20),(unsigned char*)map16tilePtr,6144);
+            // -----------------TEMP------------------
 
             // Save the rom file from the CurrentFile copy
             QFile file(filePath);
