@@ -101,6 +101,40 @@ void TilesetEditDialog::SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8
     checkBoxVFlip->setChecked(tile8->GetFlipY());
 }
 
+/// <summary>
+/// Set Tile16 Palette id for all the 4 TIle8x8 in it
+/// </summary>
+/// <param name="tile16ID">
+/// Tile16's Id which are going to be set.
+/// </param>
+void TilesetEditDialog::SetTile16PaletteId(int tile16ID)
+{
+    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(0)->GetIndex(),
+                                                 0,
+                                                 ui->spinBox_paletteBrushValue->value(),
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(0)->GetFlipX(),
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(0)->GetFlipY());
+    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(1)->GetIndex(),
+                                                 1,
+                                                 ui->spinBox_paletteBrushValue->value(),
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(1)->GetFlipX(),
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(1)->GetFlipY());
+    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(2)->GetIndex(),
+                                                 2,
+                                                 ui->spinBox_paletteBrushValue->value(),
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(2)->GetFlipX(),
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(2)->GetFlipY());
+    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(3)->GetIndex(),
+                                                 3,
+                                                 ui->spinBox_paletteBrushValue->value(),
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(3)->GetFlipX(),
+                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(3)->GetFlipY());
+}
+
 void TilesetEditDialog::on_spinBox_valueChanged(int arg1)
 {
     if(!HasInitialized || IsSelectingTile16) return;
@@ -441,6 +475,12 @@ void TilesetEditDialog::CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile1
 /// <summary>
 /// Reset One Tile8x8 for Selected Tile16 in Tileset data and Update Graphics in Tile16Map GraphicView at the same time
 /// </summary>
+/// <param name="tile16Id">
+/// Used to find a Tile16 to reset a Tile8x8
+/// </param>
+/// <param name="newTile8x8_Id">
+/// Use a new tile8x8 id to find a Tile8x8 to replace the current Tile8x8
+/// </param>
 /// <param name="position">
 /// The tile8x8 position id, from 0 to 3.
 /// </param>
@@ -453,19 +493,19 @@ void TilesetEditDialog::CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile1
 /// <param name="yflip">
 /// set yflip
 /// </param>
-void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip)
+void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int tile16Id, int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip)
 {
     // Update Data
-    LevelComponents::TileMap16* tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[SelectedTile16];
+    LevelComponents::TileMap16* tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16Id];
     tile16Data->ResetTile8x8(tilesetEditParams->newTileset->GetTile8x8arrayPtr()[newTile8x8_Id], position & 3, newTile8x8_Id, new_paletteIndex, xflip, yflip);
 
     // Update Graphic
     QPixmap pm(Tile16mapping->pixmap());
-    tilesetEditParams->newTileset->GetMap16arrayPtr()[SelectedTile16]->DrawTile(&pm, (SelectedTile16 & 7) << 4, (SelectedTile16 >> 3) << 4);
+    tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16Id]->DrawTile(&pm, (tile16Id & 7) << 4, (tile16Id >> 3) << 4);
     Tile16mapping->setPixmap(pm);
 
     // Update Tile16 generating data in Tileset
-    tilesetEditParams->newTileset->ResetATile8x8MapDataInTile16Data(SelectedTile16, position, newTile8x8_Id, xflip, yflip, new_paletteIndex);
+    tilesetEditParams->newTileset->ResetATile8x8MapDataInTile16Data(tile16Id, position, newTile8x8_Id, xflip, yflip, new_paletteIndex);
 }
 
 /// <summary>
@@ -527,7 +567,8 @@ void TilesetEditDialog::on_horizontalSlider_valueChanged(int value)
 
 void TilesetEditDialog::TLTile8x8Reset()
 {
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopLeftTileId->value(),
+    UpdateATile8x8ForSelectedTile16InTilesetData(SelectedTile16,
+                                                 ui->spinBox_TopLeftTileId->value(),
                                                  LevelComponents::TileMap16::TILE8_TOPLEFT,
                                                  ui->spinBox_TopLeftpaletteId->value(),
                                                  ui->checkBox_TopLeftHFlip->isChecked(),
@@ -536,7 +577,8 @@ void TilesetEditDialog::TLTile8x8Reset()
 
 void TilesetEditDialog::TRTile8x8Reset()
 {
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_TopRightTileId->value(),
+    UpdateATile8x8ForSelectedTile16InTilesetData(SelectedTile16,
+                                                 ui->spinBox_TopRightTileId->value(),
                                                  LevelComponents::TileMap16::TILE8_TOPRIGHT,
                                                  ui->spinBox_TopRightpaletteId->value(),
                                                  ui->checkBox_TopRightHFlip->isChecked(),
@@ -545,7 +587,8 @@ void TilesetEditDialog::TRTile8x8Reset()
 
 void TilesetEditDialog::BLTile8x8Reset()
 {
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomLeftTileId->value(),
+    UpdateATile8x8ForSelectedTile16InTilesetData(SelectedTile16,
+                                                 ui->spinBox_BottomLeftTileId->value(),
                                                  LevelComponents::TileMap16::TILE8_BOTTOMLEFT,
                                                  ui->spinBox_BottomLeftpaletteId->value(),
                                                  ui->checkBox_BottomLeftHFlip->isChecked(),
@@ -554,9 +597,18 @@ void TilesetEditDialog::BLTile8x8Reset()
 
 void TilesetEditDialog::BRTile8x8Reset()
 {
-    UpdateATile8x8ForSelectedTile16InTilesetData(ui->spinBox_BottomRightTileId->value(),
+    UpdateATile8x8ForSelectedTile16InTilesetData(SelectedTile16,
+                                                 ui->spinBox_BottomRightTileId->value(),
                                                  LevelComponents::TileMap16::TILE8_BOTTOMRIGHT,
                                                  ui->spinBox_BottomRightpaletteId->value(),
                                                  ui->checkBox_BottomRightHFlip->isChecked(),
                                                  ui->checkBox_BottomRightVFlip->isChecked());
+}
+
+void TilesetEditDialog::on_checkBox_paletteBrush_toggled(bool checked)
+{
+    if(checked)
+        paletteBrushVal = ui->spinBox_paletteBrushValue->value();
+    else
+        paletteBrushVal = -1;  // Disable
 }

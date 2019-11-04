@@ -54,6 +54,8 @@ public:
     void SetSelectedColorId(int newcolorId);
     void CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile16);
     void SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
+    int PaletteBrushValue() {return paletteBrushVal; }
+    void SetTile16PaletteId(int tile16ID);
     ~TilesetEditDialog();
 
 private slots:
@@ -77,6 +79,7 @@ private slots:
     void on_checkBox_BottomLeftVFlip_toggled(bool checked);
     void on_checkBox_BottomRightVFlip_toggled(bool checked);
     void on_horizontalSlider_valueChanged(int value);
+    void on_checkBox_paletteBrush_toggled(bool checked);
 
 private:
     Ui::TilesetEditDialog *ui;
@@ -98,6 +101,8 @@ private:
     bool IsSelectingTile16 = false;
     int SelectedColorId = 0;
 
+    int paletteBrushVal = -1;
+
     // Setters for Selected Tile16
     void TLTile8x8Reset();
     void TRTile8x8Reset();
@@ -109,7 +114,7 @@ private:
     void ResetPaletteBarGraphicView(int paletteId);
     void ReRenderTile16Map();
     void ReRenderTile8x8Map(int paletteId);
-    void UpdateATile8x8ForSelectedTile16InTilesetData(int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip);
+    void UpdateATile8x8ForSelectedTile16InTilesetData(int tile16Id, int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip);
 };
 
 #endif // TILESETEDITDIALOG_H
