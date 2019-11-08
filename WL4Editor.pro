@@ -54,7 +54,8 @@ SOURCES += \
     Dialog/TilesetEditDialog.cpp \
     SettingsUtils.cpp \
     Dialog/TilesetEditor_Tile16MapGraphicView.cpp \
-    Dialog/TilesetEditor_Tile8x8MapGraphicView.cpp
+    Dialog/TilesetEditor_Tile8x8MapGraphicView.cpp \
+    Dialog/TilesetEditor_PaletteGraphicView.cpp
 
 HEADERS += \
     WL4EditorWindow.h \
@@ -85,7 +86,8 @@ HEADERS += \
     Dialog/TilesetEditDialog.h \
     SettingsUtils.h \
     Dialog/TilesetEditor_Tile16MapGraphicView.h \
-    Dialog/TilesetEditor_Tile8x8MapGraphicView.h
+    Dialog/TilesetEditor_Tile8x8MapGraphicView.h \
+    Dialog/TilesetEditor_PaletteGraphicView.h
 
 FORMS += \
     WL4EditorWindow.ui \

@@ -11,6 +11,7 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
     ui->label_TilesetID->setText("Tileset ID" + QString::number(tilesetEditParam->currentTilesetIndex, 10));
     ui->graphicsView_TilesetAllTile16->SetCurrentTilesetEditor(this);
     ui->graphicsView_TilesetAllTile8x8->SetCurrentTilesetEditor(this);
+    ui->graphicsView_paletteBar->SetCurrentTilesetEditor(this);
 
     // render
     RenderInitialization();
@@ -278,7 +279,7 @@ void TilesetEditDialog::RenderInitialization()
 
     // Set up scenes
     PaletteBarScene = new QGraphicsScene(0, 0, 16 * 8, 16);
-    PaletteBarScene->addPixmap(PaletteBarpixmap);
+    Palettemapping = PaletteBarScene->addPixmap(PaletteBarpixmap);
     Tile8x8MAPScene = new QGraphicsScene(0, 0, 8 * 16, 0x600 / 2);
     Tile8x8mapping = Tile8x8MAPScene->addPixmap(Tile8x8Pixmap);
     Tile16MAPScene = new QGraphicsScene(0, 0, 16 * 8, 0x300 * 2);
@@ -331,7 +332,7 @@ void TilesetEditDialog::ResetPaletteBarGraphicView(int paletteId)
     {
         PaletteBarPainter.fillRect(8 * i, 0, 8, 16, palettetable[paletteId][i]);
     }
-    PaletteBarScene->addPixmap(PaletteBarpixmap);
+    Palettemapping = PaletteBarScene->addPixmap(PaletteBarpixmap);
 
     // Add the highlighted tile rectangle in SelectionBox_Color
     QPixmap selectionPixmap3(8, 16);
@@ -545,9 +546,34 @@ void TilesetEditDialog::SetSelectedColorId(int newcolorId)
 {
     // Paint red Box to show selected Color
     int X = newcolorId * 8;
-    SelectionBox_Color->setPos(X * 8, 0);
+    SelectionBox_Color->setPos(X, 0);
     SelectionBox_Color->setVisible(true);
     SelectedColorId = newcolorId;
+}
+
+/// <summary>
+/// Set Color for right-clicked Color via color dialog.
+/// </summary>
+/// <param name="newcolorId">
+/// new selected color Id.
+/// </param>
+void TilesetEditDialog::SetColor(int newcolorId)
+{
+    QColor color = QColorDialog::getColor(Qt::black, this);
+    color.setAlpha(0xFF);
+    if(color.isValid())
+    {
+        tilesetEditParams->newTileset->SetColor(SelectedPaletteId, newcolorId, color.rgba());
+
+        // Update Palette Graphicview
+        QPixmap pm(Palettemapping->pixmap());
+        QPainter PaletteBarPainter(&pm);
+        PaletteBarPainter.fillRect(8 * newcolorId, 0, 8, 16, color.rgba());
+        Palettemapping->setPixmap(pm);
+
+        ReRenderTile8x8Map(SelectedPaletteId);
+        ReRenderTile16Map();
+    }
 }
 
 /// <summary>
@@ -559,6 +585,7 @@ void TilesetEditDialog::SetSelectedColorId(int newcolorId)
 void TilesetEditDialog::on_horizontalSlider_valueChanged(int value)
 {
     if(!HasInitialized) return;
+    SelectedPaletteId = value;
     ReRenderTile8x8Map(value);
     ResetPaletteBarGraphicView(value);
     SetSelectedTile8x8(0, true);

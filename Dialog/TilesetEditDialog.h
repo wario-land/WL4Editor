@@ -6,6 +6,7 @@
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QScrollBar>
+#include <QColorDialog>
 #include "LevelComponents/Layer.h"
 #include "LevelComponents/Room.h"
 #include "LevelComponents/Tileset.h"
@@ -52,6 +53,7 @@ public:
     void SetSelectedTile16(int tile16ID, bool resetscrollbar);
     void SetSelectedTile8x8(unsigned short tileId, bool resetscrollbar);
     void SetSelectedColorId(int newcolorId);
+    void SetColor(int newcolorId);
     void CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile16);
     void SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
     int PaletteBrushValue() {return paletteBrushVal; }
@@ -89,6 +91,7 @@ private:
     bool HasInitialized = false;
     QGraphicsScene *PaletteBarScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Color = nullptr;
+    QGraphicsPixmapItem *Palettemapping = nullptr;
     QGraphicsScene *Tile8x8MAPScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Tile8x8 = nullptr;
     QGraphicsPixmapItem *Tile8x8mapping = nullptr;
@@ -100,7 +103,7 @@ private:
     unsigned short SelectedTile16 = 0;
     bool IsSelectingTile16 = false;
     int SelectedColorId = 0;
-
+    int SelectedPaletteId = 0;
     int paletteBrushVal = -1;
 
     // Setters for Selected Tile16

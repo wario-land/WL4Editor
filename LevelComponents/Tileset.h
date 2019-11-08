@@ -34,6 +34,7 @@ namespace LevelComponents
         Tile8x8 **GetTile8x8arrayPtr() { return tile8x8array; }
         TileMap16 **GetMap16arrayPtr() { return map16array; }
         QVector<QRgb> *GetPalettes() { return palettes; }
+        void SetColor(int paletteId, int colorId, QRgb newcolor) { palettes[paletteId][colorId] = newcolor; }
         ~Tileset();
         QPixmap RenderTile8x8(int paletteId);
         QPixmap RenderTile16(int columns);

@@ -159,6 +159,7 @@ namespace LevelComponents
     {
         QPainter painter(layerPixmap);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
+        ImageData->setColorTable(palettes[paletteIndex]);
         QImage tileImage = ImageData->mirrored(FlipX, FlipY);
         QPoint drawDestination(x, y);
         painter.drawImage(drawDestination, tileImage);
