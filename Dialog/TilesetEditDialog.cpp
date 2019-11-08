@@ -436,14 +436,6 @@ void TilesetEditDialog::CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile1
                                     oldtile->GetPaletteIndex(),
                                     oldtile->GetFlipX(),
                                     oldtile->GetFlipY());
-
-        // Update Tile16 generating data in Tileset
-        tilesetEditParams->newTileset->ResetATile8x8MapDataInTile16Data(To_Tile16,
-                                                                        i,
-                                                                        oldtile->GetIndex(),
-                                                                        oldtile->GetFlipX(),
-                                                                        oldtile->GetFlipY(),
-                                                                        oldtile->GetPaletteIndex());
     }
 
     // Update Graphicview
@@ -504,9 +496,6 @@ void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int tile16I
     QPixmap pm(Tile16mapping->pixmap());
     tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16Id]->DrawTile(&pm, (tile16Id & 7) << 4, (tile16Id >> 3) << 4);
     Tile16mapping->setPixmap(pm);
-
-    // Update Tile16 generating data in Tileset
-    tilesetEditParams->newTileset->ResetATile8x8MapDataInTile16Data(tile16Id, position, newTile8x8_Id, xflip, yflip, new_paletteIndex);
 }
 
 /// <summary>

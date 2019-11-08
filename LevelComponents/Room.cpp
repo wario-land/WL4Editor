@@ -137,7 +137,7 @@ namespace LevelComponents
         // Load Entity list for each difficulty level
         for (int i = 0; i < 3; i++)
         {
-            EntityList[i] = room->GetEntityList(i);
+            EntityList[i] = room->GetEntityListData(i);
         }
 
         // Deep Copy Entityset and Entities

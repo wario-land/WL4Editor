@@ -24,8 +24,6 @@ namespace LevelComponents
         unsigned short *TilesetPaletteData = nullptr;
         bool newtileset = false;
         int paletteAddress, fgGFXptr, fgGFXlen, bgGFXptr, bgGFXlen, map16ptr;
-        unsigned char *statictile8x8data = nullptr;
-        unsigned char *tile16data = nullptr;
 
     public:
         Tileset(int tilesetPtr, int __TilesetID);
@@ -47,7 +45,6 @@ namespace LevelComponents
         void SetChanged(bool changed) {newtileset = changed;}
         bool IsNewTileset() {return newtileset; }
         Tile8x8 *GetblankTile() { return blankTile; }
-        void ResetATile8x8MapDataInTile16Data(int tile16Id, int position, int newtile8x8Id, bool xflip, bool yflip, int paletteId);
     };
 } // namespace LevelComponents
 
