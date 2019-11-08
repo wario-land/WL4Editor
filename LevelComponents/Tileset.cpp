@@ -26,10 +26,8 @@ namespace LevelComponents
 
         tile8x8array = new Tile8x8* [0x600];
         map16array = new TileMap16* [0x300];
-        tile16data = new unsigned char[0x300 * 8];
         memset(tile8x8array, 0, Tile8x8DefaultNum * sizeof(tile8x8array[0]));
         memset(map16array, 0, Tile16DefaultNum * sizeof(map16array[0]));
-        memset(tile16data, 0, Tile16DefaultNum * 8);
 
         // Create all 16 color palettes
         paletteAddress = ROMUtils::PointerFromData(tilesetPtr + 8);
@@ -134,8 +132,6 @@ namespace LevelComponents
             map16array[i] = new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]);
         }
 
-        memcpy(tile16data, ROMUtils::CurrentFile + map16ptr, Tile16DefaultNum * 8);
-
         // Get pointer to the map16 event table
         Map16EventTable = new unsigned short[0x300];
         memcpy(Map16EventTable, (unsigned short *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28)), Tile16DefaultNum * sizeof(unsigned short));
@@ -166,9 +162,6 @@ namespace LevelComponents
         newtileset = true;
         tile8x8array = new Tile8x8* [0x600];
         map16array = new TileMap16* [0x300];
-        tile16data = new unsigned char[0x300 * 8];
-        memset(tile16data, 0, Tile16DefaultNum * 8);
-        memcpy(tile16data, old_tileset->tile16data, Tile16DefaultNum * 8);
 
         //Save the ROM pointer into the tileset object
         this->tilesetPtr = old_tileset->getTilesetPtr();
@@ -234,7 +227,6 @@ namespace LevelComponents
             palettes[i].clear();
         }
 
-        delete tile16data;
         delete Map16EventTable;
         delete Map16TerrainTypeIDTable;
         delete TilesetPaletteData;
