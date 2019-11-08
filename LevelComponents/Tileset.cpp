@@ -34,12 +34,12 @@ namespace LevelComponents
         memset(tile16data, 0, Tile16DefaultNum * 8);
 
         // Create all 16 color palettes
-        palettePtr = ROMUtils::PointerFromData(tilesetPtr + 8);
+        paletteAddress = ROMUtils::PointerFromData(tilesetPtr + 8);
         for (int i = 0; i < 16; ++i)
         {
             // First color is transparent
             palettes[i].push_back(0);
-            int subPalettePtr = palettePtr + i * 32;
+            int subPalettePtr = paletteAddress + i * 32;
             for (int j = 1; j < 16; ++j)
             {
                 unsigned short color555 = *(unsigned short *) (ROMUtils::CurrentFile + subPalettePtr + j * 2);
@@ -151,7 +151,7 @@ namespace LevelComponents
 
         // Get pointer of Universal Sprites tiles Palette
         TilesetPaletteData = new unsigned short[16 * 16];
-        memcpy(TilesetPaletteData, (unsigned short *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 32)), 16 * 16 * sizeof(unsigned short));
+        memcpy(TilesetPaletteData, (unsigned short *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 8)), 16 * 16 * sizeof(unsigned short));
     }
 
     /// <summary>
@@ -161,7 +161,7 @@ namespace LevelComponents
     /// the new instance should only be used when editing Tileset, it should be delete after this period.
     /// </remarks>
     Tileset::Tileset(Tileset *old_tileset, int __TilesetID) :
-        palettePtr(old_tileset->palettePtr),
+        paletteAddress(old_tileset->paletteAddress),
         fgGFXptr(old_tileset->fgGFXptr),
         fgGFXlen(old_tileset->fgGFXlen),
         bgGFXptr(old_tileset->bgGFXptr),
@@ -298,6 +298,28 @@ namespace LevelComponents
             }
         }
         return pixmap;
+    }
+
+    /// <summary>
+    /// Regenerate Palette data when saving ROM.
+    /// </summary>
+    void Tileset::ReGeneratePaletteData()
+    {
+        QColor tmp_color;
+        memset(TilesetPaletteData, 0, 16 * 16 * 2);
+        for(int i = 0; i < 16; ++i)
+        {
+            // First color is transparent
+            // RGB555 format: bbbbbgggggrrrrr
+            for(int j = 1; j < 16; ++j)
+            {
+                tmp_color.setRgb(palettes[i][j]);
+                int b = (tmp_color.blue() >> 3) & 0x1F;
+                int g = (tmp_color.green() >> 3) & 0x1F;
+                int r = (tmp_color.red() >> 3) & 0x1F;
+                TilesetPaletteData[16 * i + j] = (unsigned short) ((b << 10) | (g << 5) | r);
+            }
+        }
     }
 
     /// <summary>

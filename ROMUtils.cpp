@@ -456,6 +456,15 @@ namespace ROMUtils
                         map16tilePtr[j * 4 + 3] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMRIGHT)->GetValue();
                     }
                     memcpy(TempFile + ROMUtils::PointerFromData(tilesetPtr + 20), (unsigned char*)map16tilePtr, 0x300 * 8);
+
+                    // Save palettes
+                    // ignore the alignment warning here
+                    singletonTilesets[i]->ReGeneratePaletteData();
+                    unsigned short *palettePtr = (unsigned short *) (TempFile + singletonTilesets[i]->GetPaletteAddr());
+                    unsigned short *newpalettedata = singletonTilesets[i]->GetTilesetPaletteDataPtr();
+                    memcpy((unsigned char *)palettePtr, (unsigned char *)newpalettedata, 16 * 16 * 2);
+
+                    singletonTilesets[i]->SetChanged(false);
                 }
             }
             // -----------------TEMP------------------

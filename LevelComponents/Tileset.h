@@ -23,7 +23,7 @@ namespace LevelComponents
         unsigned char *Map16TerrainTypeIDTable = nullptr;
         unsigned short *TilesetPaletteData = nullptr;
         bool newtileset = false;
-        int palettePtr, fgGFXptr, fgGFXlen, bgGFXptr, bgGFXlen, map16ptr;
+        int paletteAddress, fgGFXptr, fgGFXlen, bgGFXptr, bgGFXlen, map16ptr;
         unsigned char *statictile8x8data = nullptr;
         unsigned char *tile16data = nullptr;
 
@@ -41,7 +41,9 @@ namespace LevelComponents
         unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }
         unsigned short *GetEventTablePtr() { return Map16EventTable; }
         unsigned short *GetTilesetPaletteDataPtr() { return TilesetPaletteData; }
-        void SetChanged() {newtileset = true;}
+        int GetPaletteAddr() { return paletteAddress; }
+        void ReGeneratePaletteData();
+        void SetChanged(bool changed) {newtileset = changed;}
         bool IsNewTileset() {return newtileset; }
         Tile8x8 *GetblankTile() { return blankTile; }
         void ResetATile8x8MapDataInTile16Data(int tile16Id, int position, int newtile8x8Id, bool xflip, bool yflip, int paletteId);
