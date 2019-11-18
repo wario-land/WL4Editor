@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
+    <width>1282</width>
     <height>706</height>
    </rect>
   </property>
@@ -80,6 +80,66 @@
            <height>32</height>
           </size>
          </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_AnimatedTileGroupSetter">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Set Animated Tiles Group</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_AnimatedTIleGroupSlot">
+              <property name="text">
+               <string>Slot</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_AnimatedTileGroupId">
+              <property name="text">
+               <string>Group Id</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QSpinBox" name="spinBox_AnimatedTileSlot">
+              <property name="maximum">
+               <number>15</number>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="spinBox_AnimatedTileGroupId">
+              <property name="maximum">
+               <number>65535</number>
+              </property>
+              <property name="displayIntegerBase">
+               <number>16</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_SetAnimatedTileSlot">
+            <property name="text">
+             <string>Set Slot</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>

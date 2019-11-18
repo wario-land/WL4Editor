@@ -19,15 +19,18 @@ namespace LevelComponents
         QVector<QRgb> palettes[16];
         Tile8x8 *blankTile = nullptr;
         int UniversalSpritesTilesPalettePtr = 0;
+        unsigned short *AnimatedTileData = nullptr;
         unsigned short *Map16EventTable = nullptr;
         unsigned char *Map16TerrainTypeIDTable = nullptr;
         unsigned short *TilesetPaletteData = nullptr;
+        bool hasconstructed = false;
         bool newtileset = false;
         int paletteAddress, fgGFXptr, fgGFXlen, bgGFXptr, bgGFXlen, map16ptr;
 
     public:
         Tileset(int tilesetPtr, int __TilesetID);
         Tileset(Tileset *old_tileset, int __TilesetID);
+        void SetAnimatedTile(int tile8x8groupId, int startTile8x8Id);
         int getTilesetPtr() { return tilesetPtr; }
         Tile8x8 **GetTile8x8arrayPtr() { return tile8x8array; }
         TileMap16 **GetMap16arrayPtr() { return map16array; }
@@ -40,6 +43,7 @@ namespace LevelComponents
         unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }
         unsigned short *GetEventTablePtr() { return Map16EventTable; }
         unsigned short *GetTilesetPaletteDataPtr() { return TilesetPaletteData; }
+        unsigned short *GetAnimatedTileData() { return AnimatedTileData; }
         int GetPaletteAddr() { return paletteAddress; }
         void ReGeneratePaletteData();
         void SetChanged(bool changed) {newtileset = changed;}

@@ -464,6 +464,10 @@ namespace ROMUtils
                     unsigned short *newpalettedata = singletonTilesets[i]->GetTilesetPaletteDataPtr();
                     memcpy((unsigned char *)palettePtr, (unsigned char *)newpalettedata, 16 * 16 * 2);
 
+                    // Save Animated Tile info table
+                    unsigned short *AnimatedTileInfoTable = singletonTilesets[i]->GetAnimatedTileData();
+                    memcpy(TempFile + i * 32 + WL4Constants::AnimatedTileIdTableCase2, (unsigned char*)AnimatedTileInfoTable, 32);
+
                     singletonTilesets[i]->SetChanged(false);
                 }
             }

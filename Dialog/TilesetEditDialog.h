@@ -82,6 +82,7 @@ private slots:
     void on_checkBox_BottomRightVFlip_toggled(bool checked);
     void on_horizontalSlider_valueChanged(int value);
     void on_checkBox_paletteBrush_toggled(bool checked);
+    void on_pushButton_SetAnimatedTileSlot_clicked();
 
 private:
     Ui::TilesetEditDialog *ui;

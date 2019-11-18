@@ -17,6 +17,7 @@ namespace WL4Constants
     const unsigned int EntityTilesetPointerTable = 0x78EBF0;
     const unsigned int EntityPalettePointerTable = 0x78EDB4;
     const unsigned int EntityTilesetLengthTable  = 0x3B2C90;
+    const unsigned int AnimatedTileIdTableCase2  = 0x3F8098;
 
     // Miscellaneous definitions
     const unsigned int CameraRecordSentinel        = 0x3F9D58;

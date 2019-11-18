@@ -522,7 +522,17 @@ void TilesetEditDialog::SetSelectedTile8x8(unsigned short tileId, bool resetscro
         ui->graphicsView_TilesetAllTile8x8->verticalScrollBar()->setValue(8 * (tileId / 32));
         ui->graphicsView_TilesetAllTile8x8->horizontalScrollBar()->setValue(0);
     }
+
     ui->label_Tile8x8_ID->setText("Selected Tile8x8 Id: " + QString::number(tileId));
+
+    // Animated Tile staff
+    if(tileId < 64)
+    {
+        int slotId = tileId >> 2;
+        int tilegroupId = tilesetEditParams->newTileset->GetAnimatedTileData()[slotId];
+        ui->spinBox_AnimatedTileSlot->setValue(slotId);
+        ui->spinBox_AnimatedTileGroupId->setValue(tilegroupId);
+    }
 }
 
 /// <summary>
@@ -627,4 +637,14 @@ void TilesetEditDialog::on_checkBox_paletteBrush_toggled(bool checked)
         paletteBrushVal = ui->spinBox_paletteBrushValue->value();
     else
         paletteBrushVal = -1;  // Disable
+}
+
+/// <summary>
+/// Set Animated Tile Slot.
+/// </summary>
+void TilesetEditDialog::on_pushButton_SetAnimatedTileSlot_clicked()
+{
+    tilesetEditParams->newTileset->SetAnimatedTile(ui->spinBox_AnimatedTileGroupId->value(), 4 * ui->spinBox_AnimatedTileSlot->value());
+    ReRenderTile16Map();
+    ReRenderTile8x8Map(SelectedPaletteId);
 }
