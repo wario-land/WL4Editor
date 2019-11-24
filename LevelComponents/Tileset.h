@@ -20,6 +20,7 @@ namespace LevelComponents
         Tile8x8 *blankTile = nullptr;
         int UniversalSpritesTilesPalettePtr = 0;
         unsigned short *AnimatedTileData = nullptr;
+        unsigned char *Tile8x8GraphicData = nullptr;
         unsigned short *Map16EventTable = nullptr;
         unsigned char *Map16TerrainTypeIDTable = nullptr;
         unsigned short *TilesetPaletteData = nullptr;
@@ -40,10 +41,16 @@ namespace LevelComponents
         QPixmap RenderTile8x8(int paletteId);
         QPixmap RenderTile16(int columns);
         int GetUniversalSpritesTilesPalettePtr() { return UniversalSpritesTilesPalettePtr; }
+
         unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }
         unsigned short *GetEventTablePtr() { return Map16EventTable; }
         unsigned short *GetTilesetPaletteDataPtr() { return TilesetPaletteData; }
         unsigned short *GetAnimatedTileData() { return AnimatedTileData; }
+
+        unsigned char *GetTile8x8GraphicData() { return Tile8x8GraphicData; }
+        int GetfgGFXptr() { return fgGFXptr; }
+        int GetfgGFXlen() { return fgGFXlen; }
+
         int GetPaletteAddr() { return paletteAddress; }
         void ReGeneratePaletteData();
         void SetChanged(bool changed) {newtileset = changed;}

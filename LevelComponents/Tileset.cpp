@@ -2,7 +2,6 @@
 #include "ROMUtils.h"
 
 #include <iostream>
-
 #include <QPixmap>
 
 namespace LevelComponents
@@ -81,6 +80,9 @@ namespace LevelComponents
         bgGFXptr = ROMUtils::PointerFromData(tilesetPtr + 12);
         bgGFXlen = ROMUtils::IntFromData(tilesetPtr + 16);
 
+        Tile8x8GraphicData = new unsigned char[(1024 - 64) * 32];
+        memcpy(Tile8x8GraphicData, ROMUtils::CurrentFile + fgGFXptr, fgGFXlen * sizeof(unsigned char));
+
         // Foreground
         int fgGFXcount = fgGFXlen / 32;
         for (int i = 0; i < fgGFXcount; ++i)
@@ -148,6 +150,8 @@ namespace LevelComponents
         newtileset = true;
         tile8x8array = new Tile8x8* [0x600];
         map16array = new TileMap16* [0x300];
+        Tile8x8GraphicData = new unsigned char[(1024 - 64) * 32];
+        memcpy(Tile8x8GraphicData, old_tileset->GetTile8x8GraphicData(), fgGFXlen * sizeof(unsigned char));
 
         //Save the ROM pointer into the tileset object
         this->tilesetPtr = old_tileset->getTilesetPtr();
@@ -277,6 +281,7 @@ namespace LevelComponents
         delete Map16TerrainTypeIDTable;
         delete TilesetPaletteData;
         delete AnimatedTileData;
+        delete Tile8x8GraphicData;
     }
 
     /// <summary>

@@ -965,7 +965,7 @@ namespace LevelComponents
                     // Add the data for this layer, it must be compressed
                     unsigned int compressedSize;
                     unsigned char *compressedData = layer->GetCompressedLayerData(&compressedSize);
-                    struct ROMUtils::SaveData layerChunk = { RoomID * sizeof(struct __RoomHeader) + 8 + i * 4,
+                    struct ROMUtils::SaveData layerChunk = { static_cast<unsigned int>(RoomID * sizeof(struct __RoomHeader) + 8 + i * 4),
                                                              compressedSize,
                                                              compressedData,
                                                              ROMUtils::SaveDataIndex++,
@@ -1014,7 +1014,7 @@ namespace LevelComponents
             if (EntityListDirty[i])
             {
                 unsigned int entityListSize = (EntityList[i].size() + 1) * sizeof(struct EntityRoomAttribute);
-                struct ROMUtils::SaveData entityListChunk = { RoomID * sizeof(struct __RoomHeader) + 28 + i * 4,
+                struct ROMUtils::SaveData entityListChunk = { static_cast<unsigned int>(RoomID * sizeof(struct __RoomHeader) + 28 + i * 4),
                                                               entityListSize,
                                                               reinterpret_cast<unsigned char *>(malloc(entityListSize)),
                                                               ROMUtils::SaveDataIndex++,
@@ -1042,7 +1042,7 @@ namespace LevelComponents
         {
             size_t cameraChunkSize = 2 + CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
             struct ROMUtils::SaveData cameraChunk = { 4 * (*cameraPointerTableIndex)++,
-                                                      cameraChunkSize,
+                                                      static_cast<unsigned int>(cameraChunkSize),
                                                       reinterpret_cast<unsigned char *>(malloc(cameraChunkSize)),
                                                       ROMUtils::SaveDataIndex++,
                                                       true,

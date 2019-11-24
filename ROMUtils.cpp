@@ -285,13 +285,91 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Get the savedata chunks from a Tileset.
+    /// </summary>
+    /// <param name="TilesetId">
+    /// Select a Tileset by its Id.
+    /// </param>
+    /// <param name="chunks">
+    /// Push new chunks to it.
+    /// </param>
+    void GenerateTilesetSaveChunks(int TilesetId, QVector<SaveData> &chunks)
+    {
+        int tilesetPtr = singletonTilesets[TilesetId]->getTilesetPtr();
+        // Create Map16EventTable chunk
+        struct ROMUtils::SaveData Map16EventTablechunk = { static_cast<unsigned int>(tilesetPtr + 28),
+                                                         0x600,
+                                                         (unsigned char *) malloc(0x600),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(tilesetPtr + 28),
+                                                         ROMUtils::SaveDataChunkType::TilesetMap16EventTableChunkType };
+        memcpy(Map16EventTablechunk.data, singletonTilesets[TilesetId]->GetEventTablePtr(), 0x600);
+        chunks.append(Map16EventTablechunk);
+
+        // TODO
+        // Create FGTile8x8GraphicData chunk
+//        int FGTileGfxDataLen = singletonTilesets[TilesetId]->GetfgGFXlen();
+//        struct ROMUtils::SaveData FGTile8x8GraphicDataChunk = { static_cast<unsigned int>(tilesetPtr),
+//                                                         static_cast<unsigned int>(FGTileGfxDataLen),
+//                                                         (unsigned char *) malloc(FGTileGfxDataLen),
+//                                                         ROMUtils::SaveDataIndex++,
+//                                                         true,
+//                                                         0,
+//                                                         ROMUtils::PointerFromData(tilesetPtr),
+//                                                         ROMUtils::SaveDataChunkType::TilesetForegroundTile8x8DataChunkType };
+//        memcpy(FGTile8x8GraphicDataChunk.data, something_missing_here, FGTileGfxDataLen);
+//        chunks.append(FGTile8x8GraphicDataChunk);
+
+        // Create Map16TerrainType chunk
+        struct ROMUtils::SaveData Map16TerrainTypechunk = { static_cast<unsigned int>(tilesetPtr + 24),
+                                                         0x300,
+                                                         (unsigned char *) malloc(0x300),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(tilesetPtr + 24),
+                                                         ROMUtils::SaveDataChunkType::TilesetMap16TerrainChunkType };
+        memcpy(Map16TerrainTypechunk.data, singletonTilesets[TilesetId]->GetTerrainTypeIDTablePtr(), 0x300);
+        chunks.append(Map16TerrainTypechunk);
+
+        // Create Map16Data chunk
+        LevelComponents::TileMap16** map16data = singletonTilesets[TilesetId]->GetMap16arrayPtr();
+        struct ROMUtils::SaveData Map16Datachunk = { static_cast<unsigned int>(tilesetPtr + 20),
+                                                         0x300 * 8,
+                                                         (unsigned char *) malloc(0x300 * 8),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(tilesetPtr + 20),
+                                                         ROMUtils::SaveDataChunkType::TilesetMap16DataChunkType };
+        unsigned short map16tilePtr[0x300 * 4];
+        for (int j = 0; j < 0x300; ++j)
+        {
+            map16tilePtr[j * 4] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPLEFT)->GetValue();
+            map16tilePtr[j * 4 + 1] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPRIGHT)->GetValue();
+            map16tilePtr[j * 4 + 2] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMLEFT)->GetValue();
+            map16tilePtr[j * 4 + 3] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMRIGHT)->GetValue();
+        }
+        memcpy(Map16Datachunk.data, (unsigned char*)map16tilePtr, 0x300 * 8);
+        chunks.append(Map16Datachunk);
+    }
+
+    /// <summary>
     /// Save the currently loaded level to the ROM file.
     /// </summary>
     bool SaveFile(QString filePath)
     {
-        // Obtain the list of data chunks to save to the rom
+        // Create TempFile
         SaveDataIndex = 1;
         bool success = false;
+        unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
+        unsigned int TempLength = CurrentFileSize;
+        memcpy(TempFile, CurrentFile, CurrentFileSize);
+
+        // Obtain the list of data chunks to save to the rom
+        // Get level's chunks
         QVector<struct SaveData> chunks;
         LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
         int levelHeaderOffset =
@@ -299,6 +377,28 @@ namespace ROMUtils
         int levelHeaderIndex = ROMUtils::IntFromData(levelHeaderOffset);
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
         currentLevel->GetSaveChunks(chunks);
+
+        // Get Tilesets chunks
+        for(int i = 0; i < 92; ++i)
+        {
+            if(singletonTilesets[i]->IsNewTileset())
+            {
+                GenerateTilesetSaveChunks(i, chunks);
+
+                // Save palettes
+                // ignore the alignment warning here
+                singletonTilesets[i]->ReGeneratePaletteData();
+                unsigned short *palettePtr = (unsigned short *) (TempFile + singletonTilesets[i]->GetPaletteAddr());
+                unsigned short *newpalettedata = singletonTilesets[i]->GetTilesetPaletteDataPtr();
+                memcpy((unsigned char *)palettePtr, (unsigned char *)newpalettedata, 16 * 16 * 2);
+
+                // Save Animated Tile info table
+                unsigned short *AnimatedTileInfoTable = singletonTilesets[i]->GetAnimatedTileData();
+                memcpy(TempFile + i * 32 + WL4Constants::AnimatedTileIdTableCase2, (unsigned char*)AnimatedTileInfoTable, 32);
+
+                singletonTilesets[i]->SetChanged(false);
+            }
+        }
 
         // Finding space for the chunks can be done faster if the chunks are ordered by size
         std::sort(chunks.begin(), chunks.end(),
@@ -310,9 +410,6 @@ namespace ROMUtils
         }
 
         // Invalidate old chunk data
-        unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
-        unsigned int TempLength = CurrentFileSize;
-        memcpy(TempFile, CurrentFile, CurrentFileSize);
         foreach (struct SaveData chunk, chunks)
         {
             if (chunk.old_chunk_addr > WL4Constants::AvailableSpaceBeginningInROM)
@@ -428,51 +525,6 @@ namespace ROMUtils
                sizeof(struct LevelComponents::__LevelHeader));
 
         { // Prevent goto from crossing initialization of variables here
-
-            // TODO: implement Tileset saving code
-            // Save Tile16 map new data in old address
-            // -----------------TEMP------------------
-            for(int i = 0; i < 92; ++i)
-            {
-                if(singletonTilesets[i]->IsNewTileset())
-                {
-                    int tilesetPtr = singletonTilesets[i]->getTilesetPtr();
-                    // Saves Map16EventTable
-                    unsigned short *Map16EventTable = singletonTilesets[i]->GetEventTablePtr();
-                    memcpy(TempFile + ROMUtils::PointerFromData(tilesetPtr + 28), (unsigned char*)Map16EventTable, 0x600);
-
-                    // Saves Map16TerrainType
-                    unsigned char *Map16TerrainTypeIDTable = singletonTilesets[i]->GetTerrainTypeIDTablePtr();
-                    memcpy(TempFile + ROMUtils::PointerFromData(tilesetPtr + 24), (unsigned char*)Map16TerrainTypeIDTable, 0x300);
-
-                    // Saves Map16Data
-                    LevelComponents::TileMap16** map16data = singletonTilesets[i]->GetMap16arrayPtr();
-                    unsigned short map16tilePtr[0x300 * 4];
-                    for (int j = 0; j < 0x300; ++j)
-                    {
-                        map16tilePtr[j * 4] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPLEFT)->GetValue();
-                        map16tilePtr[j * 4 + 1] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPRIGHT)->GetValue();
-                        map16tilePtr[j * 4 + 2] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMLEFT)->GetValue();
-                        map16tilePtr[j * 4 + 3] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMRIGHT)->GetValue();
-                    }
-                    memcpy(TempFile + ROMUtils::PointerFromData(tilesetPtr + 20), (unsigned char*)map16tilePtr, 0x300 * 8);
-
-                    // Save palettes
-                    // ignore the alignment warning here
-                    singletonTilesets[i]->ReGeneratePaletteData();
-                    unsigned short *palettePtr = (unsigned short *) (TempFile + singletonTilesets[i]->GetPaletteAddr());
-                    unsigned short *newpalettedata = singletonTilesets[i]->GetTilesetPaletteDataPtr();
-                    memcpy((unsigned char *)palettePtr, (unsigned char *)newpalettedata, 16 * 16 * 2);
-
-                    // Save Animated Tile info table
-                    unsigned short *AnimatedTileInfoTable = singletonTilesets[i]->GetAnimatedTileData();
-                    memcpy(TempFile + i * 32 + WL4Constants::AnimatedTileIdTableCase2, (unsigned char*)AnimatedTileInfoTable, 32);
-
-                    singletonTilesets[i]->SetChanged(false);
-                }
-            }
-            // -----------------TEMP------------------
-
             // Save the rom file from the CurrentFile copy
             QFile file(filePath);
             file.open(QIODevice::WriteOnly);
