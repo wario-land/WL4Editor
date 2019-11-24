@@ -237,7 +237,7 @@
        <item>
         <widget class="QSpinBox" name="spinBox_TerrainId">
          <property name="maximum">
-          <number>127</number>
+          <number>255</number>
          </property>
          <property name="displayIntegerBase">
           <number>16</number>
