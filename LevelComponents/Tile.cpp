@@ -372,4 +372,25 @@ namespace LevelComponents
         return tile8Data;
     }
 
+    /// <summary>
+    /// Turn a tile into graphics data.
+    /// </summary>
+    /// <returns>
+    /// The 32 bytes of graphics data in uncompressed GBA format.
+    /// </returns>
+    QByteArray Tile8x8::CreateGraphicsData()
+    {
+        QByteArray arr(32, 0);
+        for(int i = 0; i < 8; ++i)
+        {
+            for(int j = 0; j < 4; ++j)
+            {
+                char val = static_cast<char>(ImageData->pixelIndex(j << 1, i));
+                val |= ImageData->pixelIndex((j << 1) + 1, i) << 4;
+                arr[(i << 2) + j] = val;
+            }
+        }
+        return arr;
+    }
+
 } // namespace LevelComponents

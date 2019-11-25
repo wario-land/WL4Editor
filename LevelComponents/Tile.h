@@ -127,6 +127,7 @@ namespace LevelComponents
         QVector<QRgb> *GetPalette() { return palettes; }
         int GetPaletteIndex() {return paletteIndex;}
         unsigned short GetValue();
+        QByteArray CreateGraphicsData();
         ~Tile8x8();
     };
 
