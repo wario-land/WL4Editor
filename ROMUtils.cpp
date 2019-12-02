@@ -308,19 +308,24 @@ namespace ROMUtils
         memcpy(Map16EventTablechunk.data, singletonTilesets[TilesetId]->GetEventTablePtr(), 0x600);
         chunks.append(Map16EventTablechunk);
 
-        // TODO
         // Create FGTile8x8GraphicData chunk
-//        int FGTileGfxDataLen = singletonTilesets[TilesetId]->GetfgGFXlen();
-//        struct ROMUtils::SaveData FGTile8x8GraphicDataChunk = { static_cast<unsigned int>(tilesetPtr),
-//                                                         static_cast<unsigned int>(FGTileGfxDataLen),
-//                                                         (unsigned char *) malloc(FGTileGfxDataLen),
-//                                                         ROMUtils::SaveDataIndex++,
-//                                                         true,
-//                                                         0,
-//                                                         ROMUtils::PointerFromData(tilesetPtr),
-//                                                         ROMUtils::SaveDataChunkType::TilesetForegroundTile8x8DataChunkType };
-//        memcpy(FGTile8x8GraphicDataChunk.data, something_missing_here, FGTileGfxDataLen);
-//        chunks.append(FGTile8x8GraphicDataChunk);
+        int FGTileGfxDataLen = singletonTilesets[TilesetId]->GetfgGFXlen();
+        unsigned char FGmap8x8tiledata[(1024 - 65) * 32];
+        LevelComponents::Tile8x8 **tile8x8array = singletonTilesets[TilesetId]->GetTile8x8arrayPtr();
+        for (int j = 0; j < (FGTileGfxDataLen / 32); ++j)
+        {
+            memcpy(&FGmap8x8tiledata[32 * j], tile8x8array[j + 0x41]->CreateGraphicsData().data(), 32);
+        }
+        struct ROMUtils::SaveData FGTile8x8GraphicDataChunk = { static_cast<unsigned int>(tilesetPtr),
+                                                         static_cast<unsigned int>(FGTileGfxDataLen),
+                                                         (unsigned char *) malloc(FGTileGfxDataLen),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(tilesetPtr),
+                                                         ROMUtils::SaveDataChunkType::TilesetForegroundTile8x8DataChunkType };
+        memcpy(FGTile8x8GraphicDataChunk.data, FGmap8x8tiledata, FGTileGfxDataLen);
+        chunks.append(FGTile8x8GraphicDataChunk);
 
         // Create Map16TerrainType chunk
         struct ROMUtils::SaveData Map16TerrainTypechunk = { static_cast<unsigned int>(tilesetPtr + 24),

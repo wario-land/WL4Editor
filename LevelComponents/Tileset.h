@@ -20,7 +20,6 @@ namespace LevelComponents
         Tile8x8 *blankTile = nullptr;
         int UniversalSpritesTilesPalettePtr = 0;
         unsigned short *AnimatedTileData = nullptr;
-        unsigned char *Tile8x8GraphicData = nullptr;
         unsigned short *Map16EventTable = nullptr;
         unsigned char *Map16TerrainTypeIDTable = nullptr;
         unsigned short *TilesetPaletteData = nullptr;
@@ -47,7 +46,6 @@ namespace LevelComponents
         unsigned short *GetTilesetPaletteDataPtr() { return TilesetPaletteData; }
         unsigned short *GetAnimatedTileData() { return AnimatedTileData; }
 
-        unsigned char *GetTile8x8GraphicData() { return Tile8x8GraphicData; }
         int GetfgGFXptr() { return fgGFXptr; }
         int GetfgGFXlen() { return fgGFXlen; }
 

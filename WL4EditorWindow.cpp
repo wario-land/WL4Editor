@@ -1039,6 +1039,9 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
         // Update Tile16Dockwidget
         Tile16SelecterWidget->SetTileset(currentTilesetId);
 
+        // Set bool UnsavedChanges
+        UnsavedChanges = true;
+
         // Push Operation
         // TODO
     }
