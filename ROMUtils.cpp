@@ -339,6 +339,19 @@ namespace ROMUtils
         memcpy(Map16TerrainTypechunk.data, singletonTilesets[TilesetId]->GetTerrainTypeIDTablePtr(), 0x300);
         chunks.append(Map16TerrainTypechunk);
 
+        // Save palettes
+        singletonTilesets[TilesetId]->ReGeneratePaletteData();
+        struct ROMUtils::SaveData TilesetPalettechunk = { static_cast<unsigned int>(tilesetPtr + 8),
+                                                         16 * 16 * 2,
+                                                         (unsigned char *) malloc(16 * 16 * 2),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(tilesetPtr + 8),
+                                                         ROMUtils::SaveDataChunkType::TilesetPaletteDataChunkType };
+        memcpy(TilesetPalettechunk.data, singletonTilesets[TilesetId]->GetTilesetPaletteDataPtr(), 16 * 16 * 2);
+        chunks.append(TilesetPalettechunk);
+
         // Create Map16Data chunk
         LevelComponents::TileMap16** map16data = singletonTilesets[TilesetId]->GetMap16arrayPtr();
         struct ROMUtils::SaveData Map16Datachunk = { static_cast<unsigned int>(tilesetPtr + 20),
@@ -389,13 +402,6 @@ namespace ROMUtils
             if(singletonTilesets[i]->IsNewTileset())
             {
                 GenerateTilesetSaveChunks(i, chunks);
-
-                // Save palettes
-                // ignore the alignment warning here
-                singletonTilesets[i]->ReGeneratePaletteData();
-                unsigned short *palettePtr = (unsigned short *) (TempFile + singletonTilesets[i]->GetPaletteAddr());
-                unsigned short *newpalettedata = singletonTilesets[i]->GetTilesetPaletteDataPtr();
-                memcpy((unsigned char *)palettePtr, (unsigned char *)newpalettedata, 16 * 16 * 2);
 
                 // Save Animated Tile info table
                 unsigned short *AnimatedTileInfoTable = singletonTilesets[i]->GetAnimatedTileData();
