@@ -281,7 +281,7 @@ namespace LevelComponents
     /// <summary>
     /// Render the tileset by Tile8 as a pixmap.
     /// </summary>
-    QPixmap Tileset::RenderTile8x8(int paletteId)
+    QPixmap Tileset::RenderAllTile8x8(int paletteId)
     {
         int lineNum = 0x600 / 16;
         QPixmap pixmap(8 * 16, 8 * lineNum);
@@ -308,7 +308,7 @@ namespace LevelComponents
     /// <returns>
     /// The tileset rendered at a pixmap.
     /// </returns>
-    QPixmap Tileset::RenderTile16(int columns)
+    QPixmap Tileset::RenderAllTile16(int columns)
     {
         // Initialize the pixmap with transparency
         int tileCountY = 96 / columns;
@@ -326,6 +326,30 @@ namespace LevelComponents
                 }
             }
         }
+        return pixmap;
+    }
+
+    /// <summary>
+    /// Render a Tile8x8 to a pixmap.
+    /// </summary>
+    /// <param name="tileId">
+    /// the Id of the Tile8x8 needs to render.
+    /// </param>
+    /// <param name="paletteId">
+    /// the id of palette to render Tile8x8.
+    /// </param>
+    /// <returns>
+    /// The Tile8x8 rendered at a pixmap.
+    /// </returns>
+    QPixmap Tileset::RenderTile8x8(int tileId, int paletteId)
+    {
+        QPixmap pixmap(8, 8);
+        pixmap.fill(Qt::transparent);
+
+        // drawing
+        tile8x8array[tileId]->SetPaletteIndex(paletteId);
+        tile8x8array[tileId]->DrawTile(&pixmap, 0, 0);
+
         return pixmap;
     }
 

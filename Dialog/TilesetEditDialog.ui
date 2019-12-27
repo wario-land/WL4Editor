@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Tileset Editor</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -43,7 +43,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QGraphicsView" name="graphicsView_Tile8x8Editor">
+        <widget class="TilesetEditor_Tile8x8EditorGraphicView" name="graphicsView_Tile8x8Editor">
          <property name="maximumSize">
           <size>
            <width>240</width>
@@ -512,6 +512,11 @@
    <class>TilesetEditor_PaletteGraphicView</class>
    <extends>QGraphicsView</extends>
    <header>Dialog/TilesetEditor_PaletteGraphicView.h</header>
+  </customwidget>
+  <customwidget>
+   <class>TilesetEditor_Tile8x8EditorGraphicView</class>
+   <extends>QGraphicsView</extends>
+   <header>Dialog/TilesetEditor_Tile8x8EditorGraphicView.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

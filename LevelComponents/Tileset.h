@@ -37,8 +37,9 @@ namespace LevelComponents
         QVector<QRgb> *GetPalettes() { return palettes; }
         void SetColor(int paletteId, int colorId, QRgb newcolor) { palettes[paletteId][colorId] = newcolor; }
         ~Tileset();
-        QPixmap RenderTile8x8(int paletteId);
-        QPixmap RenderTile16(int columns);
+        QPixmap RenderAllTile8x8(int paletteId);
+        QPixmap RenderAllTile16(int columns);
+        QPixmap RenderTile8x8(int tileId, int paletteId);
         int GetUniversalSpritesTilesPalettePtr() { return UniversalSpritesTilesPalettePtr; }
 
         unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }

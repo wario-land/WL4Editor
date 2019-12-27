@@ -8,10 +8,11 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
 {
     ui->setupUi(this);
     this->tilesetEditParams = tilesetEditParam;
-    ui->label_TilesetID->setText("Tileset ID" + QString::number(tilesetEditParam->currentTilesetIndex, 10));
+    ui->label_TilesetID->setText("Tileset ID: " + QString::number(tilesetEditParam->currentTilesetIndex, 10));
     ui->graphicsView_TilesetAllTile16->SetCurrentTilesetEditor(this);
     ui->graphicsView_TilesetAllTile8x8->SetCurrentTilesetEditor(this);
     ui->graphicsView_paletteBar->SetCurrentTilesetEditor(this);
+    ui->graphicsView_Tile8x8Editor->SetCurrentTilesetEditor(this);
 
     // render
     RenderInitialization();
@@ -261,11 +262,11 @@ void TilesetEditDialog::RenderInitialization()
     QPixmap Tile8x8Pixmap(8 * 16, 0x600 / 2);
     Tile8x8Pixmap.fill(Qt::transparent);
     QPainter Tile8x8PixmapPainter(&Tile8x8Pixmap);
-    Tile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderTile8x8(0).toImage());
+    Tile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderAllTile8x8(0).toImage());
     QPixmap Tile16Pixmap(16 * 8, 0x300 * 2);
     Tile16Pixmap.fill(Qt::transparent);
     QPainter Tile16PixmapPainter(&Tile16Pixmap);
-    Tile16PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderTile16(1).toImage());
+    Tile16PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderAllTile16(1).toImage());
 
     // draw palette Bar
     QPixmap PaletteBarpixmap(8 * 16, 16);
@@ -277,6 +278,12 @@ void TilesetEditDialog::RenderInitialization()
         PaletteBarPainter.fillRect(8 * i, 0, 8, 16, palettetable[0][i]);
     }
 
+    // draw Tile8x8 in Tile8x8 editor
+    QPixmap CurTile8x8Pixmap(8, 8);
+    CurTile8x8Pixmap.fill(Qt::transparent);
+    QPainter CurTile8x8PixmapPainter(&CurTile8x8Pixmap);
+    CurTile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderTile8x8(0, 0).toImage());
+
     // Set up scenes
     PaletteBarScene = new QGraphicsScene(0, 0, 16 * 8, 16);
     Palettemapping = PaletteBarScene->addPixmap(PaletteBarpixmap);
@@ -284,6 +291,8 @@ void TilesetEditDialog::RenderInitialization()
     Tile8x8mapping = Tile8x8MAPScene->addPixmap(Tile8x8Pixmap);
     Tile16MAPScene = new QGraphicsScene(0, 0, 16 * 8, 0x300 * 2);
     Tile16mapping = Tile16MAPScene->addPixmap(Tile16Pixmap);
+    Tile8x8EditorScene = new QGraphicsScene(0, 0, 8, 8);
+    Tile8x8Editormapping = Tile8x8EditorScene->addPixmap(CurTile8x8Pixmap);
 
     // Add the highlighted tile rectangle
     QPixmap selectionPixmap(8, 8);
@@ -313,6 +322,9 @@ void TilesetEditDialog::RenderInitialization()
     ui->graphicsView_paletteBar->setScene(PaletteBarScene);
     ui->graphicsView_paletteBar->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     ui->graphicsView_paletteBar->scale(2, 2);
+    ui->graphicsView_Tile8x8Editor->setScene(Tile8x8EditorScene);
+    ui->graphicsView_Tile8x8Editor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_Tile8x8Editor->scale(24, 24);
 }
 
 /// <summary>
@@ -320,8 +332,7 @@ void TilesetEditDialog::RenderInitialization()
 /// </summary>
 void TilesetEditDialog::ResetPaletteBarGraphicView(int paletteId)
 {
-    delete PaletteBarScene;
-    PaletteBarScene = new QGraphicsScene(0, 0, 16 * 8, 16);
+    PaletteBarScene->clear();
 
     // draw palette Bar
     QPixmap PaletteBarpixmap(8 * 16, 16);
@@ -343,10 +354,6 @@ void TilesetEditDialog::ResetPaletteBarGraphicView(int paletteId)
     SelectionBoxRectPainter.drawRect(1, 1, 7, 15);
     SelectionBox_Color = PaletteBarScene->addPixmap(selectionPixmap3);
     SelectionBox_Color->setVisible(false);
-
-    // show Rneder
-    ui->graphicsView_paletteBar->setScene(PaletteBarScene);
-    ui->graphicsView_paletteBar->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
 /// <summary>
@@ -358,11 +365,10 @@ void TilesetEditDialog::ReRenderTile16Map()
     QPixmap Tile16Pixmap(16 * 8, 0x300 * 2);
     Tile16Pixmap.fill(Qt::transparent);
     QPainter Tile16PixmapPainter(&Tile16Pixmap);
-    Tile16PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderTile16(1).toImage());
+    Tile16PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderAllTile16(1).toImage());
 
     // Set up scenes
-    delete Tile16MAPScene;
-    Tile16MAPScene = new QGraphicsScene(0, 0, 16 * 8, 0x300 * 2);
+    Tile16MAPScene->clear();
     Tile16mapping = Tile16MAPScene->addPixmap(Tile16Pixmap);
 
     // Add the highlighted tile rectangle
@@ -371,10 +377,6 @@ void TilesetEditDialog::ReRenderTile16Map()
     selectionPixmap2.fill(highlightColor);
     SelectionBox_Tile16 = Tile16MAPScene->addPixmap(selectionPixmap2);
     SelectionBox_Tile16->setVisible(false);
-
-    // show Rneder
-    ui->graphicsView_TilesetAllTile16->setScene(Tile16MAPScene);
-    ui->graphicsView_TilesetAllTile16->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
     SetSelectedTile16(0, true);
 }
@@ -385,11 +387,10 @@ void TilesetEditDialog::ReRenderTile8x8Map(int paletteId)
     QPixmap Tile8x8Pixmap(8 * 16, 0x600 / 2);
     Tile8x8Pixmap.fill(Qt::transparent);
     QPainter Tile8x8PixmapPainter(&Tile8x8Pixmap);
-    Tile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderTile8x8(paletteId).toImage());
+    Tile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderAllTile8x8(paletteId).toImage());
 
     // Set up scenes
-    delete Tile8x8MAPScene;
-    Tile8x8MAPScene = new QGraphicsScene(0, 0, 8 * 16, 0x600 / 2);
+    Tile8x8MAPScene->clear();
     Tile8x8mapping = Tile8x8MAPScene->addPixmap(Tile8x8Pixmap);
 
     // Add the highlighted tile rectangle
@@ -398,10 +399,6 @@ void TilesetEditDialog::ReRenderTile8x8Map(int paletteId)
     selectionPixmap.fill(highlightColor);
     SelectionBox_Tile8x8 = Tile8x8MAPScene->addPixmap(selectionPixmap);
     SelectionBox_Tile8x8->setVisible(false);
-
-    // show Rneder
-    ui->graphicsView_TilesetAllTile8x8->setScene(Tile8x8MAPScene);
-    ui->graphicsView_TilesetAllTile8x8->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
 /// <summary>
@@ -524,6 +521,14 @@ void TilesetEditDialog::SetSelectedTile8x8(unsigned short tileId, bool resetscro
     }
 
     ui->label_Tile8x8_ID->setText("Selected Tile8x8 Id: " + QString::number(tileId));
+
+    // Tile8x8 Editor graphicview update
+    QPixmap CurTile8x8Pixmap(8, 8);
+    CurTile8x8Pixmap.fill(Qt::transparent);
+    QPainter CurTile8x8PixmapPainter(&CurTile8x8Pixmap);
+    CurTile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderTile8x8(tileId, SelectedPaletteId).toImage());
+    Tile8x8EditorScene->clear();
+    Tile8x8Editormapping = Tile8x8EditorScene->addPixmap(CurTile8x8Pixmap);
 
     // Animated Tile staff
     if(tileId < 64)

@@ -67,7 +67,7 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
 
     // Set up scene
     Tile16MAPScene = new QGraphicsScene(0, 0, 8 * 16, (48 * 2) * 16);
-    Tile16MAPScene->addPixmap(SelectedTileset->RenderTile16(1));
+    Tile16MAPScene->addPixmap(SelectedTileset->RenderAllTile16(1));
     ui->tileSetIDLabel->setText("Tileset ID: 0x" + QString::number(_tilesetIndex, 16).toUpper());
 
     // Add the highlighted tile rectangle

@@ -99,6 +99,8 @@ private:
     QGraphicsScene *Tile16MAPScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Tile16 = nullptr;
     QGraphicsPixmapItem *Tile16mapping = nullptr;
+    QGraphicsScene *Tile8x8EditorScene = nullptr;
+    QGraphicsPixmapItem *Tile8x8Editormapping = nullptr;
 
     unsigned short SelectedTile8x8 = 0;
     unsigned short SelectedTile16 = 0;

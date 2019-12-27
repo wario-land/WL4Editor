@@ -11,6 +11,8 @@ void TilesetEditor_PaletteGraphicView::mouseReleaseEvent(QMouseEvent *event)
     }
     else if(event->button() == Qt::RightButton)
     {
+        if(selectingColorId == 0) return;
+        TilesetEditor->SetSelectedColorId(selectingColorId);
         TilesetEditor->SetColor(selectingColorId);
     }
     else
