@@ -29,13 +29,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_ImportTileGraphic">
-         <property name="text">
-          <string>Import static tiles graphic from file</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QLabel" name="label_Tile8x8_ID">
          <property name="text">
           <string>Selected Tile8x8 Id:</string>
@@ -44,10 +37,16 @@
        </item>
        <item>
         <widget class="TilesetEditor_Tile8x8EditorGraphicView" name="graphicsView_Tile8x8Editor">
-         <property name="maximumSize">
+         <property name="minimumSize">
           <size>
            <width>240</width>
            <height>240</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
           </size>
          </property>
         </widget>
@@ -69,6 +68,13 @@
          </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_RGB888Value">
+         <property name="text">
+          <string>RGB888: </string>
          </property>
         </widget>
        </item>
@@ -172,6 +178,27 @@
        <item>
         <widget class="TilesetEditor_Tile8x8MapGraphicView" name="graphicsView_TilesetAllTile8x8"/>
        </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="pushButton_ExportTile8x8Map">
+           <property name="text">
+            <string>Export</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_ImportTile8x8Graphic">
+           <property name="text">
+            <string>Import and overwrite</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
       </layout>
      </item>
      <item>
@@ -188,6 +215,20 @@
        </item>
        <item>
         <widget class="TilesetEditor_Tile16MapGraphicView" name="graphicsView_TilesetAllTile16"/>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="pushButton_ExportTile16Map">
+           <property name="text">
+            <string>Export</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>

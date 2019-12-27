@@ -1,6 +1,7 @@
 #include "TilesetEditDialog.h"
 #include "ui_TilesetEditDialog.h"
 
+#include <QFileDialog>
 
 TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditParams *tilesetEditParam) :
     QDialog(parent),
@@ -553,6 +554,12 @@ void TilesetEditDialog::SetSelectedColorId(int newcolorId)
     SelectionBox_Color->setPos(X, 0);
     SelectionBox_Color->setVisible(true);
     SelectedColorId = newcolorId;
+
+    QColor color = tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId][newcolorId];
+    ui->label_RGB888Value->setText(QString("RGB888: (") +
+                                   QString::number(color.red(), 10) + QString(", ") +
+                                   QString::number(color.green(), 10) + QString(", ") +
+                                   QString::number(color.blue(), 10) + QString(")"));
 }
 
 /// <summary>
@@ -574,6 +581,10 @@ void TilesetEditDialog::SetColor(int newcolorId)
         QPainter PaletteBarPainter(&pm);
         PaletteBarPainter.fillRect(8 * newcolorId, 0, 8, 16, color.rgba());
         Palettemapping->setPixmap(pm);
+        ui->label_RGB888Value->setText(QString("RGB888: (") +
+                                       QString::number(color.red(), 10) + QString(", ") +
+                                       QString::number(color.green(), 10) + QString(", ") +
+                                       QString::number(color.blue(), 10) + QString(")"));
 
         ReRenderTile8x8Map(SelectedPaletteId);
         ReRenderTile16Map();
@@ -652,4 +663,61 @@ void TilesetEditDialog::on_pushButton_SetAnimatedTileSlot_clicked()
     tilesetEditParams->newTileset->SetAnimatedTile(ui->spinBox_AnimatedTileGroupId->value(), 4 * ui->spinBox_AnimatedTileSlot->value());
     ReRenderTile16Map();
     ReRenderTile8x8Map(SelectedPaletteId);
+}
+
+/// <summary>
+/// Save Tile8x8 map into file.
+/// </summary>
+void TilesetEditDialog::on_pushButton_ExportTile8x8Map_clicked()
+{
+    QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile8x8 map to a file"),
+                                                     QString(""), tr("PNG files (*.png)"));
+    if (qFilePath.compare(""))
+    {
+        int CR_width, CR_height;
+        CR_width = 8 * 16;
+        CR_height = 0x600 / 2;
+        QGraphicsScene *tmpscene = Tile8x8MAPScene;
+        QPixmap currentTile8x8mapPixmap(CR_width, CR_height);
+        QPainter tmppainter(&currentTile8x8mapPixmap);
+        tmpscene->render(&tmppainter);
+        currentTile8x8mapPixmap.save(qFilePath, "PNG", 100);
+    }
+}
+
+/// <summary>
+/// Save Tile16 map into file.
+/// </summary>
+void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
+{
+    QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile16 map to a file"),
+                                                     QString(""), tr("PNG files (*.png)"));
+    if (qFilePath.compare(""))
+    {
+        int CR_width, CR_height;
+        CR_width = 8 * 16;
+        CR_height = 0x300 * 2;
+        QGraphicsScene *tmpscene = Tile16MAPScene;
+        QPixmap currentTile16mapPixmap(CR_width, CR_height);
+        QPainter tmppainter(&currentTile16mapPixmap);
+        tmpscene->render(&tmppainter);
+        currentTile16mapPixmap.save(qFilePath, "PNG", 100);
+    }
+}
+
+void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
+{
+    // Load QPixmap from file
+    // test its width and height, if these 2 values are not multiples of 8 then return
+    // let pure white as transparent, if users want white to appear in the graphic, then let them use bright colors
+    // test its palette(all the colors appear in the graphic), if there are more than 15 colors in the graphic, then return
+    // if the graphic does not use the current palette, then return
+    // rearrange pixels using the existing color order in the palette, convert them into half-byte data
+    // (don't forget to do the half-byte exchange for each byte)
+    // compare (number of the new Tile8x8 + selected Tile8x8 Id) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)
+    // if (number of the new Tile8x8 + selected Tile8x8 Id) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32) then
+    // tilesetEditParams->newTileset->SetfgGFXlen(number of the new Tile8x8 + selected Tile8x8 Id)
+    // create new Tile8x8 by using 32-byte length data
+    // overwrite and replace the old TIle8x8 instances down-throught from selected Tile8x8
+    // update all the graphicviews
 }

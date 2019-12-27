@@ -49,6 +49,7 @@ namespace LevelComponents
 
         int GetfgGFXptr() { return fgGFXptr; }
         int GetfgGFXlen() { return fgGFXlen; }
+        void SetfgGFXlen(int lenth) { fgGFXlen = lenth; }
 
         int GetPaletteAddr() { return paletteAddress; }
         void ReGeneratePaletteData();

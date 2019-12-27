@@ -83,6 +83,9 @@ private slots:
     void on_horizontalSlider_valueChanged(int value);
     void on_checkBox_paletteBrush_toggled(bool checked);
     void on_pushButton_SetAnimatedTileSlot_clicked();
+    void on_pushButton_ExportTile8x8Map_clicked();
+    void on_pushButton_ExportTile16Map_clicked();
+    void on_pushButton_ImportTile8x8Graphic_clicked();
 
 private:
     Ui::TilesetEditDialog *ui;
