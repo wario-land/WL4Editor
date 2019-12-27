@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QString>
+#include <QImage>
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QScrollBar>

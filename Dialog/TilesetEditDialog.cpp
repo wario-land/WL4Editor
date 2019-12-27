@@ -2,6 +2,7 @@
 #include "ui_TilesetEditDialog.h"
 
 #include <QFileDialog>
+#include <QMessageBox>
 
 TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditParams *tilesetEditParam) :
     QDialog(parent),
@@ -707,17 +708,151 @@ void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
 
 void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 {
+    // Check SelectedTile8x8, cannot overwrite animated Tile8x8s
+    if(SelectedTile8x8 < 65)
+    {
+        QMessageBox::critical(this, QString("Error"), QString("Overwrite animated tiles not permit!"));
+        return;
+    }
+
     // Load QPixmap from file
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                    tr("Load Tile8x8 map"), QString(""),
+                                                    tr("PNG files (*.png)"));
+    QPixmap newTile8x8Graphic;
+    if(newTile8x8Graphic.load(fileName))
+    {
+        QMessageBox::critical(this, QString("Load Error"), QString("Cannot load file!"));
+        return;
+    }
+
     // test its width and height, if these 2 values are not multiples of 8 then return
-    // let pure white as transparent, if users want white to appear in the graphic, then let them use bright colors
+    int picwidth = newTile8x8Graphic.width();
+    int picheight = newTile8x8Graphic.height();
+    if((picwidth & 7) && (picheight & 7))
+    {
+        QMessageBox::critical(this, QString("Load Error"), QString("The width and height of the graphic are not multiples of 8!"));
+        return;
+    }
+
+    // let pure white as transparent, if users want white color to appear in the graphic, then let them use bright colors
     // test its palette(all the colors appear in the graphic), if there are more than 15 colors in the graphic, then return
-    // if the graphic does not use the current palette, then return
-    // rearrange pixels using the existing color order in the palette, convert them into half-byte data
+    QVector<QRgb> tmp_palettes;
+    QVector<QVector<int>> pixelIdtable, pixelIdtable_final;
+    QImage tmp_tile8x8map = newTile8x8Graphic.toImage();
+    tmp_palettes.push_back(0xFFFFFF); // white
+    for(int j = 0; j < picheight; ++j)
+    {
+        for(int i = 0; i < picwidth; ++i)
+        {
+            auto iter = std::find_if(tmp_palettes.begin(), tmp_palettes.end(), [&](const QRgb& value) {
+                return value == tmp_tile8x8map.pixelColor(i, j).rgb(); });
+            if(tmp_palettes.end() != iter)
+            {
+                auto id = iter - tmp_palettes.begin();
+                pixelIdtable[i][j] = id;
+            }
+            else
+            {
+                tmp_palettes.push_back(tmp_tile8x8map.pixelColor(i, j).rgb());
+                pixelIdtable[i][j] = tmp_palettes.size() - 1;
+            }
+
+            if(tmp_palettes.size() > 16)
+            {
+                QMessageBox::critical(this, QString("Load Error"), QString("Too many colors, you can only use 15 colors in the graphic!"));
+                return;
+            }
+        }
+    }
+
+    // fullfill tmp_palettes with black if the color number is less than 16
+    auto palettesize = tmp_palettes.size();
+    if(palettesize > 16)
+    {
+        for(int i = palettesize; i < 17; i++)
+            tmp_palettes.push_back(0); // black
+    }
+
+    // check if the graphic uses the current palette, if not, then return
+    // rearrange pixels using the existing color order in the palette
+    for(int k = 0; k < 16; ++k)
+    {
+        auto iter = std::find_if(tmp_palettes.begin(), tmp_palettes.end(), [&](const QRgb& value) {
+            return value == tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId][k] ; });
+        if(tmp_palettes.end() != iter)
+        {
+            auto id = iter - tmp_palettes.begin();
+            for(int j = 0; j < picheight; ++j)
+            {
+                for(int i = 0; i < picwidth; ++i)
+                {
+                    if(pixelIdtable[i][j] == id) pixelIdtable_final[i][j] = k;
+                }
+            }
+        }
+        else
+        {
+            QMessageBox::critical(this, QString("Load Error"), QString("Palette not match!"));
+            return;
+        }
+    }
+
+    // convert them into half-byte data
     // (don't forget to do the half-byte exchange for each byte)
-    // compare (number of the new Tile8x8 + selected Tile8x8 Id) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)
-    // if (number of the new Tile8x8 + selected Tile8x8 Id) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32) then
+    QByteArray tmptile8x8data;
+    tmptile8x8data.resize(picheight * picwidth / 2);
+    for(int i = 0; i < (picheight * picwidth); i+=2)
+    {
+        int rowid = i / picwidth;
+        int colid = i % picwidth;
+        tmptile8x8data[i] = pixelIdtable_final[rowid][colid] + (pixelIdtable_final[rowid][colid + 1] << 4);
+    }
+
+    // find the first blank Tile8x8
+    int k;
+    int newtilenum = 0;
+    for(int i = 0; i < tmptile8x8data.size(); i+=32)
+    {
+        k = 0;
+        while(!tmptile8x8data[i + k]) // tmptile8x8data[i + k] == 0
+        {
+            ++k;
+            if(k > 32) break;
+        }
+        if(k > 32)
+        {
+            newtilenum = i; break;
+        }
+    }
+    if(!newtilenum) // if newtilenum == 0
+    {
+        newtilenum = tmptile8x8data.size() / 32;
+    }
+
+    // compare (number of the new Tile8x8 + selected Tile8x8 Id + 1) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)
+    // if (number of the new Tile8x8 + selected Tile8x8 Id + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32) then
     // tilesetEditParams->newTileset->SetfgGFXlen(number of the new Tile8x8 + selected Tile8x8 Id)
+    // also (number of the new Tile8x8 + selected Tile8x8 Id) should be < (1024 - tilesetEditParams->newTileset->GetbgGFXlen() / 32) or return
     // create new Tile8x8 by using 32-byte length data
-    // overwrite and replace the old TIle8x8 instances down-throught from selected Tile8x8
+    // overwrite and replace the old TIle8x8 instances down-through from selected Tile8x8
+    if((newtilenum + SelectedTile8x8 + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32))
+    {
+        if((newtilenum + SelectedTile8x8 + 1 + tilesetEditParams->newTileset->GetbgGFXlen() / 32 + 1) > 1024)
+        {
+            QMessageBox::critical(this, QString("Load Error"), QString("Too many Tile8x8(s)!"));
+            return;
+        }
+        else
+        {
+            tilesetEditParams->newTileset->SetfgGFXlen(32 * (SelectedTile8x8 - 65 + newtilenum));
+            // TODO
+        }
+    }
+    else
+    {
+        // TODO
+    }
+
     // update all the graphicviews
 }
