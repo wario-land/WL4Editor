@@ -498,6 +498,40 @@ void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int tile16I
 }
 
 /// <summary>
+/// Overwrite One Tile8x8 in Tile8x8 map and update tile16 map at the same time
+/// </summary>
+/// <param name="posId">
+/// The id of a Tile8x8 needs to reset
+/// </param>
+/// <param name="tiledata">
+/// data for generating a new Tile8x8
+/// </param>
+void TilesetEditDialog::OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(int posId, unsigned char *tiledata)
+{
+    LevelComponents::Tile8x8* tile = tilesetEditParams->newTileset->GetTile8x8arrayPtr()[posId];
+    if(tile != tilesetEditParams->newTileset->GetblankTile())
+        delete tile;
+    tile = new LevelComponents::Tile8x8(tiledata, tilesetEditParams->newTileset->GetPalettes());
+
+    // update Tile16 map
+    for(int i = 0; i < 0x300; ++i)
+    {
+        LevelComponents::TileMap16* tile16 = tilesetEditParams->newTileset->GetMap16arrayPtr()[i];
+        for(int j = 0; j < 4; ++j)
+        {
+            LevelComponents::Tile8x8* tmptile = tile16->GetTile8X8(j);
+            if(tmptile->GetIndex() == posId)
+            {
+                int pal = tmptile->GetPaletteIndex();
+                bool xflip = tmptile->GetFlipX();
+                bool yflip = tmptile->GetFlipY();
+                tile16->ResetTile8x8(tile, j, posId, pal, xflip, yflip);
+            }
+        }
+    }
+}
+
+/// <summary>
 /// Set the selected tile8x8 index and update the position of the highlight square.
 /// </summary>
 /// <param name="tileId">
@@ -799,9 +833,10 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     }
 
     // convert them into half-byte data
-    // (don't forget to do the half-byte exchange for each byte)
-    QByteArray tmptile8x8data;
+    // do the half-byte exchange for each byte
+    QByteArray tmptile8x8data, tmptile8x8data_final;
     tmptile8x8data.resize(picheight * picwidth / 2);
+    tmptile8x8data_final.resize(picheight * picwidth / 2);
     for(int i = 0; i < (picheight * picwidth); i+=2)
     {
         int rowid = i / picwidth;
@@ -809,13 +844,29 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         tmptile8x8data[i] = pixelIdtable_final[rowid][colid] + (pixelIdtable_final[rowid][colid + 1] << 4);
     }
 
+    // rearrange byte data to Tile8x8s data
+    int colnum = picwidth / 8;
+    for(int line = 0; line < (picheight / 8); ++line)
+    {
+        for(int k = 0; k < colnum; ++k)
+        {
+            for(int j = 0; j < 8; ++j)
+            {
+                for(int i = 0; i < 4; ++i)
+                {
+                    tmptile8x8data_final[32 * colnum * line + 32 * k + 8 * j + i] = tmptile8x8data[picwidth * (8 * line + j) + 8 * k + i];
+                }
+            }
+        }
+    }
+
     // find the first blank Tile8x8
     int k;
     int newtilenum = 0;
-    for(int i = 0; i < tmptile8x8data.size(); i+=32)
+    for(int i = 0; i < tmptile8x8data_final.size(); i+=32)
     {
         k = 0;
-        while(!tmptile8x8data[i + k]) // tmptile8x8data[i + k] == 0
+        while(!tmptile8x8data_final[i + k]) // tmptile8x8data[i + k] == 0
         {
             ++k;
             if(k > 32) break;
@@ -827,7 +878,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     }
     if(!newtilenum) // if newtilenum == 0
     {
-        newtilenum = tmptile8x8data.size() / 32;
+        newtilenum = tmptile8x8data_final.size() / 32;
     }
 
     // compare (number of the new Tile8x8 + selected Tile8x8 Id + 1) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)
@@ -836,6 +887,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     // also (number of the new Tile8x8 + selected Tile8x8 Id) should be < (1024 - tilesetEditParams->newTileset->GetbgGFXlen() / 32) or return
     // create new Tile8x8 by using 32-byte length data
     // overwrite and replace the old TIle8x8 instances down-through from selected Tile8x8
+    unsigned char* newtmpdata = new unsigned char[32];
     if((newtilenum + SelectedTile8x8 + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32))
     {
         if((newtilenum + SelectedTile8x8 + 1 + tilesetEditParams->newTileset->GetbgGFXlen() / 32 + 1) > 1024)
@@ -846,13 +898,16 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         else
         {
             tilesetEditParams->newTileset->SetfgGFXlen(32 * (SelectedTile8x8 - 65 + newtilenum));
-            // TODO
         }
     }
-    else
+    for(int i = 0; i < newtilenum; ++i)
     {
-        // TODO
+        memcpy(newtmpdata, tmptile8x8data_final.data() + 32 * i, 32);
+        OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(SelectedTile8x8 + i, newtmpdata);
     }
+    delete[] newtmpdata;
 
     // update all the graphicviews
+    ReRenderTile8x8Map(SelectedPaletteId);
+    ReRenderTile16Map();
 }

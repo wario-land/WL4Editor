@@ -96,6 +96,42 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Construct an instance of Tile8x8.
+    /// </summary>
+    /// <remarks>
+    /// This constructor will attempt to match the image data to a cached QImage
+    /// </remarks>
+    /// <param name="data">
+    /// Pointer to the beginning of the tile graphic data.
+    /// </param>
+    /// <param name="_palettes">
+    /// Entire palette for the tileset this tile is a part of.
+    /// </param>
+    Tile8x8::Tile8x8(unsigned char *data, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
+    {
+        // Initialize the QImage data from data
+        for (int i = 0; i < 8; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
+                unsigned char val = data[i * 4 + j];
+                ImageData->setPixel(j * 2, i, (unsigned char) (val & 0xF));
+                ImageData->setPixel(j * 2 + 1, i, (unsigned char) ((val >> 4) & 0xF));
+            }
+        }
+
+#ifndef NOCACHE
+        // Cache the QImage
+        QImageW *cached = GetCachedImageData(ImageData);
+        if (cached != ImageData)
+        {
+            delete ImageData;
+            ImageData = cached;
+        }
+#endif
+    }
+
+    /// <summary>
     /// Deconstruct the Tile8x8 and clean up its instance objects on the heap.
     /// </summary>
     Tile8x8::~Tile8x8()

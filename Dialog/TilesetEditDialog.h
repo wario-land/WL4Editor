@@ -125,6 +125,7 @@ private:
     void ReRenderTile16Map();
     void ReRenderTile8x8Map(int paletteId);
     void UpdateATile8x8ForSelectedTile16InTilesetData(int tile16Id, int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip);
+    void OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(int posId, unsigned char *tiledata);
 };
 
 #endif // TILESETEDITDIALOG_H
