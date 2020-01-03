@@ -594,7 +594,10 @@ void TilesetEditDialog::SetSelectedColorId(int newcolorId)
     ui->label_RGB888Value->setText(QString("RGB888: (") +
                                    QString::number(color.red(), 10) + QString(", ") +
                                    QString::number(color.green(), 10) + QString(", ") +
-                                   QString::number(color.blue(), 10) + QString(")"));
+                                   QString::number(color.blue(), 10) + QString(") RGB555: (") +
+                                   QString::number(color.red() >> 3, 10) + QString(", ") +
+                                   QString::number(color.green() >> 3, 10) + QString(", ") +
+                                   QString::number(color.blue() >> 3, 10) + QString(")"));
 }
 
 /// <summary>
@@ -754,7 +757,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
                                                     tr("Load Tile8x8 map"), QString(""),
                                                     tr("PNG files (*.png)"));
     QPixmap newTile8x8Graphic;
-    if(newTile8x8Graphic.load(fileName))
+    if(!newTile8x8Graphic.load(fileName))
     {
         QMessageBox::critical(this, QString("Load Error"), QString("Cannot load file!"));
         return;
@@ -775,6 +778,8 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     QVector<QVector<int>> pixelIdtable, pixelIdtable_final;
     QImage tmp_tile8x8map = newTile8x8Graphic.toImage();
     tmp_palettes.push_back(0xFFFFFF); // white
+    pixelIdtable.resize(picheight);
+    pixelIdtable_final.resize(picheight);
     for(int j = 0; j < picheight; ++j)
     {
         for(int i = 0; i < picwidth; ++i)
@@ -784,12 +789,14 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
             if(tmp_palettes.end() != iter)
             {
                 auto id = iter - tmp_palettes.begin();
-                pixelIdtable[i][j] = id;
+                pixelIdtable[j].push_back(id);
+                pixelIdtable_final[j].push_back(17); // Init
             }
             else
             {
                 tmp_palettes.push_back(tmp_tile8x8map.pixelColor(i, j).rgb());
-                pixelIdtable[i][j] = tmp_palettes.size() - 1;
+                pixelIdtable[j].push_back(tmp_palettes.size() - 1);
+                pixelIdtable_final[j].push_back(17); // Init
             }
 
             if(tmp_palettes.size() > 16)
@@ -808,7 +815,6 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
             tmp_palettes.push_back(0); // black
     }
 
-    // check if the graphic uses the current palette, if not, then return
     // rearrange pixels using the existing color order in the palette
     for(int k = 0; k < 16; ++k)
     {
@@ -821,14 +827,22 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
             {
                 for(int i = 0; i < picwidth; ++i)
                 {
-                    if(pixelIdtable[i][j] == id) pixelIdtable_final[i][j] = k;
+                    if(pixelIdtable[j][i] == id) pixelIdtable_final[j][i] = k;
                 }
             }
         }
-        else
+    }
+
+    // check if the graphic uses the current palette, if not, then return
+    for(int j = 0; j < picheight; ++j)
+    {
+        for(int i = 0; i < picwidth; ++i)
         {
-            QMessageBox::critical(this, QString("Load Error"), QString("Palette not match!"));
-            return;
+            if(pixelIdtable[j][i] == 17)
+            {
+                QMessageBox::critical(this, QString("Load Error"), QString("Palette not match!"));
+                return;
+            }
         }
     }
 
