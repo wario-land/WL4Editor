@@ -508,10 +508,12 @@ void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int tile16I
 /// </param>
 void TilesetEditDialog::OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(int posId, unsigned char *tiledata)
 {
-    LevelComponents::Tile8x8* tile = tilesetEditParams->newTileset->GetTile8x8arrayPtr()[posId];
+    LevelComponents::Tile8x8** tilearray = tilesetEditParams->newTileset->GetTile8x8arrayPtr();
+    LevelComponents::Tile8x8* tile = tilearray[posId];
     if(tile != tilesetEditParams->newTileset->GetblankTile())
         delete tile;
     tile = new LevelComponents::Tile8x8(tiledata, tilesetEditParams->newTileset->GetPalettes());
+    tilearray[posId] = tile;
 
     // update Tile16 map
     for(int i = 0; i < 0x300; ++i)
