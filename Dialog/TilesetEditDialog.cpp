@@ -1,7 +1,9 @@
 #include "TilesetEditDialog.h"
 #include "ui_TilesetEditDialog.h"
 
+#include <QFile>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QMessageBox>
 
 TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditParams *tilesetEditParam) :
@@ -754,140 +756,126 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         return;
     }
 
-    // Load QPixmap from file
+    // Load gfx bin file
     QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Load Tile8x8 map"), QString(""),
-                                                    tr("PNG files (*.png)"));
-    QPixmap newTile8x8Graphic;
-    if(!newTile8x8Graphic.load(fileName))
-    {
-        QMessageBox::critical(this, QString("Load Error"), QString("Cannot load file!"));
-        return;
-    }
+                                                    tr("Load Tileset bin file"), QString(""),
+                                                    tr("bin files (*.bin)"));
 
-    // test its width and height, if these 2 values are not multiples of 8 then return
-    int picwidth = newTile8x8Graphic.width();
-    int picheight = newTile8x8Graphic.height();
-    if((picwidth & 7) && (picheight & 7))
-    {
-        QMessageBox::critical(this, QString("Load Error"), QString("The width and height of the graphic are not multiples of 8!"));
-        return;
-    }
-
-    // let pure white as transparent, if users want white color to appear in the graphic, then let them use bright colors
-    // test its palette(all the colors appear in the graphic), if there are more than 15 colors in the graphic, then return
-    QVector<QRgb> tmp_palettes;
-    QVector<QVector<int>> pixelIdtable, pixelIdtable_final;
-    QImage tmp_tile8x8map = newTile8x8Graphic.toImage();
-    tmp_palettes.push_back(tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId][0]); // use the current transparent-substitute color
-    pixelIdtable.resize(picheight);
-    pixelIdtable_final.resize(picheight);
-    for(int j = 0; j < picheight; ++j)
-    {
-        for(int i = 0; i < picwidth; ++i)
-        {
-            auto iter = std::find_if(tmp_palettes.begin(), tmp_palettes.end(), [&](const QRgb& value) {
-                return value == tmp_tile8x8map.pixelColor(i, j).rgb(); });
-            if(tmp_palettes.end() != iter)
-            {
-                auto id = iter - tmp_palettes.begin();
-                pixelIdtable[j].push_back(id);
-                pixelIdtable_final[j].push_back(17); // Init
-            }
-            else
-            {
-                tmp_palettes.push_back(tmp_tile8x8map.pixelColor(i, j).rgb());
-                pixelIdtable[j].push_back(tmp_palettes.size() - 1);
-                pixelIdtable_final[j].push_back(17); // Init
-            }
-
-            if(tmp_palettes.size() > 16)
-            {
-                QMessageBox::critical(this, QString("Load Error"), QString("Too many colors, you can only use 15 colors in the graphic!"));
-                return;
-            }
-        }
-    }
-
-    // fullfill tmp_palettes with black if the color number is less than 16
-    auto palettesize = tmp_palettes.size();
-    if(palettesize > 16)
-    {
-        for(int i = palettesize; i < 17; i++)
-            tmp_palettes.push_back(0); // black
-    }
-
-    // rearrange pixels using the existing color order in the palette
-    for(int k = 0; k < 16; ++k)
-    {
-        auto iter = std::find_if(tmp_palettes.begin(), tmp_palettes.end(), [&](const QRgb& value) {
-            return value == tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId][k] ; });
-        if(tmp_palettes.end() != iter)
-        {
-            auto id = iter - tmp_palettes.begin();
-            for(int j = 0; j < picheight; ++j)
-            {
-                for(int i = 0; i < picwidth; ++i)
-                {
-                    if(pixelIdtable[j][i] == id) pixelIdtable_final[j][i] = k;
-                }
-            }
-        }
-    }
-
-    // check if the graphic uses the current palette, if not, then return
-    for(int j = 0; j < picheight; ++j)
-    {
-        for(int i = 0; i < picwidth; ++i)
-        {
-            if(pixelIdtable[j][i] == 17)
-            {
-                QMessageBox::critical(this, QString("Load Error"), QString("Palette not match!"));
-                return;
-            }
-        }
-    }
-
-    // convert them into half-byte data
-    // do the half-byte exchange for each byte
+    // load data into QBytearray
     QByteArray tmptile8x8data, tmptile8x8data_final;
-    tmptile8x8data.resize(picheight * picwidth / 2);
-    tmptile8x8data_final.resize(picheight * picwidth / 2);
-    for(int i = 0; i < (picheight * picwidth); i+=2)
+    QFile gfxbinfile(fileName);
+    if(!gfxbinfile.open(QIODevice::ReadOnly))
     {
-        int rowid = i / picwidth;
-        int colid = i % picwidth;
-        tmptile8x8data[i] = pixelIdtable_final[rowid][colid] + (pixelIdtable_final[rowid][colid + 1] << 4);
+        QMessageBox::critical(this, QString("Error"), QString("Cannot open file!"));
+        return;
+    }
+    tmptile8x8data = gfxbinfile.readAll();
+    tmptile8x8data_final = gfxbinfile.readAll(); // Init
+    gfxbinfile.close();
+
+    // Check size
+    if(tmptile8x8data.size() % 8)
+    {
+        QMessageBox::critical(this, QString("Error"), QString("Illegal file size!"));
+        return;
     }
 
-    // rearrange byte data to Tile8x8s data
-    int colnum = picwidth / 8;
-    for(int line = 0; line < (picheight / 8); ++line)
+    // Load palette data from bin file
+    fileName = QFileDialog::getOpenFileName(this,
+                                            tr("Load palette bin file"), QString(""),
+                                            tr("bin files (*.bin)"));
+    QByteArray tmppalettedata;
+    QFile palbinfile(fileName);
+    if(!palbinfile.open(QIODevice::ReadOnly))
     {
-        for(int k = 0; k < colnum; ++k)
+        QMessageBox::critical(this, QString("Error"), QString("Cannot open file!"));
+        return;
+    }
+    tmppalettedata = palbinfile.readAll();
+    palbinfile.close();
+
+    QVector<QRgb> tmppalette;
+    unsigned short *tmppaldata = new unsigned short[16];
+    memcpy(tmppaldata, tmppalettedata.data(), 32);
+
+    // Get transparent color id in the palette
+    bool ok;
+    int transparentcolorId = QInputDialog::getInt(this, tr("Dialog"),
+                                         tr("Input the transparent-substitute color id in the palette bin file:"), 0,
+                                         0, 15, 1, &ok);
+    if (!ok)
+        return;
+
+    // transparent-substitute color replacement and load palette
+    tmppaldata[transparentcolorId] = 0;
+
+    ROMUtils::LoadPalette(&tmppalette, tmppaldata);
+    delete[] tmppaldata;
+
+    // half-byte exchange not needed
+    // reset bytearray according to the palette bin file
+    for(int i = 0; i != 16; ++i)
+    {
+        char count = 1; // skip transparent-substitute color
+        while(1)
         {
-            for(int j = 0; j < 8; ++j)
+            if(tmppalette[i] == tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId][count])
             {
-                for(int i = 0; i < 4; ++i)
+                break;
+            }
+            ++count;
+            if(count == 16)
+            {
+                if((tmppalette[i] != 0xFF000000) && (tmppalette[i] != 0xFFFFFFFF) && (tmppalette[i] != 0))
                 {
-                    tmptile8x8data_final[32 * colnum * line + 32 * k + 8 * j + i] = tmptile8x8data[picwidth * (8 * line + j) + 8 * k + i];
+                    QMessageBox::critical(this, QString("Error"), QString("Palette not suitable!"));
+                    return;
+                }
+                else if(tmppalette[i] == 0xFF000000)
+                {
+                    count = 15; // replace 15 with std::find_if
+                    break;
+                }
+                else if(tmppalette[i] == 0xFFFFFFFF)
+                {
+                    count = 0; // replace 0 with std::find_if
+                    break;
+                }
+                else
+                {
+                    count = 0;
+                    break;
                 }
             }
+        }
+        if(transparentcolorId == i)
+        {
+            count = 0;
+        }
+        for(int j = 0; j < tmptile8x8data.size(); ++j) // TODO: bugfix here
+        {
+            char tmpchr = tmptile8x8data[j];
+            char l4b, h4b;
+            h4b = (tmpchr >> 4) & 0xF;
+            l4b = tmpchr & 0xF;
+            if(l4b == i) l4b = count;
+            if(h4b == i) h4b = count;
+            tmptile8x8data_final[j] = (h4b << 4) | l4b;
         }
     }
 
     // find the first blank Tile8x8
     int k;
     int newtilenum = 0;
-    for(int i = 0; i < tmptile8x8data_final.size(); i+=32)
+    for(int i = 0; i < (tmptile8x8data_final.size() / 32); ++i)
     {
         k = 0;
-        while(!tmptile8x8data_final[i + k]) // tmptile8x8data[i + k] == 0
+        while((tmptile8x8data.at(i * 32 + k) == 0x11) || (tmptile8x8data.at(i * 32 + k) == 0x22)) // tmptile8x8data[i * 32 + k] == 0x11 or 0x22
         {
             ++k;
-            if(k > 32) break;
+            if(k == 16) break;
         }
-        if(k > 32)
+        if(k == 16)
         {
             newtilenum = i; break;
         }
@@ -900,7 +888,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     // compare (number of the new Tile8x8 + selected Tile8x8 Id + 1) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)
     // if (number of the new Tile8x8 + selected Tile8x8 Id + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32) then
     // tilesetEditParams->newTileset->SetfgGFXlen(number of the new Tile8x8 + selected Tile8x8 Id)
-    // also (number of the new Tile8x8 + selected Tile8x8 Id) should be < (1024 - tilesetEditParams->newTileset->GetbgGFXlen() / 32) or return
+    // also (number of the new Tile8x8 + selected Tile8x8 Id) should be < (0x600 - tilesetEditParams->newTileset->GetbgGFXlen() / 32) or return
     // create new Tile8x8 by using 32-byte length data
     // overwrite and replace the old TIle8x8 instances down-through from selected Tile8x8
     unsigned char* newtmpdata = new unsigned char[32];

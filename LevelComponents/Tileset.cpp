@@ -32,18 +32,9 @@ namespace LevelComponents
         paletteAddress = ROMUtils::PointerFromData(tilesetPtr + 8);
         for (int i = 0; i < 16; ++i)
         {
-            // First color is transparent
-            palettes[i].push_back(0);
             int subPalettePtr = paletteAddress + i * 32;
-            for (int j = 1; j < 16; ++j)
-            {
-                unsigned short color555 = *(unsigned short *) (ROMUtils::CurrentFile + subPalettePtr + j * 2);
-                int r = ((color555 << 3) & 0xF8) | ((color555 >> 2) & 3);
-                int g = ((color555 >> 2) & 0xF8) | ((color555 >> 7) & 3);
-                int b = ((color555 >> 7) & 0xF8) | ((color555 >> 13) & 3);
-                int a = 0xFF;
-                palettes[i].push_back(QColor(r, g, b, a).rgba());
-            }
+            unsigned short *tmpptr = (unsigned short*) (ROMUtils::CurrentFile + subPalettePtr);
+            ROMUtils::LoadPalette(&palettes[i], tmpptr);
         }
 
         // Initialize the 8x8 tiles by setting all the tiles to blank tiles

@@ -52,6 +52,7 @@ namespace ROMUtils
     // Global functions
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
+    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData,
                                   unsigned char **OutputCompressedData);

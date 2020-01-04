@@ -611,4 +611,29 @@ namespace ROMUtils
         }
         return success;
     }
+
+    /// <summary>
+    /// Load a palette, 16 colors, from a pointer.
+    /// </summary>
+    /// <param name="palette">
+    /// Pointer of palette instance provided for palette loading.
+    /// </param>
+    /// <param name="dataptr">
+    /// data pointer which keeps RGB55 palette data.
+    /// </param>
+    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr)
+    {
+        // First color is transparent
+        palette->push_back(0);
+        for (int j = 1; j < 16; ++j)
+        {
+            unsigned short color555 = *(dataptr + j);
+            int r = ((color555 << 3) & 0xF8) | ((color555 >> 2) & 7);
+            int g = ((color555 >> 2) & 0xF8) | ((color555 >> 7) & 7);
+            int b = ((color555 >> 7) & 0xF8) | ((color555 >> 12) & 7);
+            int a = 0xFF;
+            palette->push_back(QColor(r, g, b, a).rgba());
+        }
+    }
+
 } // namespace ROMUtils
