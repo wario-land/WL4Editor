@@ -779,7 +779,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     QVector<QRgb> tmp_palettes;
     QVector<QVector<int>> pixelIdtable, pixelIdtable_final;
     QImage tmp_tile8x8map = newTile8x8Graphic.toImage();
-    tmp_palettes.push_back(0xFFFFFF); // white
+    tmp_palettes.push_back(tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId][0]); // use the current transparent-substitute color
     pixelIdtable.resize(picheight);
     pixelIdtable_final.resize(picheight);
     for(int j = 0; j < picheight; ++j)
@@ -906,9 +906,9 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     unsigned char* newtmpdata = new unsigned char[32];
     if((newtilenum + SelectedTile8x8 + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32))
     {
-        if((newtilenum + SelectedTile8x8 + 1 + tilesetEditParams->newTileset->GetbgGFXlen() / 32 + 1) > 1024)
+        if((newtilenum + SelectedTile8x8 + 1 + tilesetEditParams->newTileset->GetbgGFXlen() / 32 + 1) > 0x600)
         {
-            QMessageBox::critical(this, QString("Load Error"), QString("Too many Tile8x8(s)!"));
+            QMessageBox::critical(this, QString("Load Error"), QString("Cannot overwrite background Tiles!"));
             return;
         }
         else
@@ -925,5 +925,6 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 
     // update all the graphicviews
     ReRenderTile8x8Map(SelectedPaletteId);
+    SetSelectedTile8x8(SelectedTile8x8, false);
     ReRenderTile16Map();
 }
