@@ -407,6 +407,13 @@ namespace ROMUtils
                 unsigned short *AnimatedTileInfoTable = singletonTilesets[i]->GetAnimatedTileData();
                 memcpy(TempFile + i * 32 + WL4Constants::AnimatedTileIdTableCase2, (unsigned char*)AnimatedTileInfoTable, 32);
 
+                // Reset size_of bgGFXLen and fgGBXLen
+                int tilesetPtr = singletonTilesets[i]->getTilesetPtr();
+                int *fgGFXLenaddr = (int *) (TempFile + tilesetPtr + 4);
+                *fgGFXLenaddr = singletonTilesets[i]->GetfgGFXlen();
+                int *bgGFXLenaddr = (int *) (TempFile + tilesetPtr + 16);
+                *bgGFXLenaddr = singletonTilesets[i]->GetbgGFXlen();
+
                 singletonTilesets[i]->SetChanged(false);
             }
         }

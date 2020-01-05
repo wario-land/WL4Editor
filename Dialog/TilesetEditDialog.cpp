@@ -807,16 +807,17 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         return;
 
     // transparent-substitute color replacement and load palette
-    tmppaldata[transparentcolorId] = 0;
-
+    tmppaldata[transparentcolorId] = 0x7FFF;
     ROMUtils::LoadPalette(&tmppalette, tmppaldata);
     delete[] tmppaldata;
+    tmppalette[0] = 0xFF000000;
+    tmppalette[transparentcolorId] = 0;
 
     // half-byte exchange not needed
     // reset bytearray according to the palette bin file
     for(int i = 0; i != 16; ++i)
     {
-        char count = 1; // skip transparent-substitute color
+        char count = 0;
         while(1)
         {
             if(tmppalette[i] == tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId][count])
@@ -831,17 +832,31 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
                     QMessageBox::critical(this, QString("Error"), QString("Palette not suitable!"));
                     return;
                 }
-                else if(tmppalette[i] == 0xFF000000)
+                else if(tmppalette[i] == 0xFF000000) // black
                 {
-                    count = 15; // replace 15 with std::find_if
+                    auto iter = std::find_if(tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId].begin(),
+                                             tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId].end(), [&](const QRgb& value) {
+                                    return value == tmppalette[i]; });
+                    if (tmppalette.end() != iter) {
+                        count = iter - tmppalette.begin();
+                    } else {
+                    count = 0;
+                    }
                     break;
                 }
-                else if(tmppalette[i] == 0xFFFFFFFF)
+                else if(tmppalette[i] == 0xFFFFFFFF) // white
                 {
-                    count = 0; // replace 0 with std::find_if
+                    auto iter = std::find_if(tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId].begin(),
+                                             tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId].end(), [&](const QRgb& value) {
+                                    return value == tmppalette[i]; });
+                    if (tmppalette.end() != iter) {
+                        count = iter - tmppalette.begin();
+                    } else {
+                    count = 0;
+                    }
                     break;
                 }
-                else
+                else if(tmppalette[i] == 0)
                 {
                     count = 0;
                     break;
@@ -858,8 +873,16 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
             char l4b, h4b;
             h4b = (tmpchr >> 4) & 0xF;
             l4b = tmpchr & 0xF;
-            if(l4b == i) l4b = count;
-            if(h4b == i) h4b = count;
+            if (l4b == i) {
+                l4b = count;
+            } else {
+                l4b = tmptile8x8data_final[j] & 0xF;
+            }
+            if (h4b == i) {
+                h4b = count;
+            } else {
+                h4b = (tmptile8x8data_final[j] >> 4) & 0xF;
+            }
             tmptile8x8data_final[j] = (h4b << 4) | l4b;
         }
     }

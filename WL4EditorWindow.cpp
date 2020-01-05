@@ -138,16 +138,6 @@ void WL4EditorWindow::OpenROM()
     if (!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?")))
         return;
 
-    if (CurrentLevel)
-    {
-        delete CurrentLevel;
-        // Decomstruct all Tileset singletons
-        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
-        {
-            delete ROMUtils::singletonTilesets[i];
-        }
-    }
-
     // Select a ROM file to open
     QString qFilePath =
         QFileDialog::getOpenFileName(this, tr("Open ROM file"), dialogInitialPath, tr("GBA ROM files (*.gba)"));
@@ -162,6 +152,17 @@ void WL4EditorWindow::OpenROM()
     {
         QMessageBox::critical(nullptr, QString("Load Error"), QString("You may load a wrong ROM!"));
         return;
+    }
+
+    // Clean-up
+    if (CurrentLevel)
+    {
+        delete CurrentLevel;
+        // Decomstruct all Tileset singletons
+        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
+        {
+            delete ROMUtils::singletonTilesets[i];
+        }
     }
 
     // Set the program title
