@@ -1,4 +1,5 @@
 beta-10:
+- Support drag & drop for door and entity, now double-click open the door dialog instead of left-click
 - Add Tileset editor dialog
 - Adjust the EditMode dock widget, move ExtraLayers_GroupBox out from visibleLayersGroupBox 
 - Fix some entities rendering glitches caused by wrong tile loading
