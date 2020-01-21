@@ -63,6 +63,82 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     bool b2 = door->GetX2() >= (int) tileX;
                     bool b3 = door->GetY1() <= (int) tileY;
                     bool b4 = door->GetY2() >= (int) tileY;
+                    if (b1 && b2 && b3 && b4) {
+
+                        // If the door that was clicked was not already selected, then select it
+                        SelectedDoorID = i;
+                        // Let the Entityset change with the last selected Door
+                        singleton->GetCurrentRoom()->SetCurrentEntitySet(
+                            singleton->GetCurrentRoom()->GetDoor(i)->GetEntitySetID());
+                        singleton->ResetEntitySetDockWidget();
+                        holdingEntityOrDoor=true;
+                        objectInitialX=door->GetX1();
+                        objectInitialY=door->GetY1();
+                        goto DOOR_FOUND;
+                    }
+                }
+                SelectedDoorID = -1;
+            DOOR_FOUND:;
+            }
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
+        }
+        else if (editMode == Ui::EntityEditMode) // select or add an Entity
+        {
+            SelectedEntityID = room->FindEntity(tileX, tileY);
+            if (SelectedEntityID == -1)
+            {
+                // Add the new entity
+                bool success =
+                    room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
+                assert(success /* Failure to add entity */); // TODO: Show information if failure
+                int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                room->SetEntityListDirty(difficulty, true);
+                singleton->SetUnsavedChanges(true);
+            }
+            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, SelectedEntityID);
+            holdingEntityOrDoor=true;
+            objectInitialX=tileX;
+            objectInitialY=tileY;
+        }
+    }
+}
+
+
+/// <summary>
+/// This function will be called when the graphic view in the main window is double clicked
+/// For now it used on door to open the dialog
+/// <param name="event">
+/// The mouse click event.
+/// </param>
+void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
+    if (!singleton->FirstROMIsLoaded())
+        return;
+
+    // Get the ID of the tile that was clicked
+    unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
+    unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
+    unsigned int tileX = X / 32;
+    unsigned int tileY = Y / 32;
+
+    // Different cases for different editting mode
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    if (tileX < room->GetWidth() && tileY < room->GetHeight())
+    {
+        enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
+
+        if (editMode == Ui::DoorEditMode) // select a door
+        {
+            unsigned int doorCount = room->CountDoors();
+            if (doorCount)
+            {
+                // Select a Door if possible
+                for (unsigned int i = 0; i < doorCount; i++)
+                {
+                    LevelComponents::Door *door = room->GetDoor(i);
+                    bool b1 = door->GetX1() <= (int) tileX;
+                    bool b2 = door->GetX2() >= (int) tileX;
+                    bool b3 = door->GetY1() <= (int) tileY;
+                    bool b4 = door->GetY2() >= (int) tileY;
                     if (b1 && b2 && b3 && b4)
                     {
                         // Door "i" was selected
@@ -94,30 +170,13 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     }
                 }
                 SelectedDoorID = -1;
-            DOOR_FOUND:;
+                DOOR_FOUND:;
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
         }
-        else if (editMode == Ui::EntityEditMode) // select or add an Entity
-        {
-            SelectedEntityID = room->FindEntity(tileX, tileY);
-            if (SelectedEntityID == -1)
-            {
-                // Add the new entity
-                bool success =
-                    room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
-                assert(success /* Failure to add entity */); // TODO: Show information if failure
-                int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
-                room->SetEntityListDirty(difficulty, true);
-                singleton->SetUnsavedChanges(true);
-            }
-            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, SelectedEntityID);
-            holdingEntityOrDoor=true;
-            objectInitialX=tileX;
-            objectInitialY=tileY;
-        }
     }
 }
+
 
 /// <summary>
 /// this function will be called when the graphic view in the main window is clicked and then mouse start moving.

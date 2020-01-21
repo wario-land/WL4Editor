@@ -13,6 +13,7 @@ class MainGraphicsView : public QGraphicsView
 public:
     MainGraphicsView(QWidget *param) : QGraphicsView(param) {}
     void mousePressEvent(QMouseEvent *event);
+    void mouseDoubleClickEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);

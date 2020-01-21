@@ -12,5 +12,3 @@ And also, our Discord community will be the first place for exchanging and shari
 
 * Discord https://discord.gg/EQ6JhvP
 * Level sharing website : https://weirdprogramming.github.io/WarioLand4HackRepository/
-
-(to ssp uncomment the remove section in tileset.cpp to test the save event table feature (you should see a change at 58DDBC in the ROM file))
