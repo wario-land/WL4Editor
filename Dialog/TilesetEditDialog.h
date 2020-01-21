@@ -31,7 +31,7 @@ namespace DialogParams
                 currentTilesetIndex = room->GetTilesetID();
                 newTileset = new LevelComponents::Tileset(room->GetTileset(), room->GetTilesetID());
         }
-        ~TilesetEditParams(){};
+        ~TilesetEditParams() {}
     };
 }
 

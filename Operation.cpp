@@ -82,7 +82,24 @@ void PerformOperation(struct OperationParams *operation)
                 }
             }
         }
+    }
+    if (operation->TilesetChange)
+    {
+        // Update Rooms's Tileset in CurrentLevel
+        int roomnum = singleton->GetCurrentLevel()->GetRooms().size();
+        int tilesetId = operation->newTilesetEditParams->currentTilesetIndex;
+        ROMUtils::singletonTilesets[tilesetId] = operation->newTilesetEditParams->newTileset;
+        for(int i = 0; i < roomnum; ++i)
+        {
+            if(singleton->GetCurrentLevel()->GetRooms()[i]->GetTilesetID() == tilesetId)
+            {
+                singleton->GetCurrentLevel()->GetRooms()[i]->SetTileset(operation->newTilesetEditParams->newTileset, tilesetId);
+            }
+        }
 
+        singleton->GetTile16DockWidgetPtr()->SetTileset(operation->newTilesetEditParams->currentTilesetIndex);
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
     }
 }
 
@@ -119,7 +136,6 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->SetEditModeDockWidgetLayerEditability();
         singleton->SetEditModeWidgetDifficultyRadioBox(1);
         singleton->ResetEntitySetDockWidget();
-        singleton->SetUnsavedChanges(true);
     }
     if (operation->objectPositionChange)
     {
@@ -157,11 +173,26 @@ void BackTrackOperation(struct OperationParams *operation)
                     singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
                     int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
                     singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
-                    singleton->SetUnsavedChanges(true);
                 }
             }
         }
+    }
+    if (operation->TilesetChange)
+    {
+        // Update Rooms's Tileset in CurrentLevel
+        int roomnum = singleton->GetCurrentLevel()->GetRooms().size();
+        int tilesetId = operation->lastTilesetEditParams->currentTilesetIndex;
+        ROMUtils::singletonTilesets[tilesetId] = operation->lastTilesetEditParams->newTileset;
+        for(int i = 0; i < roomnum; ++i)
+        {
+            if(singleton->GetCurrentLevel()->GetRooms()[i]->GetTilesetID() == tilesetId)
+            {
+                singleton->GetCurrentLevel()->GetRooms()[i]->SetTileset(operation->lastTilesetEditParams->newTileset, tilesetId);
+            }
+        }
 
+        singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
+        singleton->RenderScreenFull();
     }
 }
 

@@ -999,10 +999,7 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         operation->roomConfigChange = true;
         operation->lastRoomConfigParams = new DialogParams::RoomConfigParams(*_currentRoomConfigParams);
         operation->newRoomConfigParams = new DialogParams::RoomConfigParams(dialog.GetConfigParams());
-        ExecuteOperation(operation); // Set change flag is done in it
-
-        // Delete _currentRoomConfigParams
-        delete _currentRoomConfigParams;
+        ExecuteOperation(operation); // Set UnsavedChanges bool inside
     }
 }
 
@@ -1020,31 +1017,22 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
     if (dialog.exec() == QDialog::Accepted)
     {
         int currentTilesetId = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
-        delete ROMUtils::singletonTilesets[currentTilesetId];
-        ROMUtils::singletonTilesets[currentTilesetId] = _currentRoomTilesetEditParams->newTileset;
+        DialogParams::TilesetEditParams *_oldRoomTilesetEditParams = new DialogParams::TilesetEditParams();
+        _oldRoomTilesetEditParams->currentTilesetIndex = currentTilesetId;
+        _oldRoomTilesetEditParams->newTileset = ROMUtils::singletonTilesets[currentTilesetId];
         _currentRoomTilesetEditParams->newTileset->SetChanged(true);
 
-        // Update Rooms's Tileset in CurrentLevel
-        int roomnum = CurrentLevel->GetRooms().size();
-        for(int i = 0; i < roomnum; ++i)
-        {
-            if(CurrentLevel->GetRooms()[i]->GetTilesetID() == currentTilesetId)
-            {
-                CurrentLevel->GetRooms()[i]->SetTileset(_currentRoomTilesetEditParams->newTileset, currentTilesetId);
-            }
-        }
-
-        // Update current room rendering
-        RenderScreenFull();
-
-        // Update Tile16Dockwidget
-        Tile16SelecterWidget->SetTileset(currentTilesetId);
-
-        // Set bool UnsavedChanges
-        UnsavedChanges = true;
-
-        // Push Operation
-        // TODO
+        // Execute Operation and add changes into the operation history
+        OperationParams *operation = new OperationParams;
+        operation->type = ChangeTilesetOperation;
+        operation->TilesetChange = true;
+        operation->lastTilesetEditParams = _oldRoomTilesetEditParams;
+        operation->newTilesetEditParams = _currentRoomTilesetEditParams;
+        ExecuteOperation(operation); // Set UnsavedChanges bool inside
+    }
+    else
+    {
+        delete _currentRoomTilesetEditParams->newTileset;
     }
 }
 

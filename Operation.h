@@ -2,6 +2,7 @@
 #define OPERATION_H
 
 #include "Dialog/RoomConfigDialog.h"
+#include "Dialog/TilesetEditDialog.h"
 #include "LevelComponents/Tile.h"
 
 // Enumerate the type of operations that can be performed and undone
@@ -9,7 +10,8 @@ enum OperationType
 {
     ChangeTileOperation,
     ChangeRoomConfigOperation,
-    ObjectMoveOperation
+    ObjectMoveOperation,
+    ChangeTilesetOperation,
 };
 
 // The parameters specific to a tile change operation
@@ -73,12 +75,20 @@ struct OperationParams
     ObjectMoveParams *objectMoveParams;
     DialogParams::RoomConfigParams *lastRoomConfigParams;
     DialogParams::RoomConfigParams *newRoomConfigParams;
+    DialogParams::TilesetEditParams *lastTilesetEditParams;
+    DialogParams::TilesetEditParams *newTilesetEditParams;
     bool tileChange;
     bool roomConfigChange;
     bool objectPositionChange;
+    bool TilesetChange;
 
     OperationParams() :
-            lastRoomConfigParams(nullptr), newRoomConfigParams(nullptr), tileChange(false), roomConfigChange(false), objectPositionChange(false)
+            lastRoomConfigParams(nullptr),
+            newRoomConfigParams(nullptr),
+            tileChange(false),
+            roomConfigChange(false),
+            objectPositionChange(false),
+            TilesetChange(false)
     {}
 
     // Clean up the struct when it is deconstructed
@@ -98,6 +108,13 @@ struct OperationParams
                 delete lastRoomConfigParams;
             if (newRoomConfigParams)
                 delete newRoomConfigParams;
+        }
+        if (TilesetChange)
+        {
+            if (lastTilesetEditParams)
+                delete lastTilesetEditParams;
+            if (newTilesetEditParams)
+                delete newTilesetEditParams;
         }
     }
 };
