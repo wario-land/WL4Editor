@@ -114,7 +114,10 @@ struct OperationParams
             if (lastTilesetEditParams)
                 delete lastTilesetEditParams;
             if (newTilesetEditParams)
+            {
+                delete newTilesetEditParams->newTileset;
                 delete newTilesetEditParams;
+            }
         }
     }
 };
