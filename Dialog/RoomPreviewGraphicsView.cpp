@@ -123,7 +123,7 @@ void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tile
     if (tileset != dataPointers[0])
     {
         dataPointers[0] = tileset;
-        QPixmap tilesetPixmap = tileset->Render(3);
+        QPixmap tilesetPixmap = tileset->RenderAllTile16(3);
         pixmapItems[0]->setPixmap(tilesetPixmap);
     }
 

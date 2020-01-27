@@ -11,6 +11,7 @@
 #include "Dialog/DoorConfigDialog.h"
 #include "Dialog/LevelConfigDialog.h"
 #include "Dialog/RoomConfigDialog.h"
+#include "Dialog/TilesetEditDialog.h"
 #include "DockWidget/CameraControlDockWidget.h"
 #include "DockWidget/EditModeDockWidget.h"
 #include "DockWidget/EntitySetDockWidget.h"
@@ -116,6 +117,7 @@ private slots:
     void on_action_clear_Hard_triggered();
     void on_action_clear_S_Hard_triggered();
     void on_actionSave_Room_s_graphic_triggered();
+    void on_actionEdit_Tileset_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

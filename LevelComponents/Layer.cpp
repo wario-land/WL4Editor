@@ -170,7 +170,7 @@ namespace LevelComponents
             tiles = std::vector<Tile *>(Width * Height);
 
             // For 16x16 tiles, just copy the tiles from the map16
-            TileMap16 **map16 = tileset->GetMap16Data();
+            TileMap16 **map16 = tileset->GetMap16arrayPtr();
             for (int i = 0; i < Width * Height; ++i)
             {
                 tiles[i] = map16[LayerData[i]];
@@ -185,7 +185,7 @@ namespace LevelComponents
             tiles = std::vector<Tile *>(Width * Height);
 
             // For 8x8 tiles, we must use the copy constructor and set each tile's properties
-            Tile8x8 **tile8x8 = tileset->GetTile8x8Data();
+            Tile8x8 **tile8x8 = tileset->GetTile8x8arrayPtr();
             for (int i = 0; i < Width * Height; ++i)
             {
                 unsigned short tileData = LayerData[i];
@@ -239,12 +239,12 @@ namespace LevelComponents
         if (MappingType == LayerMap16)
         {
             // If map16 type, then just copy the map16 tile object from the tileset
-            tiles[index] = tileset->GetMap16Data()[TileID];
+            tiles[index] = tileset->GetMap16arrayPtr()[TileID];
         }
         else if (MappingType == LayerTile8x8)
         {
             // If tile8x8 type, then new Tile8x8 objects must be constructed from data
-            Tile8x8 *newTile = new Tile8x8(tileset->GetTile8x8Data()[0x200 + (TileID & 0x3FF)]);
+            Tile8x8 *newTile = new Tile8x8(tileset->GetTile8x8arrayPtr()[0x200 + (TileID & 0x3FF)]);
             newTile->SetFlipX((TileID & (1 << 10)) != 0);
             newTile->SetFlipY((TileID & (1 << 11)) != 0);
             newTile->SetPaletteIndex((TileID >> 12) & 0xF);

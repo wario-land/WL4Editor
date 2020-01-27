@@ -18,7 +18,7 @@ static unsigned int operationIndex[16];
 /// <param name="operation">
 /// The operation to perform.
 /// </param>
-static void PerformOperation(struct OperationParams *operation)
+void PerformOperation(struct OperationParams *operation)
 {
     LevelComponents::Room *room;
     if (operation->tileChange)
@@ -44,6 +44,63 @@ static void PerformOperation(struct OperationParams *operation)
         singleton->ResetEntitySetDockWidget();
         singleton->SetUnsavedChanges(true);
     }
+    if (operation->objectPositionChange)
+    {
+        struct ObjectMoveParams *om=operation->objectMoveParams;
+        /*om->previousPositionX = pX;
+        om->previousPositionY = pY;*/
+        if (om->type == ObjectMoveParams::DOOR_TYPE) {
+            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+            LevelComponents::Door *selectedDoor = currentRoom->GetDoor(om->objectID);
+
+            // Calculating the deltas
+            int px1 = selectedDoor->GetX1();
+            int py1 = selectedDoor->GetY1();
+            int deltaX = selectedDoor->GetX2()-px1;
+            int deltaY = selectedDoor->GetY2()-py1;
+
+            // If the door exists and if it is still in the room
+            if (om->objectID != -1 && selectedDoor) {
+                if (currentRoom->IsNewDoorPositionInsideRoom(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY+deltaY))
+                {
+                    selectedDoor->SetDoorPlace(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY+deltaY);
+                    singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
+                }
+            }
+        } else if (om->type == ObjectMoveParams::ENTITY_TYPE) {
+            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+
+            // If the entity exists
+            if (om->objectID != -1) {
+                if (currentRoom->IsNewEntityPositionInsideRoom(om->nextPositionX, om->nextPositionY))
+                {
+                    currentRoom->SetEntityPosition(om->nextPositionX, om->nextPositionY, om->objectID);
+                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                    singleton->SetUnsavedChanges(true);
+                }
+            }
+        }
+    }
+    if (operation->TilesetChange)
+    {
+        // Update Rooms's Tileset in CurrentLevel
+        int roomnum = singleton->GetCurrentLevel()->GetRooms().size();
+        int tilesetId = operation->newTilesetEditParams->currentTilesetIndex;
+        ROMUtils::singletonTilesets[tilesetId] = operation->newTilesetEditParams->newTileset;
+        for(int i = 0; i < roomnum; ++i)
+        {
+            if(singleton->GetCurrentLevel()->GetRooms()[i]->GetTilesetID() == tilesetId)
+            {
+                singleton->GetCurrentLevel()->GetRooms()[i]->SetTileset(operation->newTilesetEditParams->newTileset, tilesetId);
+            }
+        }
+
+        singleton->GetTile16DockWidgetPtr()->SetTileset(operation->newTilesetEditParams->currentTilesetIndex);
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
+    }
 }
 
 /// <summary>
@@ -55,7 +112,7 @@ static void PerformOperation(struct OperationParams *operation)
 /// <param name="operation">
 /// The operation to backtrack.
 /// </param>
-static void BackTrackOperation(struct OperationParams *operation)
+void BackTrackOperation(struct OperationParams *operation)
 {
     LevelComponents::Room *room;
     if (operation->tileChange)
@@ -79,7 +136,63 @@ static void BackTrackOperation(struct OperationParams *operation)
         singleton->SetEditModeDockWidgetLayerEditability();
         singleton->SetEditModeWidgetDifficultyRadioBox(1);
         singleton->ResetEntitySetDockWidget();
-        singleton->SetUnsavedChanges(true);
+    }
+    if (operation->objectPositionChange)
+    {
+        struct ObjectMoveParams *om=operation->objectMoveParams;
+        /*om->previousPositionX = pX;
+        om->previousPositionY = pY;*/
+        if (om->type == ObjectMoveParams::DOOR_TYPE) {
+            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+            LevelComponents::Door *selectedDoor = currentRoom->GetDoor(om->objectID);
+
+            // Calculating the deltas
+            int px1 = selectedDoor->GetX1();
+            int py1 = selectedDoor->GetY1();
+            int deltaX = selectedDoor->GetX2()-px1;
+            int deltaY = selectedDoor->GetY2()-py1;
+
+            // If the door exists and if it is still in the room
+            if (om->objectID != -1)
+            {
+                if (currentRoom->IsNewDoorPositionInsideRoom(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY+deltaY))
+                {
+                    selectedDoor->SetDoorPlace(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY+deltaY);
+                    singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
+                }
+            }
+        } else if (om->type == ObjectMoveParams::ENTITY_TYPE) {
+            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+
+            // If the entity exists and if it is still in the room
+            if (om->objectID != -1)
+            {
+                if (currentRoom->IsNewEntityPositionInsideRoom(om->previousPositionX, om->previousPositionY))
+                {
+                    currentRoom->SetEntityPosition(om->previousPositionX, om->previousPositionY, om->objectID);
+                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                }
+            }
+        }
+    }
+    if (operation->TilesetChange)
+    {
+        // Update Rooms's Tileset in CurrentLevel
+        int roomnum = singleton->GetCurrentLevel()->GetRooms().size();
+        int tilesetId = operation->lastTilesetEditParams->currentTilesetIndex;
+        ROMUtils::singletonTilesets[tilesetId] = operation->lastTilesetEditParams->newTileset;
+        for(int i = 0; i < roomnum; ++i)
+        {
+            if(singleton->GetCurrentLevel()->GetRooms()[i]->GetTilesetID() == tilesetId)
+            {
+                singleton->GetCurrentLevel()->GetRooms()[i]->SetTileset(operation->lastTilesetEditParams->newTileset, tilesetId);
+            }
+        }
+
+        singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
+        singleton->RenderScreenFull();
     }
 }
 

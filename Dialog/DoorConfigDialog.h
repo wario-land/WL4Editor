@@ -235,7 +235,7 @@ public:
         "0x78 Toy Car 10 points",
         "0x79 Onomī",
         "0x7A Cat in boss corridor",
-        "0x7B PET Bottom",
+        "0x7B PET Bottle",
         "0x7C Pearl Bird",
         "0x7D Golden Diva",
         "0x7E Falling Chandelier",

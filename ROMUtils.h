@@ -8,24 +8,10 @@
 #include <vector>
 
 #include "WL4Constants.h"
+#include "LevelComponents/Tileset.h"
 
 namespace ROMUtils
 {
-    // Global variables
-    extern unsigned char *CurrentFile;
-    extern unsigned int CurrentFileSize;
-    extern QString ROMFilePath;
-    extern unsigned int SaveDataIndex;
-
-    // Global functions
-    unsigned int IntFromData(int address);
-    unsigned int PointerFromData(int address);
-    unsigned char *LayerRLEDecompress(int address, size_t outputSize);
-    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData,
-                                  unsigned char **OutputCompressedData);
-    int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
-    bool SaveFile(QString fileName);
-
     enum SaveDataChunkType
     {
         InvalidationChunk = '\x00',
@@ -36,6 +22,11 @@ namespace ROMUtils
         EntityListChunk = '\x05',
         CameraPointerTableType = '\x06',
         CameraBoundaryChunkType = '\x07',
+        TilesetForegroundTile8x8DataChunkType = '\x0A',
+        TilesetMap16EventTableChunkType = '\x0B',
+        TilesetMap16TerrainChunkType = '\x0C',
+        TilesetMap16DataChunkType = '\x0D',
+        TilesetPaletteDataChunkType = '\x0E',
     };
 
     struct SaveData
@@ -50,6 +41,24 @@ namespace ROMUtils
         unsigned int old_chunk_addr; // address of the old chunk that was pointed to
         enum SaveDataChunkType ChunkType;
     };
+
+    // Global variables
+    extern unsigned char *CurrentFile;
+    extern unsigned int CurrentFileSize;
+    extern QString ROMFilePath;
+    extern unsigned int SaveDataIndex;
+    extern LevelComponents::Tileset *singletonTilesets[92];
+
+    // Global functions
+    unsigned int IntFromData(int address);
+    unsigned int PointerFromData(int address);
+    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr);
+    unsigned char *LayerRLEDecompress(int address, size_t outputSize);
+    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData,
+                                  unsigned char **OutputCompressedData);
+    int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
+    void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
+    bool SaveFile(QString fileName);
 } // namespace ROMUtils
 
 #endif // ROMUTILS_H
