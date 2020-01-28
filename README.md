@@ -1,6 +1,6 @@
 # WL4Editor
 
-![](https://raw.githubusercontent.com/Kleyment/WL4Editor/master/images/WL4Editor.png)
+![](./images/WL4Editor.png)
 
 This repository contains the most feature complete Wario Land 4 Editor yet.
 
