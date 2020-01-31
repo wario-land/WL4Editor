@@ -50,6 +50,7 @@ private:
     bool SaveCurrentFileAs();
     bool UnsavedChangesPrompt(QString str);
     void CurrentRoomClearEverything();
+    void LoadROMDataFromFile(QString qFilePath);
 
 protected:
     void resizeEvent(QResizeEvent *event);

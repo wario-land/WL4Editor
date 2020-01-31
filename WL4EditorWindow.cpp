@@ -170,6 +170,20 @@ void WL4EditorWindow::OpenROM()
         return;
     }
 
+    LoadROMDataFromFile(qFilePath);
+}
+
+/// <summary>
+/// Load ROM data from a file into the editor's data structures
+/// </summary>
+/// <remarks>
+/// This is a helper function to prevent duplication of code from multiple ways a ROM file can be loaded
+/// </remarks>
+/// <param name="filePath">
+/// The path of the ROM file
+/// </param>
+void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
+{
     // Load the ROM file
     std::string filePath = qFilePath.toStdString();
     if (!LoadROMFile(qFilePath))
@@ -635,6 +649,9 @@ void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
 /// </summary>
 void WL4EditorWindow::openRecentROM()
 {
+    // Check for unsaved operations
+    if(!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?"))) return;
+
     QString filepath;
     QAction *action = qobject_cast<QAction *>(sender());
     if(action)
@@ -677,33 +694,8 @@ void WL4EditorWindow::openRecentROM()
         return;
     }
 
-    // Check for unsaved operations
-    if(!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?"))) return;
+    LoadROMDataFromFile(filepath);
 
-    // Load the ROM file
-    std::string cfilePath = filepath.toStdString();
-    if(!LoadROMFile(filepath))
-    {
-        QMessageBox::critical(nullptr, QString("Load Error"), QString("You may have loaded an invalid ROM!"));
-        return;
-    }
-
-    // Set the program title
-    std::string fileName = cfilePath.substr(cfilePath.rfind('/') + 1);
-    setWindowTitle(fileName.c_str());
-
-    // Load the first level and render the screen
-    if(CurrentLevel) delete CurrentLevel;
-    selectedLevel._PassageIndex = selectedLevel._LevelIndex = 0;
-    CurrentLevel = new LevelComponents::Level(
-        static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
-        static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex)
-    );
-    selectedRoom = 0;
-    int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
-    UnsavedChanges = false;
-
-    UIStartUp(tmpTilesetID);
     this->setFocus(); // Enable keyPressEvent
 }
 
