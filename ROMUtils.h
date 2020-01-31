@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "WL4Constants.h"
+#include "LevelComponents/Tileset.h"
 
 namespace ROMUtils
 {
@@ -29,16 +30,21 @@ namespace ROMUtils
 
     enum SaveDataChunkType
     {
-        InvalidationChunk = '\x00',
-        RoomHeaderChunkType = '\x01',
-        DoorChunkType = '\x02',
-        LayerChunkType = '\x03',
-        LevelNameChunkType = '\x04',
-        EntityListChunk = '\x05',
-        CameraPointerTableType = '\x06',
-        CameraBoundaryChunkType = '\x07',
-        PatchListChunk          = '\x08',
-        PatchChunk              = '\x09'
+        InvalidationChunk                     = '\x00',
+        RoomHeaderChunkType                   = '\x01',
+        DoorChunkType                         = '\x02',
+        LayerChunkType                        = '\x03',
+        LevelNameChunkType                    = '\x04',
+        EntityListChunk                       = '\x05',
+        CameraPointerTableType                = '\x06',
+        CameraBoundaryChunkType               = '\x07',
+        PatchListChunk                        = '\x08',
+        PatchChunk                            = '\x09',
+        TilesetForegroundTile8x8DataChunkType = '\x0A',
+        TilesetMap16EventTableChunkType       = '\x0B',
+        TilesetMap16TerrainChunkType          = '\x0C',
+        TilesetMap16DataChunkType             = '\x0D',
+        TilesetPaletteDataChunkType           = '\x0E'
     };
 
     struct SaveData
@@ -66,6 +72,16 @@ namespace ROMUtils
         std::function<void(QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
         std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback);
     bool SaveLevel(QString fileName);
+    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr);
+    void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
+
+    // Global variables
+    extern unsigned char *CurrentFile;
+    extern unsigned int CurrentFileSize;
+    extern QString ROMFilePath;
+    extern unsigned int SaveDataIndex;
+    extern LevelComponents::Tileset *singletonTilesets[92];
+
 } // namespace ROMUtils
 
 #endif // ROMUTILS_H

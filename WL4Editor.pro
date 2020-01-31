@@ -24,7 +24,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11 strict_c++
 
+QMAKE_CXXFLAGS = -fpermissive
+
 SOURCES += \
+    Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \
     main.cpp \
     WL4EditorWindow.cpp \
     LevelComponents/Level.cpp \
@@ -53,9 +56,14 @@ SOURCES += \
     Dialog/PatchManagerTableView.cpp \
     PatchUtils.cpp \
     Dialog/PatchEditDialog.cpp \
-    SettingsUtils.cpp
+    Dialog/TilesetEditDialog.cpp \
+    SettingsUtils.cpp \
+    Dialog/TilesetEditor_Tile16MapGraphicView.cpp \
+    Dialog/TilesetEditor_Tile8x8MapGraphicView.cpp \
+    Dialog/TilesetEditor_PaletteGraphicView.cpp
 
 HEADERS += \
+    Dialog/TilesetEditor_Tile8x8EditorGraphicView.h \
     WL4EditorWindow.h \
     LevelComponents/Level.h \
     LevelComponents/Room.h \
@@ -85,7 +93,11 @@ HEADERS += \
     Dialog/PatchManagerTableView.h \
     PatchUtils.h \
     Dialog/PatchEditDialog.h \
-    SettingsUtils.h
+    Dialog/TilesetEditDialog.h \
+    SettingsUtils.h \
+    Dialog/TilesetEditor_Tile16MapGraphicView.h \
+    Dialog/TilesetEditor_Tile8x8MapGraphicView.h \
+    Dialog/TilesetEditor_PaletteGraphicView.h
 
 FORMS += \
     WL4EditorWindow.ui \
@@ -98,4 +110,5 @@ FORMS += \
     DockWidget/EntitySetDockWidget.ui \
     DockWidget/CameraControlDockWidget.ui \
     Dialog/PatchManagerDialog.ui \
-    Dialog/PatchEditDialog.ui
+    Dialog/PatchEditDialog.ui \
+    Dialog/TilesetEditDialog.ui

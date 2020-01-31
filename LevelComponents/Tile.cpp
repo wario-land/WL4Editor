@@ -28,18 +28,35 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Copy constructor for Tile8x8
+    /// Copy constructor for Tile8x8, used only in current Tileset
     /// </summary>
     /// <param name="other">
     /// Another Tile8x8 to copy image data from.
     /// </param>
     Tile8x8::Tile8x8(Tile8x8 *other) :
-            Tile(TileType8x8), palettes(other->palettes),
+        Tile(TileType8x8), palettes(other->palettes),
 #ifndef NOCACHE
-            ImageData(GetCachedImageData(other->ImageData))
+        ImageData(GetCachedImageData(other->ImageData)),
 #else
-            ImageData(new QImageW(other->ImageData->copy()))
+        ImageData(new QImageW(other->ImageData->copy())),
 #endif
+        index(other->index), paletteIndex(other->paletteIndex), FlipX(other->FlipX), FlipY(other->FlipY)
+    {}
+
+    /// <summary>
+    /// Deep Copy constructor for Tile8x8, use this to create new Tile8x8 for new Tileset
+    /// </summary>
+    /// <param name="other">
+    /// Another Tile8x8 to copy image data from.
+    /// </param>
+    Tile8x8::Tile8x8(Tile8x8 *other, QVector<QRgb> *_palettes) :
+        Tile(TileType8x8), palettes(_palettes),
+#ifndef NOCACHE
+        ImageData(GetCachedImageData(other->ImageData)),
+#else
+        ImageData(new QImageW(other->ImageData->copy())),
+#endif
+        index(other->index), paletteIndex(other->paletteIndex), FlipX(other->FlipX), FlipY(other->FlipY)
     {}
 
     /// <summary>
@@ -62,6 +79,42 @@ namespace LevelComponents
             for (int j = 0; j < 4; ++j)
             {
                 unsigned char val = ROMUtils::CurrentFile[dataPtr + i * 4 + j];
+                ImageData->setPixel(j * 2, i, (unsigned char) (val & 0xF));
+                ImageData->setPixel(j * 2 + 1, i, (unsigned char) ((val >> 4) & 0xF));
+            }
+        }
+
+#ifndef NOCACHE
+        // Cache the QImage
+        QImageW *cached = GetCachedImageData(ImageData);
+        if (cached != ImageData)
+        {
+            delete ImageData;
+            ImageData = cached;
+        }
+#endif
+    }
+
+    /// <summary>
+    /// Construct an instance of Tile8x8.
+    /// </summary>
+    /// <remarks>
+    /// This constructor will attempt to match the image data to a cached QImage
+    /// </remarks>
+    /// <param name="data">
+    /// Pointer to the beginning of the tile graphic data.
+    /// </param>
+    /// <param name="_palettes">
+    /// Entire palette for the tileset this tile is a part of.
+    /// </param>
+    Tile8x8::Tile8x8(unsigned char *data, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
+    {
+        // Initialize the QImage data from data
+        for (int i = 0; i < 8; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
+                unsigned char val = data[i * 4 + j];
                 ImageData->setPixel(j * 2, i, (unsigned char) (val & 0xF));
                 ImageData->setPixel(j * 2 + 1, i, (unsigned char) ((val >> 4) & 0xF));
             }
@@ -142,6 +195,7 @@ namespace LevelComponents
     {
         QPainter painter(layerPixmap);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
+        ImageData->setColorTable(palettes[paletteIndex]);
         QImage tileImage = ImageData->mirrored(FlipX, FlipY);
         QPoint drawDestination(x, y);
         painter.drawImage(drawDestination, tileImage);
@@ -169,6 +223,7 @@ namespace LevelComponents
 #endif
     }
 
+
     /// <summary>
     /// Construct an instance of TileMap16.
     /// </summary>
@@ -191,6 +246,19 @@ namespace LevelComponents
         TileData[2] = t2;
         TileData[3] = t3;
     }
+
+    /// <summary>
+    /// Deep copy constructor for TileMap16.
+    /// </summary>
+    /// <param name="other">
+    /// The source map16 tile.
+    /// </param>
+    TileMap16::TileMap16(TileMap16 *other, QVector<QRgb> *newpalettes) : TileMap16(
+        new Tile8x8(other->GetTile8X8(TILE8_TOPLEFT), newpalettes),
+        new Tile8x8(other->GetTile8X8(TILE8_TOPRIGHT), newpalettes),
+        new Tile8x8(other->GetTile8X8(TILE8_BOTTOMLEFT), newpalettes),
+        new Tile8x8(other->GetTile8X8(TILE8_BOTTOMRIGHT), newpalettes))
+    { }
 
     /// <summary>
     /// Deconstruct the TileMap16 and clean up its instance objects on the heap.
@@ -224,6 +292,48 @@ namespace LevelComponents
         TileData[1]->DrawTile(layerPixmap, x + 8, y);
         TileData[2]->DrawTile(layerPixmap, x, y + 8);
         TileData[3]->DrawTile(layerPixmap, x + 8, y + 8);
+    }
+
+    /// <summary>
+    /// Get a pointer to a Tile8x8 at current position
+    /// <param name="position">
+    /// The position (TileMap16::TILE8_TOPLEFT : 0, TileMap16::TILE8_TOPLEFT : 1, TileMap16::TILE8_BOTTOMLEFT : 2, TileMap16::TILE8_BOTTOMRIGHT : 3)
+    /// </param>
+    Tile8x8* TileMap16::GetTile8X8(int position)
+    {
+        return TileData[position & 3];
+    }
+
+    /// <summary>
+    /// Change one of the TIle8x8 in TileMap16
+    /// </summary>
+    /// <param name="other">
+    /// an Tile8x8 used as copy referance
+    /// </param>
+    /// <param name="position">
+    /// The position (TileMap16::TILE8_TOPLEFT : 0, TileMap16::TILE8_TOPLEFT : 1, TileMap16::TILE8_BOTTOMLEFT : 2, TileMap16::TILE8_BOTTOMRIGHT : 3)
+    /// </param>
+    /// <param name="new_index">
+    /// new index of tile8x8
+    /// </param>
+    /// <param name="new_paletteIndex">
+    /// set a new palette index
+    /// </param>
+    /// <param name="xflip">
+    /// set xflip bit
+    /// </param>
+    /// <param name="yflip">
+    /// set yflip bit
+    /// </param>
+    void TileMap16::ResetTile8x8(Tile8x8 *other, int position, int new_index, int new_paletteIndex, bool xflip, bool yflip)
+    {
+        int pos = position & 3;
+        delete TileData[pos];
+        TileData[pos] = new Tile8x8(other);
+        TileData[pos]->SetIndex(new_index);
+        TileData[pos]->SetFlipX(xflip);
+        TileData[pos]->SetFlipY(yflip);
+        TileData[pos]->SetPaletteIndex(new_paletteIndex);
     }
 
     /// <summary>
@@ -274,4 +384,49 @@ namespace LevelComponents
             assert(0 /* Cached QImage with 0 references */);
         }
     }
+
+    /// <summary>
+    /// Get the two byte corresponding to the tile8 in ROM.
+    /// </summary>
+    unsigned short Tile8x8::GetValue()
+    {
+        // First set the 10 first byte that represent the index of the tile8
+        unsigned short tile8Data=this->GetIndex() & 0x3FF;
+
+        // Set the flipX and flipY bit if present (11th and 12th bits)
+        if (this->GetFlipX()) {
+            tile8Data |= 1 << 10;
+        }
+
+        if (this->GetFlipY()) {
+            tile8Data |= 1 << 11;
+        }
+
+        // Set the last 4 bits to the palette bits.
+        tile8Data |= this->GetPaletteIndex() << 12;
+
+        return tile8Data;
+    }
+
+    /// <summary>
+    /// Turn a tile into graphics data.
+    /// </summary>
+    /// <returns>
+    /// The 32 bytes of graphics data in uncompressed GBA format.
+    /// </returns>
+    QByteArray Tile8x8::CreateGraphicsData()
+    {
+        QByteArray arr(32, 0);
+        for(int i = 0; i < 8; ++i)
+        {
+            for(int j = 0; j < 4; ++j)
+            {
+                char val = static_cast<char>(ImageData->pixelIndex(j << 1, i));
+                val |= ImageData->pixelIndex((j << 1) + 1, i) << 4;
+                arr[(i << 2) + j] = val;
+            }
+        }
+        return arr;
+    }
+
 } // namespace LevelComponents

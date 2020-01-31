@@ -256,6 +256,65 @@ static QByteArray CreateHook(unsigned int patchAddr, bool stubFunction, bool thu
     }
 }
 
+/// <summary>
+/// Compile files in a list of patches to save to the ROM.
+/// </summary>
+/// <param name="entries">
+/// The patch entries to compile.
+/// </param>
+/// <returns>
+/// The error string if compilation failed, or empty if successful.
+/// </returns>
+static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
+{
+    QDir ROMdir(ROMUtils::ROMFilePath);
+    ROMdir.cdUp();
+
+    // Create binaries from C and asm
+    QVector<struct CompileEntry> compileEntries;
+    foreach(struct PatchEntryItem entry, entries)
+    {
+        QString fname(entry.FileName);
+        switch(entry.PatchType)
+        {
+        case PatchType::C:
+            compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::C});
+        case PatchType::Assembly:
+            REPLACE_EXT(fname, ".c", ".s");
+            compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Assembly});
+            REPLACE_EXT(fname, ".s", ".o");
+            compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Binary});
+        }
+    }
+    std::sort(compileEntries.begin(), compileEntries.end(),
+        [](const struct CompileEntry& c1, const struct CompileEntry& c2){ return c1.Type > c2.Type; });
+    foreach(struct CompileEntry entry, compileEntries)
+    {
+        QString output;
+        switch(entry.Type)
+        {
+        case PatchType::C:
+            if((output = CompileCFile(entry.FileName)) != "")
+            {
+                return QString("Compiler error: ") + output;
+            }
+            break;
+        case PatchType::Assembly:
+            if((output = AssembleSFile(entry.FileName)) != "")
+            {
+                return QString("Assembler error: ") + output;
+            }
+            break;
+        case PatchType::Binary:
+            if((output = ExtractOFile(entry.FileName)) != "")
+            {
+                return QString("ObjCopy error: ") + output;
+            }
+        }
+    }
+    return "";
+}
+
 namespace PatchUtils
 {
     QString EABI_INSTALLATION;
@@ -327,51 +386,8 @@ namespace PatchUtils
     /// </returns>
     QString SavePatchesToROM(QVector<struct PatchEntryItem> entries)
     {
-        QDir ROMdir(ROMUtils::ROMFilePath);
-        ROMdir.cdUp();
-
-        // Create binaries from C and asm
-        QVector<struct CompileEntry> compileEntries;
-        foreach(struct PatchEntryItem entry, entries)
-        {
-            QString fname(entry.FileName);
-            switch(entry.PatchType)
-            {
-            case PatchType::C:
-                compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::C});
-            case PatchType::Assembly:
-                REPLACE_EXT(fname, ".c", ".s");
-                compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Assembly});
-                REPLACE_EXT(fname, ".s", ".o");
-                compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Binary});
-            }
-        }
-        std::sort(compileEntries.begin(), compileEntries.end(),
-            [](const struct CompileEntry& c1, const struct CompileEntry& c2){ return c1.Type > c2.Type; });
-        foreach(struct CompileEntry entry, compileEntries)
-        {
-            QString output;
-            switch(entry.Type)
-            {
-            case PatchType::C:
-                if((output = CompileCFile(entry.FileName)) != "")
-                {
-                    return QString("Compiler error: ") + output;
-                }
-                break;
-            case PatchType::Assembly:
-                if((output = AssembleSFile(entry.FileName)) != "")
-                {
-                    return QString("Assembler error: ") + output;
-                }
-                break;
-            case PatchType::Binary:
-                if((output = ExtractOFile(entry.FileName)) != "")
-                {
-                    return QString("ObjCopy error: ") + output;
-                }
-            }
-        }
+        QString compileErrorMsg = CompilePatchEntries(entries);
+        if(compileErrorMsg != "") return compileErrorMsg;
 
         /* For all entries:
          *   1. Save chunk does not exist:
@@ -430,6 +446,12 @@ namespace PatchUtils
                 chunks.append(patchChunk);
                 chunkIndexToEntryIndex[patchChunk.index] = i;
             }
+        }
+        
+        // Find which existing patch chunks should be removed
+        for(int i = 0; i < existingPatches.size(); ++i)
+        {
+            
         }
 
         // Save the chunks to the ROM

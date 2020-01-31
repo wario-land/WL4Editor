@@ -36,10 +36,6 @@ Tile16DockWidget::~Tile16DockWidget()
     {
         delete Tile16MAPScene;
     }
-    if (SelectedTileset)
-    {
-        delete SelectedTileset;
-    }
 }
 
 /// <summary>
@@ -61,22 +57,17 @@ void Tile16DockWidget::FocusInEvent(QFocusEvent *e) { SetSelectedTile(0, true); 
 int Tile16DockWidget::SetTileset(int _tilesetIndex)
 {
     // Clean up heap objects from previous invocations
-    if (SelectedTileset)
-    {
-        delete SelectedTileset;
-    }
     if (Tile16MAPScene)
     {
         delete Tile16MAPScene;
     }
 
     // Set up tileset
-    int _tilesetPtr = WL4Constants::TilesetDataTable + _tilesetIndex * 36;
-    SelectedTileset = new LevelComponents::Tileset(_tilesetPtr, _tilesetIndex);
+    SelectedTileset = ROMUtils::singletonTilesets[_tilesetIndex];
 
     // Set up scene
     Tile16MAPScene = new QGraphicsScene(0, 0, 8 * 16, (48 * 2) * 16);
-    Tile16MAPScene->addPixmap(SelectedTileset->Render(1));
+    Tile16MAPScene->addPixmap(SelectedTileset->RenderAllTile16(1));
     ui->tileSetIDLabel->setText("Tileset ID: 0x" + QString::number(_tilesetIndex, 16).toUpper());
 
     // Add the highlighted tile rectangle
@@ -122,8 +113,8 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
     SelectedTile = tile;
 
     // Get the event information about the selected tile
-    unsigned short eventIndex = SelectedTileset->Map16EventTable[tile];
-    int tmpTerrainTypeID = SelectedTileset->Map16TerrainTypeIDTable[tile];
+    unsigned short eventIndex = SelectedTileset->GetEventTablePtr()[tile];
+    int tmpTerrainTypeID = SelectedTileset->GetTerrainTypeIDTablePtr()[tile];
 
     // Print information about the tile to the user
     QString infoText;

@@ -116,7 +116,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -219,6 +219,7 @@
     <addaction name="separator"/>
     <addaction name="actionLevel_Config"/>
     <addaction name="actionRoom_Config"/>
+    <addaction name="actionEdit_Tileset"/>
     <addaction name="menuAdd"/>
     <addaction name="menuSwap"/>
     <addaction name="menuClear"/>
@@ -392,6 +393,14 @@
    </property>
    <property name="text">
     <string>Current Room's graphic</string>
+   </property>
+  </action>
+  <action name="actionEdit_Tileset">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit Current Tileset</string>
    </property>
   </action>
  </widget>

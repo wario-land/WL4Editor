@@ -164,7 +164,6 @@ namespace LevelComponents
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         LevelComponents::Door *GetDoor(int _localdoorID) { return doors[_localdoorID]; }
         std::vector<Door *> GetDoors() { return doors; }
-        std::vector<struct EntityRoomAttribute> GetEntityList(int difficulty_id) { return EntityList[difficulty_id]; }
         bool GetEntityListDirty(int difficulty) { return EntityListDirty[difficulty]; }
         std::vector<struct EntityRoomAttribute> GetEntityListData(int difficulty) { return EntityList[difficulty]; }
         int GetEVA() { return Layer0ColorBlendCoefficient_EVA; }
@@ -240,6 +239,7 @@ namespace LevelComponents
             tileset = newtileset;
             RoomHeader.TilesetID = (unsigned char) tilesetID;
         }
+        void ResetTileSet();
         void SetEntityPosition(int XPos, int YPos, int index);
         void SetLayerDataInRoomHeader(int layerid, unsigned int value)
         {

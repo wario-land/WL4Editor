@@ -37,8 +37,7 @@ namespace LevelComponents
         memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
 
         // Set up tileset
-        int tilesetPtr = WL4Constants::TilesetDataTable + RoomHeader.TilesetID * 36;
-        tileset = new Tileset(tilesetPtr, RoomHeader.TilesetID);
+        tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
 
         // Set up the layer data
         int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
@@ -119,8 +118,7 @@ namespace LevelComponents
         memset(EntityListDirty, 0, sizeof(EntityListDirty));
 
         // Set up tileset, TODO: if we support Tileset changes in the editor, this need to be changed
-        int tilesetPtr = WL4Constants::TilesetDataTable + RoomHeader.TilesetID * 36;
-        tileset = new Tileset(tilesetPtr, RoomHeader.TilesetID);
+        tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
 
         // Set up the layer data
         for (int i = 0; i < 4; ++i)
@@ -139,7 +137,7 @@ namespace LevelComponents
         // Load Entity list for each difficulty level
         for (int i = 0; i < 3; i++)
         {
-            EntityList[i] = room->GetEntityList(i);
+            EntityList[i] = room->GetEntityListData(i);
         }
 
         // Deep Copy Entityset and Entities
@@ -200,6 +198,15 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Reset the tileset of a Room.
+    /// Useful after saving the ROM.
+    /// </summary>
+    void Room::ResetTileSet()
+    {
+        tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
+    }
+
+    /// <summary>
     /// Deconstruct an instance of Room.
     /// </summary>
     Room::~Room()
@@ -224,7 +231,6 @@ namespace LevelComponents
         {
             delete layers[i];
         }
-        delete tileset;
     }
 
     /// <summary>
@@ -959,7 +965,7 @@ namespace LevelComponents
                     // Add the data for this layer, it must be compressed
                     unsigned int compressedSize;
                     unsigned char *compressedData = layer->GetCompressedLayerData(&compressedSize);
-                    struct ROMUtils::SaveData layerChunk = { RoomID * sizeof(struct __RoomHeader) + 8 + i * 4,
+                    struct ROMUtils::SaveData layerChunk = { static_cast<unsigned int>(RoomID * sizeof(struct __RoomHeader) + 8 + i * 4),
                                                              compressedSize,
                                                              compressedData,
                                                              ROMUtils::SaveDataIndex++,
@@ -1008,7 +1014,7 @@ namespace LevelComponents
             if (EntityListDirty[i])
             {
                 unsigned int entityListSize = (EntityList[i].size() + 1) * sizeof(struct EntityRoomAttribute);
-                struct ROMUtils::SaveData entityListChunk = { RoomID * sizeof(struct __RoomHeader) + 28 + i * 4,
+                struct ROMUtils::SaveData entityListChunk = { static_cast<unsigned int>(RoomID * sizeof(struct __RoomHeader) + 28 + i * 4),
                                                               entityListSize,
                                                               reinterpret_cast<unsigned char *>(malloc(entityListSize)),
                                                               ROMUtils::SaveDataIndex++,
@@ -1036,7 +1042,7 @@ namespace LevelComponents
         {
             size_t cameraChunkSize = 2 + CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
             struct ROMUtils::SaveData cameraChunk = { 4 * (*cameraPointerTableIndex)++,
-                                                      cameraChunkSize,
+                                                      static_cast<unsigned int>(cameraChunkSize),
                                                       reinterpret_cast<unsigned char *>(malloc(cameraChunkSize)),
                                                       ROMUtils::SaveDataIndex++,
                                                       true,

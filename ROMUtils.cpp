@@ -36,6 +36,7 @@ namespace ROMUtils
     unsigned int CurrentFileSize;
     QString ROMFilePath;
     unsigned int SaveDataIndex;
+    LevelComponents::Tileset *singletonTilesets[92];
 
     /// <summary>
     /// Get a 4-byte, little-endian integer from ROM data.
@@ -284,6 +285,96 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Get the savedata chunks from a Tileset.
+    /// </summary>
+    /// <param name="TilesetId">
+    /// Select a Tileset by its Id.
+    /// </param>
+    /// <param name="chunks">
+    /// Push new chunks to it.
+    /// </param>
+    void GenerateTilesetSaveChunks(int TilesetId, QVector<SaveData> &chunks)
+    {
+        int tilesetPtr = singletonTilesets[TilesetId]->getTilesetPtr();
+        // Create Map16EventTable chunk
+        struct ROMUtils::SaveData Map16EventTablechunk = { static_cast<unsigned int>(tilesetPtr + 28),
+                                                         0x600,
+                                                         (unsigned char *) malloc(0x600),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(tilesetPtr + 28),
+                                                         ROMUtils::SaveDataChunkType::TilesetMap16EventTableChunkType };
+        memcpy(Map16EventTablechunk.data, singletonTilesets[TilesetId]->GetEventTablePtr(), 0x600);
+        chunks.append(Map16EventTablechunk);
+
+        // Create FGTile8x8GraphicData chunk
+        int FGTileGfxDataLen = singletonTilesets[TilesetId]->GetfgGFXlen();
+        unsigned char FGmap8x8tiledata[(1024 - 65) * 32];
+        LevelComponents::Tile8x8 **tile8x8array = singletonTilesets[TilesetId]->GetTile8x8arrayPtr();
+        for (int j = 0; j < (FGTileGfxDataLen / 32); ++j)
+        {
+            memcpy(&FGmap8x8tiledata[32 * j], tile8x8array[j + 0x41]->CreateGraphicsData().data(), 32);
+        }
+        struct ROMUtils::SaveData FGTile8x8GraphicDataChunk = { static_cast<unsigned int>(tilesetPtr),
+                                                         static_cast<unsigned int>(FGTileGfxDataLen),
+                                                         (unsigned char *) malloc(FGTileGfxDataLen),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(tilesetPtr),
+                                                         ROMUtils::SaveDataChunkType::TilesetForegroundTile8x8DataChunkType };
+        memcpy(FGTile8x8GraphicDataChunk.data, FGmap8x8tiledata, FGTileGfxDataLen);
+        chunks.append(FGTile8x8GraphicDataChunk);
+
+        // Create Map16TerrainType chunk
+        struct ROMUtils::SaveData Map16TerrainTypechunk = { static_cast<unsigned int>(tilesetPtr + 24),
+                                                         0x300,
+                                                         (unsigned char *) malloc(0x300),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(tilesetPtr + 24),
+                                                         ROMUtils::SaveDataChunkType::TilesetMap16TerrainChunkType };
+        memcpy(Map16TerrainTypechunk.data, singletonTilesets[TilesetId]->GetTerrainTypeIDTablePtr(), 0x300);
+        chunks.append(Map16TerrainTypechunk);
+
+        // Save palettes
+        singletonTilesets[TilesetId]->ReGeneratePaletteData();
+        struct ROMUtils::SaveData TilesetPalettechunk = { static_cast<unsigned int>(tilesetPtr + 8),
+                                                         16 * 16 * 2,
+                                                         (unsigned char *) malloc(16 * 16 * 2),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(tilesetPtr + 8),
+                                                         ROMUtils::SaveDataChunkType::TilesetPaletteDataChunkType };
+        memcpy(TilesetPalettechunk.data, singletonTilesets[TilesetId]->GetTilesetPaletteDataPtr(), 16 * 16 * 2);
+        chunks.append(TilesetPalettechunk);
+
+        // Create Map16Data chunk
+        LevelComponents::TileMap16** map16data = singletonTilesets[TilesetId]->GetMap16arrayPtr();
+        struct ROMUtils::SaveData Map16Datachunk = { static_cast<unsigned int>(tilesetPtr + 20),
+                                                         0x300 * 8,
+                                                         (unsigned char *) malloc(0x300 * 8),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(tilesetPtr + 20),
+                                                         ROMUtils::SaveDataChunkType::TilesetMap16DataChunkType };
+        unsigned short map16tilePtr[0x300 * 4];
+        for (int j = 0; j < 0x300; ++j)
+        {
+            map16tilePtr[j * 4] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPLEFT)->GetValue();
+            map16tilePtr[j * 4 + 1] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPRIGHT)->GetValue();
+            map16tilePtr[j * 4 + 2] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMLEFT)->GetValue();
+            map16tilePtr[j * 4 + 3] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMRIGHT)->GetValue();
+        }
+        memcpy(Map16Datachunk.data, (unsigned char*)map16tilePtr, 0x300 * 8);
+        chunks.append(Map16Datachunk);
+    }
+
+    /// <summary>
     /// Find the next chunk of a specific type.
     /// </summary>
     /// <param name="ROMData">
@@ -385,6 +476,9 @@ namespace ROMUtils
         std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
+        unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
+        unsigned int TempLength = CurrentFileSize;
+        memcpy(TempFile, CurrentFile, CurrentFileSize);
         std::sort(chunks.begin(), chunks.end(),
                   [](const struct SaveData &a, const struct SaveData &b) { return a.size < b.size; });
         std::map<int, int> chunkIDtoIndex;
@@ -394,9 +488,6 @@ namespace ROMUtils
         }
 
         // Invalidate old chunk data
-        unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
-        unsigned int TempLength = CurrentFileSize;
-        memcpy(TempFile, CurrentFile, CurrentFileSize);
         foreach (struct SaveData chunk, chunks)
         {
             if (chunk.old_chunk_addr > WL4Constants::AvailableSpaceBeginningInROM)
@@ -597,6 +688,15 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
         currentLevel->GetSaveChunks(chunks);
 
+        // Get Tilesets chunks
+        for(int i = 0; i < 92; ++i)
+        {
+            if(singletonTilesets[i]->IsNewTileset())
+            {
+                GenerateTilesetSaveChunks(i, chunks);
+            }
+        }
+
         // Isolate the room header chunk for post-processing
         struct SaveData roomHeaderChunk = *std::find_if(chunks.begin(), chunks.end(), [](const struct SaveData &chunk) {
             return chunk.ChunkType == SaveDataChunkType::RoomHeaderChunkType;
@@ -613,6 +713,26 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
 
                 // Write the level header to the ROM
                 memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
+
+                // Write Tileset pointer info
+                for(int i = 0; i < 92; ++i)
+                {
+                    if(singletonTilesets[i]->IsNewTileset())
+                    {
+                        // Save Animated Tile info table
+                        unsigned short *AnimatedTileInfoTable = singletonTilesets[i]->GetAnimatedTileData();
+                        memcpy(TempFile + i * 32 + WL4Constants::AnimatedTileIdTableCase2, (unsigned char*)AnimatedTileInfoTable, 32);
+
+                        // Reset size_of bgGFXLen and fgGBXLen
+                        int tilesetPtr = singletonTilesets[i]->getTilesetPtr();
+                        int *fgGFXLenaddr = (int *) (TempFile + tilesetPtr + 4);
+                        *fgGFXLenaddr = singletonTilesets[i]->GetfgGFXlen();
+                        int *bgGFXLenaddr = (int *) (TempFile + tilesetPtr + 16);
+                        *bgGFXLenaddr = singletonTilesets[i]->GetbgGFXlen();
+
+                        singletonTilesets[i]->SetChanged(false);
+                    }
+                }
             });
         if(!ret) return false;
 
@@ -642,4 +762,28 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         }
         return true;
     }
+
+    /// Load a palette, 16 colors, from a pointer.
+    /// </summary>
+    /// <param name="palette">
+    /// Pointer of palette instance provided for palette loading.
+    /// </param>
+    /// <param name="dataptr">
+    /// data pointer which keeps RGB55 palette data.
+    /// </param>
+    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr)
+    {
+        // First color is transparent
+        palette->push_back(0);
+        for (int j = 1; j < 16; ++j)
+        {
+            unsigned short color555 = *(dataptr + j);
+            int r = ((color555 << 3) & 0xF8) | ((color555 >> 2) & 7);
+            int g = ((color555 >> 2) & 0xF8) | ((color555 >> 7) & 7);
+            int b = ((color555 >> 7) & 0xF8) | ((color555 >> 12) & 7);
+            int a = 0xFF;
+            palette->push_back(QColor(r, g, b, a).rgba());
+        }
+    }
+
 } // namespace ROMUtils
