@@ -94,57 +94,5 @@ int main(int argc, char *argv[])
     SettingsUtils::InitProgramSetupPath(application);
     WL4EditorWindow window;
     window.show();
-
-    // Quickly test or debug by automatically loading the ROM without UI
-    //-------------------------------------------------------------------
-    char *username;
-#ifdef _WIN32
-    TCHAR usernameTC[UNLEN + 1];
-    DWORD size = UNLEN + 1;
-    GetUserName((TCHAR *) usernameTC, &size);
-    username = new char[UNLEN + 1];
-    for (int i = 0; i < UNLEN; ++i)
-    {
-        if (!usernameTC[i])
-        {
-            username[i] = '\0';
-            break;
-        }
-        username[i] = (char) (usernameTC[i] & 0xDF); // Makes username uppercase
-    }
-#else
-    username = new char[33]; // Maximum length is 32 (plus 1 for null termination)
-    getlogin_r(username, 33);
-    for (int i = 0; i < 32; ++i)
-    {
-        username[i] &= '\xDF'; // Make username uppercase
-    }
-#endif
-    if (!strncmp(username, "ANDREW", strlen(username))) // Goldensunboy
-    {
-        // Andrew's tests
-        extern QString dialogInitialPath;
-        dialogInitialPath = QString("C:\\Users\\Andrew\\Desktop\\WL4.gba");
-        window.OpenROM();
-    }
-    else if (!strncmp(username, "ADMINISTRATOR", strlen(username))) // SSP
-    {
-        /*
-        std::string filePath = "E:\\Wario Harker\\0169 - Wario Land 4.gba";
-        LoadROMFile(filePath);
-
-        // Load level (0, 0)
-        CurrentLevel = new LevelComponents::Level(LevelComponents::EmeraldPassage, LevelComponents::FourthLevel);
-
-        // Render the screen
-        w.RenderScreen(CurrentLevel->GetRooms()[0]);
-
-        std::cout << CurrentLevel->GetDoors().size() << std::endl;
-        std::cout << "\"" << CurrentLevel->GetLevelName() << "\"" << std::endl;
-        */
-    }
-    delete[] username;
-    //-------------------------------------------------------------------
-
     return application.exec();
 }
