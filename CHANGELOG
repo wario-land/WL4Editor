@@ -1,18 +1,18 @@
 beta-10:
-- Fix Layer alpha setting problem in RoomConfigDialog
-- Add ROM Patch functionalities
-- Stability after saving has improved
+- Fix Layer alpha setting problem in RoomConfigDialog.
+- Add ROM Patch functionalities.
+- Stability after saving has improved.
 - Added INI program settings, Support Opening Recent ROM in File menu.
-- Support drag & drop for door and entity, now double-click open the door dialog instead of left-click
-- Add Tileset editor dialog
-- Adjust the EditMode dock widget, move ExtraLayers_GroupBox out from visibleLayersGroupBox 
-- Fix some entities rendering glitches caused by wrong tile loading
-- Add another available Camera control type, Vertical Seperate
-- Support tristate for Entities Layers visibility checkbox to support not rendering position boxes for entities
-- Add menu item "Export" and support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers
-- Support showing hidden coins in breakable blocks
-- Add Room size limitation
-- Fix incorrect EVA/EVB option being displayed by Room Config Dialog
+- Support drag & drop for door and entity, now double-click open the door dialog instead of left-click.
+- Add Tileset editor dialog.
+- Adjust the EditMode dock widget, move ExtraLayers_GroupBox out from visibleLayersGroupBox.
+- Fix some entities rendering glitches caused by wrong tile loading.
+- Add another available Camera control type, Vertical Seperate.
+- Support tristate for Entities Layers visibility checkbox to support not rendering position boxes for entities.
+- Add menu item "Export" and support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers.
+- Support showing hidden coins in breakable blocks.
+- Add Room size limitation.
+- Fix incorrect EVA/EVB option being displayed by Room Config Dialog.
 
 beta-9:
 - Fix clear-all only clears hardmode entities
