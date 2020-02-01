@@ -31,8 +31,12 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 
     // Different cases for different editting mode
     LevelComponents::Room *room = singleton->GetCurrentRoom();
-    if (tileX < room->GetWidth() && tileY < room->GetHeight())
+    if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) && tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
     {
+        if (singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer != 0)
+            if (tileX > room->GetWidth() || tileY > room->GetHeight())
+                return;
+
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
         if (editMode == Ui::LayerEditMode)
@@ -40,7 +44,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             // If we use right click then copy the tile
             if (event->button() == Qt::RightButton)
             {
-                CopyTile(tileX,tileY);
+                CopyTile(tileX, tileY);
             }
             else // Otherwise just place the tile
             {
@@ -203,8 +207,12 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
     // Draw the new tile
     LevelComponents::Room *room = singleton->GetCurrentRoom();
-    if (tileX < room->GetWidth() && tileY < room->GetHeight())
+    if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) && tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
     {
+        if (singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer != 0)
+            if (tileX > room->GetWidth() || tileY > room->GetHeight())
+                return;
+
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
         if ((editMode == Ui::LayerEditMode))
@@ -292,7 +300,13 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
     if (layer->GetMappingType() == LevelComponents::LayerTile8x8)
         return; // temporarily skip the condition when the current Layer's MappingType is 0x20 to avoid incorrect
                 // rendering
-    int selectedTileIndex = tileX + tileY * room->GetWidth();
+    int selectedTileIndex;
+    if (selectedLayer)
+    {
+        selectedTileIndex = tileX + tileY * room->GetWidth();
+    } else {
+        selectedTileIndex = tileX + tileY * room->GetLayer0Width();
+    }
     if (layer->GetLayerData()[selectedTileIndex] == selectedTile)
         return;
     struct OperationParams *params = new struct OperationParams();
@@ -317,7 +331,13 @@ void MainGraphicsView::CopyTile(int tileX, int tileY)
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
     LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
-    int selectedTileIndex = tileX + tileY * room->GetWidth();
+    int selectedTileIndex;
+    if (selectedLayer)
+    {
+        selectedTileIndex = tileX + tileY * room->GetWidth();
+    } else {
+        selectedTileIndex = tileX + tileY * room->GetLayer0Width();
+    }
     unsigned short placedTile = layer->GetLayerData()[selectedTileIndex];
     singleton->GetTile16DockWidgetPtr()->SetSelectedTile(placedTile, true);
 }
