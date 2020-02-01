@@ -1,0 +1,57 @@
+=== ROM
+
+== Graphics
+283F54 - Nintendo logo - compressed - 8bit - palette: 283F14 - width: 17
+285A40 - A few days later. - compressed - 4bit - w:32
+28B234 - Hangar - Indexed bitmap - palette: 28B210 - width: 30
+28C730 - Intro hangar sprites - compressed - 4bit - palette: 28C570 index: 0,1,2 - width: 32
+28E880 - Legendary pyramid newspaper - compressed - 4bit - palette: 28E780 index: 0,1,2 - width: 32
+295954 - Wario logo - compressed - 4bit - palette: 2943DC, 2943FC - width: 24
+29D4D0 - Wario sprites (1) - compressed - 4bit - palette: 2DDDA0 - width: 32
+2A37C0 - Hole - compressed - 4bit - palette: 2A37A0 - width: 16 
+2A4E3C - Wario sprites (2) - compressed - 4bit - palette: 2DDDA0 - width: 32
+2A53F8 - Wario sprites (3) - compressed - 4bit - palette: 2DDDA0 - width: 32
+2D41D4 - STEAKS! - compressed - 4bit - palette: 2D40F4 - width: 32
+2D8390 - The End + push start - compressed - 4bit - palette: 2D830E (?) index: 0,1,3 - width: 32
+2D9D18 - Intense mode (probably unused) - 4bit - palette: 2D9C78
+368CF0 - Spoiled Rotten & cie - uncompressed - 4bit - palette: 3B1A70 - width: 32 - height: 16
+~371C30 - Object from Block Tower
+3754F0 - palette: 3B1D90
+400CE8 - Empty health bar - (all health bar) palette: 400AC8
+405288 - Empty health bar (2)
+405388 - 1 heart health bar
+405488 - 2 heart health bar
+405588 - 3 heart health bar
+405688 - 4 heart health bar
+405788 - 5 heart health bar
+405888 - 6 heart health bar
+405988 - 7 heart health bar
+405A88 - 8 heart health bar (Full)
+405B88 - Blinking 1 heart health bar
+405C88 - Empty health fragment bar
+405D88 - 1 health fragment bar
+405E88 - 2 health fragment bar
+405F88 - 3 health fragment bar
+406088 - 4 health fragment bar
+406188 - 5 health fragment bar
+406288 - 6 health fragment bar
+406388 - 7 health fragment bar
+406388 - 8 health fragment bar (Full)
+(Palette in RAM 050002E0)
+
+~47D87C - Tileset of Block Tower
+64C8C4 - All level and boss icons - uncompressed - 4bit - width: 32 - height: 30
+68CF5C - Pyramid - Indexed bitmap - palette: near 646358 somewhere
+6B4288 - CDroms player screen with icons - uncompressed - palette: 6B41E8 (From 6B4088 to 6B4288) - 4bit - width: 32 - height: 34
+73D764 - Menu - compressed - 4bit - w:32
+7409C0 - Menutext - compressed - 4bit - w:32
+74140C -      - || -
+741D00 -      - || -
+7430FC, 745350, 745B58
+74C3D0 - End Paintings
+
+== Palettes:
+2DDDA0,2DDFA0,2DE918,2DE3A0 - Wario
+28C566 - Intro
+
+3F2F92 Music ID for Hall of Hieroglyph Level (0x02A0 => 672)
