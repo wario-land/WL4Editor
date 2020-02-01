@@ -28,7 +28,15 @@ void PerformOperation(struct OperationParams *operation)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
-            unsigned int index = tcp->tileX + tcp->tileY * room->GetWidth();
+            unsigned int index;
+            if (!tcp->targetLayer)
+            {
+                index = tcp->tileX + tcp->tileY * room->GetLayer0Width();
+            }
+            else
+            {
+                index = tcp->tileX + tcp->tileY * room->GetWidth();
+            }
             layer->GetLayerData()[index] = tcp->newTile;
             // Re-render the tile
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile, tcp->targetLayer);
@@ -122,7 +130,15 @@ void BackTrackOperation(struct OperationParams *operation)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
-            unsigned int index = tcp->tileX + tcp->tileY * room->GetWidth();
+            unsigned int index;
+            if (!tcp->targetLayer)
+            {
+                index = tcp->tileX + tcp->tileY * room->GetLayer0Width();
+            }
+            else
+            {
+                index = tcp->tileX + tcp->tileY * room->GetWidth();
+            }
             layer->GetLayerData()[index] = tcp->oldTile;
             // Re-render the tile
             singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile, tcp->targetLayer);

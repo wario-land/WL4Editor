@@ -1,4 +1,6 @@
 beta-10:
+- Fix a bug for the EditMode DockWidget, now switching to different Rooms won't change the visibility settings
+- Fix edge cases of drawing Tile on Layer 0 when the size of Layer 0 is different from the Room's size
 - Fix Layer alpha setting problem in RoomConfigDialog.
 - Add ROM Patch functionalities.
 - Stability after saving has improved.

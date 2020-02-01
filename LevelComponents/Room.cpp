@@ -50,6 +50,8 @@ namespace LevelComponents
             int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
             layers[i] = new Layer(layerPtr, mappingType);
         }
+        Layer0width = layers[0]->GetLayerWidth();
+        Layer0height = layers[0]->GetLayerHeight();
 
         SetLayerPriorityAndAlphaAttributes(ROMUtils::CurrentFile[roomDataPtr + 26]);
 
@@ -108,8 +110,8 @@ namespace LevelComponents
     /// </remarks>
     Room::Room(Room *room) :
             CameraControlType(room->GetCameraControlType()), RoomID(room->GetRoomID()), LevelID(room->GetLevelID()),
-            Width(room->GetWidth()), Height(room->GetHeight()), RoomHeader(room->GetRoomHeader()),
-            CurrentEntitySetID(room->GetCurrentEntitySetID()), IsCopy(true)
+            Width(room->GetWidth()), Height(room->GetHeight()), Layer0width(room->Layer0width), Layer0height(room->Layer0height),
+            RoomHeader(room->GetRoomHeader()), CurrentEntitySetID(room->GetCurrentEntitySetID()), IsCopy(true)
     {
         // Zero out the arrays
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
@@ -295,8 +297,10 @@ namespace LevelComponents
             if (scene)
             {
                 delete scene;
-            } // Make a new graphics scene to draw to
-            scene = new QGraphicsScene(0, 0, qMax(sceneWidth, 16 * this->GetLayer(0)->GetLayerWidth()), sceneHeight);
+            }
+
+            // Make a new graphics scene to draw to
+            scene = new QGraphicsScene(0, 0, qMax(sceneWidth, (int) (16 * Layer0width)), qMax(sceneHeight, (int) (16 * Layer0height)));
 
             // This represents the EVA alpha layer, which will be rendered in passes before the alpha layer is finalized
             QPixmap alphaPixmap(sceneWidth, sceneHeight);
