@@ -12,3 +12,4 @@ If you're interested in our project and want to get the latest news and enjoy Wa
 
 * [Discord](https://discord.gg/EQ6JhvP)
 * [Level sharing website](https://wario-land.github.io/HackVault/index.html)
+* [Toge-Docs](https://github.com/wario-land/Toge-Docs)
