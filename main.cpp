@@ -17,7 +17,7 @@
 
 #include "phantomstyle.h"
 
-LevelComponents::Level *CurrentLevel;
+// LevelComponents::Level *CurrentLevel;  // TODO: delete this when not needed
 extern int selectedRoom;
 
 /// <summary>
