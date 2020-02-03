@@ -18,6 +18,7 @@ public:
     PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEntry);
     ~PatchEditDialog();
     struct PatchEntryItem CreatePatchEntry();
+    static void StaticComboBoxesInitialization();
 
 private slots:
     void on_pushButton_Browse_clicked();

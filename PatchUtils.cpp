@@ -252,6 +252,7 @@ static QByteArray CreateHook(unsigned int patchAddr, bool stubFunction, bool thu
     }
     else
     {
+        // TODO populate an array for ARM mode
         return QByteArray();
     }
 }
@@ -312,7 +313,7 @@ static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
             }
         }
     }
-    return "";
+    return ""; // success
 }
 
 namespace PatchUtils

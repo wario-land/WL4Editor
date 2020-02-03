@@ -50,7 +50,6 @@ private:
     bool SaveCurrentFileAs();
     bool UnsavedChangesPrompt(QString str);
     void CurrentRoomClearEverything();
-    void LoadROMDataFromFile(QString qFilePath);
 
 protected:
     void resizeEvent(QResizeEvent *event);
@@ -92,6 +91,7 @@ public:
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
     void DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
+    void LoadROMDataFromFile(QString qFilePath);
 
     // Events
     void keyPressEvent(QKeyEvent *event);

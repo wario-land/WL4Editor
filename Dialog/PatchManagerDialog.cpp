@@ -82,19 +82,19 @@ retry:
 
         // Validate that the entry can be added
         if(
-            entry.ThumbMode && (entry.HookAddress & 1) ||
-            !entry.ThumbMode && (entry.HookAddress & 3)
+            entry.ThumbMode && (entry.HookAddress & 1) || // Mis-aligned instruction check
+            !entry.ThumbMode && (entry.HookAddress & 3)   // 2 bytes for thumb, 4 bytes for arm
         ){
             QMessageBox::information(this, "About", QString("Misaligned hook address: ") + QString("%1").arg(entry.HookAddress, 0, 16));
         }
         QFile file(entry.FileName);
-        if(!file.exists())
+        if(!file.exists()) // Patch file must exist
         {
             QMessageBox::information(this, "About", QString("File does not exist: ") + entry.FileName);
             goto error;
         }
         QString relativeFN = GetPathRelativeToROM(entry.FileName);
-        if(relativeFN == "")
+        if(relativeFN.isEmpty()) // Patch file must be within the directory tree of the ROM file
         {
             QMessageBox::information(this, "About", QString("File must be within directory subtree of ROM file: ") + ROMUtils::ROMFilePath);
             goto error;
@@ -102,14 +102,14 @@ retry:
         entry.FileName = relativeFN;
         bool fileNameIsValid = !std::any_of(currentEntries.begin(), currentEntries.end(),
             [entry](struct PatchEntryItem e){ return e.FileName == entry.FileName; });
-        if(!fileNameIsValid)
+        if(!fileNameIsValid) // Cannot add two patch entries using the same file
         {
             QMessageBox::information(this, "About", QString("Another entry already exists with the filename: ") + entry.FileName);
             goto error;
         }
         bool hookIsValid = !entry.HookAddress || !std::any_of(currentEntries.begin(), currentEntries.end(),
             [entry](struct PatchEntryItem e){ return e.HookAddress == entry.HookAddress; });
-        if(!hookIsValid)
+        if(!hookIsValid) // Cannot use two patches on same hook address
         {
             QMessageBox::information(this, "About", QString("Another entry already exists with the hook address: ") + QString::number(entry.HookAddress));
             goto error;
@@ -240,7 +240,7 @@ void PatchManagerDialog::on_savePatchButton_clicked()
             invalidDir,
             QFileDialog::ShowDirsOnly
         );
-        if(selectedDir == "")
+        if(selectedDir.isEmpty())
         {
             return; // canceled
         }
@@ -255,7 +255,7 @@ void PatchManagerDialog::on_savePatchButton_clicked()
 
     // Generate the save chunks and write them to the ROM
     QString errorStr = PatchUtils::SavePatchesToROM(PatchTable->GetAllEntries());
-    if(errorStr == "")
+    if(errorStr.isEmpty())
     {
         // TODO close the patch manager dialog
     }

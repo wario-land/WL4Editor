@@ -3,6 +3,16 @@
 #include <QFileDialog>
 #include <ROMUtils.h>
 
+static QStringList PatchTypeNameSet;
+
+/// <summary>
+/// Perform static initializtion of constant data structures for the dialog.
+/// </summary>
+void PatchEditDialog::StaticComboBoxesInitialization()
+{
+    PatchTypeNameSet << "Binary" << "Assembly" << "C";
+}
+
 /// <summary>
 /// Construct an instance of the PatchEditDialog.
 /// </summary>
@@ -19,8 +29,6 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     ui->setupUi(this);
 
     // Initialize the items in comboBox_PatchType
-    QStringList PatchTypeNameSet;
-    PatchTypeNameSet << "Binary" << "Assembly" << "C";
     ui->comboBox_PatchType->addItems(PatchTypeNameSet);
 
     // Set Validator for lineEdit_HookAddress
@@ -88,7 +96,7 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
         QString(""),
         tr("C source files (*.c);;ARM assembly files (*.s);;Binary files (*.bin)")
     );
-    if(qFilePath != "")
+    if(!qFilePath.isEmpty())
     {
         ui->lineEdit_FilePath->setText(qFilePath);
 

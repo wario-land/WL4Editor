@@ -22,7 +22,8 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
         EntryTableModel.AddEntry(patch);
     }
 
-    // TEST
+    // TODO delete this once the patch manager is complete
+    // TEST this is here for quick auto-population of the patch list while testing
     /*
     struct PatchEntryItem TEST1 { QString("foo.c"), PatchType::C, 0x1111AF, false, false, 0x800000, "01020304" };
     struct PatchEntryItem TEST2 { QString("bar.c"), PatchType::C, 0x2222AF, false, true, 0x800001, "01020304" };

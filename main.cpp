@@ -1,5 +1,6 @@
 #include "Dialog/DoorConfigDialog.h"
 #include "Dialog/RoomConfigDialog.h"
+#include "Dialog/PatchEditDialog.h"
 #include "DockWidget/CameraControlDockWidget.h"
 #include "LevelComponents/Level.h"
 #include "ROMUtils.h"
@@ -13,19 +14,9 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-
-#ifdef _WIN32
-#include <lmcons.h>
-#include <windows.h>
-#if _MSC_VER && !__INTEL_COMPILER
-#pragma comment(lib, "Advapi32.lib")
-#endif // _MSC_VER
-#else  // _WIN32 (else linux)
-#include <unistd.h>
-#endif
-
 #include "Compress.h"
 
+LevelComponents::Level *CurrentLevel;
 extern int selectedRoom;
 
 /// <summary>
@@ -76,6 +67,7 @@ static void StaticInitialization_BeforeROMLoading()
     RoomConfigDialog::StaticComboBoxesInitialization();
     DoorConfigDialog::StaticInitialization();
     CameraControlDockWidget::StaticInitialization();
+    PatchEditDialog::StaticComboBoxesInitialization();
 }
 
 /// <summary>
@@ -101,5 +93,16 @@ int main(int argc, char *argv[])
 >>>>>>> master
     WL4EditorWindow window;
     window.show();
+
+    // Quickly test or debug by automatically loading the ROM without UI
+    //-------------------------------------------------------------------
+    QString filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
+    QFile testFile(filePath);
+    if(testFile.exists())
+    {
+        window.LoadROMDataFromFile(filePath);
+    }
+    //-------------------------------------------------------------------
+
     return application.exec();
 }
