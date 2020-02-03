@@ -6,6 +6,7 @@
 #include "SettingsUtils.h"
 #include "WL4Application.h"
 #include "WL4EditorWindow.h"
+#include "phantomstyle.h"
 #include <QApplication>
 #include <QFile>
 #include <QMessageBox>
@@ -91,7 +92,10 @@ int main(int argc, char *argv[])
 {
     StaticInitialization_BeforeROMLoading();
 
+    QApplication::setStyle(new PhantomStyle);
+
     QApplication application(argc, argv);
+    application.setWindowIcon(QIcon("./images/icon.ico"));
     WL4EditorWindow window;
     window.show();
 

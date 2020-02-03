@@ -1,0 +1,3 @@
+[submodule "ThirdParty/phantomstyle"]
+	path = ThirdParty/phantomstyle
+	url = https://github.com/randrew/phantomstyle.git

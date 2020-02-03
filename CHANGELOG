@@ -8,6 +8,7 @@ beta-10:
 - Support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers
 - Support showing hidden coins in breakable blocks
 - Add Room size limitation
+- Use the Phantomstyle UI theme
 
 beta-9:
 - Fix clear-all only clears layer 0
