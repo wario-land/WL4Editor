@@ -15,6 +15,7 @@ beta-10:
 - Support showing hidden coins in breakable blocks.
 - Add Room size limitation.
 - Fix incorrect EVA/EVB option being displayed by Room Config Dialog.
+- Use the Phantomstyle UI theme
 
 beta-9:
 - Fix clear-all only clears hardmode entities

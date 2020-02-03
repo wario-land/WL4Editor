@@ -392,7 +392,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Current Room's graphic</string>
+    <string>Screenshot Room</string>
    </property>
   </action>
   <action name="actionEdit_Tileset">

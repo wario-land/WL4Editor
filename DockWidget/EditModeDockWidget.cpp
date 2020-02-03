@@ -300,7 +300,7 @@ void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 }
 
 /// <summary>
-/// Slot function for changing difficulty to SHard.
+/// Slot function for changing difficulty to S-Hard.
 /// </summary>
 /// <param name="checked">
 /// show the check state of the RadioButton_SHMode.
