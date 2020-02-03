@@ -14,8 +14,8 @@ beta-10:
 - Add menu item "Export" and support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers.
 - Support showing hidden coins in breakable blocks.
 - Add Room size limitation.
-- Fix incorrect EVA/EVB option being displayed by Room Config Dialog.
-- Use the Phantomstyle UI theme
+- Use the Phantomstyle UI theme.
+- Add Icon.
 
 beta-9:
 - Fix clear-all only clears hardmode entities
