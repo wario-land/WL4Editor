@@ -101,7 +101,8 @@ HEADERS += \
     SettingsUtils.h \
     Dialog/TilesetEditor_Tile16MapGraphicView.h \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.h \
-    Dialog/TilesetEditor_PaletteGraphicView.h
+    Dialog/TilesetEditor_PaletteGraphicView.h \
+    ThirdParty/phantomstyle/src/phantomstyle.h
 
 FORMS += \
     WL4EditorWindow.ui \

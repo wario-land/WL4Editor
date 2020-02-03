@@ -7,7 +7,6 @@
 #include "SettingsUtils.h"
 #include "WL4Application.h"
 #include "WL4EditorWindow.h"
-#include "phantomstyle.h"
 #include <QApplication>
 #include <QFile>
 #include <QMessageBox>
@@ -15,6 +14,8 @@
 #include <fstream>
 #include <iostream>
 #include "Compress.h"
+
+#include "phantomstyle.h"
 
 LevelComponents::Level *CurrentLevel;
 extern int selectedRoom;
@@ -84,13 +85,8 @@ int main(int argc, char *argv[])
     StaticInitialization_BeforeROMLoading();
 
     QApplication::setStyle(new PhantomStyle);
-
     QApplication application(argc, argv);
-<<<<<<< HEAD
-    SettingsUtils::InitProgramSetupPath(application);
-=======
     application.setWindowIcon(QIcon("./images/icon.ico"));
->>>>>>> master
     WL4EditorWindow window;
     window.show();
 
