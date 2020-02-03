@@ -1122,8 +1122,9 @@ void WL4EditorWindow::on_actionAbout_triggered()
                                "    xiazhanjian\n"
                                "    chanchancl\n"
                                "    Kleyment\n"
+                               "    IamRifki\n\n"
                                "Special thanks:\n"
-                               "    xTibor\n"
+                               "    xTibor\n\n"
                                "Version: ") +
                        WL4EDITOR_VERSION);
     QPushButton *changelogButton = infoPrompt.addButton(tr("Ok"), QMessageBox::NoRole);

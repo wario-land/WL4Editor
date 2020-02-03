@@ -93,7 +93,8 @@ HEADERS += \
     SettingsUtils.h \
     Dialog/TilesetEditor_Tile16MapGraphicView.h \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.h \
-    Dialog/TilesetEditor_PaletteGraphicView.h
+    Dialog/TilesetEditor_PaletteGraphicView.h \ 
+    Themes.h
 
 FORMS += \
     WL4EditorWindow.ui \
