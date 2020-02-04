@@ -6,7 +6,10 @@
 #include "SettingsUtils.h"
 #include "WL4Application.h"
 #include "WL4EditorWindow.h"
+#include "phantomstyle.h"
+#include "Themes.h"
 #include <QApplication>
+#include <QCoreApplication>
 #include <QFile>
 #include <QMessageBox>
 #include <cstring>
@@ -91,7 +94,12 @@ int main(int argc, char *argv[])
 {
     StaticInitialization_BeforeROMLoading();
 
+    QApplication::setStyle(new PhantomStyle);
+    // TODO(alt): Add option to toggle themes.
+    QApplication::setPalette(namedColorSchemePalette(Dark));
+
     QApplication application(argc, argv);
+    application.setWindowIcon(QIcon("./images/icon.ico"));
     WL4EditorWindow window;
     window.show();
 

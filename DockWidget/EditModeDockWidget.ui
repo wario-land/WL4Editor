@@ -234,7 +234,7 @@
           </size>
          </property>
          <property name="text">
-          <string>view hidden coins</string>
+          <string>View hidden coins</string>
          </property>
         </widget>
        </item>
@@ -319,7 +319,7 @@
        <item>
         <widget class="QRadioButton" name="RadioButton_SHMode">
          <property name="text">
-          <string>SHard</string>
+          <string>S-Hard</string>
          </property>
         </widget>
        </item>
