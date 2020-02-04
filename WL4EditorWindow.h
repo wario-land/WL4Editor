@@ -128,6 +128,8 @@ private slots:
     void on_actionSave_Room_s_graphic_triggered();
     void on_actionManager_triggered();
     void on_actionEdit_Tileset_triggered();
+    void on_actionLight_triggered();
+    void on_actionDark_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

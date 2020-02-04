@@ -7,8 +7,6 @@
 #include "SettingsUtils.h"
 #include "WL4Application.h"
 #include "WL4EditorWindow.h"
-#include "phantomstyle.h"
-#include "Themes.h"
 #include <QApplication>
 #include <QCoreApplication>
 #include <QFile>
@@ -17,11 +15,6 @@
 #include <fstream>
 #include <iostream>
 #include "Compress.h"
-
-#include "phantomstyle.h"
-
-// LevelComponents::Level *CurrentLevel;  // TODO: delete this when not needed
-extern int selectedRoom;
 
 /// <summary>
 /// Load a ROM file into the data array in ROMUtils.cpp.
@@ -87,11 +80,8 @@ int main(int argc, char *argv[])
 {
     StaticInitialization_BeforeROMLoading();
 
-    QApplication::setStyle(new PhantomStyle);
-
-    // TODO(alt): Add option to toggle themes.
-    QApplication::setPalette(namedColorSchemePalette(Dark));
     QApplication application(argc, argv);
+    SettingsUtils::InitProgramSetupPath(application);
     application.setWindowIcon(QIcon("./images/icon.ico"));
     WL4EditorWindow window;
     window.show();
