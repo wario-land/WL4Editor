@@ -56,6 +56,10 @@ SOURCES += \
     DockWidget/EntitySetDockWidget.cpp \
     Compress.cpp \
     DockWidget/CameraControlDockWidget.cpp \
+    Dialog/PatchManagerDialog.cpp \
+    Dialog/PatchManagerTableView.cpp \
+    PatchUtils.cpp \
+    Dialog/PatchEditDialog.cpp \
     Dialog/TilesetEditDialog.cpp \
     SettingsUtils.cpp \
     Dialog/TilesetEditor_Tile16MapGraphicView.cpp \
@@ -89,11 +93,16 @@ HEADERS += \
     Compress.h \
     DockWidget/CameraControlDockWidget.h \
     WL4Application.h \
+    Dialog/PatchManagerDialog.h \
+    Dialog/PatchManagerTableView.h \
+    PatchUtils.h \
+    Dialog/PatchEditDialog.h \
     Dialog/TilesetEditDialog.h \
     SettingsUtils.h \
     Dialog/TilesetEditor_Tile16MapGraphicView.h \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.h \
-    Dialog/TilesetEditor_PaletteGraphicView.h \ 
+    Dialog/TilesetEditor_PaletteGraphicView.h \
+    ThirdParty/phantomstyle/src/phantom/phantomstyle.h
     Themes.h
 
 FORMS += \
@@ -106,4 +115,6 @@ FORMS += \
     Dialog/DoorConfigDialog.ui \
     DockWidget/EntitySetDockWidget.ui \
     DockWidget/CameraControlDockWidget.ui \
+    Dialog/PatchManagerDialog.ui \
+    Dialog/PatchEditDialog.ui \
     Dialog/TilesetEditDialog.ui

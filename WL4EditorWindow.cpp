@@ -1,5 +1,6 @@
 #include "WL4EditorWindow.h"
 #include "Operation.h"
+#include "Dialog/PatchManagerDialog.h"
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
 
@@ -37,15 +38,38 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     ui->setupUi(this);
     singleton = this;
 
-    // UI Initialization
+    // MainWindow UI Initialization
     ui->graphicsView->scale(graphicViewScalerate, graphicViewScalerate);
     statusBarLabel = new QLabel("Open a ROM file");
     statusBarLabel->setMargin(3);
     ui->statusBar->addWidget(statusBarLabel);
+
+    // Create DockWidgets
     EditModeWidget = new EditModeDockWidget();
     Tile16SelecterWidget = new Tile16DockWidget();
     EntitySetWidget = new EntitySetDockWidget();
     CameraControlWidget = new CameraControlDockWidget();
+
+    // Add Recent ROM QAction according to the INI file
+    QMenu *filemenu = ui->menuRecent_ROM;
+    for(uint i = 0; i < sizeof(RecentROMs) / sizeof(RecentROMs[0]); i++)
+    {
+        recentROMnum = i;
+        QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + 1));
+        if(!filepath.length())
+        {
+            if(i == 0)
+            {
+                RecentROMs[0] = new QAction("-/-", this);
+                filemenu->addAction(RecentROMs[0]);
+                connect(RecentROMs[0], SIGNAL(triggered()), this, SLOT(openRecentROM()));
+            }
+            break;
+        }
+        RecentROMs[i] = new QAction(filepath, this);
+        filemenu->addAction(RecentROMs[i]);
+        connect(RecentROMs[i], SIGNAL(triggered()), this, SLOT(openRecentROM()));
+    }
 
     // Memory Initialization
     memset(ROMUtils::singletonTilesets, 0, sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0]));
@@ -146,11 +170,25 @@ void WL4EditorWindow::OpenROM()
         return;
     }
 
+    LoadROMDataFromFile(qFilePath);
+}
+
+/// <summary>
+/// Load ROM data from a file into the editor's data structures
+/// </summary>
+/// <remarks>
+/// This is a helper function to prevent duplication of code from multiple ways a ROM file can be loaded
+/// </remarks>
+/// <param name="filePath">
+/// The path of the ROM file
+/// </param>
+void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
+{
     // Load the ROM file
     std::string filePath = qFilePath.toStdString();
     if (!LoadROMFile(qFilePath))
     {
-        QMessageBox::critical(nullptr, QString("Load Error"), QString("You may load a wrong ROM!"));
+        QMessageBox::critical(nullptr, QString("Load Error"), QString("You may have loaded an invalid ROM!"));
         return;
     }
 
@@ -184,6 +222,14 @@ void WL4EditorWindow::OpenROM()
     int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     UnsavedChanges = false;
 
+    UIStartUp(tmpTilesetID);
+}
+
+/// <summary>
+/// Update the UI after loading a ROM.
+/// </summary>
+void WL4EditorWindow::UIStartUp(int currentTilesetID)
+{
     // Only modify UI on the first time a ROM is loaded
     if (!firstROMLoaded)
     {
@@ -216,9 +262,61 @@ void WL4EditorWindow::OpenROM()
 
     // Modify UI every time when a ROM is loaded
     EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
-    Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    Tile16SelecterWidget->SetTileset(currentTilesetID);
     CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
 
+    // Modify Recent ROM menu
+    int findedInRecentFile = -1; // start by 0
+    if(recentROMnum > 0)
+    {
+        for(uint i = 0; i < recentROMnum; i++)
+        {
+            QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + 1));
+            if(filepath == ROMUtils::ROMFilePath)
+            {
+                findedInRecentFile = i;
+                break;
+            }
+        }
+    }
+    QMenu *filemenu = ui->menuRecent_ROM;
+    if(findedInRecentFile == -1)
+    {
+        if(recentROMnum > 0)
+        {
+            if(recentROMnum < (sizeof(RecentROMs) / sizeof(RecentROMs[0])))
+            {
+                RecentROMs[recentROMnum] = new QAction(RecentROMs[recentROMnum - 1]->text(), this);
+                filemenu->addAction(RecentROMs[recentROMnum]);
+                connect(RecentROMs[recentROMnum], SIGNAL(triggered()), this, SLOT(openRecentROM()));
+            }
+            for(uint i = ((recentROMnum < (sizeof(RecentROMs) / sizeof(RecentROMs[0]) - 1) ? recentROMnum : (sizeof(RecentROMs) / sizeof(RecentROMs[0]) - 1))); i > 0 ; i--)
+            {
+                QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i));
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), filepath);
+                RecentROMs[i]->setText(filepath);
+            }
+        }
+        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFilePath);
+        RecentROMs[0]->setText(ROMUtils::ROMFilePath);
+        recentROMnum++;
+    }
+    else
+    {
+        if(findedInRecentFile > 0)
+        {
+            for(int i = findedInRecentFile; i > -1; i--)
+            {
+                QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i));
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), filepath);
+                RecentROMs[i]->setText(filepath);
+            }
+            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFilePath);
+            RecentROMs[0]->setText(ROMUtils::ROMFilePath);
+        }
+    }
+
+    // UI update
     LoadRoomUIUpdate();
     DoorConfigDialog::EntitySetsInitialization();
 }
@@ -547,11 +645,65 @@ void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
 }
 
 /// <summary>
+/// Slot function to load a ROM.
+/// </summary>
+void WL4EditorWindow::openRecentROM()
+{
+    // Check for unsaved operations
+    if(!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?"))) return;
+
+    QString filepath;
+    QAction *action = qobject_cast<QAction *>(sender());
+    if(action)
+    {
+        filepath = action->text();
+    }
+    // Check if it is a valid slot function call
+    if(filepath == "-/-" || filepath == "") return;
+
+    // Check if the file exist, if not, modify the Recent ROM QAction list
+    QFile file(filepath);
+    if(!file.exists())
+    {
+        if(recentROMnum == 1)
+        {
+            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), "");
+            RecentROMs[0]->setText("-/-");
+        }
+        if(recentROMnum > 1)
+        {
+            int deletelinenum = -1;
+            for(int i = 0; i < 5; i++)
+            {
+                if(RecentROMs[i]->text() == filepath)
+                {
+                    deletelinenum = i;
+                    break;
+                }
+            }
+            for(int i = deletelinenum; i < (recentROMnum - 1); i++)
+            {
+                RecentROMs[i]->setText(RecentROMs[i+1]->text());
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), RecentROMs[i+1]->text());
+            }
+            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentROMnum), "");
+            delete RecentROMs[recentROMnum - 1];
+        }
+        recentROMnum--;
+        QMessageBox::critical(nullptr, QString("Load Error"), QString("This ROM no longer exists!"));
+        return;
+    }
+
+    LoadROMDataFromFile(filepath);
+
+    this->setFocus(); // Enable keyPressEvent
+}
+
+/// <summary>
 /// Call the OpenROM function when the action for it is triggered in the main window.
 /// </summary>
 void WL4EditorWindow::on_actionOpen_ROM_triggered()
 {
-    // TODO: check UnsavedChanges
     OpenROM();
     this->setFocus(); // Enable keyPressEvent
 }
@@ -1095,7 +1247,7 @@ bool WL4EditorWindow::SaveCurrentFileAs()
         QFileDialog::getSaveFileName(this, tr("Save ROM file as"), dialogInitialPath, tr("GBA ROM files (*.gba)"));
     if (qFilePath.compare(""))
     {
-        if (ROMUtils::SaveFile(qFilePath))
+        if (ROMUtils::SaveLevel(qFilePath))
         {
             // If successful in saving the file, set the window title to reflect the new file
             dialogInitialPath = qFilePath;
@@ -1447,4 +1599,11 @@ void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
     }
 }
 
-
+/// <summary>
+/// Open the patch manager.
+/// </summary>
+void WL4EditorWindow::on_actionManager_triggered()
+{
+    PatchManagerDialog dialog(this);
+    auto result = dialog.exec();
+}
