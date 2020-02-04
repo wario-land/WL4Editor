@@ -102,7 +102,7 @@ HEADERS += \
     Dialog/TilesetEditor_Tile16MapGraphicView.h \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.h \
     Dialog/TilesetEditor_PaletteGraphicView.h \
-    ThirdParty/phantomstyle/src/phantom/phantomstyle.h
+    ThirdParty/phantomstyle/src/phantom/phantomstyle.h \
     Themes.h
 
 FORMS += \

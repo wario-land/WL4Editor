@@ -116,7 +116,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -236,9 +236,23 @@
     </property>
     <addaction name="actionManager"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <widget class="QMenu" name="menuThemes">
+     <property name="title">
+      <string>Themes</string>
+     </property>
+     <addaction name="actionLight"/>
+     <addaction name="actionDark"/>
+    </widget>
+    <addaction name="menuThemes"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuPatches"/>
+   <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -401,6 +415,22 @@
    </property>
    <property name="text">
     <string>Edit Current Tileset</string>
+   </property>
+  </action>
+  <action name="actionDark">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Dark</string>
+   </property>
+  </action>
+  <action name="actionLight">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Light</string>
    </property>
   </action>
  </widget>
