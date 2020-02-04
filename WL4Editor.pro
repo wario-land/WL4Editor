@@ -11,6 +11,10 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = WL4Editor
 TEMPLATE = app
 
+include(./ThirdParty/phantomstyle/src/phantom/phantom.pri)
+
+RC_ICONS = images/icon.ico
+
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -52,6 +56,10 @@ SOURCES += \
     DockWidget/EntitySetDockWidget.cpp \
     Compress.cpp \
     DockWidget/CameraControlDockWidget.cpp \
+    Dialog/PatchManagerDialog.cpp \
+    Dialog/PatchManagerTableView.cpp \
+    PatchUtils.cpp \
+    Dialog/PatchEditDialog.cpp \
     Dialog/TilesetEditDialog.cpp \
     SettingsUtils.cpp \
     Dialog/TilesetEditor_Tile16MapGraphicView.cpp \
@@ -85,11 +93,17 @@ HEADERS += \
     Compress.h \
     DockWidget/CameraControlDockWidget.h \
     WL4Application.h \
+    Dialog/PatchManagerDialog.h \
+    Dialog/PatchManagerTableView.h \
+    PatchUtils.h \
+    Dialog/PatchEditDialog.h \
     Dialog/TilesetEditDialog.h \
     SettingsUtils.h \
     Dialog/TilesetEditor_Tile16MapGraphicView.h \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.h \
-    Dialog/TilesetEditor_PaletteGraphicView.h
+    Dialog/TilesetEditor_PaletteGraphicView.h \
+    ThirdParty/phantomstyle/src/phantom/phantomstyle.h \
+    Themes.h
 
 FORMS += \
     WL4EditorWindow.ui \
@@ -101,4 +115,6 @@ FORMS += \
     Dialog/DoorConfigDialog.ui \
     DockWidget/EntitySetDockWidget.ui \
     DockWidget/CameraControlDockWidget.ui \
+    Dialog/PatchManagerDialog.ui \
+    Dialog/PatchEditDialog.ui \
     Dialog/TilesetEditDialog.ui

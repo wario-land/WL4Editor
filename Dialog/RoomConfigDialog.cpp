@@ -35,7 +35,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->CheckBox_Layer0Alpha->setChecked(CurrentRoomParams->Layer0Alpha);
     int LayerPriorityID = CurrentRoomParams->LayerPriorityAndAlphaAttr & 3;
     ui->ComboBox_LayerPriority->setCurrentIndex((LayerPriorityID < 2) ? LayerPriorityID : (LayerPriorityID - 1));
-    ui->ComboBox_AlphaBlendAttribute->setCurrentIndex((CurrentRoomParams->LayerPriorityAndAlphaAttr & 0x78) >> 2);
+    ui->ComboBox_AlphaBlendAttribute->setCurrentIndex((CurrentRoomParams->LayerPriorityAndAlphaAttr - 4) >> 2);  // == (LayerPriorityAndAlphaAttr - 8) >> 2 + 1
     if (CurrentRoomParams->Layer0Enable)
     {
         ui->ComboBox_Layer0MappingType->setCurrentIndex((((CurrentRoomParams->Layer0MappingTypeParam) & 0x30) >> 4) -

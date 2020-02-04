@@ -1,23 +1,30 @@
 beta-10:
-- Support drag & drop for door and entity, now double-click open the door dialog instead of left-click
-- Add Tileset editor dialog
-- Adjust the EditMode dock widget, move ExtraLayers_GroupBox out from visibleLayersGroupBox 
-- Fix some entities rendering glitches caused by wrong tile loading
-- Add another available Camera control type, Vertical Seperate
-- Support tristate for Entities Layers visibility checkbox to support not rendering position boxes for entities
-- Support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers
-- Support showing hidden coins in breakable blocks
-- Add Room size limitation
+- Fix a bug for the EditMode DockWidget, now switching to different Rooms won't change the visibility settings
+- Fix edge cases of drawing Tile on Layer 0 when the size of Layer 0 is different from the Room's size
+- Fix Layer alpha setting problem in RoomConfigDialog.
+- Add ROM Patch functionalities.
+- Stability after saving has improved.
+- Added INI program settings, Support Opening Recent ROM in File menu.
+- Support drag & drop for door and entity, now double-click open the door dialog instead of left-click.
+- Add Tileset editor dialog.
+- Adjust the EditMode dock widget, move ExtraLayers_GroupBox out from visibleLayersGroupBox.
+- Fix some entities rendering glitches caused by wrong tile loading.
+- Add another available Camera control type, Vertical Seperate.
+- Support tristate for Entities Layers visibility checkbox to support not rendering position boxes for entities.
+- Add menu item "Export" and support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers.
+- Support showing hidden coins in breakable blocks.
+- Add Room size limitation.
+- Use the Phantomstyle UI theme.
+- Add Icon.
 
 beta-9:
-- Fix clear-all only clears layer 0
+- Fix clear-all only clears hardmode entities
 - Fix undo multiple times then placing a tile crashes the editor
 - Find wrong max value setting of some spinboxes in door config dialog
 - Fix shrinking the Room cannot protect you from deleting the last Door, optimize the auto-reset door position code
 - Fix new camera limitators data does not work in-game
 
 beta-8:
-- Known issue: Editor instability after saving ROM (always close and re-open the editor after saving, for now!)
 - Fix cannot delete out-of-range Doors when shrinking Room size.
 - Fix changing the tileset in Sapphire passage level 4 causes a crash.
 - Adjust the code of the program to let it be able to compile by MSVC64 C++ compiler.

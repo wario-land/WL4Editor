@@ -61,17 +61,14 @@ void EditModeDockWidget::SetLayersCheckBoxEnabled(int index, bool usable)
     {
     case 0:
         ui->CheckBox_Layer0View->setEnabled(usable);
-        ui->CheckBox_Layer0View->setChecked(usable);
         ui->RadioButton_EditOnLayer0->setEnabled(usable);
         break;
     case 2:
         ui->CheckBox_Layer2View->setEnabled(usable);
-        ui->CheckBox_Layer2View->setChecked(usable);
         ui->RadioButton_EditOnLayer2->setEnabled(usable);
         break;
     case 3:
         ui->CheckBox_Layer3View->setEnabled(usable);
-        ui->CheckBox_Layer3View->setChecked(usable);
         ui->RadioButton_EditOnLayer3->setEnabled(usable);
         break;
     case 7:
@@ -303,7 +300,7 @@ void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 }
 
 /// <summary>
-/// Slot function for changing difficulty to SHard.
+/// Slot function for changing difficulty to S-Hard.
 /// </summary>
 /// <param name="checked">
 /// show the check state of the RadioButton_SHMode.

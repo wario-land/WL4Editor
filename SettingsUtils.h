@@ -22,15 +22,19 @@ namespace SettingsUtils
      * RecentROMPath_2 = path
      * RecentROMPath_3 = path
      * RecentROMPath_4 = path
+     *
+     * [settings]
+     * EditorThemeId = string (convert to int after being read)
      */
     enum IniKeys
     {
         eabi_binfile_path = 0,
-        RecentROMPath_0 = 1,
-        RecentROMPath_1 = 2,
-        RecentROMPath_2 = 3,
-        RecentROMPath_3 = 4,
-        RecentROMPath_4 = 5,
+        RecentROMPath_0   = 1,
+        RecentROMPath_1   = 2,
+        RecentROMPath_2   = 3,
+        RecentROMPath_3   = 4,
+        RecentROMPath_4   = 5,
+        EditorThemeId     = 6,
     };
 
     // Static Key QString set
@@ -43,10 +47,11 @@ namespace SettingsUtils
         "history/RecentROMPath_2",
         "history/RecentROMPath_3",
         "history/RecentROMPath_4",
+        "settings/EditorThemeId",
     };
     // clang-format on
 
-    void InitProgramSetupPath();
+    void InitProgramSetupPath(QCoreApplication &application);
     void SetKey(enum IniKeys key, QString value);
     QString GetKey(enum IniKeys key);
 }; // namespace SettingsUtils

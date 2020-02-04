@@ -36,6 +36,9 @@ private:
     EntitySetDockWidget *EntitySetWidget;
     CameraControlDockWidget *CameraControlWidget;
     LevelComponents::Level *CurrentLevel = nullptr;
+    QAction *RecentROMs[5];
+    uint recentROMnum = 0;
+
     unsigned int selectedRoom = 0;
     uint graphicViewScalerate = 2;
     bool UnsavedChanges = false; // state check bool only be used when user try loading another ROM, another Level or
@@ -43,7 +46,7 @@ private:
     bool firstROMLoaded = false;
     void closeEvent(QCloseEvent *event);
     bool notify(QObject *receiver, QEvent *event);
-    static bool SaveCurrentFile() { return ROMUtils::SaveFile(ROMUtils::ROMFilePath); }
+    static bool SaveCurrentFile() { return ROMUtils::SaveLevel(ROMUtils::ROMFilePath); }
     bool SaveCurrentFileAs();
     bool UnsavedChangesPrompt(QString str);
     void CurrentRoomClearEverything();
@@ -68,6 +71,7 @@ public:
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
     bool FirstROMIsLoaded() { return firstROMLoaded; }
     void OpenROM();
+    void UIStartUp(int currentTilesetID);
     void SetEditModeDockWidgetLayerEditability();
     bool *GetLayersVisibilityArray() { return EditModeWidget->GetLayersVisibilityArray(); }
     void Graphicsview_UnselectDoorAndEntity();
@@ -87,11 +91,16 @@ public:
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
     void DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
+    void LoadROMDataFromFile(QString qFilePath);
 
     // Events
     void keyPressEvent(QKeyEvent *event);
 
 private slots:
+    // called slots
+    void openRecentROM();
+
+    // Auto-generated
     void on_actionOpen_ROM_triggered();
     void on_loadLevelButton_clicked();
     void on_roomDecreaseButton_clicked();
@@ -117,7 +126,10 @@ private slots:
     void on_action_clear_Hard_triggered();
     void on_action_clear_S_Hard_triggered();
     void on_actionSave_Room_s_graphic_triggered();
+    void on_actionManager_triggered();
     void on_actionEdit_Tileset_triggered();
+    void on_actionLight_triggered();
+    void on_actionDark_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

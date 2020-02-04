@@ -375,50 +375,110 @@ namespace ROMUtils
     }
 
     /// <summary>
-    /// Save the currently loaded level to the ROM file.
+    /// Find the next chunk of a specific type.
     /// </summary>
-    bool SaveFile(QString filePath)
+    /// <param name="ROMData">
+    /// The pointer to the ROM data being processed.
+    /// </param>
+    /// <param name="ROMLength">
+    /// The length of the ROM data.
+    /// </param>
+    /// <param name="startAddr">
+    /// The start address to search from.
+    /// </param>
+    /// <param name="chunkType">
+    /// The chunk type to search for in the ROM.
+    /// </param>
+    /// <returns>
+    /// The next chunk of a specific type, or 0 if none exists.
+    /// </returns>
+    unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType)
     {
-        // Create TempFile
-        SaveDataIndex = 1;
-        bool success = false;
+        if(startAddr >= ROMLength) return 0; // fail if not enough room in ROM
+        while(startAddr < ROMLength)
+        {
+            // Optimize search by incrementing more with partial matches
+            int STARmatch = StrMatch(ROMData + startAddr, "STAR");
+            if(STARmatch < 4)
+            {
+                // STAR not found at current address
+                startAddr += qMax(STARmatch, 1);
+            }
+            else
+            {
+                // STAR found at current address: validate the RATS checksum and chunk type
+                if(ValidRATS(ROMData + startAddr) && ROMData[startAddr + 8] == chunkType)
+                {
+                    return startAddr;
+                }
+                else
+                {
+                    // Invalid RATS or chunk type not found: advance
+                    startAddr += 4;
+                }
+            }
+        }
+        return 0;
+    }
+
+    /// <summary>
+    /// Find all chunks of a specific type.
+    /// </summary>
+    /// <param name="ROMData">
+    /// The pointer to the ROM data being processed.
+    /// </param>
+    /// <param name="ROMLength">
+    /// The length of the ROM data.
+    /// </param>
+    /// <param name="startAddr">
+    /// The start address to search from.
+    /// </param>
+    /// <param name="chunkType">
+    /// The chunk type to search for in the ROM.
+    /// </param>
+    /// <returns>
+    /// A list of all chunks of a specific type.
+    /// </returns>
+    QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType)
+    {
+        QVector<unsigned int> chunks;
+        while(startAddr < ROMLength)
+        {
+            unsigned int chunk = FindChunkInROM(ROMData, ROMLength, startAddr, chunkType);
+            if(chunk)
+            {
+                chunks.append(chunk);
+                unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMData + startAddr + 4);
+                startAddr += chunkLen + 12;
+            }
+            else break;
+        }
+        return chunks;
+    }
+
+    /// <summary>
+    /// Save a list of chunks to the ROM file.
+    /// </summary>
+    /// <param name="filePath">
+    /// The file name to use when saving the ROM.
+    /// </param>
+    /// <param name="chunks">
+    /// The chunks to save to the ROM.
+    /// </param>
+    /// <param name="PostProcessingCallback">
+    /// Post-processing to perform after writing the save chunks, but before saving the file itself.
+    /// </param>
+    /// <returns>
+    /// True if the save was successful.
+    /// </returns>
+    bool SaveFile(QString filePath, QVector<struct SaveData> chunks,
+        std::function<void(QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
+        std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback)
+    {
+        // Finding space for the chunks can be done faster if the chunks are ordered by size
         unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
         unsigned int TempLength = CurrentFileSize;
         memcpy(TempFile, CurrentFile, CurrentFileSize);
-
-        // Obtain the list of data chunks to save to the rom
-        // Get level's chunks
-        QVector<struct SaveData> chunks;
-        LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
-        int levelHeaderOffset =
-            WL4Constants::LevelHeaderIndexTable + currentLevel->GetPassage() * 24 + currentLevel->GetStage() * 4;
-        int levelHeaderIndex = ROMUtils::IntFromData(levelHeaderOffset);
-        int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-        currentLevel->GetSaveChunks(chunks);
-
-        // Get Tilesets chunks
-        for(int i = 0; i < 92; ++i)
-        {
-            if(singletonTilesets[i]->IsNewTileset())
-            {
-                GenerateTilesetSaveChunks(i, chunks);
-
-                // Save Animated Tile info table
-                unsigned short *AnimatedTileInfoTable = singletonTilesets[i]->GetAnimatedTileData();
-                memcpy(TempFile + i * 32 + WL4Constants::AnimatedTileIdTableCase2, (unsigned char*)AnimatedTileInfoTable, 32);
-
-                // Reset size_of bgGFXLen and fgGBXLen
-                int tilesetPtr = singletonTilesets[i]->getTilesetPtr();
-                int *fgGFXLenaddr = (int *) (TempFile + tilesetPtr + 4);
-                *fgGFXLenaddr = singletonTilesets[i]->GetfgGFXlen();
-                int *bgGFXLenaddr = (int *) (TempFile + tilesetPtr + 16);
-                *bgGFXLenaddr = singletonTilesets[i]->GetbgGFXlen();
-
-                singletonTilesets[i]->SetChanged(false);
-            }
-        }
-
-        // Finding space for the chunks can be done faster if the chunks are ordered by size
         std::sort(chunks.begin(), chunks.end(),
                   [](const struct SaveData &a, const struct SaveData &b) { return a.size < b.size; });
         std::map<int, int> chunkIDtoIndex;
@@ -444,49 +504,70 @@ namespace ROMUtils
 
         // Find space in the ROM for each chunk and assign addresses for the chunks
         // also expand the ROM size as necessary (up to 32MB) to hold the new data.
+        bool success = false;
         std::map<int, int> indexToChunkPtr;
-        int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
-        foreach (struct SaveData chunk, chunks)
-        {
-            int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
-        findspace:
-            int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
-            if (chunk.alignment)
-                chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
-            if (!chunkAddr)
+        QVector<struct SaveData> chunksToAdd(chunks);
+        do {
+            int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
+            foreach(struct SaveData chunk, chunksToAdd)
             {
-                // Expand ROM (double the size and align to 8MB)
-                unsigned int newSize = (TempLength << 1) & ~0x7FFFFF;
-                if (newSize <= 0x2000000)
+                int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
+findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
+                if(chunk.alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
+                if(!chunkAddr)
                 {
-                    unsigned char *newTempFile = (unsigned char *) realloc(TempFile, newSize);
-                    if (!newTempFile)
+                    // Expand ROM (double the size and align to 8MB)
+                    unsigned int newSize = (TempLength << 1) & ~0x7FFFFF;
+                    if(newSize <= 0x2000000)
                     {
-                        // Realloc failed due to system memory constraints
-                        QMessageBox::warning(singleton, "Out of memory",
-                                             "Unable to save changes because your computer is out of memory.",
-                                             QMessageBox::Ok, QMessageBox::Ok);
+                        unsigned char *newTempFile = (unsigned char*) realloc(TempFile, newSize);
+                        if(!newTempFile)
+                        {
+                            // Realloc failed due to system memory constraints
+                            QMessageBox::warning(
+                                singleton,
+                                "Out of memory",
+                                "Unable to save changes because your computer is out of memory.",
+                                QMessageBox::Ok,
+                                QMessageBox::Ok
+                            );
+                            goto error;
+                        }
+                        TempFile = newTempFile;
+                        memset(TempFile + TempLength, 0xFF, newSize - TempLength);
+                        TempLength = newSize;
+                        goto findspace;
+                    }
+                    else
+                    {
+                        // Size cannot exceed 32MB
+                        QMessageBox::warning(
+                            singleton,
+                            "ROM too large",
+                            QString("Unable to save changes because ") + QString::number(chunkSize) +
+                                " contiguous free bytes are necessary, but such a region could not be"
+                                " found, and the ROM file cannot be expanded larger than 32MB.",
+                            QMessageBox::Ok,
+                            QMessageBox::Ok
+                        );
                         goto error;
                     }
-                    TempFile = newTempFile;
-                    memset(TempFile + TempLength, 0xFF, newSize - TempLength);
-                    TempLength = newSize;
-                    goto findspace;
+                }
+                indexToChunkPtr[chunk.index] = chunkAddr;
+                startAddr = chunkAddr + chunk.size + 12; // do not re-search old areas of the ROM
+
+                // Perform chunk allocation callback
+                if(ChunkAllocationCallback)
+                {
+                    ChunkAllocationCallback(chunksToAdd, indexToChunkPtr);
+                    chunks.append(chunksToAdd); // Add any additional chunks created in the callback
                 }
                 else
                 {
-                    // Size cannot exceed 32MB
-                    QMessageBox::warning(singleton, "ROM too large",
-                                         QString("Unable to save changes because ") + QString::number(chunkSize) +
-                                             " contiguous free bytes are necessary, but such a region could not be"
-                                             " found, and the ROM file cannot be expanded larger than 32MB.",
-                                         QMessageBox::Ok, QMessageBox::Ok);
-                    goto error;
+                    chunksToAdd.clear();
                 }
             }
-            indexToChunkPtr[chunk.index] = chunkAddr;
-            startAddr = chunkAddr + chunk.size + 12; // do not re-search old areas of the ROM
-        }
+        } while(!chunksToAdd.empty());
 
         // Apply source pointer modifications
         foreach (struct SaveData chunk, chunks)
@@ -495,14 +576,14 @@ namespace ROMUtils
                 continue;
 
             unsigned char *ptrLoc = chunk.dest_index ?
-                                                     // Source pointer is in another chunk
-                                        chunks[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr
-                                                     :
-                                                     // Source pointer is in main ROM
-                                        TempFile + chunk.ptr_addr;
+                // Source pointer is in another chunk
+                chunks[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr
+                    :
+                // Source pointer is in main ROM
+                TempFile + chunk.ptr_addr;
 
             // We add 12 to the pointer location because the chunk ptr starts at the chunk's RATS tag
-            *(unsigned int *) ptrLoc = (indexToChunkPtr[chunk.index] + 12) | 0x8000000;
+            *reinterpret_cast<unsigned int*>(ptrLoc) = static_cast<unsigned int>((indexToChunkPtr[chunk.index] + 12) | 0x8000000);
         }
 
         // Write each chunk to TempFile
@@ -513,34 +594,37 @@ namespace ROMUtils
 
             // Create the RATS tag
             unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
-            strncpy((char *) destPtr, "STAR", 4);
-            if (chunk.size & 0xFFFF0000)
+            strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
+            if(chunk.size & 0xFFFF0000)
             {
                 // Chunk size must be a 16-bit value
                 QMessageBox::warning(singleton, "RATS chunk too large",
-                                     QString("Unable to save changes because ") + QString::number(chunk.size) +
-                                         " contiguous free bytes are necessary for some save chunk of type " +
-                                         QString::number(chunk.ChunkType) +
-                                         ", but the editor currently"
-                                         " only supports up to size " +
-                                         QString::number(0xFFFF) + ".",
-                                     QMessageBox::Ok, QMessageBox::Ok);
+                     QString("Unable to save changes because ") + QString::number(chunk.size) +
+                         " contiguous free bytes are necessary for some save chunk of type " +
+                         QString::number(chunk.ChunkType) +
+                         ", but the editor currently"
+                         " only supports up to size " +
+                         QString::number(0xFFFF) + ".",
+                     QMessageBox::Ok, QMessageBox::Ok);
                 goto error;
             }
             unsigned short chunkLen = (unsigned short) chunk.size;
-            *(unsigned short *) (destPtr + 4) = chunkLen;
-            *(unsigned short *) (destPtr + 6) = ~chunkLen;
+            *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
+            *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
 
             // Write the chunk metadata
-            *(unsigned int *) (destPtr + 8) = 0;
+            *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
             destPtr[8] = chunk.ChunkType;
 
             // Write the data
             memcpy(destPtr + 12, chunk.data, chunkLen);
         }
-        // Write the level header to the ROM
-        memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(),
-               sizeof(struct LevelComponents::__LevelHeader));
+
+        // Perform post-processing before saving the file
+        if(PostProcessingCallback)
+        {
+            PostProcessingCallback(TempFile, indexToChunkPtr);
+        }
 
         { // Prevent goto from crossing initialization of variables here
             // Save the rom file from the CurrentFile copy
@@ -548,57 +632,21 @@ namespace ROMUtils
             file.open(QIODevice::WriteOnly);
             if (file.isOpen())
             {
-                file.write((const char *) TempFile, TempLength);
+                file.write(reinterpret_cast<const char*>(TempFile), TempLength);
             }
             else
             {
                 // Couldn't open the file to save the ROM
                 QMessageBox::warning(singleton, "Could not save file",
-                                     "Unable to write to or create the ROM file for saving.", QMessageBox::Ok,
-                                     QMessageBox::Ok);
+                     "Unable to write to or create the ROM file for saving.", QMessageBox::Ok,
+                     QMessageBox::Ok);
                 goto error;
             }
             file.close();
 
             // Set the CurrentFile to the copied CurrentFile data
-            free(CurrentFile);
-            CurrentFile = TempFile;
+            memcpy(CurrentFile, TempFile, CurrentFileSize);
             CurrentFileSize = TempLength;
-
-            // Set the new internal data pointer for LevelComponents objects, and mark dirty objects as clean
-            struct SaveData roomHeaderChunk =
-                *std::find_if(chunks.begin(), chunks.end(),
-                              [](const struct SaveData &chunk)
-                              {
-                                  return chunk.ChunkType == SaveDataChunkType::RoomHeaderChunkType;
-                              });
-            unsigned int roomHeaderInROM = indexToChunkPtr[roomHeaderChunk.index] + 12;
-            std::vector<LevelComponents::Room *> rooms = currentLevel->GetRooms();
-            for (unsigned int i = 0; i < rooms.size(); ++i)
-            {
-                struct LevelComponents::__RoomHeader *roomHeader =
-                    (struct LevelComponents::__RoomHeader *) (CurrentFile + roomHeaderInROM +
-                                                              i * sizeof(struct LevelComponents::__RoomHeader));
-                unsigned int *layerDataPtrs = (unsigned int *) &roomHeader->Layer0Data;
-                LevelComponents::Room *room = rooms[i];
-                room->SetCameraBoundaryDirty(false);
-                for (unsigned int j = 0; j < 4; ++j)
-                {
-                    LevelComponents::Layer *layer = room->GetLayer(j);
-                    layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
-                    layer->SetDirty(false);
-                }
-                for (unsigned int j = 0; j < 3; ++j)
-                {
-                    room->SetEntityListDirty(j, false);
-                }
-                struct LevelComponents::__RoomHeader newroomheader;
-                memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
-                room->ResetRoomHeader(newroomheader);
-
-                // TODO: if more elements in the game are going to be support customizing in the editor, more pointers
-                // need to be reset here
-            }
         }
 
         // Set that there are no changes to the ROM now (so no save prompt is given)
@@ -620,6 +668,101 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Save the currently loaded level to the ROM file.
+    /// </summary>
+    /// <param name="filePath">
+    /// The file name to use when saving the ROM.
+    /// </param>
+    /// <returns>
+    /// True if the save was successful.
+    /// </returns>
+    bool SaveLevel(QString filePath)
+    {
+        SaveDataIndex = 1;
+        QVector<struct SaveData> chunks;
+
+        // Get save chunks for the level
+        LevelComponents::Level *currentLevel = singleton->GetCurrentLevel();
+        int levelHeaderOffset = WL4Constants::LevelHeaderIndexTable + currentLevel->GetPassage() * 24 + currentLevel->GetStage() * 4;
+        int levelHeaderIndex = ROMUtils::IntFromData(levelHeaderOffset);
+        int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
+        currentLevel->GetSaveChunks(chunks);
+
+        // Get Tilesets chunks
+        for(int i = 0; i < 92; ++i)
+        {
+            if(singletonTilesets[i]->IsNewTileset())
+            {
+                GenerateTilesetSaveChunks(i, chunks);
+            }
+        }
+
+        // Isolate the room header chunk for post-processing
+        struct SaveData roomHeaderChunk = *std::find_if(chunks.begin(), chunks.end(), [](const struct SaveData &chunk) {
+            return chunk.ChunkType == SaveDataChunkType::RoomHeaderChunkType;
+        });
+        unsigned int roomHeaderInROM;
+
+        // Save the level
+        bool ret = SaveFile(filePath, chunks, nullptr,
+            [levelHeaderPointer, currentLevel, roomHeaderChunk, &roomHeaderInROM]
+            (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
+            {
+                // Capture pointer to new room header location
+                roomHeaderInROM = static_cast<unsigned int>(indexToChunkPtr[roomHeaderChunk.index] + 12);
+
+                // Write the level header to the ROM
+                memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
+
+                // Write Tileset pointer info
+                for(int i = 0; i < 92; ++i)
+                {
+                    if(singletonTilesets[i]->IsNewTileset())
+                    {
+                        // Save Animated Tile info table
+                        unsigned short *AnimatedTileInfoTable = singletonTilesets[i]->GetAnimatedTileData();
+                        memcpy(TempFile + i * 32 + WL4Constants::AnimatedTileIdTableCase2, (unsigned char*)AnimatedTileInfoTable, 32);
+
+                        // Reset size_of bgGFXLen and fgGBXLen
+                        int tilesetPtr = singletonTilesets[i]->getTilesetPtr();
+                        int *fgGFXLenaddr = (int *) (TempFile + tilesetPtr + 4);
+                        *fgGFXLenaddr = singletonTilesets[i]->GetfgGFXlen();
+                        int *bgGFXLenaddr = (int *) (TempFile + tilesetPtr + 16);
+                        *bgGFXLenaddr = singletonTilesets[i]->GetbgGFXlen();
+
+                        singletonTilesets[i]->SetChanged(false);
+                    }
+                }
+            });
+        if(!ret) return false;
+
+        // Set the new internal data pointer for LevelComponents objects, and mark dirty objects as clean
+        std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
+        for(unsigned int i = 0; i < rooms.size(); ++i)
+        {
+            struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
+                (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
+            unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
+            LevelComponents::Room *room = rooms[i];
+            room->SetCameraBoundaryDirty(false);
+            for(unsigned int j = 0; j < 4; ++j)
+            {
+                LevelComponents::Layer *layer = room->GetLayer(j);
+                layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
+                layer->SetDirty(false);
+            }
+            for(unsigned int j = 0; j < 3; ++j)
+            {
+                room->SetEntityListDirty(j, false);
+            }
+            struct LevelComponents::__RoomHeader newroomheader;
+            memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
+            room->ResetRoomHeader(newroomheader);
+           // TODO: if more elements in the game are going to be support customizing in the editor, more pointers need to be reset here
+        }
+        return true;
+    }
+
     /// Load a palette, 16 colors, from a pointer.
     /// </summary>
     /// <param name="palette">
