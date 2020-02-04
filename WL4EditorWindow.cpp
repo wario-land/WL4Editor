@@ -3,6 +3,7 @@
 #include "Dialog/PatchManagerDialog.h"
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
+#include "Themes.h"
 
 #include <cstdio>
 #include <deque>
@@ -35,6 +36,11 @@ QString dialogInitialPath = QString("");
 /// </param>
 WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::WL4EditorWindow)
 {
+    // Render Themes
+    int themeId = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(6)).toInt();
+    QApplication::setStyle(new PhantomStyle);
+    QApplication::setPalette(namedColorSchemePalette(static_cast<ThemeColorType>(themeId)));
+
     ui->setupUi(this);
     singleton = this;
 
@@ -43,6 +49,12 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     statusBarLabel = new QLabel("Open a ROM file");
     statusBarLabel->setMargin(3);
     ui->statusBar->addWidget(statusBarLabel);
+    switch (themeId) {
+    case 0:
+    { ui->actionLight->setChecked(true); break; }
+    case 1:
+    { ui->actionDark->setChecked(true); break; }
+    }
 
     // Create DockWidgets
     EditModeWidget = new EditModeDockWidget();
@@ -1607,4 +1619,24 @@ void WL4EditorWindow::on_actionManager_triggered()
 {
     PatchManagerDialog dialog(this);
     auto result = dialog.exec();
+}
+
+/// <summary>
+/// Reset Theme to Light Theme.
+/// </summary>
+void WL4EditorWindow::on_actionLight_triggered()
+{
+    QApplication::setPalette(namedColorSchemePalette(Light));
+    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString("0"));
+    ui->actionDark->setChecked(false);
+}
+
+/// <summary>
+/// Reset Theme to Dark Theme.
+/// </summary>
+void WL4EditorWindow::on_actionDark_triggered()
+{
+    QApplication::setPalette(namedColorSchemePalette(Dark));
+    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString("1"));
+    ui->actionLight->setChecked(false);
 }
