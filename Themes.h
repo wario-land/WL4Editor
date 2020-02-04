@@ -88,15 +88,14 @@ QPalette namedColorSchemePalette(ThemeColorType color)
         }
         case Dark: 
         {
-            QColor window(52, 51, 50);
-            QColor button(66, 65, 64);
-            QColor base(46, 47, 49);
-            QColor alternateBase(41, 41, 43);
+            QColor window(22, 21, 20);
+            QColor button(90, 89, 88);
+            QColor base(53, 54, 55);
+            QColor alternateBase(51, 51, 52);
             QColor text(240, 240, 240);
             QColor highlight(83, 114, 142);
             QColor highlightedText(240, 240, 240);
-            QColor disabledText(20, 20, 20);
-            disabledText = disabledText.darker(120); // old
+            QColor disabledText(120, 120, 120);
             c.window = window;
             c.text = text;
             c.disabledText = disabledText;
@@ -104,7 +103,7 @@ QPalette namedColorSchemePalette(ThemeColorType color)
             c.alternateBase = alternateBase;
             c.shadow = base;
             c.button = button;
-            c.disabledButton = button.darker(107);
+            c.disabledButton = button.darker(50);
             c.brightText = Qt::white;
             c.highlight = highlight;
             c.highlightedText = highlightedText;
