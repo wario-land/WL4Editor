@@ -100,7 +100,7 @@
        <item>
         <widget class="QLabel" name="alphaBlendingLabel">
          <property name="text">
-          <string>Alhpa Blend Attributes:</string>
+          <string>Alpha Blend Attributes:</string>
          </property>
         </widget>
        </item>
