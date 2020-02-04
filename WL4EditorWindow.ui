@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>WL4EditorWindow</string>
+   <string>Wario Land 4 Editor</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -123,11 +123,25 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuRecent_ROM">
+     <property name="title">
+      <string>Recent ROM</string>
+     </property>
+    </widget>
+    <widget class="QMenu" name="menuExport">
+     <property name="title">
+      <string>Export</string>
+     </property>
+     <addaction name="actionSave_Room_s_graphic"/>
+    </widget>
     <addaction name="separator"/>
     <addaction name="actionOpen_ROM"/>
+    <addaction name="menuRecent_ROM"/>
+    <addaction name="separator"/>
     <addaction name="actionSave_ROM"/>
     <addaction name="actionSave_As"/>
-    <addaction name="actionSave_Room_s_graphic"/>
+    <addaction name="separator"/>
+    <addaction name="menuExport"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -216,8 +230,15 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuPatches">
+    <property name="title">
+     <string>Patches</string>
+    </property>
+    <addaction name="actionManager"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuPatches"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -356,12 +377,22 @@
     <string>S-Hard</string>
    </property>
   </action>
+  <action name="actionManager">
+   <property name="text">
+    <string>Manager</string>
+   </property>
+  </action>
+  <action name="actionClear">
+   <property name="text">
+    <string>Clear</string>
+   </property>
+  </action>
   <action name="actionSave_Room_s_graphic">
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Save Room's graphic</string>
+    <string>Screenshot Room</string>
    </property>
   </action>
   <action name="actionEdit_Tileset">

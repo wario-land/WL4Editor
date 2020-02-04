@@ -40,7 +40,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->TableView_EntityFilter->setColumnWidth(0, 30);
     ui->TableView_EntityFilter->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->TableView_EntityFilter->resizeColumnsToContents();
-    // set rwo height
+    // set row height
     ui->TableView_EntityFilter->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->TableView_EntityFilter->resizeRowsToContents();
     IsInitialized = false;
@@ -145,7 +145,7 @@ void DoorConfigDialog::UpdateCurrentDoorData()
 }
 
 /// <summary>
-/// Perform static initializtion of constant data structures for the dialog.
+/// Perform static initialization of constant data structures for the dialog.
 /// </summary>
 void DoorConfigDialog::StaticInitialization()
 {
