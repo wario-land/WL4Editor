@@ -16,6 +16,7 @@ beta-10:
 - Add Room size limitation.
 - Use the Phantomstyle UI theme.
 - Add Icon.
+- Support running js script in the editor.
 
 beta-9:
 - Fix clear-all only clears hardmode entities
