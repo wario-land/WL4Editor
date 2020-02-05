@@ -16,11 +16,7 @@ jobs:
       matrix:
         os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
-      - name: Checkout ThirdParty
-        uses: actions/checkout@v2
-        with:
-          repository: randrew/phantomstyle
-          path: ThirdParty
+      - uses: actions/checkout@v1
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2.3.0
