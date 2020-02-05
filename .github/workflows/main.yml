@@ -21,7 +21,6 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v2.3.0
         with:
-          dir: /build/
           version: 5.14.0
 
       - name: Build Wl4Editor on Windows
