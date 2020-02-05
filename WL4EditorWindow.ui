@@ -249,9 +249,16 @@
     </widget>
     <addaction name="menuThemes"/>
    </widget>
+   <widget class="QMenu" name="menuScript">
+    <property name="title">
+     <string>Script</string>
+    </property>
+    <addaction name="actionRun_from_file"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuPatches"/>
+   <addaction name="menuScript"/>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -431,6 +438,14 @@
    </property>
    <property name="text">
     <string>Light</string>
+   </property>
+  </action>
+  <action name="actionRun_from_file">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Run from file...</string>
    </property>
   </action>
  </widget>

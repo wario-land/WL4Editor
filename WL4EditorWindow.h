@@ -16,6 +16,7 @@
 #include "DockWidget/EditModeDockWidget.h"
 #include "DockWidget/EntitySetDockWidget.h"
 #include "DockWidget/Tile16DockWidget.h"
+#include "DockWidget/OutputDockWidget.h"
 #include "LevelComponents/Level.h"
 #include "LevelComponents/Room.h"
 
@@ -35,6 +36,7 @@ private:
     EditModeDockWidget *EditModeWidget;
     EntitySetDockWidget *EntitySetWidget;
     CameraControlDockWidget *CameraControlWidget;
+    OutputDockWidget *OutputWidget;
     LevelComponents::Level *CurrentLevel = nullptr;
     QAction *RecentROMs[5];
     uint recentROMnum = 0;
@@ -130,6 +132,7 @@ private slots:
     void on_actionEdit_Tileset_triggered();
     void on_actionLight_triggered();
     void on_actionDark_triggered();
+    void on_actionRun_from_file_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

@@ -61,6 +61,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     Tile16SelecterWidget = new Tile16DockWidget();
     EntitySetWidget = new EntitySetDockWidget();
     CameraControlWidget = new CameraControlDockWidget();
+    OutputWidget = new OutputDockWidget();
 
     // Add Recent ROM QAction according to the INI file
     QMenu *filemenu = ui->menuRecent_ROM;
@@ -96,6 +97,7 @@ WL4EditorWindow::~WL4EditorWindow()
     delete ui;
     delete Tile16SelecterWidget;
     delete EditModeWidget;
+    delete OutputWidget;
     delete EntitySetWidget;
     delete CameraControlWidget;
     delete statusBarLabel;
@@ -262,12 +264,14 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionRedo->setEnabled(true);
         ui->actionUndo->setEnabled(true);
+        ui->actionRun_from_file->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
         addDockWidget(Qt::RightDockWidgetArea, Tile16SelecterWidget);
         addDockWidget(Qt::RightDockWidgetArea, EntitySetWidget);
         addDockWidget(Qt::RightDockWidgetArea, CameraControlWidget);
+        addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
         CameraControlWidget->setVisible(false);
         EntitySetWidget->setVisible(false);
     }
@@ -1639,4 +1643,24 @@ void WL4EditorWindow::on_actionDark_triggered()
     QApplication::setPalette(namedColorSchemePalette(Dark));
     SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString("1"));
     ui->actionLight->setChecked(false);
+}
+
+/// <summary>
+/// Open a script file and run it.
+/// </summary>
+void WL4EditorWindow::on_actionRun_from_file_triggered()
+{
+    // Select a Script file to open and run
+    QString qFilePath =
+        QFileDialog::getOpenFileName(this, tr("Open Script file"), dialogInitialPath, tr("Script files (*.js)"));
+    if (!qFilePath.compare("")) {
+        return;
+    }
+    QFile file(qFilePath);
+    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+            QMessageBox::critical(this, tr("Error"), tr("Can't open file."));
+            return;
+    }
+    QString code = QString::fromUtf8(file.readAll());
+    OutputWidget->ExecuteJSScript(code);
 }
