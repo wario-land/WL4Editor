@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: randrew/phantomstyle
-          path: ThirdParty/phantomstyle
+          path: ThirdParty
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2.3.0
