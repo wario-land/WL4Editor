@@ -16,14 +16,18 @@ jobs:
       matrix:
         os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout ThirdParty
+        uses: actions/checkout@v2
+        with:
+          repository: randrew/phantomstyle
+          path: ThirdParty/phantomstyle
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2.3.0
         with:
           version: 5.14.0
 
-      - name: Build Wl4Editor on Windows
+      - name: Build WL4Editor on Windows
         if: startsWith(matrix.os, 'windows')
         run: |
           call "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
@@ -31,7 +35,7 @@ jobs:
           qmake
         shell: cmd
 
-      - name: Build Wl4Editor on *nix
+      - name: Build WL4Editor on *nix
         if: (!startsWith(matrix.os, 'windows'))
         run: |
           ls $Qt5_Dir/lib/cmake
