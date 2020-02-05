@@ -17,6 +17,7 @@ beta-10:
 - Use the Phantomstyle UI theme.
 - Add Icon.
 - Support running js script in the editor.
+- Support showing mouse position in status bar.
 
 beta-9:
 - Fix clear-all only clears hardmode entities
