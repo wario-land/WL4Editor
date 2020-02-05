@@ -106,7 +106,11 @@
      </layout>
     </item>
     <item row="1" column="0">
-     <widget class="MainGraphicsView" name="graphicsView"/>
+     <widget class="MainGraphicsView" name="graphicsView">
+      <property name="mouseTracking">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

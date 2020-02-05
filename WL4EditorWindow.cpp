@@ -47,8 +47,11 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     // MainWindow UI Initialization
     ui->graphicsView->scale(graphicViewScalerate, graphicViewScalerate);
     statusBarLabel = new QLabel("Open a ROM file");
+    statusBarLabel_MousePosition = new QLabel();
     statusBarLabel->setMargin(3);
+    statusBarLabel_MousePosition->setMargin(3);
     ui->statusBar->addWidget(statusBarLabel);
+    ui->statusBar->addWidget(statusBarLabel_MousePosition);
     switch (themeId) {
     case 0:
     { ui->actionLight->setChecked(true); break; }
@@ -101,6 +104,7 @@ WL4EditorWindow::~WL4EditorWindow()
     delete EntitySetWidget;
     delete CameraControlWidget;
     delete statusBarLabel;
+    delete statusBarLabel_MousePosition;
 
     // Decomstruct all Tileset singletons
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)

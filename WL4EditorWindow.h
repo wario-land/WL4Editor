@@ -32,6 +32,7 @@ class WL4EditorWindow : public QMainWindow
 private:
     Ui::WL4EditorWindow *ui;
     QLabel *statusBarLabel;
+    QLabel *statusBarLabel_MousePosition;
     Tile16DockWidget *Tile16SelecterWidget;
     EditModeDockWidget *EditModeWidget;
     EntitySetDockWidget *EntitySetWidget;
@@ -94,6 +95,8 @@ public:
     void DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
     void LoadROMDataFromFile(QString qFilePath);
+    void PrintMousePos(uint x, uint y) { statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")"); }
+    uint GetGraphicViewScalerate() { return graphicViewScalerate; }
 
     // Events
     void keyPressEvent(QKeyEvent *event);

@@ -23,6 +23,8 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
     if (!singleton->FirstROMIsLoaded())
         return;
 
+    holdingmouse = true;
+
     // Get the ID of the tile that was clicked
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
@@ -183,7 +185,7 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
 
 
 /// <summary>
-/// this function will be called when the graphic view in the main window is clicked and then mouse start moving.
+/// this function will be called when the mouse is moving on the graphic view in the main window.
 /// </summary>
 /// <param name="event">
 /// The mouse click event.
@@ -194,10 +196,15 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
         return;
 
     // Get the ID of the tile that was clicked
+    uint scalerate = singleton->GetGraphicViewScalerate();
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
-    unsigned int tileX = X / 32;
-    unsigned int tileY = Y / 32;
+    unsigned int tileX = X / (16 * scalerate);
+    unsigned int tileY = Y / (16 * scalerate);
+
+    // Print Mouse Position
+    singleton->PrintMousePos(tileX, tileY);
+    if(!holdingmouse) return;
 
     // If we have moved within the same tile, do nothing
     if (tileX == (unsigned int) drawingTileX && tileY == (unsigned int) drawingTileY)
@@ -270,6 +277,17 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
             }
         }
     }
+}
+
+/// <summary>
+/// this function will be called when the mouse is dragging out from the graphic view in the main window.
+/// </summary>
+/// <param name="event">
+/// The drag leave event.
+/// </param>
+void MainGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    holdingmouse = false;
 }
 
 /// <summary>
@@ -350,6 +368,8 @@ void MainGraphicsView::CopyTile(int tileX, int tileY)
 /// </param>
 void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
+    holdingmouse = false;
+
     // Get the ID of the tile where the mouse was released
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
