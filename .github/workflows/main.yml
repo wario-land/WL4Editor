@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v1
 
@@ -26,16 +26,14 @@ jobs:
       - name: Build Wl4Editor on Windows
         if: startsWith(matrix.os, 'windows')
         run: |
-         cd tests/TestWithModules
-         call "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-         dir %Qt5_Dir%/lib/cmake
-         qmake
+          call "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          dir %Qt5_Dir%/lib/cmake
+          qmake
         shell: cmd
 
       - name: Build Wl4Editor on *nix
         if: (!startsWith(matrix.os, 'windows'))
         run: |
-          cd tests/TestWithModules
           ls $Qt5_Dir/lib/cmake
           qmake
         shell: bash
