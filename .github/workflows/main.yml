@@ -1,0 +1,38 @@
+name: Build Wario Land 4 Editor
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macOS-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2.3.0
+        with:
+          version: 5.14.0
+
+      - name: Build WL4Editor on Windows
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          call "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          dir %Qt5_Dir%/lib/cmake
+          qmake
+        shell: cmd
+
+      - name: Build WL4Editor on *nix
+        if: (!startsWith(matrix.os, 'windows'))
+        run: |
+          ls $Qt5_Dir/lib/cmake
+          qmake
+        shell: bash
