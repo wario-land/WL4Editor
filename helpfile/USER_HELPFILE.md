@@ -29,3 +29,15 @@ Besides the Tile16 Id, you can also find an ``Event ID`` and a ``Wario Animation
 ![graphics not found](1.png)  
 You may know the place in the first graphic, you can control Wario ground-pound here and warp into another Room. We find the Tile16 in the ``Tile16 Selector``, and find its Event Id is 0x12. Perhaps you will find another unused Tile16, it has a same Event Id in the third graphic. Then we can guess that, if Wario attact it, those Tile16s will disappear with leaves scattered around. We can put these unused Tile16s here to make this hidden Room enterable.  
 ![graphics not found](2.png)  
+
+#### Alpha Blending
+There's unfortunately not a great way to describe alpha blending
+we could be hand-wavey and say it's a transparency value
+but alpha blending and transparency are not the same thing
+transparency color calculations are a subset of alpha blending
+so if you have transparency, you will have a top color with some opacity level EVA, and a bottom color which is EVB = 1 - EVA
+so green with 30% opacity on top of red would be some color that is 0.3 * red + 0.7 * green
+however, with alpha blending, the relation does not hold true, EVB = 1 - EVA
+it means that colors can additively go over 255 (they cap at 255)
+so something like 0.7 * yellow + 0.6 * green will give you 1.3 times the green channel, making any pixels with 196 or more green max out at 255
+but anyway, we call it the alpha blending attribute because WL4 has a few sets of EVA/EVB pairs that you can pick from (you can't set them individually)
