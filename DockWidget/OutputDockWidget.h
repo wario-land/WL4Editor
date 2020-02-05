@@ -20,6 +20,7 @@ public:
 
 private:
     Ui::OutputDockWidget *ui;
+    ScriptInterface *interface;
     QJSEngine jsEngine;
 };
 
