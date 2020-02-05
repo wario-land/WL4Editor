@@ -30,7 +30,7 @@ Besides the Tile16 Id, you can also find an ``Event ID`` and a ``Wario Animation
 You may know the place in the first graphic, you can control Wario ground-pound here and warp into another Room. We find the Tile16 in the ``Tile16 Selector``, and find its Event Id is 0x12. Perhaps you will find another unused Tile16, it has a same Event Id in the third graphic. Then we can guess that, if Wario attact it, those Tile16s will disappear with leaves scattered around. We can put these unused Tile16s here to make this hidden Room enterable.  
 ![graphics not found](2.png)  
 
-#### Alpha Blending
+#### Alpha Blending Attributes
 There's unfortunately not a great way to describe alpha blending
 we could be hand-wavey and say it's a transparency value
 but alpha blending and transparency are not the same thing
