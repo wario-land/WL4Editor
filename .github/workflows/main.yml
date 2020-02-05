@@ -1,0 +1,23 @@
+name: Build Wario Land 4 Editor
+
+on: 
+  pull_request:
+    branches: 
+      - master
+  push:
+    branches: 
+      - master
+
+jobs:
+  build:
+    name: WL4Editor
+    runs-on: [windows-latest, macos-latest, ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2.3.0
+      with:
+        dir: /build/
+        version: 5.14.0 
+       
