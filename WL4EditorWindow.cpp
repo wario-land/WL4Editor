@@ -254,7 +254,13 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
 /// </param>
 void WL4EditorWindow::PrintMousePos(uint x, uint y)
 {
-    if(x > CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width() || y > CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height())
+    bool condition;
+    if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam()) {
+        condition = (x > CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width()) || (y > CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height());
+    } else {
+        condition = (x > CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y > CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
+    }
+    if(condition)
         statusBarLabel_MousePosition->setText("Out of range!");
     else
         statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")");
