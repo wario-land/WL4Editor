@@ -25,8 +25,10 @@ int ScriptInterface::GetCurRoomTile16(int layerID, int x, int y)
         return -1;
     int width = static_cast<int>(room->GetWidth());
     int height = static_cast<int>(room->GetHeight());
-    if(x > width || y > height)
+    if(x >= width || y >= height) {
+        log(QString("position out of range!\n"));
         return -1;
+    }
     return room->GetLayer(layerID)->GetLayerData()[y * width + x];
 }
 
@@ -37,8 +39,10 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
         return;
     int width = static_cast<int>(room->GetWidth());
     int height = static_cast<int>(room->GetHeight());
-    if(x > width || y > height)
+    if(x >= width || y >= height) {
+        log(QString("position out of range!\n"));
         return;
+    }
     room->GetLayer(layerID)->GetLayerData()[y * width + x] = (unsigned short) TileID;
 }
 
