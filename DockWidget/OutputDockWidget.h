@@ -18,6 +18,10 @@ public:
     QJSValue ExecuteJSScript(QString scriptSourceCode);
     ~OutputDockWidget();
 
+    // Functions
+    void PrintString(QString str);
+    void ClearTextEdit();
+
 private:
     Ui::OutputDockWidget *ui;
     ScriptInterface *interface;

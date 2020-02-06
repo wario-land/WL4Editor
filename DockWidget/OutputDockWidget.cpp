@@ -24,15 +24,12 @@ QJSValue OutputDockWidget::ExecuteJSScript(QString scriptSourceCode)
     // execute scripts and output
     QTextCursor logCursor = ui->textEdit_Output->textCursor();
     QJSValue result = jsEngine.evaluate(scriptSourceCode, windowFilePath());
-    if(result.isError()) {
+    if(result.isError()) { // Only output error if needed
             QTextCharFormat errFormat;
             logCursor.insertText(tr("Exception at line %1:\n").arg(result.property("lineNumber").toInt()), errFormat);
             logCursor.insertText(result.toString(), errFormat);
             logCursor.insertBlock();
             logCursor.insertText(result.property("stack").toString(), errFormat);
-    } else {
-            QTextCharFormat resultFormat;
-            logCursor.insertText(result.toString(), resultFormat);
     }
     return result;
 }
@@ -44,4 +41,17 @@ OutputDockWidget::~OutputDockWidget()
 {
     delete interface;
     delete ui;
+}
+
+/// <summary>
+/// Print String in the textEdit_Output.
+/// </summary>
+void OutputDockWidget::PrintString(QString str)
+{
+    ui->textEdit_Output->append(str + QString('\n'));
+}
+
+void OutputDockWidget::ClearTextEdit()
+{
+    ui->textEdit_Output->clear();
 }

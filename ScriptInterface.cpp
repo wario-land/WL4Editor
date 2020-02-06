@@ -42,6 +42,33 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
     room->GetLayer(layerID)->GetLayerData()[y * width + x] = (unsigned short) TileID;
 }
 
+void ScriptInterface::alert(QString message)
+{
+    QMessageBox::critical(nullptr, QString("Error"), message);
+}
+
+void ScriptInterface::clear()
+{
+    singleton->GetOutputWidgetPtr()->ClearTextEdit();
+}
+
+void ScriptInterface::log(QString message)
+{
+    singleton->GetOutputWidgetPtr()->PrintString(message);
+}
+
+QString ScriptInterface::prompt(QString message, QString defaultInput)
+{
+    bool ok;
+    QString text = QInputDialog::getText(nullptr, tr("InputBox"),
+                                         message, QLineEdit::Normal,
+                                         defaultInput, &ok);
+    if (ok && !text.isEmpty())
+        return text;
+    else
+        return QString("");
+}
+
 void ScriptInterface::UpdateRoomGFXFull()
 {
     singleton->RenderScreenFull();

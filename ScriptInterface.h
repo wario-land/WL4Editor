@@ -1,7 +1,8 @@
-#ifndef SCRIPTOBJECTSGROUP_H
-#define SCRIPTOBJECTSGROUP_H
+#ifndef SCRIPTINTERFACE_H
+#define SCRIPTINTERFACE_H
 
 #include <QObject>
+#include <QInputDialog>
 
 class ScriptInterface : public QObject
 {
@@ -17,6 +18,12 @@ public:
     // Setter
     Q_INVOKABLE void SetCurRoomTile16(int layerID, int TileID, int x, int y);
 
+    // Localize JS function
+    Q_INVOKABLE void alert(QString message);
+    Q_INVOKABLE void clear();
+    Q_INVOKABLE void log(QString message);
+    Q_INVOKABLE QString prompt(QString message, QString defaultInput);
+
     // UI
     Q_INVOKABLE void UpdateRoomGFXFull();
 
@@ -24,4 +31,4 @@ signals:
 
 };
 
-#endif // SCRIPTOBJECTSGROUP_H
+#endif // SCRIPTINTERFACE_H

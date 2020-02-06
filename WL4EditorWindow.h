@@ -69,6 +69,7 @@ public:
     Tile16DockWidget *GetTile16DockWidgetPtr() { return Tile16SelecterWidget; }
     EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
     EntitySetDockWidget *GetEntitySetDockWidgetPtr() { return EntitySetWidget; }
+    OutputDockWidget *GetOutputWidgetPtr() { return OutputWidget; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
     LevelComponents::Level *GetCurrentLevel() { return CurrentLevel; }
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
@@ -95,7 +96,7 @@ public:
     void DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
     void LoadROMDataFromFile(QString qFilePath);
-    void PrintMousePos(uint x, uint y) { statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")"); }
+    void PrintMousePos(uint x, uint y);
     uint GetGraphicViewScalerate() { return graphicViewScalerate; }
 
     // Events

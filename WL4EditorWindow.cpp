@@ -244,6 +244,23 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
 }
 
 /// <summary>
+/// Print Mouse Pos in the status bar
+/// </summary>
+/// <param name="x">
+/// current tile x position
+/// </param>
+/// <param name="y">
+/// current tile y position
+/// </param>
+void WL4EditorWindow::PrintMousePos(uint x, uint y)
+{
+    if(x > CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width() || y > CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height())
+        statusBarLabel_MousePosition->setText("Out of range!");
+    else
+        statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")");
+}
+
+/// <summary>
 /// Update the UI after loading a ROM.
 /// </summary>
 void WL4EditorWindow::UIStartUp(int currentTilesetID)
