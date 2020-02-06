@@ -44,6 +44,8 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
         return;
     }
     room->GetLayer(layerID)->GetLayerData()[y * width + x] = (unsigned short) TileID;
+    room->GetLayer(layerID)->SetDirty(true);
+    singleton->SetUnsavedChanges(true);
 }
 
 void ScriptInterface::alert(QString message)
