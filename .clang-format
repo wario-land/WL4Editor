@@ -31,6 +31,14 @@ AllowShortLoopsOnASingleLine: false
 PointerAlignment: Right
 AlignTrailingComments: true
 NamespaceIndentation: All
+AlignConsecutiveAssignments: true
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: ENAS_Left
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: true
+AlignConsecutiveDeclarations: false
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: true
 
 SpaceAfterCStyleCast: true
 CommentPragmas: '^ NO-FORMAT:'
