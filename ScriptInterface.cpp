@@ -43,7 +43,7 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
         log(QString("position out of range!\n"));
         return;
     }
-    room->GetLayer(layerID)->GetLayerData()[y * width + x] = (unsigned short) TileID;
+    room->GetLayer(layerID)->GetLayerData()[y * width + x] = (unsigned short) (TileID & 0xFFFF);
     room->GetLayer(layerID)->SetDirty(true);
     singleton->SetUnsavedChanges(true);
 }

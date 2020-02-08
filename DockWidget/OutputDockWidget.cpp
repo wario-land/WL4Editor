@@ -30,6 +30,8 @@ QJSValue OutputDockWidget::ExecuteJSScript(QString scriptSourceCode)
             logCursor.insertText(result.toString(), errFormat);
             logCursor.insertBlock();
             logCursor.insertText(result.property("stack").toString(), errFormat);
+    } else {
+        ui->textEdit_Output->append("Script processing finished.\n");
     }
     return result;
 }

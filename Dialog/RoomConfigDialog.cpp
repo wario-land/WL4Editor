@@ -385,8 +385,8 @@ void RoomConfigDialog::on_SpinBox_RoomWidth_valueChanged(int arg1)
     }
     else
     {
-        ui->SpinBox_RoomWidth->setStyleSheet("background-color: white");
-        ui->SpinBox_RoomHeight->setStyleSheet("background-color: white");
+        ui->SpinBox_RoomWidth->setStyleSheet(""); // TODO: need a better solution,for example, add an extra label to show the warning
+        ui->SpinBox_RoomHeight->setStyleSheet("");
     }
 }
 
@@ -406,7 +406,7 @@ void RoomConfigDialog::on_SpinBox_RoomHeight_valueChanged(int arg1)
     }
     else
     {
-        ui->SpinBox_RoomWidth->setStyleSheet("background-color: white");
-        ui->SpinBox_RoomHeight->setStyleSheet("background-color: white");
+        ui->SpinBox_RoomWidth->setStyleSheet(""); // TODO: need a better solution,for example, add an extra label to show the warning
+        ui->SpinBox_RoomHeight->setStyleSheet("");
     }
 }
