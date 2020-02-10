@@ -19,6 +19,7 @@ namespace ROMUtils
     extern unsigned int CurrentFileSize;
     extern QString ROMFilePath;
     extern unsigned int SaveDataIndex;
+    extern LevelComponents::Tileset *singletonTilesets[92];
 
     // Global functions
     unsigned int IntFromData(int address);
@@ -74,13 +75,6 @@ namespace ROMUtils
     bool SaveLevel(QString fileName);
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
-
-    // Global variables
-    extern unsigned char *CurrentFile;
-    extern unsigned int CurrentFileSize;
-    extern QString ROMFilePath;
-    extern unsigned int SaveDataIndex;
-    extern LevelComponents::Tileset *singletonTilesets[92];
 
 } // namespace ROMUtils
 

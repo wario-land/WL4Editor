@@ -37,7 +37,7 @@ private:
     EditModeDockWidget *EditModeWidget;
     EntitySetDockWidget *EntitySetWidget;
     CameraControlDockWidget *CameraControlWidget;
-    OutputDockWidget *OutputWidget;
+    OutputDockWidget *OutputWidget = nullptr;
     LevelComponents::Level *CurrentLevel = nullptr;
     QAction *RecentROMs[5];
     uint recentROMnum = 0;
@@ -70,6 +70,7 @@ public:
     EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
     EntitySetDockWidget *GetEntitySetDockWidgetPtr() { return EntitySetWidget; }
     OutputDockWidget *GetOutputWidgetPtr() { return OutputWidget; }
+    void InvalidOutputWidgetPtr() { OutputWidget = nullptr; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
     LevelComponents::Level *GetCurrentLevel() { return CurrentLevel; }
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
@@ -137,6 +138,7 @@ private slots:
     void on_actionLight_triggered();
     void on_actionDark_triggered();
     void on_actionRun_from_file_triggered();
+    void on_actionOutput_window_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

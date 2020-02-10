@@ -1,5 +1,8 @@
 #include "OutputDockWidget.h"
 #include "ui_OutputDockWidget.h"
+#include "WL4EditorWindow.h"
+
+extern WL4EditorWindow *singleton;
 
 /// <summary>
 /// Construct the instance of the OutputDockWidget and initialize jsEngine.
@@ -12,7 +15,7 @@ OutputDockWidget::OutputDockWidget(QWidget *parent) :
 
     // Initialize jsEngine with QObject
     interface = new ScriptInterface();
-    QJSValue funcInterface= jsEngine.newQObject(interface);
+    QJSValue funcInterface = jsEngine.newQObject(interface);
     jsEngine.globalObject().setProperty("interface", funcInterface);
 }
 
@@ -33,6 +36,7 @@ QJSValue OutputDockWidget::ExecuteJSScript(QString scriptSourceCode)
     } else {
         ui->textEdit_Output->append("Script processing finished.\n");
     }
+    jsEngine.collectGarbage();
     return result;
 }
 
@@ -41,6 +45,7 @@ QJSValue OutputDockWidget::ExecuteJSScript(QString scriptSourceCode)
 /// </summary>
 OutputDockWidget::~OutputDockWidget()
 {
+    singleton->InvalidOutputWidgetPtr();
     delete interface;
     delete ui;
 }

@@ -1691,3 +1691,17 @@ void WL4EditorWindow::on_actionRun_from_file_triggered()
     QString code = QString::fromUtf8(file.readAll());
     OutputWidget->ExecuteJSScript(code);
 }
+
+/// <summary>
+/// Open the Output dock widget.
+/// </summary>
+void WL4EditorWindow::on_actionOutput_window_triggered()
+{
+    if(OutputWidget == nullptr) {
+        OutputWidget = new OutputDockWidget(this);
+        addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
+    } else if(OutputWidget != nullptr) {
+        addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
+        OutputWidget->setVisible(true);
+    }
+}

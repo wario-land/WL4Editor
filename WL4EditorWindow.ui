@@ -259,11 +259,18 @@
     </property>
     <addaction name="actionRun_from_file"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionOutput_window"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuPatches"/>
    <addaction name="menuScript"/>
    <addaction name="menuSettings"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -450,6 +457,11 @@
    </property>
    <property name="text">
     <string>Run from file...</string>
+   </property>
+  </action>
+  <action name="actionOutput_window">
+   <property name="text">
+    <string>Output window</string>
    </property>
   </action>
  </widget>
