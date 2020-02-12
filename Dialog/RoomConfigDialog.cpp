@@ -35,7 +35,8 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->CheckBox_Layer0Alpha->setChecked(CurrentRoomParams->Layer0Alpha);
     int LayerPriorityID = CurrentRoomParams->LayerPriorityAndAlphaAttr & 3;
     ui->ComboBox_LayerPriority->setCurrentIndex((LayerPriorityID < 2) ? LayerPriorityID : (LayerPriorityID - 1));
-    ui->ComboBox_AlphaBlendAttribute->setCurrentIndex((CurrentRoomParams->LayerPriorityAndAlphaAttr - 4) >> 2);  // == (LayerPriorityAndAlphaAttr - 8) >> 2 + 1
+    ui->ComboBox_AlphaBlendAttribute->setCurrentIndex((CurrentRoomParams->LayerPriorityAndAlphaAttr - 4) >>
+                                                      2); // == (LayerPriorityAndAlphaAttr - 8) >> 2 + 1
     if (CurrentRoomParams->Layer0Enable)
     {
         ui->ComboBox_Layer0MappingType->setCurrentIndex((((CurrentRoomParams->Layer0MappingTypeParam) & 0x30) >> 4) -
@@ -50,7 +51,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->CheckBox_BGLayerAutoScroll->setChecked(CurrentRoomParams->BackgroundLayerAutoScrollEnable);
 
     // Initialize the selection for the BG selection combobox
-    bool CurrentBGSelectionAvailable = false;
+    bool CurrentBGSelectionAvailable        = false;
     std::vector<int> CurrentBGLayerdataPtrs = BGLayerdataPtrs[CurrentRoomParams->CurrentTilesetIndex];
     for (unsigned int i = 0; i < CurrentBGLayerdataPtrs.size(); ++i)
     {
@@ -69,8 +70,8 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
 
     // Initialize the graphic view layers
     ui->graphicsView->infoLabel = ui->graphicViewDetailsLabel;
-    int _tilesetPtr = WL4Constants::TilesetDataTable + CurrentRoomParams->CurrentTilesetIndex * 36;
-    currentTileset = new LevelComponents::Tileset(_tilesetPtr, CurrentRoomParams->CurrentTilesetIndex);
+    int _tilesetPtr             = WL4Constants::TilesetDataTable + CurrentRoomParams->CurrentTilesetIndex * 36;
+    currentTileset              = new LevelComponents::Tileset(_tilesetPtr, CurrentRoomParams->CurrentTilesetIndex);
     int L0ptr = (ui->ComboBox_Layer0MappingType->currentIndex() == 1) ? CurrentRoomParams->Layer0DataPtr : 0;
     ;
     ui->graphicsView->UpdateGraphicsItems(currentTileset, CurrentRoomParams->BackgroundLayerDataPtr, L0ptr);
@@ -95,8 +96,8 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
 
     // Get all the Room Configuration data
     configParams.CurrentTilesetIndex = ui->ComboBox_TilesetID->currentIndex();
-    configParams.Layer0Enable = ui->CheckBox_Layer0Enable->isChecked();
-    configParams.Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();
+    configParams.Layer0Enable        = ui->CheckBox_Layer0Enable->isChecked();
+    configParams.Layer0Alpha         = ui->CheckBox_Layer0Alpha->isChecked();
     if (configParams.Layer0Enable)
     {
         if (ui->ComboBox_Layer0MappingType->isEnabled())
@@ -125,7 +126,7 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
         break;
     }
     configParams.LayerPriorityAndAlphaAttr += (ui->ComboBox_AlphaBlendAttribute->currentIndex() << 2);
-    configParams.BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
+    configParams.BackgroundLayerEnable           = ui->CheckBox_BGLayerEnable->isChecked();
     configParams.BackgroundLayerAutoScrollEnable = ui->CheckBox_BGLayerAutoScroll->isChecked();
     if (configParams.BackgroundLayerEnable)
     {
@@ -136,7 +137,7 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
         configParams.BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
     }
     configParams.RoomHeight = ui->SpinBox_RoomHeight->value();
-    configParams.RoomWidth = ui->SpinBox_RoomWidth->value();
+    configParams.RoomWidth  = ui->SpinBox_RoomWidth->value();
 
     return configParams;
 }
@@ -251,8 +252,8 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
     {
         // Update the graphic view
         LevelComponents::Tileset *oldTileset = currentTileset;
-        int _tilesetPtr = WL4Constants::TilesetDataTable + index * 36;
-        currentTileset = new LevelComponents::Tileset(_tilesetPtr, index);
+        int _tilesetPtr                      = WL4Constants::TilesetDataTable + index * 36;
+        currentTileset                       = new LevelComponents::Tileset(_tilesetPtr, index);
         delete oldTileset;
 
         // Update the available BG layers to choose from
@@ -261,7 +262,7 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         QStringList elements;
         if (!BGlayers.empty())
         {
-            for (int & BGlayer : BGlayers)
+            for (int &BGlayer : BGlayers)
             {
                 elements << QString::number(BGlayer, 16).toUpper();
             }

@@ -34,8 +34,8 @@ CameraControlDockWidget::~CameraControlDockWidget() { delete ui; }
 /// </param>
 void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *currentroom)
 {
-    currentRoom = currentroom;
-    CurrentRoomWidth = (int) currentroom->GetWidth();
+    currentRoom       = currentroom;
+    CurrentRoomWidth  = (int) currentroom->GetWidth();
     CurrentRoomHeight = (int) currentroom->GetHeight();
     ClearListView();
     if (ListViewItemModel)
@@ -120,7 +120,7 @@ void CameraControlDockWidget::SetCurrentLimitator()
         ui->TriggerBlockPositionY_spinBox->setMaximum(CurrentRoomHeight - 3);
         LevelComponents::__CameraControlRecord current_limitator_data{};
         current_limitator_data.TransboundaryControl = (unsigned char) 2;
-        current_limitator_data.x1 = (unsigned char) ui->spinBox_x1->value();
+        current_limitator_data.x1                   = (unsigned char) ui->spinBox_x1->value();
         ui->spinBox_width->setMaximum(CurrentRoomWidth - ui->spinBox_x1->value() - 2);
         current_limitator_data.y1 = (unsigned char) ui->spinBox_y1->value();
         ui->spinBox_height->setMaximum(CurrentRoomHeight - ui->spinBox_y1->value() - 2);
@@ -168,7 +168,7 @@ void CameraControlDockWidget::SetCurrentLimitator()
         else
         {
             current_limitator_data.ChangeValueOffset = current_limitator_data.ChangedValue = current_limitator_data.x3 =
-                current_limitator_data.y3 = (unsigned char) 0xFF;
+                current_limitator_data.y3                                                  = (unsigned char) 0xFF;
         }
         currentRoom->SetCameraLimitator(SelectedLimitator, current_limitator_data);
 
@@ -203,7 +203,7 @@ void CameraControlDockWidget::PaintListView()
     QStringList List_strs;
     if (currentCameraLimitators.size() > (unsigned int) 0)
     {
-        for (auto & currentCameraLimitator : currentCameraLimitators)
+        for (auto &currentCameraLimitator : currentCameraLimitators)
         {
             QString string = "(" + QString::number((int) currentCameraLimitator->x1) + ", " +
                              QString::number((int) currentCameraLimitator->y1) + ") - (" +
@@ -216,7 +216,7 @@ void CameraControlDockWidget::PaintListView()
         for (int i = 0; i < nCount; i++)
         {
             QString string = static_cast<QString>(List_strs.at(i));
-            auto *item = new QStandardItem(string);
+            auto *item     = new QStandardItem(string);
             ListViewItemModel->appendRow(item);
         }
     }
@@ -248,8 +248,8 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
     ui->LimitatorSetting_groupBox->setEnabled(false);
     std::vector<struct LevelComponents::__CameraControlRecord *> currentCameraLimitators =
         currentRoom->GetCameraControlRecords();
-    int linenum = index.row();
-    SelectedLimitator = linenum;
+    int linenum                                              = index.row();
+    SelectedLimitator                                        = linenum;
     LevelComponents::__CameraControlRecord *currentLimitator = currentCameraLimitators[linenum];
     int currentLimitatorTypeid =
         (currentLimitator->ChangeValueOffset == 0xFF ? -1 : currentLimitator->ChangeValueOffset);

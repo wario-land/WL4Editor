@@ -27,6 +27,6 @@ namespace PatchUtils
     QVector<struct PatchEntryItem> GetPatchesFromROM();
     QString SavePatchesToROM(QVector<struct PatchEntryItem> entries);
     bool VerifyEABI(QString *missing);
-}
+} // namespace PatchUtils
 
 #endif // PATCHUTILS_H

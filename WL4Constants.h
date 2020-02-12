@@ -87,7 +87,7 @@ namespace WL4Constants
     const unsigned int BG_0x60E96C = 0x60E96C;
     const unsigned int BG_0x60ED78 = 0x60ED78;
 
-    //Entity OAM default action frames data pointers
+    // Entity OAM default action frames data pointers
     /*
      * Generated using c code.
      * src: Hacking Documents\DataExtraction.cpp
@@ -115,7 +115,9 @@ namespace WL4Constants
     const unsigned int Entity19_0x3BB0E8 = 0x3BB0E8;
     const unsigned int Entity1A_0x3BB63C = 0x3BB63C;
     const unsigned int Entity1B_0x3BBD6C = 0x3BBD6C;
-    const unsigned int Entity1B_0x3BBDF4 = 0x3BBDF4; // Notice: there are two different entities here but indexed the same number, they use different palettes so render them carefully
+    const unsigned int Entity1B_0x3BBDF4 =
+        0x3BBDF4; // Notice: there are two different entities here but indexed the same number, they use different
+                  // palettes so render them carefully
     const unsigned int Entity1C_0x3BC570 = 0x3BC570;
     const unsigned int Entity1D_0x3BC570 = 0x3BC570;
     const unsigned int Entity1E_0x3BC8E4 = 0x3BC8E4;
@@ -217,6 +219,6 @@ namespace WL4Constants
     const unsigned int Entity7E_0x3F0F04 = 0x3F0F04;
     const unsigned int Entity7F_0x3F122C = 0x3F122C;
     const unsigned int Entity80_0x3F1AA0 = 0x3F1AA0;
-}
+} // namespace WL4Constants
 
 #endif // WL4CONSTANTS_H

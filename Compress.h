@@ -13,9 +13,9 @@ namespace ROMUtils
     protected:
         void *data;
         unsigned int data_len;
-        virtual void InitializeJumpTable() = 0;
-        virtual int GetTypeIdentifier() = 0;
-        virtual int GetMinimumRunSize() = 0;
+        virtual void InitializeJumpTable()                                                                  = 0;
+        virtual int GetTypeIdentifier()                                                                     = 0;
+        virtual int GetMinimumRunSize()                                                                     = 0;
         virtual void AddOpcode(QVector<unsigned char> &compressedData, unsigned short opcode, bool runmode) = 0;
         RLEMetadata(void *data, unsigned int len) : data(data), data_len(len) {}
         void InitializeJumpTableHelper(unsigned short jumpLimit);

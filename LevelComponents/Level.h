@@ -13,27 +13,27 @@ namespace LevelComponents
     enum __LevelDifficulty
     {
         NormalDifficulty = 0,
-        HardDifficulty = 1,
-        SHardDifficulty = 2
+        HardDifficulty   = 1,
+        SHardDifficulty  = 2
     };
 
     enum __passage
     {
-        EntryPassage = 0,
-        EmeraldPassage = 1,
-        RubyPassage = 2,
-        TopazPassage = 3,
+        EntryPassage    = 0,
+        EmeraldPassage  = 1,
+        RubyPassage     = 2,
+        TopazPassage    = 3,
         SapphirePassage = 4,
-        GoldenPassage = 5
+        GoldenPassage   = 5
     };
 
     enum __stage
     {
-        FirstLevel = 0,
+        FirstLevel  = 0,
         SecondLevel = 1,
-        ThirdLevel = 2,
+        ThirdLevel  = 2,
         FourthLevel = 3,
-        BossLevel = 4
+        BossLevel   = 4
     };
 
     // This structure is set up the same way the level header is organized in the ROM.

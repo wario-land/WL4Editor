@@ -11,8 +11,8 @@ namespace LevelComponents
     enum LayerMappingType
     {
         LayerDisabled = 0x00,
-        LayerMap16 = 0x10,
-        LayerTile8x8 = 0x20
+        LayerMap16    = 0x10,
+        LayerTile8x8  = 0x20
     };
 
     class Layer
@@ -23,8 +23,8 @@ namespace LevelComponents
         std::vector<Tile *> tiles;
         int Width = 0, Height = 0;
         unsigned short *LayerData = nullptr;
-        int LayerPriority = 0;
-        bool dirty = false;
+        int LayerPriority         = 0;
+        bool dirty                = false;
         unsigned int DataPtr; // this pointer does not include the 0x8000000 bit
         void DeconstructTiles();
 

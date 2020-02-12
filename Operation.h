@@ -28,11 +28,11 @@ struct TileChangeParams
     static TileChangeParams *Create(int X, int Y, int target, unsigned short nt, unsigned short ot)
     {
         struct TileChangeParams *p = new struct TileChangeParams;
-        p->tileX = X;
-        p->tileY = Y;
-        p->targetLayer = target;
-        p->newTile = nt;
-        p->oldTile = ot;
+        p->tileX                   = X;
+        p->tileY                   = Y;
+        p->targetLayer             = target;
+        p->newTile                 = nt;
+        p->oldTile                 = ot;
         return p;
     }
 };
@@ -47,19 +47,19 @@ struct ObjectMoveParams
     int type; // DOOR_TYPE or ENTITY_TYPE
     int objectID;
 
-    const static int DOOR_TYPE=1;
-    const static int ENTITY_TYPE=2;
+    const static int DOOR_TYPE   = 1;
+    const static int ENTITY_TYPE = 2;
 
     // Create an instance of ObjectMoveParams on the heap, which represents a moved obect
     static ObjectMoveParams *Create(int pX, int pY, int nX, int nY, int type, int objectID)
     {
         struct ObjectMoveParams *om = new struct ObjectMoveParams;
-        om->previousPositionX = pX;
-        om->previousPositionY = pY;
-        om->nextPositionX = nX;
-        om->nextPositionY = nY;
-        om->type = type;
-        om->objectID = objectID;
+        om->previousPositionX       = pX;
+        om->previousPositionY       = pY;
+        om->nextPositionX           = nX;
+        om->nextPositionY           = nY;
+        om->type                    = type;
+        om->objectID                = objectID;
 
         return om;
     }
@@ -83,12 +83,8 @@ struct OperationParams
     bool TilesetChange;
 
     OperationParams() :
-            lastRoomConfigParams(nullptr),
-            newRoomConfigParams(nullptr),
-            tileChange(false),
-            roomConfigChange(false),
-            objectPositionChange(false),
-            TilesetChange(false)
+            lastRoomConfigParams(nullptr), newRoomConfigParams(nullptr), tileChange(false), roomConfigChange(false),
+            objectPositionChange(false), TilesetChange(false)
     {}
 
     // Clean up the struct when it is deconstructed
@@ -129,6 +125,5 @@ void BackTrackOperation(struct OperationParams *operation);
 void UndoOperation();
 void RedoOperation();
 void ResetUndoHistory();
-
 
 #endif // OPERATION_H

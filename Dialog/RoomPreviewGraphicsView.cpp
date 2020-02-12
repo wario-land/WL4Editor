@@ -17,8 +17,10 @@ RoomPreviewGraphicsView::RoomPreviewGraphicsView(QWidget *param) : QGraphicsView
 {
     memset(dataPointers, 0, sizeof(dataPointers));
     auto *scene = new QGraphicsScene();
-    for (auto & pixmapItem : pixmapItems)
-    { pixmapItem = scene->addPixmap(QPixmap()); }
+    for (auto &pixmapItem : pixmapItems)
+    {
+        pixmapItem = scene->addPixmap(QPixmap());
+    }
     EnableSelectedPixmap();
     setScene(scene);
     setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -41,7 +43,9 @@ RoomPreviewGraphicsView::~RoomPreviewGraphicsView()
 void RoomPreviewGraphicsView::EnableSelectedPixmap()
 {
     for (unsigned int i = 0; i < sizeof(pixmapItems) / sizeof(pixmapItems[0]); ++i)
-    { pixmapItems[i]->setVisible(displayPixmap == i); }
+    {
+        pixmapItems[i]->setVisible(displayPixmap == i);
+    }
 }
 
 /// <summary>
@@ -49,7 +53,10 @@ void RoomPreviewGraphicsView::EnableSelectedPixmap()
 /// </summary>
 void RoomPreviewGraphicsView::DisplayNextPixmap()
 {
-    if (displayPixmap > 2 || !dataPointers[++displayPixmap]) { displayPixmap = 0; }
+    if (displayPixmap > 2 || !dataPointers[++displayPixmap])
+    {
+        displayPixmap = 0;
+    }
     EnableSelectedPixmap();
 }
 
@@ -122,7 +129,7 @@ void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tile
     // Update tilset
     if (tileset != dataPointers[0])
     {
-        dataPointers[0] = tileset;
+        dataPointers[0]       = tileset;
         QPixmap tilesetPixmap = tileset->RenderAllTile16(3);
         pixmapItems[0]->setPixmap(tilesetPixmap);
     }
@@ -150,6 +157,9 @@ void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tile
     }
 
     // Make sure the selected layer is viewable
-    if (!dataPointers[displayPixmap]) { displayPixmap = 0; }
+    if (!dataPointers[displayPixmap])
+    {
+        displayPixmap = 0;
+    }
     EnableSelectedPixmap();
 }

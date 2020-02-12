@@ -58,9 +58,9 @@ namespace LevelComponents
     // Enumeration of the types of camera control that a room may have
     enum __CameraControlType
     {
-        FixedY = 1,
-        NoLimit = 2,
-        HasControlAttrs = 3,
+        FixedY             = 1,
+        NoLimit            = 2,
+        HasControlAttrs    = 3,
         Vertical_Seperated = 4,
     };
 
@@ -75,9 +75,9 @@ namespace LevelComponents
     // Enumeration of the ways in which we can re-render the main graphics view
     enum RenderUpdateType
     {
-        FullRender = 0,
-        SingleTile = 1,
-        LayerEnable = 2,
+        FullRender           = 0,
+        SingleTile           = 1,
+        LayerEnable          = 2,
         ElementsLayersUpdate = 3
     };
 
@@ -85,11 +85,11 @@ namespace LevelComponents
     struct RenderUpdateParams
     {
         enum RenderUpdateType type;
-        int tileX = 0;
-        int tileY = 0;
-        unsigned short tileID = 0;
-        unsigned int SelectedDoorID = ~0u;
-        int SelectedEntityID = -1;
+        int tileX                      = 0;
+        int tileY                      = 0;
+        unsigned short tileID          = 0;
+        unsigned int SelectedDoorID    = ~0u;
+        int SelectedEntityID           = -1;
         struct Ui::EditModeParams mode = {};
         RenderUpdateParams(enum RenderUpdateType _type) : type(_type) {}
     };
@@ -103,33 +103,33 @@ namespace LevelComponents
         {
             Layer *layer;
             int index;
-        } * drawLayers[4]{}{};
+        } * drawLayers[4]{} {};
 
         // Locals
-        int EntityLayerZValue[4]{}{};
+        int EntityLayerZValue[4]{} {};
         enum __CameraControlType CameraControlType;
         unsigned int RoomID;
         unsigned int LevelID;
         unsigned int Width, Height;
         unsigned int Layer0width{}, Layer0height{};
-        bool Layer0ColorBlending = false;
+        bool Layer0ColorBlending            = false;
         int Layer0ColorBlendCoefficient_EVA = 16;
         int Layer0ColorBlendCoefficient_EVB = 0;
         std::vector<struct __CameraControlRecord *> CameraControlRecords;
         struct __RoomHeader RoomHeader;
-        int CurrentEntitySetID = 0;
+        int CurrentEntitySetID      = 0;
         EntitySet *currentEntitySet = nullptr;
         std::vector<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
-        bool EntityListDirty[3]{}{};
+        bool EntityListDirty[3]{} {};
         std::vector<Entity *> currentEntityListSource; // Initialize Entities here
         int currentDifficulty = 1;
-        Layer *layers[4]{}{};
+        Layer *layers[4]{} {};
         Tileset *tileset;
         std::vector<Door *> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem
-            *RenderedLayers[13]{}{}; // L0 - 3, E(Entities boxes), D, C, A (may not exist), E0 - 3, hidden coins
+            *RenderedLayers[13]{} {}; // L0 - 3, E(Entities boxes), D, C, A (may not exist), E0 - 3, hidden coins
         bool CameraBoundaryDirty = false;
-        bool IsCopy = false;
+        bool IsCopy              = false;
 
         // Helper functions
         void FreeDrawLayers();
@@ -203,7 +203,7 @@ namespace LevelComponents
         void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }
         void SetCameraControlType(__CameraControlType new_control_type)
         {
-            CameraControlType = new_control_type;
+            CameraControlType            = new_control_type;
             RoomHeader.CameraControlType = (unsigned char) new_control_type;
         }
         void SetCurrentEntitySet(int _currentEntitySetID)
@@ -239,7 +239,7 @@ namespace LevelComponents
         void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
         void SetTileset(Tileset *newtileset, int tilesetID)
         {
-            tileset = newtileset;
+            tileset              = newtileset;
             RoomHeader.TilesetID = (unsigned char) tilesetID;
         }
         void ResetTileSet();
@@ -247,7 +247,7 @@ namespace LevelComponents
         void SetLayerDataInRoomHeader(int layerid, unsigned int value)
         {
             unsigned int *ptr = &(RoomHeader.Layer0Data);
-            ptr[layerid] = value;
+            ptr[layerid]      = value;
         }
         void ResetRoomHeader(__RoomHeader newheader);
 

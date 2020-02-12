@@ -7,7 +7,7 @@
 enum ThemeColorType : int
 {
     Light = 0,
-    Dark = 1,
+    Dark  = 1,
 };
 
 QPalette namedColorSchemePalette(ThemeColorType color)

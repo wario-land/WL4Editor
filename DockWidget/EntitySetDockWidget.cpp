@@ -19,7 +19,7 @@ void EntitySetDockWidget::ResetEntitySet(LevelComponents::Room *currentroom)
 {
     currentRoom = currentroom;
     ui->label_EntitySetID->setText("EntitySet ID: " + QString::number(currentroom->GetCurrentEntitySetID(), 10));
-    EntityAmount = currentroom->GetCurrentEntityListSource().size() - 1;
+    EntityAmount    = currentroom->GetCurrentEntityListSource().size() - 1;
     currentEntityId = 1;
     RenderEntityAndResetInfo();
     ui->pushButton_PreviousEntity->setEnabled(false);
@@ -33,16 +33,16 @@ void EntitySetDockWidget::RenderEntityAndResetInfo()
 {
     // Render Entity
     QGraphicsScene *scene = ui->graphicsView_CurrentEntity->scene();
-    
-    
-        delete scene;
-    
+
+    delete scene;
+
     LevelComponents::Entity *currentEntityPtr = currentRoom->GetCurrentEntityListSource()[currentEntityId];
-    QImage EntityImage = currentEntityPtr->Render();
-    int Entitywidth; int Entityheight;
-    Entitywidth = EntityImage.width();
+    QImage EntityImage                        = currentEntityPtr->Render();
+    int Entitywidth;
+    int Entityheight;
+    Entitywidth  = EntityImage.width();
     Entityheight = EntityImage.height();
-    scene = new QGraphicsScene(0, 0, Entitywidth, Entityheight);
+    scene        = new QGraphicsScene(0, 0, Entitywidth, Entityheight);
     QPixmap pixmap(Entitywidth, Entityheight);
     pixmap.fill(Qt::transparent);
     QPainter Entitypainter(&pixmap);

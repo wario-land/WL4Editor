@@ -33,7 +33,7 @@ AlignTrailingComments: true
 NamespaceIndentation: All
 AlignConsecutiveAssignments: true
 AlignConsecutiveMacros: true
-AlignEscapedNewlines: ENAS_Left
+AlignEscapedNewlines: Left
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: true
 AlignConsecutiveDeclarations: false

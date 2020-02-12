@@ -54,12 +54,12 @@ namespace DialogParams
             }
             if (BackgroundLayerEnable)
             {
-                BackgroundLayerDataPtr = room->GetLayerDataPtr(3);
+                BackgroundLayerDataPtr          = room->GetLayerDataPtr(3);
                 BackgroundLayerAutoScrollEnable = room->IsBGLayerAutoScrollEnabled();
             }
             else
             {
-                BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
+                BackgroundLayerDataPtr          = WL4Constants::BGLayerDefaultPtr;
                 BackgroundLayerAutoScrollEnable = false;
             }
         }
@@ -69,7 +69,8 @@ namespace DialogParams
             // new and delete by myself.
             for (int i = 0; i < 3; i++)
             {
-                if (LayerData[i]) delete[] LayerData[i];
+                if (LayerData[i])
+                    delete[] LayerData[i];
             }
         }
     };

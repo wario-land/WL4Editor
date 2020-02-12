@@ -1,11 +1,12 @@
 #ifndef PATCHEDITDIALOG_H
 #define PATCHEDITDIALOG_H
 
-#include <QDialog>
 #include "PatchManagerTableView.h"
+#include <QDialog>
 
-namespace Ui {
-class PatchEditDialog;
+namespace Ui
+{
+    class PatchEditDialog;
 }
 
 class PatchEditDialog : public QDialog
@@ -14,7 +15,7 @@ class PatchEditDialog : public QDialog
 
 public:
     PatchEditDialog(QWidget *parent) :
-        PatchEditDialog(parent, { "", PatchType::C, 0, false, true, 0, "" }) {} // default UI values
+            PatchEditDialog(parent, { "", PatchType::C, 0, false, true, 0, "" }) {} // default UI values
     PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEntry);
     ~PatchEditDialog();
     struct PatchEntryItem CreatePatchEntry();
@@ -26,7 +27,7 @@ private slots:
 
 private:
     Ui::PatchEditDialog *ui;
-    void InitializeComponents(const struct PatchEntryItem& patchEntry);
+    void InitializeComponents(const struct PatchEntryItem &patchEntry);
     QRegExpValidator *addressvalidator;
 };
 

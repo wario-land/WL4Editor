@@ -52,7 +52,7 @@ namespace SettingsUtils
     // clang-format on
 
     void InitProgramSetupPath(QCoreApplication &application);
-    void SetKey(enum IniKeys key, const QString& value);
+    void SetKey(enum IniKeys key, const QString &value);
     QString GetKey(enum IniKeys key);
 }; // namespace SettingsUtils
 

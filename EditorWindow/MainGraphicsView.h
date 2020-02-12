@@ -21,12 +21,12 @@ public:
     void DeselectDoorAndEntity();
 
 private:
-    int SelectedDoorID = -1;
-    int SelectedEntityID = -1;
-    int drawingTileX = -1;
-    int drawingTileY = -1;
-    int objectInitialX = -1;
-    int objectInitialY = -1;
+    int SelectedDoorID      = -1;
+    int SelectedEntityID    = -1;
+    int drawingTileX        = -1;
+    int drawingTileY        = -1;
+    int objectInitialX      = -1;
+    int objectInitialY      = -1;
     int holdingEntityOrDoor = false;
 
     void SetTile(int tileX, int tileY);

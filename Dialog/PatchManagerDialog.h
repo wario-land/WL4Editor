@@ -1,11 +1,12 @@
 #ifndef PATCHMANAGERDIALOG_H
 #define PATCHMANAGERDIALOG_H
 
-#include <QDialog>
-#include "PatchManagerTableView.h"
 #include "PatchEditDialog.h"
+#include "PatchManagerTableView.h"
+#include <QDialog>
 
-namespace Ui {
+namespace Ui
+{
     class PatchManagerDialog;
 }
 

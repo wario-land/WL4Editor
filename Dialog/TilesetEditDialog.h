@@ -1,20 +1,20 @@
 #ifndef TILESETEDITDIALOG_H
 #define TILESETEDITDIALOG_H
 
-#include <QDialog>
-#include <QString>
-#include <QImage>
-#include <QSpinBox>
-#include <QCheckBox>
-#include <QScrollBar>
-#include <QColorDialog>
 #include "LevelComponents/Layer.h"
 #include "LevelComponents/Room.h"
-#include "LevelComponents/Tileset.h"
 #include "LevelComponents/Tile.h"
+#include "LevelComponents/Tileset.h"
 #include "ROMUtils.h"
 #include "RoomPreviewGraphicsView.h"
 #include "WL4Constants.h"
+#include <QCheckBox>
+#include <QColorDialog>
+#include <QDialog>
+#include <QImage>
+#include <QScrollBar>
+#include <QSpinBox>
+#include <QString>
 
 namespace DialogParams
 {
@@ -27,22 +27,23 @@ namespace DialogParams
         TilesetEditParams() { memset(this, 0, sizeof(struct TilesetEditParams)); }
 
         // Construct this param struct using a Room object
-        TilesetEditParams(LevelComponents::Room *room) {
-                currentTilesetIndex = room->GetTilesetID();
-                newTileset = new LevelComponents::Tileset(room->GetTileset(), room->GetTilesetID());
+        TilesetEditParams(LevelComponents::Room *room)
+        {
+            currentTilesetIndex = room->GetTilesetID();
+            newTileset          = new LevelComponents::Tileset(room->GetTileset(), room->GetTilesetID());
         }
         ~TilesetEditParams() {}
     };
-}
+} // namespace DialogParams
 
 namespace Ui
 {
     class RoomConfigDialog;
 }
 
-
-namespace Ui {
-class TilesetEditDialog;
+namespace Ui
+{
+    class TilesetEditDialog;
 }
 
 class TilesetEditDialog : public QDialog
@@ -56,8 +57,9 @@ public:
     void SetSelectedColorId(int newcolorId);
     void SetColor(int newcolorId);
     void CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile16);
-    void SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxPaletteID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
-    int PaletteBrushValue() {return paletteBrushVal; }
+    void SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8 *tile8, QSpinBox *spinBoxID, QSpinBox *spinBoxPaletteID,
+                                  QCheckBox *checkBoxHFlip, QCheckBox *checkBoxVFlip);
+    int PaletteBrushValue() { return paletteBrushVal; }
     void SetTile16PaletteId(int tile16ID);
     ~TilesetEditDialog();
 
@@ -92,26 +94,26 @@ private:
     Ui::TilesetEditDialog *ui;
 
     // members
-    DialogParams::TilesetEditParams* tilesetEditParams;
-    bool HasInitialized = false;
-    QGraphicsScene *PaletteBarScene = nullptr;
-    QGraphicsPixmapItem *SelectionBox_Color = nullptr;
-    QGraphicsPixmapItem *Palettemapping = nullptr;
-    QGraphicsScene *Tile8x8MAPScene = nullptr;
+    DialogParams::TilesetEditParams *tilesetEditParams;
+    bool HasInitialized                       = false;
+    QGraphicsScene *PaletteBarScene           = nullptr;
+    QGraphicsPixmapItem *SelectionBox_Color   = nullptr;
+    QGraphicsPixmapItem *Palettemapping       = nullptr;
+    QGraphicsScene *Tile8x8MAPScene           = nullptr;
     QGraphicsPixmapItem *SelectionBox_Tile8x8 = nullptr;
-    QGraphicsPixmapItem *Tile8x8mapping = nullptr;
-    QGraphicsScene *Tile16MAPScene = nullptr;
-    QGraphicsPixmapItem *SelectionBox_Tile16 = nullptr;
-    QGraphicsPixmapItem *Tile16mapping = nullptr;
-    QGraphicsScene *Tile8x8EditorScene = nullptr;
+    QGraphicsPixmapItem *Tile8x8mapping       = nullptr;
+    QGraphicsScene *Tile16MAPScene            = nullptr;
+    QGraphicsPixmapItem *SelectionBox_Tile16  = nullptr;
+    QGraphicsPixmapItem *Tile16mapping        = nullptr;
+    QGraphicsScene *Tile8x8EditorScene        = nullptr;
     QGraphicsPixmapItem *Tile8x8Editormapping = nullptr;
 
     unsigned short SelectedTile8x8 = 0;
-    unsigned short SelectedTile16 = 0;
-    bool IsSelectingTile16 = false;
-    int SelectedColorId = 0;
-    int SelectedPaletteId = 0;
-    int paletteBrushVal = -1;
+    unsigned short SelectedTile16  = 0;
+    bool IsSelectingTile16         = false;
+    int SelectedColorId            = 0;
+    int SelectedPaletteId          = 0;
+    int paletteBrushVal            = -1;
 
     // Setters for Selected Tile16
     void TLTile8x8Reset();
@@ -124,7 +126,8 @@ private:
     void ResetPaletteBarGraphicView(int paletteId);
     void ReRenderTile16Map();
     void ReRenderTile8x8Map(int paletteId);
-    void UpdateATile8x8ForSelectedTile16InTilesetData(int tile16Id, int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip);
+    void UpdateATile8x8ForSelectedTile16InTilesetData(int tile16Id, int newTile8x8_Id, int position,
+                                                      int new_paletteIndex, bool xflip, bool yflip);
     void OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(int posId, unsigned char *tiledata);
 };
 

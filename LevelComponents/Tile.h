@@ -86,7 +86,7 @@ namespace LevelComponents
             {
                 seed = ROT(seed ^ (uint) rgb);
             }
-            const int bytes = img->width() * img->height() * img->depth() / 32;
+            const int bytes    = img->width() * img->height() * img->depth() / 32;
             unsigned int *data = (unsigned int *) img->constBits();
             for (int i = 0; i < bytes; ++i)
             {
@@ -102,10 +102,10 @@ namespace LevelComponents
         Tile8x8(QVector<QRgb> *_palettes);
         QVector<QRgb> *palettes;
         QImageW *ImageData;
-        int index = 0;
+        int index        = 0;
         int paletteIndex = 0;
-        bool FlipX = false;
-        bool FlipY = false;
+        bool FlipX       = false;
+        bool FlipY       = false;
 
         static QImageW *GetCachedImageData(QImageW *image);
         static QHash<QImageW *, int> ImageDataCache;
@@ -118,15 +118,15 @@ namespace LevelComponents
         Tile8x8(Tile8x8 *other, QVector<QRgb> *_palettes);
         void DrawTile(QPixmap *layerPixmap, int x, int y);
         static Tile8x8 *CreateBlankTile(QVector<QRgb> *_palettes);
-        void SetIndex(int _index) {index=_index;}
-        int GetIndex() {return index;};
+        void SetIndex(int _index) { index = _index; }
+        int GetIndex() { return index; };
         void SetFlipX(bool _flipX) { FlipX = _flipX; }
         void SetFlipY(bool _flipY) { FlipY = _flipY; }
-        bool GetFlipX() {return FlipX;}
-        bool GetFlipY() {return FlipY;}
+        bool GetFlipX() { return FlipX; }
+        bool GetFlipY() { return FlipY; }
         void SetPaletteIndex(int index);
         QVector<QRgb> *GetPalette() { return palettes; }
-        int GetPaletteIndex() {return paletteIndex;}
+        int GetPaletteIndex() { return paletteIndex; }
         unsigned short GetValue();
         QByteArray CreateGraphicsData();
         ~Tile8x8();
@@ -142,11 +142,11 @@ namespace LevelComponents
         TileMap16(Tile8x8 *t0, Tile8x8 *t1, Tile8x8 *t2, Tile8x8 *t3);
         TileMap16(TileMap16 *other, QVector<QRgb> *newpalettes);
         void DrawTile(QPixmap *layerPixmap, int x, int y);
-        Tile8x8* GetTile8X8(int position);
-        const static int TILE8_TOPLEFT=0;
-        const static int TILE8_TOPRIGHT=1;
-        const static int TILE8_BOTTOMLEFT=2;
-        const static int TILE8_BOTTOMRIGHT=3;
+        Tile8x8 *GetTile8X8(int position);
+        const static int TILE8_TOPLEFT     = 0;
+        const static int TILE8_TOPRIGHT    = 1;
+        const static int TILE8_BOTTOMLEFT  = 2;
+        const static int TILE8_BOTTOMRIGHT = 3;
         void ResetTile8x8(Tile8x8 *other, int position, int new_index, int new_paletteIndex, bool xflip, bool yflip);
         QVector<QRgb> *GetPalette() { return TileData[0]->GetPalette(); }
         ~TileMap16();

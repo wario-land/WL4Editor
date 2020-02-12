@@ -32,10 +32,8 @@ Tile16DockWidget::Tile16DockWidget(QWidget *parent) : QDockWidget(parent), ui(ne
 Tile16DockWidget::~Tile16DockWidget()
 {
     delete ui;
-    
-    
-        delete Tile16MAPScene;
-    
+
+    delete Tile16MAPScene;
 }
 
 /// <summary>
@@ -57,10 +55,8 @@ void Tile16DockWidget::FocusInEvent(QFocusEvent * /*e*/) { SetSelectedTile(0, tr
 int Tile16DockWidget::SetTileset(int _tilesetIndex)
 {
     // Clean up heap objects from previous invocations
-    
-    
-        delete Tile16MAPScene;
-    
+
+    delete Tile16MAPScene;
 
     // Set up tileset
     SelectedTileset = ROMUtils::singletonTilesets[_tilesetIndex];
@@ -92,7 +88,7 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
 /// <param name="str">
 /// The string to display in the text box.
 /// </param>
-void Tile16DockWidget::SetTileInfoText(const QString& str) { ui->tileInfoTextBox->setText(str); }
+void Tile16DockWidget::SetTileInfoText(const QString &str) { ui->tileInfoTextBox->setText(str); }
 
 /// <summary>
 /// Set the selected tile index for the dock widget, and update the position of the highlight square.
@@ -114,7 +110,7 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
 
     // Get the event information about the selected tile
     unsigned short eventIndex = SelectedTileset->GetEventTablePtr()[tile];
-    int tmpTerrainTypeID = SelectedTileset->GetTerrainTypeIDTablePtr()[tile];
+    int tmpTerrainTypeID      = SelectedTileset->GetTerrainTypeIDTablePtr()[tile];
 
     // Print information about the tile to the user
     QString infoText;

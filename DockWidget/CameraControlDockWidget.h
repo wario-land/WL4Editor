@@ -22,13 +22,13 @@ class CameraControlDockWidget : public QDockWidget
 
 private:
     Ui::CameraControlDockWidget *ui;
-    LevelComponents::Room *currentRoom = nullptr;
+    LevelComponents::Room *currentRoom    = nullptr;
     QStandardItemModel *ListViewItemModel = nullptr;
     void ClearCurrentLimitatorSetting();
     int SelectedLimitator = -1;
-    int CurrentRoomWidth = 0;
+    int CurrentRoomWidth  = 0;
     int CurrentRoomHeight = 0;
-    bool IsSavingData = false;
+    bool IsSavingData     = false;
     void SetCurrentLimitator();
     void SetListviewItemText(int row);
     void PaintListView();

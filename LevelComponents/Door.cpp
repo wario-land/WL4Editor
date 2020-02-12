@@ -29,7 +29,8 @@ namespace LevelComponents
     /// </return>
     QPoint Door::GetWarioOriginalPosition_x4()
     {
-        int ypos; int xpos;
+        int ypos;
+        int xpos;
         if (DoorEntry.DoorTypeByte == NormalDoor)
         {
             xpos = ((DoorEntry.x1 + 1) << 6) - 1;

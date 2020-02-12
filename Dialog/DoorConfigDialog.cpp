@@ -61,7 +61,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->ComboBox_DoorType->setCurrentIndex(currentdoor->GetDoorTypeNum() - 1);
     ui->SpinBox_DoorX->setValue(currentdoor->GetX1());
     ui->SpinBox_DoorY->setValue(currentdoor->GetY1());
-    int doorwidth = currentdoor->GetX2() - currentdoor->GetX1() + 1;
+    int doorwidth  = currentdoor->GetX2() - currentdoor->GetX1() + 1;
     int doorheight = currentdoor->GetY2() - currentdoor->GetY1() + 1;
     ui->SpinBox_DoorWidth->setValue(doorwidth);
     ui->SpinBox_DoorHeight->setValue(doorheight);
@@ -162,11 +162,11 @@ void DoorConfigDialog::StaticInitialization()
     }
 
     // Initialize all the Entitysets and the Entities pointers with nullptr
-    for (auto & entitiesset : entitiessets)
+    for (auto &entitiesset : entitiessets)
     {
         entitiesset = nullptr;
     }
-    for (auto & entity : entities)
+    for (auto &entity : entities)
     {
         entity = nullptr;
     }
@@ -201,14 +201,14 @@ void DoorConfigDialog::EntitySetsInitialization()
 void DoorConfigDialog::EntitySetsDeconstruction()
 {
     // Initialize all the entitysets
-    for (auto & entitiesset : entitiessets)
+    for (auto &entitiesset : entitiessets)
     {
         if (entitiesset)
             delete entitiesset;
     }
 
     // Initialize all the Entity
-    for (auto & entity : entities)
+    for (auto &entity : entities)
     {
         if (entity)
             delete entity;
@@ -221,17 +221,16 @@ void DoorConfigDialog::EntitySetsDeconstruction()
 void DoorConfigDialog::RenderGraphicsView_Preview()
 {
     QGraphicsScene *oldScene = ui->GraphicsView_Preview->scene();
-    
-    
-        delete oldScene;
-    
+
+    delete oldScene;
+
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::FullRender);
-    tparam.tileX = tparam.tileY = 0;
-    tparam.tileID = (unsigned short) 0;
-    tparam.SelectedDoorID = (unsigned int) DoorID; // ID in Room
-    tparam.mode.editMode = Ui::DoorEditMode;
+    tparam.tileX = tparam.tileY    = 0;
+    tparam.tileID                  = (unsigned short) 0;
+    tparam.SelectedDoorID          = (unsigned int) DoorID; // ID in Room
+    tparam.mode.editMode           = Ui::DoorEditMode;
     tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
-    tparam.mode.entitiesboxesDisabled = true;
+    tparam.mode.entitiesboxesDisabled                                                             = true;
     QGraphicsScene *scene = tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
     ui->GraphicsView_Preview->setScene(scene);
     ui->GraphicsView_Preview->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -246,17 +245,16 @@ void DoorConfigDialog::RenderGraphicsView_Preview()
 void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
 {
     QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
-    
-    
-        delete oldScene;
-    
+
+    delete oldScene;
+
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::FullRender);
-    tparam.tileX = tparam.tileY = 0;
-    tparam.tileID = (unsigned short) 0;
-    tparam.SelectedDoorID = (unsigned int) doorIDinRoom; // ID in Room
-    tparam.mode.editMode = Ui::DoorEditMode;
+    tparam.tileX = tparam.tileY    = 0;
+    tparam.tileID                  = (unsigned short) 0;
+    tparam.SelectedDoorID          = (unsigned int) doorIDinRoom; // ID in Room
+    tparam.mode.editMode           = Ui::DoorEditMode;
     tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
-    tparam.mode.entitiesboxesDisabled = true;
+    tparam.mode.entitiesboxesDisabled                                                             = true;
     QGraphicsScene *scene = tmpDestinationRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
     ui->GraphicsView_DestinationDoor->setScene(scene);
     ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -272,7 +270,7 @@ void DoorConfigDialog::ResetDoorRect()
                                (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
                                (unsigned char) ui->SpinBox_DoorY->value(),
                                (unsigned char) (ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1));
-    int doorwidth = currentdoor0->GetX2() - currentdoor0->GetX1() + 1;
+    int doorwidth  = currentdoor0->GetX2() - currentdoor0->GetX1() + 1;
     int doorheight = currentdoor0->GetY2() - currentdoor0->GetY1() + 1;
     ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - doorwidth);
     ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetHeight() - doorheight);
@@ -290,12 +288,12 @@ void DoorConfigDialog::ResetDoorRect()
 void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
 {
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::ElementsLayersUpdate);
-    tparam.tileX = tparam.tileY = 0;
-    tparam.tileID = (unsigned short) 0;
-    tparam.SelectedDoorID = (unsigned int) DoorID; // ID in Room
-    tparam.mode.editMode = Ui::DoorEditMode;
+    tparam.tileX = tparam.tileY    = 0;
+    tparam.tileID                  = (unsigned short) 0;
+    tparam.SelectedDoorID          = (unsigned int) DoorID; // ID in Room
+    tparam.mode.editMode           = Ui::DoorEditMode;
     tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
-    tparam.mode.entitiesboxesDisabled = true;
+    tparam.mode.entitiesboxesDisabled                                                             = true;
     tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
 }
 
@@ -306,12 +304,12 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_DestinationDoor()
 {
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::ElementsLayersUpdate);
     tparam.tileX = tparam.tileY = 0;
-    tparam.tileID = (unsigned short) 0;
-    tparam.SelectedDoorID = (unsigned int) tmpDestinationRoom->GetLocalDoorID(
+    tparam.tileID               = (unsigned short) 0;
+    tparam.SelectedDoorID       = (unsigned int) tmpDestinationRoom->GetLocalDoorID(
         ui->ComboBox_DoorDestinationPicker->currentIndex()); // ID in Room
-    tparam.mode.editMode = Ui::DoorEditMode;
+    tparam.mode.editMode           = Ui::DoorEditMode;
     tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
-    tparam.mode.entitiesboxesDisabled = true;
+    tparam.mode.entitiesboxesDisabled                                                             = true;
     tmpDestinationRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
 }
 
@@ -324,8 +322,8 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_DestinationDoor()
 int DoorConfigDialog::GetSelectedComboBoxEntitySetID()
 {
     QString str = ui->ComboBox_EntitySetID->currentText();
-    bool ok = false;
-    int ret = str.toInt(&ok);
+    bool ok     = false;
+    int ret     = str.toInt(&ok);
     if (!ok)
         ret = -1;
 
@@ -360,7 +358,7 @@ void DoorConfigDialog::UpdateTableView()
         if (!item.visible)
             continue;
 
-        int row = model->rowCount();
+        int row        = model->rowCount();
         auto *checkbox = new QStandardItem;
         checkbox->setCheckable(true);
         checkbox->setCheckState(Qt::Unchecked);
@@ -391,7 +389,7 @@ void DoorConfigDialog::UpdateTableView()
 /// </param>
 void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
 {
-    auto *model = dynamic_cast<EntityFilterTableModel *>(ui->TableView_EntityFilter->model());
+    auto *model               = dynamic_cast<EntityFilterTableModel *>(ui->TableView_EntityFilter->model());
     const TableEntityItem &it = model->entities[item->row()];
 
     if (item->checkState() == Qt::Checked)
@@ -456,10 +454,8 @@ void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int
     else
     {
         QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
-        
-        
-            delete oldScene; // UI automatically update
-        
+
+        delete oldScene; // UI automatically update
     }
 }
 
@@ -601,7 +597,7 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
     ui->TextEdit_AllTheEntities->clear();
     std::vector<LevelComponents::EntitySetinfoTableElement> currentEntityTable =
         entitiessets[currentEntitySetId]->GetEntityTable();
-    for (auto & i : currentEntityTable)
+    for (auto &i : currentEntityTable)
     {
         QString currentname = EntitynameSetData[i.Global_EntityID - 1];
         ui->TextEdit_AllTheEntities->append(currentname);

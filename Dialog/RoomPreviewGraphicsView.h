@@ -16,7 +16,7 @@ class RoomPreviewGraphicsView : public QGraphicsView
     Q_OBJECT
 
 private:
-    bool initialized = false;               // Used for initializing the scrollbars
+    bool initialized      = false;          // Used for initializing the scrollbars
     void *dataPointers[4] = { 0, 0, 0, 0 }; // Tilset, BG, L0
     QGraphicsPixmapItem *pixmapItems[3]{};
     unsigned int displayPixmap;

@@ -1,6 +1,7 @@
+#include "Compress.h"
 #include "Dialog/DoorConfigDialog.h"
-#include "Dialog/RoomConfigDialog.h"
 #include "Dialog/PatchEditDialog.h"
+#include "Dialog/RoomConfigDialog.h"
 #include "DockWidget/CameraControlDockWidget.h"
 #include "LevelComponents/Level.h"
 #include "ROMUtils.h"
@@ -14,7 +15,6 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include "Compress.h"
 
 /// <summary>
 /// Load a ROM file into the data array in ROMUtils.cpp.
@@ -22,7 +22,7 @@
 /// <param name="filePath">
 /// The path to the file that will be read.
 /// </param>
-bool LoadROMFile(const QString& filePath)
+bool LoadROMFile(const QString &filePath)
 {
     // Read ROM file into current file array
     QFile file(filePath);
@@ -37,7 +37,7 @@ bool LoadROMFile(const QString& filePath)
     }
 
     // Read data
-    auto *ROMAddr = new unsigned char[0x1000000];  // set it to be 16 MB to let the data can be write freely
+    auto *ROMAddr = new unsigned char[0x1000000]; // set it to be 16 MB to let the data can be write freely
     file.read((char *) ROMAddr, length);
     file.close();
 
@@ -47,13 +47,11 @@ bool LoadROMFile(const QString& filePath)
         delete[] ROMAddr;
         return false;
     }
-    
-    
-        ROMUtils::CurrentFileSize = length;
-        ROMUtils::ROMFilePath = filePath;
-        ROMUtils::CurrentFile = (unsigned char *) ROMAddr;
-        return true;
-    
+
+    ROMUtils::CurrentFileSize = length;
+    ROMUtils::ROMFilePath     = filePath;
+    ROMUtils::CurrentFile     = (unsigned char *) ROMAddr;
+    return true;
 }
 
 /// <summary>
@@ -90,7 +88,7 @@ int main(int argc, char *argv[])
     //-------------------------------------------------------------------
     QString filePath = R"(C:\Users\Andrew\Desktop\WL4.gba)";
     QFile testFile(filePath);
-    if(testFile.exists())
+    if (testFile.exists())
     {
         window.LoadROMDataFromFile(filePath);
     }

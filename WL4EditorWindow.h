@@ -48,7 +48,7 @@ private:
     bool notify(QObject *receiver, QEvent *event);
     static bool SaveCurrentFile() { return ROMUtils::SaveLevel(ROMUtils::ROMFilePath); }
     bool SaveCurrentFileAs();
-    bool UnsavedChangesPrompt(const QString& str);
+    bool UnsavedChangesPrompt(const QString &str);
     void CurrentRoomClearEverything();
 
 protected:
@@ -91,7 +91,7 @@ public:
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
     void DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
-    void LoadROMDataFromFile(const QString& qFilePath);
+    void LoadROMDataFromFile(const QString &qFilePath);
 
     // Events
     void keyPressEvent(QKeyEvent *event);

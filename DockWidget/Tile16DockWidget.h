@@ -26,13 +26,13 @@ public:
 
 private:
     Ui::Tile16DockWidget *ui;
-    int scalerate = 1;
+    int scalerate                             = 1;
     LevelComponents::Tileset *SelectedTileset = nullptr;
-    QGraphicsScene *Tile16MAPScene = nullptr;
+    QGraphicsScene *Tile16MAPScene            = nullptr;
     QGraphicsPixmapItem *SelectionBox{};
     unsigned short SelectedTile{};
     // Function
-    void SetTileInfoText(const QString& str);
+    void SetTileInfoText(const QString &str);
 
 public:
     int SetTileset(int _tilesetIndex);

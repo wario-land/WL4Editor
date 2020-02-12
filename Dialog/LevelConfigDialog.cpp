@@ -60,7 +60,9 @@ void LevelConfigDialog::InitTextBoxes(std::string _levelname, int HModeTimer, in
     ui->LevelName_TextBox->setText(QString::fromStdString(_levelname));
 
     // Parse and Show Timers
-    int a; int b; int c;
+    int a;
+    int b;
+    int c;
     a = HModeTimer / 60;
     b = (HModeTimer - 60 * a) / 10;
     c = HModeTimer - 60 * a - 10 * b;
@@ -87,10 +89,12 @@ void LevelConfigDialog::InitTextBoxes(std::string _levelname, int HModeTimer, in
 std::string LevelConfigDialog::GetPaddedLevelName()
 {
     QString tmplevelname = ui->LevelName_TextBox->text();
-    int a; int b;
+    int a;
+    int b;
     a = (26 - tmplevelname.length()) / 2;
     b = (26 - tmplevelname.length()) / 2 + (26 - tmplevelname.length()) % 2;
-    QString stra; QString strb;
+    QString stra;
+    QString strb;
     stra.fill(' ', a);
     strb.fill(' ', b);
     stra = stra + tmplevelname + strb;
@@ -105,7 +109,9 @@ std::string LevelConfigDialog::GetPaddedLevelName()
 /// </return>
 int LevelConfigDialog::GetHModeTimer()
 {
-    int a; int b; int c;
+    int a;
+    int b;
+    int c;
     a = (int) (ui->HModeTimer_TextBox->text().at(0).unicode()) - 48;
     b = (int) (ui->HModeTimer_TextBox->text().at(2).unicode()) - 48;
     c = (int) (ui->HModeTimer_TextBox->text().at(3).unicode()) - 48;
@@ -120,7 +126,9 @@ int LevelConfigDialog::GetHModeTimer()
 /// </return>
 int LevelConfigDialog::GetNModeTimer()
 {
-    int a; int b; int c;
+    int a;
+    int b;
+    int c;
     a = (int) (ui->NModeTimer_TextBox->text().at(0).unicode()) - 48;
     b = (int) (ui->NModeTimer_TextBox->text().at(2).unicode()) - 48;
     c = (int) (ui->NModeTimer_TextBox->text().at(3).unicode()) - 48;
@@ -135,7 +143,9 @@ int LevelConfigDialog::GetNModeTimer()
 /// </return>
 int LevelConfigDialog::GetSHModeTimer()
 {
-    int a; int b; int c;
+    int a;
+    int b;
+    int c;
     a = (int) (ui->SHModeTimer_TextBox->text().at(0).unicode()) - 48;
     b = (int) (ui->SHModeTimer_TextBox->text().at(2).unicode()) - 48;
     c = (int) (ui->SHModeTimer_TextBox->text().at(3).unicode()) - 48;
@@ -158,7 +168,7 @@ void SetOKButtonEnable(QVector<QLineEdit *> textBoxes, QPushButton *okButton)
     for (auto line : textBoxes)
     {
         auto variable = line->text();
-        int pos = 0;
+        int pos       = 0;
         if (line->validator()->validate(variable, pos) != QValidator::State::Acceptable)
         {
             allValid = false;

@@ -53,32 +53,39 @@ void PerformOperation(struct OperationParams *operation)
     }
     if (operation->objectPositionChange)
     {
-        struct ObjectMoveParams *om=operation->objectMoveParams;
+        struct ObjectMoveParams *om = operation->objectMoveParams;
         /*om->previousPositionX = pX;
         om->previousPositionY = pY;*/
-        if (om->type == ObjectMoveParams::DOOR_TYPE) {
-            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+        if (om->type == ObjectMoveParams::DOOR_TYPE)
+        {
+            LevelComponents::Room *currentRoom  = singleton->GetCurrentRoom();
             LevelComponents::Door *selectedDoor = currentRoom->GetDoor(om->objectID);
 
             // Calculating the deltas
-            int px1 = selectedDoor->GetX1();
-            int py1 = selectedDoor->GetY1();
-            int deltaX = selectedDoor->GetX2()-px1;
-            int deltaY = selectedDoor->GetY2()-py1;
+            int px1    = selectedDoor->GetX1();
+            int py1    = selectedDoor->GetY1();
+            int deltaX = selectedDoor->GetX2() - px1;
+            int deltaY = selectedDoor->GetY2() - py1;
 
             // If the door exists and if it is still in the room
-            if (om->objectID != -1 && selectedDoor) {
-                if (currentRoom->IsNewDoorPositionInsideRoom(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY+deltaY))
+            if (om->objectID != -1 && selectedDoor)
+            {
+                if (currentRoom->IsNewDoorPositionInsideRoom(om->nextPositionX, om->nextPositionX + deltaX,
+                                                             om->nextPositionY, om->nextPositionY + deltaY))
                 {
-                    selectedDoor->SetDoorPlace(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY+deltaY);
+                    selectedDoor->SetDoorPlace(om->nextPositionX, om->nextPositionX + deltaX, om->nextPositionY,
+                                               om->nextPositionY + deltaY);
                     singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
                 }
             }
-        } else if (om->type == ObjectMoveParams::ENTITY_TYPE) {
+        }
+        else if (om->type == ObjectMoveParams::ENTITY_TYPE)
+        {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
 
             // If the entity exists
-            if (om->objectID != -1) {
+            if (om->objectID != -1)
+            {
                 if (currentRoom->IsNewEntityPositionInsideRoom(om->nextPositionX, om->nextPositionY))
                 {
                     currentRoom->SetEntityPosition(om->nextPositionX, om->nextPositionY, om->objectID);
@@ -93,14 +100,15 @@ void PerformOperation(struct OperationParams *operation)
     if (operation->TilesetChange)
     {
         // Update Rooms's Tileset in CurrentLevel
-        int roomnum = singleton->GetCurrentLevel()->GetRooms().size();
-        int tilesetId = operation->newTilesetEditParams->currentTilesetIndex;
+        int roomnum                            = singleton->GetCurrentLevel()->GetRooms().size();
+        int tilesetId                          = operation->newTilesetEditParams->currentTilesetIndex;
         ROMUtils::singletonTilesets[tilesetId] = operation->newTilesetEditParams->newTileset;
-        for(int i = 0; i < roomnum; ++i)
+        for (int i = 0; i < roomnum; ++i)
         {
-            if(singleton->GetCurrentLevel()->GetRooms()[i]->GetTilesetID() == tilesetId)
+            if (singleton->GetCurrentLevel()->GetRooms()[i]->GetTilesetID() == tilesetId)
             {
-                singleton->GetCurrentLevel()->GetRooms()[i]->SetTileset(operation->newTilesetEditParams->newTileset, tilesetId);
+                singleton->GetCurrentLevel()->GetRooms()[i]->SetTileset(operation->newTilesetEditParams->newTileset,
+                                                                        tilesetId);
             }
         }
 
@@ -153,29 +161,34 @@ void BackTrackOperation(struct OperationParams *operation)
     }
     if (operation->objectPositionChange)
     {
-        struct ObjectMoveParams *om=operation->objectMoveParams;
+        struct ObjectMoveParams *om = operation->objectMoveParams;
         /*om->previousPositionX = pX;
         om->previousPositionY = pY;*/
-        if (om->type == ObjectMoveParams::DOOR_TYPE) {
-            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+        if (om->type == ObjectMoveParams::DOOR_TYPE)
+        {
+            LevelComponents::Room *currentRoom  = singleton->GetCurrentRoom();
             LevelComponents::Door *selectedDoor = currentRoom->GetDoor(om->objectID);
 
             // Calculating the deltas
-            int px1 = selectedDoor->GetX1();
-            int py1 = selectedDoor->GetY1();
-            int deltaX = selectedDoor->GetX2()-px1;
-            int deltaY = selectedDoor->GetY2()-py1;
+            int px1    = selectedDoor->GetX1();
+            int py1    = selectedDoor->GetY1();
+            int deltaX = selectedDoor->GetX2() - px1;
+            int deltaY = selectedDoor->GetY2() - py1;
 
             // If the door exists and if it is still in the room
             if (om->objectID != -1)
             {
-                if (currentRoom->IsNewDoorPositionInsideRoom(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY+deltaY))
+                if (currentRoom->IsNewDoorPositionInsideRoom(om->previousPositionX, om->previousPositionX + deltaX,
+                                                             om->previousPositionY, om->previousPositionY + deltaY))
                 {
-                    selectedDoor->SetDoorPlace(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY+deltaY);
+                    selectedDoor->SetDoorPlace(om->previousPositionX, om->previousPositionX + deltaX,
+                                               om->previousPositionY, om->previousPositionY + deltaY);
                     singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
                 }
             }
-        } else if (om->type == ObjectMoveParams::ENTITY_TYPE) {
+        }
+        else if (om->type == ObjectMoveParams::ENTITY_TYPE)
+        {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
 
             // If the entity exists and if it is still in the room
@@ -194,14 +207,15 @@ void BackTrackOperation(struct OperationParams *operation)
     if (operation->TilesetChange)
     {
         // Update Rooms's Tileset in CurrentLevel
-        int roomnum = singleton->GetCurrentLevel()->GetRooms().size();
-        int tilesetId = operation->lastTilesetEditParams->currentTilesetIndex;
+        int roomnum                            = singleton->GetCurrentLevel()->GetRooms().size();
+        int tilesetId                          = operation->lastTilesetEditParams->currentTilesetIndex;
         ROMUtils::singletonTilesets[tilesetId] = operation->lastTilesetEditParams->newTileset;
-        for(int i = 0; i < roomnum; ++i)
+        for (int i = 0; i < roomnum; ++i)
         {
-            if(singleton->GetCurrentLevel()->GetRooms()[i]->GetTilesetID() == tilesetId)
+            if (singleton->GetCurrentLevel()->GetRooms()[i]->GetTilesetID() == tilesetId)
             {
-                singleton->GetCurrentLevel()->GetRooms()[i]->SetTileset(operation->lastTilesetEditParams->newTileset, tilesetId);
+                singleton->GetCurrentLevel()->GetRooms()[i]->SetTileset(operation->lastTilesetEditParams->newTileset,
+                                                                        tilesetId);
             }
         }
 
@@ -294,7 +308,7 @@ void RedoOperation()
 /// </remarks>
 void ResetUndoHistory()
 {
-    for (auto & i : operationHistory)
+    for (auto &i : operationHistory)
     {
         // Deconstruct the dynamically allocated operation structs within the history queue
         for (unsigned int j = 0; j < i.size(); ++j)

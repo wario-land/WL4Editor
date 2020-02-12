@@ -1,7 +1,8 @@
 #include "PatchEditDialog.h"
 #include "ui_PatchEditDialog.h"
 #include <QFileDialog>
-#include <utility> #include <ROMUtils.h>
+#include <ROMUtils.h>
+#include <utility>
 
 static QStringList PatchTypeNameSet;
 
@@ -10,7 +11,9 @@ static QStringList PatchTypeNameSet;
 /// </summary>
 void PatchEditDialog::StaticComboBoxesInitialization()
 {
-    PatchTypeNameSet << "Binary" << "Assembly" << "C";
+    PatchTypeNameSet << "Binary"
+                     << "Assembly"
+                     << "C";
 }
 
 /// <summary>
@@ -23,8 +26,7 @@ void PatchEditDialog::StaticComboBoxesInitialization()
 /// The patch entry whose fields are used to initialize the dialog.
 /// </param>
 PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEntry) :
-    QDialog(parent),
-    ui(new Ui::PatchEditDialog)
+        QDialog(parent), ui(new Ui::PatchEditDialog)
 {
     ui->setupUi(this);
 
@@ -54,7 +56,7 @@ PatchEditDialog::~PatchEditDialog()
 /// <param name="patchEntry">
 /// The patch entry whose fields are used to initialize the dialog.
 /// </param>
-void PatchEditDialog::InitializeComponents(const struct PatchEntryItem& patchEntry)
+void PatchEditDialog::InitializeComponents(const struct PatchEntryItem &patchEntry)
 {
     ui->lineEdit_FilePath->setText(patchEntry.FileName);
     ui->comboBox_PatchType->setCurrentIndex(patchEntry.PatchType);
@@ -72,16 +74,11 @@ void PatchEditDialog::InitializeComponents(const struct PatchEntryItem& patchEnt
 /// </returns>
 struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
 {
-    return
-    {
-        ui->lineEdit_FilePath->text(),
-        static_cast<enum PatchType>(ui->comboBox_PatchType->currentIndex()),
-        static_cast<unsigned int>(ui->lineEdit_HookAddress->text().toInt(Q_NULLPTR, 16)),
-        ui->checkBox_FunctionPointerReplacementMode->isChecked(),
-        ui->radioButton_CompileInThumbMode->isChecked(),
-        // These should be calculated later by saving
-        0, ""
-    };
+    return { ui->lineEdit_FilePath->text(), static_cast<enum PatchType>(ui->comboBox_PatchType->currentIndex()),
+             static_cast<unsigned int>(ui->lineEdit_HookAddress->text().toInt(Q_NULLPTR, 16)),
+             ui->checkBox_FunctionPointerReplacementMode->isChecked(), ui->radioButton_CompileInThumbMode->isChecked(),
+             // These should be calculated later by saving
+             0, "" };
 }
 
 /// <summary>
@@ -90,22 +87,19 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
 void PatchEditDialog::on_pushButton_Browse_clicked()
 {
     // Promt the user for the patch file
-    QString qFilePath = QFileDialog::getOpenFileName(
-        this,
-        tr("Open patch file"),
-        QString(""),
-        tr("C source files (*.c);;ARM assembly files (*.s);;Binary files (*.bin)")
-    );
-    if(!qFilePath.isEmpty())
+    QString qFilePath =
+        QFileDialog::getOpenFileName(this, tr("Open patch file"), QString(""),
+                                     tr("C source files (*.c);;ARM assembly files (*.s);;Binary files (*.bin)"));
+    if (!qFilePath.isEmpty())
     {
         ui->lineEdit_FilePath->setText(qFilePath);
 
         // Infer the type based on the extension
-        if(qFilePath.endsWith(".c", Qt::CaseInsensitive))
+        if (qFilePath.endsWith(".c", Qt::CaseInsensitive))
         {
             ui->comboBox_PatchType->setCurrentIndex(PatchType::C);
         }
-        else if(qFilePath.endsWith(".s", Qt::CaseInsensitive))
+        else if (qFilePath.endsWith(".s", Qt::CaseInsensitive))
         {
             ui->comboBox_PatchType->setCurrentIndex(PatchType::Assembly);
         }

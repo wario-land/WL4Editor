@@ -64,11 +64,11 @@ private slots:
 private:
     Ui::DoorConfigDialog *ui;
     LevelComponents::Level *_currentLevel;
-    LevelComponents::Room *CurrentRoom = nullptr;    // Use this to reset current Door
-    LevelComponents::Room *tmpCurrentRoom = nullptr; // Use this to render Door preview
+    LevelComponents::Room *CurrentRoom        = nullptr; // Use this to reset current Door
+    LevelComponents::Room *tmpCurrentRoom     = nullptr; // Use this to render Door preview
     LevelComponents::Room *tmpDestinationRoom = nullptr;
-    int DoorID = -1;
-    bool IsInitialized = false;
+    int DoorID                                = -1;
+    bool IsInitialized                        = false;
     EntityFilterTableModel *EntityFilterTable;
 
     void RenderGraphicsView_Preview();

@@ -18,18 +18,18 @@ EditModeDockWidget::EditModeDockWidget(QWidget *parent) : QDockWidget(parent), u
     ui->setupUi(this);
 
     // Set up internal data structures
-    modeEnums[ui->RadioButton_LayerMode] = Ui::LayerEditMode;
-    modeEnums[ui->RadioButton_EntityMode] = Ui::EntityEditMode;
-    modeEnums[ui->RadioButton_DoorMode] = Ui::DoorEditMode;
-    modeEnums[ui->RadioButton_CameraMode] = Ui::CameraEditMode;
+    modeEnums[ui->RadioButton_LayerMode]       = Ui::LayerEditMode;
+    modeEnums[ui->RadioButton_EntityMode]      = Ui::EntityEditMode;
+    modeEnums[ui->RadioButton_DoorMode]        = Ui::DoorEditMode;
+    modeEnums[ui->RadioButton_CameraMode]      = Ui::CameraEditMode;
     layerIndices[ui->RadioButton_EditOnLayer0] = 0;
     layerIndices[ui->RadioButton_EditOnLayer1] = 1;
     layerIndices[ui->RadioButton_EditOnLayer2] = 2;
     layerIndices[ui->RadioButton_EditOnLayer3] = 3;
-    difficultyIndices[ui->RadioButton_HMode] = 0;
-    difficultyIndices[ui->RadioButton_NMode] = 1;
-    difficultyIndices[ui->RadioButton_SHMode] = 2;
-    modeGroup = new QButtonGroup(ui->editModeGroupBox);
+    difficultyIndices[ui->RadioButton_HMode]   = 0;
+    difficultyIndices[ui->RadioButton_NMode]   = 1;
+    difficultyIndices[ui->RadioButton_SHMode]  = 2;
+    modeGroup                                  = new QButtonGroup(ui->editModeGroupBox);
     modeGroup->addButton(ui->RadioButton_LayerMode);
     modeGroup->addButton(ui->RadioButton_EntityMode);
     modeGroup->addButton(ui->RadioButton_DoorMode);
@@ -103,14 +103,14 @@ void EditModeDockWidget::SetDifficultyRadioBox(int modeid)
 bool *EditModeDockWidget::GetLayersVisibilityArray()
 {
     bool *LayersVisibilityArray = new bool[8];
-    LayersVisibilityArray[0] = ui->CheckBox_Layer0View->isChecked();
-    LayersVisibilityArray[1] = ui->CheckBox_Layer1View->isChecked();
-    LayersVisibilityArray[2] = ui->CheckBox_Layer2View->isChecked();
-    LayersVisibilityArray[3] = ui->CheckBox_Layer3View->isChecked();
-    LayersVisibilityArray[4] = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
-    LayersVisibilityArray[5] = ui->CheckBox_DoorView->isChecked();
-    LayersVisibilityArray[6] = ui->CheckBox_CameraView->isChecked();
-    LayersVisibilityArray[7] = ui->CheckBox_AlphaView->isChecked();
+    LayersVisibilityArray[0]    = ui->CheckBox_Layer0View->isChecked();
+    LayersVisibilityArray[1]    = ui->CheckBox_Layer1View->isChecked();
+    LayersVisibilityArray[2]    = ui->CheckBox_Layer2View->isChecked();
+    LayersVisibilityArray[3]    = ui->CheckBox_Layer3View->isChecked();
+    LayersVisibilityArray[4]    = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
+    LayersVisibilityArray[5]    = ui->CheckBox_DoorView->isChecked();
+    LayersVisibilityArray[6]    = ui->CheckBox_CameraView->isChecked();
+    LayersVisibilityArray[7]    = ui->CheckBox_AlphaView->isChecked();
     return LayersVisibilityArray;
 }
 
@@ -130,23 +130,23 @@ void EditModeDockWidget::UncheckHiddencoinsViewCheckbox()
 /// </return>
 struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
 {
-    QAbstractButton *selectedModeButton = modeGroup->checkedButton();
-    QAbstractButton *selectedLayerButton = layerGroup->checkedButton();
+    QAbstractButton *selectedModeButton       = modeGroup->checkedButton();
+    QAbstractButton *selectedLayerButton      = layerGroup->checkedButton();
     QAbstractButton *selectedDifficultyButton = difficultyGroup->checkedButton();
     struct Ui::EditModeParams params;
-    params.editMode = modeEnums[selectedModeButton];
-    params.selectedLayer = layerIndices[selectedLayerButton];
-    params.layersEnabled[0] = ui->CheckBox_Layer0View->isChecked();
-    params.layersEnabled[1] = ui->CheckBox_Layer1View->isChecked();
-    params.layersEnabled[2] = ui->CheckBox_Layer2View->isChecked();
-    params.layersEnabled[3] = ui->CheckBox_Layer3View->isChecked();
-    params.entitiesEnabled = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
+    params.editMode              = modeEnums[selectedModeButton];
+    params.selectedLayer         = layerIndices[selectedLayerButton];
+    params.layersEnabled[0]      = ui->CheckBox_Layer0View->isChecked();
+    params.layersEnabled[1]      = ui->CheckBox_Layer1View->isChecked();
+    params.layersEnabled[2]      = ui->CheckBox_Layer2View->isChecked();
+    params.layersEnabled[3]      = ui->CheckBox_Layer3View->isChecked();
+    params.entitiesEnabled       = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
     params.entitiesboxesDisabled = (ui->CheckBox_EntityView->checkState() != Qt::Checked);
-    params.doorsEnabled = ui->CheckBox_DoorView->isChecked();
-    params.alphaBlendingEnabled = ui->CheckBox_AlphaView->isChecked();
-    params.cameraAreasEnabled = ui->CheckBox_CameraView->isChecked();
-    params.seleteddifficulty = difficultyIndices[selectedDifficultyButton];
-    params.hiddencoinsEnabled = ui->CheckBox_hiddencoinsView->isChecked();
+    params.doorsEnabled          = ui->CheckBox_DoorView->isChecked();
+    params.alphaBlendingEnabled  = ui->CheckBox_AlphaView->isChecked();
+    params.cameraAreasEnabled    = ui->CheckBox_CameraView->isChecked();
+    params.seleteddifficulty     = difficultyIndices[selectedDifficultyButton];
+    params.hiddencoinsEnabled    = ui->CheckBox_hiddencoinsView->isChecked();
     return params;
 }
 

@@ -11,11 +11,11 @@ namespace LevelComponents
     // The integers correspond to the real values the games uses internally to represent a door.
     enum DoorType
     {
-        Portal = 1,     // A special type just for the level's portal
-        Instant = 2,    // Automatically "enter" the door. For example, the edge of a room leading to another one
+        Portal     = 1, // A special type just for the level's portal
+        Instant    = 2, // Automatically "enter" the door. For example, the edge of a room leading to another one
         NormalDoor = 3, // A door with normal "door"-like behavior. Press up to enter
-        TYPE_04 = 4,    // unknown
-        TYPE_05 = 5     // unknown
+        TYPE_04    = 4, // unknown
+        TYPE_05    = 5  // unknown
     };
 
     struct __DoorEntry
@@ -39,8 +39,8 @@ namespace LevelComponents
         // Instance variables
         unsigned char RoomID;
         Door *DestinationDoor = nullptr;
-        bool is_vortex = false;
-        bool newDoor = false;
+        bool is_vortex        = false;
+        bool newDoor          = false;
         int DoorID; // Global Door Id in one Room
         __DoorEntry DoorEntry;
 
@@ -85,7 +85,7 @@ namespace LevelComponents
         void SetDelta(signed char _DeltaX, signed char _DeltaY)
         {
             DoorEntry.HorizontalDelta = (signed char) _DeltaX;
-            DoorEntry.VerticalDelta = (signed char) _DeltaY;
+            DoorEntry.VerticalDelta   = (signed char) _DeltaY;
         }
         void SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2)
         {

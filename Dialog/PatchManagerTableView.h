@@ -1,9 +1,9 @@
 #ifndef PATCHMANAGERTABLEVIEW_H
 #define PATCHMANAGERTABLEVIEW_H
 
-#include <QTableView>
-#include <QStandardItemModel>
 #include <PatchUtils.h>
+#include <QStandardItemModel>
+#include <QTableView>
 
 class PatchEntryTableModel : public QStandardItemModel
 {
@@ -11,7 +11,7 @@ class PatchEntryTableModel : public QStandardItemModel
 
 public:
     PatchEntryTableModel(QWidget *_parent);
-    ~PatchEntryTableModel() { };
+    ~PatchEntryTableModel(){};
     void AddEntry(struct PatchEntryItem entry) { entries.append(entry); }
     QVector<struct PatchEntryItem> entries;
     void RemoveEntries(QModelIndexList entryList);

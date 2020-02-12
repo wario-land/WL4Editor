@@ -41,16 +41,15 @@ namespace LevelComponents
 
         // Set up the layer data
         int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
-        Width = ROMUtils::CurrentFile[dimensionPointer];
-        Height = ROMUtils::CurrentFile[dimensionPointer + 1];
+        Width                = ROMUtils::CurrentFile[dimensionPointer];
+        Height               = ROMUtils::CurrentFile[dimensionPointer + 1];
         for (int i = 0; i < 4; ++i)
         {
-            auto mappingType =
-                static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1] & 0x30);
-            int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
-            layers[i] = new Layer(layerPtr, mappingType);
+            auto mappingType = static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1] & 0x30);
+            int layerPtr     = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
+            layers[i]        = new Layer(layerPtr, mappingType);
         }
-        Layer0width = layers[0]->GetLayerWidth();
+        Layer0width  = layers[0]->GetLayerWidth();
         Layer0height = layers[0]->GetLayerHeight();
 
         SetLayerPriorityAndAlphaAttributes(ROMUtils::CurrentFile[roomDataPtr + 26]);
@@ -62,7 +61,7 @@ namespace LevelComponents
             int pLevelCameraControlPointerTable =
                 ROMUtils::PointerFromData(WL4Constants::CameraControlPointerTable + _LevelID * 4);
             struct __CameraControlRecord *recordPtr = nullptr;
-            int k = 0;
+            int k                                   = 0;
             for (int i = 0; i < 16; i++)
             {
                 int CurrentPointer = ROMUtils::PointerFromData(pLevelCameraControlPointerTable + i * 4);
@@ -91,10 +90,12 @@ namespace LevelComponents
         for (unsigned int i = 0; i < 3; i++)
         {
             unsigned int Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
-            unsigned int k = 0;
+            unsigned int k           = 0;
             while (ROMUtils::CurrentFile[Listaddress + 3 * k] != 0xFF) // maximum entity count is 46
             {
-                struct EntityRoomAttribute tmpEntityroomattribute{};
+                struct EntityRoomAttribute tmpEntityroomattribute
+                {
+                };
                 memcpy(&tmpEntityroomattribute, ROMUtils::CurrentFile + Listaddress + 3 * k++,
                        sizeof(struct EntityRoomAttribute));
                 EntityList[i].push_back(tmpEntityroomattribute);
@@ -151,7 +152,7 @@ namespace LevelComponents
     /// </summary>
     void Room::FreeDrawLayers()
     {
-        for (auto & drawLayer : drawLayers)
+        for (auto &drawLayer : drawLayers)
         {
             if (drawLayer)
             {
@@ -182,8 +183,8 @@ namespace LevelComponents
     /// </param>
     void Room::ResetEntitySet(int entitysetId)
     {
-        
-            delete currentEntitySet;
+
+        delete currentEntitySet;
         FreeCurrentEntityListSource();
         currentEntitySet = new EntitySet(entitysetId, tileset->GetUniversalSpritesTilesPalettePtr());
         for (int i = 0; i < 17; ++i)
@@ -193,7 +194,7 @@ namespace LevelComponents
         }
         for (int i = 0; i < (int) currentEntitySet->GetEntityTable().size(); ++i)
         {
-            int _globalId = currentEntitySet->GetEntityTable().at(i).Global_EntityID;
+            int _globalId   = currentEntitySet->GetEntityTable().at(i).Global_EntityID;
             auto *newEntity = new Entity(i, _globalId, currentEntitySet);
             currentEntityListSource.push_back(newEntity);
         }
@@ -203,10 +204,7 @@ namespace LevelComponents
     /// Reset the tileset of a Room.
     /// Useful after saving the ROM.
     /// </summary>
-    void Room::ResetTileSet()
-    {
-        tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
-    }
+    void Room::ResetTileSet() { tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID]; }
 
     /// <summary>
     /// Deconstruct an instance of Room.
@@ -215,8 +213,8 @@ namespace LevelComponents
     {
         // Free drawlayer elements
         FreeDrawLayers();
-        
-            delete currentEntitySet;
+
+        delete currentEntitySet;
         FreeCurrentEntityListSource();
         foreach (struct __CameraControlRecord *C, CameraControlRecords)
         {
@@ -224,12 +222,12 @@ namespace LevelComponents
         }
         if (IsCopy && !doors.empty())
         {
-            for (auto & door : doors)
+            for (auto &door : doors)
             {
                 delete door; // Delete doors
             }
         }
-        for (auto & layer : layers)
+        for (auto &layer : layers)
         {
             delete layer;
         }
@@ -270,19 +268,20 @@ namespace LevelComponents
     /// </return>
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
-        int sceneWidth = Width * 16; int sceneHeight = Height * 16; int Z = 0;
+        int sceneWidth                         = Width * 16;
+        int sceneHeight                        = Height * 16;
+        int Z                                  = 0;
         std::vector<int> eventidwithhiddencoin = {
             0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C
         }; // TODO: There perhaps will be more
         switch (renderParams->type)
         {
-        case FullRender:
-        {
+        case FullRender: {
             // Order the layers by their priority
             FreeDrawLayers();
             for (int i = 0; i < 4; ++i)
             {
-                auto *newDLS = new struct DLS;
+                auto *newDLS  = new struct DLS;
                 newDLS->layer = layers[i];
                 newDLS->index = i;
                 drawLayers[i] = newDLS;
@@ -294,9 +293,8 @@ namespace LevelComponents
             });
 
             // Create a graphics scene with the layers added in order of priority
-            
-            
-                delete scene;
+
+            delete scene;
             // Make a new graphics scene to draw to
             scene = new QGraphicsScene(0, 0, qMax(sceneWidth, 16 * this->GetLayer(0)->GetLayerWidth()), sceneHeight);
 
@@ -330,7 +328,7 @@ namespace LevelComponents
                 QGraphicsPixmapItem *pixmapItem = scene->addPixmap(pixmap);
                 pixmapItem->setZValue(Z);
                 Z += 2;
-                EntityLayerZValue[3 - i] = Z - 1;
+                EntityLayerZValue[3 - i]             = Z - 1;
                 RenderedLayers[drawLayers[i]->index] = pixmapItem;
 
                 // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
@@ -350,14 +348,15 @@ namespace LevelComponents
                         {
                             for (int k = 0; k < qMin(sceneWidth, imageA.width()); ++k)
                             {
-                                QColor PXA = QColor(imageA.pixel(k, j)); QColor PXB = QColor(imageB.pixel(k, j));
-                                int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
+                                QColor PXA = QColor(imageA.pixel(k, j));
+                                QColor PXB = QColor(imageB.pixel(k, j));
+                                int R      = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
                                                  (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
                                              255);
-                                int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
+                                int G      = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
                                                  (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
                                              255);
-                                int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
+                                int B      = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
                                                  (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
                                              255);
                                 imageA.setPixel(k, j, QColor(R, G, B).rgb());
@@ -369,7 +368,7 @@ namespace LevelComponents
                         alphaItem->setZValue(Z);
                         Z += 2;
                         EntityLayerZValue[i] = Z - 1;
-                        RenderedLayers[7] = alphaItem;
+                        RenderedLayers[7]    = alphaItem;
                     };
                 }
                 else
@@ -378,8 +377,7 @@ namespace LevelComponents
             delete[] LayersCurrentVisibility;
         }
             // Fall through to ElementsLayersUpdate section
-        case ElementsLayersUpdate:
-        {
+        case ElementsLayersUpdate: {
             // Render entity layer
             QPixmap *EntityPixmap[4];
             QPainter *EntityPainter[4];
@@ -390,7 +388,7 @@ namespace LevelComponents
                 EntityPainter[i] = new QPainter(EntityPixmap[i]);
             }
             currentDifficulty = renderParams->mode.seleteddifficulty;
-            for (auto & i : EntityList[currentDifficulty])
+            for (auto &i : EntityList[currentDifficulty])
             {
                 unsigned char EntityID = i.EntityID;
                 // TODO this continue statement may not be addressing the underlying problem,
@@ -406,11 +404,13 @@ namespace LevelComponents
                                           : (layers[2]->GetLayerPriority());
                     EntityPainter[tmppriority]->drawImage(
                         16 * i.XPos + currententity->GetXOffset() + 8 +
-                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
+                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID())
+                                 .XOffset +
                              98) /
                                 4,
                         16 * i.YPos + currententity->GetYOffset() + 16 +
-                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
+                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID())
+                                 .YOffset +
                              66) /
                                 4,
                         currententity->Render());
@@ -419,11 +419,13 @@ namespace LevelComponents
                 {
                     EntityPainter[layers[0]->GetLayerPriority()]->drawImage(
                         16 * i.XPos + currententity->GetXOffset() + 8 +
-                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
+                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID())
+                                 .XOffset +
                              98) /
                                 4,
                         16 * i.YPos + currententity->GetYOffset() + 16 +
-                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
+                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID())
+                                 .YOffset +
                              66) /
                                 4,
                         currententity->Render());
@@ -432,11 +434,13 @@ namespace LevelComponents
                 {
                     EntityPainter[layers[1]->GetLayerPriority() + 1]->drawImage(
                         16 * i.XPos + currententity->GetXOffset() + 8 +
-                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
+                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID())
+                                 .XOffset +
                              98) /
                                 4,
                         16 * i.YPos + currententity->GetYOffset() + 16 +
-                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
+                            (LevelComponents::EntitySet::GetEntityPositionalOffset(currententity->GetEntityGlobalID())
+                                 .YOffset +
                              66) /
                                 4,
                         currententity->Render());
@@ -471,9 +475,9 @@ namespace LevelComponents
             doorPainter.setPen(DoorPen);
             for (unsigned int i = 0; i < doors.size(); i++)
             {
-                int doorX = doors[i]->GetX1() * 16;
-                int doorY = doors[i]->GetY1() * 16;
-                int doorWidth = (qAbs(doors[i]->GetX1() - doors[i]->GetX2()) + 1) * 16;
+                int doorX      = doors[i]->GetX1() * 16;
+                int doorY      = doors[i]->GetY1() * 16;
+                int doorWidth  = (qAbs(doors[i]->GetX1() - doors[i]->GetX2()) + 1) * 16;
                 int doorHeight = (qAbs(doors[i]->GetY1() - doors[i]->GetY2()) + 1) * 16;
                 if (i == renderParams->SelectedDoorID)
                 {
@@ -508,7 +512,7 @@ namespace LevelComponents
             CameraLimitationPixmap.fill(Qt::transparent);
             QPainter CameraLimitationPainter(&CameraLimitationPixmap);
             CameraLimitationPainter.setRenderHint(QPainter::Antialiasing);
-            QPen CameraLimitationPen = QPen(QBrush(Qt::red), 2);
+            QPen CameraLimitationPen  = QPen(QBrush(Qt::red), 2);
             QPen CameraLimitationPen2 = QPen(QBrush(Qt::green), 2);
             CameraLimitationPen.setJoinStyle(Qt::MiterJoin);
             CameraLimitationPen2.setJoinStyle(Qt::MiterJoin);
@@ -518,7 +522,7 @@ namespace LevelComponents
             {
                 // Use Wario original position when getting out of a door to figure out the Camera Limitator Y position
                 // CameraY and WarioYPos here are 4 times the real values
-                int CameraY = 0x80 - 32;
+                int CameraY   = 0x80 - 32;
                 int WarioYPos = doors[0]->GetWarioOriginalPosition_x4().y(); // Use the first door in the data
                 if (WarioYPos > 0x260)
                 {
@@ -566,7 +570,7 @@ namespace LevelComponents
             }
             else if (CameraControlType == LevelComponents::HasControlAttrs)
             {
-                for (auto & CameraControlRecord : CameraControlRecords)
+                for (auto &CameraControlRecord : CameraControlRecords)
                 {
                     CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecord->x1) + 1,
                                                      16 * ((int) CameraControlRecord->y1) + 1,
@@ -587,8 +591,8 @@ namespace LevelComponents
                         CameraLimitationPainter.setPen(CameraLimitationPen2);
                         int SetNum[4] = { (int) CameraControlRecord->x1, (int) CameraControlRecord->x2,
                                           (int) CameraControlRecord->y1, (int) CameraControlRecord->y2 };
-                        int k = (int) CameraControlRecord->ChangeValueOffset;
-                        SetNum[k] = (int) CameraControlRecord->ChangedValue;
+                        int k         = (int) CameraControlRecord->ChangeValueOffset;
+                        SetNum[k]     = (int) CameraControlRecord->ChangedValue;
                         CameraLimitationPainter.drawRect(16 * SetNum[0], 16 * SetNum[2],
                                                          16 * (qMin(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
                                                          16 * (qMin(SetNum[3], (int) Height - 3) - SetNum[2] + 1));
@@ -685,8 +689,7 @@ namespace LevelComponents
         }
 
             // Fall through to layer enable section
-        case LayerEnable:
-        {
+        case LayerEnable: {
             // Enable visibility of the foreground and background layers
             Ui::EditModeParams *layerVisibility = &(renderParams->mode);
             for (int i = 0; i < 4; ++i)
@@ -712,8 +715,7 @@ namespace LevelComponents
             RenderedLayers[12]->setVisible(layerVisibility->hiddencoinsEnabled);
         }
             return scene;
-        case SingleTile:
-        {
+        case SingleTile: {
             // Re-render the QImage for the changed tile
             Layer *layer = layers[renderParams->mode.selectedLayer];
             if (!layer->IsEnabled())
@@ -725,9 +727,9 @@ namespace LevelComponents
 
             // Draw the new tile graphics over the position of the old tile in the QPixmap
             QPixmap pm(item->pixmap());
-            int units = layer->GetMappingType() == LayerMap16 ? 16 : 8;
-            int X = renderParams->tileX * units;
-            int Y = renderParams->tileY * units;
+            int units         = layer->GetMappingType() == LayerMap16 ? 16 : 8;
+            int X             = renderParams->tileX * units;
+            int Y             = renderParams->tileY * units;
             int tileDataIndex = renderParams->tileX + renderParams->tileY * layer->GetLayerWidth();
             layer->GetTiles()[tileDataIndex]->DrawTile(&pm, X, Y);
 
@@ -777,14 +779,15 @@ namespace LevelComponents
                         {
                             for (int k = 16 * renderParams->tileX; k < (16 * renderParams->tileX + 16); ++k)
                             {
-                                QColor PXA = QColor(imageA.pixel(k, j)); QColor PXB = QColor(imageB.pixel(k, j));
-                                int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
+                                QColor PXA = QColor(imageA.pixel(k, j));
+                                QColor PXB = QColor(imageB.pixel(k, j));
+                                int R      = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
                                                  (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
                                              255);
-                                int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
+                                int G      = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
                                                  (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
                                              255);
-                                int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
+                                int B      = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
                                                  (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
                                              255);
                                 imageB.setPixel(k, j, QColor(R, G, B).rgb());
@@ -809,7 +812,7 @@ namespace LevelComponents
     void Room::SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr)
     {
         // Prioritize the layers
-        int priorityFlag = layerPriorityAndAlphaAttr;
+        int priorityFlag        = layerPriorityAndAlphaAttr;
         RoomHeader.LayerEffects = (unsigned char) layerPriorityAndAlphaAttr;
         switch (priorityFlag & 3)
         {
@@ -966,8 +969,9 @@ namespace LevelComponents
                 {
                     // Add the data for this layer, it must be compressed
                     unsigned int compressedSize;
-                    unsigned char *compressedData = layer->GetCompressedLayerData(&compressedSize);
-                    struct ROMUtils::SaveData layerChunk = { static_cast<unsigned int>(RoomID * sizeof(struct __RoomHeader) + 8 + i * 4),
+                    unsigned char *compressedData        = layer->GetCompressedLayerData(&compressedSize);
+                    struct ROMUtils::SaveData layerChunk = { static_cast<unsigned int>(
+                                                                 RoomID * sizeof(struct __RoomHeader) + 8 + i * 4),
                                                              compressedSize,
                                                              compressedData,
                                                              ROMUtils::SaveDataIndex++,
@@ -1016,7 +1020,8 @@ namespace LevelComponents
             if (EntityListDirty[i])
             {
                 unsigned int entityListSize = (EntityList[i].size() + 1) * sizeof(struct EntityRoomAttribute);
-                struct ROMUtils::SaveData entityListChunk = { static_cast<unsigned int>(RoomID * sizeof(struct __RoomHeader) + 28 + i * 4),
+                struct ROMUtils::SaveData entityListChunk = { static_cast<unsigned int>(
+                                                                  RoomID * sizeof(struct __RoomHeader) + 28 + i * 4),
                                                               entityListSize,
                                                               reinterpret_cast<unsigned char *>(malloc(entityListSize)),
                                                               ROMUtils::SaveDataIndex++,
@@ -1129,8 +1134,8 @@ namespace LevelComponents
         if (EntityList[currentDifficulty].size() == 47)
             return false;
         EntityRoomAttribute newEntityattrs{};
-        newEntityattrs.XPos = XPos;
-        newEntityattrs.YPos = YPos;
+        newEntityattrs.XPos     = XPos;
+        newEntityattrs.YPos     = YPos;
         newEntityattrs.EntityID = localEntityId;
         EntityList[currentDifficulty].push_back(newEntityattrs);
         return true;
@@ -1156,7 +1161,7 @@ namespace LevelComponents
             return;
         EntityList[currentDifficulty].at(index).XPos = XPos;
         EntityList[currentDifficulty].at(index).YPos = YPos;
-   }
+    }
 
     /// <summary>
     /// only used to reset the data of RoomHeader, won't do sub-reset to the member variables relative to RoomHeader.
@@ -1276,8 +1281,8 @@ namespace LevelComponents
         auto *recordPtr = new __CameraControlRecord;
         memset(recordPtr, 0, sizeof(struct __CameraControlRecord));
         recordPtr->TransboundaryControl = recordPtr->x1 = recordPtr->y1 = 2;
-        recordPtr->x2 = 16;
-        recordPtr->y2 = 11;
+        recordPtr->x2                                                   = 16;
+        recordPtr->y2                                                   = 11;
         recordPtr->ChangedValue = recordPtr->ChangeValueOffset = recordPtr->x3 = recordPtr->y3 = 0xFF;
         CameraControlRecords.push_back(recordPtr);
     }

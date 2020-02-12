@@ -25,8 +25,8 @@ void TileGraphicsView::mousePressEvent(QMouseEvent *event)
     int Y = event->y() + verticalScrollBar()->sliderPosition();
     if (X > 32 * 8 || Y > 32 * 0x60)
         return;
-    int tileX = X / 32;
-    int tileY = Y / 32;
+    int tileX  = X / 32;
+    int tileY  = Y / 32;
     int tileID = tileX + tileY * 8;
 
     // Set the selected tile location for the graphics view

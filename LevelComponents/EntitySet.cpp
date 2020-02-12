@@ -29,10 +29,10 @@ namespace LevelComponents
             for (int j = 1; j < 16; ++j)
             {
                 unsigned short color555 = *(unsigned short *) (ROMUtils::CurrentFile + subPalettePtr + j * 2);
-                int r = ((color555 << 3) & 0xF8) | ((color555 >> 2) & 3);
-                int g = ((color555 >> 2) & 0xF8) | ((color555 >> 7) & 3);
-                int b = ((color555 >> 7) & 0xF8) | ((color555 >> 13) & 3);
-                int a = 0xFF;
+                int r                   = ((color555 << 3) & 0xF8) | ((color555 >> 2) & 3);
+                int g                   = ((color555 >> 2) & 0xF8) | ((color555 >> 7) & 3);
+                int b                   = ((color555 >> 7) & 0xF8) | ((color555 >> 13) & 3);
+                int a                   = 0xFF;
                 palettes[i + startPaletteId].push_back(QColor(r, g, b, a).rgba());
             }
         }
@@ -72,11 +72,12 @@ namespace LevelComponents
         int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + _EntitySetID * 4);
 
         // Load 16 color palettes, ignore the first 3 rows, they are only for wario tiles
-        int palettePtr; int lastpalettePtr;
+        int palettePtr;
+        int lastpalettePtr;
         palettePtr = lastpalettePtr = 0;
         int tmpEntityId;
         int EntityPaletteNum;
-        int k = 0;
+        int k                = 0;
         int currentpaletteID = 0;
         do // Load palette 8 - 14 if exist for entities
         {
@@ -127,14 +128,15 @@ namespace LevelComponents
         memset(tile8x8data, 0, sizeof(tile8x8data));
 
         // Load Basic Universal Entities' tile8x8s.
-        int tiledataptr; int tiledatalength;
-        tiledataptr = WL4Constants::SpritesBasicElementTiles;
+        int tiledataptr;
+        int tiledatalength;
+        tiledataptr    = WL4Constants::SpritesBasicElementTiles;
         tiledatalength = 0x3000;
         LoadSpritesTiles(tiledataptr, tiledatalength, 4);
 
         // Load Entities' tile8x8s which differ amongst all entitysets
-        k = 0;
-        int currentrow = 16;
+        k                   = 0;
+        int currentrow      = 16;
         int lasttiledataptr = 0;
         do
         {
@@ -143,7 +145,7 @@ namespace LevelComponents
                 break;
             EntitySetinfoTableElement Tmp_entitytableElement{};
             Tmp_entitytableElement.Global_EntityID = tmpEntityId;
-            Tmp_entitytableElement.paletteOffset = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
+            Tmp_entitytableElement.paletteOffset   = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
             EntityinfoTable.push_back(Tmp_entitytableElement);
             tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable + 4 * (tmpEntityId - 0x10));
             tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (tmpEntityId - 0x10));
@@ -155,7 +157,7 @@ namespace LevelComponents
             k++;
             lasttiledataptr = tiledataptr;
         } while (true);
-        for (auto & i : tile8x8data)
+        for (auto &i : tile8x8data)
         {
             if (!i)
                 i = Tile8x8::CreateBlankTile(palettes);
@@ -188,26 +190,24 @@ namespace LevelComponents
         {
             return 0;
         }
-        
-        
-            int Paloffset = EntityinfoTable[_entityID].paletteOffset + 8;
 
-            // these Entities have an extra relative palette offset
-            if ((entityglobalId == 0x12) || (entityglobalId == 0x1D) || (entityglobalId == 0x2B) ||
-                (entityglobalId == 0x30) || (entityglobalId == 0x31) || (entityglobalId == 0x32) ||
-                (entityglobalId == 0x33) || (entityglobalId == 0x34) || (entityglobalId == 0x35) ||
-                (entityglobalId == 0x36) || (entityglobalId == 0x37) || (entityglobalId == 0x38) ||
-                (entityglobalId == 0x39))
-            {
-                Paloffset++;
-            }
-            if (entityglobalId == 0x13)
-            {
-                Paloffset += 2;
-            }
+        int Paloffset = EntityinfoTable[_entityID].paletteOffset + 8;
 
-            return Paloffset;
-        
+        // these Entities have an extra relative palette offset
+        if ((entityglobalId == 0x12) || (entityglobalId == 0x1D) || (entityglobalId == 0x2B) ||
+            (entityglobalId == 0x30) || (entityglobalId == 0x31) || (entityglobalId == 0x32) ||
+            (entityglobalId == 0x33) || (entityglobalId == 0x34) || (entityglobalId == 0x35) ||
+            (entityglobalId == 0x36) || (entityglobalId == 0x37) || (entityglobalId == 0x38) ||
+            (entityglobalId == 0x39))
+        {
+            Paloffset++;
+        }
+        if (entityglobalId == 0x13)
+        {
+            Paloffset += 2;
+        }
+
+        return Paloffset;
     }
 
     /// <summary>
@@ -222,10 +222,8 @@ namespace LevelComponents
         {
             return 0;
         }
-        
-        
-            return 64 * (EntityinfoTable[_entityID].paletteOffset);
-        
+
+        return 64 * (EntityinfoTable[_entityID].paletteOffset);
     }
 
     /// <summary>
@@ -238,7 +236,7 @@ namespace LevelComponents
     {
         if (entityglobalId >= 0 && entityglobalId <= 0x10)
             return true;
-        for (auto & i : EntityinfoTable)
+        for (auto &i : EntityinfoTable)
         {
             if (i.Global_EntityID == entityglobalId)
             {
@@ -275,23 +273,25 @@ namespace LevelComponents
     /// </param>
     EntitySetAndEntitylocalId EntitySet::EntitySetFromEntityID(int entityglobalId)
     {
-        struct EntitySetAndEntitylocalId tmpEntitySetAndEntitylocalId{};
+        struct EntitySetAndEntitylocalId tmpEntitySetAndEntitylocalId
+        {
+        };
         if (entityglobalId < 0x11)
         {
-            tmpEntitySetAndEntitylocalId.entitysetId = 1;
+            tmpEntitySetAndEntitylocalId.entitysetId   = 1;
             tmpEntitySetAndEntitylocalId.entitylocalId = -1;
             return tmpEntitySetAndEntitylocalId;
         }
         for (int j = 1; j < 90; ++j)
         {
             int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + 4 * j);
-            int i = 0;
+            int i            = 0;
             while (ROMUtils::CurrentFile[entitysetptr + 2 * i] != (unsigned char) 0)
             {
                 unsigned char *entityidtmp = ROMUtils::CurrentFile + entitysetptr + 2 * i;
                 if (*entityidtmp == (unsigned char) entityglobalId)
                 {
-                    tmpEntitySetAndEntitylocalId.entitysetId = j;
+                    tmpEntitySetAndEntitylocalId.entitysetId   = j;
                     tmpEntitySetAndEntitylocalId.entitylocalId = i;
                     return tmpEntitySetAndEntitylocalId;
                 }
@@ -358,7 +358,7 @@ namespace LevelComponents
     {
         // Delete Tile8x8 information
         // BlankTile may be disjoint in the array, so we skip over those and delete it afterward
-        for (auto & i : tile8x8data)
+        for (auto &i : tile8x8data)
         {
             delete i;
         }

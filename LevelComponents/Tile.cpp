@@ -34,13 +34,13 @@ namespace LevelComponents
     /// Another Tile8x8 to copy image data from.
     /// </param>
     Tile8x8::Tile8x8(Tile8x8 *other) :
-        Tile(TileType8x8), palettes(other->palettes),
+            Tile(TileType8x8), palettes(other->palettes),
 #ifndef NOCACHE
-        ImageData(GetCachedImageData(other->ImageData)),
+            ImageData(GetCachedImageData(other->ImageData)),
 #else
-        ImageData(new QImageW(other->ImageData->copy())),
+            ImageData(new QImageW(other->ImageData->copy())),
 #endif
-        index(other->index), paletteIndex(other->paletteIndex), FlipX(other->FlipX), FlipY(other->FlipY)
+            index(other->index), paletteIndex(other->paletteIndex), FlipX(other->FlipX), FlipY(other->FlipY)
     {}
 
     /// <summary>
@@ -50,13 +50,13 @@ namespace LevelComponents
     /// Another Tile8x8 to copy image data from.
     /// </param>
     Tile8x8::Tile8x8(Tile8x8 *other, QVector<QRgb> *_palettes) :
-        Tile(TileType8x8), palettes(_palettes),
+            Tile(TileType8x8), palettes(_palettes),
 #ifndef NOCACHE
-        ImageData(GetCachedImageData(other->ImageData)),
+            ImageData(GetCachedImageData(other->ImageData)),
 #else
-        ImageData(new QImageW(other->ImageData->copy())),
+            ImageData(new QImageW(other->ImageData->copy())),
 #endif
-        index(other->index), paletteIndex(other->paletteIndex), FlipX(other->FlipX), FlipY(other->FlipY)
+            index(other->index), paletteIndex(other->paletteIndex), FlipX(other->FlipX), FlipY(other->FlipY)
     {}
 
     /// <summary>
@@ -209,7 +209,7 @@ namespace LevelComponents
     /// </param>
     void Tile8x8::SetPaletteIndex(int index)
     {
-        paletteIndex = index;
+        paletteIndex   = index;
         auto *newImage = new QImageW(*ImageData);
         newImage->setColorTable(palettes[paletteIndex]);
         ImageData = newImage;
@@ -222,7 +222,6 @@ namespace LevelComponents
         }
 #endif
     }
-
 
     /// <summary>
     /// Construct an instance of TileMap16.
@@ -253,12 +252,12 @@ namespace LevelComponents
     /// <param name="other">
     /// The source map16 tile.
     /// </param>
-    TileMap16::TileMap16(TileMap16 *other, QVector<QRgb> *newpalettes) : TileMap16(
-        new Tile8x8(other->GetTile8X8(TILE8_TOPLEFT), newpalettes),
-        new Tile8x8(other->GetTile8X8(TILE8_TOPRIGHT), newpalettes),
-        new Tile8x8(other->GetTile8X8(TILE8_BOTTOMLEFT), newpalettes),
-        new Tile8x8(other->GetTile8X8(TILE8_BOTTOMRIGHT), newpalettes))
-    { }
+    TileMap16::TileMap16(TileMap16 *other, QVector<QRgb> *newpalettes) :
+            TileMap16(new Tile8x8(other->GetTile8X8(TILE8_TOPLEFT), newpalettes),
+                      new Tile8x8(other->GetTile8X8(TILE8_TOPRIGHT), newpalettes),
+                      new Tile8x8(other->GetTile8X8(TILE8_BOTTOMLEFT), newpalettes),
+                      new Tile8x8(other->GetTile8X8(TILE8_BOTTOMRIGHT), newpalettes))
+    {}
 
     /// <summary>
     /// Deconstruct the TileMap16 and clean up its instance objects on the heap.
@@ -297,12 +296,10 @@ namespace LevelComponents
     /// <summary>
     /// Get a pointer to a Tile8x8 at current position
     /// <param name="position">
-    /// The position (TileMap16::TILE8_TOPLEFT : 0, TileMap16::TILE8_TOPLEFT : 1, TileMap16::TILE8_BOTTOMLEFT : 2, TileMap16::TILE8_BOTTOMRIGHT : 3)
+    /// The position (TileMap16::TILE8_TOPLEFT : 0, TileMap16::TILE8_TOPLEFT : 1, TileMap16::TILE8_BOTTOMLEFT : 2,
+    /// TileMap16::TILE8_BOTTOMRIGHT : 3)
     /// </param>
-    Tile8x8* TileMap16::GetTile8X8(int position)
-    {
-        return TileData[position & 3];
-    }
+    Tile8x8 *TileMap16::GetTile8X8(int position) { return TileData[position & 3]; }
 
     /// <summary>
     /// Change one of the TIle8x8 in TileMap16
@@ -311,7 +308,8 @@ namespace LevelComponents
     /// an Tile8x8 used as copy referance
     /// </param>
     /// <param name="position">
-    /// The position (TileMap16::TILE8_TOPLEFT : 0, TileMap16::TILE8_TOPLEFT : 1, TileMap16::TILE8_BOTTOMLEFT : 2, TileMap16::TILE8_BOTTOMRIGHT : 3)
+    /// The position (TileMap16::TILE8_TOPLEFT : 0, TileMap16::TILE8_TOPLEFT : 1, TileMap16::TILE8_BOTTOMLEFT : 2,
+    /// TileMap16::TILE8_BOTTOMRIGHT : 3)
     /// </param>
     /// <param name="new_index">
     /// new index of tile8x8
@@ -325,7 +323,8 @@ namespace LevelComponents
     /// <param name="yflip">
     /// set yflip bit
     /// </param>
-    void TileMap16::ResetTile8x8(Tile8x8 *other, int position, int new_index, int new_paletteIndex, bool xflip, bool yflip)
+    void TileMap16::ResetTile8x8(Tile8x8 *other, int position, int new_index, int new_paletteIndex, bool xflip,
+                                 bool yflip)
     {
         int pos = position & 3;
         delete TileData[pos];
@@ -352,11 +351,9 @@ namespace LevelComponents
             ++ImageDataCache[image];
             return ImageDataCache.find(image).key();
         }
-        
-        
-            ImageDataCache[image] = 1;
-            return image;
-        
+
+        ImageDataCache[image] = 1;
+        return image;
     }
 
     /// <summary>
@@ -391,14 +388,16 @@ namespace LevelComponents
     unsigned short Tile8x8::GetValue()
     {
         // First set the 10 first byte that represent the index of the tile8
-        unsigned short tile8Data=this->GetIndex() & 0x3FF;
+        unsigned short tile8Data = this->GetIndex() & 0x3FF;
 
         // Set the flipX and flipY bit if present (11th and 12th bits)
-        if (this->GetFlipX()) {
+        if (this->GetFlipX())
+        {
             tile8Data |= 1 << 10;
         }
 
-        if (this->GetFlipY()) {
+        if (this->GetFlipY())
+        {
             tile8Data |= 1 << 11;
         }
 
@@ -417,9 +416,9 @@ namespace LevelComponents
     QByteArray Tile8x8::CreateGraphicsData()
     {
         QByteArray arr(32, 0);
-        for(int i = 0; i < 8; ++i)
+        for (int i = 0; i < 8; ++i)
         {
-            for(int j = 0; j < 4; ++j)
+            for (int j = 0; j < 4; ++j)
             {
                 char val = static_cast<char>(ImageData->pixelIndex(j << 1, i));
                 val |= ImageData->pixelIndex((j << 1) + 1, i) << 4;

@@ -1,11 +1,11 @@
 #ifndef TILESETEDITOR_TILE8X8MAPGRAPHICVIEW_H
 #define TILESETEDITOR_TILE8X8MAPGRAPHICVIEW_H
 
+#include "Dialog/TilesetEditDialog.h"
 #include <LevelComponents/Tileset.h>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsView>
 #include <QMouseEvent>
-#include "Dialog/TilesetEditDialog.h"
 
 class TilesetEditor_Tile8x8MapGraphicView : public QGraphicsView
 {
@@ -18,8 +18,8 @@ public:
 
 private:
     TilesetEditDialog *TilesetEditor = nullptr;
-    int mouseX_Press = 0;
-    int mouseY_Press = 0;
+    int mouseX_Press                 = 0;
+    int mouseY_Press                 = 0;
 };
 
 #endif // TILESETEDITOR_TILE8X8MAPGRAPHICVIEW_H

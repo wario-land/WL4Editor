@@ -11,10 +11,11 @@ namespace ROMUtils
     void RLEMetadata::InitializeJumpTableHelper(unsigned short jumpLimit)
     {
         // Define variables used in the creation of the jump table
-        auto *data = (unsigned char *) this->data;
-        auto *R = new unsigned short[data_len * 2];
+        auto *data        = (unsigned char *) this->data;
+        auto *R           = new unsigned short[data_len * 2];
         unsigned short *C = R + data_len;
-        int cons = 0; int minrun = GetMinimumRunSize();
+        int cons          = 0;
+        int minrun        = GetMinimumRunSize();
 
         // Seed the dynamic programming jump table
         R[data_len - 1] = 1;
@@ -35,7 +36,7 @@ namespace ROMUtils
             else
             {
                 C[i - cons] = cons;
-                cons = 0;
+                cons        = 0;
                 i += R[i] - 1;
             }
         }
@@ -56,14 +57,16 @@ namespace ROMUtils
     unsigned int RLEMetadata::GetCompressedLengthHelper(unsigned int opcodeSize)
     {
         // Define the variables used to traverse the jump table
-        unsigned int size = 0;
-        unsigned int i = 0; unsigned int minrun = GetMinimumRunSize();
-        unsigned short *R = JumpTable; unsigned short *C = JumpTable + data_len;
+        unsigned int size   = 0;
+        unsigned int i      = 0;
+        unsigned int minrun = GetMinimumRunSize();
+        unsigned short *R   = JumpTable;
+        unsigned short *C   = JumpTable + data_len;
 
         // Calculate the size
         while (i < data_len)
         {
-            bool runmode = R[i] >= minrun;
+            bool runmode       = R[i] >= minrun;
             unsigned short len = runmode ? R[i] : C[i];
             size += opcodeSize + (runmode ? 1 : len);
             i += len;
@@ -81,15 +84,17 @@ namespace ROMUtils
     {
         // Define variables used by compression
         QVector<unsigned char> compressedData;
-        unsigned int i = 0; unsigned int minrun = GetMinimumRunSize();
-        unsigned short *R = JumpTable; unsigned short *C = JumpTable + data_len;
-        auto *data = (unsigned char *) this->data;
+        unsigned int i      = 0;
+        unsigned int minrun = GetMinimumRunSize();
+        unsigned short *R   = JumpTable;
+        unsigned short *C   = JumpTable + data_len;
+        auto *data          = (unsigned char *) this->data;
 
         // Populate the compressed data
         compressedData.append(GetTypeIdentifier());
         while (i < data_len)
         {
-            bool runmode = R[i] >= minrun;
+            bool runmode       = R[i] >= minrun;
             unsigned short len = runmode ? R[i] : C[i];
             AddOpcode(compressedData, len, runmode);
             for (int j = 0; j < (runmode ? 1 : len); ++j)

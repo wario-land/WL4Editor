@@ -31,7 +31,8 @@ ChooseLevelDialog::~ChooseLevelDialog() { delete ui; }
 
 void ChooseLevelDialog::ConfigureLevelComboBox(int level)
 {
-    QStringList LevelSet1; QStringList LevelSet2;
+    QStringList LevelSet1;
+    QStringList LevelSet2;
     LevelSet1 << "First Level"
               << "Second Level"
               << "Third Level"
@@ -61,7 +62,7 @@ DialogParams::PassageAndLevelIndex ChooseLevelDialog::GetResult()
 {
     DialogParams::PassageAndLevelIndex tmpRetStruct{};
     tmpRetStruct._PassageIndex = ui->comboBox_Passage->currentIndex();
-    tmpRetStruct._LevelIndex = ui->comboBox_Level->currentIndex();
+    tmpRetStruct._LevelIndex   = ui->comboBox_Level->currentIndex();
     if ((ui->comboBox_Passage->currentIndex() == 0 || ui->comboBox_Passage->currentIndex() == 5) &&
         ui->comboBox_Level->currentIndex() == 1)
     {

@@ -24,14 +24,15 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         return;
 
     // Get the ID of the tile that was clicked
-    unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
-    unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
+    unsigned int X     = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
+    unsigned int Y     = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
     unsigned int tileX = X / 32;
     unsigned int tileY = Y / 32;
 
     // Different cases for different editting mode
     LevelComponents::Room *room = singleton->GetCurrentRoom();
-    if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) && tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
+    if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) &&
+        tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
     {
         if (singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer != 0)
             if (tileX > room->GetWidth() || tileY > room->GetHeight())
@@ -63,11 +64,12 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 for (unsigned int i = 0; i < doorCount; i++)
                 {
                     LevelComponents::Door *door = room->GetDoor(i);
-                    bool b1 = door->GetX1() <= (int) tileX;
-                    bool b2 = door->GetX2() >= (int) tileX;
-                    bool b3 = door->GetY1() <= (int) tileY;
-                    bool b4 = door->GetY2() >= (int) tileY;
-                    if (b1 && b2 && b3 && b4) {
+                    bool b1                     = door->GetX1() <= (int) tileX;
+                    bool b2                     = door->GetX2() >= (int) tileX;
+                    bool b3                     = door->GetY1() <= (int) tileY;
+                    bool b4                     = door->GetY2() >= (int) tileY;
+                    if (b1 && b2 && b3 && b4)
+                    {
 
                         // If the door that was clicked was not already selected, then select it
                         SelectedDoorID = i;
@@ -75,9 +77,9 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                         singleton->GetCurrentRoom()->SetCurrentEntitySet(
                             singleton->GetCurrentRoom()->GetDoor(i)->GetEntitySetID());
                         singleton->ResetEntitySetDockWidget();
-                        holdingEntityOrDoor=true;
-                        objectInitialX=door->GetX1();
-                        objectInitialY=door->GetY1();
+                        holdingEntityOrDoor = true;
+                        objectInitialX      = door->GetX1();
+                        objectInitialY      = door->GetY1();
                         goto DOOR_FOUND;
                     }
                 }
@@ -100,13 +102,12 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 singleton->SetUnsavedChanges(true);
             }
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, SelectedEntityID);
-            holdingEntityOrDoor=true;
-            objectInitialX=tileX;
-            objectInitialY=tileY;
+            holdingEntityOrDoor = true;
+            objectInitialX      = tileX;
+            objectInitialY      = tileY;
         }
     }
 }
-
 
 /// <summary>
 /// This function will be called when the graphic view in the main window is double clicked
@@ -114,13 +115,14 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 /// <param name="event">
 /// The mouse click event.
 /// </param>
-void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
+void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event)
+{
     if (!singleton->FirstROMIsLoaded())
         return;
 
     // Get the ID of the tile that was clicked
-    unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
-    unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
+    unsigned int X     = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
+    unsigned int Y     = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
     unsigned int tileX = X / 32;
     unsigned int tileY = Y / 32;
 
@@ -139,10 +141,10 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
                 for (unsigned int i = 0; i < doorCount; i++)
                 {
                     LevelComponents::Door *door = room->GetDoor(i);
-                    bool b1 = door->GetX1() <= (int) tileX;
-                    bool b2 = door->GetX2() >= (int) tileX;
-                    bool b3 = door->GetY1() <= (int) tileY;
-                    bool b4 = door->GetY2() >= (int) tileY;
+                    bool b1                     = door->GetX1() <= (int) tileX;
+                    bool b2                     = door->GetX2() >= (int) tileX;
+                    bool b3                     = door->GetY1() <= (int) tileY;
+                    bool b4                     = door->GetY2() >= (int) tileY;
                     if (b1 && b2 && b3 && b4)
                     {
                         // Door "i" was selected
@@ -166,21 +168,20 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
                             singleton->GetCurrentRoom()->SetCurrentEntitySet(
                                 singleton->GetCurrentRoom()->GetDoor(i)->GetEntitySetID());
                             singleton->ResetEntitySetDockWidget();
-                            holdingEntityOrDoor=true;
-                            objectInitialX=door->GetX1();
-                            objectInitialY=door->GetY1();
+                            holdingEntityOrDoor = true;
+                            objectInitialX      = door->GetX1();
+                            objectInitialY      = door->GetY1();
                         }
                         goto DOOR_FOUND;
                     }
                 }
                 SelectedDoorID = -1;
-                DOOR_FOUND:;
+            DOOR_FOUND:;
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
         }
     }
 }
-
 
 /// <summary>
 /// this function will be called when the graphic view in the main window is clicked and then mouse start moving.
@@ -194,8 +195,8 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
         return;
 
     // Get the ID of the tile that was clicked
-    unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
-    unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
+    unsigned int X     = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
+    unsigned int Y     = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
     unsigned int tileX = X / 32;
     unsigned int tileY = Y / 32;
 
@@ -207,7 +208,8 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
     // Draw the new tile
     LevelComponents::Room *room = singleton->GetCurrentRoom();
-    if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) && tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
+    if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) &&
+        tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
     {
         if (singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer != 0)
             if (tileX > room->GetWidth() || tileY > room->GetHeight())
@@ -221,15 +223,18 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
             // event->button() cannot work, event->buttons() return the correct mouseState according to the Qt code
             if (event->buttons() == Qt::RightButton)
             {
-               CopyTile(tileX, tileY);
+                CopyTile(tileX, tileY);
             }
             else // Otherwise just place the tile
             {
                 // Change textmaps and layer graphics
                 SetTile(tileX, tileY);
             }
-        } else if((editMode == Ui::EntityEditMode)) {
-            if (holdingEntityOrDoor && SelectedEntityID != -1) {
+        }
+        else if ((editMode == Ui::EntityEditMode))
+        {
+            if (holdingEntityOrDoor && SelectedEntityID != -1)
+            {
 
                 LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
                 // If the entity position has changed
@@ -237,7 +242,8 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                 int py = currentRoom->GetEntityY(SelectedEntityID);
 
                 // If the entity position has changed
-                if (px != tileX || py != tileY) {
+                if (px != tileX || py != tileY)
+                {
                     if (currentRoom->IsNewEntityPositionInsideRoom(tileX, tileY))
                     {
                         currentRoom->SetEntityPosition(tileX, tileY, SelectedEntityID);
@@ -248,22 +254,26 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                     }
                 }
             }
-        } else if((editMode == Ui::DoorEditMode)) {
-            if (holdingEntityOrDoor && SelectedDoorID != -1) {
-                LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+        }
+        else if ((editMode == Ui::DoorEditMode))
+        {
+            if (holdingEntityOrDoor && SelectedDoorID != -1)
+            {
+                LevelComponents::Room *currentRoom  = singleton->GetCurrentRoom();
                 LevelComponents::Door *selectedDoor = currentRoom->GetDoor(SelectedDoorID);
 
                 // The new positions
-                int px1 = selectedDoor->GetX1();
-                int py1 = selectedDoor->GetY1();
-                int deltaX = selectedDoor->GetX2()-px1;
-                int deltaY = selectedDoor->GetY2()-py1;
+                int px1    = selectedDoor->GetX1();
+                int py1    = selectedDoor->GetY1();
+                int deltaX = selectedDoor->GetX2() - px1;
+                int deltaY = selectedDoor->GetY2() - py1;
 
                 // If the door position has changed
-                if (px1 != tileX || py1 != tileY) {
-                    if (currentRoom->IsNewDoorPositionInsideRoom(tileX, tileX+deltaX, tileY, tileY+deltaY))
+                if (px1 != tileX || py1 != tileY)
+                {
+                    if (currentRoom->IsNewDoorPositionInsideRoom(tileX, tileX + deltaX, tileY, tileY + deltaY))
                     {
-                        selectedDoor->SetDoorPlace(tileX, tileX+deltaX, tileY, tileY+deltaY);
+                        selectedDoor->SetDoorPlace(tileX, tileX + deltaX, tileY, tileY + deltaY);
                         singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
                     }
                 }
@@ -293,7 +303,7 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
     unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
     if (selectedTile == 0xFFFF)
         return;
-    int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+    int selectedLayer             = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
     LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
     if (!layer->IsEnabled())
         return;
@@ -304,13 +314,15 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
     if (selectedLayer)
     {
         selectedTileIndex = tileX + tileY * room->GetWidth();
-    } else {
+    }
+    else
+    {
         selectedTileIndex = tileX + tileY * room->GetLayer0Width();
     }
     if (layer->GetLayerData()[selectedTileIndex] == selectedTile)
         return;
-    auto *params = new struct OperationParams();
-    params->type = ChangeTileOperation;
+    auto *params       = new struct OperationParams();
+    params->type       = ChangeTileOperation;
     params->tileChange = true;
     params->tileChangeParams.push_back(
         TileChangeParams::Create(tileX, tileY, selectedLayer, selectedTile, layer->GetLayerData()[selectedTileIndex]));
@@ -328,14 +340,16 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
 /// </param>
 void MainGraphicsView::CopyTile(int tileX, int tileY)
 {
-    LevelComponents::Room *room = singleton->GetCurrentRoom();
-    int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+    LevelComponents::Room *room   = singleton->GetCurrentRoom();
+    int selectedLayer             = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
     LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
     int selectedTileIndex;
     if (selectedLayer)
     {
         selectedTileIndex = tileX + tileY * room->GetWidth();
-    } else {
+    }
+    else
+    {
         selectedTileIndex = tileX + tileY * room->GetLayer0Width();
     }
     unsigned short placedTile = layer->GetLayerData()[selectedTileIndex];
@@ -351,43 +365,47 @@ void MainGraphicsView::CopyTile(int tileX, int tileY)
 void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
     // Get the ID of the tile where the mouse was released
-    unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
-    unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
+    unsigned int X  = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
+    unsigned int Y  = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
     unsigned int pX = X / 32;
     unsigned int pY = Y / 32;
 
     enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
-    //Temporary Remove because of a bug
-    //Add a move operation for door (for CTRL-Z)
-    if (editMode == Ui::DoorEditMode) {
-        if (holdingEntityOrDoor && SelectedDoorID != -1) {
-            auto *params = new struct OperationParams();
-            params->type = ObjectMoveOperation;
+    // Temporary Remove because of a bug
+    // Add a move operation for door (for CTRL-Z)
+    if (editMode == Ui::DoorEditMode)
+    {
+        if (holdingEntityOrDoor && SelectedDoorID != -1)
+        {
+            auto *params                 = new struct OperationParams();
+            params->type                 = ObjectMoveOperation;
             params->objectPositionChange = true;
-            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, pX, pY,ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
+            params->objectMoveParams     = ObjectMoveParams::Create(objectInitialX, objectInitialY, pX, pY,
+                                                                ObjectMoveParams::DOOR_TYPE, SelectedDoorID);
             // Only perform and not execute because of a bug after deletion and undo
             PerformOperation(params);
         }
-    // Add a move operation for entity (for CTRL-Z)
-    } else if (editMode == Ui::EntityEditMode) {
-        if (holdingEntityOrDoor && SelectedEntityID != -1) {
-            auto *params = new struct OperationParams();
-            params->type = ObjectMoveOperation;
+        // Add a move operation for entity (for CTRL-Z)
+    }
+    else if (editMode == Ui::EntityEditMode)
+    {
+        if (holdingEntityOrDoor && SelectedEntityID != -1)
+        {
+            auto *params                 = new struct OperationParams();
+            params->type                 = ObjectMoveOperation;
             params->objectPositionChange = true;
-            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, pX, pY,ObjectMoveParams::ENTITY_TYPE,SelectedEntityID);
+            params->objectMoveParams     = ObjectMoveParams::Create(objectInitialX, objectInitialY, pX, pY,
+                                                                ObjectMoveParams::ENTITY_TYPE, SelectedEntityID);
             // Only perform and not execute because of a bug after deletion and undo
             PerformOperation(params);
         }
     }
     // We are no longer drawing or holding an object
-    drawingTileX = -1;
-    drawingTileY = -1;
+    drawingTileX        = -1;
+    drawingTileY        = -1;
     holdingEntityOrDoor = false;
 }
-
-
-
 
 /// <summary>
 /// this function will be called when key-press happens.
@@ -404,8 +422,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         {
         // Delete selected entity if BSP or DEL is pressed
         case Qt::Key_Backspace:
-        case Qt::Key_Delete:
-        {
+        case Qt::Key_Delete: {
             singleton->DeleteEntity(SelectedEntityID);
             SelectedEntityID = -1;
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, -1);
@@ -419,8 +436,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Right:
         case Qt::Key_Left:
         case Qt::Key_Up:
-        case Qt::Key_Down:
-        {
+        case Qt::Key_Down: {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
 
             // The new positions
@@ -429,8 +445,8 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             int pY = currentRoom->GetEntityY(SelectedEntityID);
 
             // The old positions
-            int oldX=pX;
-            int oldY=pY;
+            int oldX = pX;
+            int oldY = pY;
 
             if (event->key() == Qt::Key_Left)
             {
@@ -451,10 +467,11 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 
             if (currentRoom->IsNewEntityPositionInsideRoom(pX, pY))
             {
-                auto *params = new struct OperationParams();
-                params->type = ObjectMoveOperation;
+                auto *params                 = new struct OperationParams();
+                params->type                 = ObjectMoveOperation;
                 params->objectPositionChange = true;
-                params->objectMoveParams=ObjectMoveParams::Create(oldX, oldY, pX, pY,ObjectMoveParams::ENTITY_TYPE,SelectedEntityID);
+                params->objectMoveParams =
+                    ObjectMoveParams::Create(oldX, oldY, pX, pY, ObjectMoveParams::ENTITY_TYPE, SelectedEntityID);
 
                 // Only perform and not execute because of a bug after deletion and undo
                 PerformOperation(params);
@@ -470,8 +487,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         {
         // Delete selected door if BSP or DEL is pressed
         case Qt::Key_Backspace:
-        case Qt::Key_Delete:
-        {
+        case Qt::Key_Delete: {
             if (singleton->GetCurrentRoom()->CountDoors() < 2)
             {
                 QMessageBox::critical(nullptr, QString("Error"),
@@ -489,9 +505,8 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Right:
         case Qt::Key_Left:
         case Qt::Key_Up:
-        case Qt::Key_Down:
-        {
-            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+        case Qt::Key_Down: {
+            LevelComponents::Room *currentRoom  = singleton->GetCurrentRoom();
             LevelComponents::Door *selectedDoor = currentRoom->GetDoor(SelectedDoorID);
 
             // The new positions
@@ -501,8 +516,8 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             int pY2 = selectedDoor->GetY2();
 
             // Old positions (x1 and y1)
-            int oldX=pX1;
-            int oldY=pY1;
+            int oldX = pX1;
+            int oldY = pY1;
 
             if (event->key() == Qt::Key_Left)
             {
@@ -527,10 +542,11 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 
             if (currentRoom->IsNewDoorPositionInsideRoom(pX1, pX2, pY1, pY2))
             {
-                auto *params = new struct OperationParams();
-                params->type = ObjectMoveOperation;
+                auto *params                 = new struct OperationParams();
+                params->type                 = ObjectMoveOperation;
                 params->objectPositionChange = true;
-                params->objectMoveParams=ObjectMoveParams::Create(oldX, oldY, pX1, pY1,ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
+                params->objectMoveParams =
+                    ObjectMoveParams::Create(oldX, oldY, pX1, pY1, ObjectMoveParams::DOOR_TYPE, SelectedDoorID);
 
                 // Only perform and not execute because of a bug after deletion and undo
                 PerformOperation(params);
@@ -546,7 +562,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 /// </summary>
 void MainGraphicsView::DeselectDoorAndEntity()
 {
-    SelectedDoorID = -1;
+    SelectedDoorID   = -1;
     SelectedEntityID = -1;
     singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, -1);
 }

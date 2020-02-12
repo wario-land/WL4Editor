@@ -85,19 +85,19 @@ namespace LevelComponents
         unsigned short attr2 = singleOAM[2];
 
         // Obtain the tile parameters for the OAM tile
-        auto *newOAM = new struct OAMTile();
-        newOAM->Xoff = (attr1 & 0xFF) - (attr1 & 0x100); // Offset of OAM tile from entity origin
-        newOAM->Yoff = (attr0 & 0x7F) - (attr0 & 0x80);
-        newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
-        newOAM->yFlip = (attr1 & (1 << 0xD)) != 0;
-        int SZ = (attr1 >> 0xE) & 3;                         // object size
-        int SH = (attr0 >> 0xE) & 3;                         // object shape
-        newOAM->OAMwidth = OAMDimensions[2 * (SZ * 3 + SH)]; // unit: 8x8 tiles
+        auto *newOAM      = new struct OAMTile();
+        newOAM->Xoff      = (attr1 & 0xFF) - (attr1 & 0x100); // Offset of OAM tile from entity origin
+        newOAM->Yoff      = (attr0 & 0x7F) - (attr0 & 0x80);
+        newOAM->xFlip     = (attr1 & (1 << 0xC)) != 0;
+        newOAM->yFlip     = (attr1 & (1 << 0xD)) != 0;
+        int SZ            = (attr1 >> 0xE) & 3;               // object size
+        int SH            = (attr0 >> 0xE) & 3;               // object shape
+        newOAM->OAMwidth  = OAMDimensions[2 * (SZ * 3 + SH)]; // unit: 8x8 tiles
         newOAM->OAMheight = OAMDimensions[2 * (SZ * 3 + SH) + 1];
-        int tileID = attr2 & 0x3FF;
-        int palNum = (attr2 >> 0xB) & 0xF;
-        SemiTransparent = ((attr0 >> 0xA) & 3) == 1;
-        Priority = (attr2 >> 0xA) & 3;
+        int tileID        = attr2 & 0x3FF;
+        int palNum        = (attr2 >> 0xB) & 0xF;
+        SemiTransparent   = ((attr0 >> 0xA) & 3) == 1;
+        Priority          = (attr2 >> 0xA) & 3;
 
         // Create the tile8x8 objects
         Tile8x8 **tileData = currentEntityset->GetTileData();
@@ -105,21 +105,22 @@ namespace LevelComponents
         {
             for (int x = 0; x < newOAM->OAMwidth; ++x)
             {
-                auto *entityTile = new struct EntityTile();
+                auto *entityTile   = new struct EntityTile();
                 entityTile->deltaX = x * 8;
                 entityTile->deltaY = y * 8;
-                int offsetID; int offsetPal;
+                int offsetID;
+                int offsetPal;
                 // Bosses' offsetID are loaded directly
                 if ((EntityGlobalID > 0x10) && (EntityGlobalID != 0x18) && (EntityGlobalID != 0x2C) &&
                     (EntityGlobalID != 0x51) && (EntityGlobalID != 0x69) && (EntityGlobalID != 0x76) &&
                     (EntityGlobalID != 0x7D)) // Normal Entities
                 {
-                    offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
+                    offsetID  = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
                     offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID, EntityGlobalID);
                 }
                 else if ((EntityGlobalID < 9) && (EntityGlobalID > 6)) // Diamond and Frog switch
                 {
-                    offsetID = tileID + y * 0x20 + x;
+                    offsetID  = tileID + y * 0x20 + x;
                     offsetPal = 5;
                 }
                 else if ((EntityGlobalID < 17) && (EntityGlobalID > 8)) // Keyzer
@@ -131,37 +132,37 @@ namespace LevelComponents
                 }
                 else if (EntityGlobalID < 7) // Boxes
                 {
-                    offsetID = tileID + (y + 14) * 0x20 + x;
+                    offsetID  = tileID + (y + 14) * 0x20 + x;
                     offsetPal = 15;
                 }
                 else if (EntityGlobalID == 0x18)
                 {
-                    offsetID = tileID + y * 0x20 + x;
+                    offsetID  = tileID + y * 0x20 + x;
                     offsetPal = palNum + 1;
                 }
                 else if ((EntityGlobalID == 0x2C) || (EntityGlobalID == 0x51))
                 {
-                    offsetID = tileID + y * 0x20 + x;
+                    offsetID  = tileID + y * 0x20 + x;
                     offsetPal = palNum + 8;
                 }
                 else if (EntityGlobalID == 0x76)
                 {
-                    offsetID = tileID + y * 0x20 + x;
+                    offsetID  = tileID + y * 0x20 + x;
                     offsetPal = palNum + 8;
                 } // only showing flowerpot
                 else if (EntityGlobalID == 0x7D)
                 {
-                    offsetID = tileID + y * 0x20 + x;
+                    offsetID  = tileID + y * 0x20 + x;
                     offsetPal = palNum + 3;
                 } // Golden Diva is a Frog Switch ??
                 else if (EntityGlobalID == 0x69)
                 {
-                    offsetID = tileID + y * 0x20 + x;
+                    offsetID  = tileID + y * 0x20 + x;
                     offsetPal = palNum + 5;
                 }
                 else // TODO: more cases
                 {
-                    offsetID = tileID + y * 0x20 + x;
+                    offsetID  = tileID + y * 0x20 + x;
                     offsetPal = palNum;
                 }
                 // palette reset
@@ -202,13 +203,15 @@ namespace LevelComponents
     /// </returns>
     QImage Entity::Render()
     {
-        int maxX = 0x80000000; int maxY = 0x80000000;
+        int maxX = 0x80000000;
+        int maxY = 0x80000000;
         foreach (OAMTile *ot, OAMTiles)
         {
             maxX = qMax(maxX, ot->OAMwidth * 8 + (ot->Xoff));
             maxY = qMax(maxY, ot->OAMheight * 8 + (ot->Yoff));
         }
-        int width = maxX - xOffset; int height = maxY - yOffset;
+        int width  = maxX - xOffset;
+        int height = maxY - yOffset;
         QPixmap pm(width, height);
         pm.fill(Qt::transparent);
         if (UnusedEntity)
@@ -231,7 +234,9 @@ namespace LevelComponents
     void Entity::ExtractSpritesTiles(int spritesFrameDataPtr, int frame)
     {
         auto *u16_attribute = (unsigned short *) (ROMUtils::CurrentFile + spritesFrameDataPtr);
-        int offset = 0; int objectnum = 0; int nowframe = 0;
+        int offset          = 0;
+        int objectnum       = 0;
+        int nowframe        = 0;
         while (nowframe <= frame)
         {
             objectnum = (int) u16_attribute[offset];
