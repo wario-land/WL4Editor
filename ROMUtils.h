@@ -3,7 +3,6 @@
 
 #include <QString>
 #include <cstdio> //include definition for FILE
-#include <cstring>
 #include <functional>
 #include <map>
 #include <string>

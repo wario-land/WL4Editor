@@ -1,7 +1,7 @@
 #include "RoomConfigDialog.h"
 #include "ui_RoomConfigDialog.h"
 
-#include <cstring>
+#include <Qstring>
 
 // constexpr declarations for the initializers in the header
 constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];

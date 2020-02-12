@@ -14,7 +14,7 @@
 #include <QMessageBox>
 #include <QTextEdit>
 
-bool LoadROMFile(QString); // Prototype for main.cpp function
+bool LoadROMFile(const QString); // Prototype for main.cpp function
 
 // Variables used by WL4EditorWindow
 QString statusBarText("Open a ROM file");
@@ -198,7 +198,7 @@ void WL4EditorWindow::OpenROM()
 /// <param name="filePath">
 /// The path of the ROM file
 /// </param>
-void WL4EditorWindow::LoadROMDataFromFile(const QString &qFilePath)
+void WL4EditorWindow::LoadROMDataFromFile(const QString qFilePath)
 {
     // Load the ROM file
     std::string filePath = qFilePath.toStdString();

@@ -12,7 +12,6 @@
 #include <QCoreApplication>
 #include <QFile>
 #include <QMessageBox>
-#include <cstring>
 #include <fstream>
 #include <iostream>
 
@@ -22,7 +21,7 @@
 /// <param name="filePath">
 /// The path to the file that will be read.
 /// </param>
-bool LoadROMFile(const QString &filePath)
+bool LoadROMFile(const QString filePath)
 {
     // Read ROM file into current file array
     QFile file(filePath);

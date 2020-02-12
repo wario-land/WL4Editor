@@ -91,7 +91,7 @@ public:
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
     void DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
-    void LoadROMDataFromFile(const QString &qFilePath);
+    void LoadROMDataFromFile(const QString qFilePath);
 
     // Events
     void keyPressEvent(QKeyEvent *event);

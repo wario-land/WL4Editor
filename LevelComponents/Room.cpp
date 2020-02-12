@@ -5,7 +5,6 @@
 
 #include <cassert>
 #include <cstdlib>
-#include <cstring>
 
 #include <QPainter>
 #include <iostream>

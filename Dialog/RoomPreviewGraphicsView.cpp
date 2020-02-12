@@ -2,7 +2,6 @@
 
 #include <LevelComponents/Layer.h>
 #include <QScrollBar>
-#include <cstring>
 
 /// <summary>
 /// Construct an instance of the RoomPreviewGraphicsView.

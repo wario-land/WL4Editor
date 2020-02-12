@@ -3,7 +3,6 @@
 #include "WL4Constants.h"
 
 #include <cassert>
-#include <cstring>
 
 namespace LevelComponents
 {

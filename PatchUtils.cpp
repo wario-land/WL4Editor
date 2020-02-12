@@ -6,7 +6,6 @@
 #include <ROMUtils.h>
 #include <SettingsUtils.h>
 #include <cassert>
-#include <cstring>
 
 #define PATCH_CHUNK_VERSION 0
 

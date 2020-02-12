@@ -2,7 +2,6 @@
 #include "ROMUtils.h"
 
 #include <cassert>
-#include <cstring>
 #include <iostream>
 
 namespace LevelComponents
