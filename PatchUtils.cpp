@@ -509,7 +509,7 @@ namespace PatchUtils
             },
             // PostProcessingCallback
             [chunks, entries, chunkIndexToEntryIndex]
-            (const unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
+            (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
                 // Restore substituted data to ROM for patches that have been removed
                 for (auto chunk : chunks)
@@ -529,7 +529,7 @@ namespace PatchUtils
                     {
                         // For each patch chunk, convert its index to entry index to get matching entry info
                         PatchEntryItem entry = entries[chunkIndexToEntryIndex.at(i)];
-                        QByteArray hookCode = CreateHook(entry.PatchAddress, entry.FunctionPointerReplacementMode, entry.ThumbMode);
+                        QByteArray hookCode = CreateHook(entry.PatchAddress,  entry.ThumbMode);
                         assert(entry.PatchAddress + hookCode.size() < ROMUtils::CurrentFileSize); // Hook code outside valid ROM area
                         memcpy(TempFile + entry.PatchAddress, hookCode.data(), hookCode.size());
                     }

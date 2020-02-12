@@ -348,11 +348,11 @@ namespace LevelComponents
             cameraPointerTable->dest_index = 0;
             cameraPointerTable->old_chunk_addr = ROMUtils::PointerFromData(cameraPointerTablePtr);
             cameraPointerTable->ChunkType      = ROMUtils::CameraPointerTableType;
-            * static_cast<int *>((cameraPointerTable->data + boundaryEntries * 4)) = GBAptrSentinel;
+            * reinterpret_cast<int *>((cameraPointerTable->data + boundaryEntries * 4)) = GBAptrSentinel;
 
             // Create null entries in the chunk data which will be used to invalidate old camera boundary chunks
             unsigned int cameraBoundaryListEntryPtr = ROMUtils::PointerFromData(cameraPointerTablePtr);
-            while (* static_cast<int *>((ROMUtils::CurrentFile + cameraBoundaryListEntryPtr)) != GBAptrSentinel)
+            while (* reinterpret_cast<int *>((ROMUtils::CurrentFile + cameraBoundaryListEntryPtr)) != GBAptrSentinel)
             {
                 struct ROMUtils::SaveData invalidationEntry = { 0,
                                                                 0,

@@ -220,7 +220,7 @@ namespace LevelComponents
         }
         QPainter p(&pm);
         // OAM tiles must be rendered in reverse order as per the GBA graphical specifications
-        for (const auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
+        for (auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
         {
             OAMTile *ot = *iter;
             p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, ot->Render());

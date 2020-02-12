@@ -734,9 +734,9 @@ namespace ROMUtils
 
                                  // Reset size_of bgGFXLen and fgGBXLen
                                  int tilesetPtr    = singletonTilesets[i]->getTilesetPtr();
-                                 int *fgGFXLenaddr = static_cast<int *>((TempFile + tilesetPtr + 4));
+                                 int *fgGFXLenaddr = reinterpret_cast<int *>((TempFile + tilesetPtr + 4));
                                  *fgGFXLenaddr     = singletonTilesets[i]->GetfgGFXlen();
-                                 int *bgGFXLenaddr = static_cast<int *>((TempFile + tilesetPtr + 16));
+                                 int *bgGFXLenaddr = reinterpret_cast<int *>((TempFile + tilesetPtr + 16));
                                  *bgGFXLenaddr     = singletonTilesets[i]->GetbgGFXlen();
 
                                  singletonTilesets[i]->SetChanged(false);

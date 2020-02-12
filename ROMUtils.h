@@ -71,7 +71,7 @@ namespace ROMUtils
                                 enum SaveDataChunkType chunkType);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr,
                                              enum SaveDataChunkType chunkType);
-    bool SaveFile(const QString fileName, QVector<struct SaveData> chunks,
+    bool SaveFile(const QString &fileName, QVector<struct SaveData> chunks,
                   const std::function<void(QVector<struct SaveData>, std::map<int, int>)> &ChunkAllocationCallback,
                   const std::function<void(unsigned char *, std::map<int, int>)> &PostProcessingCallback);
     bool SaveLevel(QString filePath);
