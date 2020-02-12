@@ -71,7 +71,7 @@ struct OperationParams
 {
     // Fields
     enum OperationType type;
-    QVector<struct TileChangeParams *> tileChangeParams;
+    std::vector<struct TileChangeParams *> tileChangeParams;
     ObjectMoveParams *objectMoveParams;
     DialogParams::RoomConfigParams *lastRoomConfigParams;
     DialogParams::RoomConfigParams *newRoomConfigParams;

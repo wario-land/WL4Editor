@@ -20,7 +20,7 @@ namespace LevelComponents
     private:
         enum LayerMappingType MappingType;
         bool Enabled = false;
-        QVector<Tile *> tiles;
+        std::vector<Tile *> tiles;
         int Width = 0, Height = 0;
         unsigned short *LayerData = nullptr;
         int LayerPriority         = 0;
@@ -40,7 +40,7 @@ namespace LevelComponents
         int GetLayerPriority() { return LayerPriority; }
         void SetLayerPriority(int priority) { LayerPriority = priority; }
         void ReRenderTile(int xpos, int ypos, unsigned short TileID, Tileset *tileset);
-        QVector<Tile *> GetTiles() { return tiles; }
+        std::vector<Tile *> GetTiles() { return tiles; }
         bool IsEnabled() { return Enabled; }
         void SetDisabled();
         void CreateNewLayer_type0x10(int layerWidth, int layerHeight);

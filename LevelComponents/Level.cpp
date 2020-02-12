@@ -71,7 +71,7 @@ namespace LevelComponents
         memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
 
         // Load the door data
-        QVector<int> destinations;
+        std::vector<int> destinations;
         int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + LevelID * 4);
         auto *doorPtr        = (struct __DoorEntry *) (ROMUtils::CurrentFile + doorStartAddress);
         unsigned char *firstByte;
@@ -224,9 +224,9 @@ namespace LevelComponents
     /// <remark>
     /// only used to give data to the Room copy.
     /// </remark>
-    QVector<Door *> Level::GetRoomDoors(unsigned int roomId)
+    std::vector<Door *> Level::GetRoomDoors(unsigned int roomId)
     {
-        QVector<Door *> roomDoors;
+        std::vector<Door *> roomDoors;
         // Distribute door data
         for (auto &door : doors)
         {

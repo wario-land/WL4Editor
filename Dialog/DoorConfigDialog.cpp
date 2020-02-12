@@ -604,7 +604,7 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
     if (IsInitialized)
         currentEntitySetId = ui->ComboBox_EntitySetID->currentText().toInt();
     ui->TextEdit_AllTheEntities->clear();
-    QVector<LevelComponents::EntitySetinfoTableElement> currentEntityTable =
+    std::vector<LevelComponents::EntitySetinfoTableElement> currentEntityTable =
         entitiessets[currentEntitySetId]->GetEntityTable();
     for (auto &i : currentEntityTable)
     {

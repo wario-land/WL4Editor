@@ -6,7 +6,7 @@
 #include <QMessageBox>
 #include <QStandardItemModel>
 #include <QString>
-#include <QVector>
+#include <vector>
 
 #include "LevelComponents/Level.h"
 

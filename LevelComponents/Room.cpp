@@ -270,7 +270,7 @@ namespace LevelComponents
         int sceneWidth                         = Width * 16;
         int sceneHeight                        = Height * 16;
         int Z                                  = 0;
-        QVector<int> eventidwithhiddencoin = {
+        std::vector<int> eventidwithhiddencoin = {
             0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C
         }; // TODO: There perhaps will be more
         switch (renderParams->type)
@@ -1259,10 +1259,10 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Delete a CameraLimitator from QVector<struct __CameraControlRecord*> CameraControlRecords.
+    /// Delete a CameraLimitator from std::vector<struct __CameraControlRecord*> CameraControlRecords.
     /// </summary>
     /// <param name="index">
-    /// The index of the limitator in QVector<struct __CameraControlRecord*> CameraControlRecords needs to be
+    /// The index of the limitator in std::vector<struct __CameraControlRecord*> CameraControlRecords needs to be
     /// deleted, count from 0.
     /// </param>
     void Room::DeleteCameraLimitator(int index)
@@ -1273,7 +1273,7 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Add a CameraLimitator to QVector<struct __CameraControlRecord*> CameraControlRecords.
+    /// Add a CameraLimitator to std::vector<struct __CameraControlRecord*> CameraControlRecords.
     /// </summary>
     void Room::AddCameraLimitator()
     {
@@ -1287,10 +1287,10 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Set a CameraLimitator in QVector<struct __CameraControlRecord*> CameraControlRecords.
+    /// Set a CameraLimitator in std::vector<struct __CameraControlRecord*> CameraControlRecords.
     /// </summary>
     /// <param name="index">
-    /// The index of the limitator in QVector<struct __CameraControlRecord*> CameraControlRecords needs to be
+    /// The index of the limitator in std::vector<struct __CameraControlRecord*> CameraControlRecords needs to be
     /// changed, count from 0.
     /// </param>
     /// <param name="limitator_data">

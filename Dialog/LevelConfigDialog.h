@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QString>
 #include <QValidator> // include <QRegExp> and <QRegExpValidator>
+#include <string>
 
 namespace Ui
 {
@@ -20,8 +21,8 @@ private:
 public:
     explicit LevelConfigDialog(QWidget *parent = 0);
     ~LevelConfigDialog();
-    void InitTextBoxes(QString _levelname, int HModeTimer, int NModeTimer, int SHModeTimer);
-    QString GetPaddedLevelName();
+    void InitTextBoxes(std::string _levelname, int HModeTimer, int NModeTimer, int SHModeTimer);
+    std::string GetPaddedLevelName();
     int GetHModeTimer();
     int GetNModeTimer();
     int GetSHModeTimer();

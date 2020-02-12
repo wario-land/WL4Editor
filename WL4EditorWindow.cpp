@@ -13,7 +13,6 @@
 #include <QGraphicsScene>
 #include <QMessageBox>
 #include <QTextEdit>
-#include <QString>
 
 bool LoadROMFile(const QString); // Prototype for main.cpp function
 
@@ -202,7 +201,7 @@ void WL4EditorWindow::OpenROM()
 void WL4EditorWindow::LoadROMDataFromFile(const QString qFilePath)
 {
     // Load the ROM file
-    QString filePath = qFilePath.toStdString();
+    std::string filePath = qFilePath.toStdString();
     if (!LoadROMFile(qFilePath))
     {
         QMessageBox::critical(nullptr, QString("Load Error"), QString("You may have loaded an invalid ROM!"));
@@ -221,7 +220,7 @@ void WL4EditorWindow::LoadROMDataFromFile(const QString qFilePath)
     }
 
     // Set the program title
-    QString fileName = filePath.substr(filePath.rfind('/') + 1);
+    std::string fileName = filePath.substr(filePath.rfind('/') + 1);
     setWindowTitle(fileName.c_str());
 
     // Load all Tilesets as singletons
@@ -430,7 +429,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         // -- Door --
         int nxtRoomWidth                              = nextroomconfig->RoomWidth;
         int nxtRoomHeight                             = nextroomconfig->RoomHeight;
-        QVector<LevelComponents::Door *> doorlist = currentRoom->GetDoors();
+        std::vector<LevelComponents::Door *> doorlist = currentRoom->GetDoors();
         size_t doornum                                = currentRoom->CountDoors();
         size_t k                                      = doornum - 1;
         size_t vortexdoorId_needResetPos              = 0;
@@ -488,7 +487,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         // -- Entity --
         for (uint i = 0; i < 3; i++)
         {
-            QVector<struct LevelComponents::EntityRoomAttribute> entitylist = currentRoom->GetEntityListData(i);
+            std::vector<struct LevelComponents::EntityRoomAttribute> entitylist = currentRoom->GetEntityListData(i);
             size_t entitynum                                                    = entitylist.size();
             for (uint j = entitynum; j > 0; j--)
             {
@@ -501,7 +500,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         }
 
         // -- Camera limitator --
-        QVector<struct LevelComponents::__CameraControlRecord *> limitatorlist =
+        std::vector<struct LevelComponents::__CameraControlRecord *> limitatorlist =
             currentRoom->GetCameraControlRecords(false);
         size_t limitatornum         = limitatorlist.size();
         k                           = limitatornum - 1;
@@ -981,7 +980,7 @@ void WL4EditorWindow::CurrentRoomClearEverything()
     // Delete most of the Doors
     if (IfDeleteAllDoors)
     {
-        QVector<LevelComponents::Door *> doorlist = currentRoom->GetDoors();
+        std::vector<LevelComponents::Door *> doorlist = currentRoom->GetDoors();
         size_t doornum                                = currentRoom->CountDoors();
         size_t k                                      = doornum - 1;
         size_t vortexdoorId_needResetPos              = 0;
@@ -1276,8 +1275,8 @@ bool WL4EditorWindow::SaveCurrentFileAs()
         {
             // If successful in saving the file, set the window title to reflect the new file
             dialogInitialPath    = qFilePath;
-            QString filePath = qFilePath.toStdString();
-            QString fileName = filePath.substr(filePath.rfind('/') + 1);
+            std::string filePath = qFilePath.toStdString();
+            std::string fileName = filePath.substr(filePath.rfind('/') + 1);
             setWindowTitle(fileName.c_str());
             return true;
         }

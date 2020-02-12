@@ -8,7 +8,7 @@
 #include <QColor>
 #include <QPixmap>
 #include <QVector>
-#include <QVector>
+#include <vector>
 
 namespace LevelComponents
 {
@@ -42,7 +42,7 @@ namespace LevelComponents
         int GetEntityTileIdOffset(int _entityID);
         bool IsEntityInside(int entityglobalId);
         bool IncludeBossTiles();
-        QVector<EntitySetinfoTableElement> GetEntityTable();
+        std::vector<EntitySetinfoTableElement> GetEntityTable();
         static EntitySetAndEntitylocalId EntitySetFromEntityID(int entityglobalId);
         static int GetEntityFirstActionFrameSetPtr(int entityglobalId);
         static EntityPositionalOffset GetEntityPositionalOffset(int entityglobalId);
@@ -52,7 +52,7 @@ namespace LevelComponents
         int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available
         QVector<QRgb> palettes[16];
         Tile8x8 *tile8x8data[0x480]{};
-        QVector<EntitySetinfoTableElement> EntityinfoTable;
+        std::vector<EntitySetinfoTableElement> EntityinfoTable;
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
 

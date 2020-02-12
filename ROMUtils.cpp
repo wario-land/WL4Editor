@@ -747,7 +747,7 @@ namespace ROMUtils
             return false;
 
         // Set the new internal data pointer for LevelComponents objects, and mark dirty objects as clean
-        QVector<LevelComponents::Room *> rooms = currentLevel->GetRooms();
+        std::vector<LevelComponents::Room *> rooms = currentLevel->GetRooms();
         for (unsigned int i = 0; i < rooms.size(); ++i)
         {
             auto *roomHeader =

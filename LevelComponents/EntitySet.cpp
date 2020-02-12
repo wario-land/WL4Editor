@@ -258,9 +258,9 @@ namespace LevelComponents
     /// <summary>
     /// Get a copy of EntitySetinfoTableElement from this EntitySet.
     /// </summary>
-    QVector<EntitySetinfoTableElement> EntitySet::GetEntityTable()
+    std::vector<EntitySetinfoTableElement> EntitySet::GetEntityTable()
     {
-        QVector<EntitySetinfoTableElement> newtable;
+        std::vector<EntitySetinfoTableElement> newtable;
         newtable.assign(EntityinfoTable.begin(), EntityinfoTable.end());
         return newtable;
     }

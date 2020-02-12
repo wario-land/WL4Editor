@@ -7,7 +7,7 @@
 #include <QStandardItemModel>
 #include <QString>
 
-#include <QVector>
+#include <vector>
 
 #include "LevelComponents/Room.h"
 
