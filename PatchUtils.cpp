@@ -530,7 +530,7 @@ namespace PatchUtils
                         // For each patch chunk, convert its index to entry index to get matching entry info
                         PatchEntryItem entry = entries[chunkIndexToEntryIndex.at(i)];
                         QByteArray hookCode = CreateHook(entry.PatchAddress, entry.FunctionPointerReplacementMode, entry.ThumbMode);
-                        assert(entry.PatchAddress + hookCode.size() < ROMUtils::CurrentFileSize /* Hook code outside valid ROM area */);
+                        assert(entry.PatchAddress + hookCode.size() < ROMUtils::CurrentFileSize); // Hook code outside valid ROM area
                         memcpy(TempFile + entry.PatchAddress, hookCode.data(), hookCode.size());
                     }
                 }

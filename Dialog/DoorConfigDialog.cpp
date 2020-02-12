@@ -150,13 +150,13 @@ void DoorConfigDialog::UpdateCurrentDoorData()
 void DoorConfigDialog::StaticInitialization()
 {
     // Initialize the selections for the Door type
-    for (auto i : DoortypeSetData)
+    for (const auto i : DoortypeSetData)
     {
         DoortypeSet << i;
     }
 
     // Initialize the selections for the Entity name
-    for (auto i : EntitynameSetData)
+    for (const auto i : EntitynameSetData)
     {
         EntitynameSet << i;
     }

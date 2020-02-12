@@ -148,25 +148,25 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
 void RoomConfigDialog::StaticComboBoxesInitialization()
 {
     // Initialize the selections for the tilesets
-    for (auto i : TilesetNamesSetData)
+    for (const auto i : TilesetNamesSetData)
     {
         TilesetNamesSet << i;
     }
 
     // Initialize the selections for the layer priority types
-    for (auto i : LayerPrioritySetData)
+    for (const auto i : LayerPrioritySetData)
     {
         LayerPrioritySet << i;
     }
 
     // Initialize the selections for the alpha blending types
-    for (auto i : AlphaBlendAttrsSetData)
+    for (const auto i : AlphaBlendAttrsSetData)
     {
         AlphaBlendAttrsSet << i;
     }
 
     // Initialize the selections for the types of layer mapping for layer 0
-    for (auto i : Layer0MappingTypeParamSetData)
+    for (const auto i : Layer0MappingTypeParamSetData)
     {
         Layer0MappingTypeParamSet << i;
     }

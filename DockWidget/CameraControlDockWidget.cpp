@@ -85,7 +85,7 @@ void CameraControlDockWidget::SetCameraControlInfo(LevelComponents::Room *curren
 void CameraControlDockWidget::StaticInitialization()
 {
     // Initialize the selections for the CameraLimitatorType ComboBox
-    for (auto i : CameraLimitatorResetSideTypeNameData)
+    for (const auto i : CameraLimitatorResetSideTypeNameData)
     {
         CameraLimitatorTypeNameSet << i;
     }
