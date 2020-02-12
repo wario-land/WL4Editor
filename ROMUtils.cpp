@@ -1,7 +1,7 @@
 #include "ROMUtils.h"
 #include "Compress.h"
+#include "WL4EditorWindow.h"
 #include <QFile>
-#include <WL4EditorWindow.h>
 #include <cassert>
 #include <iostream>
 #include <utility>

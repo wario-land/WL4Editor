@@ -1,6 +1,7 @@
 #include "Room.h"
 #include "ROMUtils.h"
 #include "WL4Constants.h"
+#include "WL4EditorWindow.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -9,7 +10,6 @@
 #include <QPainter>
 #include <iostream>
 
-#include <WL4EditorWindow.h>
 extern WL4EditorWindow *singleton;
 
 namespace LevelComponents
