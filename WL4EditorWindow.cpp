@@ -736,10 +736,13 @@ void WL4EditorWindow::on_actionOpen_ROM_triggered()
 /// </summary>
 void WL4EditorWindow::RenderScreenFull()
 {
+    // TODO: Replace this mess.
     // Delete the old scene, if it exists
     QGraphicsScene *oldScene = ui->graphicsView->scene();
-
-    delete oldScene;
+    if (oldScene) 
+    {
+        delete oldScene;
+    }
 
     // Perform a full render of the screen
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::FullRender);

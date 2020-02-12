@@ -222,7 +222,10 @@ void DoorConfigDialog::RenderGraphicsView_Preview()
 {
     QGraphicsScene *oldScene = ui->GraphicsView_Preview->scene();
 
-    delete oldScene;
+    if (oldScene) 
+    {
+        delete oldScene;
+    }
 
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::FullRender);
     tparam.tileX = tparam.tileY    = 0;
@@ -246,7 +249,10 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
 {
     QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
 
-    delete oldScene;
+    if (oldScene) 
+    {
+        delete oldScene;
+    }
 
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::FullRender);
     tparam.tileX = tparam.tileY    = 0;
@@ -455,7 +461,10 @@ void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int
     {
         QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
 
-        delete oldScene; // UI automatically update
+        if (oldScene) 
+        {
+            delete oldScene; // UI auto updates.
+        }
     }
 }
 
