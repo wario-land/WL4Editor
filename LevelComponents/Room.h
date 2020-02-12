@@ -103,10 +103,10 @@ namespace LevelComponents
         {
             Layer *layer;
             int index;
-        } * drawLayers[4]{} {};
+        } * drawLayers[4]{};
 
         // Locals
-        int EntityLayerZValue[4]{} {};
+        int EntityLayerZValue[4]{};
         enum __CameraControlType CameraControlType;
         unsigned int RoomID;
         unsigned int LevelID;
@@ -120,14 +120,14 @@ namespace LevelComponents
         int CurrentEntitySetID      = 0;
         EntitySet *currentEntitySet = nullptr;
         std::vector<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
-        bool EntityListDirty[3]{} {};
+        bool EntityListDirty[3]{};
         std::vector<Entity *> currentEntityListSource; // Initialize Entities here
         int currentDifficulty = 1;
-        Layer *layers[4]{} {};
+        Layer *layers[4]{};
         Tileset *tileset;
         std::vector<Door *> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem
-            *RenderedLayers[13]{} {}; // L0 - 3, E(Entities boxes), D, C, A (may not exist), E0 - 3, hidden coins
+            *RenderedLayers[13]{}; // L0 - 3, E(Entities boxes), D, C, A (may not exist), E0 - 3, hidden coins
         bool CameraBoundaryDirty = false;
         bool IsCopy              = false;
 

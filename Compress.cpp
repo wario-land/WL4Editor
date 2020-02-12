@@ -11,7 +11,7 @@ namespace ROMUtils
     void RLEMetadata::InitializeJumpTableHelper(unsigned short jumpLimit)
     {
         // Define variables used in the creation of the jump table
-        auto *data        = (unsigned char *) this->data;
+        auto *data        = static_cast<unsigned char *>(this->data);
         auto *R           = new unsigned short[data_len * 2];
         unsigned short *C = R + data_len;
         int cons          = 0;
@@ -88,7 +88,7 @@ namespace ROMUtils
         unsigned int minrun = GetMinimumRunSize();
         unsigned short *R   = JumpTable;
         unsigned short *C   = JumpTable + data_len;
-        auto *data          = (unsigned char *) this->data;
+        auto *data          = static_cast<unsigned char *>(this->data);
 
         // Populate the compressed data
         compressedData.append(GetTypeIdentifier());

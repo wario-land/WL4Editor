@@ -50,7 +50,7 @@ bool LoadROMFile(const QString &filePath)
 
     ROMUtils::CurrentFileSize = length;
     ROMUtils::ROMFilePath     = filePath;
-    ROMUtils::CurrentFile     = (unsigned char *) ROMAddr;
+    ROMUtils::CurrentFile     = static_cast<unsigned char *>(ROMAddr);
     return true;
 }
 
