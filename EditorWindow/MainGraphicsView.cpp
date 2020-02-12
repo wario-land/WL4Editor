@@ -99,7 +99,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 room->SetEntityListDirty(difficulty, true);
                 singleton->SetUnsavedChanges(true);
             }
-            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, SelectedEntityID);
+            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, SelectedEntityID);
             holdingEntityOrDoor=true;
             objectInitialX=tileX;
             objectInitialY=tileY;
@@ -241,7 +241,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                     if (currentRoom->IsNewEntityPositionInsideRoom(tileX, tileY))
                     {
                         currentRoom->SetEntityPosition(tileX, tileY, SelectedEntityID);
-                        singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, SelectedEntityID);
+                        singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, SelectedEntityID);
                         int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
                         singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
                         singleton->SetUnsavedChanges(true);
@@ -295,7 +295,7 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
         return;
     int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
     LevelComponents::Layer *layer = room->GetLayer(selectedLayer);
-    if (layer->IsEnabled() == false)
+    if (!layer->IsEnabled())
         return;
     if (layer->GetMappingType() == LevelComponents::LayerTile8x8)
         return; // temporarily skip the condition when the current Layer's MappingType is 0x20 to avoid incorrect
@@ -309,7 +309,7 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
     }
     if (layer->GetLayerData()[selectedTileIndex] == selectedTile)
         return;
-    struct OperationParams *params = new struct OperationParams();
+    auto *params = new struct OperationParams();
     params->type = ChangeTileOperation;
     params->tileChange = true;
     params->tileChangeParams.push_back(
@@ -362,7 +362,7 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     //Add a move operation for door (for CTRL-Z)
     if (editMode == Ui::DoorEditMode) {
         if (holdingEntityOrDoor && SelectedDoorID != -1) {
-            struct OperationParams *params = new struct OperationParams();
+            auto *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
             params->objectPositionChange = true;
             params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, pX, pY,ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
@@ -372,7 +372,7 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     // Add a move operation for entity (for CTRL-Z)
     } else if (editMode == Ui::EntityEditMode) {
         if (holdingEntityOrDoor && SelectedEntityID != -1) {
-            struct OperationParams *params = new struct OperationParams();
+            auto *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
             params->objectPositionChange = true;
             params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, pX, pY,ObjectMoveParams::ENTITY_TYPE,SelectedEntityID);
@@ -408,7 +408,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         {
             singleton->DeleteEntity(SelectedEntityID);
             SelectedEntityID = -1;
-            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, -1);
             int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
             singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
             singleton->SetUnsavedChanges(true);
@@ -451,7 +451,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 
             if (currentRoom->IsNewEntityPositionInsideRoom(pX, pY))
             {
-                struct OperationParams *params = new struct OperationParams();
+                auto *params = new struct OperationParams();
                 params->type = ObjectMoveOperation;
                 params->objectPositionChange = true;
                 params->objectMoveParams=ObjectMoveParams::Create(oldX, oldY, pX, pY,ObjectMoveParams::ENTITY_TYPE,SelectedEntityID);
@@ -480,7 +480,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             }
             singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
             SelectedDoorID = -1;
-            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, -1);
             singleton->ResetEntitySetDockWidget();
             singleton->SetUnsavedChanges(true);
             break;
@@ -527,7 +527,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 
             if (currentRoom->IsNewDoorPositionInsideRoom(pX1, pX2, pY1, pY2))
             {
-                struct OperationParams *params = new struct OperationParams();
+                auto *params = new struct OperationParams();
                 params->type = ObjectMoveOperation;
                 params->objectPositionChange = true;
                 params->objectMoveParams=ObjectMoveParams::Create(oldX, oldY, pX1, pY1,ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
@@ -548,5 +548,5 @@ void MainGraphicsView::DeselectDoorAndEntity()
 {
     SelectedDoorID = -1;
     SelectedEntityID = -1;
-    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, -1);
 }

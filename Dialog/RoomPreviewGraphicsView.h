@@ -18,7 +18,7 @@ class RoomPreviewGraphicsView : public QGraphicsView
 private:
     bool initialized = false;               // Used for initializing the scrollbars
     void *dataPointers[4] = { 0, 0, 0, 0 }; // Tilset, BG, L0
-    QGraphicsPixmapItem *pixmapItems[3];
+    QGraphicsPixmapItem *pixmapItems[3]{};
     unsigned int displayPixmap;
     void DisplayNextPixmap();
     void EnableSelectedPixmap();
@@ -28,7 +28,7 @@ protected:
     void showEvent(QShowEvent *event);
 
 public:
-    QLabel *infoLabel;
+    QLabel *infoLabel{};
     RoomPreviewGraphicsView(QWidget *param);
     void mousePressEvent(QMouseEvent *event);
     void UpdateGraphicsItems(LevelComponents::Tileset *tileset, int BGptr, int L0ptr);

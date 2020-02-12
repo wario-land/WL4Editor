@@ -10,7 +10,7 @@ namespace SettingsUtils
     /// </summary>
     void InitProgramSetupPath(QCoreApplication &application)
     {
-        ProgramSettingFilePath = application.applicationDirPath();
+        ProgramSettingFilePath = QCoreApplication::applicationDirPath();
         ProgramSettingFilePath += QString("/WL4Editor.ini");
 
         // Check INI file
@@ -18,8 +18,8 @@ namespace SettingsUtils
         if (!fileInfo.isFile())
         {
             QSettings WL4EditorIni(ProgramSettingFilePath, QSettings::IniFormat);
-            for (int i = 0; i < KeyStringSet.size(); i++)
-                WL4EditorIni.setValue(KeyStringSet[i], "");
+            for (const auto & i : KeyStringSet)
+                WL4EditorIni.setValue(i, "");
         }
     }
 
@@ -32,7 +32,7 @@ namespace SettingsUtils
     /// <param name="value">
     /// The new value of the Key.
     /// </param>
-    void SetKey(IniKeys key, QString value)
+    void SetKey(IniKeys key, const QString& value)
     {
         QSettings WL4EditorIni(ProgramSettingFilePath, QSettings::IniFormat);
         WL4EditorIni.setValue(KeyStringSet[key], value);

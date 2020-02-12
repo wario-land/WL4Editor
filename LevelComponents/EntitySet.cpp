@@ -21,7 +21,7 @@ namespace LevelComponents
     {
         for (int i = 0; i < paletteNum; ++i)
         {
-            if (palettes[i + startPaletteId].size())
+            if (!palettes[i + startPaletteId].empty())
                 palettes[i + startPaletteId].clear();
             // First color is transparent
             palettes[i + startPaletteId].push_back(0);
@@ -72,7 +72,7 @@ namespace LevelComponents
         int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + _EntitySetID * 4);
 
         // Load 16 color palettes, ignore the first 3 rows, they are only for wario tiles
-        int palettePtr, lastpalettePtr;
+        int palettePtr; int lastpalettePtr;
         palettePtr = lastpalettePtr = 0;
         int tmpEntityId;
         int EntityPaletteNum;
@@ -127,7 +127,7 @@ namespace LevelComponents
         memset(tile8x8data, 0, sizeof(tile8x8data));
 
         // Load Basic Universal Entities' tile8x8s.
-        int tiledataptr, tiledatalength;
+        int tiledataptr; int tiledatalength;
         tiledataptr = WL4Constants::SpritesBasicElementTiles;
         tiledatalength = 0x3000;
         LoadSpritesTiles(tiledataptr, tiledatalength, 4);
@@ -141,7 +141,7 @@ namespace LevelComponents
             tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
             if (tmpEntityId == 0)
                 break;
-            EntitySetinfoTableElement Tmp_entitytableElement;
+            EntitySetinfoTableElement Tmp_entitytableElement{};
             Tmp_entitytableElement.Global_EntityID = tmpEntityId;
             Tmp_entitytableElement.paletteOffset = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
             EntityinfoTable.push_back(Tmp_entitytableElement);
@@ -154,11 +154,11 @@ namespace LevelComponents
             }
             k++;
             lasttiledataptr = tiledataptr;
-        } while (1);
-        for (unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
+        } while (true);
+        for (auto & i : tile8x8data)
         {
-            if (!tile8x8data[i])
-                tile8x8data[i] = Tile8x8::CreateBlankTile(palettes);
+            if (!i)
+                i = Tile8x8::CreateBlankTile(palettes);
         }
 
         // Load Treasure/CD Boxes tile8x8s when this Entityset is not a Boss Entityset
@@ -188,8 +188,8 @@ namespace LevelComponents
         {
             return 0;
         }
-        else
-        {
+        
+        
             int Paloffset = EntityinfoTable[_entityID].paletteOffset + 8;
 
             // these Entities have an extra relative palette offset
@@ -207,7 +207,7 @@ namespace LevelComponents
             }
 
             return Paloffset;
-        }
+        
     }
 
     /// <summary>
@@ -222,10 +222,10 @@ namespace LevelComponents
         {
             return 0;
         }
-        else
-        {
+        
+        
             return 64 * (EntityinfoTable[_entityID].paletteOffset);
-        }
+        
     }
 
     /// <summary>
@@ -238,9 +238,9 @@ namespace LevelComponents
     {
         if (entityglobalId >= 0 && entityglobalId <= 0x10)
             return true;
-        for (unsigned int i = 0; i < EntityinfoTable.size(); ++i)
+        for (auto & i : EntityinfoTable)
         {
-            if (EntityinfoTable[i].Global_EntityID == entityglobalId)
+            if (i.Global_EntityID == entityglobalId)
             {
                 return true;
             }
@@ -275,7 +275,7 @@ namespace LevelComponents
     /// </param>
     EntitySetAndEntitylocalId EntitySet::EntitySetFromEntityID(int entityglobalId)
     {
-        struct EntitySetAndEntitylocalId tmpEntitySetAndEntitylocalId;
+        struct EntitySetAndEntitylocalId tmpEntitySetAndEntitylocalId{};
         if (entityglobalId < 0x11)
         {
             tmpEntitySetAndEntitylocalId.entitysetId = 1;
@@ -321,7 +321,7 @@ namespace LevelComponents
     /// </param>
     EntityPositionalOffset EntitySet::GetEntityPositionalOffset(int entityglobalId)
     {
-        EntityPositionalOffset tmpEntityPositionalOffset;
+        EntityPositionalOffset tmpEntityPositionalOffset{};
         tmpEntityPositionalOffset.XOffset = EntityPositinalOffset[2 * entityglobalId];
         tmpEntityPositionalOffset.YOffset = EntityPositinalOffset[2 * entityglobalId + 1];
         return tmpEntityPositionalOffset;
@@ -358,9 +358,9 @@ namespace LevelComponents
     {
         // Delete Tile8x8 information
         // BlankTile may be disjoint in the array, so we skip over those and delete it afterward
-        for (unsigned int i = 0; i < sizeof(tile8x8data) / sizeof(tile8x8data[0]); ++i)
+        for (auto & i : tile8x8data)
         {
-            delete tile8x8data[i];
+            delete i;
         }
     }
 } // namespace LevelComponents

@@ -101,15 +101,15 @@ WL4EditorWindow::~WL4EditorWindow()
     delete statusBarLabel;
 
     // Decomstruct all Tileset singletons
-    for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
+    for(auto & singletonTileset : ROMUtils::singletonTilesets)
     {
-        delete ROMUtils::singletonTilesets[i];
+        delete singletonTileset;
     }
 
-    if (CurrentLevel)
-    {
+    
+    
         delete CurrentLevel;
-    }
+    
     DoorConfigDialog::EntitySetsDeconstruction();
 }
 
@@ -124,7 +124,7 @@ WL4EditorWindow::~WL4EditorWindow()
 /// </param>
 void WL4EditorWindow::SetStatusBarText(char *str)
 {
-    QLabel *old = (QLabel *) ui->statusBar->children()[0];
+    auto *old = dynamic_cast<QLabel *>( ui->statusBar->children()[0]);
     QLabel *newStr = new QLabel(str);
     ui->statusBar->removeWidget(old);
     ui->statusBar->addWidget(newStr);
@@ -194,7 +194,7 @@ void WL4EditorWindow::OpenROM()
 /// <param name="filePath">
 /// The path of the ROM file
 /// </param>
-void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
+void WL4EditorWindow::LoadROMDataFromFile(const QString& qFilePath)
 {
     // Load the ROM file
     std::string filePath = qFilePath.toStdString();
@@ -209,9 +209,9 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     {
         delete CurrentLevel;
         // Decomstruct all Tileset singletons
-        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
+        for(auto & singletonTileset : ROMUtils::singletonTilesets)
         {
-            delete ROMUtils::singletonTilesets[i];
+            delete singletonTileset;
         }
     }
 
@@ -419,7 +419,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         // Deal with out-of-range Doors, Entities, Camera limitators
         // TODO: support Undo/Redo on these elements
         // -- Door --
-        int nxtRoomWidth = nextroomconfig->RoomWidth, nxtRoomHeight = nextroomconfig->RoomHeight;
+        int nxtRoomWidth = nextroomconfig->RoomWidth; int nxtRoomHeight = nextroomconfig->RoomHeight;
         std::vector<LevelComponents::Door *> doorlist = currentRoom->GetDoors();
         size_t doornum = currentRoom->CountDoors();
         size_t k = doornum - 1;
@@ -526,7 +526,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                 {
                     // save previous Layer data
                     size_t datasize1 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
-                    unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
+                    auto *tmpLayerdata1 = new unsigned short[datasize1];
                     memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
                     currentroomconfig->LayerData[i] = tmpLayerdata1;
 
@@ -535,7 +535,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
 
                     // save result Layer data
                     size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
-                    unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                    auto *tmpLayerdata2 = new unsigned short[datasize2];
                     memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
                     nextroomconfig->LayerData[i] = tmpLayerdata2;
                 }
@@ -544,7 +544,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                     currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
                     delete[] currentRoom->GetLayer(i)->GetLayerData();
                     size_t size = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
-                    unsigned short *tmpData = new unsigned short[size];
+                    auto *tmpData = new unsigned short[size];
                     memcpy(tmpData, nextroomconfig->LayerData[i], size);
                     currentRoom->GetLayer(i)->SetLayerData(tmpData);
                 }
@@ -665,7 +665,7 @@ void WL4EditorWindow::openRecentROM()
     if(!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load ROM anyway?"))) return;
 
     QString filepath;
-    QAction *action = qobject_cast<QAction *>(sender());
+    auto *action = qobject_cast<QAction *>(sender());
     if(action)
     {
         filepath = action->text();
@@ -727,10 +727,10 @@ void WL4EditorWindow::RenderScreenFull()
 {
     // Delete the old scene, if it exists
     QGraphicsScene *oldScene = ui->graphicsView->scene();
-    if (oldScene)
-    {
+    
+    
         delete oldScene;
-    }
+    
 
     // Perform a full render of the screen
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::FullRender);
@@ -810,7 +810,7 @@ void WL4EditorWindow::closeEvent(QCloseEvent *event)
             event->accept();
             return;
         }
-        else if (savePrompt.clickedButton() == saveButton)
+        if (savePrompt.clickedButton() == saveButton)
         {
             // Do not exit if there was an issue saving the file
             if (!SaveCurrentFile())
@@ -860,7 +860,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     if (tmpdialog.exec() == QDialog::Accepted)
     {
         selectedLevel = tmpdialog.GetResult();
-        if (CurrentLevel)
+        
             delete CurrentLevel;
         CurrentLevel =
             new LevelComponents::Level(static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
@@ -887,7 +887,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
 /// <returns>
 /// True if the user chose to continue with the save prompt.
 /// </returns>
-bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
+bool WL4EditorWindow::UnsavedChangesPrompt(const QString& str)
 {
     if (UnsavedChanges)
     {
@@ -915,7 +915,7 @@ bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
         }
         return false;
     }
-    else
+    
         return true;
 }
 
@@ -1158,7 +1158,7 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     if (dialog.exec() == QDialog::Accepted)
     {
         // Add changes into the operation history
-        OperationParams *operation = new OperationParams;
+        auto *operation = new OperationParams;
         operation->type = ChangeRoomConfigOperation;
         operation->roomConfigChange = true;
         operation->lastRoomConfigParams = new DialogParams::RoomConfigParams(*_currentRoomConfigParams);
@@ -1181,13 +1181,13 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
     if (dialog.exec() == QDialog::Accepted)
     {
         int currentTilesetId = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
-        DialogParams::TilesetEditParams *_oldRoomTilesetEditParams = new DialogParams::TilesetEditParams();
+        auto *_oldRoomTilesetEditParams = new DialogParams::TilesetEditParams();
         _oldRoomTilesetEditParams->currentTilesetIndex = currentTilesetId;
         _oldRoomTilesetEditParams->newTileset = ROMUtils::singletonTilesets[currentTilesetId];
         _currentRoomTilesetEditParams->newTileset->SetChanged(true);
 
         // Execute Operation and add changes into the operation history
-        OperationParams *operation = new OperationParams;
+        auto *operation = new OperationParams;
         operation->type = ChangeTilesetOperation;
         operation->TilesetChange = true;
         operation->lastTilesetEditParams = _oldRoomTilesetEditParams;
@@ -1206,7 +1206,7 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
 void WL4EditorWindow::on_actionNew_Door_triggered()
 {
     // Create a new door struct with blank fields
-    LevelComponents::__DoorEntry newDoorEntry;
+    LevelComponents::__DoorEntry newDoorEntry{};
     memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
 
     // Initialize the fields
@@ -1600,7 +1600,7 @@ void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
                                                      dialogInitialPath, tr("PNG files (*.png)"));
     if (qFilePath.compare(""))
     {
-        int CR_width, CR_height;
+        int CR_width; int CR_height;
         CR_width = CurrentLevel->GetRooms()[selectedRoom]->GetWidth();
         CR_height = CurrentLevel->GetRooms()[selectedRoom]->GetHeight();
         QGraphicsScene *tmpscene = ui->graphicsView->scene();

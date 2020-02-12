@@ -36,7 +36,7 @@ private:
     EntitySetDockWidget *EntitySetWidget;
     CameraControlDockWidget *CameraControlWidget;
     LevelComponents::Level *CurrentLevel = nullptr;
-    QAction *RecentROMs[5];
+    QAction *RecentROMs[5]{};
     uint recentROMnum = 0;
 
     unsigned int selectedRoom = 0;
@@ -48,7 +48,7 @@ private:
     bool notify(QObject *receiver, QEvent *event);
     static bool SaveCurrentFile() { return ROMUtils::SaveLevel(ROMUtils::ROMFilePath); }
     bool SaveCurrentFileAs();
-    bool UnsavedChangesPrompt(QString str);
+    bool UnsavedChangesPrompt(const QString& str);
     void CurrentRoomClearEverything();
 
 protected:
@@ -91,7 +91,7 @@ public:
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
     void DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
-    void LoadROMDataFromFile(QString qFilePath);
+    void LoadROMDataFromFile(const QString& qFilePath);
 
     // Events
     void keyPressEvent(QKeyEvent *event);

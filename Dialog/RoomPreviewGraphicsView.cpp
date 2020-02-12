@@ -16,9 +16,9 @@
 RoomPreviewGraphicsView::RoomPreviewGraphicsView(QWidget *param) : QGraphicsView(param), displayPixmap(0)
 {
     memset(dataPointers, 0, sizeof(dataPointers));
-    QGraphicsScene *scene = new QGraphicsScene();
-    for (unsigned int i = 0; i < sizeof(pixmapItems) / sizeof(pixmapItems[0]); ++i)
-    { pixmapItems[i] = scene->addPixmap(QPixmap()); }
+    auto *scene = new QGraphicsScene();
+    for (auto & pixmapItem : pixmapItems)
+    { pixmapItem = scene->addPixmap(QPixmap()); }
     EnableSelectedPixmap();
     setScene(scene);
     setAlignment(Qt::AlignTop | Qt::AlignLeft);

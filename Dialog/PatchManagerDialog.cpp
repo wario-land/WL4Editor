@@ -58,10 +58,10 @@ static QString GetPathRelativeToROM(const QString &filePath)
     {
         return filePath.right(filePath.length() - ROMdir.absolutePath().length() - 1);
     }
-    else
-    {
+    
+    
         return "";
-    }
+    
 }
 
 /// <summary>
@@ -74,7 +74,7 @@ void PatchManagerDialog::on_addPatchButton_clicked()
     struct PatchEntryItem entry;
 
     // Execute the edit dialog
-    PatchEditDialog *editDialog = new PatchEditDialog(this);
+    auto *editDialog = new PatchEditDialog(this);
 retry:
     if(editDialog->exec() == QDialog::Accepted)
     {
@@ -101,14 +101,14 @@ retry:
         }
         entry.FileName = relativeFN;
         bool fileNameIsValid = !std::any_of(currentEntries.begin(), currentEntries.end(),
-            [entry](struct PatchEntryItem e){ return e.FileName == entry.FileName; });
+            [entry](const struct PatchEntryItem& e){ return e.FileName == entry.FileName; });
         if(!fileNameIsValid) // Cannot add two patch entries using the same file
         {
             QMessageBox::information(this, "About", QString("Another entry already exists with the filename: ") + entry.FileName);
             goto error;
         }
         bool hookIsValid = !entry.HookAddress || !std::any_of(currentEntries.begin(), currentEntries.end(),
-            [entry](struct PatchEntryItem e){ return e.HookAddress == entry.HookAddress; });
+            [entry](const struct PatchEntryItem& e){ return e.HookAddress == entry.HookAddress; });
         if(!hookIsValid) // Cannot use two patches on same hook address
         {
             QMessageBox::information(this, "About", QString("Another entry already exists with the hook address: ") + QString::number(entry.HookAddress));
@@ -143,7 +143,7 @@ void PatchManagerDialog::on_editPatchButton_clicked()
         struct PatchEntryItem entry;
         int selectedIndex = -1;
         std::find_if(currentEntries.begin(), currentEntries.end(),
-            [selectedEntry, &selectedIndex](struct PatchEntryItem e){ ++selectedIndex; return selectedEntry.FileName == e.FileName; });
+            [selectedEntry, &selectedIndex](const struct PatchEntryItem& e){ ++selectedIndex; return selectedEntry.FileName == e.FileName; });
         currentEntries.remove(selectedIndex);
 
         // Execute the edit dialog
@@ -168,14 +168,14 @@ retry:
             }
             entry.FileName = relativeFN;
             bool fileNameIsValid = !std::any_of(currentEntries.begin(), currentEntries.end(),
-                [entry](struct PatchEntryItem e){ return e.FileName == entry.FileName; });
+                [entry](const struct PatchEntryItem& e){ return e.FileName == entry.FileName; });
             if(!fileNameIsValid)
             {
                 QMessageBox::information(this, "About", QString("Another entry already exists with the filename: ") + entry.FileName);
                 goto error;
             }
             bool hookIsValid = !entry.HookAddress || !std::any_of(currentEntries.begin(), currentEntries.end(),
-                [entry](struct PatchEntryItem e){ return e.HookAddress == entry.HookAddress; });
+                [entry](const struct PatchEntryItem& e){ return e.HookAddress == entry.HookAddress; });
             if(!hookIsValid)
             {
                 QMessageBox::information(this, "About", QString("Another entry already exists with the hook address: ") + QString::number(entry.HookAddress));
@@ -193,7 +193,7 @@ error:
         editDialog = new PatchEditDialog(this, entry);
         goto retry;
     }
-    else if(!selectedRows.size())
+    if(selectedRows.empty())
     {
         QMessageBox::information(this, "About", "You must select a row to edit.");
     }

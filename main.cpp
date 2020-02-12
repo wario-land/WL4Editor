@@ -22,7 +22,7 @@
 /// <param name="filePath">
 /// The path to the file that will be read.
 /// </param>
-bool LoadROMFile(QString filePath)
+bool LoadROMFile(const QString& filePath)
 {
     // Read ROM file into current file array
     QFile file(filePath);
@@ -37,23 +37,23 @@ bool LoadROMFile(QString filePath)
     }
 
     // Read data
-    unsigned char *ROMAddr = new unsigned char[0x1000000];  // set it to be 16 MB to let the data can be write freely
+    auto *ROMAddr = new unsigned char[0x1000000];  // set it to be 16 MB to let the data can be write freely
     file.read((char *) ROMAddr, length);
     file.close();
 
     // To check ROM correct
-    if (strncmp((const char *) (ROMAddr + 0xA0), "WARIOLANDE", 10))
+    if (strncmp((const char *) (ROMAddr + 0xA0), "WARIOLANDE", 10) != 0)
     { // if loaded a wrong ROM
         delete[] ROMAddr;
         return false;
     }
-    else
-    {
+    
+    
         ROMUtils::CurrentFileSize = length;
         ROMUtils::ROMFilePath = filePath;
         ROMUtils::CurrentFile = (unsigned char *) ROMAddr;
         return true;
-    }
+    
 }
 
 /// <summary>
@@ -82,13 +82,13 @@ int main(int argc, char *argv[])
 
     QApplication application(argc, argv);
     SettingsUtils::InitProgramSetupPath(application);
-    application.setWindowIcon(QIcon("./images/icon.ico"));
+    QApplication::setWindowIcon(QIcon("./images/icon.ico"));
     WL4EditorWindow window;
     window.show();
 
     // Quickly test or debug by automatically loading the ROM without UI
     //-------------------------------------------------------------------
-    QString filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
+    QString filePath = R"(C:\Users\Andrew\Desktop\WL4.gba)";
     QFile testFile(filePath);
     if(testFile.exists())
     {
@@ -96,5 +96,5 @@ int main(int argc, char *argv[])
     }
     //-------------------------------------------------------------------
 
-    return application.exec();
+    return QApplication::exec();
 }

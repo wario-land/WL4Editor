@@ -160,98 +160,98 @@ void TilesetEditDialog::on_spinBox_TerrainId_valueChanged(int arg1)
     tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr()[SelectedTile16] = (unsigned char) arg1;
 }
 
-void TilesetEditDialog::on_spinBox_TopLeftTileId_valueChanged(int arg1)
+void TilesetEditDialog::on_spinBox_TopLeftTileId_valueChanged(int  /*arg1*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     TLTile8x8Reset();
 }
 
-void TilesetEditDialog::on_spinBox_TopRightTileId_valueChanged(int arg1)
+void TilesetEditDialog::on_spinBox_TopRightTileId_valueChanged(int  /*arg1*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     TRTile8x8Reset();
 }
 
-void TilesetEditDialog::on_spinBox_BottomLeftTileId_valueChanged(int arg1)
+void TilesetEditDialog::on_spinBox_BottomLeftTileId_valueChanged(int  /*arg1*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     BLTile8x8Reset();
 }
 
-void TilesetEditDialog::on_spinBox_BottomRightTileId_valueChanged(int arg1)
+void TilesetEditDialog::on_spinBox_BottomRightTileId_valueChanged(int  /*arg1*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     BRTile8x8Reset();
 }
 
-void TilesetEditDialog::on_spinBox_TopLeftpaletteId_valueChanged(int arg1)
+void TilesetEditDialog::on_spinBox_TopLeftpaletteId_valueChanged(int  /*arg1*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     TLTile8x8Reset();
 }
 
-void TilesetEditDialog::on_spinBox_TopRightpaletteId_valueChanged(int arg1)
+void TilesetEditDialog::on_spinBox_TopRightpaletteId_valueChanged(int  /*arg1*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     TRTile8x8Reset();
 }
 
-void TilesetEditDialog::on_spinBox_BottomLeftpaletteId_valueChanged(int arg1)
+void TilesetEditDialog::on_spinBox_BottomLeftpaletteId_valueChanged(int  /*arg1*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     BLTile8x8Reset();
 }
 
-void TilesetEditDialog::on_spinBox_BottomRightpaletteId_valueChanged(int arg1)
+void TilesetEditDialog::on_spinBox_BottomRightpaletteId_valueChanged(int  /*arg1*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     BRTile8x8Reset();
 }
 
-void TilesetEditDialog::on_checkBox_TopLeftHFlip_toggled(bool checked)
+void TilesetEditDialog::on_checkBox_TopLeftHFlip_toggled(bool  /*checked*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     TLTile8x8Reset();
 }
 
-void TilesetEditDialog::on_checkBox_TopRightHFlip_toggled(bool checked)
+void TilesetEditDialog::on_checkBox_TopRightHFlip_toggled(bool  /*checked*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     TRTile8x8Reset();
 }
 
-void TilesetEditDialog::on_checkBox_BottomLeftHFlip_toggled(bool checked)
+void TilesetEditDialog::on_checkBox_BottomLeftHFlip_toggled(bool  /*checked*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     BLTile8x8Reset();
 }
 
-void TilesetEditDialog::on_checkBox_BottomRightHFlip_toggled(bool checked)
+void TilesetEditDialog::on_checkBox_BottomRightHFlip_toggled(bool  /*checked*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     BRTile8x8Reset();
 }
 
 
-void TilesetEditDialog::on_checkBox_TopLeftVFlip_toggled(bool checked)
+void TilesetEditDialog::on_checkBox_TopLeftVFlip_toggled(bool  /*checked*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     TLTile8x8Reset();
 }
 
-void TilesetEditDialog::on_checkBox_TopRightVFlip_toggled(bool checked)
+void TilesetEditDialog::on_checkBox_TopRightVFlip_toggled(bool  /*checked*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     TRTile8x8Reset();
 }
 
-void TilesetEditDialog::on_checkBox_BottomLeftVFlip_toggled(bool checked)
+void TilesetEditDialog::on_checkBox_BottomLeftVFlip_toggled(bool  /*checked*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     BLTile8x8Reset();
 }
 
-void TilesetEditDialog::on_checkBox_BottomRightVFlip_toggled(bool checked)
+void TilesetEditDialog::on_checkBox_BottomRightVFlip_toggled(bool  /*checked*/)
 {
     if(!HasInitialized || IsSelectingTile16) return;
     BRTile8x8Reset();
@@ -716,7 +716,7 @@ void TilesetEditDialog::on_pushButton_ExportTile8x8Map_clicked()
                                                      QString(""), tr("PNG files (*.png)"));
     if (qFilePath.compare(""))
     {
-        int CR_width, CR_height;
+        int CR_width; int CR_height;
         CR_width = 8 * 16;
         CR_height = 0x600 / 2;
         QGraphicsScene *tmpscene = Tile8x8MAPScene;
@@ -736,7 +736,7 @@ void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
                                                      QString(""), tr("PNG files (*.png)"));
     if (qFilePath.compare(""))
     {
-        int CR_width, CR_height;
+        int CR_width; int CR_height;
         CR_width = 8 * 16;
         CR_height = 0x300 * 2;
         QGraphicsScene *tmpscene = Tile16MAPScene;
@@ -762,7 +762,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
                                                     tr("bin files (*.bin)"));
 
     // load data into QBytearray
-    QByteArray tmptile8x8data, tmptile8x8data_final;
+    QByteArray tmptile8x8data; QByteArray tmptile8x8data_final;
     QFile gfxbinfile(fileName);
     if(!gfxbinfile.open(QIODevice::ReadOnly))
     {
@@ -795,7 +795,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     palbinfile.close();
 
     QVector<QRgb> tmppalette;
-    unsigned short *tmppaldata = new unsigned short[16];
+    auto *tmppaldata = new unsigned short[16];
     memcpy(tmppaldata, tmppalettedata.data(), 32);
 
     // Get transparent color id in the palette
@@ -818,7 +818,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     for(int i = 0; i != 16; ++i)
     {
         char count = 0;
-        while(1)
+        while(true)
         {
             if(tmppalette[i] == tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId][count])
             {
@@ -832,7 +832,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
                     QMessageBox::critical(this, QString("Error"), QString("Palette not suitable!"));
                     return;
                 }
-                else if(tmppalette[i] == 0xFF000000) // black
+                if(tmppalette[i] == 0xFF000000) // black
                 {
                     auto iter = std::find_if(tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId].begin(),
                                              tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId].end(), [&](const QRgb& value) {
@@ -870,7 +870,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         for(int j = 0; j < tmptile8x8data.size(); ++j) // TODO: bugfix here
         {
             char tmpchr = tmptile8x8data[j];
-            char l4b, h4b;
+            char l4b; char h4b;
             h4b = (tmpchr >> 4) & 0xF;
             l4b = tmpchr & 0xF;
             if (l4b == i) {
@@ -914,7 +914,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     // also (number of the new Tile8x8 + selected Tile8x8 Id) should be < (0x600 - tilesetEditParams->newTileset->GetbgGFXlen() / 32) or return
     // create new Tile8x8 by using 32-byte length data
     // overwrite and replace the old TIle8x8 instances down-through from selected Tile8x8
-    unsigned char* newtmpdata = new unsigned char[32];
+    auto* newtmpdata = new unsigned char[32];
     if((newtilenum + SelectedTile8x8 + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32))
     {
         if((newtilenum + SelectedTile8x8 + 1 + tilesetEditParams->newTileset->GetbgGFXlen() / 32 + 1) > 0x600)
@@ -922,10 +922,10 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
             QMessageBox::critical(this, QString("Load Error"), QString("Cannot overwrite background Tiles!"));
             return;
         }
-        else
-        {
+        
+        
             tilesetEditParams->newTileset->SetfgGFXlen(32 * (SelectedTile8x8 - 65 + newtilenum));
-        }
+        
     }
     for(int i = 0; i < newtilenum; ++i)
     {

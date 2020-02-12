@@ -11,10 +11,10 @@ namespace ROMUtils
     void RLEMetadata::InitializeJumpTableHelper(unsigned short jumpLimit)
     {
         // Define variables used in the creation of the jump table
-        unsigned char *data = (unsigned char *) this->data;
-        unsigned short *R = new unsigned short[data_len * 2];
+        auto *data = (unsigned char *) this->data;
+        auto *R = new unsigned short[data_len * 2];
         unsigned short *C = R + data_len;
-        int cons = 0, minrun = GetMinimumRunSize();
+        int cons = 0; int minrun = GetMinimumRunSize();
 
         // Seed the dynamic programming jump table
         R[data_len - 1] = 1;
@@ -57,8 +57,8 @@ namespace ROMUtils
     {
         // Define the variables used to traverse the jump table
         unsigned int size = 0;
-        unsigned int i = 0, minrun = GetMinimumRunSize();
-        unsigned short *R = JumpTable, *C = JumpTable + data_len;
+        unsigned int i = 0; unsigned int minrun = GetMinimumRunSize();
+        unsigned short *R = JumpTable; unsigned short *C = JumpTable + data_len;
 
         // Calculate the size
         while (i < data_len)
@@ -81,9 +81,9 @@ namespace ROMUtils
     {
         // Define variables used by compression
         QVector<unsigned char> compressedData;
-        unsigned int i = 0, minrun = GetMinimumRunSize();
-        unsigned short *R = JumpTable, *C = JumpTable + data_len;
-        unsigned char *data = (unsigned char *) this->data;
+        unsigned int i = 0; unsigned int minrun = GetMinimumRunSize();
+        unsigned short *R = JumpTable; unsigned short *C = JumpTable + data_len;
+        auto *data = (unsigned char *) this->data;
 
         // Populate the compressed data
         compressedData.append(GetTypeIdentifier());
@@ -101,7 +101,7 @@ namespace ROMUtils
         AddOpcode(compressedData, 0, false);
 
         // Create the dynamically allocated char array
-        unsigned char *compressed = new unsigned char[compressedData.size()];
+        auto *compressed = new unsigned char[compressedData.size()];
         for (int i = 0; i < compressedData.size(); ++i)
         {
             compressed[i] = compressedData[i];

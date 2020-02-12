@@ -74,7 +74,7 @@ namespace LevelComponents
         // Load the door data
         std::vector<int> destinations;
         int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + LevelID * 4);
-        struct __DoorEntry *doorPtr = (struct __DoorEntry *) (ROMUtils::CurrentFile + doorStartAddress);
+        auto *doorPtr = (struct __DoorEntry *) (ROMUtils::CurrentFile + doorStartAddress);
         unsigned char *firstByte;
         int currentDoornum = 0;
         while (*(firstByte = (unsigned char *) doorPtr))
@@ -120,13 +120,13 @@ namespace LevelComponents
     /// </summary>
     Level::~Level()
     {
-        for (auto iter = doors.begin(); iter != doors.end(); ++iter)
+        for (auto & door : doors)
         {
-            delete *iter; // Delete doors
+            delete door; // Delete doors
         }
-        for (auto iter = rooms.begin(); iter != rooms.end(); ++iter)
+        for (auto & room : rooms)
         {
-            delete *iter; // Delete rooms
+            delete room; // Delete rooms
         }
     }
 
@@ -169,7 +169,7 @@ namespace LevelComponents
     /// </returns>
     int Level::GetTimeCountdownCounter(__LevelDifficulty LevelDifficulty)
     {
-        int a, b, c;
+        int a; int b; int c;
         a = b = c = 0;
         if (LevelDifficulty == HardDifficulty)
         {
@@ -198,18 +198,18 @@ namespace LevelComponents
     void Level::RedistributeDoor()
     {
         // Distribute door data to every room
-        for (unsigned int i = 0; i < doors.size(); ++i)
+        for (auto & door : doors)
         {
-            rooms[doors[i]->GetRoomID()]->AddDoor(doors[i]);
+            rooms[door->GetRoomID()]->AddDoor(door);
         }
 
         // Check if every Room have at least one Door, if not, set the entityset id to skip some problems
         // the code is only for avoiding crash
-        for (unsigned int i = 0; i < rooms.size(); ++i)
+        for (auto & room : rooms)
         {
-            if (rooms[i]->CountDoors() == 0)
+            if (room->CountDoors() == 0)
             {
-                rooms[i]->SetCurrentEntitySet(37);
+                room->SetCurrentEntitySet(37);
             }
         }
     }
@@ -227,11 +227,11 @@ namespace LevelComponents
     {
         std::vector<Door *> roomDoors;
         // Distribute door data
-        for (unsigned int i = 0; i < doors.size(); ++i)
+        for (auto & door : doors)
         {
-            if (doors[i]->GetRoomID() == (int) roomId)
+            if (door->GetRoomID() == (int) roomId)
             {
-                Door *newDoor = new Door(*doors[i]);
+                Door *newDoor = new Door(*door);
                 roomDoors.push_back(newDoor);
             }
         }
@@ -327,7 +327,7 @@ namespace LevelComponents
         if (rooms.end() != std::find_if(rooms.begin(), rooms.end(), [](Room *R) {
                 return R->IsCameraBoundaryDirty() &&
                        R->GetCameraControlType() == __CameraControlType::HasControlAttrs &&
-                       R->GetCameraControlRecords().size();
+                       !R->GetCameraControlRecords().empty();
             }))
         {
             const unsigned int GBAptrSentinel = 0x8000000 | WL4Constants::CameraRecordSentinel;

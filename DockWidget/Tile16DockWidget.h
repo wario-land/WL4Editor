@@ -29,10 +29,10 @@ private:
     int scalerate = 1;
     LevelComponents::Tileset *SelectedTileset = nullptr;
     QGraphicsScene *Tile16MAPScene = nullptr;
-    QGraphicsPixmapItem *SelectionBox;
-    unsigned short SelectedTile;
+    QGraphicsPixmapItem *SelectionBox{};
+    unsigned short SelectedTile{};
     // Function
-    void SetTileInfoText(QString str);
+    void SetTileInfoText(const QString& str);
 
 public:
     int SetTileset(int _tilesetIndex);

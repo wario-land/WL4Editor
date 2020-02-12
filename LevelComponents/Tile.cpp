@@ -107,7 +107,7 @@ namespace LevelComponents
     /// <param name="_palettes">
     /// Entire palette for the tileset this tile is a part of.
     /// </param>
-    Tile8x8::Tile8x8(unsigned char *data, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
+    Tile8x8::Tile8x8(const unsigned char *data, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
     {
         // Initialize the QImage data from data
         for (int i = 0; i < 8; ++i)
@@ -154,7 +154,7 @@ namespace LevelComponents
     /// </return>
     Tile8x8 *Tile8x8::CreateBlankTile(QVector<QRgb> *_palettes)
     {
-        Tile8x8 *t = new Tile8x8(_palettes);
+        auto *t = new Tile8x8(_palettes);
         for (int i = 0; i < 8; ++i)
         {
             for (int j = 0; j < 8; ++j)
@@ -210,7 +210,7 @@ namespace LevelComponents
     void Tile8x8::SetPaletteIndex(int index)
     {
         paletteIndex = index;
-        QImageW *newImage = new QImageW(*ImageData);
+        auto *newImage = new QImageW(*ImageData);
         newImage->setColorTable(palettes[paletteIndex]);
         ImageData = newImage;
 #ifndef NOCACHE
@@ -352,11 +352,11 @@ namespace LevelComponents
             ++ImageDataCache[image];
             return ImageDataCache.find(image).key();
         }
-        else
-        {
+        
+        
             ImageDataCache[image] = 1;
             return image;
-        }
+        
     }
 
     /// <summary>

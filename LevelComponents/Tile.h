@@ -113,7 +113,7 @@ namespace LevelComponents
 
     public:
         Tile8x8(int dataPtr, QVector<QRgb> *_palettes);
-        Tile8x8(unsigned char *data, QVector<QRgb> *_palettes);
+        Tile8x8(const unsigned char *data, QVector<QRgb> *_palettes);
         Tile8x8(Tile8x8 *other);
         Tile8x8(Tile8x8 *other, QVector<QRgb> *_palettes);
         void DrawTile(QPixmap *layerPixmap, int x, int y);
@@ -135,7 +135,7 @@ namespace LevelComponents
     class TileMap16 : public Tile
     {
     private:
-        Tile8x8 *TileData[4];
+        Tile8x8 *TileData[4]{};
 
     public:
         TileMap16() : Tile(TileTypeMap16) {}

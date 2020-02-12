@@ -56,7 +56,7 @@ public:
     void SetSelectedColorId(int newcolorId);
     void SetColor(int newcolorId);
     void CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile16);
-    void SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
+    void SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxPaletteID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
     int PaletteBrushValue() {return paletteBrushVal; }
     void SetTile16PaletteId(int tile16ID);
     ~TilesetEditDialog();

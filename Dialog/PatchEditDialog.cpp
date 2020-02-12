@@ -1,7 +1,7 @@
 #include "PatchEditDialog.h"
 #include "ui_PatchEditDialog.h"
 #include <QFileDialog>
-#include <ROMUtils.h>
+#include <utility> #include <ROMUtils.h>
 
 static QStringList PatchTypeNameSet;
 
@@ -36,7 +36,7 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegExpValidator(regExp, this));
 
     // Initialize the components with the patch entry item
-    InitializeComponents(patchEntry);
+    InitializeComponents(std::move(patchEntry));
 }
 
 /// <summary>
@@ -54,7 +54,7 @@ PatchEditDialog::~PatchEditDialog()
 /// <param name="patchEntry">
 /// The patch entry whose fields are used to initialize the dialog.
 /// </param>
-void PatchEditDialog::InitializeComponents(struct PatchEntryItem patchEntry)
+void PatchEditDialog::InitializeComponents(const struct PatchEntryItem& patchEntry)
 {
     ui->lineEdit_FilePath->setText(patchEntry.FileName);
     ui->comboBox_PatchType->setCurrentIndex(patchEntry.PatchType);

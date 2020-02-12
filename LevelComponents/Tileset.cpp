@@ -33,7 +33,7 @@ namespace LevelComponents
         for (int i = 0; i < 16; ++i)
         {
             int subPalettePtr = paletteAddress + i * 32;
-            unsigned short *tmpptr = (unsigned short*) (ROMUtils::CurrentFile + subPalettePtr);
+            auto *tmpptr = (unsigned short*) (ROMUtils::CurrentFile + subPalettePtr);
             ROMUtils::LoadPalette(&palettes[i], tmpptr);
         }
 
@@ -89,7 +89,7 @@ namespace LevelComponents
         map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
         for (int i = 0; i < Tile16DefaultNum; ++i)
         {
-            unsigned short *map16tilePtr = (unsigned short *) (ROMUtils::CurrentFile + map16ptr + i * 8);
+            auto *map16tilePtr = (unsigned short *) (ROMUtils::CurrentFile + map16ptr + i * 8);
             Tile8x8 *tiles[4];
             for (int j = 0; j < 4; ++j)
             {
@@ -127,7 +127,7 @@ namespace LevelComponents
     /// <remarks>
     /// the new instance should only be used when editing Tileset, it should be delete after this period.
     /// </remarks>
-    Tileset::Tileset(Tileset *old_tileset, int __TilesetID) :
+    Tileset::Tileset(Tileset *old_tileset, int  /*__TilesetID*/) :
         paletteAddress(old_tileset->paletteAddress),
         fgGFXptr(old_tileset->fgGFXptr),
         fgGFXlen(old_tileset->fgGFXlen),
@@ -258,9 +258,9 @@ namespace LevelComponents
             delete map16array[i];
         }
 
-        for (unsigned int i = 0; i < 16; ++i)
+        for (auto & palette : palettes)
         {
-            palettes[i].clear();
+            palette.clear();
         }
 
         delete Map16EventTable;

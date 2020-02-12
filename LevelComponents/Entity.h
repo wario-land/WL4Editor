@@ -70,7 +70,7 @@ namespace LevelComponents
         bool UnusedEntity = false;
         QVector<OAMTile *> OAMTiles;
         EntitySet *currentEntityset;
-        void OAMtoTiles(unsigned short *singleOAM);
+        void OAMtoTiles(const unsigned short *singleOAM);
         void ExtractSpritesTiles(int spritesFrameDataPtr, int frame);
     };
 } // namespace LevelComponents

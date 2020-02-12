@@ -24,7 +24,7 @@ namespace ROMUtils
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
-    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData,
+    unsigned int LayerRLECompress(unsigned int _layersize, const unsigned short *LayerData,
                                   unsigned char **OutputCompressedData);
     int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
 
@@ -64,15 +64,15 @@ namespace ROMUtils
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
-    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
+    unsigned int LayerRLECompress(unsigned int _layersize, const unsigned short *LayerData, unsigned char **OutputCompressedData);
     int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
-    bool SaveFile(QString fileName, QVector<struct SaveData> chunks,
-        std::function<void(QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
-        std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback);
-    bool SaveLevel(QString fileName);
-    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr);
+    bool SaveFile(const QSfilePathileName, QVector<struct SaveData> chunks,
+        const std::function<void(QVector<struct SaveData>, std::map<int, int>)>& ChunkAllocationCallback,
+        const std::function<void(unsigned char*, std::map<int, int>)>& PostProcessingCallback);
+    bool SaveLevel(QString filePath);
+    void LoadPalette(QVector<QRgb> *palette, const unsigned short *dataptr);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
 
     // Global variables

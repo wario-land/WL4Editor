@@ -59,7 +59,7 @@ namespace LevelComponents
         std::vector<Room *> rooms;
         std::string LevelName;
         std::vector<Door *> doors;
-        __LevelHeader LevelHeader;
+        __LevelHeader LevelHeader{};
         enum __passage passage;
         enum __stage stage;
         unsigned int LevelID;

@@ -150,25 +150,25 @@ void DoorConfigDialog::UpdateCurrentDoorData()
 void DoorConfigDialog::StaticInitialization()
 {
     // Initialize the selections for the Door type
-    for (unsigned int i = 0; i < sizeof(DoortypeSetData) / sizeof(DoortypeSetData[0]); ++i)
+    for (auto i : DoortypeSetData)
     {
-        DoortypeSet << DoortypeSetData[i];
+        DoortypeSet << i;
     }
 
     // Initialize the selections for the Entity name
-    for (unsigned int i = 0; i < sizeof(EntitynameSetData) / sizeof(EntitynameSetData[0]); ++i)
+    for (auto i : EntitynameSetData)
     {
-        EntitynameSet << EntitynameSetData[i];
+        EntitynameSet << i;
     }
 
     // Initialize all the Entitysets and the Entities pointers with nullptr
-    for (unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
+    for (auto & entitiesset : entitiessets)
     {
-        entitiessets[i] = nullptr;
+        entitiesset = nullptr;
     }
-    for (unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
+    for (auto & entity : entities)
     {
-        entities[i] = nullptr;
+        entity = nullptr;
     }
 }
 
@@ -201,17 +201,17 @@ void DoorConfigDialog::EntitySetsInitialization()
 void DoorConfigDialog::EntitySetsDeconstruction()
 {
     // Initialize all the entitysets
-    for (unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
+    for (auto & entitiesset : entitiessets)
     {
-        if (entitiessets[i])
-            delete entitiessets[i];
+        if (entitiesset)
+            delete entitiesset;
     }
 
     // Initialize all the Entity
-    for (unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
+    for (auto & entity : entities)
     {
-        if (entities[i])
-            delete entities[i];
+        if (entity)
+            delete entity;
     }
 }
 
@@ -221,10 +221,10 @@ void DoorConfigDialog::EntitySetsDeconstruction()
 void DoorConfigDialog::RenderGraphicsView_Preview()
 {
     QGraphicsScene *oldScene = ui->GraphicsView_Preview->scene();
-    if (oldScene)
-    {
+    
+    
         delete oldScene;
-    }
+    
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::FullRender);
     tparam.tileX = tparam.tileY = 0;
     tparam.tileID = (unsigned short) 0;
@@ -246,10 +246,10 @@ void DoorConfigDialog::RenderGraphicsView_Preview()
 void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
 {
     QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
-    if (oldScene)
-    {
+    
+    
         delete oldScene;
-    }
+    
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::FullRender);
     tparam.tileX = tparam.tileY = 0;
     tparam.tileID = (unsigned short) 0;
@@ -352,7 +352,7 @@ void DoorConfigDialog::UpdateComboBoxEntitySet()
 /// <sumary>
 void DoorConfigDialog::UpdateTableView()
 {
-    EntityFilterTableModel *model = static_cast<EntityFilterTableModel *>(ui->TableView_EntityFilter->model());
+    auto *model = dynamic_cast<EntityFilterTableModel *>(ui->TableView_EntityFilter->model());
     model->clear();
     for (const auto &item : model->entities)
     {
@@ -361,18 +361,18 @@ void DoorConfigDialog::UpdateTableView()
             continue;
 
         int row = model->rowCount();
-        QStandardItem *checkbox = new QStandardItem;
+        auto *checkbox = new QStandardItem;
         checkbox->setCheckable(true);
         checkbox->setCheckState(Qt::Unchecked);
         model->setItem(row, 0, checkbox);
 
         // entity name item
-        QStandardItem *entityName = new QStandardItem(item.entityName);
+        auto *entityName = new QStandardItem(item.entityName);
         // QStandardItem *entityName = new QStandardItem(QString::number(row));
         model->setItem(row, 1, entityName);
 
         // pixmap item
-        QStandardItem *imageItem = new QStandardItem;
+        auto *imageItem = new QStandardItem;
         imageItem->setData(QVariant(item.entityImage), Qt::DecorationRole);
         model->setItem(row, 2, imageItem);
 
@@ -391,7 +391,7 @@ void DoorConfigDialog::UpdateTableView()
 /// </param>
 void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
 {
-    EntityFilterTableModel *model = static_cast<EntityFilterTableModel *>(ui->TableView_EntityFilter->model());
+    auto *model = dynamic_cast<EntityFilterTableModel *>(ui->TableView_EntityFilter->model());
     const TableEntityItem &it = model->entities[item->row()];
 
     if (item->checkState() == Qt::Checked)
@@ -456,10 +456,10 @@ void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int
     else
     {
         QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
-        if (oldScene)
-        {
+        
+        
             delete oldScene; // UI automatically update
-        }
+        
     }
 }
 
@@ -596,14 +596,14 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
     if (index == -1)
         return;
     int currentEntitySetId = tmpCurrentRoom->GetDoor(DoorID)->GetEntitySetID();
-    if (IsInitialized == true)
+    if (IsInitialized)
         currentEntitySetId = ui->ComboBox_EntitySetID->currentText().toInt();
     ui->TextEdit_AllTheEntities->clear();
     std::vector<LevelComponents::EntitySetinfoTableElement> currentEntityTable =
         entitiessets[currentEntitySetId]->GetEntityTable();
-    for (unsigned int i = 0; i < currentEntityTable.size(); ++i)
+    for (auto & i : currentEntityTable)
     {
-        QString currentname = EntitynameSetData[currentEntityTable[i].Global_EntityID - 1];
+        QString currentname = EntitynameSetData[i.Global_EntityID - 1];
         ui->TextEdit_AllTheEntities->append(currentname);
     }
     tmpCurrentRoom->GetDoor(DoorID)->SetEntitySetID((unsigned char) currentEntitySetId);
@@ -632,7 +632,7 @@ EntityFilterTableModel::~EntityFilterTableModel()
     foreach (TableEntityItem item, entities)
     {
         // don't delete
-        item.entity = NULL;
+        item.entity = nullptr;
     }
 }
 
@@ -653,7 +653,7 @@ void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
 /// </summary>
 void DoorConfigDialog::on_pushButton_DeselectAll_clicked()
 {
-    EntityFilterTableModel *model = static_cast<EntityFilterTableModel *>(ui->TableView_EntityFilter->model());
+    auto *model = dynamic_cast<EntityFilterTableModel *>(ui->TableView_EntityFilter->model());
     for (int i = 0; i < model->rowCount(); ++i)
     {
         if (model->item(i, 0)->checkState() == Qt::Checked)

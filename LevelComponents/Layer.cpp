@@ -53,7 +53,7 @@ namespace LevelComponents
             //   D E F G H I      7 8 9 G H I
             if (ROMUtils::CurrentFile[layerDataPtr] == 1)
             {
-                unsigned short *rearranged = new unsigned short[Width * Height * 2];
+                auto *rearranged = new unsigned short[Width * Height * 2];
                 for (int j = 0; j < 32; ++j)
                 {
                     for (int k = 0; k < 32; ++k)
@@ -88,7 +88,7 @@ namespace LevelComponents
         memcpy(LayerData, layer.LayerData, layerDataSize);
         if (MappingType == LayerMappingType::LayerTile8x8)
             foreach (Tile *tile, layer.tiles)
-                tiles.push_back(new Tile8x8((Tile8x8 *) tile));
+                tiles.push_back(new Tile8x8(dynamic_cast<Tile8x8 *>( tile)));
         else // Map16 tiles are not deep copied
             foreach (Tile *tile, layer.tiles)
                 tiles.push_back(tile);
@@ -165,7 +165,7 @@ namespace LevelComponents
         if (MappingType == LayerMap16)
         {
             // Re-initialize tile vector
-            if (tiles.size() != 0)
+            if (!tiles.empty())
                 tiles.clear();
             tiles = std::vector<Tile *>(Width * Height);
 
@@ -180,7 +180,7 @@ namespace LevelComponents
         {
             // Re-initialize tile vector
             DeconstructTiles();
-            if (tiles.size() != 0)
+            if (!tiles.empty())
                 tiles.clear();
             tiles = std::vector<Tile *>(Width * Height);
 
@@ -189,7 +189,7 @@ namespace LevelComponents
             for (int i = 0; i < Width * Height; ++i)
             {
                 unsigned short tileData = LayerData[i];
-                Tile8x8 *newTile = new Tile8x8(tile8x8[0x200 + (tileData & 0x3FF)]);
+                auto *newTile = new Tile8x8(tile8x8[0x200 + (tileData & 0x3FF)]);
                 newTile->SetFlipX((tileData & (1 << 10)) != 0);
                 newTile->SetFlipY((tileData & (1 << 11)) != 0);
                 newTile->SetPaletteIndex((tileData >> 12) & 0xF);
@@ -244,7 +244,7 @@ namespace LevelComponents
         else if (MappingType == LayerTile8x8)
         {
             // If tile8x8 type, then new Tile8x8 objects must be constructed from data
-            Tile8x8 *newTile = new Tile8x8(tileset->GetTile8x8arrayPtr()[0x200 + (TileID & 0x3FF)]);
+            auto *newTile = new Tile8x8(tileset->GetTile8x8arrayPtr()[0x200 + (TileID & 0x3FF)]);
             newTile->SetFlipX((TileID & (1 << 10)) != 0);
             newTile->SetFlipY((TileID & (1 << 11)) != 0);
             newTile->SetPaletteIndex((TileID >> 12) & 0xF);
@@ -265,9 +265,9 @@ namespace LevelComponents
         if (MappingType ==
             LayerTile8x8) // If this is mapping type tile8x8, then the tiles are heap copies of tileset tiles.
         {
-            for (auto iter = tiles.begin(); iter != tiles.end(); ++iter)
+            for (auto & tile : tiles)
             {
-                delete (*iter);
+                delete tile;
             }
         }
         else
@@ -299,10 +299,10 @@ namespace LevelComponents
         Height = layerHeight;
         dirty = Enabled = true;
         MappingType = LayerMap16;
-        if (LayerData)
-        {
+        
+        
             delete[] LayerData;
-        }
+        
         LayerData = new unsigned short[layerWidth * layerHeight];
         memset(LayerData, 0, 2 * layerWidth * layerHeight);
     }
@@ -321,8 +321,8 @@ namespace LevelComponents
     /// </param>
     void Layer::ChangeDimensions(int newWidth, int newHeight)
     {
-        unsigned short *tmpLayerData = new unsigned short[newWidth * newHeight];
-        int boundX = qMin(Width, newWidth), boundY = qMin(Height, newHeight);
+        auto *tmpLayerData = new unsigned short[newWidth * newHeight];
+        int boundX = qMin(Width, newWidth); int boundY = qMin(Height, newHeight);
         unsigned short defaultValue = 0x0000;
         for (int i = 0; i < boundY; ++i)
         {
@@ -357,7 +357,7 @@ namespace LevelComponents
         unsigned char *dataBuffer;
         unsigned int compressedSize = ROMUtils::LayerRLECompress(Width * Height, LayerData, &dataBuffer);
         unsigned int sizeInfoLen = MappingType == LayerMap16 ? 2 : 1;
-        unsigned char *dataChunk = new unsigned char[sizeInfoLen + compressedSize];
+        auto *dataChunk = new unsigned char[sizeInfoLen + compressedSize];
         memcpy(dataChunk + sizeInfoLen, dataBuffer, compressedSize);
         delete[] dataBuffer;
         if (MappingType == LayerMap16)

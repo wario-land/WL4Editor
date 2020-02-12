@@ -1,7 +1,7 @@
 #include "PatchManagerTableView.h"
 #include <cassert>
 #include <QModelIndex>
-
+#include <utility> 
 /// <summary>
 /// Construct an instance of the PatchManagerTableView.
 /// </summary>
@@ -113,7 +113,7 @@ struct PatchEntryItem PatchManagerTableView::GetSelectedEntry()
 /// </param>
 void PatchManagerTableView::AddEntry(struct PatchEntryItem entry)
 {
-    EntryTableModel.AddEntry(entry);
+    EntryTableModel.AddEntry(std::move(entry));
     UpdateTableView();
 }
 
@@ -128,7 +128,7 @@ void PatchManagerTableView::AddEntry(struct PatchEntryItem entry)
 /// </param>
 void PatchManagerTableView::UpdateEntry(int index, struct PatchEntryItem entry)
 {
-    EntryTableModel.entries[index] = entry;
+    EntryTableModel.entries[index] = std::move(entry);
     UpdateTableView();
     selectRow(index);
 }

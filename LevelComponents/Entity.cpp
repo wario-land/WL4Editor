@@ -77,7 +77,7 @@ namespace LevelComponents
     /// <summary>
     /// Convert OAM data to Tile8x8 and save them into the entityTiles QVector.
     /// </summary>
-    void Entity::OAMtoTiles(unsigned short *singleOAM)
+    void Entity::OAMtoTiles(const unsigned short *singleOAM)
     {
         // Obtain short values for the OAM tile
         unsigned short attr0 = singleOAM[0];
@@ -85,7 +85,7 @@ namespace LevelComponents
         unsigned short attr2 = singleOAM[2];
 
         // Obtain the tile parameters for the OAM tile
-        struct OAMTile *newOAM = new struct OAMTile();
+        auto *newOAM = new struct OAMTile();
         newOAM->Xoff = (attr1 & 0xFF) - (attr1 & 0x100); // Offset of OAM tile from entity origin
         newOAM->Yoff = (attr0 & 0x7F) - (attr0 & 0x80);
         newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
@@ -96,7 +96,7 @@ namespace LevelComponents
         newOAM->OAMheight = OAMDimensions[2 * (SZ * 3 + SH) + 1];
         int tileID = attr2 & 0x3FF;
         int palNum = (attr2 >> 0xB) & 0xF;
-        SemiTransparent = (((attr0 >> 0xA) & 3) == 1) ? true : false;
+        SemiTransparent = ((attr0 >> 0xA) & 3) == 1;
         Priority = (attr2 >> 0xA) & 3;
 
         // Create the tile8x8 objects
@@ -105,10 +105,10 @@ namespace LevelComponents
         {
             for (int x = 0; x < newOAM->OAMwidth; ++x)
             {
-                struct EntityTile *entityTile = new struct EntityTile();
+                auto *entityTile = new struct EntityTile();
                 entityTile->deltaX = x * 8;
                 entityTile->deltaY = y * 8;
-                int offsetID, offsetPal;
+                int offsetID; int offsetPal;
                 // Bosses' offsetID are loaded directly
                 if ((EntityGlobalID > 0x10) && (EntityGlobalID != 0x18) && (EntityGlobalID != 0x2C) &&
                     (EntityGlobalID != 0x51) && (EntityGlobalID != 0x69) && (EntityGlobalID != 0x76) &&
@@ -168,7 +168,7 @@ namespace LevelComponents
                 if (EntityGlobalID == 0x44)
                     offsetPal = 0;
 
-                Tile8x8 *newTile = new Tile8x8(tileData[offsetID]);
+                auto *newTile = new Tile8x8(tileData[offsetID]);
                 newTile->SetPaletteIndex(offsetPal);
                 entityTile->objTile = newTile;
                 newOAM->tile8x8.push_back(entityTile);
@@ -202,13 +202,13 @@ namespace LevelComponents
     /// </returns>
     QImage Entity::Render()
     {
-        int maxX = 0x80000000, maxY = 0x80000000;
+        int maxX = 0x80000000; int maxY = 0x80000000;
         foreach (OAMTile *ot, OAMTiles)
         {
             maxX = qMax(maxX, ot->OAMwidth * 8 + (ot->Xoff));
             maxY = qMax(maxY, ot->OAMheight * 8 + (ot->Yoff));
         }
-        int width = maxX - xOffset, height = maxY - yOffset;
+        int width = maxX - xOffset; int height = maxY - yOffset;
         QPixmap pm(width, height);
         pm.fill(Qt::transparent);
         if (UnusedEntity)
@@ -230,8 +230,8 @@ namespace LevelComponents
     /// </summary>
     void Entity::ExtractSpritesTiles(int spritesFrameDataPtr, int frame)
     {
-        unsigned short *u16_attribute = (unsigned short *) (ROMUtils::CurrentFile + spritesFrameDataPtr);
-        int offset = 0, objectnum = 0, nowframe = 0;
+        auto *u16_attribute = (unsigned short *) (ROMUtils::CurrentFile + spritesFrameDataPtr);
+        int offset = 0; int objectnum = 0; int nowframe = 0;
         while (nowframe <= frame)
         {
             objectnum = (int) u16_attribute[offset];

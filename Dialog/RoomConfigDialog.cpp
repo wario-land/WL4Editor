@@ -147,27 +147,27 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
 void RoomConfigDialog::StaticComboBoxesInitialization()
 {
     // Initialize the selections for the tilesets
-    for (unsigned int i = 0; i < sizeof(TilesetNamesSetData) / sizeof(TilesetNamesSetData[0]); ++i)
+    for (auto i : TilesetNamesSetData)
     {
-        TilesetNamesSet << TilesetNamesSetData[i];
+        TilesetNamesSet << i;
     }
 
     // Initialize the selections for the layer priority types
-    for (unsigned int i = 0; i < sizeof(LayerPrioritySetData) / sizeof(LayerPrioritySetData[0]); ++i)
+    for (auto i : LayerPrioritySetData)
     {
-        LayerPrioritySet << LayerPrioritySetData[i];
+        LayerPrioritySet << i;
     }
 
     // Initialize the selections for the alpha blending types
-    for (unsigned int i = 0; i < sizeof(AlphaBlendAttrsSetData) / sizeof(AlphaBlendAttrsSetData[0]); ++i)
+    for (auto i : AlphaBlendAttrsSetData)
     {
-        AlphaBlendAttrsSet << AlphaBlendAttrsSetData[i];
+        AlphaBlendAttrsSet << i;
     }
 
     // Initialize the selections for the types of layer mapping for layer 0
-    for (unsigned int i = 0; i < sizeof(Layer0MappingTypeParamSetData) / sizeof(Layer0MappingTypeParamSetData[0]); ++i)
+    for (auto i : Layer0MappingTypeParamSetData)
     {
-        Layer0MappingTypeParamSet << Layer0MappingTypeParamSetData[i];
+        Layer0MappingTypeParamSet << i;
     }
 
     // Initialize the selections for the tilesets's available BGs
@@ -259,18 +259,18 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         std::vector<int> BGlayers = BGLayerdataPtrs[index];
         ui->ComboBox_BGLayerPicker->clear();
         QStringList elements;
-        if (BGlayers.size())
+        if (!BGlayers.empty())
         {
-            for (auto iter = BGlayers.begin(); iter != BGlayers.end(); ++iter)
+            for (int & BGlayer : BGlayers)
             {
-                elements << QString::number(*iter, 16).toUpper();
+                elements << QString::number(BGlayer, 16).toUpper();
             }
         }
         else
         {
             elements << QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper();
         }
-        if (BGLayerdataPtrs[index].size() > 0)
+        if (!BGLayerdataPtrs[index].empty())
         {
             ui->CheckBox_BGLayerEnable->setChecked(true);
         }
@@ -307,7 +307,7 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
 void RoomConfigDialog::on_CheckBox_BGLayerEnable_stateChanged(int state)
 {
     int tilesetIndex = ui->ComboBox_TilesetID->currentIndex();
-    ui->ComboBox_BGLayerPicker->setEnabled(state == Qt::Checked && BGLayerdataPtrs[tilesetIndex].size());
+    ui->ComboBox_BGLayerPicker->setEnabled(state == Qt::Checked && !BGLayerdataPtrs[tilesetIndex].empty());
     ui->CheckBox_BGLayerAutoScroll->setChecked(false);
     ui->CheckBox_BGLayerAutoScroll->setEnabled(state == Qt::Checked);
     if (ui->ComboBox_BGLayerPicker->count() > 0)
@@ -317,11 +317,11 @@ void RoomConfigDialog::on_CheckBox_BGLayerEnable_stateChanged(int state)
             ui->ComboBox_BGLayerPicker->removeItem(i);
         }
     }
-    for (unsigned int i = 0; i < BGLayerdataPtrs[tilesetIndex].size(); ++i)
+    for (int i : BGLayerdataPtrs[tilesetIndex])
     {
-        if (BGLayerdataPtrs[tilesetIndex][i])
+        if (i)
         {
-            ui->ComboBox_BGLayerPicker->addItem(QString::number(BGLayerdataPtrs[tilesetIndex][i], 16).toUpper());
+            ui->ComboBox_BGLayerPicker->addItem(QString::number(i, 16).toUpper());
         }
     }
 }

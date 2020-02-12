@@ -33,13 +33,13 @@ void EntitySetDockWidget::RenderEntityAndResetInfo()
 {
     // Render Entity
     QGraphicsScene *scene = ui->graphicsView_CurrentEntity->scene();
-    if (scene)
-    {
+    
+    
         delete scene;
-    }
+    
     LevelComponents::Entity *currentEntityPtr = currentRoom->GetCurrentEntityListSource()[currentEntityId];
     QImage EntityImage = currentEntityPtr->Render();
-    int Entitywidth, Entityheight;
+    int Entitywidth; int Entityheight;
     Entitywidth = EntityImage.width();
     Entityheight = EntityImage.height();
     scene = new QGraphicsScene(0, 0, Entitywidth, Entityheight);

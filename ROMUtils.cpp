@@ -4,11 +4,11 @@
 #include <WL4EditorWindow.h>
 #include <cassert>
 #include <iostream>
-
+#include <utility> 
 extern WL4EditorWindow *singleton;
 
 // Helper function to find the number of characters matched in ptr to a pattern
-static inline int StrMatch(unsigned char *ptr, const char *pattern)
+static inline int StrMatch(const unsigned char *ptr, const char *pattern)
 {
     int matched = 0;
     do
@@ -23,7 +23,7 @@ static inline int StrMatch(unsigned char *ptr, const char *pattern)
 // Helper function to validate RATS at an address
 static inline bool ValidRATS(unsigned char *ptr)
 {
-    if (strncmp(reinterpret_cast<const char *>(ptr), "STAR", 4))
+    if (strncmp(reinterpret_cast<const char *>(ptr), "STAR", 4) != 0)
         return false;
     short chunkLen = *reinterpret_cast<short *>(ptr + 4);
     short chunkComp = *reinterpret_cast<short *>(ptr + 6);
@@ -85,7 +85,7 @@ namespace ROMUtils
     /// <return>A pointer to decompressed data.</return>
     unsigned char *LayerRLEDecompress(int address, size_t outputSize)
     {
-        unsigned char *OutputLayerData = new unsigned char[outputSize];
+        auto *OutputLayerData = new unsigned char[outputSize];
         int runData;
 
         for (int i = 0; i < 2; i++)
@@ -93,7 +93,7 @@ namespace ROMUtils
             unsigned char *dst = OutputLayerData + i;
             if (ROMUtils::CurrentFile[address++] == 1)
             {
-                while (1)
+                while (true)
                 {
                     int ctrl = CurrentFile[address++];
                     if (!ctrl)
@@ -108,7 +108,7 @@ namespace ROMUtils
                         return nullptr;
                     }
 
-                    else if (ctrl & 0x80)
+                    if (ctrl & 0x80)
                     {
                         runData = ctrl & 0x7F;
                         for (int j = 0; j < runData; j++)
@@ -132,7 +132,7 @@ namespace ROMUtils
             }
             else // RLE16
             {
-                while (1)
+                while (true)
                 {
                     int ctrl = (static_cast<int>(CurrentFile[address]) << 8) | CurrentFile[address + 1];
                     address += 2; // offset + 2
@@ -191,11 +191,11 @@ namespace ROMUtils
     /// unsigned char pointer to the compressed layer data.
     /// </param>
     /// <return>the length of compressed data.</return>
-    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData,
+    unsigned int LayerRLECompress(unsigned int _layersize, const unsigned short *LayerData,
                                   unsigned char **OutputCompressedData)
     {
         // Separate short data into char arrays
-        unsigned char *separatedBytes = new unsigned char[_layersize * 2];
+        auto *separatedBytes = new unsigned char[_layersize * 2];
         for (unsigned int i = 0; i < _layersize; ++i)
         {
             unsigned short s = LayerData[i];
@@ -216,7 +216,7 @@ namespace ROMUtils
                                  : (RLEMetadata *) &Upper16Bit;
 
         // Create the data to return
-        unsigned int lowerLength = Lower->GetCompressedLength(), upperLength = Upper->GetCompressedLength();
+        unsigned int lowerLength = Lower->GetCompressedLength(); unsigned int upperLength = Upper->GetCompressedLength();
         unsigned int size = lowerLength + upperLength + 1;
         *OutputCompressedData = new unsigned char[size];
         void *lowerData = Lower->GetCompressedData();
@@ -411,11 +411,11 @@ namespace ROMUtils
                 {
                     return startAddr;
                 }
-                else
-                {
+                
+                
                     // Invalid RATS or chunk type not found: advance
                     startAddr += 4;
-                }
+                
             }
         }
         return 0;
@@ -471,12 +471,12 @@ namespace ROMUtils
     /// <returns>
     /// True if the save was successful.
     /// </returns>
-    bool SaveFile(QString filePath, QVector<struct SaveData> chunks,
-        std::function<void(QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
-        std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback)
+    bool SaveFile(const QString& filePath, QVector<struct SaveData> chunks,
+        const std::function<void(QVector<struct SaveData>, std::map<int, int>)>& ChunkAllocationCallback,
+        const std::function<void(unsigned char*, std::map<int, int>)>& PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
-        unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
+        auto *TempFile = (unsigned char *) malloc(CurrentFileSize);
         unsigned int TempLength = CurrentFileSize;
         memcpy(TempFile, CurrentFile, CurrentFileSize);
         std::sort(chunks.begin(), chunks.end(),
@@ -520,7 +520,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                     unsigned int newSize = (TempLength << 1) & ~0x7FFFFF;
                     if(newSize <= 0x2000000)
                     {
-                        unsigned char *newTempFile = (unsigned char*) realloc(TempFile, newSize);
+                        auto *newTempFile = (unsigned char*) realloc(TempFile, newSize);
                         if(!newTempFile)
                         {
                             // Realloc failed due to system memory constraints
@@ -608,7 +608,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                      QMessageBox::Ok, QMessageBox::Ok);
                 goto error;
             }
-            unsigned short chunkLen = (unsigned short) chunk.size;
+            auto chunkLen = (unsigned short) chunk.size;
             *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
             *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
 
@@ -654,7 +654,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
 
         // Clean up heap data and return
         success = true;
-        if (0)
+        if (false)
         {
         error:
             free(TempFile);
@@ -704,7 +704,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         unsigned int roomHeaderInROM;
 
         // Save the level
-        bool ret = SaveFile(filePath, chunks, nullptr,
+        bool ret = SaveFile(std::move(filePath), chunks, nullptr,
             [levelHeaderPointer, currentLevel, roomHeaderChunk, &roomHeaderInROM]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
@@ -740,9 +740,9 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
         for(unsigned int i = 0; i < rooms.size(); ++i)
         {
-            struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
+            auto *roomHeader = (struct LevelComponents::__RoomHeader*)
                 (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
-            unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
+            auto *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
             LevelComponents::Room *room = rooms[i];
             room->SetCameraBoundaryDirty(false);
             for(unsigned int j = 0; j < 4; ++j)
@@ -771,7 +771,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
     /// <param name="dataptr">
     /// data pointer which keeps RGB55 palette data.
     /// </param>
-    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr)
+    void LoadPalette(QVector<QRgb> *palette, const unsigned short *dataptr)
     {
         // First color is transparent
         palette->push_back(0);

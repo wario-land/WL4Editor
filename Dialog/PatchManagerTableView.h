@@ -14,7 +14,7 @@ public:
     ~PatchEntryTableModel() { };
     void AddEntry(struct PatchEntryItem entry) { entries.append(entry); }
     QVector<struct PatchEntryItem> entries;
-    void RemoveEntries(QModelIndexList entries);
+    void RemoveEntries(QModelIndexList entryList);
 
 private:
     QWidget *parent;

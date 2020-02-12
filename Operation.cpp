@@ -24,9 +24,8 @@ void PerformOperation(struct OperationParams *operation)
     if (operation->tileChange)
     {
         room = singleton->GetCurrentRoom();
-        for (auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
+        for (auto tcp : operation->tileChangeParams)
         {
-            struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
             unsigned int index;
             if (!tcp->targetLayer)
@@ -83,7 +82,7 @@ void PerformOperation(struct OperationParams *operation)
                 if (currentRoom->IsNewEntityPositionInsideRoom(om->nextPositionX, om->nextPositionY))
                 {
                     currentRoom->SetEntityPosition(om->nextPositionX, om->nextPositionY, om->objectID);
-                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
+                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, om->objectID);
                     int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
                     singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
                     singleton->SetUnsavedChanges(true);
@@ -126,9 +125,8 @@ void BackTrackOperation(struct OperationParams *operation)
     if (operation->tileChange)
     {
         room = singleton->GetCurrentRoom();
-        for (auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
+        for (auto tcp : operation->tileChangeParams)
         {
-            struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
             unsigned int index;
             if (!tcp->targetLayer)
@@ -186,7 +184,7 @@ void BackTrackOperation(struct OperationParams *operation)
                 if (currentRoom->IsNewEntityPositionInsideRoom(om->previousPositionX, om->previousPositionY))
                 {
                     currentRoom->SetEntityPosition(om->previousPositionX, om->previousPositionY, om->objectID);
-                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
+                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, om->objectID);
                     int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
                     singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
                 }
@@ -296,14 +294,14 @@ void RedoOperation()
 /// </remarks>
 void ResetUndoHistory()
 {
-    for (unsigned int i = 0; i < sizeof(operationHistory) / sizeof(operationHistory[0]); ++i)
+    for (auto & i : operationHistory)
     {
         // Deconstruct the dynamically allocated operation structs within the history queue
-        for (unsigned int j = 0; j < operationHistory[i].size(); ++j)
+        for (unsigned int j = 0; j < i.size(); ++j)
         {
-            delete operationHistory[i][j];
+            delete i[j];
         }
-        operationHistory[i].clear();
+        i.clear();
     }
 
     // Re-initialize all the operation indexes to zero

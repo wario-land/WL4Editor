@@ -26,7 +26,7 @@ private slots:
 
 private:
     Ui::PatchEditDialog *ui;
-    void InitializeComponents(struct PatchEntryItem patchEntry);
+    void InitializeComponents(const struct PatchEntryItem& patchEntry);
     QRegExpValidator *addressvalidator;
 };
 
