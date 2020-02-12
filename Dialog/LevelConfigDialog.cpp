@@ -2,6 +2,7 @@
 #include "ui_LevelConfigDialog.h"
 
 #include <QPushButton>
+#include <QString>
 
 QRegExp LevelnameRegx("^[A-Za-z0-9\\s]+$");
 QRegExp TimerRegx("^[0-9]:[0-5][0-9]$");
@@ -52,7 +53,7 @@ LevelConfigDialog::~LevelConfigDialog() { delete ui; }
 /// <param name="SHModeTimer">
 /// Number of seconds after pressing the frog switch in super hard mode.
 /// </param>
-void LevelConfigDialog::InitTextBoxes(std::string _levelname, int HModeTimer, int NModeTimer, int SHModeTimer)
+void LevelConfigDialog::InitTextBoxes(QString _levelname, int HModeTimer, int NModeTimer, int SHModeTimer)
 {
     // trimmed(_levelname) and Show LevelName
     _levelname.erase(0, _levelname.find_first_not_of(' '));
@@ -86,7 +87,7 @@ void LevelConfigDialog::InitTextBoxes(std::string _levelname, int HModeTimer, in
 /// <return>
 /// The level name, padded to 26 characters with spaces.
 /// </return>
-std::string LevelConfigDialog::GetPaddedLevelName()
+QString LevelConfigDialog::GetPaddedLevelName()
 {
     QString tmplevelname = ui->LevelName_TextBox->text();
     int a;

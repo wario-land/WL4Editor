@@ -6,7 +6,7 @@
 #include <functional>
 #include <map>
 #include <string>
-#include <vector>
+#include <QVector>
 
 #include "LevelComponents/Tileset.h"
 #include "WL4Constants.h"

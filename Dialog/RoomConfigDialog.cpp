@@ -1,7 +1,7 @@
 #include "RoomConfigDialog.h"
 #include "ui_RoomConfigDialog.h"
 
-#include <Qstring>
+#include <QString>
 
 // constexpr declarations for the initializers in the header
 constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
@@ -12,7 +12,7 @@ constexpr unsigned int RoomConfigDialog::BGLayerdataPtrsData[166];
 
 // static variables used by RoomConfigDialog
 static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet, Layer0MappingTypeParamSet;
-static std::vector<int> BGLayerdataPtrs[0x5C];
+static QVector<int> BGLayerdataPtrs[0x5C];
 
 /// <summary>
 /// Construct the instance of the RoomConfigDialog.
@@ -52,7 +52,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
 
     // Initialize the selection for the BG selection combobox
     bool CurrentBGSelectionAvailable        = false;
-    std::vector<int> CurrentBGLayerdataPtrs = BGLayerdataPtrs[CurrentRoomParams->CurrentTilesetIndex];
+    QVector<int> CurrentBGLayerdataPtrs = BGLayerdataPtrs[CurrentRoomParams->CurrentTilesetIndex];
     for (unsigned int i = 0; i < CurrentBGLayerdataPtrs.size(); ++i)
     {
         if (CurrentRoomParams->BackgroundLayerDataPtr == CurrentBGLayerdataPtrs[i])
@@ -174,7 +174,7 @@ void RoomConfigDialog::StaticComboBoxesInitialization()
     // Initialize the selections for the tilesets's available BGs
     for (unsigned int i = 0, idx = 0; idx < sizeof(BGLayerdataPtrsData) / sizeof(BGLayerdataPtrsData[0]); ++i)
     {
-        std::vector<int> vec;
+        QVector<int> vec;
         int count = BGLayerdataPtrsData[idx++];
         while (count--)
         {
@@ -257,7 +257,7 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         delete oldTileset;
 
         // Update the available BG layers to choose from
-        std::vector<int> BGlayers = BGLayerdataPtrs[index];
+        QVector<int> BGlayers = BGLayerdataPtrs[index];
         ui->ComboBox_BGLayerPicker->clear();
         QStringList elements;
         if (!BGlayers.empty())

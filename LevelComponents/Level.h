@@ -3,8 +3,8 @@
 
 #include "Door.h"
 #include "Room.h"
-#include <string>
-#include <vector>
+#include <QString>
+#include <QVector>
 
 namespace LevelComponents
 {
@@ -56,9 +56,9 @@ namespace LevelComponents
     class Level
     {
     private:
-        std::vector<Room *> rooms;
-        std::string LevelName;
-        std::vector<Door *> doors;
+        QVector<Room *> rooms;
+        QString LevelName;
+        QVector<Door *> doors;
         __LevelHeader LevelHeader{};
         enum __passage passage;
         enum __stage stage;
@@ -70,12 +70,12 @@ namespace LevelComponents
         Level(enum __passage passage, enum __stage stage);
         void SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int seconds);
         int GetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty);
-        std::vector<Door *> GetDoors() { return doors; } // get Doors without copying the data
-        std::vector<Room *> GetRooms() { return rooms; }
-        std::string GetLevelName() { return LevelName; }
-        void SetLevelName(std::string newlevelname) { LevelName = newlevelname; }
+        QVector<Door *> GetDoors() { return doors; } // get Doors without copying the data
+        QVector<Room *> GetRooms() { return rooms; }
+        QString GetLevelName() { return LevelName; }
+        void SetLevelName(QString newlevelname) { LevelName = newlevelname; }
         void RedistributeDoor();
-        std::vector<Door *> GetRoomDoors(unsigned int roomId); // get Doors and copy the data
+        QVector<Door *> GetRoomDoors(unsigned int roomId); // get Doors and copy the data
         void DeleteDoor(int globalDoorIndex);
         void AddDoor(Door *newdoor);
         ~Level();
