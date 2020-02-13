@@ -90,7 +90,7 @@ namespace ROMUtils
     /* TODO(all): THIS NEEDS A REFACTOR, ASAP 
         Maybe we can use std::optional as we're targetting C++17 now.
     */
-    unsigned char *LayerRLEDecompress(int address, size_t outputSize)
+    std::vector<unsigned char> LayerRLEDecompress(int address, size_t outputSize)
     {
         auto OutputLayerData = std::vector<unsigned char> OutputLayerData(outputSize);
         int runData;
@@ -111,7 +111,7 @@ namespace ROMUtils
                     size_t temp = dst - OutputLayerData;
                     if (temp > outputSize)
                     {
-                        return nullptr;
+                        return {};
                     }
 
                     if (ctrl & 0x80)
@@ -119,7 +119,7 @@ namespace ROMUtils
                         runData = ctrl & 0x7F;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = CurrentFile[address];
+                            OutputLayerData[dst + 2 * j] = CurrentFile[address];
                         }
                         address++;
                     }
@@ -128,7 +128,7 @@ namespace ROMUtils
                         runData = ctrl;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = CurrentFile[address + j];
+                            OutputLayerData[dst + 2 * j] = CurrentFile[address + j];
                         }
                         address += runData;
                     }
@@ -150,7 +150,7 @@ namespace ROMUtils
                     size_t temp = dst - OutputLayerData;
                     if (temp > outputSize)
                     {
-                        return nullptr;
+                        return {};
                     }
 
                     if (ctrl & 0x8000)
@@ -158,7 +158,7 @@ namespace ROMUtils
                         runData = ctrl & 0x7FFF;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = CurrentFile[address];
+                            OutputLayerData[dst + 2 * j] = CurrentFile[address];
                         }
                         address++;
                     }
@@ -167,7 +167,7 @@ namespace ROMUtils
                         runData = ctrl;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = CurrentFile[address + j];
+                            OutputLayerData[dst + 2 * j] = CurrentFile[address + j];
                         }
                         address += runData;
                     }
