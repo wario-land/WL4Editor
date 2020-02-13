@@ -7,7 +7,9 @@
 #include <cstdlib>
 
 #include <QPainter>
+#include <array>
 #include <iostream>
+#include <iterator>
 
 extern WL4EditorWindow *singleton;
 
@@ -27,13 +29,13 @@ namespace LevelComponents
     /// </param>
     Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) : RoomID(_RoomID), LevelID(_LevelID)
     {
-        memset(RenderedLayers, 0, sizeof(RenderedLayers));
-        memset(drawLayers, 0, sizeof(drawLayers));
-        memset(EntityLayerZValue, 0, sizeof(EntityLayerZValue));
-        memset(EntityListDirty, 0, sizeof(EntityListDirty));
+        memset(RenderedLayers, 0, std::size(RenderedLayers));
+        memset(drawLayers, 0, std::size(drawLayers));
+        memset(EntityLayerZValue, 0, std::size(EntityLayerZValue));
+        memset(EntityListDirty, 0, std::size(EntityListDirty));
 
         // Copy the room header information
-        memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
+        memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, std::size(struct __RoomHeader));
 
         // Set up tileset
         tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
@@ -75,8 +77,9 @@ namespace LevelComponents
                     {
                         recordPtr = new __CameraControlRecord;
                         memcpy(recordPtr,
-                               ROMUtils::CurrentFile + CurrentPointer + k++ * sizeof(struct __CameraControlRecord) + 2,
-                               sizeof(struct __CameraControlRecord));
+                               ROMUtils::CurrentFile + CurrentPointer + k++ * std::size(struct __CameraControlRecord) +
+                                   2,
+                               std::size(struct __CameraControlRecord));
                         CameraControlRecords.push_back(recordPtr);
                         recordPtr = nullptr;
                     }
@@ -96,7 +99,7 @@ namespace LevelComponents
                 {
                 };
                 memcpy(&tmpEntityroomattribute, ROMUtils::CurrentFile + Listaddress + 3 * k++,
-                       sizeof(struct EntityRoomAttribute));
+                       std::size(struct EntityRoomAttribute));
                 EntityList[i].push_back(tmpEntityroomattribute);
             }
         }
@@ -114,10 +117,10 @@ namespace LevelComponents
             CurrentEntitySetID(room->GetCurrentEntitySetID()), IsCopy(true)
     {
         // Zero out the arrays
-        memset(RenderedLayers, 0, sizeof(RenderedLayers));
-        memset(drawLayers, 0, sizeof(drawLayers));
-        memset(EntityLayerZValue, 0, sizeof(EntityLayerZValue));
-        memset(EntityListDirty, 0, sizeof(EntityListDirty));
+        memset(RenderedLayers, 0, std::size(RenderedLayers));
+        memset(drawLayers, 0, std::size(drawLayers));
+        memset(EntityLayerZValue, 0, std::size(EntityLayerZValue));
+        memset(EntityListDirty, 0, std::size(EntityListDirty));
 
         // Set up tileset, TODO: if we support Tileset changes in the editor, this need to be changed
         tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
@@ -267,12 +270,14 @@ namespace LevelComponents
     /// </return>
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
-        int sceneWidth                         = Width * 16;
-        int sceneHeight                        = Height * 16;
-        int Z                                  = 0;
-        std::vector<int> eventidwithhiddencoin = {
-            0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C
-        }; // TODO: There perhaps will be more
+        int sceneWidth  = Width * 16;
+        int sceneHeight = Height * 16;
+        int Z           = 0;
+
+        constexpr std::array eventIDWithHiddenCoin {
+            0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C // TODO: There may be more
+        };
+
         switch (renderParams->type)
         {
         case FullRender: {
@@ -285,7 +290,7 @@ namespace LevelComponents
                 newDLS->index = i;
                 drawLayers[i] = newDLS;
             }
-            qsort(drawLayers, 4, sizeof(void *), [](const void *data1, const void *data2) {
+            qsort(drawLayers, 4, std::size(void *), [](const void *data1, const void *data2) {
                 struct DLS *layer1 = *(struct DLS **) data1;
                 struct DLS *layer2 = *(struct DLS **) data2;
                 return layer2->layer->GetLayerPriority() - layer1->layer->GetLayerPriority();
@@ -386,7 +391,7 @@ namespace LevelComponents
                 EntityPixmap[i]->fill(Qt::transparent);
                 EntityPainter[i] = new QPainter(EntityPixmap[i]);
             }
-            currentDifficulty = renderParams->mode.seleteddifficulty;
+            currentDifficulty = renderParams->mode.selectedDifficulty;
             for (auto &i : EntityList[currentDifficulty])
             {
                 unsigned char EntityID = i.EntityID;
@@ -667,8 +672,8 @@ namespace LevelComponents
                 for (uint i = 0; i < Width; ++i)
                 {
                     int val = eventtable[Layer1data[j * Width + i]];
-                    if (std::find(eventidwithhiddencoin.begin(), eventidwithhiddencoin.end(), val) !=
-                        eventidwithhiddencoin.end())
+                    if (std::find(eventIDWithHiddenCoin.begin(), eventIDWithHiddenCoin.end(), val) !=
+                        eventIDWithHiddenCoin.end())
                     {
                         hiddencoinsPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
                     }
@@ -958,7 +963,7 @@ namespace LevelComponents
     {
         // Populate layer chunks (uses chunk-relative addresses)
         auto *layerPtrs =
-            reinterpret_cast<unsigned int *>(headerChunk->data + RoomID * sizeof(struct __RoomHeader) + 8);
+            reinterpret_cast<unsigned int *>(headerChunk->data + RoomID * std::size(struct __RoomHeader) + 8);
         for (unsigned int i = 0; i < 4; ++i)
         {
             Layer *layer = layers[i];
@@ -970,7 +975,7 @@ namespace LevelComponents
                     unsigned int compressedSize;
                     unsigned char *compressedData        = layer->GetCompressedLayerData(&compressedSize);
                     struct ROMUtils::SaveData layerChunk = { static_cast<unsigned int>(
-                                                                 RoomID * sizeof(struct __RoomHeader) + 8 + i * 4),
+                                                                 RoomID * std::size(struct __RoomHeader) + 8 + i * 4),
                                                              compressedSize,
                                                              compressedData,
                                                              ROMUtils::SaveDataIndex++,
@@ -1018,9 +1023,9 @@ namespace LevelComponents
         {
             if (EntityListDirty[i])
             {
-                unsigned int entityListSize = (EntityList[i].size() + 1) * sizeof(struct EntityRoomAttribute);
+                unsigned int entityListSize = (EntityList[i].size() + 1) * std::size(struct EntityRoomAttribute);
                 struct ROMUtils::SaveData entityListChunk = { static_cast<unsigned int>(
-                                                                  RoomID * sizeof(struct __RoomHeader) + 28 + i * 4),
+                                                                  RoomID * std::size(struct __RoomHeader) + 28 + i * 4),
                                                               entityListSize,
                                                               reinterpret_cast<unsigned char *>(malloc(entityListSize)),
                                                               ROMUtils::SaveDataIndex++,
@@ -1030,11 +1035,11 @@ namespace LevelComponents
                                                               ROMUtils::SaveDataChunkType::EntityListChunk };
                 for (unsigned int j = 0; j < EntityList[i].size(); ++j)
                 {
-                    memcpy(entityListChunk.data + j * sizeof(struct EntityRoomAttribute), &EntityList[i][j],
-                           sizeof(struct EntityRoomAttribute));
+                    memcpy(entityListChunk.data + j * std::size(struct EntityRoomAttribute), &EntityList[i][j],
+                           std::size(struct EntityRoomAttribute));
                 }
-                memset(entityListChunk.data + EntityList[i].size() * sizeof(struct EntityRoomAttribute), 0xFF,
-                       sizeof(struct EntityRoomAttribute));
+                memset(entityListChunk.data + EntityList[i].size() * std::size(struct EntityRoomAttribute), 0xFF,
+                       std::size(struct EntityRoomAttribute));
                 chunks.append(entityListChunk);
             }
             else
@@ -1046,7 +1051,7 @@ namespace LevelComponents
         // Create camera boundary chunk, if it is the appropriate type
         if (cameraPointerTableChunk && CameraControlType == __CameraControlType::HasControlAttrs)
         {
-            size_t cameraChunkSize = 2 + CameraControlRecords.size() * sizeof(struct __CameraControlRecord);
+            size_t cameraChunkSize = 2 + CameraControlRecords.size() * std::size(struct __CameraControlRecord);
             struct ROMUtils::SaveData cameraChunk = { 4 * (*cameraPointerTableIndex)++,
                                                       static_cast<unsigned int>(cameraChunkSize),
                                                       reinterpret_cast<unsigned char *>(malloc(cameraChunkSize)),
@@ -1062,8 +1067,8 @@ namespace LevelComponents
             for (unsigned int i = 0; i < CameraControlRecords.size(); ++i)
             {
                 struct __CameraControlRecord *ccr = CameraControlRecords[i];
-                memcpy(cameraChunk.data + 2 + i * sizeof(struct __CameraControlRecord), ccr,
-                       sizeof(struct __CameraControlRecord));
+                memcpy(cameraChunk.data + 2 + i * std::size(struct __CameraControlRecord), ccr,
+                       std::size(struct __CameraControlRecord));
             }
 
             chunks.append(cameraChunk);
@@ -1278,7 +1283,7 @@ namespace LevelComponents
     void Room::AddCameraLimitator()
     {
         auto *recordPtr = new __CameraControlRecord;
-        memset(recordPtr, 0, sizeof(struct __CameraControlRecord));
+        memset(recordPtr, 0, std::size(struct __CameraControlRecord));
         recordPtr->TransboundaryControl = recordPtr->x1 = recordPtr->y1 = 2;
         recordPtr->x2                                                   = 16;
         recordPtr->y2                                                   = 11;
@@ -1298,7 +1303,7 @@ namespace LevelComponents
     /// </param>
     void Room::SetCameraLimitator(int index, __CameraControlRecord limitator_data)
     {
-        memcpy(CameraControlRecords[index], &limitator_data, sizeof(__CameraControlRecord));
+        memcpy(CameraControlRecords[index], &limitator_data, std::size(__CameraControlRecord));
     }
 
     /// <summary>

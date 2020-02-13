@@ -1,4 +1,6 @@
 #include "Compress.h"
+#include <vector>
+#include <iterator>
 
 namespace ROMUtils
 {
@@ -12,8 +14,8 @@ namespace ROMUtils
     {
         // Define variables used in the creation of the jump table
         auto *data        = static_cast<unsigned char *>(this->data);
-        auto *R           = new unsigned short[data_len * 2];
-        unsigned short *C = R + data_len;
+        auto R            = std::vector<unsigned short> R(data_len * 2);
+        unsigned short C  = R.begin() + data_len;
         int cons          = 0;
         int minrun        = GetMinimumRunSize();
 
@@ -106,7 +108,7 @@ namespace ROMUtils
         AddOpcode(compressedData, 0, false);
 
         // Create the dynamically allocated char array
-        auto *compressed = new unsigned char[compressedData.size()];
+        auto *compressed = std::vector<unsigned char> compressed(compressedData.size());
         for (int i = 0; i < compressedData.size(); ++i)
         {
             compressed[i] = compressedData[i];

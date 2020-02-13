@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <deque>
+#include <iterator>
 
 #include <QCloseEvent>
 #include <QFileDialog>
@@ -69,7 +70,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
 
     // Add Recent ROM QAction according to the INI file
     QMenu *filemenu = ui->menuRecent_ROM;
-    for (uint i = 0; i < sizeof(RecentROMs) / sizeof(RecentROMs[0]); i++)
+    for (uint i = 0; i < std::size(RecentROMs) / std::size(RecentROMs[0]); i++)
     {
         recentROMnum     = i;
         QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + 1));
@@ -90,7 +91,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
 
     // Memory Initialization
     memset(ROMUtils::singletonTilesets, 0,
-           sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0]));
+           std::size(ROMUtils::singletonTilesets) / std::size(ROMUtils::singletonTilesets[0]));
 }
 
 /// <summary>
@@ -224,7 +225,7 @@ void WL4EditorWindow::LoadROMDataFromFile(const QString qFilePath)
     setWindowTitle(fileName.c_str());
 
     // Load all Tilesets as singletons
-    for (int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
+    for (int i = 0; i < (std::size(ROMUtils::singletonTilesets) / std::size(ROMUtils::singletonTilesets[0])); i++)
     {
         int tilesetPtr                 = WL4Constants::TilesetDataTable + i * 36;
         ROMUtils::singletonTilesets[i] = new LevelComponents::Tileset(tilesetPtr, i);
@@ -300,15 +301,15 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
     {
         if (recentROMnum > 0)
         {
-            if (recentROMnum < (sizeof(RecentROMs) / sizeof(RecentROMs[0])))
+            if (recentROMnum < (std::size(RecentROMs) / std::size(RecentROMs[0])))
             {
                 RecentROMs[recentROMnum] = new QAction(RecentROMs[recentROMnum - 1]->text(), this);
                 filemenu->addAction(RecentROMs[recentROMnum]);
                 connect(RecentROMs[recentROMnum], SIGNAL(triggered()), this, SLOT(openRecentROM()));
             }
-            for (uint i = ((recentROMnum < (sizeof(RecentROMs) / sizeof(RecentROMs[0]) - 1)
+            for (uint i = ((recentROMnum < (std::size(RecentROMs) / std::size(RecentROMs[0]) - 1)
                                 ? recentROMnum
-                                : (sizeof(RecentROMs) / sizeof(RecentROMs[0]) - 1)));
+                                : (std::size(RecentROMs) / std::size(RecentROMs[0]) - 1)));
                  i > 0; i--)
             {
                 QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i));
@@ -739,7 +740,7 @@ void WL4EditorWindow::RenderScreenFull()
     // TODO: Replace this mess.
     // Delete the old scene, if it exists
     QGraphicsScene *oldScene = ui->graphicsView->scene();
-    if (oldScene) 
+    if (oldScene)
     {
         delete oldScene;
     }
@@ -1219,7 +1220,7 @@ void WL4EditorWindow::on_actionNew_Door_triggered()
 {
     // Create a new door struct with blank fields
     LevelComponents::__DoorEntry newDoorEntry{};
-    memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
+    memset(&newDoorEntry, 0, std::size(LevelComponents::__DoorEntry));
 
     // Initialize the fields
     newDoorEntry.DoorTypeByte = (unsigned char) 2;

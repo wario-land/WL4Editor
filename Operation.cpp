@@ -2,6 +2,7 @@
 #include "WL4EditorWindow.h"
 
 #include <deque>
+#include <iterator>
 
 extern WL4EditorWindow *singleton;
 
@@ -90,7 +91,7 @@ void PerformOperation(struct OperationParams *operation)
                 {
                     currentRoom->SetEntityPosition(om->nextPositionX, om->nextPositionY, om->objectID);
                     singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, om->objectID);
-                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
                     singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
                     singleton->SetUnsavedChanges(true);
                 }
@@ -198,7 +199,7 @@ void BackTrackOperation(struct OperationParams *operation)
                 {
                     currentRoom->SetEntityPosition(om->previousPositionX, om->previousPositionY, om->objectID);
                     singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFU, om->objectID);
-                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
                     singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
                 }
             }
@@ -266,7 +267,7 @@ void UndoOperation()
         BackTrackOperation(operationHistory[currentRoomNumber][operationIndex[currentRoomNumber]++]);
 
         // If the entire operation history is undone for all rooms, then there are no unsaved changes
-        for (unsigned int i = 0; i < sizeof(operationIndex) / sizeof(operationIndex[0]); ++i)
+        for (unsigned int i = 0; i < std::size(operationIndex) / std::size(operationIndex[0]); ++i)
         {
             if (operationIndex[currentRoomNumber] != operationHistory[currentRoomNumber].size())
             {
@@ -319,5 +320,5 @@ void ResetUndoHistory()
     }
 
     // Re-initialize all the operation indexes to zero
-    memset(operationIndex, 0, sizeof(operationIndex));
+    memset(operationIndex, 0, std::size(operationIndex));
 }

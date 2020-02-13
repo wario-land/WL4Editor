@@ -14,6 +14,7 @@
 #include <QMessageBox>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 /// <summary>
 /// Load a ROM file into the data array in ROMUtils.cpp.
@@ -36,7 +37,7 @@ bool LoadROMFile(const QString filePath)
     }
 
     // Read data
-    auto *ROMAddr = new unsigned char[0x1000000]; // set it to be 16 MB to let the data can be write freely
+    auto ROMAddr = std::vector<unsigned char> ROMAddr(0x1000000); // set it to be 16 MB to let the data can be write freely
     file.read((char *) ROMAddr, length);
     file.close();
 

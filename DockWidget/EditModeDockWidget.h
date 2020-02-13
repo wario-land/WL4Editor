@@ -27,7 +27,7 @@ namespace Ui
         bool doorsEnabled          = true;
         bool cameraAreasEnabled    = true;
         bool alphaBlendingEnabled  = true;
-        int seleteddifficulty      = 0;
+        int selectedDifficulty      = 0;
         bool entitiesboxesDisabled = false;
         bool hiddencoinsEnabled    = false;
     };

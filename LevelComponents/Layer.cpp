@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <iterator>
 
 namespace LevelComponents
 {
@@ -325,7 +326,7 @@ namespace LevelComponents
         unsigned short defaultValue = 0x0000;
         for (int i = 0; i < boundY; ++i)
         {
-            memcpy(tmpLayerData + i * newWidth, LayerData + i * Width, boundX * sizeof(short));
+            memcpy(tmpLayerData + i * newWidth, LayerData + i * Width, boundX * std::size(short));
             for (int j = boundX; j < newWidth; ++j)
             {
                 tmpLayerData[i * newWidth + j] = defaultValue;

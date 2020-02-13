@@ -1,5 +1,6 @@
 #include "DoorConfigDialog.h"
 #include "ui_DoorConfigDialog.h"
+#include <iterator>
 
 // constexpr declarations for the initializers in the header
 constexpr const char *DoorConfigDialog::DoortypeSetData[5];
@@ -85,14 +86,14 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     RenderGraphicsView_Preview();
 
     // Initialize the EntitySet ComboBox
-    for (unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
+    for (unsigned int i = 0; i < std::size(entitiessets) / std::size(entitiessets[0]); ++i)
     {
         comboboxEntitySet.push_back({ (int) i, true });
     }
     UpdateComboBoxEntitySet();
 
     // Initialize the entity list drop-down
-    for (unsigned int i = 1; i < sizeof(entities) / sizeof(entities[0]); ++i)
+    for (unsigned int i = 1; i < std::size(entities) / std::size(entities[0]); ++i)
     {
         EntityFilterTable->AddEntity(entities[i]);
     }
@@ -180,13 +181,13 @@ void DoorConfigDialog::EntitySetsInitialization()
     EntitySetsDeconstruction();
 
     // Initialize all the entitysets
-    for (unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
+    for (unsigned int i = 0; i < std::size(entitiessets) / std::size(entitiessets[0]); ++i)
     {
         entitiessets[i] = new LevelComponents::EntitySet(i, WL4Constants::UniversalSpritesPalette);
     }
 
     // Initialize all the Entity
-    for (unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
+    for (unsigned int i = 0; i < std::size(entities) / std::size(entities[0]); ++i)
     {
         struct LevelComponents::EntitySetAndEntitylocalId tmpEntitysetAndEntitylocalId =
             LevelComponents::EntitySet::EntitySetFromEntityID(i);

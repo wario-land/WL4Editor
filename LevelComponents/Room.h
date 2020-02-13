@@ -10,6 +10,7 @@
 #include <QGraphicsScene>
 #include <algorithm> // find
 #include <vector>
+#include <iterator>
 
 namespace LevelComponents
 {
@@ -155,7 +156,7 @@ namespace LevelComponents
             for (unsigned int i = 0; i < CameraControlRecords.size(); ++i)
             {
                 struct __CameraControlRecord *newCameraLimitator = new __CameraControlRecord();
-                memcpy(newCameraLimitator, CameraControlRecords[i], sizeof(struct __CameraControlRecord));
+                memcpy(newCameraLimitator, CameraControlRecords[i], std::size(struct __CameraControlRecord));
                 newCameraControlRecords.push_back(newCameraLimitator);
             }
             return newCameraControlRecords;

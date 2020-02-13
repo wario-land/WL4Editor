@@ -3,6 +3,7 @@
 
 #include <QPixmap>
 #include <iostream>
+#include <iterator>
 
 namespace LevelComponents
 {
@@ -25,8 +26,8 @@ namespace LevelComponents
 
         tile8x8array = new Tile8x8 *[0x600];
         map16array   = new TileMap16 *[0x300];
-        memset(tile8x8array, 0, Tile8x8DefaultNum * sizeof(tile8x8array[0]));
-        memset(map16array, 0, Tile16DefaultNum * sizeof(map16array[0]));
+        memset(tile8x8array, 0, Tile8x8DefaultNum * std::size(tile8x8array[0]));
+        memset(map16array, 0, Tile16DefaultNum * std::size(map16array[0]));
 
         // Create all 16 color palettes
         paletteAddress = ROMUtils::PointerFromData(tilesetPtr + 8);
@@ -112,19 +113,19 @@ namespace LevelComponents
         // Get pointer to the map16 event table
         Map16EventTable = new unsigned short[0x300];
         memcpy(Map16EventTable, (unsigned short *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28)),
-               Tile16DefaultNum * sizeof(unsigned short));
+               Tile16DefaultNum * std::size(unsigned short));
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
         Map16TerrainTypeIDTable = new unsigned char[0x300];
         memcpy(Map16TerrainTypeIDTable,
                (unsigned char *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24)),
-               Tile16DefaultNum * sizeof(unsigned char));
+               Tile16DefaultNum * std::size(unsigned char));
 
         // Get pointer of Universal Sprites tiles Palette
         TilesetPaletteData = new unsigned short[16 * 16];
         memcpy(TilesetPaletteData,
                (unsigned short *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 8)),
-               16 * 16 * sizeof(unsigned short));
+               16 * 16 * std::size(unsigned short));
 
         hasconstructed = true;
     }
@@ -147,8 +148,8 @@ namespace LevelComponents
         // Save the ROM pointer into the tileset object
         this->tilesetPtr = old_tileset->getTilesetPtr();
 
-        memset(tile8x8array, 0, Tile8x8DefaultNum * sizeof(tile8x8array[0]));
-        memset(map16array, 0, Tile16DefaultNum * sizeof(map16array[0]));
+        memset(tile8x8array, 0, Tile8x8DefaultNum * std::size(tile8x8array[0]));
+        memset(map16array, 0, Tile16DefaultNum * std::size(map16array[0]));
 
         // Create all 16 color palettes
         for (unsigned int i = 0; i < 16; ++i)
@@ -172,20 +173,20 @@ namespace LevelComponents
 
         // Get pointer to the map16 event table
         Map16EventTable = new unsigned short[0x300];
-        memcpy(Map16EventTable, old_tileset->GetEventTablePtr(), Tile16DefaultNum * sizeof(unsigned short));
+        memcpy(Map16EventTable, old_tileset->GetEventTablePtr(), Tile16DefaultNum * std::size(unsigned short));
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
         Map16TerrainTypeIDTable = new unsigned char[0x300];
         memcpy(Map16TerrainTypeIDTable, old_tileset->GetTerrainTypeIDTablePtr(),
-               Tile16DefaultNum * sizeof(unsigned char));
+               Tile16DefaultNum * std::size(unsigned char));
 
         // Get pointer of Universal Sprites tiles Palette
         TilesetPaletteData = new unsigned short[16 * 16];
-        memcpy(TilesetPaletteData, old_tileset->GetTilesetPaletteDataPtr(), 16 * 16 * sizeof(unsigned short));
+        memcpy(TilesetPaletteData, old_tileset->GetTilesetPaletteDataPtr(), 16 * 16 * std::size(unsigned short));
 
         // Get Animated Tile Data
         AnimatedTileData = new unsigned short[16];
-        memcpy(AnimatedTileData, old_tileset->GetAnimatedTileData(), 32 * sizeof(unsigned char));
+        memcpy(AnimatedTileData, old_tileset->GetAnimatedTileData(), 32 * std::size(unsigned char));
 
         hasconstructed = true;
     }

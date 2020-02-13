@@ -2,12 +2,13 @@
 #define ROOMCONFIGDIALOG_H
 
 #include <QDialog>
-
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QLabel>
 #include <QPixmap>
 #include <QScrollBar>
+
+#include <iterator>
 
 #include "LevelComponents/Layer.h"
 #include "LevelComponents/Room.h"
@@ -35,7 +36,7 @@ namespace DialogParams
         unsigned short *LayerData[3];
 
         // Default constructor
-        RoomConfigParams() { memset(this, 0, sizeof(struct RoomConfigParams)); }
+        RoomConfigParams() { memset(this, 0, std::size(struct RoomConfigParams)); }
 
         // Construct this param struct using a Room object
         RoomConfigParams(LevelComponents::Room *room) :

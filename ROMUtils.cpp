@@ -3,8 +3,11 @@
 #include "WL4EditorWindow.h"
 #include <QFile>
 #include <cassert>
+#include <cstring>
 #include <iostream>
+#include <iterator>
 #include <utility>
+#include <vector>
 
 extern WL4EditorWindow *singleton;
 
@@ -84,9 +87,12 @@ namespace ROMUtils
     /// The predicted size of the output data.(unit: Byte)
     /// </param>
     /// <return>A pointer to decompressed data.</return>
+    /* TODO(all): THIS NEEDS A REFACTOR, ASAP 
+        Maybe we can use std::optional as we're targetting C++17 now.
+    */
     unsigned char *LayerRLEDecompress(int address, size_t outputSize)
     {
-        auto *OutputLayerData = new unsigned char[outputSize];
+        auto OutputLayerData = std::vector<unsigned char> OutputLayerData(outputSize);
         int runData;
 
         for (int i = 0; i < 2; i++)
@@ -105,7 +111,6 @@ namespace ROMUtils
                     size_t temp = dst - OutputLayerData;
                     if (temp > outputSize)
                     {
-                        delete[] OutputLayerData;
                         return nullptr;
                     }
 
@@ -145,7 +150,6 @@ namespace ROMUtils
                     size_t temp = dst - OutputLayerData;
                     if (temp > outputSize)
                     {
-                        delete[] OutputLayerData;
                         return nullptr;
                     }
 
@@ -192,43 +196,36 @@ namespace ROMUtils
     /// unsigned char pointer to the compressed layer data.
     /// </param>
     /// <return>the length of compressed data.</return>
-    unsigned int LayerRLECompress(unsigned int _layersize, const unsigned short *LayerData,
-                                  unsigned char **OutputCompressedData)
+    unsigned int LayerRLECompress(unsigned int _layersize, const std::vector<unsigned short> &LayerData,
+                                  std::vector<unsigned char> &OutputCompressedData)
     {
         // Separate short data into char arrays
-        auto *separatedBytes = new unsigned char[_layersize * 2];
-        for (unsigned int i = 0; i < _layersize; ++i)
-        {
-            unsigned short s               = LayerData[i];
-            separatedBytes[i]              = static_cast<unsigned char>(s);
-            separatedBytes[i + _layersize] = static_cast<unsigned char>(s >> 8);
-        }
+        auto separatedBytes = std::vector<unsigned char> seperatedBytes(_layersize * 2);
+        std::memcpy(seperatedBytes.data(), LayerData.data(), LayerData.size() * sizeof(unsigned short));
 
         // Decide on 8 or 16 bit compression for the arrays
-        RLEMetadata8Bit Lower8Bit(separatedBytes, _layersize);
-        RLEMetadata16Bit Lower16Bit(separatedBytes, _layersize);
-        RLEMetadata8Bit Upper8Bit(separatedBytes + _layersize, _layersize);
-        RLEMetadata16Bit Upper16Bit(separatedBytes + _layersize, _layersize);
-        RLEMetadata *Lower = Lower8Bit.GetCompressedLength() < Lower16Bit.GetCompressedLength()
-                                 ? (RLEMetadata *) &Lower8Bit
-                                 : (RLEMetadata *) &Lower16Bit;
-        RLEMetadata *Upper = Upper8Bit.GetCompressedLength() < Upper16Bit.GetCompressedLength()
-                                 ? (RLEMetadata *) &Upper8Bit
-                                 : (RLEMetadata *) &Upper16Bit;
+        auto Lower8Bit(separatedBytes, _layersize);
+        auto Lower16Bit(separatedBytes, _layersize);
+        auto Upper8Bit(separatedBytes + _layersize, _layersize);
+        auto Upper16Bit(separatedBytes + _layersize, _layersize);
+        auto &Lower = Lower8Bit.GetCompressedLength() < Lower16Bit.GetCompressedLength()
+                                 ? dynamic_cast<RLEMetadata &>(Lower8Bit)
+                                 : dynamic_cast<RLEMetadata &>(Lower16Bit);
+        auto &Upper = Upper8Bit.GetCompressedLength() < Upper16Bit.GetCompressedLength()
+                                 ? dynamic_cast<RLEMetadata &>(Upper8Bit)
+                                 : dynamic_cast<RLEMetadata &>(Upper16Bit);
 
         // Create the data to return
-        unsigned int lowerLength = Lower->GetCompressedLength();
-        unsigned int upperLength = Upper->GetCompressedLength();
-        unsigned int size        = lowerLength + upperLength + 1;
-        *OutputCompressedData    = new unsigned char[size];
-        void *lowerData          = Lower->GetCompressedData();
-        void *upperData          = Upper->GetCompressedData();
-        memcpy(*OutputCompressedData, lowerData, lowerLength);
-        memcpy(*OutputCompressedData + lowerLength, upperData, upperLength);
-        (*OutputCompressedData)[lowerLength + upperLength] = '\0';
+        const unsigned int lowerLength = Lower->GetCompressedLength();
+        const unsigned int upperLength = Upper->GetCompressedLength();
+        const unsigned int size        = lowerLength + upperLength + 1;
+        OutputCompressedData.resize(size);
+        void &lowerData = Lower->GetCompressedData();
+        void &upperData = Upper->GetCompressedData();
+        std::memcpy(&OutputCompressedData, lowerData, lowerLength);
+        std::memcpy(&OutputCompressedData + lowerLength, upperData, upperLength);
+        dynamic_cast<OutputCompressedData &>(lowerLength + upperLength) = '\0';
 
-        // Clean up
-        delete[] separatedBytes;
         return size;
     }
 
@@ -720,7 +717,7 @@ namespace ROMUtils
 
                          // Write the level header to the ROM
                          memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(),
-                                sizeof(struct LevelComponents::__LevelHeader));
+                                std::size(struct LevelComponents::__LevelHeader));
 
                          // Write Tileset pointer info
                          for (int i = 0; i < 92; ++i)
@@ -752,7 +749,7 @@ namespace ROMUtils
         {
             auto *roomHeader =
                 (struct LevelComponents::__RoomHeader *) (CurrentFile + roomHeaderInROM +
-                                                          i * sizeof(struct LevelComponents::__RoomHeader));
+                                                          i * std::size(struct LevelComponents::__RoomHeader));
             auto *layerDataPtrs         = (unsigned int *) &roomHeader->Layer0Data;
             LevelComponents::Room *room = rooms[i];
             room->SetCameraBoundaryDirty(false);
@@ -767,7 +764,7 @@ namespace ROMUtils
                 room->SetEntityListDirty(j, false);
             }
             struct LevelComponents::__RoomHeader newroomheader;
-            memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
+            memcpy(&newroomheader, roomHeader, std::size(newroomheader));
             room->ResetRoomHeader(newroomheader);
             // TODO: if more elements in the game are going to be support customizing in the editor, more pointers need
             // to be reset here

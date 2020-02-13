@@ -1,4 +1,5 @@
 #include "EntitySet.h"
+#include <iterator>
 
 constexpr unsigned int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
 constexpr int LevelComponents::EntitySet::EntityPositinalOffset[258];
@@ -125,7 +126,7 @@ namespace LevelComponents
         }
 
         // Load 1024 sprites tiles, ignore the first 4 rows, they are wario tiles
-        memset(tile8x8data, 0, sizeof(tile8x8data));
+        memset(tile8x8data, 0, std::size(tile8x8data));
 
         // Load Basic Universal Entities' tile8x8s.
         int tiledataptr;
@@ -298,7 +299,7 @@ namespace LevelComponents
                 i++;
             }
         }
-        memset(&tmpEntitySetAndEntitylocalId, 0, sizeof(tmpEntitySetAndEntitylocalId));
+        memset(&tmpEntitySetAndEntitylocalId, 0, std::size(tmpEntitySetAndEntitylocalId));
         return tmpEntitySetAndEntitylocalId; // TODO: Error handling
     }
 

@@ -145,7 +145,7 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
     params.doorsEnabled          = ui->CheckBox_DoorView->isChecked();
     params.alphaBlendingEnabled  = ui->CheckBox_AlphaView->isChecked();
     params.cameraAreasEnabled    = ui->CheckBox_CameraView->isChecked();
-    params.seleteddifficulty     = difficultyIndices[selectedDifficultyButton];
+    params.selectedDifficulty     = difficultyIndices[selectedDifficultyButton];
     params.hiddencoinsEnabled    = ui->CheckBox_hiddencoinsView->isChecked();
     return params;
 }

@@ -1,7 +1,8 @@
 #include "RoomConfigDialog.h"
 #include "ui_RoomConfigDialog.h"
 
-#include <Qstring>
+#include <QString>
+#include <iterator>
 
 // constexpr declarations for the initializers in the header
 constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
@@ -172,7 +173,7 @@ void RoomConfigDialog::StaticComboBoxesInitialization()
     }
 
     // Initialize the selections for the tilesets's available BGs
-    for (unsigned int i = 0, idx = 0; idx < sizeof(BGLayerdataPtrsData) / sizeof(BGLayerdataPtrsData[0]); ++i)
+    for (unsigned int i = 0, idx = 0; idx < std::size(BGLayerdataPtrsData) / std::size(BGLayerdataPtrsData[0]); ++i)
     {
         std::vector<int> vec;
         int count = BGLayerdataPtrsData[idx++];

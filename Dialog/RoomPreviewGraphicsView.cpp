@@ -1,7 +1,8 @@
 #include "RoomPreviewGraphicsView.h"
 
-#include <LevelComponents/Layer.h>
+#include "LevelComponents/Layer.h"
 #include <QScrollBar>
+#include <iterator>
 
 /// <summary>
 /// Construct an instance of the RoomPreviewGraphicsView.
@@ -14,7 +15,7 @@
 /// </param>
 RoomPreviewGraphicsView::RoomPreviewGraphicsView(QWidget *param) : QGraphicsView(param), displayPixmap(0)
 {
-    memset(dataPointers, 0, sizeof(dataPointers));
+    memset(dataPointers, 0, std::size(dataPointers));
     auto *scene = new QGraphicsScene();
     for (auto &pixmapItem : pixmapItems)
     {
@@ -41,7 +42,7 @@ RoomPreviewGraphicsView::~RoomPreviewGraphicsView()
 /// </remarks>
 void RoomPreviewGraphicsView::EnableSelectedPixmap()
 {
-    for (unsigned int i = 0; i < sizeof(pixmapItems) / sizeof(pixmapItems[0]); ++i)
+    for (unsigned int i = 0; i < std::size(pixmapItems) / std::size(pixmapItems[0]); ++i)
     {
         pixmapItems[i]->setVisible(displayPixmap == i);
     }

@@ -3,6 +3,7 @@
 #include "WL4Constants.h"
 
 #include <cassert>
+#include <iterator>
 
 namespace LevelComponents
 {
@@ -68,7 +69,7 @@ namespace LevelComponents
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
         LevelID                = ROMUtils::CurrentFile[levelHeaderPointer]; // 0x3000023
 
-        memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
+        memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, std::size(struct __LevelHeader));
 
         // Load the door data
         std::vector<int> destinations;
@@ -307,9 +308,9 @@ namespace LevelComponents
         int levelHeaderPointer           = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
         int levelIndex                   = ROMUtils::CurrentFile[levelHeaderPointer];
         unsigned int roomTablePtr        = WL4Constants::RoomDataTable + levelIndex * 4;
-        unsigned int roomHeaderChunkSize = rooms.size() * sizeof(struct __RoomHeader);
+        unsigned int roomHeaderChunkSize = rooms.size() * std::size(struct __RoomHeader);
         unsigned int doorTablePtr        = WL4Constants::DoorTable + levelIndex * 4;
-        unsigned int doorChunkSize       = (doors.size() + 1) * sizeof(struct __DoorEntry);
+        unsigned int doorChunkSize       = (doors.size() + 1) * std::size(struct __DoorEntry);
         unsigned int LevelNamePtr        = WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4;
 
         // Create the contiguous room header chunk
@@ -338,7 +339,7 @@ namespace LevelComponents
             int boundaryEntries =
                 std::count_if(rooms.begin(), rooms.end(), [](Room *R) { return R->GetCameraControlRecords().size(); });
             unsigned int cameraPointerTableSize = (boundaryEntries + 1) * 4;
-            cameraPointerTable             = (struct ROMUtils::SaveData *) malloc(sizeof(struct ROMUtils::SaveData));
+            cameraPointerTable             = (struct ROMUtils::SaveData *) malloc(std::size(struct ROMUtils::SaveData));
             cameraPointerTable->ptr_addr   = cameraPointerTablePtr;
             cameraPointerTable->size       = cameraPointerTableSize;
             cameraPointerTable->data       = (unsigned char *) malloc(cameraPointerTableSize);
@@ -371,7 +372,7 @@ namespace LevelComponents
         for (unsigned int i = 0; i < rooms.size(); ++i)
         {
             struct __RoomHeader rh = rooms[i]->GetRoomHeader();
-            memcpy(roomHeaders.data + i * sizeof(struct __RoomHeader), &rh, sizeof(struct __RoomHeader));
+            memcpy(roomHeaders.data + i * std::size(struct __RoomHeader), &rh, std::size(struct __RoomHeader));
             rooms[i]->GetSaveChunks(chunks, &roomHeaders, cameraPointerTable, &cameraPointerTableIndex);
         }
 
@@ -395,9 +396,9 @@ namespace LevelComponents
         {
             struct __DoorEntry entryStruct = doors[i]->GetEntryStruct();
             entryStruct.LinkerDestination  = indexMapping[doors[i]->GetDestinationDoor()];
-            memcpy(doorChunk.data + i * sizeof(struct __DoorEntry), &entryStruct, sizeof(struct __DoorEntry));
+            memcpy(doorChunk.data + i * std::size(struct __DoorEntry), &entryStruct, std::size(struct __DoorEntry));
         }
-        memset(doorChunk.data + doors.size() * sizeof(struct __DoorEntry), 0, sizeof(struct __DoorEntry));
+        memset(doorChunk.data + doors.size() * std::size(struct __DoorEntry), 0, std::size(struct __DoorEntry));
 
         // Create the level name chunk
         struct ROMUtils::SaveData levelNameChunk = { LevelNamePtr,

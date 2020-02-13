@@ -6,6 +6,8 @@
 #include <ROMUtils.h>
 #include <SettingsUtils.h>
 #include <cassert>
+#include <iterator>
+#include <vector>
 
 #define PATCH_CHUNK_VERSION 0
 
@@ -265,7 +267,7 @@ static QByteArray CreateHook(unsigned int patchAddr, bool thumbMode)
             '\0',   '\0',   '\0', '\0', // hook address goes here
             '\x00', '\xBD'              // POP LR
         };
-        QByteArray hook(thumbHook, sizeof(thumbHook));
+        QByteArray hook(thumbHook, std::size(thumbHook));
         *(unsigned int *) (hook.data() + 8) = patchAddr | 0x8000000;
         return hook;
     }
@@ -439,7 +441,7 @@ namespace PatchUtils
                 QFile binFile(binName);
                 binFile.open(QIODevice::ReadOnly);
                 QByteArray binContents = binFile.readAll();
-                auto *data             = new unsigned char[binFile.size()];
+                auto *data             = std::vector<unsigned char> data(binFile.size());
                 memcpy(data, binContents.constData(), binFile.size());
 
                 // Create the save chunk
@@ -485,7 +487,7 @@ namespace PatchUtils
                         ROMUtils::CurrentFile, ROMUtils::CurrentFileSize, WL4Constants::AvailableSpaceBeginningInROM,
                         ROMUtils::SaveDataChunkType::PatchListChunk);
                     QString patchListChunkContents = CreatePatchListChunkData(entries);
-                    auto *data                     = new unsigned char[patchListChunkContents.length()];
+                    auto *data                     = std::vector<unsigned char> data(patchListChunkContents.length());
                     memcpy(data, patchListChunkContents.toLocal8Bit().constData(), patchListChunkContents.length());
                     struct ROMUtils::SaveData patchListChunk = {
                         0,
@@ -507,9 +509,7 @@ namespace PatchUtils
                 }
             },
             // PostProcessingCallback
-            [chunks, entries, chunkIndexToEntryIndex]
-            (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
-            {
+            [chunks, entries, chunkIndexToEntryIndex](unsigned char *TempFile, std::map<int, int> indexToChunkPtr) {
                 // Restore substituted data to ROM for patches that have been removed
                 for (auto chunk : chunks)
                 {
@@ -528,8 +528,9 @@ namespace PatchUtils
                     {
                         // For each patch chunk, convert its index to entry index to get matching entry info
                         PatchEntryItem entry = entries[chunkIndexToEntryIndex.at(i)];
-                        QByteArray hookCode = CreateHook(entry.PatchAddress,  entry.ThumbMode);
-                        assert(entry.PatchAddress + hookCode.size() < ROMUtils::CurrentFileSize); // Hook code outside valid ROM area
+                        QByteArray hookCode  = CreateHook(entry.PatchAddress, entry.ThumbMode);
+                        assert(entry.PatchAddress + hookCode.size() <
+                               ROMUtils::CurrentFileSize); // Hook code outside valid ROM area
                         memcpy(TempFile + entry.PatchAddress, hookCode.data(), hookCode.size());
                     }
                 }

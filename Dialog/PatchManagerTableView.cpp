@@ -2,6 +2,7 @@
 #include <QModelIndex>
 #include <cassert>
 #include <utility>
+#include <iterator>
 
 /// <summary>
 /// Construct an instance of the PatchManagerTableView.
@@ -74,7 +75,7 @@ void PatchManagerTableView::UpdateTableView()
     {
         EntryTableModel.setItem(row, 0, new QStandardItem(patchEntry.FileName));
         const char *typeStrings[3] = { "Binary", "Assembly", "C" };
-        assert(patchEntry.PatchType < sizeof(typeStrings) / sizeof(typeStrings[0]) /* Patch entry type out of range */);
+        assert(patchEntry.PatchType < std::size(typeStrings) / std::size(typeStrings[0]) /* Patch entry type out of range */);
         EntryTableModel.setItem(row, 1, new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
         EntryTableModel.setItem(row, 2,
                                 new QStandardItem(!patchEntry.HookAddress
