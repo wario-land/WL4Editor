@@ -116,7 +116,7 @@ namespace LevelComponents
         bool Layer0ColorBlending            = false;
         int Layer0ColorBlendCoefficient_EVA = 16;
         int Layer0ColorBlendCoefficient_EVB = 0;
-        std::vector<struct __CameraControlRecord *> CameraControlRecords;
+        std::vector<__CameraControlRecord> CameraControlRecords;
         struct __RoomHeader RoomHeader;
         int CurrentEntitySetID      = 0;
         EntitySet *currentEntitySet = nullptr;
@@ -146,19 +146,14 @@ namespace LevelComponents
         // Getters
         size_t CountDoors() { return doors.size(); }
         size_t GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
-        std::vector<struct __CameraControlRecord *> GetCameraControlRecords(bool create_new_instances = false)
+        std::vector<__CameraControlRecord> GetCameraControlRecords(bool create_new_instances = false)
         {
             if (!create_new_instances)
             {
                 return CameraControlRecords;
             }
-            std::vector<struct __CameraControlRecord *> newCameraControlRecords;
-            for (unsigned int i = 0; i < CameraControlRecords.size(); ++i)
-            {
-                struct __CameraControlRecord *newCameraLimitator = new __CameraControlRecord();
-                memcpy(newCameraLimitator, CameraControlRecords[i], std::size(struct __CameraControlRecord));
-                newCameraControlRecords.push_back(newCameraLimitator);
-            }
+            // NOTE(alt): Got rid of the for loop, because we didn't need it (source: BreadFish64)
+            auto newCameraControlRecords = CameraControlRecords;
             return newCameraControlRecords;
         }
         enum __CameraControlType GetCameraControlType() { return CameraControlType; }

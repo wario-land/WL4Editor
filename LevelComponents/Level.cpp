@@ -3,6 +3,7 @@
 #include "WL4Constants.h"
 
 #include <cassert>
+#include <cstring>
 #include <iterator>
 
 namespace LevelComponents
@@ -69,7 +70,7 @@ namespace LevelComponents
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
         LevelID                = ROMUtils::CurrentFile[levelHeaderPointer]; // 0x3000023
 
-        memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, std::size(struct __LevelHeader));
+        std::memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, std::size(struct __LevelHeader));
 
         // Load the door data
         std::vector<int> destinations;

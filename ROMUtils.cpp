@@ -8,6 +8,7 @@
 #include <iterator>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 extern WL4EditorWindow *singleton;
 
@@ -87,94 +88,79 @@ namespace ROMUtils
     /// The predicted size of the output data.(unit: Byte)
     /// </param>
     /// <return>A pointer to decompressed data.</return>
-    /* TODO(all): THIS NEEDS A REFACTOR, ASAP 
-        Maybe we can use std::optional as we're targetting C++17 now.
-    */
-    std::vector<unsigned char> LayerRLEDecompress(int address, size_t outputSize)
+    std::vector<unsigned char> LayerRLEDecompressSingle(int &address, size_t outputSize)
     {
-        auto OutputLayerData = std::vector<unsigned char> OutputLayerData(outputSize);
-        int runData;
-
-        for (int i = 0; i < 2; i++)
+        auto output = std::vector<unsigned char>(outputSize);
+        auto dst    = output.begin();
+        if (ROMUtils::CurrentFile[address++] == 1)
         {
-            unsigned char *dst = OutputLayerData + i;
-            if (ROMUtils::CurrentFile[address++] == 1)
+            while (true)
             {
-                while (true)
+                unsigned char ctrl = CurrentFile[address++];
+                if (ctrl == 0)
                 {
-                    int ctrl = CurrentFile[address++];
-                    if (!ctrl)
-                    {
-                        break;
-                    }
-
-                    size_t temp = dst - OutputLayerData;
-                    if (temp > outputSize)
-                    {
-                        return {};
-                    }
-
-                    if (ctrl & 0x80)
-                    {
-                        runData = ctrl & 0x7F;
-                        for (int j = 0; j < runData; j++)
-                        {
-                            OutputLayerData[dst + 2 * j] = CurrentFile[address];
-                        }
-                        address++;
-                    }
-                    else
-                    {
-                        runData = ctrl;
-                        for (int j = 0; j < runData; j++)
-                        {
-                            OutputLayerData[dst + 2 * j] = CurrentFile[address + j];
-                        }
-                        address += runData;
-                    }
-
-                    dst += 2 * runData;
+                    break;
                 }
+
+                if (dst >= output.end())
+                {
+                    return {}; // throw?
+                }
+
+                int run_length = ctrl & 0x7F;
+                if (ctrl & 0x80)
+                {
+                    std::fill(dst, dst + run_length, CurrentFile[address++]);
+                }
+                else
+                {
+                    std::copy(&CurrentFile[address], &CurrentFile[address + run_length], dst);
+                    address += run_length;
+                }
+                dst += run_length;
             }
-            else // RLE16
+        }
+        else // RLE16
+        {
+            while (true)
             {
-                while (true)
+                int ctrl = (static_cast<int>(CurrentFile[address]) << 8) | CurrentFile[address + 1];
+                address += 2;
+                if (ctrl == 0)
                 {
-                    int ctrl = (static_cast<int>(CurrentFile[address]) << 8) | CurrentFile[address + 1];
-                    address += 2; // offset + 2
-                    if (!ctrl)
-                    {
-                        break;
-                    }
-
-                    size_t temp = dst - OutputLayerData;
-                    if (temp > outputSize)
-                    {
-                        return {};
-                    }
-
-                    if (ctrl & 0x8000)
-                    {
-                        runData = ctrl & 0x7FFF;
-                        for (int j = 0; j < runData; j++)
-                        {
-                            OutputLayerData[dst + 2 * j] = CurrentFile[address];
-                        }
-                        address++;
-                    }
-                    else
-                    {
-                        runData = ctrl;
-                        for (int j = 0; j < runData; j++)
-                        {
-                            OutputLayerData[dst + 2 * j] = CurrentFile[address + j];
-                        }
-                        address += runData;
-                    }
-
-                    dst += 2 * runData;
+                    break;
                 }
+
+                if (dst >= output.end())
+                {
+                    return {}; // throw?
+                }
+
+                int run_length = ctrl & 0x7FFF;
+                if (ctrl & 0x8000)
+                {
+                    std::fill(dst, dst + run_length, CurrentFile[address++]);
+                }
+                else
+                {
+                    std::copy(&CurrentFile[address], &CurrentFile[address + run_length], dst);
+                    address += run_length;
+                }
+                dst += run_length;
             }
+        }
+        return output;
+    }
+
+    std::vector<unsigned char> LayerRLEDecompressInterleave(int address, size_t outputSize)
+    {
+        auto part1           = LayerRLEDecompressSingle(address, outputSize / 2);
+        auto part2           = LayerRLEDecompressSingle(address, outputSize / 2);
+        auto OutputLayerData = std::vector<unsigned char> OutputLayerData(outputSize);
+        for (int i = 0; i < outputSize / 2; ++outputSize)
+        {
+            OutputLayerData[i * 2]     = part1[i];
+            OutputLayerData[i * 2 + 1] = part2[i];
         }
         return OutputLayerData;
     }
@@ -209,11 +195,11 @@ namespace ROMUtils
         auto Upper8Bit(separatedBytes + _layersize, _layersize);
         auto Upper16Bit(separatedBytes + _layersize, _layersize);
         auto &Lower = Lower8Bit.GetCompressedLength() < Lower16Bit.GetCompressedLength()
-                                 ? dynamic_cast<RLEMetadata &>(Lower8Bit)
-                                 : dynamic_cast<RLEMetadata &>(Lower16Bit);
+                          ? dynamic_cast<RLEMetadata &>(Lower8Bit)
+                          : dynamic_cast<RLEMetadata &>(Lower16Bit);
         auto &Upper = Upper8Bit.GetCompressedLength() < Upper16Bit.GetCompressedLength()
-                                 ? dynamic_cast<RLEMetadata &>(Upper8Bit)
-                                 : dynamic_cast<RLEMetadata &>(Upper16Bit);
+                          ? dynamic_cast<RLEMetadata &>(Upper8Bit)
+                          : dynamic_cast<RLEMetadata &>(Upper16Bit);
 
         // Create the data to return
         const unsigned int lowerLength = Lower->GetCompressedLength();
