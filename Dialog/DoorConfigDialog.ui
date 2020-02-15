@@ -431,7 +431,7 @@
         <item>
          <widget class="QLabel" name="label_CurrentDoor">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -447,7 +447,7 @@
         <item>
          <widget class="QGraphicsView" name="GraphicsView_Preview">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
+           <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -462,33 +462,7 @@
            <enum>QAbstractScrollArea::AdjustToContents</enum>
           </property>
           <property name="viewportUpdateMode">
-           <enum>QGraphicsView::FullViewportUpdate</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="Label_DoorDestination">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Door Destination:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="ComboBox_DoorDestinationPicker">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+           <enum>QGraphicsView::SmartViewportUpdate</enum>
           </property>
          </widget>
         </item>
@@ -509,9 +483,19 @@
          </widget>
         </item>
         <item>
+         <widget class="QComboBox" name="ComboBox_DoorDestinationPicker">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QGraphicsView" name="GraphicsView_DestinationDoor">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
+           <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -532,7 +516,7 @@
            <enum>QAbstractScrollArea::AdjustToContents</enum>
           </property>
           <property name="viewportUpdateMode">
-           <enum>QGraphicsView::FullViewportUpdate</enum>
+           <enum>QGraphicsView::SmartViewportUpdate</enum>
           </property>
          </widget>
         </item>

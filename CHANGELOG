@@ -18,6 +18,8 @@ beta-10:
 - Add Icon.
 - Support running js script in the editor.
 - Support showing mouse position in status bar.
+- Update the UI of Door Config Dialog.
+- Fix an edge case bug in Door Config Dialog, when the destination door and the current door are in the same room, the destination door previewer cannot render the changes of the current door.
 
 beta-9:
 - Fix clear-all only clears hardmode entities

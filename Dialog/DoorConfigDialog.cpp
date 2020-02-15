@@ -279,9 +279,17 @@ void DoorConfigDialog::ResetDoorRect()
     ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - currentdoor0->GetX1());
     ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - currentdoor0->GetY1());
     UpdateDoorLayerGraphicsView_Preview();
+
     // when DestinationDoor and currentDoor are in the same Room, the DestinationDoor also needs an update.
-    if (ui->ComboBox_DoorDestinationPicker->currentIndex() != 0)
+    if (!ui->ComboBox_DoorDestinationPicker->currentIndex()) return;
+    if(tmpDestinationRoom->GetRoomID() == tmpCurrentRoom->GetRoomID())
+    {
+        tmpDestinationRoom->GetDoor(DoorID)->SetDoorPlace((unsigned char) ui->SpinBox_DoorX->value(),
+                                                          (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
+                                                          (unsigned char) ui->SpinBox_DoorY->value(),
+                                                          (unsigned char) (ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1));
         UpdateDoorLayerGraphicsView_DestinationDoor();
+    }
 }
 
 /// <summary>
