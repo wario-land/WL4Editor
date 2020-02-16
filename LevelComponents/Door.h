@@ -74,18 +74,18 @@ namespace LevelComponents
         // Setters
         void SetAsVortex() { is_vortex = true; }
         void SetBGM(unsigned short _BGM_ID) { DoorEntry.BGM_ID = _BGM_ID; }
-        void SetDestinationDoor(Door *otherDoor)
+        void SetDestinationDoor(Door &otherDoor)
         {
             DestinationDoor = otherDoor;
-        } // Note: Set DestinationDoor Disabled by setting DestinationDoor point to the vortex Door
+        } // NOTE: Disable DestinationDoor by pointing DestinationDoor to the vortex Door
         void SetDoorType(enum DoorType _DoorType) { DoorEntry.DoorTypeByte = (unsigned char) _DoorType; }
         void SetEntitySetID(unsigned char _EntitySetID) { DoorEntry.EntitySetID = _EntitySetID; }
         void SetGlobalDoorID(int doorId) { DoorID = doorId; }
         void SetLinkerDestination(int dest_RoomId) { DoorEntry.LinkerDestination = (unsigned char) dest_RoomId; }
         void SetDelta(signed char _DeltaX, signed char _DeltaY)
         {
-            DoorEntry.HorizontalDelta = (signed char) _DeltaX;
-            DoorEntry.VerticalDelta   = (signed char) _DeltaY;
+            DoorEntry.HorizontalDelta = static_cast<signed char>(_DeltaX);
+            DoorEntry.VerticalDelta   = static_cast<signed char>(_DeltaY);
         }
         void SetDoorPlace(unsigned char _X1, unsigned char _X2, unsigned char _Y1, unsigned char _Y2)
         {

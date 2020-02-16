@@ -501,7 +501,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         }
 
         // -- Camera limitator --
-        std::vector<struct LevelComponents::__CameraControlRecord *> limitatorlist =
+        std::vector<struct LevelComponents::__CameraControlRecord> limitatorlist =
             currentRoom->GetCameraControlRecords(false);
         size_t limitatornum         = limitatorlist.size();
         k                           = limitatornum - 1;

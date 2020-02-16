@@ -108,7 +108,7 @@ namespace ROMUtils
         AddOpcode(compressedData, 0, false);
 
         // Create the dynamically allocated char array
-        auto *compressed = std::vector<unsigned char> compressed(compressedData.size());
+        auto compressed = std::vector<unsigned char> compressed(compressedData.size());
         for (int i = 0; i < compressedData.size(); ++i)
         {
             compressed[i] = compressedData[i];

@@ -35,7 +35,7 @@ namespace LevelComponents
         memset(EntityListDirty, 0, std::size(EntityListDirty));
 
         // Copy the room header information
-        memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, std::size(struct __RoomHeader));
+        memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
 
         // Set up tileset
         tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
@@ -61,7 +61,7 @@ namespace LevelComponents
         {
             int pLevelCameraControlPointerTable =
                 ROMUtils::PointerFromData(WL4Constants::CameraControlPointerTable + _LevelID * 4);
-            struct __CameraControlRecord *recordPtr = nullptr;
+            std::unique_ptr<__CameraControlRecord> recordPtr = nullptr;
             int k                                   = 0;
             for (int i = 0; i < 16; i++)
             {
@@ -75,11 +75,11 @@ namespace LevelComponents
                     int RecordNum = ROMUtils::CurrentFile[CurrentPointer + 1];
                     while (RecordNum--)
                     {
-                        recordPtr = new __CameraControlRecord;
+                        recordPtr = std::make_unique<__CameraControlRecord>();
                         memcpy(recordPtr,
-                               ROMUtils::CurrentFile + CurrentPointer + k++ * std::size(struct __CameraControlRecord) +
+                               ROMUtils::CurrentFile + CurrentPointer + k++ * sizeof(struct __CameraControlRecord) +
                                    2,
-                               std::size(struct __CameraControlRecord));
+                               sizeof(struct __CameraControlRecord));
                         CameraControlRecords.push_back(recordPtr);
                         recordPtr = nullptr;
                     }
@@ -218,10 +218,6 @@ namespace LevelComponents
 
         delete currentEntitySet;
         FreeCurrentEntityListSource();
-        foreach (struct __CameraControlRecord *C, CameraControlRecords)
-        {
-            delete C;
-        }
         if (IsCopy && !doors.empty())
         {
             for (auto &door : doors)
@@ -290,7 +286,7 @@ namespace LevelComponents
                 newDLS->index = i;
                 drawLayers[i] = newDLS;
             }
-            qsort(drawLayers, 4, std::size(void *), [](const void *data1, const void *data2) {
+            qsort(drawLayers, 4, sizeof(void *), [](const void *data1, const void *data2) {
                 struct DLS *layer1 = *(struct DLS **) data1;
                 struct DLS *layer2 = *(struct DLS **) data2;
                 return layer2->layer->GetLayerPriority() - layer1->layer->GetLayerPriority();
@@ -576,27 +572,27 @@ namespace LevelComponents
             {
                 for (auto &CameraControlRecord : CameraControlRecords)
                 {
-                    CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecord->x1) + 1,
-                                                     16 * ((int) CameraControlRecord->y1) + 1,
-                                                     16 * (qMin((int) CameraControlRecord->x2, (int) Width - 3) -
-                                                           (int) CameraControlRecord->x1 + 1) -
+                    CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecord.x1) + 1,
+                                                     16 * ((int) CameraControlRecord.y1) + 1,
+                                                     16 * (qMin((int) CameraControlRecord.x2, (int) Width - 3) -
+                                                           (int) CameraControlRecord.x1 + 1) -
                                                          2,
-                                                     16 * (qMin((int) CameraControlRecord->y2, (int) Height - 3) -
-                                                           (int) CameraControlRecord->y1 + 1) -
+                                                     16 * (qMin((int) CameraControlRecord.y2, (int) Height - 3) -
+                                                           (int) CameraControlRecord.y1 + 1) -
                                                          2);
-                    if (CameraControlRecord->x3 != (unsigned char) '\xFF')
+                    if (CameraControlRecord.x3 != (unsigned char) '\xFF')
                     {
                         // Draw a box around the block which triggers the camera box, and a line connecting it
-                        CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecord->x3) + 2,
-                                                         16 * ((int) CameraControlRecord->y3) + 2, 12, 12);
+                        CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecord.x3) + 2,
+                                                         16 * ((int) CameraControlRecord.y3) + 2, 12, 12);
                         CameraLimitationPainter.drawLine(
-                            16 * ((int) CameraControlRecord->x1) + 1, 16 * ((int) CameraControlRecord->y1) + 1,
-                            16 * ((int) CameraControlRecord->x3) + 2, 16 * ((int) CameraControlRecord->y3) + 2);
+                            16 * ((int) CameraControlRecord.x1) + 1, 16 * ((int) CameraControlRecord.y1) + 1,
+                            16 * ((int) CameraControlRecord.x3) + 2, 16 * ((int) CameraControlRecord.y3) + 2);
                         CameraLimitationPainter.setPen(CameraLimitationPen2);
-                        int SetNum[4] = { (int) CameraControlRecord->x1, (int) CameraControlRecord->x2,
-                                          (int) CameraControlRecord->y1, (int) CameraControlRecord->y2 };
-                        int k         = (int) CameraControlRecord->ChangeValueOffset;
-                        SetNum[k]     = (int) CameraControlRecord->ChangedValue;
+                        int SetNum[4] = { (int) CameraControlRecord.x1, (int) CameraControlRecord.x2,
+                                          (int) CameraControlRecord.y1, (int) CameraControlRecord.y2 };
+                        int k         = (int) CameraControlRecord.ChangeValueOffset;
+                        SetNum[k]     = (int) CameraControlRecord.ChangedValue;
                         CameraLimitationPainter.drawRect(16 * SetNum[0], 16 * SetNum[2],
                                                          16 * (qMin(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
                                                          16 * (qMin(SetNum[3], (int) Height - 3) - SetNum[2] + 1));
@@ -963,7 +959,7 @@ namespace LevelComponents
     {
         // Populate layer chunks (uses chunk-relative addresses)
         auto *layerPtrs =
-            reinterpret_cast<unsigned int *>(headerChunk->data + RoomID * std::size(struct __RoomHeader) + 8);
+            reinterpret_cast<unsigned int *>(headerChunk->data + RoomID * sizeof(struct __RoomHeader) + 8);
         for (unsigned int i = 0; i < 4; ++i)
         {
             Layer *layer = layers[i];
@@ -975,7 +971,7 @@ namespace LevelComponents
                     unsigned int compressedSize;
                     unsigned char *compressedData        = layer->GetCompressedLayerData(&compressedSize);
                     struct ROMUtils::SaveData layerChunk = { static_cast<unsigned int>(
-                                                                 RoomID * std::size(struct __RoomHeader) + 8 + i * 4),
+                                                                 RoomID * sizeof(struct __RoomHeader) + 8 + i * 4),
                                                              compressedSize,
                                                              compressedData,
                                                              ROMUtils::SaveDataIndex++,
@@ -1023,9 +1019,9 @@ namespace LevelComponents
         {
             if (EntityListDirty[i])
             {
-                unsigned int entityListSize = (EntityList[i].size() + 1) * std::size(struct EntityRoomAttribute);
+                unsigned int entityListSize = (EntityList[i].size() + 1) * sizeof(struct EntityRoomAttribute);
                 struct ROMUtils::SaveData entityListChunk = { static_cast<unsigned int>(
-                                                                  RoomID * std::size(struct __RoomHeader) + 28 + i * 4),
+                                                                  RoomID * sizeof(struct __RoomHeader) + 28 + i * 4),
                                                               entityListSize,
                                                               reinterpret_cast<unsigned char *>(malloc(entityListSize)),
                                                               ROMUtils::SaveDataIndex++,
@@ -1066,7 +1062,7 @@ namespace LevelComponents
             cameraChunk.data[1] = static_cast<unsigned char>(CameraControlRecords.size());
             for (unsigned int i = 0; i < CameraControlRecords.size(); ++i)
             {
-                struct __CameraControlRecord *ccr = CameraControlRecords[i];
+                struct __CameraControlRecordccr = CameraControlRecords[i];
                 memcpy(cameraChunk.data + 2 + i * std::size(struct __CameraControlRecord), ccr,
                        std::size(struct __CameraControlRecord));
             }
@@ -1272,7 +1268,7 @@ namespace LevelComponents
     /// </param>
     void Room::DeleteCameraLimitator(int index)
     {
-        __CameraControlRecord *limitatorptr = CameraControlRecords[index];
+        __CameraControlRecordlimitatorptr = CameraControlRecords[index];
         delete limitatorptr;
         CameraControlRecords.erase(CameraControlRecords.begin() + index);
     }
@@ -1283,7 +1279,7 @@ namespace LevelComponents
     void Room::AddCameraLimitator()
     {
         auto *recordPtr = new __CameraControlRecord;
-        memset(recordPtr, 0, std::size(struct __CameraControlRecord));
+        memset(recordPtr, 0, sizeof(struct __CameraControlRecord));
         recordPtr->TransboundaryControl = recordPtr->x1 = recordPtr->y1 = 2;
         recordPtr->x2                                                   = 16;
         recordPtr->y2                                                   = 11;

@@ -191,7 +191,7 @@ void PatchManagerDialog::on_editPatchButton_clicked()
                 QMessageBox::information(this, "About",
                                          QString("Another entry already exists with the hook address: ") +
                                              QString::number(entry.HookAddress));
-                goto error;
+                 error;
             }
 
             PatchTable->UpdateEntry(selectedIndex, entry);

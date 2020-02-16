@@ -50,6 +50,7 @@ WL4Editor
 TEST/LoadROMFileTEST.cpp
 WL4Editor.pro.user*
 .DS_Store
+Snippet.cpp
 
 # Visual Studio user files
 Backup/

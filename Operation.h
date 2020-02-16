@@ -7,7 +7,7 @@
 #include <memory>
 
 // Enumerate the type of operations that can be performed and undone
-enum class OperationType : objectType
+enum class OperationType
 {
     ChangeTileOperation,
     ChangeRoomConfigOperation,
@@ -59,7 +59,7 @@ struct OperationParams
 {
     OperationType objectType{};
     std::vector<TileChangeParams> tileChangeParams;
-    ObjectMoveParams objectMoveParams{};
+    ObjectMoveParams ObjectMoveParams(int pX, int pY, int nX, int nY, int objectType, int objectID){};
     DialogParams::RoomConfigParams lastRoomConfigParams{};
     DialogParams::RoomConfigParams newRoomConfigParams{};
     DialogParams::TilesetEditParams lastTilesetEditParams{};
@@ -69,7 +69,7 @@ struct OperationParams
     bool objectPositionChange{};
     bool TilesetChange{};
 
-    // note(alt): Commented because we don't actually need this anymore
+    // NOTE(alt): Commented because we don't actually need this anymore
     /*
     OperationParams() :
             lastRoomConfigParams(nullptr), newRoomConfigParams(nullptr), tileChange(false), roomConfigChange(false),

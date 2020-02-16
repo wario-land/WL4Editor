@@ -196,7 +196,7 @@ void CameraControlDockWidget::SetListviewItemText(int row)
 /// </summary>
 void CameraControlDockWidget::PaintListView()
 {
-    std::vector<struct LevelComponents::__CameraControlRecord *> currentCameraLimitators =
+    std::vector<struct LevelComponents::__CameraControlRecord> currentCameraLimitators =
         currentRoom->GetCameraControlRecords();
     ClearListView();
     ListViewItemModel = new QStandardItemModel(this);
@@ -246,11 +246,11 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
 {
     IsSavingData = false;
     ui->LimitatorSetting_groupBox->setEnabled(false);
-    std::vector<struct LevelComponents::__CameraControlRecord *> currentCameraLimitators =
+    std::vector<struct LevelComponents::__CameraControlRecord> currentCameraLimitators =
         currentRoom->GetCameraControlRecords();
     int linenum                                              = index.row();
     SelectedLimitator                                        = linenum;
-    LevelComponents::__CameraControlRecord *currentLimitator = currentCameraLimitators[linenum];
+    LevelComponents::__CameraControlRecord currentLimitator = currentCameraLimitators[linenum];
     int currentLimitatorTypeid =
         (currentLimitator->ChangeValueOffset == 0xFF ? -1 : currentLimitator->ChangeValueOffset);
     ui->CameraLimitatorTypePicker_comboBox->setCurrentIndex(currentLimitatorTypeid + 1);

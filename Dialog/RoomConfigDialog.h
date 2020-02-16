@@ -36,7 +36,7 @@ namespace DialogParams
         unsigned short *LayerData[3];
 
         // Default constructor
-        RoomConfigParams() { memset(this, 0, std::size(struct RoomConfigParams)); }
+        RoomConfigParams() { memset(this, 0, sizeof(struct RoomConfigParams)); }
 
         // Construct this param struct using a Room object
         RoomConfigParams(LevelComponents::Room *room) :

@@ -1,4 +1,4 @@
-# WL4Editor user helpfile
+# WL4Editor User Helpfile
   
 ## Part 1: About ROM and Level Loading
   
@@ -31,7 +31,7 @@ You may know the place in the first graphic, you can control Wario ground-pound 
 ![graphics not found](2.png)  
 
 #### Alpha Blend Attributes
-There's unfortunately not a great way to describe alpha blending
+There's unfortunately no great ways to describe alpha blending
 we could be hand-wavey and say it's a transparency value
 but alpha blending and transparency are not the same thing
 transparency color calculations are a subset of alpha blending

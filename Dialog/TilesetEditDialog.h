@@ -25,7 +25,7 @@ namespace DialogParams
         LevelComponents::Tileset *newTileset = nullptr;
 
         // Default constructor
-        TilesetEditParams() { memset(this, 0, std::size(class TilesetEditParams)); }
+        TilesetEditParams() { memset(this, 0, sizeof(TilesetEditParams)); }
 
         // Construct this param struct using a Room object
         TilesetEditParams(LevelComponents::Room *room)

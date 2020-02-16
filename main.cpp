@@ -37,20 +37,19 @@ bool LoadROMFile(const QString filePath)
     }
 
     // Read data
-    auto ROMAddr = std::vector<unsigned char> ROMAddr(0x1000000); // set it to be 16 MB to let the data can be write freely
-    file.read((char *) ROMAddr, length);
+    auto ROMAddr = std::vector<char> ROMAddr(0x1000000); // set it to be 16 MB to let the data can be write freely
+    file.read(ROMAddr, length);
     file.close();
 
     // To check ROM correct
-    if (strncmp((const char *) (ROMAddr + 0xA0), "WARIOLANDE", 10) != 0)
+    if (strncmp(const ROMAddr + 0xA0), "WARIOLANDE", 10) != 0)
     { // if loaded a wrong ROM
-        delete[] ROMAddr;
         return false;
     }
 
     ROMUtils::CurrentFileSize = length;
     ROMUtils::ROMFilePath     = filePath;
-    ROMUtils::CurrentFile     = static_cast<unsigned char *>(ROMAddr);
+    ROMUtils::CurrentFile     = static_cast<unsigned char>(ROMAddr);
     return true;
 }
 
