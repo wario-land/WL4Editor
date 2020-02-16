@@ -28,7 +28,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++17 strict_c++
 
-QMAKE_CXXFLAGS = -fpermissive
+QMAKE_CXXFLAGS = -fpermissive -Wall -Werror
 
 SOURCES += \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \

@@ -22,7 +22,7 @@
 /// <param name="filePath">
 /// The path to the file that will be read.
 /// </param>
-bool LoadROMFile(const QString filePath)
+bool LoadROMFile(QString filePath)
 {
     // Read ROM file into current file array
     QFile file(filePath);
@@ -37,20 +37,23 @@ bool LoadROMFile(const QString filePath)
     }
 
     // Read data
-    auto ROMAddr = std::vector<char> ROMAddr(0x1000000); // set it to be 16 MB to let the data can be write freely
-    file.read(ROMAddr, length);
+    unsigned char *ROMAddr = new unsigned char[0x1000000];  // set it to be 16 MB to let the data can be write freely
+    file.read((char *) ROMAddr, length);
     file.close();
 
     // To check ROM correct
-    if (strncmp(const ROMAddr + 0xA0), "WARIOLANDE", 10) != 0)
+    if (strncmp((const char *) (ROMAddr + 0xA0), "WARIOLANDE", 10))
     { // if loaded a wrong ROM
+        delete[] ROMAddr;
         return false;
     }
-
-    ROMUtils::CurrentFileSize = length;
-    ROMUtils::ROMFilePath     = filePath;
-    ROMUtils::CurrentFile     = static_cast<unsigned char>(ROMAddr);
-    return true;
+    else
+    {
+        ROMUtils::CurrentFileSize = length;
+        ROMUtils::ROMFilePath = filePath;
+        ROMUtils::CurrentFile = (unsigned char *) ROMAddr;
+        return true;
+    }
 }
 
 /// <summary>

@@ -38,9 +38,9 @@ namespace LevelComponents
     private:
         // Instance variables
         unsigned char RoomID;
-        Door *DestinationDoor = nullptr;
-        bool is_vortex        = false;
-        bool newDoor          = false;
+        std::shared_ptr<Door> DestinationDoor = nullptr;
+        bool is_vortex                        = false;
+        bool newDoor                          = false;
         int DoorID; // Global Door Id in one Room
         __DoorEntry DoorEntry;
 
@@ -55,7 +55,7 @@ namespace LevelComponents
         unsigned short GetBGM_ID() { return DoorEntry.BGM_ID; }
         int GetDeltaX() { return DoorEntry.HorizontalDelta; }
         int GetDeltaY() { return DoorEntry.VerticalDelta; }
-        Door *GetDestinationDoor() { return DestinationDoor; }
+        std::shared_ptr<Door> GetDestinationDoor() { return DestinationDoor; }
         QString GetDoorName()
         {
             return "Room " + QString::number((int) RoomID, 16) + " Door " + QString::number(DoorID, 10);
@@ -74,7 +74,7 @@ namespace LevelComponents
         // Setters
         void SetAsVortex() { is_vortex = true; }
         void SetBGM(unsigned short _BGM_ID) { DoorEntry.BGM_ID = _BGM_ID; }
-        void SetDestinationDoor(Door &otherDoor)
+        void SetDestinationDoor(std::shared_ptr<Door> otherDoor)
         {
             DestinationDoor = otherDoor;
         } // NOTE: Disable DestinationDoor by pointing DestinationDoor to the vortex Door
