@@ -21,7 +21,7 @@ jobs:
           submodules: true
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2.3.0
+        uses: ouuan/install-qt-action@v2.3.1
         with:
           version: 5.14.1
 
