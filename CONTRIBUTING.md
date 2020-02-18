@@ -1,9 +1,9 @@
-# WL4Editor's contributor's guide
-Basically this is what you need to know before contributing to this repository.
+# WL4Editor's Contributor's Guide
+Here are some guidelines for contributing to this repository:
 
-## TL;DR
+## In a Nutshell:
 - Format code with the clang-format configuration that we provided.
-- Make sure the code compiles or mark as [WIP] when making a Pull request (We have a CI and people with Qt Creator so you can't lie to us).
+- Make sure the code compiles or mark as [WIP] when making a Pull request.
 - Avoid using new/delete/malloc/free/realloc, prefer smart pointers for memory management.
 - Avoid using C-Style Anything.
 - If you have to use C Libraries, use the C++ wrappers.
