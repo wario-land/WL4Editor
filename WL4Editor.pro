@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT += core gui
-QT += qml        #need this to conpile QJSEngine
+QT += qml        # Need this to compile QJSEngine
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = WL4Editor
