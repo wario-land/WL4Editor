@@ -256,9 +256,9 @@ void WL4EditorWindow::PrintMousePos(uint x, uint y)
 {
     bool condition;
     if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam()) {
-        condition = (x > CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width()) || (y > CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height());
+        condition = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height());
     } else {
-        condition = (x > CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y > CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
+        condition = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
     }
     if(condition)
         statusBarLabel_MousePosition->setText("Out of range!");

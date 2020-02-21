@@ -21,14 +21,6 @@ namespace ROMUtils
     extern unsigned int SaveDataIndex;
     extern LevelComponents::Tileset *singletonTilesets[92];
 
-    // Global functions
-    unsigned int IntFromData(int address);
-    unsigned int PointerFromData(int address);
-    unsigned char *LayerRLEDecompress(int address, size_t outputSize);
-    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData,
-                                  unsigned char **OutputCompressedData);
-    int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
-
     enum SaveDataChunkType
     {
         InvalidationChunk                     = '\x00',

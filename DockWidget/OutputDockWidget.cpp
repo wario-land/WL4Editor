@@ -1,6 +1,7 @@
 #include "OutputDockWidget.h"
 #include "ui_OutputDockWidget.h"
 #include "WL4EditorWindow.h"
+#include <QQmlEngine>
 
 extern WL4EditorWindow *singleton;
 
@@ -36,7 +37,8 @@ QJSValue OutputDockWidget::ExecuteJSScript(QString scriptSourceCode)
     } else {
         ui->textEdit_Output->append("Script processing finished.\n");
     }
-    jsEngine.collectGarbage();
+    QQmlEngine::setObjectOwnership(interface, QQmlEngine::CppOwnership);
+    //jsEngine.collectGarbage();
     return result;
 }
 

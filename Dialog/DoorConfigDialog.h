@@ -68,6 +68,8 @@ private:
     LevelComponents::Room *tmpCurrentRoom = nullptr; // Use this to render Door preview
     LevelComponents::Room *tmpDestinationRoom = nullptr;
     int DoorID = -1;
+    int door_CurX = 0; int door_CurY = 0;
+    int door_DesX = 0; int door_DesY = 0;  // used in scrollbars reset
     bool IsInitialized = false;
     EntityFilterTableModel *EntityFilterTable;
 
