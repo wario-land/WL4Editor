@@ -106,7 +106,11 @@
      </layout>
     </item>
     <item row="1" column="0">
-     <widget class="MainGraphicsView" name="graphicsView"/>
+     <widget class="MainGraphicsView" name="graphicsView">
+      <property name="mouseTracking">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -249,10 +253,24 @@
     </widget>
     <addaction name="menuThemes"/>
    </widget>
+   <widget class="QMenu" name="menuScript">
+    <property name="title">
+     <string>Script</string>
+    </property>
+    <addaction name="actionRun_from_file"/>
+   </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionOutput_window"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuPatches"/>
+   <addaction name="menuScript"/>
    <addaction name="menuSettings"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -431,6 +449,19 @@
    </property>
    <property name="text">
     <string>Light</string>
+   </property>
+  </action>
+  <action name="actionRun_from_file">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Run from file...</string>
+   </property>
+  </action>
+  <action name="actionOutput_window">
+   <property name="text">
+    <string>Output window</string>
    </property>
   </action>
  </widget>

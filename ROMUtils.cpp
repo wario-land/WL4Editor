@@ -1,7 +1,7 @@
 #include "ROMUtils.h"
 #include "Compress.h"
 #include <QFile>
-#include <WL4EditorWindow.h>
+#include "WL4EditorWindow.h"
 #include <cassert>
 #include <iostream>
 
@@ -645,7 +645,9 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             file.close();
 
             // Set the CurrentFile to the copied CurrentFile data
-            memcpy(CurrentFile, TempFile, CurrentFileSize);
+            auto temp = CurrentFile;
+            CurrentFile = TempFile;
+            delete[] temp;
             CurrentFileSize = TempLength;
         }
 

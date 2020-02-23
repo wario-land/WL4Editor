@@ -16,6 +16,11 @@ beta-10:
 - Add Room size limitation.
 - Use the Phantomstyle UI theme.
 - Add Icon.
+- Support running js script in the editor.
+- Support showing mouse position in status bar.
+- Update the UI of Door Config Dialog.
+- Fix an edge case bug in Door Config Dialog, when the destination door and the current door are in the same room, the destination door previewer cannot render the changes of the current door.
+- In Door Config Dialog, both graphicviews of the door preview and the destination door preview will auto-reset scrollbars when you reset them.
 
 beta-9:
 - Fix clear-all only clears hardmode entities

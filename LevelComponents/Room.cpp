@@ -9,7 +9,7 @@
 #include <QPainter>
 #include <iostream>
 
-#include <WL4EditorWindow.h>
+#include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
 
 namespace LevelComponents

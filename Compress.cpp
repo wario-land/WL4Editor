@@ -13,6 +13,7 @@ namespace ROMUtils
         // Define variables used in the creation of the jump table
         unsigned char *data = (unsigned char *) this->data;
         unsigned short *R = new unsigned short[data_len * 2];
+        memset(R, 0, data_len << 2);
         unsigned short *C = R + data_len;
         int cons = 0, minrun = GetMinimumRunSize();
 

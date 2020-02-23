@@ -47,8 +47,11 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     // MainWindow UI Initialization
     ui->graphicsView->scale(graphicViewScalerate, graphicViewScalerate);
     statusBarLabel = new QLabel("Open a ROM file");
+    statusBarLabel_MousePosition = new QLabel();
     statusBarLabel->setMargin(3);
+    statusBarLabel_MousePosition->setMargin(3);
     ui->statusBar->addWidget(statusBarLabel);
+    ui->statusBar->addWidget(statusBarLabel_MousePosition);
     switch (themeId) {
     case 0:
     { ui->actionLight->setChecked(true); break; }
@@ -61,6 +64,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     Tile16SelecterWidget = new Tile16DockWidget();
     EntitySetWidget = new EntitySetDockWidget();
     CameraControlWidget = new CameraControlDockWidget();
+    OutputWidget = new OutputDockWidget();
 
     // Add Recent ROM QAction according to the INI file
     QMenu *filemenu = ui->menuRecent_ROM;
@@ -96,9 +100,11 @@ WL4EditorWindow::~WL4EditorWindow()
     delete ui;
     delete Tile16SelecterWidget;
     delete EditModeWidget;
+    delete OutputWidget;
     delete EntitySetWidget;
     delete CameraControlWidget;
     delete statusBarLabel;
+    delete statusBarLabel_MousePosition;
 
     // Decomstruct all Tileset singletons
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
@@ -238,6 +244,29 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
 }
 
 /// <summary>
+/// Print Mouse Pos in the status bar
+/// </summary>
+/// <param name="x">
+/// current tile x position
+/// </param>
+/// <param name="y">
+/// current tile y position
+/// </param>
+void WL4EditorWindow::PrintMousePos(uint x, uint y)
+{
+    bool condition;
+    if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam()) {
+        condition = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height());
+    } else {
+        condition = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
+    }
+    if(condition)
+        statusBarLabel_MousePosition->setText("Out of range!");
+    else
+        statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")");
+}
+
+/// <summary>
 /// Update the UI after loading a ROM.
 /// </summary>
 void WL4EditorWindow::UIStartUp(int currentTilesetID)
@@ -262,12 +291,14 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionRedo->setEnabled(true);
         ui->actionUndo->setEnabled(true);
+        ui->actionRun_from_file->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
         addDockWidget(Qt::RightDockWidgetArea, Tile16SelecterWidget);
         addDockWidget(Qt::RightDockWidgetArea, EntitySetWidget);
         addDockWidget(Qt::RightDockWidgetArea, CameraControlWidget);
+        addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
         CameraControlWidget->setVisible(false);
         EntitySetWidget->setVisible(false);
     }
@@ -1639,4 +1670,38 @@ void WL4EditorWindow::on_actionDark_triggered()
     QApplication::setPalette(namedColorSchemePalette(Dark));
     SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString("1"));
     ui->actionLight->setChecked(false);
+}
+
+/// <summary>
+/// Open a script file and run it.
+/// </summary>
+void WL4EditorWindow::on_actionRun_from_file_triggered()
+{
+    // Select a Script file to open and run
+    QString qFilePath =
+        QFileDialog::getOpenFileName(this, tr("Open Script file"), dialogInitialPath, tr("Script files (*.js)"));
+    if (!qFilePath.compare("")) {
+        return;
+    }
+    QFile file(qFilePath);
+    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+            QMessageBox::critical(this, tr("Error"), tr("Can't open file."));
+            return;
+    }
+    QString code = QString::fromUtf8(file.readAll());
+    OutputWidget->ExecuteJSScript(code);
+}
+
+/// <summary>
+/// Open the Output dock widget.
+/// </summary>
+void WL4EditorWindow::on_actionOutput_window_triggered()
+{
+    if(OutputWidget == nullptr) {
+        OutputWidget = new OutputDockWidget(this);
+        addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
+    } else if(OutputWidget != nullptr) {
+        addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
+        OutputWidget->setVisible(true);
+    }
 }
