@@ -29,7 +29,7 @@ int ScriptInterface::GetCurRoomTile16(int layerID, int x, int y)
         log(QString("position out of range!\n"));
         return -1;
     }
-    return room->GetLayer(layerID)->GetLayerData()[y * width + x];
+    return room->GetLayer(layerID)->GetTileData(x, y);
 }
 
 void ScriptInterface::Test_DecompressData(int mappingtype, int address)
@@ -119,7 +119,7 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
         log(QString("position out of range!\n"));
         return;
     }
-    room->GetLayer(layerID)->GetLayerData()[y * width + x] = (unsigned short) (TileID & 0xFFFF);
+    room->GetLayer(layerID)->SetTileData(TileID & 0xFFFF, x, y);
     room->GetLayer(layerID)->SetDirty(true);
     singleton->SetUnsavedChanges(true);
 }

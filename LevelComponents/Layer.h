@@ -37,6 +37,17 @@ namespace LevelComponents
         enum LayerMappingType GetMappingType() { return MappingType; }
         unsigned short *GetLayerData() { return LayerData; }
         void SetLayerData(unsigned short *ptr) { LayerData = ptr; }
+        void SetTileData(unsigned short id, unsigned char x, unsigned char y)
+        {
+            if((x + 1 + y * Width) < (Width * Height))
+                LayerData[x + y * Width] = id;
+        }
+        unsigned short GetTileData(unsigned char x, unsigned char y)
+        {
+            if((x + 1 + y * Width) < (Width * Height))
+                return LayerData[x + y * Width];
+            return 0xFFFF; // TODO
+        }
         int GetLayerPriority() { return LayerPriority; }
         void SetLayerPriority(int priority) { LayerPriority = priority; }
         void ReRenderTile(int xpos, int ypos, unsigned short TileID, Tileset *tileset);
