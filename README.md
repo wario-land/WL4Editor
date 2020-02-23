@@ -2,6 +2,8 @@
 
 ![](./images/WL4Editor.png)
 
+[![CodeFactor](https://www.codefactor.io/repository/github/wario-land/wl4editor/badge)](https://www.codefactor.io/repository/github/wario-land/wl4editor)
+
 This repository contains the most feature complete Wario Land 4 Editor yet.
 
 Based on old and deprecated projects, we made a new one and are trying to make it the best one possible.
