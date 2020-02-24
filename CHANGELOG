@@ -23,6 +23,7 @@ beta-10:
 - Fix an edge case bug in Layer data compression procedure.
 - contributors in about dialog are listed in alphabetical order now.
 - shortcuts bugfixes and menu tweaks for clearing everything in current room(ctrl + delete) and switching to different room in current level(pageup & pagedown).
+- Fix color blending glitches when reset Tiles.
 
 beta-9:
 - Fix clear-all only clears hardmode entities
