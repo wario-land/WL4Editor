@@ -39,7 +39,7 @@ namespace LevelComponents
         void SetLayerData(unsigned short *ptr) { LayerData = ptr; }
         void SetTileData(unsigned short id, unsigned char x, unsigned char y)
         {
-            if((x + 1 + y * Width) < (Width * Height))
+            if((x + y * Width) < (Width * Height))
                 LayerData[x + y * Width] = id;
         }
         unsigned short GetTileData(unsigned char x, unsigned char y)
