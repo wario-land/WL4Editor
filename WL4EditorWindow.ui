@@ -62,6 +62,9 @@
         <property name="text">
          <string>&lt;</string>
         </property>
+        <property name="shortcut">
+         <string>PgUp</string>
+        </property>
        </widget>
       </item>
       <item>
@@ -87,6 +90,9 @@
         </property>
         <property name="text">
          <string>&gt;</string>
+        </property>
+        <property name="shortcut">
+         <string>PgDown</string>
         </property>
        </widget>
       </item>
@@ -120,7 +126,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -217,6 +223,8 @@
      </widget>
      <addaction name="menu_clear_Layer"/>
      <addaction name="menu_clear_Entity_list"/>
+     <addaction name="separator"/>
+     <addaction name="actionClear_all"/>
     </widget>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
@@ -462,6 +470,17 @@
   <action name="actionOutput_window">
    <property name="text">
     <string>Output window</string>
+   </property>
+  </action>
+  <action name="actionClear_all">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Clear all</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Del</string>
    </property>
   </action>
  </widget>

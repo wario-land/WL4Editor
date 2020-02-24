@@ -289,6 +289,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menuClear->setEnabled(true);
         ui->menu_clear_Layer->setEnabled(true);
         ui->menu_clear_Entity_list->setEnabled(true);
+        ui->actionClear_all->setEnabled(true);
         ui->actionRedo->setEnabled(true);
         ui->actionUndo->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
@@ -663,31 +664,6 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 }
 
 /// <summary>
-/// this function will be called when key-press happens in the editor.
-/// </summary>
-/// <param name="event">
-/// The key-press event.
-/// </param>
-void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
-{
-    if (!firstROMLoaded)
-        return;
-
-    if (event->key() == Qt::Key_PageDown)
-    {
-        on_roomIncreaseButton_clicked();
-    }
-    else if (event->key() == Qt::Key_PageUp)
-    {
-        on_roomDecreaseButton_clicked();
-    }
-    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_Delete)
-    {
-        CurrentRoomClearEverything();
-    }
-}
-
-/// <summary>
 /// Slot function to load a ROM.
 /// </summary>
 void WL4EditorWindow::openRecentROM()
@@ -738,8 +714,6 @@ void WL4EditorWindow::openRecentROM()
     }
 
     LoadROMDataFromFile(filepath);
-
-    this->setFocus(); // Enable keyPressEvent
 }
 
 /// <summary>
@@ -748,7 +722,6 @@ void WL4EditorWindow::openRecentROM()
 void WL4EditorWindow::on_actionOpen_ROM_triggered()
 {
     OpenROM();
-    this->setFocus(); // Enable keyPressEvent
 }
 
 /// <summary>
@@ -1311,16 +1284,16 @@ void WL4EditorWindow::on_actionAbout_triggered()
     // Show the about dialog
     QMessageBox infoPrompt;
     infoPrompt.setWindowTitle(tr("About"));
-    infoPrompt.setText(QString("WL4Editor code contributors:\n"
-                               "    Goldensunboy\n"
-                               "    shinespeciall\n"
-                               "    xiazhanjian\n"
+    infoPrompt.setText(QString("WL4Editor code contributors(alphabetical order):\n"
                                "    chanchancl\n"
+                               "    Goldensunboy\n"
+                               "    IamRifki\n"
                                "    Kleyment\n"
-                               "    IamRifki\n\n"
+                               "    shinespeciall\n"
+                               "    xiazhanjian\n\n"
                                "Special Thanks:\n"
-                               "    xTibor\n"
-                               "    randrew/cancel\n\n"
+                               "    randrew\n"
+                               "    xTibor\n\n"
                                "Version: ") +
                        WL4EDITOR_VERSION);
     QPushButton *changelogButton = infoPrompt.addButton(tr("Ok"), QMessageBox::NoRole);
@@ -1704,4 +1677,12 @@ void WL4EditorWindow::on_actionOutput_window_triggered()
         addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
         OutputWidget->setVisible(true);
     }
+}
+
+/// <summary>
+/// Clear everything in the current Room.
+/// </summary>
+void WL4EditorWindow::on_actionClear_all_triggered()
+{
+    CurrentRoomClearEverything();
 }

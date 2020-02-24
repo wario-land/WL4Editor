@@ -1,7 +1,7 @@
 #ifndef WL4CONSTANTS_H
 #define WL4CONSTANTS_H
 
-#define WL4EDITOR_VERSION "beta-9"
+#define WL4EDITOR_VERSION "beta-10"
 
 namespace WL4Constants
 {
