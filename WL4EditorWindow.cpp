@@ -1284,7 +1284,7 @@ void WL4EditorWindow::on_actionAbout_triggered()
     // Show the about dialog
     QMessageBox infoPrompt;
     infoPrompt.setWindowTitle(tr("About"));
-    infoPrompt.setText(QString("WL4Editor code contributors(alphabetical order):\n"
+    infoPrompt.setText(QString("WL4Editor contributors in alphabetical order are:\n"
                                "    chanchancl\n"
                                "    Goldensunboy\n"
                                "    IamRifki\n"
