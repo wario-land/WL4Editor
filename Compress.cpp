@@ -29,13 +29,13 @@ namespace ROMUtils
         // Populate C forwards in the jump table
         for (unsigned int i = 0; i < data_len; ++i)
         {
-            if (R[i] < minrun && cons < jumpLimit)
+            if (R[i] < minrun)
             {
                 ++cons;
             }
-            else
+            if (R[i] >= minrun || cons == jumpLimit)
             {
-                C[i - cons] = cons;
+                C[i - cons + 1] = cons;
                 cons = 0;
                 i += R[i] - 1;
             }
