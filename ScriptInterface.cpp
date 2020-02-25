@@ -111,7 +111,7 @@ unsigned int ScriptInterface::Test_GetLayerDecomdataPointer(int layerId)
 void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
 {
     if(layerID > 2 || layerID < 0) {
-        log(QString("Illegal layer Id !\n"));
+        log(QString("Illegal layer ID!\n"));
         return;
     }
     LevelComponents::Room *room = singleton->GetCurrentRoom();
@@ -120,7 +120,7 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
     int width = static_cast<int>(room->GetWidth());
     int height = static_cast<int>(room->GetHeight());
     if(x >= width || y >= height) {
-        log(QString("position out of range!\n"));
+        log(QString("Position out of range!\n"));
         return;
     }
     room->GetLayer(layerID)->SetTileData(TileID & 0xFFFF, x, y);
