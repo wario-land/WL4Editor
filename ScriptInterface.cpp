@@ -110,6 +110,10 @@ unsigned int ScriptInterface::Test_GetLayerDecomdataPointer(int layerId)
 
 void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
 {
+    if(layerID > 2 || layerID < 0) {
+        log(QString("Illegal layer Id !\n"));
+        return;
+    }
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     if(room->GetLayer(layerID)->GetMappingType() != LevelComponents::LayerMap16)
         return;
