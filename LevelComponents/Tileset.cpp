@@ -21,7 +21,7 @@ namespace LevelComponents
     Tileset::Tileset(int tilesetPtr, int __TilesetID)
     {
         //Save the ROM pointer into the tileset object
-        this->tilesetPtr=tilesetPtr;
+        this->tilesetPtr = tilesetPtr;
 
         tile8x8array = new Tile8x8* [0x600];
         map16array = new TileMap16* [0x300];
