@@ -24,6 +24,7 @@ beta-10:
 - contributors in about dialog are listed in alphabetical order now.
 - shortcuts bugfixes and menu tweaks for clearing everything in current room(ctrl + delete) and switching to different room in current level(pageup & pagedown).
 - Fix color blending glitches when reset Tiles.
+- All the output information will be shown in the output window now.
 
 beta-9:
 - Fix clear-all only clears hardmode entities
