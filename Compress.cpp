@@ -33,18 +33,19 @@ namespace ROMUtils
             {
                 ++cons;
             }
-            if (R[i] >= minrun || cons == jumpLimit)
-            {
-                C[i - cons + 1] = cons;
+            if (R[i] >= minrun) {
+                C[i - cons] = cons;
                 cons = 0;
                 i += R[i] - 1;
+            } else if (cons == jumpLimit) {
+                C[i - cons + 1] = cons;
+                cons = 0;
             }
         }
         if (cons)
         {
             C[data_len - cons] = cons;
         }
-
         JumpTable = R; // set the jump table since it has been populated
     }
 

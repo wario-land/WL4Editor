@@ -739,6 +739,8 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         if(!ret) return false;
 
         // Set the new internal data pointer for LevelComponents objects, and mark dirty objects as clean
+        // TODO: move out the unset dirty code, it is headache to do all of them here
+        // TODO: code needs to be changed if we are going to support saving all the changes in the whole ROM, every level i mean
         std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
         for(unsigned int i = 0; i < rooms.size(); ++i)
         {
