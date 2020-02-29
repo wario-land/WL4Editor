@@ -80,6 +80,9 @@ int main(int argc, char *argv[])
 {
     StaticInitialization_BeforeROMLoading();
 
+    // High DPI support, perhaps won't work in all the OS but better than nothing
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
     QApplication application(argc, argv);
     SettingsUtils::InitProgramSetupPath(application);
     application.setWindowIcon(QIcon("./images/icon.ico"));
