@@ -289,6 +289,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menuClear->setEnabled(true);
         ui->menu_clear_Layer->setEnabled(true);
         ui->menu_clear_Entity_list->setEnabled(true);
+        ui->actionClear_all->setEnabled(true);
         ui->actionRedo->setEnabled(true);
         ui->actionUndo->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
@@ -663,31 +664,6 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 }
 
 /// <summary>
-/// this function will be called when key-press happens in the editor.
-/// </summary>
-/// <param name="event">
-/// The key-press event.
-/// </param>
-void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
-{
-    if (!firstROMLoaded)
-        return;
-
-    if (event->key() == Qt::Key_PageDown)
-    {
-        on_roomIncreaseButton_clicked();
-    }
-    else if (event->key() == Qt::Key_PageUp)
-    {
-        on_roomDecreaseButton_clicked();
-    }
-    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_Delete)
-    {
-        CurrentRoomClearEverything();
-    }
-}
-
-/// <summary>
 /// Slot function to load a ROM.
 /// </summary>
 void WL4EditorWindow::openRecentROM()
@@ -738,8 +714,6 @@ void WL4EditorWindow::openRecentROM()
     }
 
     LoadROMDataFromFile(filepath);
-
-    this->setFocus(); // Enable keyPressEvent
 }
 
 /// <summary>
@@ -748,7 +722,6 @@ void WL4EditorWindow::openRecentROM()
 void WL4EditorWindow::on_actionOpen_ROM_triggered()
 {
     OpenROM();
-    this->setFocus(); // Enable keyPressEvent
 }
 
 /// <summary>
@@ -1263,7 +1236,9 @@ void WL4EditorWindow::on_actionSave_ROM_triggered()
 {
     if (SaveCurrentFile())
     {
-        statusBarLabel->setText("Saved!");
+        OutputWidget->PrintString("Save successfully !");
+    } else {
+        OutputWidget->PrintString("Save failure !");
     }
 }
 
@@ -1274,7 +1249,9 @@ void WL4EditorWindow::on_actionSave_As_triggered()
 {
     if (SaveCurrentFileAs())
     {
-        statusBarLabel->setText("Saved!");
+        OutputWidget->PrintString("Save successfully !");
+    } else {
+        OutputWidget->PrintString("Save failure !");
     }
 }
 
@@ -1311,16 +1288,16 @@ void WL4EditorWindow::on_actionAbout_triggered()
     // Show the about dialog
     QMessageBox infoPrompt;
     infoPrompt.setWindowTitle(tr("About"));
-    infoPrompt.setText(QString("WL4Editor code contributors:\n"
-                               "    Goldensunboy\n"
-                               "    shinespeciall\n"
-                               "    xiazhanjian\n"
+    infoPrompt.setText(QString("WL4Editor contributors in alphabetical order are:\n"
                                "    chanchancl\n"
+                               "    Goldensunboy\n"
+                               "    IamRifki\n"
                                "    Kleyment\n"
-                               "    IamRifki\n\n"
+                               "    shinespeciall\n"
+                               "    xiazhanjian\n\n"
                                "Special Thanks:\n"
-                               "    xTibor\n"
-                               "    randrew/cancel\n\n"
+                               "    randrew\n"
+                               "    xTibor\n\n"
                                "Version: ") +
                        WL4EDITOR_VERSION);
     QPushButton *changelogButton = infoPrompt.addButton(tr("Ok"), QMessageBox::NoRole);
@@ -1368,12 +1345,12 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
     // swap Layerdata pointers if possible
     if (!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled()))
     {
-        statusBarLabel->setText(tr(layerSwapFailureMsg));
+        OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
     if (CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
     {
-        statusBarLabel->setText(tr(layerSwapFailureMsg));
+        OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
     unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetLayerData();
@@ -1401,7 +1378,7 @@ void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
     // swap Layerdata pointers if possible
     if (!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled()))
     {
-        statusBarLabel->setText(tr(layerSwapFailureMsg));
+        OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
     unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->GetLayerData();
@@ -1430,12 +1407,12 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
     if (!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled()) ||
         !(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled()))
     {
-        statusBarLabel->setText(tr(layerSwapFailureMsg));
+        OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
     if (CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
     {
-        statusBarLabel->setText(tr(layerSwapFailureMsg));
+        OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
     unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetLayerData();
@@ -1704,4 +1681,12 @@ void WL4EditorWindow::on_actionOutput_window_triggered()
         addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
         OutputWidget->setVisible(true);
     }
+}
+
+/// <summary>
+/// Clear everything in the current Room.
+/// </summary>
+void WL4EditorWindow::on_actionClear_all_triggered()
+{
+    CurrentRoomClearEverything();
 }

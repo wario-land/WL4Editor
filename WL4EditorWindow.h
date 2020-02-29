@@ -100,9 +100,6 @@ public:
     void PrintMousePos(uint x, uint y);
     uint GetGraphicViewScalerate() { return graphicViewScalerate; }
 
-    // Events
-    void keyPressEvent(QKeyEvent *event);
-
 private slots:
     // called slots
     void openRecentROM();
@@ -139,6 +136,7 @@ private slots:
     void on_actionDark_triggered();
     void on_actionRun_from_file_triggered();
     void on_actionOutput_window_triggered();
+    void on_actionClear_all_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

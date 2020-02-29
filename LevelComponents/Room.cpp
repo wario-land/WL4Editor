@@ -757,6 +757,9 @@ namespace LevelComponents
                 QPainter alphaPainterTemp(&alphaPixmapTemp);
                 bool *LayersCurrentVisibilityTemp = singleton->GetLayersVisibilityArray();
 
+                // clean the rect which need to redraw, or remaining old graphic will causes wrong rendering result
+                alphaPainterTemp.fillRect(renderParams->tileX * 16, renderParams->tileY * 16, 16, 16, QColor(0, 0, 0).rgb());
+
                 for (int i = 0; i < 4; i++)
                 {
                     // If this is a pass for a layer under the alpha layer, draw the rendered layer to the EVA component
