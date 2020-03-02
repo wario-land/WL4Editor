@@ -7,15 +7,24 @@ beta-10:
 - Added INI program settings, Support Opening Recent ROM in File menu.
 - Support drag & drop for door and entity, now double-click open the door dialog instead of left-click.
 - Add Tileset editor dialog.
-- Adjust the EditMode dock widget, move ExtraLayers_GroupBox out from visibleLayersGroupBox.
+- Adjust the EditMode dock widget, Support showing hidden coins in breakable blocks.
 - Fix some entities rendering glitches caused by wrong tile loading.
 - Add another available Camera control type, Vertical Seperate.
 - Support tristate for Entities Layers visibility checkbox to support not rendering position boxes for entities.
 - Add menu item "Export" and support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers.
-- Support showing hidden coins in breakable blocks.
 - Add Room size limitation.
 - Use the Phantomstyle UI theme.
 - Add Icon.
+- Support running js script in the editor.
+- Support showing mouse position in status bar.
+- Update the UI of Door Config Dialog.
+- Fix an edge case bug in Door Config Dialog, when the destination door and the current door are in the same room, the destination door previewer cannot update the changes of the current door.
+- In the Door Config Dialog, both graphicviews of the door preview and the destination door preview will auto-reset scrollbars when you reset them.
+- Fix an edge case bug in Layer data compression procedure.
+- contributors in about dialog are listed in alphabetical order now.
+- shortcuts bugfixes and menu tweaks for clearing everything in current room(ctrl + delete) and switching to different room in current level(pageup & pagedown).
+- Fix color blending glitches when reset Tiles.
+- All the output information will be shown in the output window now.
 
 beta-9:
 - Fix clear-all only clears hardmode entities

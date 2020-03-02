@@ -19,14 +19,7 @@ namespace ROMUtils
     extern unsigned int CurrentFileSize;
     extern QString ROMFilePath;
     extern unsigned int SaveDataIndex;
-
-    // Global functions
-    unsigned int IntFromData(int address);
-    unsigned int PointerFromData(int address);
-    unsigned char *LayerRLEDecompress(int address, size_t outputSize);
-    unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData,
-                                  unsigned char **OutputCompressedData);
-    int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
+    extern LevelComponents::Tileset *singletonTilesets[92];
 
     enum SaveDataChunkType
     {
@@ -74,13 +67,6 @@ namespace ROMUtils
     bool SaveLevel(QString fileName);
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
-
-    // Global variables
-    extern unsigned char *CurrentFile;
-    extern unsigned int CurrentFileSize;
-    extern QString ROMFilePath;
-    extern unsigned int SaveDataIndex;
-    extern LevelComponents::Tileset *singletonTilesets[92];
 
 } // namespace ROMUtils
 

@@ -1,7 +1,7 @@
 #include "EditModeDockWidget.h"
 #include "ui_EditModeDockWidget.h"
 
-#include <WL4EditorWindow.h>
+#include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
 
 /// <summary>

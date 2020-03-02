@@ -8,17 +8,13 @@
 #include "WL4Application.h"
 #include "WL4EditorWindow.h"
 #include <QApplication>
+#include <QCoreApplication>
 #include <QFile>
 #include <QMessageBox>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include "Compress.h"
-
-#include "phantomstyle.h"
-
-// LevelComponents::Level *CurrentLevel;  // TODO: delete this when not needed
-extern int selectedRoom;
 
 /// <summary>
 /// Load a ROM file into the data array in ROMUtils.cpp.
@@ -41,7 +37,7 @@ bool LoadROMFile(QString filePath)
     }
 
     // Read data
-    unsigned char *ROMAddr = new unsigned char[0x1000000];  // set it to be 16 MB to let the data can be write freely
+    unsigned char *ROMAddr = new unsigned char[length];
     file.read((char *) ROMAddr, length);
     file.close();
 
@@ -84,8 +80,11 @@ int main(int argc, char *argv[])
 {
     StaticInitialization_BeforeROMLoading();
 
-    QApplication::setStyle(new PhantomStyle);
+    // High DPI support, perhaps won't work in all the OS but better than nothing
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
     QApplication application(argc, argv);
+    SettingsUtils::InitProgramSetupPath(application);
     application.setWindowIcon(QIcon("./images/icon.ico"));
     WL4EditorWindow window;
     window.show();
@@ -98,6 +97,9 @@ int main(int argc, char *argv[])
     {
         window.LoadROMDataFromFile(filePath);
     }
+    testFile.close();
+    testFile.remove();
+
     //-------------------------------------------------------------------
 
     return application.exec();

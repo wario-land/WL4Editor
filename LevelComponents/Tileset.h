@@ -48,11 +48,14 @@ namespace LevelComponents
         unsigned short *GetAnimatedTileData() { return AnimatedTileData; }
 
         int GetfgGFXptr() { return fgGFXptr; }
+        void SetfgGFXptr(int new_fgGFXptr) { fgGFXptr = new_fgGFXptr; }
         int GetfgGFXlen() { return fgGFXlen; }
         int GetbgGFXlen() { return bgGFXlen; }
         void SetfgGFXlen(int lenth) { fgGFXlen = lenth; }
+        void Setmap16ptr(int new_map16ptr) { map16ptr = new_map16ptr; }
 
         int GetPaletteAddr() { return paletteAddress; }
+        void SetPaletteAddr(int new_paletteAddress) { paletteAddress = new_paletteAddress; }
         void ReGeneratePaletteData();
         void SetChanged(bool changed) {newtileset = changed;}
         bool IsNewTileset() {return newtileset; }

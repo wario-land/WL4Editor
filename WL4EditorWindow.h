@@ -16,6 +16,7 @@
 #include "DockWidget/EditModeDockWidget.h"
 #include "DockWidget/EntitySetDockWidget.h"
 #include "DockWidget/Tile16DockWidget.h"
+#include "DockWidget/OutputDockWidget.h"
 #include "LevelComponents/Level.h"
 #include "LevelComponents/Room.h"
 
@@ -31,10 +32,12 @@ class WL4EditorWindow : public QMainWindow
 private:
     Ui::WL4EditorWindow *ui;
     QLabel *statusBarLabel;
+    QLabel *statusBarLabel_MousePosition;
     Tile16DockWidget *Tile16SelecterWidget;
     EditModeDockWidget *EditModeWidget;
     EntitySetDockWidget *EntitySetWidget;
     CameraControlDockWidget *CameraControlWidget;
+    OutputDockWidget *OutputWidget = nullptr;
     LevelComponents::Level *CurrentLevel = nullptr;
     QAction *RecentROMs[5];
     uint recentROMnum = 0;
@@ -66,6 +69,8 @@ public:
     Tile16DockWidget *GetTile16DockWidgetPtr() { return Tile16SelecterWidget; }
     EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
     EntitySetDockWidget *GetEntitySetDockWidgetPtr() { return EntitySetWidget; }
+    OutputDockWidget *GetOutputWidgetPtr() { return OutputWidget; }
+    void InvalidOutputWidgetPtr() { OutputWidget = nullptr; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
     LevelComponents::Level *GetCurrentLevel() { return CurrentLevel; }
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
@@ -92,9 +97,8 @@ public:
     void DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
     void LoadROMDataFromFile(QString qFilePath);
-
-    // Events
-    void keyPressEvent(QKeyEvent *event);
+    void PrintMousePos(uint x, uint y);
+    uint GetGraphicViewScalerate() { return graphicViewScalerate; }
 
 private slots:
     // called slots
@@ -128,6 +132,11 @@ private slots:
     void on_actionSave_Room_s_graphic_triggered();
     void on_actionManager_triggered();
     void on_actionEdit_Tileset_triggered();
+    void on_actionLight_triggered();
+    void on_actionDark_triggered();
+    void on_actionRun_from_file_triggered();
+    void on_actionOutput_window_triggered();
+    void on_actionClear_all_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

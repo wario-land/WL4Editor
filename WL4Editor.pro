@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT += core gui
-
+QT += qml        # Need this to compile QJSEngine
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = WL4Editor
@@ -32,6 +32,8 @@ QMAKE_CXXFLAGS = -fpermissive
 
 SOURCES += \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \
+    DockWidget/OutputDockWidget.cpp \
+    ScriptInterface.cpp \
     main.cpp \
     WL4EditorWindow.cpp \
     LevelComponents/Level.cpp \
@@ -68,6 +70,8 @@ SOURCES += \
 
 HEADERS += \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.h \
+    DockWidget/OutputDockWidget.h \
+    ScriptInterface.h \
     WL4EditorWindow.h \
     LevelComponents/Level.h \
     LevelComponents/Room.h \
@@ -102,9 +106,11 @@ HEADERS += \
     Dialog/TilesetEditor_Tile16MapGraphicView.h \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.h \
     Dialog/TilesetEditor_PaletteGraphicView.h \
-    ThirdParty/phantomstyle/src/phantom/phantomstyle.h
+    ThirdParty/phantomstyle/src/phantom/phantomstyle.h \
+    Themes.h
 
 FORMS += \
+    DockWidget/OutputDockWidget.ui \
     WL4EditorWindow.ui \
     Dialog/ChooseLevelDialog.ui \
     DockWidget/Tile16DockWidget.ui \

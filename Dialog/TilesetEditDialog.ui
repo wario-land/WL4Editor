@@ -31,7 +31,7 @@
        <item>
         <widget class="QLabel" name="label_Tile8x8_ID">
          <property name="text">
-          <string>Selected Tile8x8 Id:</string>
+          <string>Selected Tile8x8 ID:</string>
          </property>
         </widget>
        </item>
@@ -96,6 +96,9 @@
            <height>0</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Slot and Group ID&lt;/span&gt;&lt;/p&gt;&lt;p&gt;There are some available animated tiles groups in the engine which you can use. You can use 16 of them in a Tileset which should always be in the front of all the other tiles, fill those 16 slots with IDs of group to add them into the Tileset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="title">
           <string>Set Animated Tiles Group</string>
          </property>
@@ -115,7 +118,7 @@
             <item row="0" column="1">
              <widget class="QLabel" name="label_AnimatedTileGroupId">
               <property name="text">
-               <string>Group Id</string>
+               <string>Group ID</string>
               </property>
              </widget>
             </item>
@@ -240,7 +243,7 @@
        <item>
         <widget class="QLabel" name="label_SelectedTile16Id">
          <property name="text">
-          <string>Selected Tile16 Id:</string>
+          <string>Selected Tile16 ID:</string>
          </property>
         </widget>
        </item>
@@ -253,8 +256,11 @@
        </item>
        <item>
         <widget class="QLabel" name="label_EventId">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Event ID&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The game engine will run a function when wario knock into the Tile16, there should be a table of them, the ID is used to find the function&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
-          <string>Event Id (hex):</string>
+          <string>Event ID (In Hex):</string>
          </property>
         </widget>
        </item>
@@ -270,8 +276,11 @@
        </item>
        <item>
         <widget class="QLabel" name="label_TerraiId">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Terrain ID&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;stands for different terrain type, no special function for each of them, they can be used everywhere when needed&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
-          <string>Terrain Id (hex):</string>
+          <string>Terrain ID (In Hex):</string>
          </property>
         </widget>
        </item>
@@ -303,21 +312,21 @@
             <item row="0" column="0">
              <widget class="QLabel" name="label_tileposition">
               <property name="text">
-               <string>position</string>
+               <string>Position</string>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
              <widget class="QLabel" name="label_tile8x8Id">
               <property name="text">
-               <string>tile8x8 id</string>
+               <string>Tile8x8 ID</string>
               </property>
              </widget>
             </item>
             <item row="0" column="2">
              <widget class="QLabel" name="label_paletteId">
               <property name="text">
-               <string>palette id</string>
+               <string>Palette ID</string>
               </property>
              </widget>
             </item>
@@ -334,14 +343,14 @@
             <item row="0" column="3">
              <widget class="QLabel" name="label_HFlip">
               <property name="text">
-               <string>H Flip</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;H-Flip&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>
             <item row="0" column="4">
              <widget class="QLabel" name="label_VFlip">
               <property name="text">
-               <string>V Flip</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;V-Flip&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>
@@ -351,7 +360,7 @@
                <enum>Qt::NoFocus</enum>
               </property>
               <property name="text">
-               <string>top left</string>
+               <string>Top Left</string>
               </property>
              </widget>
             </item>
@@ -427,7 +436,7 @@
             <item row="2" column="0">
              <widget class="QLabel" name="label_TopRight">
               <property name="text">
-               <string>top right</string>
+               <string>Top Right</string>
               </property>
              </widget>
             </item>
@@ -441,14 +450,14 @@
             <item row="3" column="0">
              <widget class="QLabel" name="label_BottomLeft">
               <property name="text">
-               <string>bottom left</string>
+               <string>Bottom Left</string>
               </property>
              </widget>
             </item>
             <item row="4" column="0">
              <widget class="QLabel" name="label_BottomRight">
               <property name="text">
-               <string>bottom right</string>
+               <string>Bottom Right</string>
               </property>
              </widget>
             </item>

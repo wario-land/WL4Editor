@@ -9,7 +9,7 @@
 #include <QPainter>
 #include <iostream>
 
-#include <WL4EditorWindow.h>
+#include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
 
 namespace LevelComponents
@@ -756,6 +756,9 @@ namespace LevelComponents
                 QPixmap alphaPixmapTemp = alphalayeritem->pixmap();
                 QPainter alphaPainterTemp(&alphaPixmapTemp);
                 bool *LayersCurrentVisibilityTemp = singleton->GetLayersVisibilityArray();
+
+                // clean the rect which need to redraw, or remaining old graphic will causes wrong rendering result
+                alphaPainterTemp.fillRect(renderParams->tileX * 16, renderParams->tileY * 16, 16, 16, QColor(0, 0, 0).rgb());
 
                 for (int i = 0; i < 4; i++)
                 {

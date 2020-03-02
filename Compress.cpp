@@ -13,6 +13,7 @@ namespace ROMUtils
         // Define variables used in the creation of the jump table
         unsigned char *data = (unsigned char *) this->data;
         unsigned short *R = new unsigned short[data_len * 2];
+        memset(R, 0, data_len << 2);
         unsigned short *C = R + data_len;
         int cons = 0, minrun = GetMinimumRunSize();
 
@@ -28,22 +29,23 @@ namespace ROMUtils
         // Populate C forwards in the jump table
         for (unsigned int i = 0; i < data_len; ++i)
         {
-            if (R[i] < minrun && cons < jumpLimit)
+            if (R[i] < minrun)
             {
                 ++cons;
             }
-            else
-            {
+            if (R[i] >= minrun) {
                 C[i - cons] = cons;
                 cons = 0;
                 i += R[i] - 1;
+            } else if (cons == jumpLimit) {
+                C[i - cons + 1] = cons;
+                cons = 0;
             }
         }
         if (cons)
         {
             C[data_len - cons] = cons;
         }
-
         JumpTable = R; // set the jump table since it has been populated
     }
 

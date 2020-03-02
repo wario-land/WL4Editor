@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>WL4EditorWindow</string>
+   <string>Wario Land 4 Editor</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -62,6 +62,9 @@
         <property name="text">
          <string>&lt;</string>
         </property>
+        <property name="shortcut">
+         <string>PgUp</string>
+        </property>
        </widget>
       </item>
       <item>
@@ -88,6 +91,9 @@
         <property name="text">
          <string>&gt;</string>
         </property>
+        <property name="shortcut">
+         <string>PgDown</string>
+        </property>
        </widget>
       </item>
       <item>
@@ -106,7 +112,11 @@
      </layout>
     </item>
     <item row="1" column="0">
-     <widget class="MainGraphicsView" name="graphicsView"/>
+     <widget class="MainGraphicsView" name="graphicsView">
+      <property name="mouseTracking">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -116,7 +126,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -213,6 +223,8 @@
      </widget>
      <addaction name="menu_clear_Layer"/>
      <addaction name="menu_clear_Entity_list"/>
+     <addaction name="separator"/>
+     <addaction name="actionClear_all"/>
     </widget>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
@@ -236,9 +248,37 @@
     </property>
     <addaction name="actionManager"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <widget class="QMenu" name="menuThemes">
+     <property name="title">
+      <string>Themes</string>
+     </property>
+     <addaction name="actionLight"/>
+     <addaction name="actionDark"/>
+    </widget>
+    <addaction name="menuThemes"/>
+   </widget>
+   <widget class="QMenu" name="menuScript">
+    <property name="title">
+     <string>Script</string>
+    </property>
+    <addaction name="actionRun_from_file"/>
+   </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionOutput_window"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuPatches"/>
+   <addaction name="menuScript"/>
+   <addaction name="menuSettings"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -401,6 +441,46 @@
    </property>
    <property name="text">
     <string>Edit Current Tileset</string>
+   </property>
+  </action>
+  <action name="actionDark">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Dark</string>
+   </property>
+  </action>
+  <action name="actionLight">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Light</string>
+   </property>
+  </action>
+  <action name="actionRun_from_file">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Run from file...</string>
+   </property>
+  </action>
+  <action name="actionOutput_window">
+   <property name="text">
+    <string>Output window</string>
+   </property>
+  </action>
+  <action name="actionClear_all">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Clear all</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Del</string>
    </property>
   </action>
  </widget>

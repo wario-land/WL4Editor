@@ -3,6 +3,7 @@
 #include "Dialog/PatchManagerDialog.h"
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
+#include "Themes.h"
 
 #include <cstdio>
 #include <deque>
@@ -35,20 +36,35 @@ QString dialogInitialPath = QString("");
 /// </param>
 WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::WL4EditorWindow)
 {
+    // Render Themes
+    int themeId = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(6)).toInt();
+    QApplication::setStyle(new PhantomStyle);
+    QApplication::setPalette(namedColorSchemePalette(static_cast<ThemeColorType>(themeId)));
+
     ui->setupUi(this);
     singleton = this;
 
     // MainWindow UI Initialization
     ui->graphicsView->scale(graphicViewScalerate, graphicViewScalerate);
     statusBarLabel = new QLabel("Open a ROM file");
+    statusBarLabel_MousePosition = new QLabel();
     statusBarLabel->setMargin(3);
+    statusBarLabel_MousePosition->setMargin(3);
     ui->statusBar->addWidget(statusBarLabel);
+    ui->statusBar->addWidget(statusBarLabel_MousePosition);
+    switch (themeId) {
+    case 0:
+    { ui->actionLight->setChecked(true); break; }
+    case 1:
+    { ui->actionDark->setChecked(true); break; }
+    }
 
     // Create DockWidgets
     EditModeWidget = new EditModeDockWidget();
     Tile16SelecterWidget = new Tile16DockWidget();
     EntitySetWidget = new EntitySetDockWidget();
     CameraControlWidget = new CameraControlDockWidget();
+    OutputWidget = new OutputDockWidget();
 
     // Add Recent ROM QAction according to the INI file
     QMenu *filemenu = ui->menuRecent_ROM;
@@ -84,9 +100,11 @@ WL4EditorWindow::~WL4EditorWindow()
     delete ui;
     delete Tile16SelecterWidget;
     delete EditModeWidget;
+    delete OutputWidget;
     delete EntitySetWidget;
     delete CameraControlWidget;
     delete statusBarLabel;
+    delete statusBarLabel_MousePosition;
 
     // Decomstruct all Tileset singletons
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
@@ -226,6 +244,29 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
 }
 
 /// <summary>
+/// Print Mouse Pos in the status bar
+/// </summary>
+/// <param name="x">
+/// current tile x position
+/// </param>
+/// <param name="y">
+/// current tile y position
+/// </param>
+void WL4EditorWindow::PrintMousePos(uint x, uint y)
+{
+    bool condition;
+    if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam()) {
+        condition = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height());
+    } else {
+        condition = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
+    }
+    if(condition)
+        statusBarLabel_MousePosition->setText("Out of range!");
+    else
+        statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")");
+}
+
+/// <summary>
 /// Update the UI after loading a ROM.
 /// </summary>
 void WL4EditorWindow::UIStartUp(int currentTilesetID)
@@ -248,14 +289,17 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menuClear->setEnabled(true);
         ui->menu_clear_Layer->setEnabled(true);
         ui->menu_clear_Entity_list->setEnabled(true);
+        ui->actionClear_all->setEnabled(true);
         ui->actionRedo->setEnabled(true);
         ui->actionUndo->setEnabled(true);
+        ui->actionRun_from_file->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
         addDockWidget(Qt::RightDockWidgetArea, Tile16SelecterWidget);
         addDockWidget(Qt::RightDockWidgetArea, EntitySetWidget);
         addDockWidget(Qt::RightDockWidgetArea, CameraControlWidget);
+        addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
         CameraControlWidget->setVisible(false);
         EntitySetWidget->setVisible(false);
     }
@@ -620,31 +664,6 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 }
 
 /// <summary>
-/// this function will be called when key-press happens in the editor.
-/// </summary>
-/// <param name="event">
-/// The key-press event.
-/// </param>
-void WL4EditorWindow::keyPressEvent(QKeyEvent *event)
-{
-    if (!firstROMLoaded)
-        return;
-
-    if (event->key() == Qt::Key_PageDown)
-    {
-        on_roomIncreaseButton_clicked();
-    }
-    else if (event->key() == Qt::Key_PageUp)
-    {
-        on_roomDecreaseButton_clicked();
-    }
-    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_Delete)
-    {
-        CurrentRoomClearEverything();
-    }
-}
-
-/// <summary>
 /// Slot function to load a ROM.
 /// </summary>
 void WL4EditorWindow::openRecentROM()
@@ -695,8 +714,6 @@ void WL4EditorWindow::openRecentROM()
     }
 
     LoadROMDataFromFile(filepath);
-
-    this->setFocus(); // Enable keyPressEvent
 }
 
 /// <summary>
@@ -705,7 +722,6 @@ void WL4EditorWindow::openRecentROM()
 void WL4EditorWindow::on_actionOpen_ROM_triggered()
 {
     OpenROM();
-    this->setFocus(); // Enable keyPressEvent
 }
 
 /// <summary>
@@ -1220,7 +1236,9 @@ void WL4EditorWindow::on_actionSave_ROM_triggered()
 {
     if (SaveCurrentFile())
     {
-        statusBarLabel->setText("Saved!");
+        OutputWidget->PrintString("Save successfully !");
+    } else {
+        OutputWidget->PrintString("Save failure !");
     }
 }
 
@@ -1231,7 +1249,9 @@ void WL4EditorWindow::on_actionSave_As_triggered()
 {
     if (SaveCurrentFileAs())
     {
-        statusBarLabel->setText("Saved!");
+        OutputWidget->PrintString("Save successfully !");
+    } else {
+        OutputWidget->PrintString("Save failure !");
     }
 }
 
@@ -1268,14 +1288,16 @@ void WL4EditorWindow::on_actionAbout_triggered()
     // Show the about dialog
     QMessageBox infoPrompt;
     infoPrompt.setWindowTitle(tr("About"));
-    infoPrompt.setText(QString("WL4Editor code contributors:\n"
-                               "    Goldensunboy\n"
-                               "    shinespeciall\n"
-                               "    xiazhanjian\n"
+    infoPrompt.setText(QString("WL4Editor contributors in alphabetical order are:\n"
                                "    chanchancl\n"
+                               "    Goldensunboy\n"
+                               "    IamRifki\n"
                                "    Kleyment\n"
-                               "Special thanks:\n"
-                               "    xTibor\n"
+                               "    shinespeciall\n"
+                               "    xiazhanjian\n\n"
+                               "Special Thanks:\n"
+                               "    randrew\n"
+                               "    xTibor\n\n"
                                "Version: ") +
                        WL4EDITOR_VERSION);
     QPushButton *changelogButton = infoPrompt.addButton(tr("Ok"), QMessageBox::NoRole);
@@ -1323,12 +1345,12 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
     // swap Layerdata pointers if possible
     if (!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled()))
     {
-        statusBarLabel->setText(tr(layerSwapFailureMsg));
+        OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
     if (CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
     {
-        statusBarLabel->setText(tr(layerSwapFailureMsg));
+        OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
     unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetLayerData();
@@ -1356,7 +1378,7 @@ void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
     // swap Layerdata pointers if possible
     if (!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled()))
     {
-        statusBarLabel->setText(tr(layerSwapFailureMsg));
+        OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
     unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->GetLayerData();
@@ -1385,12 +1407,12 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
     if (!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled()) ||
         !(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled()))
     {
-        statusBarLabel->setText(tr(layerSwapFailureMsg));
+        OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
     if (CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
     {
-        statusBarLabel->setText(tr(layerSwapFailureMsg));
+        OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
     unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetLayerData();
@@ -1605,4 +1627,66 @@ void WL4EditorWindow::on_actionManager_triggered()
 {
     PatchManagerDialog dialog(this);
     auto result = dialog.exec();
+}
+
+/// <summary>
+/// Reset Theme to Light Theme.
+/// </summary>
+void WL4EditorWindow::on_actionLight_triggered()
+{
+    QApplication::setPalette(namedColorSchemePalette(Light));
+    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString("0"));
+    ui->actionDark->setChecked(false);
+}
+
+/// <summary>
+/// Reset Theme to Dark Theme.
+/// </summary>
+void WL4EditorWindow::on_actionDark_triggered()
+{
+    QApplication::setPalette(namedColorSchemePalette(Dark));
+    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString("1"));
+    ui->actionLight->setChecked(false);
+}
+
+/// <summary>
+/// Open a script file and run it.
+/// </summary>
+void WL4EditorWindow::on_actionRun_from_file_triggered()
+{
+    // Select a Script file to open and run
+    QString qFilePath =
+        QFileDialog::getOpenFileName(this, tr("Open Script file"), dialogInitialPath, tr("Script files (*.js)"));
+    if (!qFilePath.compare("")) {
+        return;
+    }
+    QFile file(qFilePath);
+    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+            QMessageBox::critical(this, tr("Error"), tr("Can't open file."));
+            return;
+    }
+    QString code = QString::fromUtf8(file.readAll());
+    OutputWidget->ExecuteJSScript(code);
+}
+
+/// <summary>
+/// Open the Output dock widget.
+/// </summary>
+void WL4EditorWindow::on_actionOutput_window_triggered()
+{
+    if(OutputWidget == nullptr) {
+        OutputWidget = new OutputDockWidget(this);
+        addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
+    } else if(OutputWidget != nullptr) {
+        addDockWidget(Qt::BottomDockWidgetArea, OutputWidget);
+        OutputWidget->setVisible(true);
+    }
+}
+
+/// <summary>
+/// Clear everything in the current Room.
+/// </summary>
+void WL4EditorWindow::on_actionClear_all_triggered()
+{
+    CurrentRoomClearEverything();
 }

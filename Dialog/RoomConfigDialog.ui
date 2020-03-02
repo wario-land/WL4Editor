@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>574</height>
+    <height>677</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -76,12 +76,15 @@
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>Background AutoScroll Enable</string>
+          <string>Enable Background Autoscroll</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QCheckBox" name="CheckBox_Layer0Enable">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Enable Layer 0&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Layer 0 is the only layer that's able to be used as the front layer for color blending.&lt;/p&gt;&lt;p&gt;This option, if check marked, enables Layer 0.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Enable Layer 0</string>
          </property>
@@ -92,15 +95,21 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Layer 0 Alpha Enable&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Enable this to make color blending work.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
-          <string>Layer 0 Alpha Enable:</string>
+          <string>Enable Layer 0 Alpha Attibutes</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLabel" name="alphaBlendingLabel">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Alpha Blend Attributes&lt;/span&gt;&lt;/p&gt;&lt;p&gt;See the Helpfile for information.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
-          <string>Alhpa Blend Attributes:</string>
+          <string>Alpha Blend Attributes:</string>
          </property>
         </widget>
        </item>
@@ -113,6 +122,9 @@
        </item>
        <item>
         <widget class="QLabel" name="L0MappingTypeLabel">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Layer 0 Mapping Type&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This property is hardly used. It's only used if you're using the Toxic Landfill Tileset with an existing dust foreground.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Layer 0 Mapping Type:</string>
          </property>
@@ -127,6 +139,9 @@
        </item>
        <item>
         <widget class="QLabel" name="L0Label">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Use existing Layer 0&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Select the foreground layer pointer.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Use existing Layer 0:</string>
          </property>
@@ -145,12 +160,15 @@
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>Layer 0 AutoScroll Enable</string>
+          <string>Enable Layer 0 Autoscroll</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QCheckBox" name="CheckBox_Layer2Enable">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Enable Layer 2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Enable layer X to set its mapping type from 0x00 to 0x01.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Layer X can be Layer 0 or Layer 2.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Enable Layer 2</string>
          </property>
@@ -158,6 +176,9 @@
        </item>
        <item>
         <widget class="QLabel" name="layerPriorityLabel">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Layer Priority&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;There's several available priority settings that Wario Land 4's game engine supports, you can use one of them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Layer Priority:</string>
          </property>

@@ -1,7 +1,7 @@
 #include "ROMUtils.h"
 #include "Compress.h"
 #include <QFile>
-#include <WL4EditorWindow.h>
+#include "WL4EditorWindow.h"
 #include <cassert>
 #include <iostream>
 
@@ -645,7 +645,9 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             file.close();
 
             // Set the CurrentFile to the copied CurrentFile data
-            memcpy(CurrentFile, TempFile, CurrentFileSize);
+            auto temp = CurrentFile;
+            CurrentFile = TempFile;
+            delete[] temp;
             CurrentFileSize = TempLength;
         }
 
@@ -714,7 +716,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                 // Write the level header to the ROM
                 memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
 
-                // Write Tileset pointer info
+                // Write Tileset data length info
                 for(int i = 0; i < 92; ++i)
                 {
                     if(singletonTilesets[i]->IsNewTileset())
@@ -725,18 +727,22 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
 
                         // Reset size_of bgGFXLen and fgGBXLen
                         int tilesetPtr = singletonTilesets[i]->getTilesetPtr();
-                        int *fgGFXLenaddr = (int *) (TempFile + tilesetPtr + 4);
-                        *fgGFXLenaddr = singletonTilesets[i]->GetfgGFXlen();
-                        int *bgGFXLenaddr = (int *) (TempFile + tilesetPtr + 16);
-                        *bgGFXLenaddr = singletonTilesets[i]->GetbgGFXlen();
-
-                        singletonTilesets[i]->SetChanged(false);
+                        int fgGFXLenaddr = singletonTilesets[i]->GetfgGFXlen();
+                        *(int *) (TempFile + tilesetPtr + 4) = fgGFXLenaddr;
+                        int bgGFXLenaddr = singletonTilesets[i]->GetbgGFXlen();
+                        *(int *) (TempFile + tilesetPtr + 16) = bgGFXLenaddr;
+                        // don't needed, because this is done in the following internal pointers reset code
+                        // singletonTilesets[i]->SetChanged(false);
                     }
                 }
             });
         if(!ret) return false;
 
-        // Set the new internal data pointer for LevelComponents objects, and mark dirty objects as clean
+        // Set the new internal data pointers for LevelComponents objects, and mark dirty objects as clean
+        // --------------------------------------------------------------------
+        // Rooms instances internal pointers reset
+        // TODO: move out the unset dirty code, it is headache to do all of them here
+        // TODO: code needs to be changed if we are going to support saving all the changes in the whole ROM, every level, i mean
         std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
         for(unsigned int i = 0; i < rooms.size(); ++i)
         {
@@ -758,8 +764,21 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             struct LevelComponents::__RoomHeader newroomheader;
             memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
             room->ResetRoomHeader(newroomheader);
-           // TODO: if more elements in the game are going to be support customizing in the editor, more pointers need to be reset here
         }
+
+        // Tilesets instances internal pointers reset
+        for(int i = 0; i < 92; ++i)
+        {
+            if(singletonTilesets[i]->IsNewTileset())
+            {
+                int tilesetPtr = singletonTilesets[i]->getTilesetPtr();
+                singletonTilesets[i]->SetfgGFXptr(ROMUtils::PointerFromData(tilesetPtr));
+                singletonTilesets[i]->SetPaletteAddr(ROMUtils::PointerFromData(tilesetPtr + 8));
+                singletonTilesets[i]->Setmap16ptr(ROMUtils::PointerFromData(tilesetPtr + 0x14));
+                singletonTilesets[i]->SetChanged(false);
+            }
+        }
+        // --------------------------------------------------------------------
         return true;
     }
 
