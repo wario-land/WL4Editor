@@ -111,7 +111,6 @@ namespace LevelComponents
         unsigned int RoomID;
         unsigned int LevelID;
         unsigned int Width, Height;
-        unsigned int Layer0width, Layer0height;
         bool Layer0ColorBlending = false;
         int Layer0ColorBlendCoefficient_EVA = 16;
         int Layer0ColorBlendCoefficient_EVB = 0;
@@ -171,8 +170,8 @@ namespace LevelComponents
         int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
         unsigned int GetHeight() { return Height; }
         unsigned int GetWidth() { return Width; }
-        unsigned int GetLayer0Width() { return Layer0width; }
-        unsigned int GetLayer0Height() { return Layer0height; }
+        unsigned int GetLayer0Width() { return layers[0]->GetLayerWidth(); }
+        unsigned int GetLayer0Height() { return layers[0]->GetLayerHeight(); }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         int GetLayer0MappingParam() { return RoomHeader.Layer0MappingType; }
         int GetLayerDataPtr(unsigned int LayerNum);

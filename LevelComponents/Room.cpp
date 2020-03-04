@@ -50,8 +50,6 @@ namespace LevelComponents
             int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
             layers[i] = new Layer(layerPtr, mappingType);
         }
-        Layer0width = layers[0]->GetLayerWidth();
-        Layer0height = layers[0]->GetLayerHeight();
 
         SetLayerPriorityAndAlphaAttributes(ROMUtils::CurrentFile[roomDataPtr + 26]);
 
