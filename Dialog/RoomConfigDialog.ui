@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>677</height>
+    <height>662</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -87,6 +87,40 @@
          </property>
          <property name="text">
           <string>Enable Layer 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_Layer0Width">
+         <property name="text">
+          <string>Layer 0 Width:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_Layer0Width">
+         <property name="minimum">
+          <number>19</number>
+         </property>
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_Layer0Height">
+         <property name="text">
+          <string>Layer 0 Height:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_Layer0Height">
+         <property name="minimum">
+          <number>14</number>
+         </property>
+         <property name="maximum">
+          <number>255</number>
          </property>
         </widget>
        </item>

@@ -25,6 +25,8 @@ namespace DialogParams
         bool Layer0Alpha;
         int LayerPriorityAndAlphaAttr;
         int Layer0MappingTypeParam;
+        int Layer0Width;
+        int Layer0Height;
         int RoomWidth;
         int RoomHeight;
         bool Layer2Enable;
@@ -32,7 +34,7 @@ namespace DialogParams
         bool BackgroundLayerEnable;
         bool BackgroundLayerAutoScrollEnable;
         int BackgroundLayerDataPtr;
-        unsigned short *LayerData[3];
+        unsigned short *LayerData[3]; //only use it when room & layer0 size change
 
         // Default constructor
         RoomConfigParams() { memset(this, 0, sizeof(struct RoomConfigParams)); }
@@ -42,11 +44,16 @@ namespace DialogParams
                 CurrentTilesetIndex(room->GetTilesetID()), Layer0Enable(room->GetLayer0MappingParam() != 0),
                 Layer0Alpha(room->IsLayer0ColorBlendingEnabled()),
                 LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
-                Layer0MappingTypeParam(room->GetLayer0MappingParam()), RoomWidth(room->GetWidth()),
-                RoomHeight(room->GetHeight()), Layer2Enable(room->IsLayer2Enabled()),
+                Layer0MappingTypeParam(room->GetLayer0MappingParam()),
+                RoomWidth(room->GetWidth()), RoomHeight(room->GetHeight()), Layer2Enable(room->IsLayer2Enabled()),
                 Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayerDataPtr(0) : 0),
                 BackgroundLayerEnable(room->IsBGLayerEnabled())
         {
+            if((Layer0MappingTypeParam & 0x10) == 0x10){
+                Layer0Width = room->GetLayer(0)->GetLayerWidth(); Layer0Height = room->GetLayer(0)->GetLayerHeight();
+            } else {
+                Layer0Width = 0; Layer0Height = 0;
+            }
             for (int i = 0; i < 3; i++)
             {
                 // it is no needed to copy from other.
@@ -101,6 +108,8 @@ private slots:
     void on_ComboBox_LayerPriority_currentIndexChanged(int index);
     void on_SpinBox_RoomWidth_valueChanged(int arg1);
     void on_SpinBox_RoomHeight_valueChanged(int arg1);
+    void on_spinBox_Layer0Width_valueChanged(int arg1);
+    void on_spinBox_Layer0Height_valueChanged(int arg1);
 
 private:
     bool ComboBoxInitialized = false;

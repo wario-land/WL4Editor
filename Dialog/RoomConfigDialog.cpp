@@ -36,10 +36,17 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     int LayerPriorityID = CurrentRoomParams->LayerPriorityAndAlphaAttr & 3;
     ui->ComboBox_LayerPriority->setCurrentIndex((LayerPriorityID < 2) ? LayerPriorityID : (LayerPriorityID - 1));
     ui->ComboBox_AlphaBlendAttribute->setCurrentIndex((CurrentRoomParams->LayerPriorityAndAlphaAttr - 4) >> 2);  // == (LayerPriorityAndAlphaAttr - 8) >> 2 + 1
-    if (CurrentRoomParams->Layer0Enable)
-    {
+    if (CurrentRoomParams->Layer0Enable) {
         ui->ComboBox_Layer0MappingType->setCurrentIndex((((CurrentRoomParams->Layer0MappingTypeParam) & 0x30) >> 4) -
                                                         1);
+        if((CurrentRoomParams->Layer0MappingTypeParam & 0x10) == 0x10)
+        {
+            ui->spinBox_Layer0Width->setValue(CurrentRoomParams->Layer0Width);
+            ui->spinBox_Layer0Height->setValue(CurrentRoomParams->Layer0Height);
+        } else {
+            ui->spinBox_Layer0Width->setEnabled(false);
+            ui->spinBox_Layer0Height->setEnabled(false);
+        }
     }
     ui->CheckBox_Layer0AutoScroll->setChecked(CurrentRoomParams->Layer0MappingTypeParam == 0x22);
     ui->ComboBox_Layer0Picker->setEnabled(CurrentRoomParams->Layer0MappingTypeParam >= 0x20);
@@ -99,13 +106,17 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     configParams.Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();
     if (configParams.Layer0Enable)
     {
-        if (ui->ComboBox_Layer0MappingType->isEnabled())
+        if (ui->ComboBox_Layer0MappingType->isEnabled()) // only happens in a special Toxic landfill Tileset
         {
             configParams.Layer0MappingTypeParam = (ui->ComboBox_Layer0MappingType->currentIndex() + 1) << 4;
         }
-        else
+        else // normal cases
         {
             configParams.Layer0MappingTypeParam = 0x10;
+        }
+        if(configParams.Layer0MappingTypeParam == 0x10) {
+            configParams.Layer0Width = ui->spinBox_Layer0Width->value();
+            configParams.Layer0Height = ui->spinBox_Layer0Height->value();
         }
         if (ui->CheckBox_Layer0AutoScroll->isChecked())
             configParams.Layer0MappingTypeParam = 22;
@@ -194,6 +205,15 @@ void RoomConfigDialog::on_CheckBox_Layer0Enable_stateChanged(int state)
         // Extra UI changes for Toxic Landfill dust Layer0
         if (ui->ComboBox_TilesetID->currentIndex() == 0x21)
             ui->ComboBox_Layer0MappingType->setEnabled(true);
+        // CurrentRoomParams->Layer0MappingTypeParam & 0x20) != 0x20
+        if(ui->CheckBox_Layer0Enable->isChecked() && ui->ComboBox_Layer0MappingType->currentIndex() != 1)
+        {
+            ui->spinBox_Layer0Width->setValue(ui->SpinBox_RoomWidth->value());
+            ui->spinBox_Layer0Height->setValue(ui->SpinBox_RoomHeight->value());
+        } else {
+            ui->spinBox_Layer0Width->setEnabled(false);
+            ui->spinBox_Layer0Height->setEnabled(false);
+        }
     }
     else
     {
@@ -408,5 +428,47 @@ void RoomConfigDialog::on_SpinBox_RoomHeight_valueChanged(int arg1)
     {
         ui->SpinBox_RoomWidth->setStyleSheet(""); // TODO: need a better solution, for example, add an extra label to show the warning
         ui->SpinBox_RoomHeight->setStyleSheet("");
+    }
+}
+
+/// <summary>
+/// Slot function for spinBox_Layer0Width_valueChanged.
+/// </summary>
+/// <param name="arg1">
+/// The spinbox value.
+/// </param>
+void RoomConfigDialog::on_spinBox_Layer0Width_valueChanged(int arg1)
+{
+    int heightmax = 0x1400 / arg1;
+    if (ui->spinBox_Layer0Height->value() > heightmax)
+    {
+        ui->spinBox_Layer0Width->setStyleSheet("background-color: red");
+        ui->spinBox_Layer0Height->setStyleSheet("background-color: red");
+    }
+    else
+    {
+        ui->spinBox_Layer0Width->setStyleSheet(""); // TODO: need a better solution, for example, add an extra label to show the warning
+        ui->spinBox_Layer0Height->setStyleSheet("");
+    }
+}
+
+/// <summary>
+/// Slot function for spinBox_Layer0Height_valueChanged.
+/// </summary>
+/// <param name="arg1">
+/// The spinbox value.
+/// </param>
+void RoomConfigDialog::on_spinBox_Layer0Height_valueChanged(int arg1)
+{
+    int widthmax = 0x1400 / arg1;
+    if (ui->spinBox_Layer0Width->value() > widthmax)
+    {
+        ui->spinBox_Layer0Width->setStyleSheet("background-color: red");
+        ui->spinBox_Layer0Height->setStyleSheet("background-color: red");
+    }
+    else
+    {
+        ui->spinBox_Layer0Width->setStyleSheet(""); // TODO: need a better solution, for example, add an extra label to show the warning
+        ui->spinBox_Layer0Height->setStyleSheet("");
     }
 }

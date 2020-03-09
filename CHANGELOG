@@ -25,6 +25,7 @@ beta-10:
 - shortcuts bugfixes and menu tweaks for clearing everything in current room(ctrl + delete) and switching to different room in current level(pageup & pagedown).
 - Fix color blending glitches when reset Tiles.
 - All the output information will be shown in the output window now.
+- Support setting layer 0 size different from room size.
 
 beta-9:
 - Fix clear-all only clears hardmode entities

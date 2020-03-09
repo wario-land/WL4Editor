@@ -417,7 +417,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     {
         if ((nextroomconfig->Layer0MappingTypeParam & 0x30) == 0x10)
         {
-            currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+            currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->Layer0Width , nextroomconfig->Layer0Height);
         }
         else
         {
@@ -446,7 +446,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     }
 
     if (nextroomconfig->RoomWidth != currentroomconfig->RoomWidth ||
-        nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
+            nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
     {
         // Deal with out-of-range Doors, Entities, Camera limitators
         // TODO: support Undo/Redo on these elements
@@ -550,41 +550,60 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         delete[] deleteLimitatorIdlist;
 
         // Reset Layers
-        for (int i = 0; i < 3; ++i)
+        for (int i = 1; i < 3; ++i)
         {
-            if (currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
+            if ((currentRoom->GetLayer(i)->GetMappingType() & LevelComponents::LayerMap16) == LevelComponents::LayerMap16)
             {
-                if (currentroomconfig->LayerData[i] == nullptr)
-                {
-                    // save previous Layer data
-                    size_t datasize1 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
-                    unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
-                    memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
-                    currentroomconfig->LayerData[i] = tmpLayerdata1;
+                // save previous Layer data
+                size_t datasize1 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
+                unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
+                memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
+                currentroomconfig->LayerData[i] = tmpLayerdata1;
 
-                    // reset Layer size
-                    currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+                // reset Layer size
+                currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
 
-                    // save result Layer data
-                    size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
-                    unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
-                    memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
-                    nextroomconfig->LayerData[i] = tmpLayerdata2;
-                }
-                else
-                {
-                    currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
-                    delete[] currentRoom->GetLayer(i)->GetLayerData();
-                    size_t size = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
-                    unsigned short *tmpData = new unsigned short[size];
-                    memcpy(tmpData, nextroomconfig->LayerData[i], size);
-                    currentRoom->GetLayer(i)->SetLayerData(tmpData);
-                }
+                // save result Layer data
+                size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
+                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
+                nextroomconfig->LayerData[i] = tmpLayerdata2;
             }
         }
     }
 
-    // reset all the Parameters in Room class. TODO: except new layer data pointers, generate them on saving
+    if (nextroomconfig->Layer0Width != currentroomconfig->Layer0Width ||
+            nextroomconfig->Layer0Height != currentroomconfig->Layer0Height)
+    {
+        if ((currentroomconfig->Layer0MappingTypeParam & LevelComponents::LayerMap16) == LevelComponents::LayerMap16)
+        {
+            // save previous Layer data
+            size_t datasize1 = 0;
+            datasize1 = 2 * currentroomconfig->Layer0Width * currentroomconfig->Layer0Height;
+            unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
+            memcpy(tmpLayerdata1, currentRoom->GetLayer(0)->GetLayerData(), datasize1);
+            currentroomconfig->LayerData[0] = tmpLayerdata1;
+        } else {
+            currentroomconfig->LayerData[0] = nullptr;
+        }
+
+        if ((nextroomconfig->Layer0MappingTypeParam & LevelComponents::LayerMap16) == LevelComponents::LayerMap16)
+        {
+            // reset Layer size
+            size_t datasize2 = 0;
+            currentRoom->GetLayer(0)->ChangeDimensions(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
+            datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
+
+            // save result Layer data
+            unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+            memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
+            nextroomconfig->LayerData[0] = tmpLayerdata2;
+        } else {
+            nextroomconfig->LayerData[0] = nullptr;
+        }
+    }
+
+    // reset all the Parameters in Room class, except new layer data pointers, generate them on saving
     currentRoom->SetHeight(nextroomconfig->RoomHeight);
     currentRoom->SetWidth(nextroomconfig->RoomWidth);
     currentRoom->SetLayer0MappingParam(nextroomconfig->Layer0MappingTypeParam);
@@ -597,7 +616,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetBGLayerAutoScrollEnabled(nextroomconfig->BackgroundLayerAutoScrollEnable);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
 
-    // reset LayerDataPtr in RoomHeader because Layer::SetDisabled() cannot change the data in RoomHeader
+    // reset LayerDataPtr in RoomHeader because Layer::SetDisabled() doesn't change the data in RoomHeader
     for (int i = 0; i < 3; ++i)
     {
         if (currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerDisabled)
