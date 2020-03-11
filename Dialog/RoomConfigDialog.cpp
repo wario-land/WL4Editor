@@ -206,8 +206,10 @@ void RoomConfigDialog::on_CheckBox_Layer0Enable_stateChanged(int state)
         if (ui->ComboBox_TilesetID->currentIndex() == 0x21)
             ui->ComboBox_Layer0MappingType->setEnabled(true);
         // CurrentRoomParams->Layer0MappingTypeParam & 0x20) != 0x20
-        if(ui->CheckBox_Layer0Enable->isChecked() && ui->ComboBox_Layer0MappingType->currentIndex() != 1)
+        if(ui->ComboBox_Layer0MappingType->currentIndex() == 0) // Map16
         {
+            ui->spinBox_Layer0Width->setEnabled(true);
+            ui->spinBox_Layer0Height->setEnabled(true);
             ui->spinBox_Layer0Width->setValue(ui->SpinBox_RoomWidth->value());
             ui->spinBox_Layer0Height->setValue(ui->SpinBox_RoomHeight->value());
         } else {
@@ -217,10 +219,14 @@ void RoomConfigDialog::on_CheckBox_Layer0Enable_stateChanged(int state)
     }
     else
     {
+        DontEnableLayerSizeSpinboxes = true;
+        ui->spinBox_Layer0Width->setEnabled(false);
+        ui->spinBox_Layer0Height->setEnabled(false);
         ui->CheckBox_Layer0Alpha->setChecked(false);
         ui->CheckBox_Layer0Alpha->setEnabled(false);
         ui->ComboBox_Layer0MappingType->setCurrentIndex(0);
         ui->ComboBox_Layer0MappingType->setEnabled(false);
+        DontEnableLayerSizeSpinboxes = false;
     }
 }
 
@@ -244,17 +250,25 @@ void RoomConfigDialog::on_ComboBox_Layer0MappingType_currentIndexChanged(int ind
     (void) index;
     if (ComboBoxInitialized)
     {
+        if(DontEnableLayerSizeSpinboxes) return;
+
         int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
         int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
-        if (ui->ComboBox_Layer0MappingType->currentIndex() == 0)
+        if ((ui->ComboBox_Layer0MappingType->currentIndex() == 0)) // Tile16
         {
+            ui->spinBox_Layer0Width->setEnabled(true);
+            ui->spinBox_Layer0Height->setEnabled(true);
+            ui->spinBox_Layer0Width->setValue(ui->SpinBox_RoomWidth->value());
+            ui->spinBox_Layer0Height->setValue(ui->SpinBox_RoomHeight->value());
             ui->CheckBox_Layer0AutoScroll->setChecked(false);
             ui->CheckBox_Layer0AutoScroll->setEnabled(false);
             ui->ComboBox_Layer0Picker->setEnabled(false);
             ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, 0);
         }
-        else
+        else // Tile8x8
         {
+            ui->spinBox_Layer0Width->setEnabled(false);
+            ui->spinBox_Layer0Height->setEnabled(false);
             ui->ComboBox_Layer0Picker->setEnabled(true);
             ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
             ui->ComboBox_LayerPriority->setCurrentIndex(0);

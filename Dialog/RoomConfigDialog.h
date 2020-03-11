@@ -113,6 +113,7 @@ private slots:
 
 private:
     bool ComboBoxInitialized = false;
+    bool DontEnableLayerSizeSpinboxes = false;
     Ui::RoomConfigDialog *ui;
     void ShowTilesetDetails(int tilesetIndex);
     void ShowMappingType20LayerDetails(int _layerdataAddr, LevelComponents::Layer *_tmpLayer);
