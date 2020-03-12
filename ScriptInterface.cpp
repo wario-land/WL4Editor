@@ -108,6 +108,102 @@ unsigned int ScriptInterface::Test_GetLayerDecomdataPointer(int layerId)
     }
 }
 
+void ScriptInterface::Test_ExportLayerData()
+{
+    QString filePath =
+        QFileDialog::getSaveFileName(singleton, tr("Save Layer file"), "", tr("bin files (*.bin)"));
+    if (filePath.compare(""))
+    {
+        int layerid = prompt("Input the Layer Id you want to save data:", "0").toInt();
+        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        int witdh = 0, height = 0;
+        if(layerid < 0 || layerid > 2)
+        {
+            log("Illegal Layer id!");
+            return;
+        }
+        if((room->GetLayer(layerid)->GetMappingType() & 0x30) != LevelComponents::LayerMap16)
+        {
+            log("Illegal Layer mapping type!");
+            return;
+        }
+        if(layerid == 0)
+        {
+            witdh = room->GetLayer0Width();
+            height = room->GetLayer0Height();
+        } else {
+            witdh = room->GetWidth();
+            height = room->GetHeight();
+        }
+        QFile file(filePath);
+        file.open(QIODevice::WriteOnly);
+        if (file.isOpen())
+        {
+            file.write(reinterpret_cast<const char*>(room->GetLayer(layerid)->GetLayerData()), 2 * witdh * height);
+        } else {
+            log("Cannot save data file!");
+            return;
+        }
+        file.close();
+    }
+    log("Done!");
+}
+
+void ScriptInterface::Test_ImportLayerData()
+{
+    // Load gfx bin file
+    QString fileName = QFileDialog::getOpenFileName(singleton,
+                                                    tr("Load Tileset bin file"), QString(""),
+                                                    tr("bin files (*.bin)"));
+
+    // load data into QBytearray
+    QByteArray tmptile8x8data;
+    QFile layerdatabinfile(fileName);
+    int datasize = 0;
+    if(!layerdatabinfile.open(QIODevice::ReadOnly))
+    {
+        log("Cannot open file!");
+        return;
+    }
+    tmptile8x8data = layerdatabinfile.readAll();
+    datasize = layerdatabinfile.size();
+    layerdatabinfile.close();
+
+    int layerid = prompt("Input the Layer Id you choose to replace data:", "0").toInt();
+    if(layerid < 0 || layerid > 2)
+    {
+        log("Illegal Layer id!");
+        return;
+    }
+
+    // Paste data
+    int witdh = 0, height = 0;
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    if((room->GetLayer(layerid)->GetMappingType() & 0x30) != LevelComponents::LayerMap16)
+    {
+        log("Illegal Layer mapping type!");
+        return;
+    }
+    if(layerid == 0)
+    {
+        witdh = room->GetLayer0Width();
+        height = room->GetLayer0Height();
+    } else {
+        witdh = room->GetWidth();
+        height = room->GetHeight();
+    }
+    if(datasize < 2 * witdh * height)
+    {
+        log("File size not match(too small)!");
+        return;
+    }
+    memcpy(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.data(), 2 * witdh * height);
+    room->GetLayer(layerid)->SetDirty(true);
+    singleton->SetUnsavedChanges(true);
+    singleton->RenderScreenFull();
+    log("Done!");
+}
+
 void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
 {
     if(layerID > 2 || layerID < 0) {
@@ -130,7 +226,7 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
 
 void ScriptInterface::alert(QString message)
 {
-    QMessageBox::critical(nullptr, QString("Error"), message);
+    QMessageBox::critical(singleton, QString("Error"), message);
 }
 
 void ScriptInterface::clear()

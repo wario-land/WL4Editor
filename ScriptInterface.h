@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QInputDialog>
+#include <QFileDialog>
+#include <QMessageBox>
 #include <string>
 
 class ScriptInterface : public QObject
@@ -15,8 +17,12 @@ public:
     Q_INVOKABLE int GetCurRoomWidth();
     Q_INVOKABLE int GetCurRoomHeight();
     Q_INVOKABLE int GetCurRoomTile16(int layerID, int x, int y);
+
+    // Test
     Q_INVOKABLE void Test_DecompressData(int mappingtype, int address);
     Q_INVOKABLE unsigned int Test_GetLayerDecomdataPointer(int layerId);
+    Q_INVOKABLE void Test_ExportLayerData();
+    Q_INVOKABLE void Test_ImportLayerData();
 
     // Setter
     Q_INVOKABLE void SetCurRoomTile16(int layerID, int TileID, int x, int y);
