@@ -111,7 +111,7 @@ unsigned int ScriptInterface::Test_GetLayerDecomdataPointer(int layerId)
 void ScriptInterface::Test_ExportLayerData()
 {
     QString filePath =
-        QFileDialog::getSaveFileName(singleton, tr("Save Layer file"), "", tr("bin files (*.bin)"));
+        QFileDialog::getSaveFileName(singleton, tr("Save Layer data file"), "", tr("bin files (*.bin)"));
     if (filePath.compare(""))
     {
         int layerid = prompt("Input the Layer Id you want to save data:", "0").toInt();
@@ -145,6 +145,9 @@ void ScriptInterface::Test_ExportLayerData()
             return;
         }
         file.close();
+    } else {
+        log("Invalid file path!");
+        return;
     }
     log("Done!");
 }
@@ -153,8 +156,13 @@ void ScriptInterface::Test_ImportLayerData()
 {
     // Load gfx bin file
     QString fileName = QFileDialog::getOpenFileName(singleton,
-                                                    tr("Load Tileset bin file"), QString(""),
+                                                    tr("Load Layer data bin file"), "",
                                                     tr("bin files (*.bin)"));
+    if (!fileName.compare(""))
+    {
+        log("Invalid file path!");
+        return;
+    }
 
     // load data into QBytearray
     QByteArray tmptile8x8data;
