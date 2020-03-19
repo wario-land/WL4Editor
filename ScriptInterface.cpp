@@ -110,6 +110,7 @@ unsigned int ScriptInterface::Test_GetLayerDecomdataPointer(int layerId)
 
 void ScriptInterface::Test_ExportLayerData()
 {
+    log("Export Layer Data from current Room.");
     QString filePath =
         QFileDialog::getSaveFileName(singleton, tr("Save Layer data file"), "", tr("bin files (*.bin)"));
     if (filePath.compare(""))
@@ -154,6 +155,7 @@ void ScriptInterface::Test_ExportLayerData()
 
 void ScriptInterface::Test_ImportLayerData()
 {
+    log("Import Layer Data from current Room.");
     // Load gfx bin file
     QString fileName = QFileDialog::getOpenFileName(singleton,
                                                     tr("Load Layer data bin file"), "",
@@ -176,6 +178,11 @@ void ScriptInterface::Test_ImportLayerData()
     tmptile8x8data = layerdatabinfile.readAll();
     datasize = layerdatabinfile.size();
     layerdatabinfile.close();
+    if(!datasize)
+    {
+        log("No available data in the file!");
+        return;
+    }
 
     int layerid = prompt("Input the Layer Id you choose to replace data:", "0").toInt();
     if(layerid < 0 || layerid > 2)
@@ -207,6 +214,100 @@ void ScriptInterface::Test_ImportLayerData()
     }
     memcpy(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.data(), 2 * witdh * height);
     room->GetLayer(layerid)->SetDirty(true);
+    singleton->SetUnsavedChanges(true);
+    singleton->RenderScreenFull();
+    log("Done!");
+}
+
+void ScriptInterface::Test_ExportEntityListData()
+{
+    log("Export Entity List Data from current Room.");
+    QString filePath =
+        QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), "", tr("bin files (*.bin)"));
+    if (filePath.compare(""))
+    {
+        int entitylistid = prompt("Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)", "0").toInt();
+        if(entitylistid < 0 || entitylistid > 2)
+        {
+            log("Illegal Entity list id!");
+            return;
+        }
+        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        QFile file(filePath);
+        file.open(QIODevice::WriteOnly);
+        if (file.isOpen())
+        {
+            std::vector<struct LevelComponents::EntityRoomAttribute> tmpvec = room->GetEntityListData(entitylistid);
+            int size = tmpvec.size() * sizeof(struct LevelComponents::EntityRoomAttribute);
+            if(!size)
+            {
+                log("No Entity in the list!");
+                file.close();
+                return;
+            }
+            char *data = new char[size];
+            for(size_t i = 0; i < tmpvec.size(); ++i)
+            {
+                *(LevelComponents::EntityRoomAttribute *)(data + i * sizeof(struct LevelComponents::EntityRoomAttribute)) =
+                        tmpvec[i];
+            }
+            file.write(data, size);
+            delete[] data;
+        } else {
+            log("Cannot save data file!");
+            return;
+        }
+        file.close();
+    } else {
+        log("Invalid file path!");
+        return;
+    }
+    log("Done!");
+}
+
+void ScriptInterface::Test_ImportEntityListData()
+{
+    log("Import Entity List Data from current Room.");
+    QString fileName = QFileDialog::getOpenFileName(singleton,
+                                                    tr("Load Entity List Data bin file"), "",
+                                                    tr("bin files (*.bin)"));
+    if (!fileName.compare(""))
+    {
+        log("Invalid file path!");
+        return;
+    }
+
+    // load data into QBytearray
+    QByteArray entitylistdata;
+    QFile entitylistdatabinfile(fileName);
+    int datasize = 0;
+    if(!entitylistdatabinfile.open(QIODevice::ReadOnly))
+    {
+        log("Cannot open file!");
+        return;
+    }
+    entitylistdata = entitylistdatabinfile.readAll();
+    datasize = entitylistdatabinfile.size();
+    entitylistdatabinfile.close();
+    if(!datasize || (datasize % 3))
+    {
+        log("No available data in the file!");
+        return;
+    }
+
+    int entitylistid = prompt("Input the Entity list Id you want to replace data: 0(Hard) 1(Normal) 2(S Hard):", "0").toInt();
+    if(entitylistid < 0 || entitylistid > 2)
+    {
+        log("Illegal Entity list id!");
+        return;
+    }
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    room->ClearEntitylist(entitylistid);
+    for(int i = 0; i < (datasize / 3); ++i)
+    {
+        room->AddEntity(entitylistdata.at(1 + 3 * i), entitylistdata.at(3 * i), entitylistdata.at(2 + 3 * i), entitylistid);
+    }
+    room->SetEntityListDirty(entitylistid, true);
     singleton->SetUnsavedChanges(true);
     singleton->RenderScreenFull();
     log("Done!");

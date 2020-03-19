@@ -23,6 +23,8 @@ public:
     Q_INVOKABLE unsigned int Test_GetLayerDecomdataPointer(int layerId);
     Q_INVOKABLE void Test_ExportLayerData();
     Q_INVOKABLE void Test_ImportLayerData();
+    Q_INVOKABLE void Test_ExportEntityListData();
+    Q_INVOKABLE void Test_ImportEntityListData();
 
     // Setter
     Q_INVOKABLE void SetCurRoomTile16(int layerID, int TileID, int x, int y);

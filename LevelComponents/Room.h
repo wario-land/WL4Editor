@@ -191,7 +191,7 @@ namespace LevelComponents
 
         // Setters
         void AddDoor(Door *newdoor);
-        bool AddEntity(int XPos, int YPos, int localEntityId);
+        bool AddEntity(int XPos, int YPos, int localEntityId, int difficulty = -1);
         void DeleteCameraLimitator(int index);
         void DeleteDoor(int globalDoorIndex);
         void DeleteEntity(int index);

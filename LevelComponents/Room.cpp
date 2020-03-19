@@ -1122,18 +1122,27 @@ namespace LevelComponents
     /// <param name="localEntityId">
     /// The local Id of the Entity in the current EntitySet.
     /// </param>
+    /// <param name="difficulty">
+    /// The difficulty id of the entity list to add entity.
+    /// </param>
     /// <returns>
     /// Always true (?)
     /// </returns>
-    bool Room::AddEntity(int XPos, int YPos, int localEntityId)
+    bool Room::AddEntity(int XPos, int YPos, int localEntityId, int difficulty)
     {
-        if (EntityList[currentDifficulty].size() == 47)
+        if (difficulty == -1)
+        {
+            difficulty = currentDifficulty;
+        } else if (difficulty < -1 || difficulty > 2) {
+            return false;
+        }
+        if (EntityList[difficulty].size() == 47)
             return false;
         EntityRoomAttribute newEntityattrs;
         newEntityattrs.XPos = XPos;
         newEntityattrs.YPos = YPos;
         newEntityattrs.EntityID = localEntityId;
-        EntityList[currentDifficulty].push_back(newEntityattrs);
+        EntityList[difficulty].push_back(newEntityattrs);
         return true;
     }
 
