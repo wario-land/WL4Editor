@@ -245,14 +245,14 @@ void ScriptInterface::Test_ExportEntityListData()
                 file.close();
                 return;
             }
-            char *data = new char[size];
-            for(size_t i = 0; i < tmpvec.size(); ++i)
+            QByteArray entitylistdata;
+            QDataStream stream(&entitylistdata, QIODevice::WriteOnly);
+            stream.setVersion(QDataStream::Qt_5_14);
+            for(auto entity: tmpvec)
             {
-                *(LevelComponents::EntityRoomAttribute *)(data + i * sizeof(struct LevelComponents::EntityRoomAttribute)) =
-                        tmpvec[i];
+                stream << entity.YPos << entity.XPos << entity.EntityID;
             }
-            file.write(data, size);
-            delete[] data;
+            file.write(entitylistdata.data(), size);
         } else {
             log("Cannot save data file!");
             return;
