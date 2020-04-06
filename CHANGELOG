@@ -26,6 +26,7 @@ beta-10:
 - Fix color blending glitches when reset Tiles.
 - All the output information will be shown in the output window now.
 - Support setting layer 0 size different from room size.
+- Support using direction keys to set selected tile16 when editing layers.
 
 beta-9:
 - Fix clear-all only clears hardmode entities

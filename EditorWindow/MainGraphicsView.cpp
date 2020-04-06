@@ -418,8 +418,13 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 {
     // If an entity is selected
-    if (SelectedEntityID != -1)
+    enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
+
+    switch(editMode)
     {
+    case(Ui::EntityEditMode):
+    {
+        if(SelectedEntityID == -1) return;
         switch (event->key())
         {
         // Delete selected entity if BSP or DEL is pressed
@@ -432,8 +437,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
             singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
             singleton->SetUnsavedChanges(true);
-            break;
-        }
+        }; break;
 
         // Move selected entity when a direction key is pressed
         case Qt::Key_Right:
@@ -479,13 +483,12 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 // Only perform and not execute because of a bug after deletion and undo
                 PerformOperation(params);
             }
-            break;
+        }; break;
         }
-        }
-        // If a door is selected
-    }
-    else if (SelectedDoorID != -1)
+    }; break;
+    case(Ui::DoorEditMode):
     {
+        if(SelectedDoorID == -1) return;
         switch (event->key())
         {
         // Delete selected door if BSP or DEL is pressed
@@ -496,15 +499,14 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             {
                 QMessageBox::critical(nullptr, QString("Error"),
                                       QString("Deleting the last Door in a Room is not allowed!"));
-                break;
+                return;
             }
             singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
             SelectedDoorID = -1;
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
             singleton->ResetEntitySetDockWidget();
             singleton->SetUnsavedChanges(true);
-            break;
-        }
+        }; break;
         // Move selected door when a direction key is pressed
         case Qt::Key_Right:
         case Qt::Key_Left:
@@ -555,9 +557,32 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 // Only perform and not execute because of a bug after deletion and undo
                 PerformOperation(params);
             }
-            break;
+        }; break;
         }
+    }; break;
+    case(Ui::LayerEditMode):
+    {
+        unsigned short tile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
+        if (event->key() == Qt::Key_Left)
+        {
+            singleton->GetTile16DockWidgetPtr()->SetSelectedTile((tile > 0) ? tile - 1: tile, true);
         }
+        else if (event->key() == Qt::Key_Right)
+        {
+            singleton->GetTile16DockWidgetPtr()->SetSelectedTile(qMin(tile + 1, 0x2FF), true);
+        }
+        else if (event->key() == Qt::Key_Up)
+        {
+            singleton->GetTile16DockWidgetPtr()->SetSelectedTile((tile > 7) ? tile - 8: tile, true);
+        }
+        else
+        {
+            if(tile <= (0x2FF - 8))
+            {
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(tile + 8, true);
+            }
+        }
+    }; break;
     }
 }
 
