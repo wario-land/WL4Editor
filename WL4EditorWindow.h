@@ -99,6 +99,7 @@ public:
     void LoadROMDataFromFile(QString qFilePath);
     void PrintMousePos(uint x, uint y);
     uint GetGraphicViewScalerate() { return graphicViewScalerate; }
+    void SetGraphicViewScalerate(uint scalerate);
 
 private slots:
     // called slots
@@ -137,6 +138,8 @@ private slots:
     void on_actionRun_from_file_triggered();
     void on_actionOutput_window_triggered();
     void on_actionClear_all_triggered();
+    void on_actionZoom_in_triggered();
+    void on_actionZoom_out_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

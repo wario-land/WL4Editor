@@ -575,7 +575,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         {
             singleton->GetTile16DockWidgetPtr()->SetSelectedTile((tile > 7) ? tile - 8: tile, true);
         }
-        else
+        else if (event->key() == Qt::Key_Down)
         {
             if(tile <= (0x2FF - 8))
             {

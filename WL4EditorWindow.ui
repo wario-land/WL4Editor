@@ -259,7 +259,15 @@
      <addaction name="actionLight"/>
      <addaction name="actionDark"/>
     </widget>
+    <widget class="QMenu" name="menuZoom">
+     <property name="title">
+      <string>Zoom</string>
+     </property>
+     <addaction name="actionZoom_in"/>
+     <addaction name="actionZoom_out"/>
+    </widget>
     <addaction name="menuThemes"/>
+    <addaction name="menuZoom"/>
    </widget>
    <widget class="QMenu" name="menuScript">
     <property name="title">
@@ -481,6 +489,22 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Del</string>
+   </property>
+  </action>
+  <action name="actionZoom_in">
+   <property name="text">
+    <string>Zoom in</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+=</string>
+   </property>
+  </action>
+  <action name="actionZoom_out">
+   <property name="text">
+    <string>Zoom out</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+-</string>
    </property>
   </action>
  </widget>

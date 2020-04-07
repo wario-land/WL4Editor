@@ -263,7 +263,21 @@ void WL4EditorWindow::PrintMousePos(uint x, uint y)
     if(condition)
         statusBarLabel_MousePosition->setText("Out of range!");
     else
-        statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")");
+        statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ") scale rate: " + QString::number(graphicViewScalerate) + "00%");
+}
+
+/// <summary>
+/// Set graphicView scalerate.
+/// </summary>
+void WL4EditorWindow::SetGraphicViewScalerate(uint scalerate)
+{
+    ui->graphicsView->scale((qreal)scalerate / (qreal)graphicViewScalerate, (qreal)scalerate / (qreal)graphicViewScalerate);
+    graphicViewScalerate = scalerate;
+    // TODO: find a method to get mouse pos instantly
+//    int mouse_x = ui->graphicsView->mapFromGlobal(QCursor::pos()).x();
+//    int mouse_y = ui->graphicsView->mapFromGlobal(QCursor::pos()).y();
+//    PrintMousePos(mouse_x, mouse_y);
+    statusBarLabel_MousePosition->setText("Move your mouse to show its position again! scale rate: " + QString::number(graphicViewScalerate) + "00%");
 }
 
 /// <summary>
@@ -1728,4 +1742,24 @@ void WL4EditorWindow::on_actionOutput_window_triggered()
 void WL4EditorWindow::on_actionClear_all_triggered()
 {
     CurrentRoomClearEverything();
+}
+
+/// <summary>
+/// Zoom in the graphic render for the current Room.
+/// </summary>
+void WL4EditorWindow::on_actionZoom_in_triggered()
+{
+    uint rate = GetGraphicViewScalerate();
+    rate += 1;
+    SetGraphicViewScalerate(rate);
+}
+
+/// <summary>
+/// Zoom out the graphic render for the current Room.
+/// </summary>
+void WL4EditorWindow::on_actionZoom_out_triggered()
+{
+    uint rate = GetGraphicViewScalerate();
+    if(rate > 1) rate -= 1;
+    SetGraphicViewScalerate(rate);
 }
