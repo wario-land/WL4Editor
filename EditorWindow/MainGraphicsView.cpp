@@ -26,10 +26,11 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
     holdingmouse = true;
 
     // Get the ID of the tile that was clicked
+    uint scalerate = singleton->GetGraphicViewScalerate();
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
-    unsigned int tileX = X / 32;
-    unsigned int tileY = Y / 32;
+    unsigned int tileX = X / (16 * scalerate);
+    unsigned int tileY = Y / (16 * scalerate);
 
     // Different cases for different editting mode
     LevelComponents::Room *room = singleton->GetCurrentRoom();
@@ -121,10 +122,11 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
         return;
 
     // Get the ID of the tile that was clicked
+    uint scalerate = singleton->GetGraphicViewScalerate();
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
-    unsigned int tileX = X / 32;
-    unsigned int tileY = Y / 32;
+    unsigned int tileX = X / (16 * scalerate);
+    unsigned int tileY = Y / (16 * scalerate);
 
     // Different cases for different editting mode
     LevelComponents::Room *room = singleton->GetCurrentRoom();
@@ -371,10 +373,11 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     holdingmouse = false;
 
     // Get the ID of the tile where the mouse was released
+    uint scalerate = singleton->GetGraphicViewScalerate();
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
-    unsigned int pX = X / 32;
-    unsigned int pY = Y / 32;
+    unsigned int tileX = X / (16 * scalerate);
+    unsigned int tileY = Y / (16 * scalerate);
 
     enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
@@ -385,7 +388,7 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
             struct OperationParams *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
             params->objectPositionChange = true;
-            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, pX, pY,ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
+            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY,ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
             // Only perform and not execute because of a bug after deletion and undo
             PerformOperation(params);
         }
@@ -395,7 +398,7 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
             struct OperationParams *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
             params->objectPositionChange = true;
-            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, pX, pY,ObjectMoveParams::ENTITY_TYPE,SelectedEntityID);
+            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY,ObjectMoveParams::ENTITY_TYPE,SelectedEntityID);
             // Only perform and not execute because of a bug after deletion and undo
             PerformOperation(params);
         }
