@@ -29,8 +29,13 @@ private:
     int scalerate = 1;
     LevelComponents::Tileset *SelectedTileset = nullptr;
     QGraphicsScene *Tile16MAPScene = nullptr;
-    QGraphicsPixmapItem *SelectionBox;
-    unsigned short SelectedTile;
+
+    // Selection box
+    const QColor highlightColor = QColor(0xFF, 0, 0, 0x7F);
+    QGraphicsPixmapItem *SelectionBox = nullptr;
+    unsigned short SelectedTile = 0;
+    int rw = 1; int rh = 1;
+
     // Function
     void SetTileInfoText(QString str);
 
@@ -38,7 +43,10 @@ public:
     int SetTileset(int _tilesetIndex);
     LevelComponents::Tileset *GetSelectedTileset() { return SelectedTileset; }
     void SetSelectedTile(unsigned short tile, bool resetscrollbar);
+    void RectSelectTiles(int rect_width, int rect_height);
     unsigned short GetSelectedTile() { return SelectedTile; }
+    int getrw() {return rw;}
+    int getrh() {return rh;}
 };
 
 #endif // TILE16DOCKWIDGET_H

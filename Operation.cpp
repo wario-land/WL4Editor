@@ -29,7 +29,7 @@ void PerformOperation(struct OperationParams *operation)
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
             unsigned int index;
-            if (!tcp->targetLayer)
+            if (!tcp->targetLayer) // i.e. targetLayer is Layer 0
             {
                 index = tcp->tileX + tcp->tileY * room->GetLayer0Width();
             }

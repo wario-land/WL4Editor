@@ -4,6 +4,7 @@
 #include "Dialog/DoorConfigDialog.h"
 #include "LevelComponents/Level.h"
 #include "WL4EditorWindow.h"
+#include <QtGlobal>
 #include <QGraphicsView>
 
 class MainGraphicsView : public QGraphicsView
@@ -31,7 +32,7 @@ private:
     bool holdingEntityOrDoor = false;
     bool holdingmouse = false;
 
-    void SetTile(int tileX, int tileY);
+    void SetTiles(int tileX, int tileY);
     void CopyTile(int tileX, int tileY);
 };
 

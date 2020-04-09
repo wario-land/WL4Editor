@@ -28,6 +28,7 @@ beta-10:
 - Support setting layer 0 size different from room size.
 - Support using direction keys to set selected tile16 when editing layers.
 - Support scaling the main graphicview, by both menu and shortcuts.
+- Support Rect-select in Tile16 selector dock widget.
 
 beta-9:
 - Fix clear-all only clears hardmode entities

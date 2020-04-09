@@ -54,7 +54,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 // Uncheck hiddencoinsView Checkbox
                 singleton->GetEditModeWidgetPtr()->UncheckHiddencoinsViewCheckbox();
                 // Change textmaps and layer graphics
-                SetTile(tileX, tileY);
+                SetTiles(tileX, tileY);
             }
         }
         else if (editMode == Ui::DoorEditMode) // select a door
@@ -235,7 +235,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
             else // Otherwise just place the tile
             {
                 // Change textmaps and layer graphics
-                SetTile(tileX, tileY);
+                SetTiles(tileX, tileY);
             }
         } else if((editMode == Ui::EntityEditMode)) {
             if (holdingEntityOrDoor && SelectedEntityID != -1) {
@@ -302,13 +302,13 @@ void MainGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
 /// <param name="tileY">
 /// The Y position of the tile (unit: map16)
 /// </param>
-void MainGraphicsView::SetTile(int tileX, int tileY)
+void MainGraphicsView::SetTiles(int tileX, int tileY)
 {
     // Update which tile has last been drawn, for the tile painting functionality
     drawingTileX = tileX;
     drawingTileY = tileY;
 
-    // Create an execute a tile change operation for the changed tile
+    // Execute a tile change operation for the changed tile
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
     if (selectedTile == 0xFFFF)
@@ -321,19 +321,35 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
         return; // temporarily skip the condition when the current Layer's MappingType is 0x20 to avoid incorrect
                 // rendering
     int selectedTileIndex;
+    int drawwidth = singleton->GetTile16DockWidgetPtr()->getrw();
+    int drawheight = singleton->GetTile16DockWidgetPtr()->getrh();
+    int drawlayerwidth = 0;
     if (selectedLayer)
     {
-        selectedTileIndex = tileX + tileY * room->GetWidth();
+        drawlayerwidth = room->GetWidth();
+        selectedTileIndex = tileX + tileY * drawlayerwidth;
+        drawwidth = qMin(drawlayerwidth - tileX, drawwidth);
+        drawheight = qMin(static_cast<int>(room->GetHeight()) - tileY, drawheight);
     } else {
-        selectedTileIndex = tileX + tileY * room->GetLayer0Width();
+        drawlayerwidth = room->GetLayer0Width();
+        selectedTileIndex = tileX + tileY * drawlayerwidth;
+        drawwidth = qMin(drawlayerwidth - tileX, drawwidth);
+        drawheight = qMin(static_cast<int>(room->GetLayer0Height()) - tileY, drawheight);
     }
-    if (layer->GetLayerData()[selectedTileIndex] == selectedTile)
+    if (layer->GetLayerData()[selectedTileIndex] == selectedTile && drawwidth == 1 && drawheight == 1)
         return;
     struct OperationParams *params = new struct OperationParams();
     params->type = ChangeTileOperation;
     params->tileChange = true;
-    params->tileChangeParams.push_back(
-        TileChangeParams::Create(tileX, tileY, selectedLayer, selectedTile, layer->GetLayerData()[selectedTileIndex]));
+    for(int j = 0; j < drawheight; ++j)
+    {
+        for(int i = 0; i < drawwidth; ++i)
+        {
+            params->tileChangeParams.push_back(
+                TileChangeParams::Create(tileX + i, tileY + j, selectedLayer, selectedTile + i + 8 * j,
+                                         layer->GetLayerData()[selectedTileIndex + i + j * drawlayerwidth]));
+        }
+    }
     ExecuteOperation(params);
 }
 
