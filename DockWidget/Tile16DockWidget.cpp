@@ -74,6 +74,10 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
     // Re-initialize other settings
+    SelectionBox = nullptr; // to avoid memory problem when resetting Tileset
+                            // it is deleted by the Qt graphic engine when resetting graphic scene
+                            // but it still uses the old pointer, so in SetSelectedTile(0, true);
+                            // doing SelectionBox->setPixmap(selectionPixmap); causes crash
     SetSelectedTile(0, true);
 
     return 0;
@@ -103,15 +107,14 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
     // Paint red Box (i.e. highlighted tile rectangle) to show selected Tile16
     int X = tile & 7;
     int Y = tile >> 3;
-    if(SelectionBox != nullptr)
-    {
-        Tile16MAPScene->removeItem(SelectionBox);
-        delete SelectionBox;
-        SelectionBox = nullptr;
-    }
     QPixmap selectionPixmap(16, 16);
     selectionPixmap.fill(highlightColor);
-    SelectionBox = Tile16MAPScene->addPixmap(selectionPixmap);
+    if(SelectionBox == nullptr)
+    {
+        SelectionBox = Tile16MAPScene->addPixmap(selectionPixmap);
+    } else {
+        SelectionBox->setPixmap(selectionPixmap);
+    }
     SelectionBox->setPos(X * 16, Y * 16);
     SelectionBox->setVisible(true);
     SelectedTile = tile;
@@ -143,15 +146,14 @@ void Tile16DockWidget::RectSelectTiles(int rect_width, int rect_height)
 {
     qreal xpos = SelectionBox->pos().x();
     qreal ypos = SelectionBox->pos().y();
-    if(SelectionBox != nullptr)
-    {
-        Tile16MAPScene->removeItem(SelectionBox);
-        delete SelectionBox;
-        SelectionBox = nullptr;
-    }
     QPixmap selectionPixmap(rect_width * 16, rect_height * 16);
     selectionPixmap.fill(highlightColor);
-    SelectionBox = Tile16MAPScene->addPixmap(selectionPixmap);
+    if(SelectionBox == nullptr)
+    {
+        SelectionBox = Tile16MAPScene->addPixmap(selectionPixmap);
+    } else {
+        SelectionBox->setPixmap(selectionPixmap);
+    }
     SelectionBox->setPos(xpos, ypos);
     SelectionBox->setVisible(true);
 
