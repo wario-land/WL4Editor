@@ -55,9 +55,7 @@ void TileGraphicsView::mouseMoveEvent(QMouseEvent *event)
         return;
     int tileX = X / 32;
     int tileY = Y / 32;
-    if(tx == tileX && ty == tileY)
-        return;
-    if(tx > tileX || ty > tileY)
+    if(tx > tileX || ty > tileY) // you cannot drag to directions if it not right-down side
         return;
 
     Map16DockWidget->RectSelectTiles(tileX - tx + 1, tileY - ty + 1);

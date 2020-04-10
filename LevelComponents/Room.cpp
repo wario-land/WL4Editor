@@ -798,7 +798,7 @@ namespace LevelComponents
                 delete[] LayersCurrentVisibilityTemp;
             }
         }
-            return scene;
+        return scene;
         }
         // ERROR
         return nullptr;
