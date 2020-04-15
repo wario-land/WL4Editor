@@ -910,7 +910,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         return;
 
     // Deselect Door and Entity
-    ui->graphicsView->DeselectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity(true);
 
     // Load the selected level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
@@ -1098,7 +1098,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
         return;
 
     // Deselect Door and Entity
-    ui->graphicsView->DeselectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity(true);
 
     // Load the previous room
     --selectedRoom;
@@ -1122,7 +1122,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
         return;
 
     // Deselect Door and Entity
-    ui->graphicsView->DeselectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity(true);
 
     // Load the next room
     ++selectedRoom;

@@ -20,7 +20,7 @@ public:
     void mouseReleaseEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
     int GetSelectedDoorID() { return SelectedDoorID; }
-    void DeselectDoorAndEntity();
+    void DeselectDoorAndEntity(bool updateRenderArea = false);
 
 private:
     int SelectedDoorID = -1;

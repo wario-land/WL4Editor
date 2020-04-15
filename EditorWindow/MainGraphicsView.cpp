@@ -608,9 +608,11 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 /// <summary>
 /// This function will deselect doors and entities.
 /// </summary>
-void MainGraphicsView::DeselectDoorAndEntity()
+void MainGraphicsView::DeselectDoorAndEntity(bool updateRenderArea)
 {
     SelectedDoorID = -1;
     SelectedEntityID = -1;
+    if(!updateRenderArea)
+        return;
     singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
 }
