@@ -31,7 +31,7 @@ ChooseLevelDialog::~ChooseLevelDialog() { delete ui; }
 
 void ChooseLevelDialog::ConfigureLevelComboBox(int level)
 {
-    QStringList LevelSet1, LevelSet2;
+    QStringList LevelSet1, LevelSet2, LevelSet3;
     LevelSet1 << "First Level"
               << "Second Level"
               << "Third Level"
@@ -39,10 +39,17 @@ void ChooseLevelDialog::ConfigureLevelComboBox(int level)
               << "Boss Level";
     LevelSet2 << "First Level"
               << "Boss Level";
+    LevelSet3 << "First Level"
+              << "Debug Level"
+              << "Boss Level";
     ui->comboBox_Level->clear();
-    if (ui->comboBox_Passage->currentIndex() == 0 || ui->comboBox_Passage->currentIndex() == 5)
+    if (ui->comboBox_Passage->currentIndex() == 5)
     {
         ui->comboBox_Level->addItems(LevelSet2);
+    }
+    else if (ui->comboBox_Passage->currentIndex() == 0)
+    {
+        ui->comboBox_Level->addItems(LevelSet3);
     }
     else
     {
@@ -62,10 +69,16 @@ DialogParams::PassageAndLevelIndex ChooseLevelDialog::GetResult()
     DialogParams::PassageAndLevelIndex tmpRetStruct;
     tmpRetStruct._PassageIndex = ui->comboBox_Passage->currentIndex();
     tmpRetStruct._LevelIndex = ui->comboBox_Level->currentIndex();
-    if ((ui->comboBox_Passage->currentIndex() == 0 || ui->comboBox_Passage->currentIndex() == 5) &&
-        ui->comboBox_Level->currentIndex() == 1)
+    if (ui->comboBox_Passage->currentIndex() == 5 && ui->comboBox_Level->currentIndex() == 1)
     {
         tmpRetStruct._LevelIndex = 4;
+    }
+    if (ui->comboBox_Passage->currentIndex() == 0)
+    {
+        if (ui->comboBox_Level->currentIndex() == 1)
+            tmpRetStruct._LevelIndex = 2;
+        if (ui->comboBox_Level->currentIndex() == 2)
+            tmpRetStruct._LevelIndex = 4;
     }
 
     return tmpRetStruct;
