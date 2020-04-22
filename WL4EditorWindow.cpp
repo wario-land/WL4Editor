@@ -48,9 +48,15 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     ui->graphicsView->scale(graphicViewScalerate, graphicViewScalerate);
     statusBarLabel = new QLabel("Open a ROM file");
     statusBarLabel_MousePosition = new QLabel();
+    statusBarLabel_rectselectMode = new QLabel("Rect Select: Off");
+    statusBarLabel_Scalerate = new QLabel("scale rate: " + QString::number(graphicViewScalerate) + "00%");
     statusBarLabel->setMargin(3);
     statusBarLabel_MousePosition->setMargin(3);
+    statusBarLabel_rectselectMode->setMargin(3);
+    statusBarLabel_Scalerate->setMargin(3);
     ui->statusBar->addWidget(statusBarLabel);
+    ui->statusBar->addWidget(statusBarLabel_rectselectMode);
+    ui->statusBar->addWidget(statusBarLabel_Scalerate);
     ui->statusBar->addWidget(statusBarLabel_MousePosition);
     switch (themeId) {
     case 0:
@@ -105,6 +111,8 @@ WL4EditorWindow::~WL4EditorWindow()
     delete CameraControlWidget;
     delete statusBarLabel;
     delete statusBarLabel_MousePosition;
+    delete statusBarLabel_rectselectMode;
+    delete statusBarLabel_Scalerate;
 
     // Decomstruct all Tileset singletons
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
@@ -263,7 +271,7 @@ void WL4EditorWindow::PrintMousePos(uint x, uint y)
     if(condition)
         statusBarLabel_MousePosition->setText("Out of range!");
     else
-        statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ") scale rate: " + QString::number(graphicViewScalerate) + "00%");
+        statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")");
 }
 
 /// <summary>
@@ -277,7 +285,30 @@ void WL4EditorWindow::SetGraphicViewScalerate(uint scalerate)
 //    int mouse_x = ui->graphicsView->mapFromGlobal(QCursor::pos()).x();
 //    int mouse_y = ui->graphicsView->mapFromGlobal(QCursor::pos()).y();
 //    PrintMousePos(mouse_x, mouse_y);
-    statusBarLabel_MousePosition->setText("Move your mouse to show its position again! scale rate: " + QString::number(graphicViewScalerate) + "00%");
+    statusBarLabel_MousePosition->setText("Move your mouse to show position again!");
+    statusBarLabel_Scalerate->setText("scale rate: " + QString::number(graphicViewScalerate) + "00%");
+}
+
+/// <summary>
+/// Show the rect select state in the main graphic view.
+/// </summary>
+/// <param name="state">
+/// The toggle state of rect select
+/// </param>
+void WL4EditorWindow::RefreshRectSelectHint(bool state)
+{
+    statusBarLabel_rectselectMode->setText(state ? "Rect Select: On" : "Rect Select: Off");
+}
+
+/// <summary>
+/// Unset the rect select state in the main graphic view.
+/// </summary>
+/// <param name="state">
+/// The toggle state of rect select
+/// </param>
+void WL4EditorWindow::SetRectSelectMode(bool state)
+{
+    ui->graphicsView->SetRectSelectMode(state);
 }
 
 /// <summary>
@@ -1762,4 +1793,15 @@ void WL4EditorWindow::on_actionZoom_out_triggered()
     uint rate = GetGraphicViewScalerate();
     if(rate > 1) rate -= 1;
     SetGraphicViewScalerate(rate);
+}
+
+/// <summary>
+/// Toggle the rect select mode.
+/// </summary>
+/// <param name="arg1">
+/// bool state of the rect select mode.
+/// </param>
+void WL4EditorWindow::on_actionRect_Select_Mode_toggled(bool arg1)
+{
+    SetRectSelectMode(arg1);
 }

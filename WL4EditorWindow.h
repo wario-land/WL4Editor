@@ -33,6 +33,8 @@ private:
     Ui::WL4EditorWindow *ui;
     QLabel *statusBarLabel;
     QLabel *statusBarLabel_MousePosition;
+    QLabel *statusBarLabel_Scalerate;
+    QLabel *statusBarLabel_rectselectMode;
     Tile16DockWidget *Tile16SelecterWidget;
     EditModeDockWidget *EditModeWidget;
     EntitySetDockWidget *EntitySetWidget;
@@ -100,6 +102,8 @@ public:
     void PrintMousePos(uint x, uint y);
     uint GetGraphicViewScalerate() { return graphicViewScalerate; }
     void SetGraphicViewScalerate(uint scalerate);
+    void RefreshRectSelectHint(bool state);
+    void SetRectSelectMode(bool state);
 
 private slots:
     // called slots
@@ -140,6 +144,7 @@ private slots:
     void on_actionClear_all_triggered();
     void on_actionZoom_in_triggered();
     void on_actionZoom_out_triggered();
+    void on_actionRect_Select_Mode_toggled(bool arg1);
 };
 
 #endif // WL4EDITORWINDOW_H

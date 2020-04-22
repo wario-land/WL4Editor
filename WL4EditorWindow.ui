@@ -235,6 +235,7 @@
     <addaction name="menuAdd"/>
     <addaction name="menuSwap"/>
     <addaction name="menuClear"/>
+    <addaction name="actionRect_Select_Mode"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -505,6 +506,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+-</string>
+   </property>
+  </action>
+  <action name="actionRect_Select_Mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Rect Select Mode</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Tab</string>
    </property>
   </action>
  </widget>

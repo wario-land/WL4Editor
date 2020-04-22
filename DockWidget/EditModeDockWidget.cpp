@@ -326,6 +326,8 @@ void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
         singleton->HideEntitySetDockWidget();
         singleton->HideCameraControlDockWidget();
         singleton->ShowTile16DockWidget();
+    } else {
+        singleton->SetRectSelectMode(false);
     }
     QFocusEvent *tmp = nullptr;
     singleton->GetTile16DockWidgetPtr()->FocusInEvent(tmp);

@@ -29,6 +29,7 @@ beta-10:
 - Support using direction keys to set selected tile16 when editing layers.
 - Support scaling the main graphicview, by both menu and shortcuts.
 - Support Rect-select in Tile16 selector dock widget.
+- Support loading debug level.
 
 beta-9:
 - Fix clear-all only clears hardmode entities

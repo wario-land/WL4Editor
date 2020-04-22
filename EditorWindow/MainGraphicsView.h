@@ -21,6 +21,7 @@ public:
     void keyPressEvent(QKeyEvent *event);
     int GetSelectedDoorID() { return SelectedDoorID; }
     void DeselectDoorAndEntity(bool updateRenderArea = false);
+    void SetRectSelectMode(bool state);
 
 private:
     int SelectedDoorID = -1;
@@ -31,6 +32,7 @@ private:
     int objectInitialY = -1;
     bool holdingEntityOrDoor = false;
     bool holdingmouse = false;
+    bool rectSelectMode = false;
 
     void SetTiles(int tileX, int tileY);
     void CopyTile(int tileX, int tileY);

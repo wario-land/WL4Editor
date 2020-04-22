@@ -616,3 +616,9 @@ void MainGraphicsView::DeselectDoorAndEntity(bool updateRenderArea)
         return;
     singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
 }
+
+void MainGraphicsView::SetRectSelectMode(bool state)
+{
+    rectSelectMode = state;
+    singleton->RefreshRectSelectHint(rectSelectMode);
+}
