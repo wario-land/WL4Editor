@@ -174,7 +174,7 @@ void EditModeDockWidget::on_CheckBox_Layer0View_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_Layer1View_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenFull();
+    singleton->RenderScreenVisibilityChange();
 }
 
 /// <summary>
@@ -186,7 +186,7 @@ void EditModeDockWidget::on_CheckBox_Layer1View_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_Layer2View_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenFull();
+    singleton->RenderScreenVisibilityChange();
 }
 
 /// <summary>
@@ -198,7 +198,7 @@ void EditModeDockWidget::on_CheckBox_Layer2View_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_Layer3View_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenFull();
+    singleton->RenderScreenVisibilityChange();
 }
 
 /// <summary>

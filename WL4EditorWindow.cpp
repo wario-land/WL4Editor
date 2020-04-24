@@ -312,6 +312,14 @@ void WL4EditorWindow::SetRectSelectMode(bool state)
 }
 
 /// <summary>
+/// Get the pointer of the main graphic view.
+/// </summary>
+QGraphicsView *WL4EditorWindow::Getgraphicview()
+{
+    return ui->graphicsView;
+}
+
+/// <summary>
 /// Update the UI after loading a ROM.
 /// </summary>
 void WL4EditorWindow::UIStartUp(int currentTilesetID)
@@ -819,6 +827,7 @@ void WL4EditorWindow::RenderScreenFull()
     {
         delete oldScene;
     }
+    ui->graphicsView->ClearRectPointer();
 
     // Perform a full render of the screen
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::FullRender);

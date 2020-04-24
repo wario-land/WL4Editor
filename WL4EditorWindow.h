@@ -104,6 +104,7 @@ public:
     void SetGraphicViewScalerate(uint scalerate);
     void RefreshRectSelectHint(bool state);
     void SetRectSelectMode(bool state);
+    QGraphicsView *Getgraphicview();
 
 private slots:
     // called slots

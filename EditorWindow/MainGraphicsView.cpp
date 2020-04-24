@@ -57,7 +57,21 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     SetTiles(tileX, tileY);
                 }
             } else {
-                // TODO
+                if (event->button() == Qt::LeftButton)
+                {
+                    if(!singleton->Getgraphicview()->scene()) return;
+
+                    QPixmap selectionPixmap(16, 16);
+                    selectionPixmap.fill(highlightColor);
+                    if(rect == nullptr)
+                    {
+                        rect = singleton->Getgraphicview()->scene()->addPixmap(selectionPixmap);
+                    } else {
+                        rect->setPixmap(selectionPixmap);
+                    }
+                    rect->setPos(tileX * 16, tileY * 16);
+                    rect->setVisible(true);
+                }
             }
 
         }
@@ -230,18 +244,23 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
         if ((editMode == Ui::LayerEditMode))
         {
-            // If we hold right click then copy the tile
-            // event->button() cannot work, event->buttons() return the correct mouseState according to the Qt code
-            if (event->buttons() == Qt::RightButton)
+            if(!rectSelectMode)
             {
-               CopyTile(tileX, tileY);
+                // If we hold right click then copy the tile
+                // event->button() cannot work, event->buttons() return the correct mouseState according to the Qt code
+                if (event->buttons() == Qt::RightButton)
+                {
+                    CopyTile(tileX, tileY);
+                }
+                else // Otherwise just place the tile
+                {
+                    // Change textmaps and layer graphics
+                    SetTiles(tileX, tileY);
+                }
+            } else {
+                // TODO
             }
-            else // Otherwise just place the tile
-            {
-                // Change textmaps and layer graphics
-                SetTiles(tileX, tileY);
-            }
-        } else if((editMode == Ui::EntityEditMode)) {
+        } else if(editMode == Ui::EntityEditMode) {
             if (holdingEntityOrDoor && SelectedEntityID != -1) {
 
                 LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();

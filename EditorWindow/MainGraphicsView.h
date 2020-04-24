@@ -22,6 +22,7 @@ public:
     int GetSelectedDoorID() { return SelectedDoorID; }
     void DeselectDoorAndEntity(bool updateRenderArea = false);
     void SetRectSelectMode(bool state);
+    void ClearRectPointer() { rect = nullptr; }
 
 private:
     int SelectedDoorID = -1;
@@ -33,6 +34,9 @@ private:
     bool holdingEntityOrDoor = false;
     bool holdingmouse = false;
     bool rectSelectMode = false;
+    const QColor highlightColor = QColor(0xFF, 0, 0, 0x7F);
+    QGraphicsPixmapItem *rect = nullptr;
+    QGraphicsPixmapItem *selectedrect = nullptr;
 
     void SetTiles(int tileX, int tileY);
     void CopyTile(int tileX, int tileY);

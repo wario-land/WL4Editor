@@ -706,7 +706,73 @@ namespace LevelComponents
             if (RenderedLayers[6])
                 RenderedLayers[6]->setVisible(layerVisibility->cameraAreasEnabled);
             if (RenderedLayers[7])
+            {
+                // Update alpha layer for cases when layer 1, 2, 3 are under it but disabled
+                if (Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
+                {
+                    QGraphicsPixmapItem *alphalayeritem = RenderedLayers[7];
+                    Layer *layerqueue[4];
+                    QList<Layer *> layerlist;
+                    layerlist.push_back(layers[0]);
+                    layerlist.push_back(layers[1]);
+                    layerlist.push_back(layers[2]);
+                    layerlist.push_back(layers[3]);
+
+                    std::sort(layerlist.begin(), layerlist.end(), [](Layer *layera, Layer *layerb) {
+                        return layera->GetLayerPriority() < layerb->GetLayerPriority();
+                    });
+                    for (int i = 0; i < 4; i++)
+                    {
+                        layerqueue[i] = layerlist.at(3 - i);
+                    }
+
+                    QPixmap alphaPixmapTemp = alphalayeritem->pixmap();
+                    QPainter alphaPainterTemp(&alphaPixmapTemp);
+                    bool *LayersCurrentVisibilityTemp = singleton->GetLayersVisibilityArray();
+
+                    // clean the old layer, or remaining old graphic will causes wrong rendering result
+                    alphaPainterTemp.fillRect(0, 0, sceneWidth, sceneHeight, QColor(0, 0, 0).rgb());
+
+                    for (int i = 0; i < 4; i++)
+                    {
+                        // If this is a pass for a layer under the alpha layer, draw the rendered layer to the EVA component
+                        // image
+                        if ((layerqueue[i] != layers[0]) && LayersCurrentVisibilityTemp[drawLayers[i]->index])
+                        {
+                            QPixmap pm_tmp = RenderedLayers[drawLayers[i]->index]->pixmap().copy(
+                                0, 0, sceneWidth, sceneHeight);
+                            alphaPainterTemp.drawImage(0, 0, pm_tmp.toImage());
+                        }
+                        else if (layerqueue[i] == layers[0])
+                        {
+                            // Blend the EVA and EVB pixels for the new layer
+                            QImage imageA = RenderedLayers[0]->pixmap().toImage();
+                            QImage imageB = alphaPixmapTemp.toImage();
+                            for (int j = 0; j < sceneHeight; ++j)
+                            {
+                                for (int k = 0; k < sceneWidth; ++k)
+                                {
+                                    QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
+                                    int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
+                                                     (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
+                                                 255);
+                                    int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
+                                                     (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
+                                                 255);
+                                    int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
+                                                     (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
+                                                 255);
+                                    imageB.setPixel(k, j, QColor(R, G, B).rgb());
+                                }
+                            }
+                            alphalayeritem->setPixmap(QPixmap::fromImage(imageB));
+                            break;
+                        };
+                    }
+                    delete[] LayersCurrentVisibilityTemp;
+                }
                 RenderedLayers[7]->setVisible(layerVisibility->alphaBlendingEnabled);
+            }
             RenderedLayers[12]->setVisible(layerVisibility->hiddencoinsEnabled);
         }
             return scene;
