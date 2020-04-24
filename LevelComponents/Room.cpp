@@ -732,7 +732,7 @@ namespace LevelComponents
             // Set the new QPixmap for the graphics item on the QGraphicsScene
             item->setPixmap(pm);
 
-            // Redraw alpha layer
+            // Update alpha layer
             if (Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
             {
                 QGraphicsPixmapItem *alphalayeritem = RenderedLayers[7];
@@ -797,6 +797,24 @@ namespace LevelComponents
                 }
                 delete[] LayersCurrentVisibilityTemp;
             }
+
+            // Update hidden coins layer
+            QGraphicsPixmapItem *hiddencoinpixmapitem = RenderedLayers[12];
+            QPixmap hiddencoinPixmapTemp = hiddencoinpixmapitem->pixmap();
+            QPainter hiddencoinPainterTemp(&hiddencoinPixmapTemp);
+            hiddencoinPainterTemp.setCompositionMode(QPainter::CompositionMode_Source);
+            QPen hiddencionBoxPen = QPen(QBrush(QColor(255, 153, 18, 0xFF)), 2); // chrome yellow
+            hiddencionBoxPen.setJoinStyle(Qt::MiterJoin);
+            hiddencoinPainterTemp.setPen(hiddencionBoxPen);
+            int eventidtmp = tileset->GetEventTablePtr()[renderParams->tileID];
+            if (std::find(eventidwithhiddencoin.begin(), eventidwithhiddencoin.end(), eventidtmp) !=
+                eventidwithhiddencoin.end())
+            {
+                hiddencoinPainterTemp.drawRect(16 * renderParams->tileX + 4, 16 * renderParams->tileY + 4, 8, 8);
+            } else {
+                hiddencoinPainterTemp.fillRect(16 * renderParams->tileX, 16 * renderParams->tileY, 16, 16, Qt::transparent);
+            }
+            hiddencoinpixmapitem->setPixmap(hiddencoinPixmapTemp);
         }
         return scene;
         }

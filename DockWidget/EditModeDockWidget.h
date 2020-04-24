@@ -55,7 +55,6 @@ public:
     void SetLayersCheckBoxEnabled(int index, bool usable);
     void SetDifficultyRadioBox(int modeid);
     bool *GetLayersVisibilityArray();
-    void UncheckHiddencoinsViewCheckbox();
 
 private slots:
     void on_CheckBox_Layer0View_stateChanged(int arg1);

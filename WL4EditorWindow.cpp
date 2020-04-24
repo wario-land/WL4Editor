@@ -1218,7 +1218,6 @@ void WL4EditorWindow::resizeEvent(QResizeEvent *event)
 /// </summary>
 void WL4EditorWindow::on_actionUndo_triggered()
 {
-    EditModeWidget->UncheckHiddencoinsViewCheckbox();
     UndoOperation();
 }
 
@@ -1227,7 +1226,6 @@ void WL4EditorWindow::on_actionUndo_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionRedo_triggered()
 {
-    EditModeWidget->UncheckHiddencoinsViewCheckbox();
     RedoOperation();
 }
 

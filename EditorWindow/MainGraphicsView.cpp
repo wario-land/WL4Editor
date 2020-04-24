@@ -44,18 +44,22 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 
         if (editMode == Ui::LayerEditMode)
         {
-            // If we use right click then copy the tile
-            if (event->button() == Qt::RightButton)
+            if(!rectSelectMode)
             {
-                CopyTile(tileX, tileY);
+                // Use right click then copy the tile
+                if (event->button() == Qt::RightButton)
+                {
+                    CopyTile(tileX, tileY);
+                }
+                else // Otherwise just place the tile
+                {
+                    // Change textmaps and layer graphics
+                    SetTiles(tileX, tileY);
+                }
+            } else {
+                // TODO
             }
-            else // Otherwise just place the tile
-            {
-                // Uncheck hiddencoinsView Checkbox
-                singleton->GetEditModeWidgetPtr()->UncheckHiddencoinsViewCheckbox();
-                // Change textmaps and layer graphics
-                SetTiles(tileX, tileY);
-            }
+
         }
         else if (editMode == Ui::DoorEditMode) // select a door
         {

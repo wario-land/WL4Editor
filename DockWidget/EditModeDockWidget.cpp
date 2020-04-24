@@ -115,14 +115,6 @@ bool *EditModeDockWidget::GetLayersVisibilityArray()
 }
 
 /// <summary>
-/// Uncheck CheckBox_hiddencoinsView.
-/// </summary>
-void EditModeDockWidget::UncheckHiddencoinsViewCheckbox()
-{
-    ui->CheckBox_hiddencoinsView->setCheckState(Qt::Unchecked);
-}
-
-/// <summary>
 /// Retrieve the selected edit mode options as a structure.
 /// </summary>
 /// <return>
