@@ -268,7 +268,8 @@ namespace LevelComponents
     /// </return>
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
     {
-        int sceneWidth = Width * 16, sceneHeight = Height * 16, Z = 0;
+        int sceneWidth = Width * 16, sceneHeight = Height * 16;
+        int Z = 0;
         std::vector<int> eventidwithhiddencoin = {
             0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C
         }; // TODO: There perhaps will be more
@@ -1444,5 +1445,34 @@ namespace LevelComponents
     bool Room::IsNewEntityPositionInsideRoom(int x, int y)
     {
         return x >= 0 && x < this->GetWidth() && y >= 0 && y < this->GetHeight();
+    }
+
+    /// <summary>
+    /// Get the layer graphic from a single layer's qgraphicpixmapitem.
+    /// </summary>
+    /// <param name="layerId">
+    /// Use the Layer id to get the graphic.
+    /// </param>
+    /// <param name="x">
+    /// The x position of the rectangle to get from the layer's graphic. (unit: Tile16)
+    /// </param>
+    /// <param name="y">
+    /// The y position of the rectangle to get from the layer's graphic. (unit: Tile16)
+    /// </param>
+    /// <param name="h">
+    /// The height of the rectangle to get from the layer's graphic. (unit: Tile16)
+    /// </param>
+    /// <param name="w">
+    /// The width of the rectangle to get from the layer's graphic. (unit: Tile16)
+    /// </param>
+    /// <returns>
+    /// return a pixmap which is a rectangle pixmap from the layer graphic.
+    /// </returns>
+    QPixmap Room::GetLayerPixmap(int layerId, int x, int y, int w, int h)
+    {
+        if(!RenderedLayers[layerId])
+            return QPixmap();
+
+        return RenderedLayers[layerId]->pixmap().copy(x * 16, y * 16, w * 16, h * 16);
     }
 } // namespace LevelComponents

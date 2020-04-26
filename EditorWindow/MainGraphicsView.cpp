@@ -61,16 +61,91 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 {
                     if(!singleton->Getgraphicview()->scene()) return;
 
-                    QPixmap selectionPixmap(16, 16);
-                    selectionPixmap.fill(highlightColor);
-                    if(rect == nullptr)
+                    if(has_a_rect)
                     {
-                        rect = singleton->Getgraphicview()->scene()->addPixmap(selectionPixmap);
+                        // De-rect-select if need
+                        if(tileX < rectx || tileX > (rectx + rectwidth - 1) ||
+                                tileY < recty || tileY > (recty + rectheight - 1))
+                        {
+                            if(rect != nullptr)
+                            {
+                                delete rect; rect = nullptr;
+                            }
+                            if(selectedrectgraphic != nullptr)
+                            {
+                                delete selectedrectgraphic; selectedrectgraphic = nullptr;
+                            }
+                            has_a_rect = false;
+
+                            // Delete layer rect graphic
+                            delete selectedrectgraphic; selectedrectgraphic = nullptr;
+                            // Do Operation (and update layer data)
+                            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+                            unsigned short *Layerdata = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerData();
+                            int layerwidth = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerWidth();
+                            int layerheight = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerHeight();
+                            struct OperationParams *params = new struct OperationParams();
+                            params->type = ChangeTileOperation;
+                            params->tileChange = true;
+                            int rectcuttopheight, rectcutleftsidewidth;
+                            int rectcutbottomheight, rectcutrightsidewidth;
+                            rectcuttopheight = qMax(-recty, 0);
+                            rectcutleftsidewidth = qMax(-rectx, 0);
+                            rectcutbottomheight = qMax(recty + rectheight - 1 - (layerheight - 1), 0);
+                            rectcutrightsidewidth = qMax(rectx + rectwidth - 1 - (layerwidth - 1), 0);
+                            for(int j = 0; j < rectheight; ++j) // cut place
+                            {
+                                for(int i = 0; i < rectwidth; ++i)
+                                {
+                                    params->tileChangeParams.push_back(
+                                        TileChangeParams::Create(rectselectstartTileX + i, rectselectstartTileY + j, selectedLayer,
+                                                                 0,
+                                                                 rectdata[i + j * rectwidth]));
+                                }
+                            }
+                            for(int j = rectcuttopheight; j < (rectheight - rectcutbottomheight); ++j) // paste place
+                            {
+                                for(int i = rectcutleftsidewidth; i < (rectwidth - rectcutrightsidewidth); ++i)
+                                {
+                                    params->tileChangeParams.push_back(
+                                        TileChangeParams::Create(rectx + i, recty + j, selectedLayer,
+                                                                 rectdata[i + j * rectwidth],
+                                                                 Layerdata[rectx + i + (recty + j) * layerwidth]));
+                                }
+                            }
+                            ExecuteOperation(params);
+                            // Reset variables
+                            rectx = recty = -1;
+                            rectselectstartTileX = rectselectstartTileY = -1;
+                            rectwidth = rectheight = 0;
+                            has_a_rect = false;
+                            dragInitmouseX = dragInitmouseY = -1;
+                            rectdata.clear();
+                            return;
+                        }
+
+                        // Start holding the mouse inside the rect
+                        Isdraggingrect = true;
+                        dragInitmouseX = tileX;
+                        dragInitmouseY = tileY;
                     } else {
-                        rect->setPixmap(selectionPixmap);
+                        // reset rect
+                        QPixmap selectionPixmap(16, 16);
+                        selectionPixmap.fill(highlightColor);
+                        if(rect == nullptr)
+                        {
+                            rect = singleton->Getgraphicview()->scene()->addPixmap(selectionPixmap);
+                        } else {
+                            rect->setPixmap(selectionPixmap);
+                        }
+                        rectx = rectselectstartTileX = tileX;
+                        recty = rectselectstartTileY = tileY;
+                        rectwidth = rectheight = 1;
+                        rect->setPos(tileX * 16, tileY * 16);
+                        rect->setZValue(14); // assume every layer in room is enabled, and rect should be above selectedrectgraphic
+                        rect->setVisible(true);
+                        has_a_rect = true;
                     }
-                    rect->setPos(tileX * 16, tileY * 16);
-                    rect->setVisible(true);
                 }
             }
 
@@ -232,7 +307,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
-    // Draw the new tile
+    // main part
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) && tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
     {
@@ -258,7 +333,28 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                     SetTiles(tileX, tileY);
                 }
             } else {
-                // TODO
+                if(!has_a_rect) return;
+
+                if(!Isdraggingrect)
+                {
+                    if(tileX < rectselectstartTileX || tileY < rectselectstartTileY)
+                        return;
+
+                    // reset rect
+                    rectwidth = tileX - rectselectstartTileX + 1;
+                    rectheight = tileY - rectselectstartTileY + 1;
+                    QPixmap selectionPixmap(16 * rectwidth, 16 * rectheight);
+                    selectionPixmap.fill(highlightColor);
+                    rect->setPixmap(selectionPixmap);
+                    rect->setPos(rectx * 16, recty * 16);
+                    rect->setZValue(14); // assume every layer in room is enabled, and rect should be above selectedrectgraphic
+                    rect->setVisible(true);
+                } else {
+                    rectx = rectselectstartTileX - dragInitmouseX + tileX;
+                    recty = rectselectstartTileY - dragInitmouseY + tileY;
+                    rect->setPos(rectx * 16, recty * 16);
+                    selectedrectgraphic->setPos(rectx * 16, recty * 16);
+                }
             }
         } else if(editMode == Ui::EntityEditMode) {
             if (holdingEntityOrDoor && SelectedEntityID != -1) {
@@ -422,7 +518,41 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
     //Temporary Remove because of a bug
     //Add a move operation for door (for CTRL-Z)
-    if (editMode == Ui::DoorEditMode) {
+    if (editMode == Ui::LayerEditMode) {
+        if(!has_a_rect) return;
+
+        if(!Isdraggingrect)
+        {
+            // Update layer rect graphic
+            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+            QPixmap layerrectpixmap(singleton->GetCurrentRoom()->GetLayerPixmap(selectedLayer,
+                                                                                rectselectstartTileX,
+                                                                                rectselectstartTileY,
+                                                                                rectwidth,
+                                                                                rectheight));
+            if(selectedrectgraphic == nullptr)
+            {
+                selectedrectgraphic = singleton->Getgraphicview()->scene()->addPixmap(layerrectpixmap);
+            } else {
+                selectedrectgraphic->setPixmap(layerrectpixmap);
+            }
+            selectedrectgraphic->setPos(rectx * 16, recty * 16);
+            selectedrectgraphic->setZValue(13);
+            selectedrectgraphic->setVisible(true);
+            // Update rectdata
+            unsigned short *Layerdata = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerData();
+            int layerwidth = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerWidth();
+            for (int j = rectselectstartTileY; j < (rectselectstartTileY + rectheight); ++j)
+            {
+                for (int i = rectselectstartTileX; i < (rectselectstartTileX + rectwidth); ++i)
+                {
+                    rectdata.push_back(Layerdata[i + j * layerwidth]);
+                }
+            }
+        } else {
+            Isdraggingrect = false;
+        }
+    } else if (editMode == Ui::DoorEditMode) { // Add a move operation for entity (for CTRL-Z)
         if (holdingEntityOrDoor && SelectedDoorID != -1) {
             struct OperationParams *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
@@ -431,8 +561,7 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
             // Only perform and not execute because of a bug after deletion and undo
             PerformOperation(params);
         }
-    // Add a move operation for entity (for CTRL-Z)
-    } else if (editMode == Ui::EntityEditMode) {
+    } else if (editMode == Ui::EntityEditMode) { // Add a move operation for entity (for CTRL-Z)
         if (holdingEntityOrDoor && SelectedEntityID != -1) {
             struct OperationParams *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
@@ -644,4 +773,9 @@ void MainGraphicsView::SetRectSelectMode(bool state)
 {
     rectSelectMode = state;
     singleton->RefreshRectSelectHint(rectSelectMode);
+    if(!state)
+    {
+        delete rect;
+        rect = nullptr;
+    }
 }

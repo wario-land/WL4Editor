@@ -36,7 +36,18 @@ private:
     bool rectSelectMode = false;
     const QColor highlightColor = QColor(0xFF, 0, 0, 0x7F);
     QGraphicsPixmapItem *rect = nullptr;
-    QGraphicsPixmapItem *selectedrect = nullptr;
+    QGraphicsPixmapItem *selectedrectgraphic = nullptr;
+    int rectx = -1; // runtime position
+    int recty = -1;
+    int rectselectstartTileX = -1; // start position
+    int rectselectstartTileY = -1;
+    int rectwidth = 0;
+    int rectheight = 0;
+    bool has_a_rect = false;
+    QVector<unsigned short> rectdata;
+    int dragInitmouseX = -1;
+    int dragInitmouseY = -1;
+    bool Isdraggingrect = false;
 
     void SetTiles(int tileX, int tileY);
     void CopyTile(int tileX, int tileY);

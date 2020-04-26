@@ -261,6 +261,7 @@ namespace LevelComponents
         void SwapEntityLists(int first_list_id, int second_list_id);
         bool IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2);
         bool IsNewEntityPositionInsideRoom(int x, int y);
+        QPixmap GetLayerPixmap(int layerId, int x, int y, int w, int h);
     };
 } // namespace LevelComponents
 
