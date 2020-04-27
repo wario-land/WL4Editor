@@ -41,6 +41,8 @@ private:
     int recty = -1;
     int rectselectstartTileX = -1; // start position
     int rectselectstartTileY = -1;
+    int tmpLTcornerTileX = -1;
+    int tmpLTcornerTileY = -1;
     int rectwidth = 0;
     int rectheight = 0;
     bool has_a_rect = false;

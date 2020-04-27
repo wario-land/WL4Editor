@@ -60,6 +60,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 if (event->button() == Qt::LeftButton)
                 {
                     if(!singleton->Getgraphicview()->scene()) return;
+                    singleton->SetChangeCurrentRoomEnabled(false);
 
                     if(has_a_rect)
                     {
@@ -77,8 +78,6 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                             }
                             has_a_rect = false;
 
-                            // Delete layer rect graphic
-                            delete selectedrectgraphic; selectedrectgraphic = nullptr;
                             // Do Operation (and update layer data)
                             int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
                             unsigned short *Layerdata = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerData();
@@ -93,17 +92,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                             rectcutleftsidewidth = qMax(-rectx, 0);
                             rectcutbottomheight = qMax(recty + rectheight - 1 - (layerheight - 1), 0);
                             rectcutrightsidewidth = qMax(rectx + rectwidth - 1 - (layerwidth - 1), 0);
-                            for(int j = 0; j < rectheight; ++j) // cut place
-                            {
-                                for(int i = 0; i < rectwidth; ++i)
-                                {
-                                    params->tileChangeParams.push_back(
-                                        TileChangeParams::Create(rectselectstartTileX + i, rectselectstartTileY + j, selectedLayer,
-                                                                 0,
-                                                                 rectdata[i + j * rectwidth]));
-                                }
-                            }
-                            for(int j = rectcuttopheight; j < (rectheight - rectcutbottomheight); ++j) // paste place
+                            for(int j = rectcuttopheight; j < (rectheight - rectcutbottomheight); ++j) // paste rect
                             {
                                 for(int i = rectcutleftsidewidth; i < (rectwidth - rectcutrightsidewidth); ++i)
                                 {
@@ -116,11 +105,12 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                             ExecuteOperation(params);
                             // Reset variables
                             rectx = recty = -1;
-                            rectselectstartTileX = rectselectstartTileY = -1;
+                            tmpLTcornerTileX = rectselectstartTileX = tmpLTcornerTileY = rectselectstartTileY = -1;
                             rectwidth = rectheight = 0;
                             has_a_rect = false;
                             dragInitmouseX = dragInitmouseY = -1;
                             rectdata.clear();
+                            singleton->SetChangeCurrentRoomEnabled(true);
                             return;
                         }
 
@@ -138,8 +128,8 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                         } else {
                             rect->setPixmap(selectionPixmap);
                         }
-                        rectx = rectselectstartTileX = tileX;
-                        recty = rectselectstartTileY = tileY;
+                        rectx = tmpLTcornerTileX = rectselectstartTileX = tileX;
+                        recty = tmpLTcornerTileY = rectselectstartTileY = tileY;
                         rectwidth = rectheight = 1;
                         rect->setPos(tileX * 16, tileY * 16);
                         rect->setZValue(14); // assume every layer in room is enabled, and rect should be above selectedrectgraphic
@@ -350,8 +340,8 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                     rect->setZValue(14); // assume every layer in room is enabled, and rect should be above selectedrectgraphic
                     rect->setVisible(true);
                 } else {
-                    rectx = rectselectstartTileX - dragInitmouseX + tileX;
-                    recty = rectselectstartTileY - dragInitmouseY + tileY;
+                    rectx = tmpLTcornerTileX - dragInitmouseX + tileX;
+                    recty = tmpLTcornerTileY - dragInitmouseY + tileY;
                     rect->setPos(rectx * 16, recty * 16);
                     selectedrectgraphic->setPos(rectx * 16, recty * 16);
                 }
@@ -553,6 +543,8 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
                 }
             }
         } else {
+            dragInitmouseX = dragInitmouseY = -1;
+            tmpLTcornerTileX = rectx; tmpLTcornerTileY = recty;
             Isdraggingrect = false;
         }
     } else if (editMode == Ui::DoorEditMode) { // Add a move operation for entity (for CTRL-Z)
@@ -736,24 +728,68 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
     }; break;
     case(Ui::LayerEditMode):
     {
-        unsigned short tile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
-        if (event->key() == Qt::Key_Left)
-        {
-            singleton->GetTile16DockWidgetPtr()->SetSelectedTile((tile > 0) ? tile - 1: tile, true);
-        }
-        else if (event->key() == Qt::Key_Right)
-        {
-            singleton->GetTile16DockWidgetPtr()->SetSelectedTile(qMin(tile + 1, 0x2FF), true);
-        }
-        else if (event->key() == Qt::Key_Up)
-        {
-            singleton->GetTile16DockWidgetPtr()->SetSelectedTile((tile > 7) ? tile - 8: tile, true);
-        }
-        else if (event->key() == Qt::Key_Down)
-        {
-            if(tile <= (0x2FF - 8))
+        if (!rectSelectMode) {
+            // Reset selected tiles
+            unsigned short tile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
+            if (event->key() == Qt::Key_Left)
             {
-                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(tile + 8, true);
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile((tile > 0) ? tile - 1: tile, true);
+            }
+            else if (event->key() == Qt::Key_Right)
+            {
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(qMin(tile + 1, 0x2FF), true);
+            }
+            else if (event->key() == Qt::Key_Up)
+            {
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile((tile > 7) ? tile - 8: tile, true);
+            }
+            else if (event->key() == Qt::Key_Down)
+            {
+                if(tile <= (0x2FF - 8))
+                {
+                    singleton->GetTile16DockWidgetPtr()->SetSelectedTile(tile + 8, true);
+                }
+            }
+        } else {
+            if (has_a_rect) {
+                if(event->key() == Qt::Key_Backspace || event->key() == Qt::Key_Delete)
+                {
+                    if (rectselectstartTileX == rectx)
+                    {
+                        int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+                        struct OperationParams *params = new struct OperationParams();
+                        params->type = ChangeTileOperation;
+                        params->tileChange = true;
+                        for(int j = 0; j < rectheight; ++j) // delete rect
+                        {
+                            for(int i = 0; i < rectwidth; ++i)
+                            {
+                                params->tileChangeParams.push_back(
+                                            TileChangeParams::Create(rectselectstartTileX + i, rectselectstartTileY + j, selectedLayer,
+                                                                     0,
+                                                                     rectdata[i + j * rectwidth]));
+                            }
+                        }
+                        ExecuteOperation(params);
+                    }
+                    // Reset variables
+                    if(rect != nullptr)
+                    {
+                        delete rect; rect = nullptr;
+                    }
+                    if(selectedrectgraphic != nullptr)
+                    {
+                        delete selectedrectgraphic; selectedrectgraphic = nullptr;
+                    }
+                    rectx = recty = -1;
+                    tmpLTcornerTileX = tmpLTcornerTileY = rectselectstartTileX = rectselectstartTileY = -1;
+                    rectwidth = rectheight = 0;
+                    has_a_rect = false;
+                    dragInitmouseX = dragInitmouseY = -1;
+                    rectdata.clear();
+                    singleton->SetChangeCurrentRoomEnabled(true);
+                    return;
+                }
             }
         }
     }; break;
@@ -788,7 +824,7 @@ void MainGraphicsView::SetRectSelectMode(bool state)
     }
     // Reset variables
     rectx = recty = -1;
-    rectselectstartTileX = rectselectstartTileY = -1;
+    tmpLTcornerTileX = tmpLTcornerTileY = rectselectstartTileX = rectselectstartTileY = -1;
     rectwidth = rectheight = 0;
     has_a_rect = false;
     dragInitmouseX = dragInitmouseY = -1;

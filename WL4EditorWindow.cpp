@@ -320,6 +320,25 @@ QGraphicsView *WL4EditorWindow::Getgraphicview()
 }
 
 /// <summary>
+/// Set enable for buttons to go to a different room.
+/// </summary>
+/// <param name="state">
+/// The toggle state of rect select
+/// </param>
+void WL4EditorWindow::SetChangeCurrentRoomEnabled(bool state)
+{
+    if (state) {
+        if (selectedRoom)
+            ui->roomDecreaseButton->setEnabled(state);
+        if (selectedRoom < (CurrentLevel->GetRooms().size() - 1))
+            ui->roomIncreaseButton->setEnabled(state);
+    } else {
+        ui->roomDecreaseButton->setEnabled(state);
+        ui->roomIncreaseButton->setEnabled(state);
+    }
+}
+
+/// <summary>
 /// Update the UI after loading a ROM.
 /// </summary>
 void WL4EditorWindow::UIStartUp(int currentTilesetID)
@@ -1138,7 +1157,7 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
         return;
 
     // Deselect rect
-    SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
+    // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity(true);
 
@@ -1164,7 +1183,7 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
         return;
 
     // Deselect rect
-    SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
+    // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity(true);
 

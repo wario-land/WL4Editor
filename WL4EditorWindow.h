@@ -105,6 +105,7 @@ public:
     void RefreshRectSelectHint(bool state);
     void SetRectSelectMode(bool state);
     QGraphicsView *Getgraphicview();
+    void SetChangeCurrentRoomEnabled(bool state);
 
 private slots:
     // called slots
