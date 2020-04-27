@@ -519,7 +519,10 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     //Temporary Remove because of a bug
     //Add a move operation for door (for CTRL-Z)
     if (editMode == Ui::LayerEditMode) {
-        if(!has_a_rect) return;
+        if(!has_a_rect)
+        {
+            return;
+        }
 
         if(!Isdraggingrect)
         {
@@ -773,9 +776,22 @@ void MainGraphicsView::SetRectSelectMode(bool state)
 {
     rectSelectMode = state;
     singleton->RefreshRectSelectHint(rectSelectMode);
-    if(!state)
+    if(rect != nullptr)
     {
         delete rect;
         rect = nullptr;
     }
+    if(selectedrectgraphic != nullptr)
+    {
+        delete selectedrectgraphic;
+        selectedrectgraphic = nullptr;
+    }
+    // Reset variables
+    rectx = recty = -1;
+    rectselectstartTileX = rectselectstartTileY = -1;
+    rectwidth = rectheight = 0;
+    has_a_rect = false;
+    dragInitmouseX = dragInitmouseY = -1;
+    holdingmouse = false;
+    rectdata.clear();
 }

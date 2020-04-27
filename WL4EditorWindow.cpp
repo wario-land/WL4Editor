@@ -308,7 +308,7 @@ void WL4EditorWindow::RefreshRectSelectHint(bool state)
 /// </param>
 void WL4EditorWindow::SetRectSelectMode(bool state)
 {
-    ui->graphicsView->SetRectSelectMode(state);
+    ui->actionRect_Select_Mode->setChecked(state);
 }
 
 /// <summary>
@@ -1137,6 +1137,8 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     if (!selectedRoom)
         return;
 
+    // Deselect rect
+    SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity(true);
 
@@ -1161,6 +1163,8 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     if (selectedRoom == (CurrentLevel->GetRooms().size() - 1))
         return;
 
+    // Deselect rect
+    SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity(true);
 
@@ -1810,5 +1814,5 @@ void WL4EditorWindow::on_actionZoom_out_triggered()
 /// </param>
 void WL4EditorWindow::on_actionRect_Select_Mode_toggled(bool arg1)
 {
-    SetRectSelectMode(arg1);
+    ui->graphicsView->SetRectSelectMode(arg1);
 }
