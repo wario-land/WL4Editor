@@ -24,23 +24,39 @@ void PerformOperation(struct OperationParams *operation)
     if (operation->tileChange)
     {
         room = singleton->GetCurrentRoom();
+        int tl1 = -1, tl2 = -1; // there are 2 target layers only when doing cross layer rect-copy
+        QVector<LevelComponents::Tileinfo> tilechangelist, tilechangelist2;
         for (auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
             unsigned int index;
-            if (!tcp->targetLayer) // i.e. targetLayer is Layer 0
-            {
+            if (!tcp->targetLayer) { // i.e. targetLayer is Layer 0
                 index = tcp->tileX + tcp->tileY * room->GetLayer0Width();
-            }
-            else
-            {
+            } else {
                 index = tcp->tileX + tcp->tileY * room->GetWidth();
             }
             layer->GetLayerData()[index] = tcp->newTile;
-            // Re-render the tile
-            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->newTile, tcp->targetLayer);
+
+            if(tl1 == -1) {
+                tl1 = tcp->targetLayer;
+            }
+            if(tl1 != -1 && tl2 == -1 && tl1 != tcp->targetLayer) {
+                tl2 = tcp->targetLayer;
+            }
+            if(tl1 == tcp->targetLayer) {
+                tilechangelist.push_back({tcp->tileX, tcp->tileY, tcp->newTile});
+                continue;
+            }
+            if(tl2 == tcp->targetLayer) {
+                tilechangelist2.push_back({tcp->tileX, tcp->tileY, tcp->newTile});
+                continue;
+            }
         }
+        // Update graphic changes
+        singleton->RenderScreenTilesChange(tilechangelist, tl1);
+        if(tl2 == -1) return;
+        singleton->RenderScreenTilesChange(tilechangelist2, tl2);
     }
     if (operation->roomConfigChange)
     {
@@ -126,23 +142,39 @@ void BackTrackOperation(struct OperationParams *operation)
     if (operation->tileChange)
     {
         room = singleton->GetCurrentRoom();
+        int tl1 = -1, tl2 = -1; // there are 2 target layers only when doing cross layer rect-copy
+        QVector<LevelComponents::Tileinfo> tilechangelist, tilechangelist2;
         for (auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
         {
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
             unsigned int index;
-            if (!tcp->targetLayer)
-            {
+            if (!tcp->targetLayer) { // i.e. targetLayer is Layer 0
                 index = tcp->tileX + tcp->tileY * room->GetLayer0Width();
-            }
-            else
-            {
+            } else {
                 index = tcp->tileX + tcp->tileY * room->GetWidth();
             }
             layer->GetLayerData()[index] = tcp->oldTile;
-            // Re-render the tile
-            singleton->RenderScreenTileChange(tcp->tileX, tcp->tileY, tcp->oldTile, tcp->targetLayer);
+
+            if(tl1 == -1) {
+                tl1 = tcp->targetLayer;
+            }
+            if(tl1 != -1 && tl2 == -1 && tl1 != tcp->targetLayer) {
+                tl2 = tcp->targetLayer;
+            }
+            if(tl1 == tcp->targetLayer) {
+                tilechangelist.push_back({tcp->tileX, tcp->tileY, tcp->oldTile});
+                continue;
+            }
+            if(tl2 == tcp->targetLayer) {
+                tilechangelist2.push_back({tcp->tileX, tcp->tileY, tcp->oldTile});
+                continue;
+            }
         }
+        // Update graphic changes
+        singleton->RenderScreenTilesChange(tilechangelist, tl1);
+        if(tl2 == -1) return;
+        singleton->RenderScreenTilesChange(tilechangelist2, tl2);
     }
     if (operation->roomConfigChange)
     {

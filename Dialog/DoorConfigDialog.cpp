@@ -226,8 +226,7 @@ void DoorConfigDialog::RenderGraphicsView_Preview()
         delete oldScene;
     }
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::FullRender);
-    tparam.tileX = tparam.tileY = 0;
-    tparam.tileID = (unsigned short) 0;
+    tparam.tilechangelist.clear();
     tparam.SelectedDoorID = (unsigned int) DoorID; // ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
     tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
@@ -274,8 +273,7 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
         delete oldScene;
     }
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::FullRender);
-    tparam.tileX = tparam.tileY = 0;
-    tparam.tileID = (unsigned short) 0;
+    tparam.tilechangelist.clear();
     tparam.SelectedDoorID = (unsigned int) doorIDinRoom; // ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
     tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
@@ -344,8 +342,7 @@ void DoorConfigDialog::ResetDoorRect()
 void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
 {
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::ElementsLayersUpdate);
-    tparam.tileX = tparam.tileY = 0;
-    tparam.tileID = (unsigned short) 0;
+    tparam.tilechangelist.clear();
     tparam.SelectedDoorID = (unsigned int) DoorID; // ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
     tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
@@ -359,8 +356,7 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
 void DoorConfigDialog::UpdateDoorLayerGraphicsView_DestinationDoor()
 {
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::ElementsLayersUpdate);
-    tparam.tileX = tparam.tileY = 0;
-    tparam.tileID = (unsigned short) 0;
+    tparam.tilechangelist.clear();
     tparam.SelectedDoorID = (unsigned int) tmpDestinationRoom->GetLocalDoorID(
         ui->ComboBox_DoorDestinationPicker->currentIndex()); // ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;

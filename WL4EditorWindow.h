@@ -65,7 +65,7 @@ public:
     void RenderScreenFull();
     void RenderScreenVisibilityChange();
     void RenderScreenElementsLayersUpdate(unsigned int DoorId, int EntityId);
-    void RenderScreenTileChange(int tileX, int tileY, unsigned short tileID, int LayerID);
+    void RenderScreenTilesChange(QVector<LevelComponents::Tileinfo> tilelist, int LayerID);
     void SetStatusBarText(char *str);
     void LoadRoomUIUpdate();
     Tile16DockWidget *GetTile16DockWidgetPtr() { return Tile16SelecterWidget; }

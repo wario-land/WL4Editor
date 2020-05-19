@@ -887,16 +887,14 @@ void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId, int 
 }
 
 /// <summary>
-/// Perform a re-render of a single changed tile.
+/// Perform a re-render of multiple tiles changes.
 /// </summary>
-void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned short tileID, int LayerID)
+void WL4EditorWindow::RenderScreenTilesChange(QVector<LevelComponents::Tileinfo> tilelist, int LayerID)
 {
-    struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::SingleTile);
+    struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::TileChanges);
     renderParams.mode = EditModeWidget->GetEditModeParams();
     renderParams.mode.selectedLayer = LayerID;
-    renderParams.tileX = tileX;
-    renderParams.tileY = tileY;
-    renderParams.tileID = tileID;
+    renderParams.tilechangelist = tilelist;
     CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
 }
 

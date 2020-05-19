@@ -266,7 +266,7 @@ namespace LevelComponents
     /// <return>
     /// A graphics scene containing fully rendered pixmap layers in proper Z order.
     /// </return>
-    QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams)
+    QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, RenderUpdateParams *renderParams)
     {
         int sceneWidth = Width * 16, sceneHeight = Height * 16;
         int Z = 0;
@@ -777,13 +777,15 @@ namespace LevelComponents
             RenderedLayers[12]->setVisible(layerVisibility->hiddencoinsEnabled);
         }
             return scene;
-        case SingleTile:
+        case TileChanges:
         {
             // Re-render the QImage for the changed tile
             Layer *layer = layers[renderParams->mode.selectedLayer];
             if (layer->IsEnabled() == false)
                 return scene;
-            layer->ReRenderTile(renderParams->tileX, renderParams->tileY, renderParams->tileID, tileset);
+            for(auto iter: renderParams->tilechangelist) {
+                layer->ReRenderTile(iter.tileX, iter.tileY, iter.tileID, tileset);
+            }
 
             // Obtain the old QPixmap from the previously-rendered graphic layers
             QGraphicsPixmapItem *item = RenderedLayers[renderParams->mode.selectedLayer];
@@ -791,10 +793,13 @@ namespace LevelComponents
             // Draw the new tile graphics over the position of the old tile in the QPixmap
             QPixmap pm(item->pixmap());
             int units = layer->GetMappingType() == LayerMap16 ? 16 : 8;
-            int X = renderParams->tileX * units;
-            int Y = renderParams->tileY * units;
-            int tileDataIndex = renderParams->tileX + renderParams->tileY * layer->GetLayerWidth();
-            layer->GetTiles()[tileDataIndex]->DrawTile(&pm, X, Y);
+            int lw = layer->GetLayerWidth();
+            for(auto iter: renderParams->tilechangelist) {
+                int X = iter.tileX * units;
+                int Y = iter.tileY * units;
+                int tileDataIndex = iter.tileX + iter.tileY * lw;
+                layer->GetTiles()[tileDataIndex]->DrawTile(&pm, X, Y);
+            }
 
             // Set the new QPixmap for the graphics item on the QGraphicsScene
             item->setPixmap(pm);
@@ -823,7 +828,9 @@ namespace LevelComponents
                 bool *LayersCurrentVisibilityTemp = singleton->GetLayersVisibilityArray();
 
                 // clean the rect which need to redraw, or remaining old graphic will causes wrong rendering result
-                alphaPainterTemp.fillRect(renderParams->tileX * 16, renderParams->tileY * 16, 16, 16, QColor(0, 0, 0).rgb());
+                for(auto iter: renderParams->tilechangelist) {
+                    alphaPainterTemp.fillRect(iter.tileX * units, iter.tileY * units, units, units, QColor(0, 0, 0).rgb());
+                }
 
                 for (int i = 0; i < 4; i++)
                 {
@@ -831,31 +838,34 @@ namespace LevelComponents
                     // image
                     if ((layerqueue[i] != layers[0]) && LayersCurrentVisibilityTemp[drawLayers[i]->index])
                     {
-                        QPixmap pm_tmp = RenderedLayers[drawLayers[i]->index]->pixmap().copy(
-                            renderParams->tileX * 16, renderParams->tileY * 16, 16, 16);
-                        alphaPainterTemp.drawImage(renderParams->tileX * 16, renderParams->tileY * 16,
-                                                   pm_tmp.toImage());
+                        for(auto iter: renderParams->tilechangelist) {
+                            QPixmap pm_tmp = RenderedLayers[drawLayers[i]->index]->pixmap().copy(
+                                iter.tileX * units, iter.tileY * units, units, units);
+                            alphaPainterTemp.drawImage(iter.tileX * units, iter.tileY * units, pm_tmp.toImage());
+                        }
                     }
                     else if (layerqueue[i] == layers[0])
                     {
                         // Blend the EVA and EVB pixels for the new layer
                         QImage imageA = RenderedLayers[0]->pixmap().toImage();
                         QImage imageB = alphaPixmapTemp.toImage();
-                        for (int j = 16 * renderParams->tileY; j < (16 * renderParams->tileY + 16); ++j)
-                        {
-                            for (int k = 16 * renderParams->tileX; k < (16 * renderParams->tileX + 16); ++k)
+                        for(auto iter: renderParams->tilechangelist) {
+                            for (int j = units * iter.tileY; j < (units * iter.tileY + units); ++j)
                             {
-                                QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
-                                                 (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
-                                             255);
-                                int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
-                                                 (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
-                                             255);
-                                int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
-                                                 (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
-                                             255);
-                                imageB.setPixel(k, j, QColor(R, G, B).rgb());
+                                for (int k = units * iter.tileX; k < (units * iter.tileX + units); ++k)
+                                {
+                                    QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
+                                    int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
+                                                     (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
+                                                 255);
+                                    int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
+                                                     (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
+                                                 255);
+                                    int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
+                                                     (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
+                                                 255);
+                                    imageB.setPixel(k, j, QColor(R, G, B).rgb());
+                                }
                             }
                         }
                         alphalayeritem->setPixmap(QPixmap::fromImage(imageB));
@@ -873,13 +883,15 @@ namespace LevelComponents
             QPen hiddencionBoxPen = QPen(QBrush(QColor(255, 153, 18, 0xFF)), 2); // chrome yellow
             hiddencionBoxPen.setJoinStyle(Qt::MiterJoin);
             hiddencoinPainterTemp.setPen(hiddencionBoxPen);
-            int eventidtmp = tileset->GetEventTablePtr()[renderParams->tileID];
-            if (std::find(eventidwithhiddencoin.begin(), eventidwithhiddencoin.end(), eventidtmp) !=
-                eventidwithhiddencoin.end())
-            {
-                hiddencoinPainterTemp.drawRect(16 * renderParams->tileX + 4, 16 * renderParams->tileY + 4, 8, 8);
-            } else {
-                hiddencoinPainterTemp.fillRect(16 * renderParams->tileX, 16 * renderParams->tileY, 16, 16, Qt::transparent);
+            for(auto iter: renderParams->tilechangelist) {
+                int eventidtmp = tileset->GetEventTablePtr()[iter.tileID];
+                if (std::find(eventidwithhiddencoin.begin(), eventidwithhiddencoin.end(), eventidtmp) !=
+                    eventidwithhiddencoin.end())
+                {
+                    hiddencoinPainterTemp.drawRect(16 * iter.tileX + 4, 16 * iter.tileY + 4, 8, 8);
+                } else {
+                    hiddencoinPainterTemp.fillRect(16 * iter.tileX, 16 * iter.tileY, 16, 16, Qt::transparent);
+                }
             }
             hiddencoinpixmapitem->setPixmap(hiddencoinPixmapTemp);
         }

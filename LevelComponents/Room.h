@@ -76,9 +76,16 @@ namespace LevelComponents
     enum RenderUpdateType
     {
         FullRender = 0,
-        SingleTile = 1,
+        TileChanges = 1,
         LayerEnable = 2,
         ElementsLayersUpdate = 3
+    };
+
+    struct Tileinfo
+    {
+        int tileX = 0;
+        int tileY = 0;
+        unsigned short tileID = 0;
     };
 
     // This struct defines the parameters necessary to perform a rendering update to the main graphics view
@@ -88,6 +95,7 @@ namespace LevelComponents
         int tileX = 0;
         int tileY = 0;
         unsigned short tileID = 0;
+        QVector<Tileinfo> tilechangelist;
         unsigned int SelectedDoorID = ~0u;
         int SelectedEntityID = -1;
         struct Ui::EditModeParams mode = {};
@@ -256,7 +264,7 @@ namespace LevelComponents
         unsigned int GetLocalDoorID(int globalDoorId);
         void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk,
                            ROMUtils::SaveData *cameraPointerTableChunk, unsigned int *cameraPointerTableIndex);
-        QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
+        QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, RenderUpdateParams *renderParams);
         void SetCameraLimitator(int index, __CameraControlRecord limitator_data);
         void SwapEntityLists(int first_list_id, int second_list_id);
         bool IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2);
