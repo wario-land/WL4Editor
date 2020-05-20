@@ -259,6 +259,7 @@ void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
 {
     if (!checked)
     {
+        // Disable entity selection
         singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
@@ -318,6 +319,8 @@ void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
         singleton->HideEntitySetDockWidget();
         singleton->HideCameraControlDockWidget();
         singleton->ShowTile16DockWidget();
+        // Disable doors and entity selection
+        singleton->Graphicsview_UnselectDoorAndEntity();
     } else {
         singleton->SetRectSelectMode(false);
     }
@@ -339,9 +342,7 @@ void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
         singleton->HideCameraControlDockWidget();
         //        singleton->ResetEntitySetDockWidget();
         singleton->ShowEntitySetDockWidget();
-    }
-    else
-    {
+        // Disable doors selection
         singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
@@ -359,6 +360,8 @@ void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
         singleton->HideEntitySetDockWidget();
         singleton->HideTile16DockWidget();
         singleton->ShowCameraControlDockWidget();
+        // Disable doors selection
+        singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
 
