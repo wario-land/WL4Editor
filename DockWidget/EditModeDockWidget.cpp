@@ -274,7 +274,8 @@ void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
 {
     if (!checked)
     {
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        // Disable entity selection
+        singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
 
@@ -288,7 +289,8 @@ void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 {
     if (!checked)
     {
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        // Disable entity selection
+        singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
 
@@ -302,7 +304,8 @@ void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
 {
     if (!checked)
     {
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        // Disable entity selection
+        singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
 
@@ -319,8 +322,6 @@ void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
         singleton->HideEntitySetDockWidget();
         singleton->HideCameraControlDockWidget();
         singleton->ShowTile16DockWidget();
-        // Disable doors and entity selection
-        singleton->Graphicsview_UnselectDoorAndEntity();
     } else {
         singleton->SetRectSelectMode(false);
     }
@@ -342,7 +343,8 @@ void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
         singleton->HideCameraControlDockWidget();
         //        singleton->ResetEntitySetDockWidget();
         singleton->ShowEntitySetDockWidget();
-        // Disable doors selection
+    } else {
+        // Disable entity selection
         singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
@@ -360,8 +362,6 @@ void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
         singleton->HideEntitySetDockWidget();
         singleton->HideTile16DockWidget();
         singleton->ShowCameraControlDockWidget();
-        // Disable doors selection
-        singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
 
@@ -374,5 +374,4 @@ void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
 void EditModeDockWidget::on_CheckBox_hiddencoinsView_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 }

@@ -452,7 +452,7 @@ void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 /// <summary>
 /// Deselect doors or entities that are currently selected.
 /// </summary>
-void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity() { ui->graphicsView->DeselectDoorAndEntity(); }
+void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity() { ui->graphicsView->DeselectDoorAndEntity(true); }
 
 /// <summary>
 /// Reset the Room with a new/old RoomConfigParams.
