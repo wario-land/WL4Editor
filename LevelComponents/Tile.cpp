@@ -390,7 +390,7 @@ namespace LevelComponents
     /// </summary>
     unsigned short Tile8x8::GetValue()
     {
-        // First set the 10 first byte that represent the index of the tile8
+        // First set the first 10 bytes that represent the index of the tile8
         unsigned short tile8Data=this->GetIndex() & 0x3FF;
 
         // Set the flipX and flipY bit if present (11th and 12th bits)
