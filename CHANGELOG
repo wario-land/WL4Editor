@@ -23,7 +23,7 @@ beta-10:
 - Fix an edge case bug in Layer data compression procedure.
 - contributors in about dialog are listed in alphabetical order now.
 - shortcuts bugfixes and menu tweaks for clearing everything in current room(ctrl + delete) and switching to different room in current level(pageup & pagedown).
-- Fix color blending glitches when reset Tiles.
+- Fix color blending problems when editing layers.
 - All the output information will be shown in the output window now.
 - Support setting layer 0 size different from room size.
 - Support using direction keys to set selected tile16 when editing layers.
@@ -31,6 +31,7 @@ beta-10:
 - Support Rect-select in Tile16 selector dock widget.
 - Support loading debug level.
 - Support Rect-select and moving around tile16s in main editor window.
+- Fix cannot de-select Door or Entity when switching between editing modes.
 
 beta-9:
 - Fix clear-all only clears hardmode entities
