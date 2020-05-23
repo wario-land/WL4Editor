@@ -7,6 +7,7 @@
 #include <SettingsUtils.h>
 #include <QProcess>
 #include <cstring>
+#include "WL4EditorWindow.h"
 
 #define PATCH_CHUNK_VERSION 0
 
@@ -30,6 +31,8 @@ struct CompileEntry {
     QString FileName;
     enum PatchType Type;
 };
+
+extern WL4EditorWindow *singleton;
 
 /// <summary>
 /// Upgrade the format of a patch list chunk by one version.
@@ -97,6 +100,7 @@ static QString CompileCFile(QString cfile)
 {
     // Create args
     assert(cfile.endsWith(".c") /* C file does not have correct extension (should be .c) */);
+    singleton->GetOutputWidgetPtr()->PrintString("C file does not have correct extension (should be .c)"); // TODO TODO TODO TODO TODO
     QString outfile(cfile);
     REPLACE_EXT(outfile, ".c", ".s");
     QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_GCC);
@@ -273,7 +277,7 @@ static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
 
     // Create binaries from C and asm
     QVector<struct CompileEntry> compileEntries;
-    foreach(struct PatchEntryItem entry, entries)
+    for(struct PatchEntryItem entry : entries)
     {
         QString fname(entry.FileName);
         switch(entry.PatchType)
@@ -285,6 +289,7 @@ static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
             compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Assembly});
             REPLACE_EXT(fname, ".s", ".o");
             compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Binary});
+        default:;
         }
     }
     std::sort(compileEntries.begin(), compileEntries.end(),
