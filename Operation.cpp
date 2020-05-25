@@ -8,6 +8,8 @@ extern WL4EditorWindow *singleton;
 // Globals used by the undo system
 static std::deque<struct OperationParams *> operationHistory[16];
 static unsigned int operationIndex[16];
+static std::deque<struct OperationParams *> operationGlobalHistory;
+static unsigned int operationGlobalIndex;
 
 /// <summary>
 /// Perform an operation based on its parameters.
@@ -44,12 +46,17 @@ void PerformOperation(struct OperationParams *operation)
             if(tl1 != -1 && tl2 == -1 && tl1 != tcp->targetLayer) {
                 tl2 = tcp->targetLayer;
             }
+            struct LevelComponents::Tileinfo tinfo;
+            tinfo.tileX = tcp->tileX;
+            tinfo.tileY = tcp->tileY;
+            tinfo.tileID = tcp->newTile;
             if(tl1 == tcp->targetLayer) {
-                tilechangelist.push_back({tcp->tileX, tcp->tileY, tcp->newTile});
+
+                tilechangelist.push_back(tinfo);
                 continue;
             }
             if(tl2 == tcp->targetLayer) {
-                tilechangelist2.push_back({tcp->tileX, tcp->tileY, tcp->newTile});
+                tilechangelist2.push_back(tinfo);
                 continue;
             }
         }
@@ -162,12 +169,16 @@ void BackTrackOperation(struct OperationParams *operation)
             if(tl1 != -1 && tl2 == -1 && tl1 != tcp->targetLayer) {
                 tl2 = tcp->targetLayer;
             }
+            struct LevelComponents::Tileinfo tinfo;
+            tinfo.tileX = tcp->tileX;
+            tinfo.tileY = tcp->tileY;
+            tinfo.tileID = tcp->oldTile;
             if(tl1 == tcp->targetLayer) {
-                tilechangelist.push_back({tcp->tileX, tcp->tileY, tcp->oldTile});
+                tilechangelist.push_back(tinfo);
                 continue;
             }
             if(tl2 == tcp->targetLayer) {
-                tilechangelist2.push_back({tcp->tileX, tcp->tileY, tcp->oldTile});
+                tilechangelist2.push_back(tinfo);
                 continue;
             }
         }

@@ -247,7 +247,7 @@ void ScriptInterface::Test_ExportEntityListData()
             }
             QByteArray entitylistdata;
             QDataStream stream(&entitylistdata, QIODevice::WriteOnly);
-            stream.setVersion(QDataStream::Qt_5_14);
+            stream.setVersion(QDataStream::Qt_5_6);
             for(auto entity: tmpvec)
             {
                 stream << entity.YPos << entity.XPos << entity.EntityID;
