@@ -226,7 +226,7 @@ void BackTrackOperation(struct OperationParams *operation)
 /// <param name="operationIdx">
 /// The operation indexer to modify.
 /// </param>
-static void ExecuteOperationImpl(struct OperationParams *operation, std::deque<struct OperationParams *> operationHist, unsigned int *operationIdx)
+static void ExecuteOperationImpl(struct OperationParams *operation, std::deque<struct OperationParams *> &operationHist, unsigned int *operationIdx)
 {
     PerformOperation(operation);
     // If we perform an action after a series of undo, then delete the "undone" operations from history
@@ -253,7 +253,6 @@ void ExecuteOperation(struct OperationParams *operation)
 {
     int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
     ExecuteOperationImpl(operation, operationHistory[currentRoomNumber], operationIndex + currentRoomNumber);
-    // TODO: When we modify operation history, then try to undo it, the history deque is empty in the unod function. Fix this before merging to master.
 }
 
 /// <summary>
@@ -283,12 +282,12 @@ void ExecuteOperationGlobal(struct OperationParams *operation)
 /// <param name="operationIdx">
 /// The operation indexer to modify.
 /// </param>
-static void UndoOperationImpl(std::deque<struct OperationParams *> operationHist, unsigned int *operationIdx)
+static void UndoOperationImpl(std::deque<struct OperationParams *> &operationHist, unsigned int *operationIdx)
 {
     // We cannot undo past the end of the deque
     if (*operationIdx < operationHist.size())
     {
-        BackTrackOperation(operationHist[*operationIdx++]);
+        BackTrackOperation(operationHist[(*operationIdx)++]);
 
         // If the entire operation history is undone for all rooms, then there are no unsaved changes
         for (unsigned int i = 0; i < sizeof(operationIndex) / sizeof(operationIndex[0]); ++i)
@@ -346,7 +345,7 @@ void UndoOperationGlobal()
 /// <param name="operationIdx">
 /// The operation indexer to modify.
 /// </param>
-static void RedoOperationImpl(std::deque<struct OperationParams *> operationHist, unsigned int *operationIdx)
+static void RedoOperationImpl(std::deque<struct OperationParams *> &operationHist, unsigned int *operationIdx)
 {
     // We cannot redo past the front of the deque
     if (*operationIdx)
