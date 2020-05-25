@@ -137,6 +137,8 @@ private slots:
     void on_actionRun_from_file_triggered();
     void on_actionOutput_window_triggered();
     void on_actionClear_all_triggered();
+    void on_actionUndo_global_triggered();
+    void on_actionRedo_global_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

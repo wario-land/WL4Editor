@@ -98,7 +98,6 @@ int main(int argc, char *argv[])
         window.LoadROMDataFromFile(filePath);
     }
     testFile.close();
-    testFile.remove();
 
     //-------------------------------------------------------------------
 
