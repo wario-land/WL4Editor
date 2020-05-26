@@ -798,24 +798,27 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 
     QVector<QRgb> tmppalette;
     unsigned short *tmppaldata = new unsigned short[16];
-    memcpy(tmppaldata, tmppalettedata.data(), 32);
-
-    // Get transparent color id in the palette
-    bool ok;
-    int transparentcolorId = QInputDialog::getInt(this, tr("Dialog"),
-                                         tr("Input the transparent-substitute color id in the palette bin file:"), 0,
-                                         0, 15, 1, &ok);
-    if (!ok)
-        return;
-
-    // transparent-substitute color replacement and load palette
-    tmppaldata[transparentcolorId] = 0x7FFF;
+    memset(tmppaldata, 0, 32);
+    memcpy(tmppaldata, tmppalettedata.data(), qMin(32, tmppalettedata.size()));
     ROMUtils::LoadPalette(&tmppalette, tmppaldata);
     delete[] tmppaldata;
+
+    // Get transparent color id in the palette
+    int transparentcolorId = -1;
+    SelectColorDialog scdialog;
+    scdialog.SetPalette(tmppalette);
+    if(scdialog.exec() == QDialog::Accepted)
+    {
+        transparentcolorId = scdialog.GetSelectedColorId();
+    } else {
+        return;
+    }
+
+    // transparent-substitute color replacement and load palette
     tmppalette[0] = 0xFF000000;
     tmppalette[transparentcolorId] = 0;
 
-    // half-byte exchange not needed
+    // nybble exchange not needed
     // reset bytearray according to the palette bin file
     for(int i = 0; i != 16; ++i)
     {

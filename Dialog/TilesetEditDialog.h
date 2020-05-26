@@ -15,6 +15,7 @@
 #include "ROMUtils.h"
 #include "RoomPreviewGraphicsView.h"
 #include "WL4Constants.h"
+#include "Dialog/SelectColorDialog.h"
 
 namespace DialogParams
 {
