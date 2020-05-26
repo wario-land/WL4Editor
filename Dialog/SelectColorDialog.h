@@ -25,6 +25,7 @@ private:
     QGraphicsScene *pb = nullptr;
     QGraphicsPixmapItem *PalBar = nullptr;
     QGraphicsPixmapItem *SelectionBox_Color = nullptr;
+    QVector<QRgb> temppal;
 };
 
 #endif // SELECTCOLORDIALOG_H

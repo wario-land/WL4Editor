@@ -800,13 +800,14 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     unsigned short *tmppaldata = new unsigned short[16];
     memset(tmppaldata, 0, 32);
     memcpy(tmppaldata, tmppalettedata.data(), qMin(32, tmppalettedata.size()));
-    ROMUtils::LoadPalette(&tmppalette, tmppaldata);
+    ROMUtils::LoadPalette(&tmppalette, tmppaldata, true);
     delete[] tmppaldata;
 
     // Get transparent color id in the palette
     int transparentcolorId = -1;
     SelectColorDialog scdialog;
     scdialog.SetPalette(tmppalette);
+    scdialog.SetColor(0);
     if(scdialog.exec() == QDialog::Accepted)
     {
         transparentcolorId = scdialog.GetSelectedColorId();

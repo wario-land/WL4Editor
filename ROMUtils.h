@@ -65,7 +65,7 @@ namespace ROMUtils
         std::function<void(QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
         std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback);
     bool SaveLevel(QString fileName);
-    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr);
+    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor = false);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
 
 } // namespace ROMUtils

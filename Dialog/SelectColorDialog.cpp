@@ -41,11 +41,22 @@ void SelectColorDialog::SetPalette(QVector<QRgb> palette)
     SelectionBox_Color->setZValue(1);
     SelectionBox_Color->setVisible(true);
     ui->graphicsView->setScene(pb);
+
+    // Data saving
+    temppal = palette;
 }
 
 void SelectColorDialog::SetColor(int colorId)
 {
     SelectionBox_Color->setPos(20 * colorId, 0);
+    QColor color = temppal[colorId];
+    ui->label_ColorInfo->setText(QString("RGB888: (") +
+                                 QString::number(color.red(), 10) + QString(", ") +
+                                 QString::number(color.green(), 10) + QString(", ") +
+                                 QString::number(color.blue(), 10) + QString(") RGB555: (") +
+                                 QString::number(color.red() >> 3, 10) + QString(", ") +
+                                 QString::number(color.green() >> 3, 10) + QString(", ") +
+                                 QString::number(color.blue() >> 3, 10) + QString(")")); //temppal
 }
 
 int SelectColorDialog::GetSelectedColorId()

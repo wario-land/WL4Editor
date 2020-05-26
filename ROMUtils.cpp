@@ -790,11 +790,18 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
     /// <param name="dataptr">
     /// data pointer which keeps RGB55 palette data.
     /// </param>
-    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr)
+    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor)
     {
         // First color is transparent
-        palette->push_back(0);
-        for (int j = 1; j < 16; ++j)
+        int k = 1;
+        if(!notdisablefirstcolor)
+        {
+            palette->push_back(0);
+        } else {
+            k = 0;
+        }
+
+        for (int j = k; j < 16; ++j)
         {
             unsigned short color555 = *(dataptr + j);
             int r = ((color555 << 3) & 0xF8) | ((color555 >> 2) & 7);
