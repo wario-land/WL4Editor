@@ -7,9 +7,9 @@ extern WL4EditorWindow *singleton;
 
 // Globals used by the undo system
 static std::deque<struct OperationParams *> operationHistory[16];
-static unsigned int operationIndex[16];
+static unsigned int operationIndex[16]; // For room-specific changes
 static std::deque<struct OperationParams *> operationHistoryGlobal;
-static unsigned int operationIndexGlobal;
+static unsigned int operationIndexGlobal; // For level-wide changes
 
 /// <summary>
 /// Perform an operation based on its parameters.
@@ -233,7 +233,7 @@ static void ExecuteOperationImpl(struct OperationParams *operation, std::deque<s
     while (*operationIdx)
     {
         // Delete the front operation in the queue while decrementing the operation index until the index reaches 0
-        --*operationIdx;
+        --(*operationIdx);
         struct OperationParams *frontOP = operationHist[0];
         delete frontOP;
         operationHist.pop_front();
@@ -350,7 +350,7 @@ static void RedoOperationImpl(std::deque<struct OperationParams *> &operationHis
     // We cannot redo past the front of the deque
     if (*operationIdx)
     {
-        PerformOperation(operationHist[--*operationIdx]);
+        PerformOperation(operationHist[--(*operationIdx)]);
 
         // Performing a "redo" will make unsaved changes
         singleton->SetUnsavedChanges(true);
