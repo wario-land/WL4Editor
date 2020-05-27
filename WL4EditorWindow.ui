@@ -126,7 +126,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -228,6 +228,8 @@
     </widget>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
+    <addaction name="actionUndo_global"/>
+    <addaction name="actionRedo_global"/>
     <addaction name="separator"/>
     <addaction name="actionLevel_Config"/>
     <addaction name="actionRoom_Config"/>
@@ -481,6 +483,28 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Del</string>
+   </property>
+  </action>
+  <action name="actionUndo_global">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Undo (global)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Z</string>
+   </property>
+  </action>
+  <action name="actionRedo_global">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Redo (global)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Y</string>
    </property>
   </action>
  </widget>

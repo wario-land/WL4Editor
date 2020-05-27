@@ -13,6 +13,7 @@
 #include <QGraphicsScene>
 #include <QMessageBox>
 #include <QTextEdit>
+#include <QSizePolicy>
 
 bool LoadROMFile(QString); // Prototype for main.cpp function
 
@@ -254,13 +255,13 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
 /// </param>
 void WL4EditorWindow::PrintMousePos(uint x, uint y)
 {
-    bool condition;
+    bool mouseInTileArea;
     if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam()) {
-        condition = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height());
+        mouseInTileArea = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height());
     } else {
-        condition = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
+        mouseInTileArea = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
     }
-    if(condition)
+    if(mouseInTileArea)
         statusBarLabel_MousePosition->setText("Out of range!");
     else
         statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")");
@@ -291,7 +292,9 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionClear_all->setEnabled(true);
         ui->actionRedo->setEnabled(true);
+        ui->actionRedo_global->setEnabled(true);
         ui->actionUndo->setEnabled(true);
+        ui->actionUndo_global->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
 
         // Load Dock widget
@@ -1134,7 +1137,6 @@ void WL4EditorWindow::resizeEvent(QResizeEvent *event)
 /// </summary>
 void WL4EditorWindow::on_actionUndo_triggered()
 {
-    EditModeWidget->UncheckHiddencoinsViewCheckbox();
     UndoOperation();
 }
 
@@ -1143,8 +1145,23 @@ void WL4EditorWindow::on_actionUndo_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionRedo_triggered()
 {
-    EditModeWidget->UncheckHiddencoinsViewCheckbox();
     RedoOperation();
+}
+
+/// <summary>
+/// Undo one step of gobal history.
+/// </summary>
+void WL4EditorWindow::on_actionUndo_global_triggered()
+{
+    UndoOperationGlobal();
+}
+
+/// <summary>
+/// Redo one step of gobal history.
+/// </summary>
+void WL4EditorWindow::on_actionRedo_global_triggered()
+{
+    RedoOperationGlobal();
 }
 
 /// <summary>
@@ -1196,7 +1213,7 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
         operation->TilesetChange = true;
         operation->lastTilesetEditParams = _oldRoomTilesetEditParams;
         operation->newTilesetEditParams = _currentRoomTilesetEditParams;
-        ExecuteOperation(operation); // Set UnsavedChanges bool inside
+        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
     }
     else
     {

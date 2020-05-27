@@ -7,7 +7,9 @@ extern WL4EditorWindow *singleton;
 
 // Globals used by the undo system
 static std::deque<struct OperationParams *> operationHistory[16];
-static unsigned int operationIndex[16];
+static unsigned int operationIndex[16]; // For room-specific changes
+static std::deque<struct OperationParams *> operationHistoryGlobal;
+static unsigned int operationIndexGlobal; // For level-wide changes
 
 /// <summary>
 /// Perform an operation based on its parameters.
@@ -218,22 +220,51 @@ void BackTrackOperation(struct OperationParams *operation)
 /// <param name="operation">
 /// The operation to perform.
 /// </param>
+/// <param name="operationHist">
+/// The the history deque from which to execute an operation.
+/// </param>
+/// <param name="operationIdx">
+/// The operation indexer to modify.
+/// </param>
+static void ExecuteOperationImpl(struct OperationParams *operation, std::deque<struct OperationParams *> &operationHist, unsigned int *operationIdx)
+{
+    PerformOperation(operation);
+    // If we perform an action after a series of undo, then delete the "undone" operations from history
+    while (*operationIdx)
+    {
+        // Delete the front operation in the queue while decrementing the operation index until the index reaches 0
+        --(*operationIdx);
+        struct OperationParams *frontOP = operationHist[0];
+        delete frontOP;
+        operationHist.pop_front();
+    }
+    operationHist.push_front(operation);
+    singleton->SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Perform an operation based on its parameters, and add it to the undo deque.
+/// This is for performing an operation within a Room.
+/// </summary>
+/// <param name="operation">
+/// The operation to perform.
+/// </param>
 void ExecuteOperation(struct OperationParams *operation)
 {
     int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
+    ExecuteOperationImpl(operation, operationHistory[currentRoomNumber], operationIndex + currentRoomNumber);
+}
 
-    PerformOperation(operation);
-    // If we perform an action after a series of undo, then delete the "undone" operations from history
-    while (operationIndex[currentRoomNumber])
-    {
-        // Delete the front operation in the queue while decrementing the operation index until the index reaches 0
-        --operationIndex[currentRoomNumber];
-        struct OperationParams *frontOP = operationHistory[currentRoomNumber][0];
-        delete frontOP;
-        operationHistory[currentRoomNumber].pop_front();
-    }
-    operationHistory[currentRoomNumber].push_front(operation);
-    singleton->SetUnsavedChanges(true);
+/// <summary>
+/// Perform an operation based on its parameters, and add it to the undo deque.
+/// This is for performing a global operation.
+/// </summary>
+/// <param name="operation">
+/// The operation to perform.
+/// </param>
+void ExecuteOperationGlobal(struct OperationParams *operation)
+{
+    ExecuteOperationImpl(operation, operationHistoryGlobal, &operationIndexGlobal);
 }
 
 /// <summary>
@@ -244,19 +275,24 @@ void ExecuteOperation(struct OperationParams *operation)
 /// Instead, an index is used within the deque to track which operation should be undone next.
 /// That way, an operation can be undone and redone multiple times.
 /// </remarks>
-void UndoOperation()
+/// </param>
+/// <param name="operationHist">
+/// The the history deque from which to undo an operation.
+/// </param>
+/// <param name="operationIdx">
+/// The operation indexer to modify.
+/// </param>
+static void UndoOperationImpl(std::deque<struct OperationParams *> &operationHist, unsigned int *operationIdx)
 {
-    int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
-
     // We cannot undo past the end of the deque
-    if (operationIndex[currentRoomNumber] < operationHistory[currentRoomNumber].size())
+    if (*operationIdx < operationHist.size())
     {
-        BackTrackOperation(operationHistory[currentRoomNumber][operationIndex[currentRoomNumber]++]);
+        BackTrackOperation(operationHist[(*operationIdx)++]);
 
         // If the entire operation history is undone for all rooms, then there are no unsaved changes
         for (unsigned int i = 0; i < sizeof(operationIndex) / sizeof(operationIndex[0]); ++i)
         {
-            if (operationIndex[currentRoomNumber] != operationHistory[currentRoomNumber].size())
+            if (*operationIdx != operationHist.size())
             {
                 return;
             }
@@ -267,7 +303,63 @@ void UndoOperation()
 }
 
 /// <summary>
+/// Undo a previously performed operation in the undo deque.
+/// This is for undoing an operation within a Room.
+/// </summary>
+/// <remarks>
+/// This function does not remove the operation from the deque.
+/// Instead, an index is used within the deque to track which operation should be undone next.
+/// That way, an operation can be undone and redone multiple times.
+/// </remarks>
+void UndoOperation()
+{
+    int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
+    UndoOperationImpl(operationHistory[currentRoomNumber], operationIndex + currentRoomNumber);
+}
+
+/// <summary>
+/// Undo a previously performed operation in the undo deque.
+/// This is for undoing a global operation.
+/// </summary>
+/// <remarks>
+/// This function does not remove the operation from the deque.
+/// Instead, an index is used within the deque to track which operation should be undone next.
+/// That way, an operation can be undone and redone multiple times.
+/// </remarks>
+void UndoOperationGlobal()
+{
+    UndoOperationImpl(operationHistoryGlobal, &operationIndexGlobal);
+}
+
+/// <summary>
 /// Redo a previously undone operation from the undo deque.
+/// </summary>
+/// <remarks>
+/// This function does not add the operation to the deque.
+/// Instead, an index is used within the deque to track which operation should be redone next.
+/// That way, an operation can be undone and redone multiple times.
+/// </remarks>
+/// <param name="operationHist">
+/// The the history deque from which to undo an operation.
+/// </param>
+/// <param name="operationIdx">
+/// The operation indexer to modify.
+/// </param>
+static void RedoOperationImpl(std::deque<struct OperationParams *> &operationHist, unsigned int *operationIdx)
+{
+    // We cannot redo past the front of the deque
+    if (*operationIdx)
+    {
+        PerformOperation(operationHist[--(*operationIdx)]);
+
+        // Performing a "redo" will make unsaved changes
+        singleton->SetUnsavedChanges(true);
+    }
+}
+
+/// <summary>
+/// Redo a previously undone operation from the undo deque.
+/// This is for redoing an operation within a Room.
 /// </summary>
 /// <remarks>
 /// This function does not add the operation to the deque.
@@ -277,15 +369,21 @@ void UndoOperation()
 void RedoOperation()
 {
     int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
+    RedoOperationImpl(operationHistory[currentRoomNumber], operationIndex + currentRoomNumber);
+}
 
-    // We cannot redo past the front of the deque
-    if (operationIndex[currentRoomNumber])
-    {
-        PerformOperation(operationHistory[currentRoomNumber][--operationIndex[currentRoomNumber]]);
-
-        // Performing a "redo" will make unsaved changes
-        singleton->SetUnsavedChanges(true);
-    }
+/// <summary>
+/// Redo a previously undone operation from the undo deque.
+/// This is for redoing a global operation.
+/// </summary>
+/// <remarks>
+/// This function does not add the operation to the deque.
+/// Instead, an index is used within the deque to track which operation should be redone next.
+/// That way, an operation can be undone and redone multiple times.
+/// </remarks>
+void RedoOperationGlobal()
+{
+    RedoOperationImpl(operationHistoryGlobal, &operationIndexGlobal);
 }
 
 /// <summary>
@@ -306,6 +404,14 @@ void ResetUndoHistory()
         operationHistory[i].clear();
     }
 
+    // Deconstruct the global history
+    for (unsigned int j = 0; j < operationHistoryGlobal.size(); ++j)
+    {
+        delete operationHistoryGlobal[j];
+    }
+    operationHistoryGlobal.clear();
+
     // Re-initialize all the operation indexes to zero
     memset(operationIndex, 0, sizeof(operationIndex));
+    operationIndexGlobal = 0;
 }
