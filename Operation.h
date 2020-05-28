@@ -124,10 +124,13 @@ struct OperationParams
 
 // Operation function prototypes
 void ExecuteOperation(struct OperationParams *operation);
+void ExecuteOperationGlobal(struct OperationParams *operation);
 void PerformOperation(struct OperationParams *operation);
 void BackTrackOperation(struct OperationParams *operation);
 void UndoOperation();
+void UndoOperationGlobal();
 void RedoOperation();
+void RedoOperationGlobal();
 void ResetUndoHistory();
 
 

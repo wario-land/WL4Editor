@@ -147,6 +147,8 @@ private slots:
     void on_actionZoom_in_triggered();
     void on_actionZoom_out_triggered();
     void on_actionRect_Select_Mode_toggled(bool arg1);
+    void on_actionUndo_global_triggered();
+    void on_actionRedo_global_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H
