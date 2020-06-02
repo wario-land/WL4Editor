@@ -100,17 +100,17 @@ void EditModeDockWidget::SetDifficultyRadioBox(int modeid)
     }
 }
 
-bool *EditModeDockWidget::GetLayersVisibilityArray()
+QVector<bool> EditModeDockWidget::GetLayersVisibilityArray()
 {
-    bool *LayersVisibilityArray = new bool[8];
-    LayersVisibilityArray[0] = ui->CheckBox_Layer0View->isChecked();
-    LayersVisibilityArray[1] = ui->CheckBox_Layer1View->isChecked();
-    LayersVisibilityArray[2] = ui->CheckBox_Layer2View->isChecked();
-    LayersVisibilityArray[3] = ui->CheckBox_Layer3View->isChecked();
-    LayersVisibilityArray[4] = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
-    LayersVisibilityArray[5] = ui->CheckBox_DoorView->isChecked();
-    LayersVisibilityArray[6] = ui->CheckBox_CameraView->isChecked();
-    LayersVisibilityArray[7] = ui->CheckBox_AlphaView->isChecked();
+    QVector<bool> LayersVisibilityArray;
+    LayersVisibilityArray.push_back(ui->CheckBox_Layer0View->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_Layer1View->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_Layer2View->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_Layer3View->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
+    LayersVisibilityArray.push_back(ui->CheckBox_DoorView->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_CameraView->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_AlphaView->isChecked());
     return LayersVisibilityArray;
 }
 

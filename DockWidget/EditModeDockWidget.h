@@ -54,7 +54,7 @@ public:
     ~EditModeDockWidget();
     void SetLayersCheckBoxEnabled(int index, bool usable);
     void SetDifficultyRadioBox(int modeid);
-    bool *GetLayersVisibilityArray();
+    QVector<bool> GetLayersVisibilityArray();
 
 private slots:
     void on_CheckBox_Layer0View_stateChanged(int arg1);

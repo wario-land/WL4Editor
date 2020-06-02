@@ -80,7 +80,7 @@ public:
     void OpenROM();
     void UIStartUp(int currentTilesetID);
     void SetEditModeDockWidgetLayerEditability();
-    bool *GetLayersVisibilityArray() { return EditModeWidget->GetLayersVisibilityArray(); }
+    QVector<bool> GetLayersVisibilityArray() { return EditModeWidget->GetLayersVisibilityArray(); }
     void Graphicsview_UnselectDoorAndEntity();
     void RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig,
                          DialogParams::RoomConfigParams *nextroomconfig);
