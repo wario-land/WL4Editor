@@ -87,7 +87,7 @@ private:
     // TableView
     void UpdateTableView();
 
-    static LevelComponents::EntitySet *entitiessets[83];
+    static LevelComponents::EntitySet *entitiessets[90];
     static LevelComponents::Entity *entities[129];
 
     // visible in EntitySet ComboBox

@@ -9,7 +9,7 @@ constexpr const char *DoorConfigDialog::EntitynameSetData[128];
 static QStringList DoortypeSet;
 static QStringList EntitynameSet;
 
-LevelComponents::EntitySet *DoorConfigDialog::entitiessets[83];
+LevelComponents::EntitySet *DoorConfigDialog::entitiessets[90];
 LevelComponents::Entity *DoorConfigDialog::entities[129];
 
 /// <summary>
