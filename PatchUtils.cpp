@@ -10,6 +10,7 @@
 #include "WL4EditorWindow.h"
 
 #define PATCH_CHUNK_VERSION 0
+#define PATCH_FIELD_COUNT 7
 
 #ifdef _WIN32
 #define EABI_GCC     "arm-none-eabi-gcc.exe"
@@ -66,6 +67,58 @@ static QString UpgradePatchListContents(QString contents, int version)
             break;
     }
     return contents;
+}
+
+/// <summary>
+/// Deserialize patch metadata from the patch list chunk into a patch metadata struct.
+/// </summary>
+/// <param name="patchTuples">
+/// The string list of the fields for the patch metadata.
+/// See the format specified in the documentation for UpgradePatchListContents.
+/// </param>
+/// <returns>
+/// The patch metadata struct.
+/// </returns>
+static struct PatchEntryItem DeserializePatchMetadata(QStringList patchTuples)
+{
+    int patchType = patchTuples[1].toInt(Q_NULLPTR, 16);
+    unsigned int hookAddress = static_cast<unsigned int>(patchTuples[2].toInt(Q_NULLPTR, 16));
+    unsigned int patchAddress = static_cast<unsigned int>(patchTuples[3].toInt(Q_NULLPTR, 16));
+    //assert(patchChunks.contains(patchAddress) /* Patch chunk list refers to an invalid patch address */);
+    bool stubFunction = patchTuples[4] != "0";
+    bool thumbMode = patchTuples[5] != "0";
+    struct PatchEntryItem entry
+    {
+        patchTuples[0],
+        static_cast<enum PatchType>(patchType),
+        hookAddress,
+        stubFunction,
+        thumbMode,
+        patchAddress,
+        patchTuples[6]
+    };
+    return entry;
+}
+
+/// <summary>
+/// Serialize a patch struct into a metadata string for the patch list chunk.
+/// </summary>
+/// <param name="patchMetadata">
+/// The metadata struct to serialize.
+/// See the format specified in the documentation for UpgradePatchListContents.
+/// </param>
+/// <returns>
+/// The metadata string.
+/// </returns>
+static QString SerializePatchMetadata(struct PatchEntryItem patchMetadata)
+{
+    QString ret = patchMetadata.FileName + ";";
+    ret += QString::number(patchMetadata.PatchType) + ";";
+    ret += QString::number(patchMetadata.HookAddress, 16) + ";";
+    ret += QString::number(patchMetadata.FunctionPointerReplacementMode) + ";";
+    ret += QString::number(patchMetadata.ThumbMode) + ";";
+    ret += QString::number(patchMetadata.PatchAddress, 16) + ";";
+    return ret + patchMetadata.SubstitutedBytes;
 }
 
 /// <summary>
@@ -211,14 +264,7 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
         // Delimit entries with semicolon
         if(first) first = false; else contents += ";";
 
-        // Format matches description from UpgradePatchListContents
-        contents += entry.FileName + ";";
-        contents += QString::number(entry.PatchType) + ";";
-        contents += QString::number(entry.HookAddress, 16).toUpper() + ";";
-        contents += QString::number(entry.PatchAddress, 16).toUpper() + ";";
-        contents += QString(entry.FunctionPointerReplacementMode ? "1" : "0") + ";";
-        contents += QString(entry.ThumbMode ? "1" : "0") + ";";
-        contents += entry.SubstitutedBytes;
+        contents += SerializePatchMetadata(entry);
     }
     return contents;
 }
@@ -428,33 +474,17 @@ namespace PatchUtils
                 ROMUtils::CurrentFile,
                 ROMUtils::CurrentFileSize,
                 WL4Constants::AvailableSpaceBeginningInROM,
-                ROMUtils::SaveDataChunkType::PatchListChunk
+                ROMUtils::SaveDataChunkType::PatchChunk
             );
 
             // Get the patch list information
             QString contents = GetUpgradedPatchListChunkData(patchListAddr);
             assert(contents.length() > 0 /* ROM contains an empty patch list chunk */);
             QStringList patchTuples = contents.split(";");
-            assert(!(patchTuples.count() % 4) /* ROM contains a corrupted patch list chunk (field count is not a multiple of 4) */);
-            for(int i = 0; i < patchTuples.count(); i += 4)
+            assert(!(patchTuples.count() % PATCH_FIELD_COUNT) /* ROM contains a corrupted patch list chunk (field count is not a multiple of PATCH_FIELD_COUNT) */);
+            for(int i = 0; i < patchTuples.count(); i += PATCH_FIELD_COUNT)
             {
-                // Add the patch entry
-                int patchType = patchTuples[i + 1].toInt(Q_NULLPTR, 16);
-                unsigned int hookAddress = static_cast<unsigned int>(patchTuples[i + 2].toInt(Q_NULLPTR, 16));
-                unsigned int patchAddress = static_cast<unsigned int>(patchTuples[i + 3].toInt(Q_NULLPTR, 16));
-                assert(patchChunks.contains(patchAddress) /* Patch chunk list refers to an invalid patch address */);
-                bool stubFunction = patchTuples[i + 4] != "0";
-                bool thumbMode = patchTuples[i + 5] != "0";
-                struct PatchEntryItem entry
-                {
-                    patchTuples[i],
-                    static_cast<enum PatchType>(patchType),
-                    hookAddress,
-                    stubFunction,
-                    thumbMode,
-                    patchAddress,
-                    patchTuples[i + 6]
-                };
+                struct PatchEntryItem entry = DeserializePatchMetadata(patchTuples.mid(i, 7));
                 patchEntries.append(entry);
             }
         }
@@ -527,10 +557,32 @@ namespace PatchUtils
             chunks.append(invalidationChunk);
         }
 
+        // We must invalidate the old patch list chunk
+        unsigned int patchListChunkAddr = ROMUtils::FindChunkInROM(
+            ROMUtils::CurrentFile,
+            ROMUtils::CurrentFileSize,
+            WL4Constants::AvailableSpaceBeginningInROM,
+            ROMUtils::SaveDataChunkType::PatchListChunk
+        );
+        struct ROMUtils::SaveData PLinvalidationChunk =
+        {
+            0,
+            0,
+            nullptr,
+            ROMUtils::SaveDataIndex++,
+            false,
+            0,
+            patchListChunkAddr,
+            ROMUtils::SaveDataChunkType::InvalidationChunk
+        };
+        chunks.append(PLinvalidationChunk);
+
         // Save the chunks to the ROM
         bool firstCallback = true;
         bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, chunks,
+
             // ChunkAllocationCallback
+
             [firstCallback, entries]
             (QVector<struct ROMUtils::SaveData> addedChunks, std::map<int, int> indexToChunkPtr) mutable
             {
@@ -578,7 +630,9 @@ namespace PatchUtils
                     addedChunks.clear();
                 }
             },
+
             // PostProcessingCallback
+
             [chunks, entries]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {

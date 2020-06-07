@@ -465,6 +465,10 @@ namespace ROMUtils
     /// <param name="chunks">
     /// The chunks to save to the ROM.
     /// </param>
+    /// <param name="ChunkAllocationCallback">
+    /// Callback function that allocates additional chunks based on data from chunks which have been
+    /// allocated by this function before saving to ROM.
+    /// </param>
     /// <param name="PostProcessingCallback">
     /// Post-processing to perform after writing the save chunks, but before saving the file itself.
     /// </param>
