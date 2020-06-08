@@ -510,6 +510,7 @@ namespace PatchUtils
         QVector<struct PatchEntryItem> existingPatches = GetPatchesFromROM();
         QVector<struct PatchEntryItem> addPatches = DetermineNewPatches(entries, existingPatches);
         QVector<struct PatchEntryItem> removePatches = DetermineRemovalPatches(entries, existingPatches);
+        std::map<int, struct PatchEntryItem> saveChunkIndexToMetadata;
 
         // Populate the chunk list with patches to add to the ROM
         for(struct PatchEntryItem patch : addPatches)
@@ -531,12 +532,13 @@ namespace PatchUtils
                 0,
                 static_cast<unsigned int>(binFile.size()),
                 data,
-                ROMUtils::SaveDataIndex++,
+                ROMUtils::SaveDataIndex,
                 true,
                 0,
                 patch.PatchAddress,
                 ROMUtils::SaveDataChunkType::PatchChunk
             };
+            saveChunkIndexToMetadata[ROMUtils::SaveDataIndex++] = patch;
             chunks.append(patchChunk);
         }
         
