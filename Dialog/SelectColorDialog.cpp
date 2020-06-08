@@ -20,10 +20,10 @@ SelectColorDialog::~SelectColorDialog()
 void SelectColorDialog::SetPalette(QVector<QRgb> palette)
 {
     // draw palette Bar
-    QPixmap PaletteBarpixmap(8 * 20, 40);
+    QPixmap PaletteBarpixmap(16 * 20, 40);
     PaletteBarpixmap.fill(Qt::transparent);
     QPainter PaletteBarPainter(&PaletteBarpixmap);
-    for(int i = 1; i < qMin(palette.size(), 16); ++i)
+    for(int i = 0; i < qMin(palette.size(), 16); i++)
     {
         PaletteBarPainter.fillRect(20 * i, 0, 20, 40, palette[i]);
     }

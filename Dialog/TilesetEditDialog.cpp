@@ -760,7 +760,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 
     // Load gfx bin file
     QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Load Tileset bin file"), QString(""),
+                                                    tr("Load Tileset graphic bin file"), QString(""),
                                                     tr("bin file (*.bin)"));
 
     // load data into QBytearray
