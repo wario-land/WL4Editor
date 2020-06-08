@@ -373,5 +373,5 @@ void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_CheckBox_hiddencoinsView_stateChanged(int arg1)
 {
-    (void) arg1;
+    singleton->RenderScreenVisibilityChange();
 }
