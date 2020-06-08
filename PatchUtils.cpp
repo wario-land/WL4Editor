@@ -484,7 +484,7 @@ static std::shared_ptr<unsigned char[]> HexStringToBinary(QString str)
     std::shared_ptr<unsigned char[]> data(new unsigned char[str.length() / 2]);
     for(int i = 0; i < str.length(); i += 2)
     {
-        (*data)[i] = str.mid(i, 2).toUInt(Q_NULLPTR, 16);
+        data[i] = str.mid(i, 2).toUInt(Q_NULLPTR, 16);
     }
     return data;
 }
@@ -658,7 +658,7 @@ namespace PatchUtils
 
                                 // Get patch hex string from current patch list chunk, write into TempFile
                                 std::shared_ptr<unsigned char[]> originalBytes = HexStringToBinary(removalPatchInROM->SubstitutedBytes);
-                                memcpy(TempFile, *originalBytes, removalPatchInROM->SubstitutedBytes.length() / 2);
+                                memcpy(TempFile, &originalBytes, removalPatchInROM->SubstitutedBytes.length() / 2);
                             }
                         }
                     }
@@ -730,7 +730,7 @@ namespace PatchUtils
 
                         // Write hook to ROM
                         std::shared_ptr<unsigned char[]> hookData = HexStringToBinary(patchPtr->HookString);
-                        memcpy(TempFile + patchPtr->PatchAddress, *hookData, patchPtr->HookString.length() / 2);
+                        memcpy(TempFile + patchPtr->PatchAddress, &hookData, patchPtr->HookString.length() / 2);
                     }
                 }
             }
