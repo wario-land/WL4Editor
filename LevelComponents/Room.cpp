@@ -304,7 +304,7 @@ namespace LevelComponents
             QPainter alphaPainter(&alphaPixmap);
 
             // Render the 4 layers in the order of their priority
-            bool *LayersCurrentVisibility = singleton->GetLayersVisibilityArray();
+            QVector<bool> LayersCurrentVisibility = singleton->GetLayersVisibilityArray();
             for (int i = 0; i < 4; ++i)
             {
                 QPixmap pixmap = drawLayers[i]->layer->RenderLayer(tileset);
@@ -374,7 +374,6 @@ namespace LevelComponents
                 else
                     RenderedLayers[7] = nullptr;
             }
-            delete[] LayersCurrentVisibility;
         }
             // Fall through to ElementsLayersUpdate section
         case ElementsLayersUpdate:
@@ -729,7 +728,7 @@ namespace LevelComponents
 
                     QPixmap alphaPixmapTemp = alphalayeritem->pixmap();
                     QPainter alphaPainterTemp(&alphaPixmapTemp);
-                    bool *LayersCurrentVisibilityTemp = singleton->GetLayersVisibilityArray();
+                    QVector<bool> LayersCurrentVisibilityTemp = singleton->GetLayersVisibilityArray();
 
                     // clean the old layer, or remaining old graphic will causes wrong rendering result
                     alphaPainterTemp.fillRect(0, 0, sceneWidth, sceneHeight, QColor(0, 0, 0).rgb());
@@ -770,7 +769,6 @@ namespace LevelComponents
                             break;
                         };
                     }
-                    delete[] LayersCurrentVisibilityTemp;
                 }
                 RenderedLayers[7]->setVisible(layerVisibility->alphaBlendingEnabled);
             }
@@ -825,7 +823,7 @@ namespace LevelComponents
 
                 QPixmap alphaPixmapTemp = alphalayeritem->pixmap();
                 QPainter alphaPainterTemp(&alphaPixmapTemp);
-                bool *LayersCurrentVisibilityTemp = singleton->GetLayersVisibilityArray();
+                QVector<bool> LayersCurrentVisibilityTemp = singleton->GetLayersVisibilityArray();
 
                 // clean the rect which need to redraw, or remaining old graphic will causes wrong rendering result
                 for(auto iter: renderParams->tilechangelist) {
@@ -872,7 +870,6 @@ namespace LevelComponents
                         break;
                     };
                 }
-                delete[] LayersCurrentVisibilityTemp;
             }
 
             // Update hidden coins layer
