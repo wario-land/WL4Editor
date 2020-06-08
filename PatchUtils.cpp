@@ -473,15 +473,18 @@ static QString BinaryToHexString(unsigned char *data, int len)
 /// <summary>
 /// Convert a hex string into binary data.
 /// </summary>
+/// <remarks>
+/// The binary data is dynamically allocated. Make sure to delete it after use.
+/// </remarks>
 /// <param name="str">
 /// The string to convert into binary.
 /// </param>
 /// <returns>
 /// The binary created from the hex string.
 /// </returns>
-static std::shared_ptr<unsigned char[]> HexStringToBinary(QString str)
+static unsigned char *HexStringToBinary(QString str)
 {
-    std::shared_ptr<unsigned char[]> data(new unsigned char[str.length() / 2]);
+    unsigned char *data = new unsigned char[str.length() / 2];
     for(int i = 0; i < str.length(); i += 2)
     {
         data[i / 2] = str.mid(i, 2).toUInt(Q_NULLPTR, 16);
@@ -657,8 +660,9 @@ namespace PatchUtils
                                 struct PatchEntryItem *removalPatchInROM = saveChunkIndexToRemoval[chunk.index];
 
                                 // Get patch hex string from current patch list chunk, write into TempFile
-                                std::shared_ptr<unsigned char[]> originalBytes = HexStringToBinary(removalPatchInROM->SubstitutedBytes);
-                                memcpy(TempFile, originalBytes.get(), removalPatchInROM->SubstitutedBytes.length() / 2);
+                                unsigned char *originalBytes = HexStringToBinary(removalPatchInROM->SubstitutedBytes);
+                                memcpy(TempFile, originalBytes, removalPatchInROM->SubstitutedBytes.length() / 2);
+                                delete originalBytes;
                             }
                         }
                     }
@@ -729,8 +733,9 @@ namespace PatchUtils
                         struct PatchEntryItem *patchPtr = saveChunkIndexToMetadata[chunk.index];
 
                         // Write hook to ROM
-                        std::shared_ptr<unsigned char[]> hookData = HexStringToBinary(patchPtr->HookString);
-                        memcpy(TempFile + patchPtr->PatchAddress, hookData.get(), patchPtr->HookString.length() / 2);
+                        unsigned char *hookData = HexStringToBinary(patchPtr->HookString);
+                        memcpy(TempFile + patchPtr->PatchAddress, hookData, patchPtr->HookString.length() / 2);
+                        delete hookData;
                     }
                 }
             }
