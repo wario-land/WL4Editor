@@ -484,7 +484,7 @@ static std::shared_ptr<unsigned char[]> HexStringToBinary(QString str)
     std::shared_ptr<unsigned char[]> data(new unsigned char[str.length() / 2]);
     for(int i = 0; i < str.length(); i += 2)
     {
-        data[i] = str.mid(i, 2).toUInt(Q_NULLPTR, 16);
+        data[i / 2] = str.mid(i, 2).toUInt(Q_NULLPTR, 16);
     }
     return data;
 }
@@ -638,7 +638,7 @@ namespace PatchUtils
 
             // ChunkAllocationCallback
 
-            [firstCallback, entries, saveChunkIndexToMetadata, saveChunkIndexToRemoval]
+            [firstCallback, entries, &saveChunkIndexToMetadata, &saveChunkIndexToRemoval]
             (unsigned char *TempFile, QVector<struct ROMUtils::SaveData> addedChunks, std::map<int, int> indexToChunkPtr) mutable
             {
                 // Create and add PatchListChunk after patch chunk locations have been allocated by SaveFile()
@@ -654,11 +654,11 @@ namespace PatchUtils
                                 saveChunkIndexToRemoval.find(chunk.index) != saveChunkIndexToRemoval.end()) // map does not contain an entry for the old patch list chunk's invalidator
                             {
                                 // Find metadata for the existing patch in the ROM which we want to remove
-                                struct PatchEntryItem *removalPatchInROM = saveChunkIndexToRemoval.at(chunk.index);
+                                struct PatchEntryItem *removalPatchInROM = saveChunkIndexToRemoval[chunk.index];
 
                                 // Get patch hex string from current patch list chunk, write into TempFile
                                 std::shared_ptr<unsigned char[]> originalBytes = HexStringToBinary(removalPatchInROM->SubstitutedBytes);
-                                memcpy(TempFile, &originalBytes, removalPatchInROM->SubstitutedBytes.length() / 2);
+                                memcpy(TempFile, originalBytes.get(), removalPatchInROM->SubstitutedBytes.length() / 2);
                             }
                         }
                     }
@@ -669,7 +669,7 @@ namespace PatchUtils
                         if(chunk.ChunkType == ROMUtils::SaveDataChunkType::PatchChunk)
                         {
                             // Set the patch address that was calculated by the save chunk allocator
-                            struct PatchEntryItem *patchPtr = saveChunkIndexToMetadata.at(chunk.index);
+                            struct PatchEntryItem *patchPtr = saveChunkIndexToMetadata[chunk.index];
                             patchPtr->PatchAddress = indexToChunkPtr[chunk.index];
 
                             // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
@@ -715,7 +715,7 @@ namespace PatchUtils
 
             // PostProcessingCallback
 
-            [chunks, saveChunkIndexToMetadata]
+            [chunks, &saveChunkIndexToMetadata]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
                 (void)indexToChunkPtr;
@@ -726,11 +726,11 @@ namespace PatchUtils
                     if(chunk.ChunkType == ROMUtils::SaveDataChunkType::PatchChunk) // hooks only written for PatchChunk save chunk type
                     {
                         // Get patch metadata associated with this save chunk
-                        struct PatchEntryItem *patchPtr = saveChunkIndexToMetadata.at(chunk.index);
+                        struct PatchEntryItem *patchPtr = saveChunkIndexToMetadata[chunk.index];
 
                         // Write hook to ROM
                         std::shared_ptr<unsigned char[]> hookData = HexStringToBinary(patchPtr->HookString);
-                        memcpy(TempFile + patchPtr->PatchAddress, &hookData, patchPtr->HookString.length() / 2);
+                        memcpy(TempFile + patchPtr->PatchAddress, hookData.get(), patchPtr->HookString.length() / 2);
                     }
                 }
             }
