@@ -19,6 +19,7 @@ struct PatchEntryItem
     bool ThumbMode;
     unsigned int PatchAddress;
     QString SubstitutedBytes;
+    QString HookString;
 };
 
 namespace PatchUtils

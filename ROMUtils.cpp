@@ -476,7 +476,7 @@ namespace ROMUtils
     /// True if the save was successful.
     /// </returns>
     bool SaveFile(QString filePath, QVector<struct SaveData> chunks,
-        std::function<void(QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
+        std::function<void(unsigned char*, QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
         std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
@@ -563,7 +563,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                 // Perform chunk allocation callback
                 if(ChunkAllocationCallback)
                 {
-                    ChunkAllocationCallback(chunksToAdd, indexToChunkPtr);
+                    ChunkAllocationCallback(TempFile, chunksToAdd, indexToChunkPtr);
                     chunks.append(chunksToAdd); // Add any additional chunks created in the callback
                 }
                 else

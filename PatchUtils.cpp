@@ -89,13 +89,14 @@ static struct PatchEntryItem DeserializePatchMetadata(QStringList patchTuples)
     bool thumbMode = patchTuples[5] != "0";
     struct PatchEntryItem entry
     {
-        patchTuples[0],
+        patchTuples[0], // filename
         static_cast<enum PatchType>(patchType),
         hookAddress,
         stubFunction,
         thumbMode,
         patchAddress,
-        patchTuples[6]
+        patchTuples[6], // substituted bytes for the hook
+        "" // hook string (not saved to patch list chunk)
     };
     return entry;
 }
@@ -284,7 +285,7 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
 /// <returns>
 /// The hook payload.
 /// </returns>
-static QByteArray CreateHook(unsigned int patchAddr, bool stubFunction, bool thumbMode)
+static QByteArray CreateHook(unsigned int patchAddr, bool thumbMode)
 {
     if(thumbMode)
     {
@@ -447,6 +448,47 @@ static QVector<struct PatchEntryItem> DetermineRemovalPatches(QVector<struct Pat
     return removalPatches;
 }
 
+/// <summary>
+/// Convert a region of binary into a hex string.
+/// </summary>
+/// <param name="data">
+/// The data to convert into a hex string.
+/// </param>
+/// <param name="len">
+/// The length of the data to convert into a hex string.
+/// </param>
+/// <returns>
+/// The hex string formatted as uppercase hex digits.
+/// </returns>
+static QString BinaryToHexString(unsigned char *data, int len)
+{
+    QString ret;
+    while(len--)
+    {
+        ret += QString("%02X").arg(*(data++));
+    }
+    return ret;
+}
+
+/// <summary>
+/// Convert a hex string into binary data.
+/// </summary>
+/// <param name="str">
+/// The string to convert into binary.
+/// </param>
+/// <returns>
+/// The binary created from the hex string.
+/// </returns>
+static std::shared_ptr<unsigned char[]> HexStringToBinary(QString str)
+{
+    std::shared_ptr<unsigned char[]> data(new unsigned char[str.length() / 2]);
+    for(int i = 0; i < str.length(); i += 2)
+    {
+        (*data)[i] = str.mid(i, 2).toUInt(Q_NULLPTR, 16);
+    }
+    return data;
+}
+
 namespace PatchUtils
 {
     QString EABI_INSTALLATION;
@@ -510,7 +552,7 @@ namespace PatchUtils
         QVector<struct PatchEntryItem> existingPatches = GetPatchesFromROM();
         QVector<struct PatchEntryItem> addPatches = DetermineNewPatches(entries, existingPatches);
         QVector<struct PatchEntryItem> removePatches = DetermineRemovalPatches(entries, existingPatches);
-        std::map<int, struct PatchEntryItem> saveChunkIndexToMetadata;
+        std::map<int, struct PatchEntryItem*> saveChunkIndexToMetadata, saveChunkIndexToRemoval;
 
         // Populate the chunk list with patches to add to the ROM
         for(struct PatchEntryItem patch : addPatches)
@@ -526,25 +568,33 @@ namespace PatchUtils
             unsigned char *data = new unsigned char[binFile.size()];
             memcpy(data, binContents.constData(), binFile.size());
 
+            // Create the hook string for the patch
+            struct PatchEntryItem *patchPtr = std::find_if(entries.begin(), entries.end(),
+                [patch](struct PatchEntryItem origPatch){return patch.FileName == origPatch.FileName;});
+            patchPtr->HookString = CreateHook(patchPtr->PatchAddress, patchPtr->ThumbMode); // TODO: This will come from the user, not a function
+            saveChunkIndexToMetadata[ROMUtils::SaveDataIndex] = patchPtr;
+
             // Create the save chunk
             struct ROMUtils::SaveData patchChunk =
             {
                 0,
                 static_cast<unsigned int>(binFile.size()),
                 data,
-                ROMUtils::SaveDataIndex,
+                ROMUtils::SaveDataIndex++,
                 true,
                 0,
                 patch.PatchAddress,
                 ROMUtils::SaveDataChunkType::PatchChunk
             };
-            saveChunkIndexToMetadata[ROMUtils::SaveDataIndex++] = patch;
+
             chunks.append(patchChunk);
         }
         
         // Populate the chunk list with invalidation chunks for patches to be removed from the ROM
         for(struct PatchEntryItem patch : removePatches)
         {
+            saveChunkIndexToRemoval[ROMUtils::SaveDataIndex] = std::find_if(removePatches.begin(), removePatches.end(),
+                [patch](struct PatchEntryItem removePatch){return patch.FileName == removePatch.FileName;});
             struct ROMUtils::SaveData invalidationChunk =
             {
                 0,
@@ -559,25 +609,28 @@ namespace PatchUtils
             chunks.append(invalidationChunk);
         }
 
-        // We must invalidate the old patch list chunk
+        // We must invalidate the old patch list chunk (if it exists)
         unsigned int patchListChunkAddr = ROMUtils::FindChunkInROM(
             ROMUtils::CurrentFile,
             ROMUtils::CurrentFileSize,
             WL4Constants::AvailableSpaceBeginningInROM,
             ROMUtils::SaveDataChunkType::PatchListChunk
         );
-        struct ROMUtils::SaveData PLinvalidationChunk =
+        if(patchListChunkAddr)
         {
-            0,
-            0,
-            nullptr,
-            ROMUtils::SaveDataIndex++,
-            false,
-            0,
-            patchListChunkAddr,
-            ROMUtils::SaveDataChunkType::InvalidationChunk
-        };
-        chunks.append(PLinvalidationChunk);
+            struct ROMUtils::SaveData PLinvalidationChunk =
+            {
+                0,
+                0,
+                nullptr,
+                ROMUtils::SaveDataIndex++,
+                false,
+                0,
+                patchListChunkAddr,
+                ROMUtils::SaveDataChunkType::InvalidationChunk
+            };
+            chunks.append(PLinvalidationChunk);
+        }
 
         // Save the chunks to the ROM
         bool firstCallback = true;
@@ -585,20 +638,47 @@ namespace PatchUtils
 
             // ChunkAllocationCallback
 
-            [firstCallback, entries]
-            (QVector<struct ROMUtils::SaveData> addedChunks, std::map<int, int> indexToChunkPtr) mutable
+            [firstCallback, entries, saveChunkIndexToMetadata, saveChunkIndexToRemoval]
+            (unsigned char *TempFile, QVector<struct ROMUtils::SaveData> addedChunks, std::map<int, int> indexToChunkPtr) mutable
             {
                 // Create and add PatchListChunk after patch chunk locations have been allocated by SaveFile()
                 if(firstCallback)
                 {
-                    // Update entry structs with information from the added chunks
-                    foreach(struct ROMUtils::SaveData chunk, addedChunks)
+                    // Undo removal patches (if ROM already has patches)
+                    QVector<struct PatchEntryItem> patchesInROM = GetPatchesFromROM();
+                    if(patchesInROM.length())
                     {
-                        //int entryIndex = chunkIndexToEntryIndex[chunk.index];
-                        //entries[entryIndex].PatchAddress = indexToChunkPtr[chunk.index];
+                        for(struct ROMUtils::SaveData chunk : addedChunks)
+                        {
+                            if(chunk.ChunkType == ROMUtils::SaveDataChunkType::InvalidationChunk &&
+                                saveChunkIndexToRemoval.find(chunk.index) != saveChunkIndexToRemoval.end()) // map does not contain an entry for the old patch list chunk's invalidator
+                            {
+                                // Find metadata for the existing patch in the ROM which we want to remove
+                                struct PatchEntryItem *removalPatchInROM = saveChunkIndexToRemoval.at(chunk.index);
 
-                        // TODO Capture data from hook address for the entry's substituted bytes (depends on size of hook)
+                                // Get patch hex string from current patch list chunk, write into TempFile
+                                std::shared_ptr<unsigned char[]> originalBytes = HexStringToBinary(removalPatchInROM->SubstitutedBytes);
+                                memcpy(TempFile, *originalBytes, removalPatchInROM->SubstitutedBytes.length() / 2);
+                            }
+                        }
+                    }
 
+                    // Update entry structs with information from the added chunks
+                    for(struct ROMUtils::SaveData chunk : addedChunks)
+                    {
+                        if(chunk.ChunkType == ROMUtils::SaveDataChunkType::PatchChunk)
+                        {
+                            // Set the patch address that was calculated by the save chunk allocator
+                            struct PatchEntryItem *patchPtr = saveChunkIndexToMetadata.at(chunk.index);
+                            patchPtr->PatchAddress = indexToChunkPtr[chunk.index];
+
+                            // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
+                            if(patchPtr->HookAddress)
+                            {
+                                int hookLength = patchPtr->HookString.length() / 2; // hook string is hex string, 2 digits per byte
+                                patchPtr->SubstitutedBytes = BinaryToHexString(TempFile + patchPtr->HookAddress, hookLength);
+                            }
+                        }
                     }
                     addedChunks.clear();
 
@@ -635,31 +715,22 @@ namespace PatchUtils
 
             // PostProcessingCallback
 
-            [chunks, entries]
+            [chunks, saveChunkIndexToMetadata]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
-                // Restore substituted data to ROM for patches that have been removed
-                for(int i = 0; i < chunks.size(); ++i)
-                {
-                    struct ROMUtils::SaveData chunk = chunks[i];
-                    if(chunk.ChunkType == ROMUtils::SaveDataChunkType::InvalidationChunk)
-                    {
-                        int hookSize = CreateHook(0, false, false).size();
-                        // TODO
-                    }
-                }
+                (void)indexToChunkPtr;
 
                 // Write hooks to ROM
-                for(int i = 0; i < chunks.size(); ++i)
+                for(struct ROMUtils::SaveData chunk : chunks)
                 {
-                    struct ROMUtils::SaveData chunk = chunks[i];
-                    if(chunk.ChunkType == ROMUtils::SaveDataChunkType::PatchChunk)
+                    if(chunk.ChunkType == ROMUtils::SaveDataChunkType::PatchChunk) // hooks only written for PatchChunk save chunk type
                     {
-                        // For each patch chunk, convert its index to entry index to get matching entry info
-                        //PatchEntryItem entry = entries[chunkIndexToEntryIndex.at(i)];
-                        //QByteArray hookCode = CreateHook(entry.PatchAddress, entry.FunctionPointerReplacementMode, entry.ThumbMode);
-                        //assert(entry.PatchAddress + hookCode.size() < ROMUtils::CurrentFileSize /* Hook code outside valid ROM area */);
-                        //memcpy(TempFile + entry.PatchAddress, hookCode.data(), hookCode.size());
+                        // Get patch metadata associated with this save chunk
+                        struct PatchEntryItem *patchPtr = saveChunkIndexToMetadata.at(chunk.index);
+
+                        // Write hook to ROM
+                        std::shared_ptr<unsigned char[]> hookData = HexStringToBinary(patchPtr->HookString);
+                        memcpy(TempFile + patchPtr->PatchAddress, *hookData, patchPtr->HookString.length() / 2);
                     }
                 }
             }
