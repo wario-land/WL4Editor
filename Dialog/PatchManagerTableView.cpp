@@ -23,14 +23,6 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
         EntryTableModel.AddEntry(patch);
     }
 
-    // TODO delete this once the patch manager is complete
-    // TEST this is here for quick auto-population of the patch list while testing
-
-    struct PatchEntryItem TEST1 { QString("PatchCode/testfunc.c"), PatchType::C, 0x1F628, "8F69B144A08956BC", 6, 0, "" };
-    struct PatchEntryItem TEST2 { QString("PatchCode/UnlimitedRockBouncing.c"), PatchType::C, 4, "8F69B144A08956BC", (unsigned int)-1, 0, "" };
-    EntryTableModel.AddEntry(TEST1);
-    EntryTableModel.AddEntry(TEST2);
-
     UpdateTableView();
 }
 
@@ -61,6 +53,7 @@ void PatchManagerTableView::UpdateTableView()
         EntryTableModel.setItem(row, 4, new QStandardItem(patchEntry.HookString));
         EntryTableModel.setItem(row, 5, new QStandardItem(patchEntry.PatchOffsetInHookString == (unsigned int) -1 ?
             "no patch addr" : QString::number(patchEntry.PatchOffsetInHookString, 10).toUpper()));
+        ++row;
     }
 }
 

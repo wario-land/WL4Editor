@@ -70,6 +70,20 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Reverse the endianness of an integer.
+    /// </summary>
+    /// <param name="n">
+    /// The integer to reverse.
+    /// </param>
+    /// <return>
+    /// 08 FF A1 C9 -> C9 A1 FF 08
+    /// </return>
+    uint32_t EndianReverse(uint32_t n)
+    {
+        return (n << 24) | ((n & 0xFF00) << 8) | ((n & 0xFF0000) >> 8) | ((n >> 24) & 0xFF);
+    }
+
+    /// <summary>
     /// Decompress ROM data that was compressed with run-length encoding.
     /// </summary>
     /// <remarks>
@@ -476,7 +490,7 @@ namespace ROMUtils
     /// True if the save was successful.
     /// </returns>
     bool SaveFile(QString filePath, QVector<struct SaveData> chunks,
-        std::function<void(unsigned char*, QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
+        std::function<void(unsigned char*, QVector<struct SaveData>&, std::map<int, int>)> ChunkAllocationCallback,
         std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
@@ -492,7 +506,7 @@ namespace ROMUtils
         }
 
         // Invalidate old chunk data
-        foreach (struct SaveData chunk, chunks)
+        for(struct SaveData chunk : chunks)
         {
             if (chunk.old_chunk_addr > WL4Constants::AvailableSpaceBeginningInROM)
             {
@@ -513,7 +527,7 @@ namespace ROMUtils
         QVector<struct SaveData> chunksToAdd(chunks);
         do {
             int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
-            foreach(struct SaveData chunk, chunksToAdd)
+            for(struct SaveData chunk : chunksToAdd)
             {
                 int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
 findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
@@ -558,7 +572,17 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                     }
                 }
                 indexToChunkPtr[chunk.index] = chunkAddr;
-                startAddr = chunkAddr + chunk.size + 12; // do not re-search old areas of the ROM
+
+                // Mark the region for the chunk as used, with RATS
+                unsigned char *destPtr = TempFile + chunkAddr;
+                strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
+                unsigned short chunkLen = (unsigned short) chunk.size;
+                *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
+                *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
+                *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
+                destPtr[8] = chunk.ChunkType;
+
+                startAddr = chunkAddr + chunk.size + 12; // do not search through old areas of the ROM again
 
                 // Perform chunk allocation callback
                 if(ChunkAllocationCallback)
@@ -573,11 +597,16 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             }
         } while(!chunksToAdd.empty());
 
-        // Apply source pointer modifications
-        foreach (struct SaveData chunk, chunks)
+        // Apply source pointer modifications to applicable chunk types
+        for(struct SaveData chunk : chunks)
         {
-            if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk)
-                continue;
+            switch(chunk.ChunkType)
+            {
+            case SaveDataChunkType::InvalidationChunk:
+            case SaveDataChunkType::PatchListChunk:
+            case SaveDataChunkType::PatchChunk:
+                continue; // the above chunk types are not associated with a modified pointer in main ROM
+            }
 
             unsigned char *ptrLoc = chunk.dest_index ?
                 // Source pointer is in another chunk
@@ -591,14 +620,12 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         }
 
         // Write each chunk to TempFile
-        foreach (struct SaveData chunk, chunks)
+        for(struct SaveData chunk : chunks)
         {
             if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk)
                 continue;
 
-            // Create the RATS tag
-            unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
-            strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
+            // Sanity check that chunks are not above the allowed size
             if(chunk.size & 0xFFFF0000)
             {
                 // Chunk size must be a 16-bit value
@@ -612,16 +639,14 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                      QMessageBox::Ok, QMessageBox::Ok);
                 goto error;
             }
-            unsigned short chunkLen = (unsigned short) chunk.size;
-            *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
-            *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
 
             // Write the chunk metadata
+            unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
             *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
             destPtr[8] = chunk.ChunkType;
 
             // Write the data
-            memcpy(destPtr + 12, chunk.data, chunkLen);
+            memcpy(destPtr + 12, chunk.data, (unsigned short) chunk.size);
         }
 
         // Perform post-processing before saving the file

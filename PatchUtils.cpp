@@ -113,11 +113,11 @@ static QString SerializePatchMetadata(struct PatchEntryItem patchMetadata)
 {
     QString ret = patchMetadata.FileName + ";";
     ret += QString::number(patchMetadata.PatchType) + ";";
-    ret += QString::number(patchMetadata.HookAddress, 16) + ";";
-    ret += QString::number(patchMetadata.PatchAddress, 16) + ";";
+    ret += QString::number(patchMetadata.HookAddress, 16).toUpper() + ";";
+    ret += QString::number(patchMetadata.PatchAddress, 16).toUpper() + ";";
     ret += patchMetadata.SubstitutedBytes + ";";
     ret += patchMetadata.HookString + ";";
-    ret += QString::number(patchMetadata.PatchOffsetInHookString) + ";";
+    ret += QString::number(patchMetadata.PatchOffsetInHookString);
     return ret;
 }
 
@@ -160,7 +160,7 @@ static QString CompileCFile(QString cfile)
     QStringList args;
     args << "-MMD" << "-MP" << "-MF" << "-g" << "-Wall" << "-mcpu=arm7tdmi" << "-mtune=arm7tdmi" <<
         "-fomit-frame-pointer" << "-ffast-math" << "-mthumb" << "-mthumb-interwork" <<
-        "-mgeneral-regs-only" << "-S" << cfile << "-o" << outfile;
+        "-S" << cfile << "-o" << outfile;
 
     // Run GCC
     QProcess process;
@@ -526,7 +526,8 @@ namespace PatchUtils
             binName += "bin";
 
             // Get data from bin file
-            QFile binFile(binName);
+            QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+            QFile binFile(romFileDir + "/" + binName);
             binFile.open(QIODevice::ReadOnly);
             QByteArray binContents = binFile.readAll();
             unsigned char *data = new unsigned char[binFile.size()];
@@ -601,7 +602,7 @@ namespace PatchUtils
             // ChunkAllocationCallback
 
             [firstCallback, entries, &saveChunkIndexToMetadata, &saveChunkIndexToRemoval]
-            (unsigned char *TempFile, QVector<struct ROMUtils::SaveData> addedChunks, std::map<int, int> indexToChunkPtr) mutable
+            (unsigned char *TempFile, QVector<struct ROMUtils::SaveData>& addedChunks, std::map<int, int> indexToChunkPtr) mutable
             {
                 // Create and add PatchListChunk after patch chunk locations have been allocated by SaveFile()
                 if(firstCallback)
@@ -699,13 +700,14 @@ namespace PatchUtils
                         QString hookString = patchPtr->HookString;
                         if(patchPtr->PatchOffsetInHookString >= 0)
                         {
-                            int patchAddress = 0x8000000 | patchPtr->PatchAddress;
+                            uint32_t patchAddress = 0x8000000 | patchPtr->PatchAddress;
+                            patchAddress = ROMUtils::EndianReverse(patchAddress);
                             QString patchAddressString = QString("%1").arg(patchAddress, 8, 16, QChar('0')).toUpper();
-                            hookString = hookString.mid(0, patchPtr->PatchOffsetInHookString) +
-                                patchAddressString + hookString.mid(patchPtr->PatchOffsetInHookString);
+                            hookString = hookString.mid(0, patchPtr->PatchOffsetInHookString * 2) +
+                                patchAddressString + hookString.mid(patchPtr->PatchOffsetInHookString * 2);
                         }
                         unsigned char *hookData = HexStringToBinary(hookString);
-                        memcpy(TempFile + patchPtr->PatchAddress, hookData, patchPtr->HookString.length() / 2);
+                        memcpy(TempFile + patchPtr->HookAddress, hookData, patchPtr->HookString.length() / 2);
                         delete hookData;
                     }
                 }
