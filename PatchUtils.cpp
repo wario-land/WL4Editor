@@ -700,7 +700,7 @@ namespace PatchUtils
                         QString hookString = patchPtr->HookString;
                         if(patchPtr->PatchOffsetInHookString >= 0)
                         {
-                            uint32_t patchAddress = 0x8000000 | patchPtr->PatchAddress;
+                            uint32_t patchAddress = 0x8000000 | (patchPtr->PatchAddress + 13); // STAR header + 1 so that BLX goes into thumb mode
                             patchAddress = ROMUtils::EndianReverse(patchAddress);
                             QString patchAddressString = QString("%1").arg(patchAddress, 8, 16, QChar('0')).toUpper();
                             hookString = hookString.mid(0, patchPtr->PatchOffsetInHookString * 2) +
