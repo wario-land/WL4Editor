@@ -1,7 +1,8 @@
+#include <QMessageBox>
+#include <QFileDialog>
 #include "PatchEditDialog.h"
 #include "ui_PatchEditDialog.h"
-#include <QFileDialog>
-#include <ROMUtils.h>
+#include "ROMUtils.h"
 
 static QStringList PatchTypeNameSet;
 
@@ -32,11 +33,75 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     ui->comboBox_PatchType->addItems(PatchTypeNameSet);
 
     // Set Validator for lineEdit_HookAddress
-    QRegExp regExp("[a-fA-F0-9]{6}");
-    ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegExpValidator(regExp, this));
+    QRegExp regExp1("[a-fA-F0-9]{6}");
+    ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegExpValidator(regExp1, this));
+
+    // Set Validator for lineEdit_HookText
+    QRegExp regExp2("( *[a-fA-F0-9] *[a-fA-F0-9])*( *[pP])?( *[a-fA-F0-9] *[a-fA-F0-9])* *");
+    ui->lineEdit_HookText->setValidator(addressvalidator = new QRegExpValidator(regExp2, this));
 
     // Initialize the components with the patch entry item
     InitializeComponents(patchEntry);
+}
+
+/// <summary>
+/// Normalize the hook text to a standard format for the patch saving.
+/// </summary>
+/// <remarks>
+/// Spaces and "P" identifier are removed, all hex digits are made uppercase.
+/// </remarks>
+/// <param name="str">
+/// The string whose contents to normalize.
+/// </param>
+/// <returns>
+/// The string in a format like: 8F69B144A08956BC
+/// </returns>
+static QString NormalizeHookText(QString str)
+{
+    str = str.replace(" ", ""); // remove whitespace
+    str = str.toUpper();        // uppercase
+    str = str.replace("P", ""); // placeholder bytes for patch address
+    return str;
+}
+
+/// <summary>
+/// Find the index of the patch address identifier in hook text.
+/// </summary>
+/// <param name="str">
+/// The string whose contents to analyze.
+/// </param>
+/// <returns>
+/// The index (in bytes, not characters) of the patch address identifier.
+/// </returns>
+static unsigned int GetPatchOffset(QString str)
+{
+    str = str.replace(" ", "").toUpper();
+    int index = str.indexOf("P");
+    return index > 0 ? index / 2 : -1;
+}
+
+/// <summary>
+/// Format the normalized hook text in a nice, human-readable format.
+/// </summary>
+/// <param name="hookStr">
+/// The normalized hook text.
+/// </param>
+/// <param name="patchOffset">
+/// The offset of the patch address.
+/// </param>
+/// <returns>
+/// The string in a format like: 8F 69 B1 44 A0 89 P 56 BC
+/// </returns>
+static QString FormatHookText(QString hookStr, int patchOffset)
+{
+    QString ret;
+    for(int i = 0;; ++i)
+    {
+        if(i == patchOffset) ret += " P";
+        if(i == hookStr.length() / 2) break;
+        ret += QString(" %1").arg(hookStr.mid(i * 2, 2));
+    }
+    return ret.length() ? ret.mid(1) : "";
 }
 
 /// <summary>
@@ -58,10 +123,9 @@ void PatchEditDialog::InitializeComponents(struct PatchEntryItem patchEntry)
 {
     ui->lineEdit_FilePath->setText(patchEntry.FileName);
     ui->comboBox_PatchType->setCurrentIndex(patchEntry.PatchType);
-    QString hookText = patchEntry.HookAddress ? QString::number(patchEntry.HookAddress, 16) : "";
+    QString hookText = patchEntry.HookAddress ? QString::number(patchEntry.HookAddress, 16).toUpper() : "";
     ui->lineEdit_HookAddress->setText(hookText);
-    ui->checkBox_FunctionPointerReplacementMode->setChecked(patchEntry.FunctionPointerReplacementMode);
-    (patchEntry.ThumbMode ? ui->radioButton_CompileInThumbMode : ui->radioButton_CompileInARMMode)->setChecked(true);
+    ui->lineEdit_HookText->setText(FormatHookText(patchEntry.HookString, patchEntry.PatchOffsetInHookString));
 }
 
 /// <summary>
@@ -77,10 +141,12 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
         ui->lineEdit_FilePath->text(),
         static_cast<enum PatchType>(ui->comboBox_PatchType->currentIndex()),
         static_cast<unsigned int>(ui->lineEdit_HookAddress->text().toInt(Q_NULLPTR, 16)),
-        ui->checkBox_FunctionPointerReplacementMode->isChecked(),
-        ui->radioButton_CompileInThumbMode->isChecked(),
-        // These should be calculated later by saving
-        0, ""
+        NormalizeHookText(ui->lineEdit_HookText->text()),
+        GetPatchOffset(ui->lineEdit_HookText->text()),
+
+        // The following fields are populated and used by the saving routine
+        0,
+        ""
     };
 }
 
@@ -96,7 +162,11 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
         QString(""),
         tr("C source files (*.c);;ARM assembly files (*.s);;Binary files (*.bin)")
     );
-    if(!qFilePath.isEmpty())
+    if(qFilePath.contains(";"))
+    {
+        QMessageBox::information(this, "About", "The file path may not contain a semicolon. File path: \"" + qFilePath + "\"");
+    }
+    else if(!qFilePath.isEmpty())
     {
         ui->lineEdit_FilePath->setText(qFilePath);
 
@@ -114,12 +184,4 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
             ui->comboBox_PatchType->setCurrentIndex(PatchType::Binary);
         }
     }
-}
-
-/// <summary>
-/// This slot function will be triggered when change the selection in comboBox_PatchType.
-/// </summary>
-void PatchEditDialog::on_comboBox_PatchType_currentIndexChanged(int index)
-{
-    ui->groupBox_CompileConfig->setEnabled(index != PatchType::Binary);
 }

@@ -29,7 +29,6 @@ private:
 
 public:
     PatchManagerTableView(QWidget *param);
-    ~PatchManagerTableView();
     void UpdateTableView();
     void RemoveSelected();
     struct PatchEntryItem GetSelectedEntry();

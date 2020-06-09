@@ -14,7 +14,7 @@ class PatchEditDialog : public QDialog
 
 public:
     PatchEditDialog(QWidget *parent) :
-        PatchEditDialog(parent, { "", PatchType::C, 0, false, true, 0, "", "" }) {} // default UI values
+        PatchEditDialog(parent, { "", PatchType::C, 0, "", 0, 0, "" }) {} // default UI values
     PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEntry);
     ~PatchEditDialog();
     struct PatchEntryItem CreatePatchEntry();
@@ -22,7 +22,6 @@ public:
 
 private slots:
     void on_pushButton_Browse_clicked();
-    void on_comboBox_PatchType_currentIndexChanged(int index);
 
 private:
     Ui::PatchEditDialog *ui;

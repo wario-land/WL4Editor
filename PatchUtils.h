@@ -15,11 +15,10 @@ struct PatchEntryItem
     QString FileName;
     enum PatchType PatchType;
     unsigned int HookAddress;
-    bool FunctionPointerReplacementMode;
-    bool ThumbMode;
+    QString HookString;
+    unsigned int PatchOffsetInHookString;
     unsigned int PatchAddress;
     QString SubstitutedBytes;
-    QString HookString;
 };
 
 namespace PatchUtils

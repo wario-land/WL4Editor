@@ -14,6 +14,7 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
     // Configure the table
     setModel(&EntryTableModel);
     setSelectionBehavior(SelectionBehavior::SelectRows);
+    setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Populate the table
     QVector<struct PatchEntryItem> patches = PatchUtils::GetPatchesFromROM();
@@ -24,31 +25,13 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
 
     // TODO delete this once the patch manager is complete
     // TEST this is here for quick auto-population of the patch list while testing
-    /*
-    struct PatchEntryItem TEST1 { QString("foo.c"), PatchType::C, 0x1111AF, false, false, 0x800000, "01020304" };
-    struct PatchEntryItem TEST2 { QString("bar.c"), PatchType::C, 0x2222AF, false, true, 0x800001, "01020304" };
-    struct PatchEntryItem TEST3 { QString("baz.s"), PatchType::Assembly, 0x3333AF, true, false, 0x800002, "01020304" };
-    struct PatchEntryItem TEST4 { QString("file.bin"), PatchType::Binary, 0x4444AF, true, true, 0x800003, "01020304" };
-    EntryTableModel.AddEntry(TEST1);
-    EntryTableModel.AddEntry(TEST2);
-    EntryTableModel.AddEntry(TEST3);
-    EntryTableModel.AddEntry(TEST4);
-    */
 
-    struct PatchEntryItem TEST1 { QString("PatchCode/testfunc.c"), PatchType::C, 0x1F628, false, true, 0, "" };
-    struct PatchEntryItem TEST2 { QString("PatchCode/UnlimitedRockBouncing.c"), PatchType::C, 4, false, false, 0, "" };
+    struct PatchEntryItem TEST1 { QString("PatchCode/testfunc.c"), PatchType::C, 0x1F628, "8F69B144A08956BC", 6, 0, "" };
+    struct PatchEntryItem TEST2 { QString("PatchCode/UnlimitedRockBouncing.c"), PatchType::C, 4, "8F69B144A08956BC", (unsigned int)-1, 0, "" };
     EntryTableModel.AddEntry(TEST1);
     EntryTableModel.AddEntry(TEST2);
 
     UpdateTableView();
-}
-
-/// <summary>
-/// Deconstruct the PatchManagerTableView and clean up its instance objects on the heap.
-/// </summary>
-PatchManagerTableView::~PatchManagerTableView()
-{
-    // TODO
 }
 
 /// <summary>
@@ -58,9 +41,9 @@ void PatchManagerTableView::UpdateTableView()
 {
     EntryTableModel.clear();
     EntryTableModel.setHorizontalHeaderLabels(QStringList() <<
-        "File" << "Type" << "Hook Address" << "Patch Address" << "Function Pointer Replacement Mode" << "Architecture");
+        "File" << "Type" << "Hook Address" << "Patch Address" << "Hook string" << "Patch addr offset");
     int row = 0;
-    foreach(const struct PatchEntryItem patchEntry, EntryTableModel.entries)
+    for(const struct PatchEntryItem patchEntry : EntryTableModel.entries)
     {
         EntryTableModel.setItem(row, 0, new QStandardItem(patchEntry.FileName));
         const char *typeStrings[3] =
@@ -75,8 +58,9 @@ void PatchManagerTableView::UpdateTableView()
             "none" : "0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
         EntryTableModel.setItem(row, 3, new QStandardItem(!patchEntry.PatchAddress ?
             "pending" : "0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
-        EntryTableModel.setItem(row, 4, new QStandardItem(patchEntry.FunctionPointerReplacementMode ? "yes" : "no"));
-        EntryTableModel.setItem(row++, 5, new QStandardItem(patchEntry.ThumbMode ? "Thumb" : "ARM"));
+        EntryTableModel.setItem(row, 4, new QStandardItem(patchEntry.HookString));
+        EntryTableModel.setItem(row, 5, new QStandardItem(patchEntry.PatchOffsetInHookString == (unsigned int) -1 ?
+            "no patch addr" : QString::number(patchEntry.PatchOffsetInHookString, 10).toUpper()));
     }
 }
 

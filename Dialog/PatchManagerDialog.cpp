@@ -81,12 +81,6 @@ retry:
         entry = editDialog->CreatePatchEntry();
 
         // Validate that the entry can be added
-        if(
-            entry.ThumbMode && (entry.HookAddress & 1) || // Mis-aligned instruction check
-            !entry.ThumbMode && (entry.HookAddress & 3)   // 2 bytes for thumb, 4 bytes for arm
-        ){
-            QMessageBox::information(this, "About", QString("Misaligned hook address: ") + QString("%1").arg(entry.HookAddress, 0, 16));
-        }
         QFile file(entry.FileName);
         if(!file.exists()) // Patch file must exist
         {

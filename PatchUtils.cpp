@@ -41,13 +41,13 @@ extern WL4EditorWindow *singleton;
 /// <remarks>
 /// Version 0:
 ///   Semicolon-delimited (7 fields):
-///     0: Filename
-///     1: Patch type (int)
-///     2: Hook address (hex string)
-///     3: Patch address (hex string)
-///     4: Stub function (0 or 1)
-///     5: ARM/Thumb (0 or 1)
-///     6: Substituted bytes (hex string)
+///     0: Filename             (string, may not contain a semicolon)
+///     1: Patch type           (int)
+///     2: Hook address         (hex string)
+///     3: Patch address        (hex string)
+///     4: Substituted bytes    (hex string)
+///     5: Hook string          (hex string)
+///     6: Patch address offset (int)
 /// </remarks>
 /// <param name="contents">
 /// The patch list chunk contents to upgrade.
@@ -83,20 +83,18 @@ static struct PatchEntryItem DeserializePatchMetadata(QStringList patchTuples)
 {
     int patchType = patchTuples[1].toInt(Q_NULLPTR, 16);
     unsigned int hookAddress = static_cast<unsigned int>(patchTuples[2].toInt(Q_NULLPTR, 16));
-    unsigned int patchAddress = static_cast<unsigned int>(patchTuples[3].toInt(Q_NULLPTR, 16));
+    unsigned int patchAddress = static_cast<unsigned int>(patchTuples[5].toInt(Q_NULLPTR, 16));
     //assert(patchChunks.contains(patchAddress) /* Patch chunk list refers to an invalid patch address */);
-    bool stubFunction = patchTuples[4] != "0";
-    bool thumbMode = patchTuples[5] != "0";
+    unsigned int patchAddressOffset = static_cast<unsigned int>(patchTuples[4].toInt(Q_NULLPTR, 16));
     struct PatchEntryItem entry
     {
         patchTuples[0], // filename
         static_cast<enum PatchType>(patchType),
         hookAddress,
-        stubFunction,
-        thumbMode,
+        patchTuples[3], // hook string
+        patchAddressOffset,
         patchAddress,
-        patchTuples[6], // substituted bytes for the hook
-        "" // hook string (not saved to patch list chunk)
+        patchTuples[6] // substituted bytes for the hook
     };
     return entry;
 }
@@ -116,10 +114,11 @@ static QString SerializePatchMetadata(struct PatchEntryItem patchMetadata)
     QString ret = patchMetadata.FileName + ";";
     ret += QString::number(patchMetadata.PatchType) + ";";
     ret += QString::number(patchMetadata.HookAddress, 16) + ";";
-    ret += QString::number(patchMetadata.FunctionPointerReplacementMode) + ";";
-    ret += QString::number(patchMetadata.ThumbMode) + ";";
     ret += QString::number(patchMetadata.PatchAddress, 16) + ";";
-    return ret + patchMetadata.SubstitutedBytes;
+    ret += patchMetadata.SubstitutedBytes + ";";
+    ret += patchMetadata.HookString + ";";
+    ret += QString::number(patchMetadata.PatchOffsetInHookString) + ";";
+    return ret;
 }
 
 /// <summary>
@@ -268,44 +267,6 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
         contents += SerializePatchMetadata(entry);
     }
     return contents;
-}
-
-/// <summary>
-/// Create the data for a hook.
-/// </summary>
-/// <param name="patchAddr">
-/// The address that the hook will branch to.
-/// </param>
-/// <param name="stubFunction">
-/// If true, stub the function by returning early.
-/// </param>
-/// <param name="thumbMode">
-/// If true, specify that the code being hooked is in thumb mode.
-/// </param>
-/// <returns>
-/// The hook payload.
-/// </returns>
-static QByteArray CreateHook(unsigned int patchAddr, bool thumbMode)
-{
-    if(thumbMode)
-    {
-        const char thumbHook[14] = {
-            '\x01', '\xB5', // PUSH R0, LR
-            '\x01', '\x48', // LDR R0, 4
-            '\x80', '\x47', // BLX R0
-            '\x01', '\xE0', // B 4
-            '\0', '\0', '\0', '\0', // hook address goes here
-            '\x00', '\xBD'  // POP LR
-        };
-        QByteArray hook(thumbHook, sizeof(thumbHook));
-        *(unsigned int*)(hook.data() + 8) = patchAddr | 0x8000000;
-        return hook;
-    }
-    else
-    {
-        // TODO populate an array for ARM mode
-        return QByteArray();
-    }
 }
 
 /// <summary>
@@ -465,7 +426,7 @@ static QString BinaryToHexString(unsigned char *data, int len)
     QString ret;
     while(len--)
     {
-        ret += QString("%02X").arg(*(data++));
+        ret += QString("%1").arg(*(data++), 2, 16, QChar('0')).toUpper();
     }
     return ret;
 }
@@ -571,11 +532,9 @@ namespace PatchUtils
             unsigned char *data = new unsigned char[binFile.size()];
             memcpy(data, binContents.constData(), binFile.size());
 
-            // Create the hook string for the patch
-            struct PatchEntryItem *patchPtr = std::find_if(entries.begin(), entries.end(),
+            // Save the mapping for the save chunk onto the added patch
+            saveChunkIndexToMetadata[ROMUtils::SaveDataIndex] = std::find_if(entries.begin(), entries.end(),
                 [patch](struct PatchEntryItem origPatch){return patch.FileName == origPatch.FileName;});
-            patchPtr->HookString = CreateHook(patchPtr->PatchAddress, patchPtr->ThumbMode); // TODO: This will come from the user, not a function
-            saveChunkIndexToMetadata[ROMUtils::SaveDataIndex] = patchPtr;
 
             // Create the save chunk
             struct ROMUtils::SaveData patchChunk =
@@ -680,6 +639,10 @@ namespace PatchUtils
                             if(patchPtr->HookAddress)
                             {
                                 int hookLength = patchPtr->HookString.length() / 2; // hook string is hex string, 2 digits per byte
+                                if(patchPtr->PatchOffsetInHookString >= 0)
+                                {
+                                    hookLength += 4;
+                                }
                                 patchPtr->SubstitutedBytes = BinaryToHexString(TempFile + patchPtr->HookAddress, hookLength);
                             }
                         }
@@ -733,7 +696,15 @@ namespace PatchUtils
                         struct PatchEntryItem *patchPtr = saveChunkIndexToMetadata[chunk.index];
 
                         // Write hook to ROM
-                        unsigned char *hookData = HexStringToBinary(patchPtr->HookString);
+                        QString hookString = patchPtr->HookString;
+                        if(patchPtr->PatchOffsetInHookString >= 0)
+                        {
+                            int patchAddress = 0x8000000 | patchPtr->PatchAddress;
+                            QString patchAddressString = QString("%1").arg(patchAddress, 8, 16, QChar('0')).toUpper();
+                            hookString = hookString.mid(0, patchPtr->PatchOffsetInHookString) +
+                                patchAddressString + hookString.mid(patchPtr->PatchOffsetInHookString);
+                        }
+                        unsigned char *hookData = HexStringToBinary(hookString);
                         memcpy(TempFile + patchPtr->PatchAddress, hookData, patchPtr->HookString.length() / 2);
                         delete hookData;
                     }
