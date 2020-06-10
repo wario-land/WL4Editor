@@ -61,7 +61,7 @@ void ScriptInterface::Test_DecompressData(int mappingtype, int address)
         tmph = ROMUtils::CurrentFile[address + 1];
         LayerData = reinterpret_cast<unsigned short *>(ROMUtils::LayerRLEDecompress(address + 2, tmpw * tmph * 2));
     } else {
-        singleton->GetOutputWidgetPtr()->PrintString("Mapping Type unavailable.");
+        singleton->GetOutputWidgetPtr()->PrintString("Corruption error: Invalid layer mapping type: 0x" + QString::number(mappingtype, 16).toUpper());
         return;
     }
     QString tmpstr;
@@ -73,7 +73,8 @@ void ScriptInterface::Test_DecompressData(int mappingtype, int address)
     }
 
     if(LayerData == nullptr) {
-        singleton->GetOutputWidgetPtr()->PrintString("Decompress error.");
+        singleton->GetOutputWidgetPtr()->PrintString("Corruption error: Decompression failure. Mapping type: 0x" +
+            QString::number(mappingtype, 16).toUpper() + ". Address: 0x" + QString::number(address, 16).toUpper());
         return;
     }
     singleton->GetOutputWidgetPtr()->PrintString(tmpstr);

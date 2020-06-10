@@ -65,7 +65,10 @@ namespace ROMUtils
     unsigned int PointerFromData(int address)
     {
         unsigned int ret = IntFromData(address) & 0x7FFFFFF;
-        assert(ret < CurrentFileSize /* Pointer is out of range */); // TODO proper error handling
+        if(ret >= CurrentFileSize)
+        {
+            singleton->GetOutputWidgetPtr()->PrintString("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size");
+        }
         return ret;
     }
 
@@ -511,12 +514,16 @@ namespace ROMUtils
             if (chunk.old_chunk_addr > WL4Constants::AvailableSpaceBeginningInROM)
             {
                 unsigned char *RATSaddr = TempFile + chunk.old_chunk_addr - 12;
-                if (ValidRATS(RATSaddr))
+                if (ValidRATS(RATSaddr)) // old_chunk_addr should point to the start of the chunk data, not the RATS tag
                 {
                     strncpy((char *) RATSaddr, "STAR_INV", 8);
                 }
                 else
-                    std::cout << "Invalid RATS identifier for existing chunk, index " << chunk.index << std::endl;
+                {
+                    singleton->GetOutputWidgetPtr()->PrintString("Internal error while saving changes to ROM: Invalidation chunk references an invalid RATS identifier for existing chunk. Save chunk index: " +
+                        QString::number(chunk.index) + ". Address: 0x" + QString::number(chunk.old_chunk_addr - 12, 16).toUpper() + ". Changes not saved.");
+                    return false;
+                }
             }
         }
 
@@ -690,7 +697,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         error:
             free(TempFile);
         }
-        foreach (struct SaveData chunk, chunks)
+        for(struct SaveData chunk : chunks)
         {
             if (chunk.ChunkType != SaveDataChunkType::InvalidationChunk)
                 free(chunk.data);

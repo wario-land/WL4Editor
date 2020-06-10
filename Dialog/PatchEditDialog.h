@@ -14,7 +14,16 @@ class PatchEditDialog : public QDialog
 
 public:
     PatchEditDialog(QWidget *parent) :
-        PatchEditDialog(parent, { "", PatchType::C, 0, "", 0, 0, "" }) {} // default UI values
+        PatchEditDialog(parent,
+        {
+            "C:/Users/Andrew/Desktop/PatchCode/URB.c",
+            PatchType::C,
+            0x6C75E,
+            "034886460148004702E0P67C70608C046C046C046C046C046C046C046C046C046",
+            (unsigned int) 10,
+            0,
+            ""
+        }) {} // default UI values
     PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEntry);
     ~PatchEditDialog();
     struct PatchEntryItem CreatePatchEntry();

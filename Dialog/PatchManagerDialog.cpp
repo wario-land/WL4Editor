@@ -1,11 +1,14 @@
 #include "PatchManagerDialog.h"
 #include "ui_PatchManagerDialog.h"
+#include "WL4EditorWindow.h"
 #include <QMessageBox>
 #include <QFile>
 #include <QDir>
 #include <ROMUtils.h>
 #include <SettingsUtils.h>
 #include <QFileDialog>
+
+extern WL4EditorWindow *singleton;
 
 /// <summary>
 /// Construct an instance of the PatchManagerDialog.
@@ -251,7 +254,8 @@ void PatchManagerDialog::on_savePatchButton_clicked()
     QString errorStr = PatchUtils::SavePatchesToROM(PatchTable->GetAllEntries());
     if(errorStr.isEmpty())
     {
-        // TODO close the patch manager dialog
+        singleton->GetOutputWidgetPtr()->PrintString("Finished saving patch data to ROM. (patches: " + QString::number(PatchTable->GetAllEntries().size()) + ")");
+        this->close();
     }
     else
     {

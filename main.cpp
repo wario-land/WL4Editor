@@ -91,8 +91,12 @@ int main(int argc, char *argv[])
 
     // Quickly test or debug by automatically loading the ROM without UI
     //-------------------------------------------------------------------
+    QString restoreFilePath = "C:\\Users\\Andrew\\Desktop\\WL4 2.gba";
+    QFile restoreFile(restoreFilePath);
     QString filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
     QFile testFile(filePath);
+    testFile.remove();
+    restoreFile.copy(filePath);
     if(testFile.exists())
     {
         window.LoadROMDataFromFile(filePath);

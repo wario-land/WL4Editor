@@ -1,6 +1,9 @@
 #include "PatchManagerTableView.h"
+#include "WL4EditorWindow.h"
 #include <cassert>
 #include <QModelIndex>
+
+extern WL4EditorWindow *singleton;
 
 /// <summary>
 /// Construct an instance of the PatchManagerTableView.
@@ -18,7 +21,7 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
 
     // Populate the table
     QVector<struct PatchEntryItem> patches = PatchUtils::GetPatchesFromROM();
-    foreach(struct PatchEntryItem patch, patches)
+    for(struct PatchEntryItem patch : patches)
     {
         EntryTableModel.AddEntry(patch);
     }
@@ -44,7 +47,11 @@ void PatchManagerTableView::UpdateTableView()
             "Assembly",
             "C"
         };
-        assert(patchEntry.PatchType < sizeof(typeStrings) / sizeof(typeStrings[0]) /* Patch entry type out of range */);
+        if(patchEntry.PatchType >= sizeof(typeStrings) / sizeof(typeStrings[0]))
+        {
+            singleton->GetOutputWidgetPtr()->PrintString("Internal error: Patch entry type out of range: " + QString::number(patchEntry.PatchType));
+            continue;
+        }
         EntryTableModel.setItem(row, 1, new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
         EntryTableModel.setItem(row, 2, new QStandardItem(!patchEntry.HookAddress ?
             "none" : "0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
@@ -78,7 +85,11 @@ struct PatchEntryItem PatchManagerTableView::GetSelectedEntry()
 {
     QItemSelectionModel *select = selectionModel();
     QModelIndexList selectedRows = select->selectedRows();
-    assert(selectedRows.size() == 1 /* PatchManagerTableView::GetSelectedEntry called when a single row is not selected */);
+    if(selectedRows.size() != 1)
+    {
+        singleton->GetOutputWidgetPtr()->PrintString("Internal error: PatchManagerTableView::GetSelectedEntry called when a single row is not selected");
+        if(!selectedRows.size()) selectedRows.append(QModelIndex());
+    }
     return EntryTableModel.entries[selectedRows[0].row()];
 }
 

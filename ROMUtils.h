@@ -49,7 +49,7 @@ namespace ROMUtils
         bool alignment;          // false: do not perform special alignment of the save chunk
         unsigned int dest_index; // 0: the address of the pointer that points to this chunk is in main ROM. Else, it is
                                  // in another chunk
-        unsigned int old_chunk_addr; // address of the old chunk that was pointed to
+        unsigned int old_chunk_addr; // address of the old chunk that was pointed to. This should point to the start of the chunk data, not the RATS tag
         enum SaveDataChunkType ChunkType;
     };
 
