@@ -10,7 +10,7 @@ extern WL4EditorWindow *singleton;
 /// </summary>
 OutputDockWidget::OutputDockWidget(QWidget *parent) :
     QDockWidget(parent),
-    ui(new Ui::OutputDockWidget)
+    ui(new Ui::OutputDockWidget) // TODO memory leak
 {
     ui->setupUi(this);
 

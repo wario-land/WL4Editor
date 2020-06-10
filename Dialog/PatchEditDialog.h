@@ -16,7 +16,11 @@ public:
     PatchEditDialog(QWidget *parent) :
         PatchEditDialog(parent,
         {
+#ifdef _WIN32
             "C:/Users/Andrew/Desktop/PatchCode/URB.c",
+#else
+            "/home/andrew/Desktop/PatchCode/URB.c",
+#endif
             PatchType::C,
             0x6C75E,
             "034886460148004702E0P67C70608C046C046C046C046C046C046C046C046C046",
