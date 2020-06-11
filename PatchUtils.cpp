@@ -431,7 +431,7 @@ static QVector<struct PatchEntryItem> DetermineRemovalPatches(QVector<struct Pat
 }
 
 /// <summary>
-/// Compile a list of patches which would remain in the ROM.
+/// Compile a list of patches which would remain in the ROM after removing some.
 /// </summary>
 /// <param name="existingPatches">
 /// The existing patch entries in the ROM.
@@ -444,16 +444,11 @@ static QVector<struct PatchEntryItem> DetermineRemovalPatches(QVector<struct Pat
 /// </returns>
 static QVector<struct PatchEntryItem> DetermineRemainingPatches(QVector<struct PatchEntryItem> existingPatches, QVector<struct PatchEntryItem> removalPatches)
 {
-    QVector<struct PatchEntryItem> remainingPatches;
-    for(struct PatchEntryItem existingPatch : existingPatches)
-    {
-        remainingPatches.append(existingPatch);
-    }
-    for(struct PatchEntryItem removePatch : removalPatches)
-    {
-        std::remove_if(remainingPatches.begin(), remainingPatches.end(),
-            [removePatch](struct PatchEntryItem p){return p.FileName == removePatch.FileName;});
-    }
+    QVector<struct PatchEntryItem> remainingPatches(existingPatches);
+    QVector<struct PatchEntryItem>::iterator removeItr = std::remove_if(remainingPatches.begin(), remainingPatches.end(),
+        [removalPatches](struct PatchEntryItem p1){return std::find_if(removalPatches.begin(), removalPatches.end(),
+            [p1](struct PatchEntryItem p2){return p1.FileName == p2.FileName;}) != removalPatches.end();});
+    remainingPatches.erase(removeItr, remainingPatches.end());
     return remainingPatches;
 }
 
@@ -485,6 +480,10 @@ static QString BinaryToHexString(unsigned char *data, int len)
 /// <remarks>
 /// The binary data is dynamically allocated. Make sure to delete it after use.
 /// </remarks>
+/// <param name="buf">
+/// The buffer that the binary will be written to.
+/// It is assumed that the buffer is allocated to the proper length (half the length of the string)
+/// </param>
 /// <param name="str">
 /// The string to convert into binary.
 /// </param>
@@ -493,12 +492,12 @@ static QString BinaryToHexString(unsigned char *data, int len)
 /// </returns>
 static unsigned char *HexStringToBinary(QString str)
 {
-    unsigned char *data = new unsigned char[str.length() / 2];
+    unsigned char *buf = new unsigned char[str.length() / 2];
     for(int i = 0; i < str.length(); i += 2)
     {
-        data[i / 2] = str.mid(i, 2).toUInt(Q_NULLPTR, 16);
+        buf[i / 2] = str.mid(i, 2).toUInt(Q_NULLPTR, 16);
     }
-    return data;
+    return buf;
 }
 
 namespace PatchUtils
@@ -664,30 +663,19 @@ namespace PatchUtils
 
             // ChunkAllocationCallback
 
-            [firstCallback, entries, &saveChunkIndexToMetadata, &saveChunkIndexToRemoval, noPatches]
+            [firstCallback, entries, &saveChunkIndexToMetadata, removePatches, noPatches]
             (unsigned char *TempFile, QVector<struct ROMUtils::SaveData>& addedChunks, std::map<int, int> indexToChunkPtr) mutable
             {
                 // Create and add PatchListChunk after patch chunk locations have been allocated by SaveFile()
                 if(firstCallback)
                 {
-                    // Undo removal patches (if ROM already has patches)
-                    QVector<struct PatchEntryItem> patchesInROM = GetPatchesFromROM();
-                    if(patchesInROM.length())
+                    // Undo removal patches (if there are patches to remove)
+                    for(struct PatchEntryItem patch : removePatches)
                     {
-                        for(struct ROMUtils::SaveData chunk : addedChunks)
-                        {
-                            if(chunk.ChunkType == ROMUtils::SaveDataChunkType::InvalidationChunk &&
-                                saveChunkIndexToRemoval.find(chunk.index) != saveChunkIndexToRemoval.end()) // map does not contain an entry for the old patch list chunk's invalidator
-                            {
-                                // Find metadata for the existing patch in the ROM which we want to remove
-                                struct PatchEntryItem *removalPatchInROM = saveChunkIndexToRemoval[chunk.index];
-
-                                // Get patch hex string from current patch list chunk, write into TempFile
-                                unsigned char *originalBytes = HexStringToBinary(removalPatchInROM->SubstitutedBytes);
-                                memcpy(TempFile, originalBytes, removalPatchInROM->SubstitutedBytes.length() / 2);
-                                delete originalBytes;
-                            }
-                        }
+                        // Get patch hex string from removal patch struct, write into TempFile
+                        unsigned char *originalBytes = HexStringToBinary(patch.SubstitutedBytes);
+                        memcpy(TempFile + patch.HookAddress, originalBytes, patch.SubstitutedBytes.length() / 2);
+                        delete[] originalBytes;
                     }
 
                     // Update entry structs with information from the added chunks
@@ -739,13 +727,11 @@ namespace PatchUtils
                         };
                         addedChunks.append(patchListChunk);
                     }
+                    else addedChunks.clear();
 
                     firstCallback = false;
                 }
-                else
-                {
-                    addedChunks.clear();
-                }
+                else addedChunks.clear();
             },
 
             // PostProcessingCallback
@@ -774,8 +760,8 @@ namespace PatchUtils
                                 patchAddressString + hookString.mid(patchPtr->PatchOffsetInHookString * 2);
                         }
                         unsigned char *hookData = HexStringToBinary(hookString);
-                        memcpy(TempFile + patchPtr->HookAddress, hookData, patchPtr->HookString.length() / 2);
-                        delete hookData;
+                        memcpy(TempFile + patchPtr->HookAddress, hookData, hookString.length() / 2);
+                        delete[] hookData;
                     }
                 }
             }

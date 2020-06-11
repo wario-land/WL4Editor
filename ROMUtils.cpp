@@ -484,7 +484,7 @@ namespace ROMUtils
     /// </param>
     /// <param name="ChunkAllocationCallback">
     /// Callback function that allocates additional chunks based on data from chunks which have been
-    /// allocated by this function before saving to ROM.
+    /// allocated by this function before saving to ROM. This function may not allocate invalidation chunks.
     /// </param>
     /// <param name="PostProcessingCallback">
     /// Post-processing to perform after writing the save chunks, but before saving the file itself.
@@ -536,6 +536,8 @@ namespace ROMUtils
             int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
             for(struct SaveData chunk : chunksToAdd)
             {
+                if(chunk.ChunkType == SaveDataChunkType::InvalidationChunk) continue; // do not allocate for invalidation chunks
+
                 int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
 findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
                 if(chunk.alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
@@ -590,18 +592,19 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                 destPtr[8] = chunk.ChunkType;
 
                 startAddr = chunkAddr + chunk.size + 12; // do not search through old areas of the ROM again
-
-                // Perform chunk allocation callback
-                if(ChunkAllocationCallback)
-                {
-                    ChunkAllocationCallback(TempFile, chunksToAdd, indexToChunkPtr);
-                    chunks.append(chunksToAdd); // Add any additional chunks created in the callback
-                }
-                else
-                {
-                    chunksToAdd.clear();
-                }
             }
+
+            // Perform chunk allocation callback
+            if(ChunkAllocationCallback)
+            {
+                ChunkAllocationCallback(TempFile, chunksToAdd, indexToChunkPtr);
+                chunks.append(chunksToAdd); // Add any additional chunks created in the callback
+            }
+            else
+            {
+                chunksToAdd.clear();
+            }
+
         } while(!chunksToAdd.empty());
 
         // Apply source pointer modifications to applicable chunk types

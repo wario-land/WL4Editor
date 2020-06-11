@@ -17,16 +17,16 @@ public:
         PatchEditDialog(parent,
         {
 #ifdef _WIN32
-            "C:/Users/Andrew/Desktop/PatchCode/URB.c",
+            QString("C:/Users/Andrew/Desktop/PatchCode/URB.c"),
 #else
-            "/home/andrew/Desktop/PatchCode/URB.c",
+            QString("/home/andrew/Desktop/PatchCode/URB.c"),
 #endif
             PatchType::C,
             0x6C75E,
-            "034886460148004702E0P67C70608C046C046C046C046C046C046C046C046C046",
+            QString("034886460148004702E067C70608C046C046C046C046C046C046C046C046C046"),
             (unsigned int) 10,
             0,
-            ""
+            QString("")
         }) {} // default UI values
     PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEntry);
     ~PatchEditDialog();
