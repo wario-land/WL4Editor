@@ -429,6 +429,9 @@
    </property>
   </action>
   <action name="actionManager">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Manager</string>
    </property>

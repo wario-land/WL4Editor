@@ -156,10 +156,11 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
 void PatchEditDialog::on_pushButton_Browse_clicked()
 {
     // Promt the user for the patch file
+    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
     QString qFilePath = QFileDialog::getOpenFileName(
         this,
         tr("Open patch file"),
-        QString(""),
+        romFileDir,
         tr("C source files (*.c);;ARM assembly files (*.s);;Binary files (*.bin)")
     );
     if(qFilePath.contains(";"))

@@ -368,6 +368,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionUndo->setEnabled(true);
         ui->actionUndo_global->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
+        ui->actionManager->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);

@@ -26,6 +26,8 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
         EntryTableModel.AddEntry(patch);
     }
 
+    horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    setVerticalHeader(new PersistentHeader(Qt::Vertical, this));
     UpdateTableView();
 }
 
@@ -34,10 +36,13 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
 /// </summary>
 void PatchManagerTableView::UpdateTableView()
 {
+    // Populate the table header
     EntryTableModel.clear();
     EntryTableModel.setHorizontalHeaderLabels(QStringList() <<
         "File" << "Type" << "Hook Address" << "Patch Address" << "Hook string" << "Patch addr offset");
     int row = 0;
+
+    // Populate the table items
     for(const struct PatchEntryItem patchEntry : EntryTableModel.entries)
     {
         EntryTableModel.setItem(row, 0, new QStandardItem(patchEntry.FileName));
@@ -61,6 +66,22 @@ void PatchManagerTableView::UpdateTableView()
         EntryTableModel.setItem(row, 5, new QStandardItem(patchEntry.PatchOffsetInHookString == (unsigned int) -1 ?
             "no patch addr" : QString::number(patchEntry.PatchOffsetInHookString, 10).toUpper()));
         ++row;
+    }
+
+    // Resize the table columns
+    int remain = width(), colCount = EntryTableModel.columnCount();
+    for(int i = 0; i < colCount; ++i)
+    {
+        if(i == colCount - 1)
+        {
+            setColumnWidth(i, remain);
+        }
+        else
+        {
+            int w = width() / colCount;
+            setColumnWidth(i, w);
+            remain -= w;
+        }
     }
 }
 
