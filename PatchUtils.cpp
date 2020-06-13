@@ -418,7 +418,7 @@ static QVector<struct PatchEntryItem> DetermineRemovalPatches(QVector<struct Pat
         if(!(mustRemoveChunk = !saveChunkInDialog))
         {
             // If the save chunk is in the dialog, we must check to see if content matches bin contents
-            unsigned short chunkLen = *reinterpret_cast<unsigned short*>(existingPatch.PatchAddress + 4);
+            unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMUtils::CurrentFile + existingPatch.PatchAddress + 4);
             mustRemoveChunk = !BinaryMatchWithROM(dialogPatch->FileName, existingPatch.PatchAddress + 12, chunkLen);
         }
 
