@@ -23,7 +23,7 @@ public:
 #endif
             PatchType::C,
             0x6C75E,
-            QString("034886460148004702E067C70608C046C046C046C046C046C046C046C046C046"),
+            QString("034886460148004702E067C70608C046C046C046C046C046C046C046C046C046C046"),
             (unsigned int) 10,
             0,
             QString("")

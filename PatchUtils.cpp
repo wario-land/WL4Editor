@@ -379,7 +379,7 @@ static QVector<struct PatchEntryItem> DetermineNewPatches(QVector<struct PatchEn
             dialogPatch.PatchAddress = existingPatch->PatchAddress;
 
             // If the save chunk exists by filename, we must check to see if content matches bin contents
-            unsigned short chunkLen = *reinterpret_cast<unsigned short*>(existingPatch->PatchAddress + 4);
+            unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMUtils::CurrentFile + existingPatch->PatchAddress + 4);
             mustCreateChunk = !BinaryMatchWithROM(dialogPatch.FileName, existingPatch->PatchAddress + 12, chunkLen);
         }
 
