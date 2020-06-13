@@ -16,15 +16,11 @@ public:
     PatchEditDialog(QWidget *parent) :
         PatchEditDialog(parent,
         {
-#ifdef _WIN32
-            QString("C:/Users/Andrew/Desktop/PatchCode/URB.c"),
-#else
-            QString("/home/andrew/Desktop/PatchCode/URB.c"),
-#endif
+            QString(""),
             PatchType::C,
-            0x6C75E,
-            QString("034886460148004702E067C70608C046C046C046C046C046C046C046C046C046C046"),
-            (unsigned int) 10,
+            0,
+            QString(""),
+            (unsigned int) -1,
             0,
             QString("")
         }) {} // default UI values

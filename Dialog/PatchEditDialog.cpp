@@ -40,6 +40,39 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     QRegExp regExp2("( *[a-fA-F0-9] *[a-fA-F0-9])*( *[pP])?( *[a-fA-F0-9] *[a-fA-F0-9])* *");
     ui->lineEdit_HookText->setValidator(addressvalidator = new QRegExpValidator(regExp2, this));
 
+#ifdef _WIN32
+    QString file1 = "C:/Users/Andrew/Desktop/PatchCode/UnlimitedRockBouncing.c";
+    QString file2 = "C:/Users/Andrew/Desktop/PatchCode/WarioSpeedResetWithCondCheck.c";
+#else // linux
+    QString file1 = "/home/andrew/Desktop/PatchCode/UnlimitedRockBouncing.c";
+    QString file2 = "/home/andrew/Desktop/PatchCode/WarioSpeedResetWithCondCheck.c";
+#endif
+    static int initializations = 0;
+    if(initializations == 0)
+    {
+        patchEntry = {
+            file1,
+            PatchType::C,
+            0x6C75E,
+            QString("034886460148004702E067C70608C046C046C046C046C046C046C046C046C046C046"),
+            (unsigned int) 10,
+            0,
+            QString("")
+        };
+    } else if(initializations == 1)
+    {
+        patchEntry = {
+            file2,
+            PatchType::C,
+            0x12BB2,
+            QString("10B4C046034886460148004702E0BF2B010810BCC046C046C046C046C046"),
+            (unsigned int) 14,
+            0,
+            QString("")
+        };
+    }
+    initializations++;
+
     // Initialize the components with the patch entry item
     InitializeComponents(patchEntry);
 }

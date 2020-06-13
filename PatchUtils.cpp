@@ -608,7 +608,7 @@ namespace PatchUtils
                 ROMUtils::SaveDataIndex++,
                 true,
                 0,
-                patch.PatchAddress,
+                0,
                 ROMUtils::SaveDataChunkType::PatchChunk
             };
 
@@ -722,7 +722,7 @@ namespace PatchUtils
                             ROMUtils::SaveDataIndex++,
                             false,
                             0,
-                            patchListAddr, // will be 0 if it does not already exist
+                            0,
                             ROMUtils::SaveDataChunkType::PatchListChunk
                         };
                         addedChunks.append(patchListChunk);
