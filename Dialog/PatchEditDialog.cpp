@@ -1,10 +1,18 @@
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QTextStream>
 #include "PatchEditDialog.h"
 #include "ui_PatchEditDialog.h"
 #include "ROMUtils.h"
 
 static QStringList PatchTypeNameSet;
+static QRegExp hookAddressRegex("^ *(0x)?[a-fA-F0-9]{1,6} *$");
+static QRegExp hookStringRegex("^( *[a-fA-F0-9] *[a-fA-F0-9])*( *[pP])?( *[a-fA-F0-9] *[a-fA-F0-9])* *$");
+static QRegExp descriptionRegex("^[^;]+$");
+
+#define HOOK_ADDR_IDENTIFIER "@HookAddress"
+#define HOOK_STRING_IDENTIFIER "@HookString"
+#define DESCRIPTION_IDENTIFIER "@Description"
 
 /// <summary>
 /// Perform static initializtion of constant data structures for the dialog.
@@ -33,12 +41,10 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     ui->comboBox_PatchType->addItems(PatchTypeNameSet);
 
     // Set Validator for lineEdit_HookAddress
-    QRegExp regExp1("(0x)?[a-fA-F0-9]{1,6}");
-    ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegExpValidator(regExp1, this));
+    ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegExpValidator(hookAddressRegex, this));
 
     // Set Validator for lineEdit_HookText
-    QRegExp regExp2("( *[a-fA-F0-9] *[a-fA-F0-9])*( *[pP])?( *[a-fA-F0-9] *[a-fA-F0-9])* *");
-    ui->lineEdit_HookText->setValidator(addressvalidator = new QRegExpValidator(regExp2, this));
+    ui->lineEdit_HookText->setValidator(addressvalidator = new QRegExpValidator(hookStringRegex, this));
 
 #ifdef _WIN32
     QString file1 = "C:/Users/Andrew/Desktop/PatchCode/UnlimitedRockBouncing.c";
@@ -47,7 +53,7 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     QString file1 = "/home/andrew/Desktop/PatchCode/UnlimitedRockBouncing.c";
     QString file2 = "/home/andrew/Desktop/PatchCode/WarioSpeedResetWithCondCheck.c";
 #endif
-    static int initializations = 0;
+    static int initializations = 3;
     if(initializations == 0)
     {
         patchEntry = {
@@ -151,6 +157,22 @@ static QString FormatHookText(QString hookStr, int patchOffset)
     return ret.length() ? ret.mid(1) : "";
 }
 
+static QString InferFromIdentifier(QString filePath, QString identifier, QRegExp validator)
+{
+    QFile file(filePath);
+    file.open(QIODevice::ReadOnly);
+    QTextStream in(&file);
+    QString line;
+    do {
+        line = in.readLine();
+        if (line.contains(identifier, Qt::CaseSensitive)) {
+            QString contents = line.mid(line.indexOf(identifier) + identifier.length());
+            return validator.indexIn(contents) ? "" : contents.trimmed();
+        }
+    } while (!line.isNull());
+    return "";
+}
+
 /// <summary>
 /// Deconstruct the PatchEditDialog and clean up its instance objects on the heap.
 /// </summary>
@@ -204,7 +226,7 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
 /// </summary>
 void PatchEditDialog::on_pushButton_Browse_clicked()
 {
-    // Promt the user for the patch file
+    // Prompt the user for the patch file
     QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
     QString qFilePath = QFileDialog::getOpenFileName(
         this,
@@ -212,26 +234,46 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
         romFileDir,
         tr("C source files (*.c);;ARM assembly files (*.s);;Binary files (*.bin)")
     );
-    if(qFilePath.contains(";"))
-    {
-        QMessageBox::information(this, "About", "The file path may not contain a semicolon. File path: \"" + qFilePath + "\"");
-    }
-    else if(!qFilePath.isEmpty())
+    if(!qFilePath.isEmpty())
     {
         ui->lineEdit_FilePath->setText(qFilePath);
 
         // Infer the type based on the extension
+        enum PatchType fileType;
         if(qFilePath.endsWith(".c", Qt::CaseInsensitive))
         {
-            ui->comboBox_PatchType->setCurrentIndex(PatchType::C);
+            fileType = PatchType::C;
         }
         else if(qFilePath.endsWith(".s", Qt::CaseInsensitive))
         {
-            ui->comboBox_PatchType->setCurrentIndex(PatchType::Assembly);
+            fileType = PatchType::Assembly;
         }
         else
         {
-            ui->comboBox_PatchType->setCurrentIndex(PatchType::Binary);
+            fileType = PatchType::Binary;
+        }
+        ui->comboBox_PatchType->setCurrentIndex(fileType);
+
+        // Infer fields from file comments
+        if(fileType != PatchType::Binary)
+        {
+            QString hookAddress = InferFromIdentifier(qFilePath, HOOK_ADDR_IDENTIFIER, hookAddressRegex);
+            if(hookAddress != "")
+            {
+                ui->lineEdit_HookAddress->setText(hookAddress);
+            }
+
+            QString hookString = InferFromIdentifier(qFilePath, HOOK_STRING_IDENTIFIER, hookStringRegex);
+            if(hookString != "")
+            {
+                ui->lineEdit_HookText->setText(hookString);
+            }
+
+            QString descString = InferFromIdentifier(qFilePath, DESCRIPTION_IDENTIFIER, descriptionRegex);
+            if(descString != "")
+            {
+                ui->textEdit_Description->setText(descString);
+            }
         }
     }
 }
