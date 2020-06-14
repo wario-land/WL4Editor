@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>180</height>
+    <height>292</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -102,6 +102,16 @@
       <widget class="QLineEdit" name="lineEdit_HookText"/>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_Description">
+     <property name="text">
+      <string>Description:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextEdit" name="textEdit_Description"/>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">

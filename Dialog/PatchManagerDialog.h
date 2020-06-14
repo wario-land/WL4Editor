@@ -28,6 +28,7 @@ private:
     PatchManagerTableView *PatchTable;
     Ui::PatchManagerDialog *ui;
     bool dirty = false;
+    int initialEntries;
 };
 
 #endif // PATCHMANAGERDIALOG_H

@@ -33,7 +33,7 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     ui->comboBox_PatchType->addItems(PatchTypeNameSet);
 
     // Set Validator for lineEdit_HookAddress
-    QRegExp regExp1("[a-fA-F0-9]{6}");
+    QRegExp regExp1("(0x)?[a-fA-F0-9]{1,6}");
     ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegExpValidator(regExp1, this));
 
     // Set Validator for lineEdit_HookText
@@ -57,7 +57,8 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
             QString("034886460148004702E067C70608C046C046C046C046C046C046C046C046C046C046"),
             (unsigned int) 10,
             0,
-            QString("")
+            "",
+            "Allows rocks to bounce against each other infinitely"
         };
     } else if(initializations == 1)
     {
@@ -65,10 +66,23 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
             file2,
             PatchType::C,
             0x12BB2,
-            QString("10B4C046034886460148004702E0BF2B010810BCC046C046C046C046C046"),
-            (unsigned int) 14,
+            QString("034886460148004702E0BB2B0108C046C046C046C046C046C046C046C046"),
+            (unsigned int) 10,
             0,
-            QString("")
+            "",
+            "Do not reset Wario's speed in midair when he throws an object"
+        };
+    } else if(initializations == 2)
+    {
+        patchEntry = {
+            "",
+            PatchType::C,
+            0x12E28,
+            QString("FF"),
+            (unsigned int) -1,
+            0,
+            "",
+            "Moon jump"
         };
     }
     initializations++;
@@ -156,9 +170,10 @@ void PatchEditDialog::InitializeComponents(struct PatchEntryItem patchEntry)
 {
     ui->lineEdit_FilePath->setText(patchEntry.FileName);
     ui->comboBox_PatchType->setCurrentIndex(patchEntry.PatchType);
-    QString hookText = patchEntry.HookAddress ? QString::number(patchEntry.HookAddress, 16).toUpper() : "";
-    ui->lineEdit_HookAddress->setText(hookText);
+    QString hookAddressText = patchEntry.HookAddress ? QString::number(patchEntry.HookAddress, 16).toUpper() : "";
+    ui->lineEdit_HookAddress->setText("0x" + hookAddressText);
     ui->lineEdit_HookText->setText(FormatHookText(patchEntry.HookString, patchEntry.PatchOffsetInHookString));
+    ui->textEdit_Description->setText(patchEntry.Description);
 }
 
 /// <summary>
@@ -169,17 +184,18 @@ void PatchEditDialog::InitializeComponents(struct PatchEntryItem patchEntry)
 /// </returns>
 struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
 {
+    QString hookAddressText = ui->lineEdit_HookAddress->text();
+    if(hookAddressText.startsWith("0x")) hookAddressText = hookAddressText.mid(2);
     return
     {
         ui->lineEdit_FilePath->text(),
         static_cast<enum PatchType>(ui->comboBox_PatchType->currentIndex()),
-        static_cast<unsigned int>(ui->lineEdit_HookAddress->text().toInt(Q_NULLPTR, 16)),
+        hookAddressText.toUInt(Q_NULLPTR, 16),
         NormalizeHookText(ui->lineEdit_HookText->text()),
         GetPatchOffset(ui->lineEdit_HookText->text()),
-
-        // The following fields are populated and used by the saving routine
         0,
-        ""
+        "",
+        ui->textEdit_Description->toPlainText()
     };
 }
 

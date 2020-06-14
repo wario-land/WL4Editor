@@ -35,18 +35,66 @@ struct CompileEntry {
 extern WL4EditorWindow *singleton;
 
 /// <summary>
+/// Convert a region of binary into a hex string.
+/// </summary>
+/// <param name="data">
+/// The data to convert into a hex string.
+/// </param>
+/// <param name="len">
+/// The length of the data to convert into a hex string.
+/// </param>
+/// <returns>
+/// The hex string formatted as uppercase hex digits.
+/// </returns>
+static QString BinaryToHexString(unsigned char *data, int len)
+{
+    QString ret;
+    while(len--)
+    {
+        ret += QString("%1").arg(*(data++), 2, 16, QChar('0')).toUpper();
+    }
+    return ret;
+}
+
+/// <summary>
+/// Convert a hex string into binary data.
+/// </summary>
+/// <remarks>
+/// The binary data is dynamically allocated. Make sure to delete it after use.
+/// </remarks>
+/// <param name="buf">
+/// The buffer that the binary will be written to.
+/// It is assumed that the buffer is allocated to the proper length (half the length of the string)
+/// </param>
+/// <param name="str">
+/// The string to convert into binary.
+/// </param>
+/// <returns>
+/// The binary created from the hex string.
+/// </returns>
+static unsigned char *HexStringToBinary(QString str)
+{
+    unsigned char *buf = new unsigned char[str.length() / 2];
+    for(int i = 0; i < str.length(); i += 2)
+    {
+        buf[i / 2] = str.mid(i, 2).toUInt(Q_NULLPTR, 16);
+    }
+    return buf;
+}
+
+/// <summary>
 /// Upgrade the format of a patch list chunk by one version.
 /// </summary>
 /// <remarks>
 /// Version 0:
-///   Semicolon-delimited (7 fields):
+///   Semicolon-delimited (6 fields):
 ///     0: Filename             (string, may not contain a semicolon)
 ///     1: Patch type           (int)
 ///     2: Hook address         (hex string)
 ///     3: Patch address        (hex string)
 ///     4: Substituted bytes    (hex string)
-///     5: Hook string          (hex string)
-///     6: Patch address offset (int)
+///     5: Patch address offset (int)
+///     6: Patch description    (string, may not contain a semicolon)
 /// </remarks>
 /// <param name="contents">
 /// The patch list chunk contents to upgrade.
@@ -81,18 +129,20 @@ static QString UpgradePatchListContents(QString contents, int version)
 static struct PatchEntryItem DeserializePatchMetadata(QStringList patchTuples)
 {
     int patchType = patchTuples[1].toInt(Q_NULLPTR, 16);
-    unsigned int hookAddress = static_cast<unsigned int>(patchTuples[2].toInt(Q_NULLPTR, 16));
-    unsigned int patchAddress = static_cast<unsigned int>(patchTuples[3].toInt(Q_NULLPTR, 16));
-    unsigned int patchAddressOffset = static_cast<unsigned int>(patchTuples[6].toInt(Q_NULLPTR, 16));
+    unsigned int hookAddress = patchTuples[2].toUInt(Q_NULLPTR, 16);
+    unsigned int patchAddress = patchTuples[3].toUInt(Q_NULLPTR, 16);
+    unsigned int patchAddressOffset = patchTuples[5].toUInt(Q_NULLPTR, 16);
+    QString hookString = BinaryToHexString(ROMUtils::CurrentFile + hookAddress, patchTuples[4].length() / 2); // obtain hook string directly from the patched rom data
     struct PatchEntryItem entry
     {
         patchTuples[0], // filename
         static_cast<enum PatchType>(patchType),
         hookAddress,
-        patchTuples[5], // hook string
+        hookString,
         patchAddressOffset,
         patchAddress,
-        patchTuples[4] // substituted bytes for the hook
+        patchTuples[4], // substituted bytes for the hook
+        patchTuples[6] // description
     };
     return entry;
 }
@@ -114,8 +164,8 @@ static QString SerializePatchMetadata(struct PatchEntryItem patchMetadata)
     ret += QString::number(patchMetadata.HookAddress, 16).toUpper() + ";";
     ret += QString::number(patchMetadata.PatchAddress, 16).toUpper() + ";";
     ret += patchMetadata.SubstitutedBytes + ";";
-    ret += patchMetadata.HookString + ";";
-    ret += QString::number(patchMetadata.PatchOffsetInHookString, 16).toUpper();
+    ret += QString::number(patchMetadata.PatchOffsetInHookString, 16).toUpper() + ";";
+    ret += patchMetadata.Description;
     return ret;
 }
 
@@ -165,7 +215,7 @@ static QString CompileCFile(QString cfile)
     QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_GCC);
     QStringList args;
     args << "-MMD" << "-MP" << "-MF" << "-g" << "-Wall" << "-mcpu=arm7tdmi" << "-mtune=arm7tdmi" <<
-        "-fomit-frame-pointer" << "-ffast-math" << "-mthumb" << "-mthumb-interwork" <<
+        "-fomit-frame-pointer" << "-ffast-math" << "-mthumb" << "-mthumb-interwork" << "-O2" <<
         "-S" << cfile << "-o" << outfile;
 
     // Run GCC
@@ -250,7 +300,7 @@ static bool BinaryMatchWithROM(QString file, unsigned int startAddr, unsigned in
 {
     if(length > 0xFFFF)
     {
-        singleton->GetOutputWidgetPtr()->PrintString(QString("Invalid comparison length in BinaryMatchWithROM: ") + QString::number(length, 16).toUpper());
+        singleton->GetOutputWidgetPtr()->PrintString(QString("Invalid comparison length in BinaryMatchWithROM: 0x") + QString::number(length, 16).toUpper());
         return false;
     }
 
@@ -308,6 +358,8 @@ static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
     QVector<struct CompileEntry> compileEntries;
     for(struct PatchEntryItem entry : entries)
     {
+        if(!entry.FileName.length()) continue;
+
         QString fname(entry.FileName);
         switch(entry.PatchType)
         {
@@ -351,47 +403,6 @@ static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
 }
 
 /// <summary>
-/// Compile a list of patches which must be added to the ROM.
-/// A patch must be added if it is entirely new, or if it exists in the ROM already and has been modified.
-/// </summary>
-/// <param name="dialogPatches">
-/// The patch entries coming from the dialog.
-/// </param>
-/// <param name="existingPatches">
-/// The existing patch entries in the ROM.
-/// </param>
-/// <returns>
-/// The list of patches which must be added to the ROM.
-/// </returns>
-static QVector<struct PatchEntryItem> DetermineNewPatches(QVector<struct PatchEntryItem> dialogPatches, QVector<struct PatchEntryItem> existingPatches)
-{
-    QVector<struct PatchEntryItem> newPatches;
-    for(struct PatchEntryItem dialogPatch : dialogPatches)
-    {
-        // Check if save chunk exists in the ROM (by file name)
-        struct PatchEntryItem *existingPatch = std::find_if(existingPatches.begin(), existingPatches.end(),
-            [dialogPatch](struct PatchEntryItem e){ return e.FileName == dialogPatch.FileName; });
-        bool mustCreateChunk, saveChunkExists = existingPatch != existingPatches.end();
-
-        // If the save chunk does not exist in ROM, we must create it
-        if(!(mustCreateChunk = !saveChunkExists))
-        {
-            dialogPatch.PatchAddress = existingPatch->PatchAddress;
-
-            // If the save chunk exists by filename, we must check to see if content matches bin contents
-            unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMUtils::CurrentFile + existingPatch->PatchAddress + 4);
-            mustCreateChunk = !BinaryMatchWithROM(dialogPatch.FileName, existingPatch->PatchAddress + 12, chunkLen);
-        }
-
-        if(mustCreateChunk)
-        {
-            newPatches.append(dialogPatch);
-        }
-    }
-    return newPatches;
-}
-
-/// <summary>
 /// Compile a list of patches which must be removed from the ROM.
 /// A patch must be removed if it exists in the ROM and has either been modified, or is not in the chunk list from the dialog.
 /// </summary>
@@ -411,7 +422,7 @@ static QVector<struct PatchEntryItem> DetermineRemovalPatches(QVector<struct Pat
     {
         // Check if save chunk exists in the ROM (by file name)
         struct PatchEntryItem *dialogPatch = std::find_if(dialogPatches.begin(), dialogPatches.end(),
-            [existingPatch](struct PatchEntryItem e){ return e.FileName == existingPatch.FileName; });
+            [existingPatch](struct PatchEntryItem e){ return e.HookAddress == existingPatch.HookAddress; });
         bool mustRemoveChunk, saveChunkInDialog = dialogPatch != dialogPatches.end();
 
         // If the save chunk is not in the dialog, we must remove it
@@ -447,57 +458,9 @@ static QVector<struct PatchEntryItem> DetermineRemainingPatches(QVector<struct P
     QVector<struct PatchEntryItem> remainingPatches(existingPatches);
     QVector<struct PatchEntryItem>::iterator removeItr = std::remove_if(remainingPatches.begin(), remainingPatches.end(),
         [removalPatches](struct PatchEntryItem p1){return std::find_if(removalPatches.begin(), removalPatches.end(),
-            [p1](struct PatchEntryItem p2){return p1.FileName == p2.FileName;}) != removalPatches.end();});
+            [p1](struct PatchEntryItem p2){return p1.HookAddress == p2.HookAddress;}) != removalPatches.end();});
     remainingPatches.erase(removeItr, remainingPatches.end());
     return remainingPatches;
-}
-
-/// <summary>
-/// Convert a region of binary into a hex string.
-/// </summary>
-/// <param name="data">
-/// The data to convert into a hex string.
-/// </param>
-/// <param name="len">
-/// The length of the data to convert into a hex string.
-/// </param>
-/// <returns>
-/// The hex string formatted as uppercase hex digits.
-/// </returns>
-static QString BinaryToHexString(unsigned char *data, int len)
-{
-    QString ret;
-    while(len--)
-    {
-        ret += QString("%1").arg(*(data++), 2, 16, QChar('0')).toUpper();
-    }
-    return ret;
-}
-
-/// <summary>
-/// Convert a hex string into binary data.
-/// </summary>
-/// <remarks>
-/// The binary data is dynamically allocated. Make sure to delete it after use.
-/// </remarks>
-/// <param name="buf">
-/// The buffer that the binary will be written to.
-/// It is assumed that the buffer is allocated to the proper length (half the length of the string)
-/// </param>
-/// <param name="str">
-/// The string to convert into binary.
-/// </param>
-/// <returns>
-/// The binary created from the hex string.
-/// </returns>
-static unsigned char *HexStringToBinary(QString str)
-{
-    unsigned char *buf = new unsigned char[str.length() / 2];
-    for(int i = 0; i < str.length(); i += 2)
-    {
-        buf[i / 2] = str.mid(i, 2).toUInt(Q_NULLPTR, 16);
-    }
-    return buf;
 }
 
 namespace PatchUtils
@@ -545,7 +508,7 @@ namespace PatchUtils
             }
             for(int i = 0; i < patchTuples.count(); i += PATCH_FIELD_COUNT)
             {
-                struct PatchEntryItem entry = DeserializePatchMetadata(patchTuples.mid(i, 7));
+                struct PatchEntryItem entry = DeserializePatchMetadata(patchTuples.mid(i, PATCH_FIELD_COUNT));
                 if(!std::find_if(patchChunks.begin(), patchChunks.end(), [entry](unsigned int addr){return addr == entry.PatchAddress;}))
                 {
                     singleton->GetOutputWidgetPtr()->PrintString("Corruption error: Patch chunk list entry refers to an invalid patch address: 0x" + QString::number(entry.PatchAddress, 16).toUpper());
@@ -574,15 +537,16 @@ namespace PatchUtils
         ROMUtils::SaveDataIndex = 1;
         QVector<struct ROMUtils::SaveData> chunks;
         QVector<struct PatchEntryItem> existingPatches = GetPatchesFromROM();
-        QVector<struct PatchEntryItem> addPatches = DetermineNewPatches(entries, existingPatches);
         QVector<struct PatchEntryItem> removePatches = DetermineRemovalPatches(entries, existingPatches);
         QVector<struct PatchEntryItem> remainingPatches = DetermineRemainingPatches(existingPatches, removePatches);
-        bool noPatches = !remainingPatches.size() && !addPatches.size();
+        bool noPatches = !remainingPatches.size() && !entries.size();
         std::map<int, struct PatchEntryItem*> saveChunkIndexToMetadata, saveChunkIndexToRemoval;
 
         // Populate the chunk list with patches to add to the ROM
-        for(struct PatchEntryItem patch : addPatches)
+        for(struct PatchEntryItem patch : entries)
         {
+            if(!patch.FileName.length()) continue; // no save chunk to create for hook-only patches
+
             QString binName(patch.FileName);
             binName.chop(1);
             binName += "bin";
@@ -597,7 +561,7 @@ namespace PatchUtils
 
             // Save the mapping for the save chunk onto the added patch
             saveChunkIndexToMetadata[ROMUtils::SaveDataIndex] = std::find_if(entries.begin(), entries.end(),
-                [patch](struct PatchEntryItem origPatch){return patch.FileName == origPatch.FileName;});
+                [patch](struct PatchEntryItem origPatch){return patch.HookAddress == origPatch.HookAddress;});
 
             // Create the save chunk
             struct ROMUtils::SaveData patchChunk =
@@ -618,8 +582,10 @@ namespace PatchUtils
         // Populate the chunk list with invalidation chunks for patches to be removed from the ROM
         for(struct PatchEntryItem patch : removePatches)
         {
+            if(!patch.FileName.length()) continue; // no save chunks to invalidate for hook-only patches
+
             saveChunkIndexToRemoval[ROMUtils::SaveDataIndex] = std::find_if(removePatches.begin(), removePatches.end(),
-                [patch](struct PatchEntryItem removePatch){return patch.FileName == removePatch.FileName;});
+                [patch](struct PatchEntryItem removePatch){return patch.HookAddress == removePatch.HookAddress;});
             struct ROMUtils::SaveData invalidationChunk =
             {
                 0,
@@ -663,8 +629,8 @@ namespace PatchUtils
 
             // ChunkAllocationCallback
 
-            [firstCallback, entries, &saveChunkIndexToMetadata, removePatches, noPatches]
-            (unsigned char *TempFile, QVector<struct ROMUtils::SaveData>& addedChunks, std::map<int, int> indexToChunkPtr) mutable
+            [firstCallback, &entries, &saveChunkIndexToMetadata, removePatches, noPatches]
+            (unsigned char *TempFile, QVector<struct ROMUtils::SaveData>& addedSaveChunks, std::map<int, int> indexToChunkPtr) mutable
             {
                 // Create and add PatchListChunk after patch chunk locations have been allocated by SaveFile()
                 if(firstCallback)
@@ -681,35 +647,30 @@ namespace PatchUtils
                     // Update entry structs with information from the added chunks
                     if(!noPatches)
                     {
-                        for(struct ROMUtils::SaveData chunk : addedChunks)
+                        for(struct PatchEntryItem &patch : entries)
                         {
-                            if(chunk.ChunkType == ROMUtils::SaveDataChunkType::PatchChunk)
-                            {
-                                // Set the patch address that was calculated by the save chunk allocator
-                                struct PatchEntryItem *patchPtr = saveChunkIndexToMetadata[chunk.index];
-                                patchPtr->PatchAddress = indexToChunkPtr[chunk.index];
-
-                                // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
-                                if(patchPtr->HookAddress)
+                            // Set the patch address that was calculated by the save chunk allocator
+                            int chunkPtr;
+                            struct ROMUtils::SaveData *saveChunk = std::find_if(addedSaveChunks.begin(), addedSaveChunks.end(),
+                                [patch, &chunkPtr, &indexToChunkPtr, &saveChunkIndexToMetadata](struct ROMUtils::SaveData sd)
                                 {
-                                    int hookLength = patchPtr->HookString.length() / 2; // hook string is hex string, 2 digits per byte
-                                    if(patchPtr->PatchOffsetInHookString != static_cast<unsigned int>(-1))
-                                    {
-                                        hookLength += 4;
-                                    }
-                                    patchPtr->SubstitutedBytes = BinaryToHexString(TempFile + patchPtr->HookAddress, hookLength);
-                                }
+                                    chunkPtr = indexToChunkPtr[sd.index];
+                                    struct PatchEntryItem *mdPtr = saveChunkIndexToMetadata[sd.index];
+                                    return mdPtr ? mdPtr->HookAddress == patch.HookAddress : false;
+                                });
+                            patch.PatchAddress = saveChunk != addedSaveChunks.end() ? chunkPtr : 0;
+
+                            // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
+                            int hookLength = patch.HookString.length() / 2; // hook string is hex string, 2 digits per byte
+                            if(patch.PatchOffsetInHookString != static_cast<unsigned int>(-1))
+                            {
+                                hookLength += 4;
                             }
+                            patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
                         }
-                        addedChunks.clear();
+                        addedSaveChunks.clear();
 
                         // Create the save chunk for the PatchListChunk
-                        unsigned int patchListAddr = ROMUtils::FindChunkInROM(
-                            ROMUtils::CurrentFile,
-                            ROMUtils::CurrentFileSize,
-                            WL4Constants::AvailableSpaceBeginningInROM,
-                            ROMUtils::SaveDataChunkType::PatchListChunk
-                        );
                         QString patchListChunkContents = CreatePatchListChunkData(entries);
                         unsigned char *data = new unsigned char[patchListChunkContents.length() + 1];
                         memcpy(data + 1, patchListChunkContents.toLocal8Bit().constData(), patchListChunkContents.length());
@@ -725,44 +686,41 @@ namespace PatchUtils
                             0,
                             ROMUtils::SaveDataChunkType::PatchListChunk
                         };
-                        addedChunks.append(patchListChunk);
+                        addedSaveChunks.append(patchListChunk);
                     }
-                    else addedChunks.clear();
+                    else addedSaveChunks.clear();
 
                     firstCallback = false;
                 }
-                else addedChunks.clear();
+                else addedSaveChunks.clear();
             },
 
             // PostProcessingCallback
 
-            [chunks, &saveChunkIndexToMetadata]
+            [chunks, &entries]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
                 (void)indexToChunkPtr;
 
                 // Write hooks to ROM
-                for(struct ROMUtils::SaveData chunk : chunks)
+                for(struct PatchEntryItem patch : entries)
                 {
-                    if(chunk.ChunkType == ROMUtils::SaveDataChunkType::PatchChunk) // hooks only written for PatchChunk save chunk type
-                    {
-                        // Get patch metadata associated with this save chunk
-                        struct PatchEntryItem *patchPtr = saveChunkIndexToMetadata[chunk.index];
+                    QString hookString = patch.HookString;
 
-                        // Write hook to ROM
-                        QString hookString = patchPtr->HookString;
-                        if(patchPtr->PatchOffsetInHookString != static_cast<unsigned int>(-1))
-                        {
-                            uint32_t patchAddress = 0x8000000 | (patchPtr->PatchAddress + 13); // STAR header + 1 so that BLX goes into thumb mode
-                            patchAddress = ROMUtils::EndianReverse(patchAddress);
-                            QString patchAddressString = QString("%1").arg(patchAddress, 8, 16, QChar('0')).toUpper();
-                            hookString = hookString.mid(0, patchPtr->PatchOffsetInHookString * 2) +
-                                patchAddressString + hookString.mid(patchPtr->PatchOffsetInHookString * 2);
-                        }
-                        unsigned char *hookData = HexStringToBinary(hookString);
-                        memcpy(TempFile + patchPtr->HookAddress, hookData, hookString.length() / 2);
-                        delete[] hookData;
+                    // Splice patch address into hook string
+                    if(patch.PatchOffsetInHookString != static_cast<unsigned int>(-1))
+                    {
+                        uint32_t patchAddress = 0x8000000 | (patch.PatchAddress + 13); // STAR header + 1 so that BLX goes into thumb mode
+                        patchAddress = ROMUtils::EndianReverse(patchAddress);
+                        QString patchAddressString = QString("%1").arg(patchAddress, 8, 16, QChar('0')).toUpper();
+                        hookString = hookString.mid(0, patch.PatchOffsetInHookString * 2) +
+                            patchAddressString + hookString.mid(patch.PatchOffsetInHookString * 2);
                     }
+
+                    // Convert hook string to binary and save to ROM
+                    unsigned char *hookData = HexStringToBinary(hookString);
+                    memcpy(TempFile + patch.HookAddress, hookData, hookString.length() / 2);
+                    delete[] hookData;
                 }
             }
         );

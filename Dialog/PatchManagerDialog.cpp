@@ -24,6 +24,8 @@ PatchManagerDialog::PatchManagerDialog(QWidget *parent) :
 
     setWindowTitle("Patch Manager");
     PatchTable = ui->patchManagerTableView;
+    initialEntries = PatchTable->GetAllEntries().size();
+    ui->savePatchButton->setEnabled(initialEntries);
 }
 
 /// <summary>
@@ -68,6 +70,96 @@ static QString GetPathRelativeToROM(const QString &filePath)
 }
 
 /// <summary>
+/// Validate that some new patch entry can be added to the current set of patches in the dialog.
+/// </summary>
+/// <param name="currentEntries">
+/// The current patch entries in the list.
+/// </param>
+/// <param name="newEntry">
+/// The new patch entry to add to the list.
+/// </param>
+/// <returns>
+/// If the entry is valid, an empty QString. Otherwise, the error message.
+/// </returns>
+static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, struct PatchEntryItem &newEntry)
+{
+    // The hook may not fall outside the area of the vanilla rom
+    if(newEntry.HookAddress + newEntry.GetHookLength() > WL4Constants::AvailableSpaceBeginningInROM)
+    {
+        return QString("Hook overlaps with save chunk area in ROM: 0x%1 - 0x%2").arg(
+            QString::number(newEntry.HookAddress, 16).toUpper(), QString::number(newEntry.HookAddress + newEntry.GetHookLength() - 1, 16).toUpper());
+    }
+
+    // File name may not contain a semicolon
+    if(newEntry.FileName.contains(";"))
+    {
+        return QString("File path contains a semicolon, which is not allowed: ") + newEntry.FileName;
+    }
+
+    // Description may not contain a semicolon
+    if(newEntry.Description.contains(";"))
+    {
+        return QString("Description contains a semicolon, which is not allowed: ") + newEntry.Description;
+    }
+
+
+    if(newEntry.FileName.length())
+    {
+        // If a file name is specified, the file must exist.
+        QFile file(newEntry.FileName);
+        if(!file.exists())
+        {
+            return QString("File does not exist: ") + newEntry.FileName;
+        }
+
+        // The file must be in a subdirectory relative to the ROM file.
+        QString relativeFN = GetPathRelativeToROM(newEntry.FileName);
+        if(relativeFN.isEmpty())
+        {
+            return QString("File must be within directory subtree of ROM file: ") + QFileInfo(ROMUtils::ROMFilePath).dir().path();
+        }
+
+        // Two entries may not use the same file name. Two entries with blank file names are allowed.
+        newEntry.FileName = relativeFN;
+        bool fileNameIsValid = !std::any_of(currentEntries.begin(), currentEntries.end(),
+            [newEntry](struct PatchEntryItem e){ return e.FileName == newEntry.FileName; });
+        if(!fileNameIsValid)
+        {
+            return QString("Another entry already exists with the filename: ") + newEntry.FileName;
+        }
+
+        // It does not make sense to add a save chunk with no link to it in the hook
+        if(newEntry.PatchOffsetInHookString == (unsigned int) -1)
+        {
+            return "A file is sepcified, so a save chunk will be created. But, the hook does not specify the P identifier for the patch code address. The save chunk would be useless, so this is not allowed (please use P in the hook).";
+        }
+    }
+
+    // If a file is not specified, then it will not create a save chunk. Therefore, the hook may not contain a save chunk address.
+    else if(newEntry.PatchOffsetInHookString != (unsigned int) -1)
+    {
+        return "Patch does not specify a file so no save chunk will be created. But, the hook text specifies that there should be a pointer to a save chunk. This contradiction is not allowed";
+    }
+
+    // Patch's hook may not overlap with another patch's hook
+    struct PatchEntryItem curr;
+    bool hookIsValid = !newEntry.HookAddress || !std::any_of(currentEntries.begin(), currentEntries.end(), [newEntry, &curr](struct PatchEntryItem e)
+    {
+        curr = e;
+        int s1 = newEntry.HookAddress, s2 = e.HookAddress, e1 = newEntry.GetHookLength() + s1 - 1, e2 = e.GetHookLength() + s2 - 1;
+        return (e1 >= s2 && e1 <= e2) || (e2 >= s1 && e2 <= e1);
+    });
+    if(!hookIsValid)
+    {
+        return QString("This patch's hook (0x%1 - 0x%2) overlaps with the hook of another patch (0x%3 - 0x%4)").arg(
+            QString::number(newEntry.HookAddress, 16).toUpper(), QString::number(newEntry.HookAddress + newEntry.GetHookLength() - 1, 16).toUpper(),
+            QString::number(curr.HookAddress, 16).toUpper(), QString::number(curr.HookAddress + curr.GetHookLength() - 1, 16).toUpper());
+    }
+
+    return "";
+}
+
+/// <summary>
 /// This slot function will be triggered when clicking the "Add" button.
 /// </summary>
 void PatchManagerDialog::on_addPatchButton_clicked()
@@ -77,51 +169,20 @@ void PatchManagerDialog::on_addPatchButton_clicked()
     struct PatchEntryItem entry;
 
     // Execute the edit dialog
-    PatchEditDialog *editDialog = new PatchEditDialog(this);
+    PatchEditDialog editDialog(this);
 retry:
-    if(editDialog->exec() == QDialog::Accepted)
+    if(editDialog.exec() == QDialog::Accepted)
     {
-        entry = editDialog->CreatePatchEntry();
-
-        // Validate that the entry can be added
-        QFile file(entry.FileName);
-        if(!file.exists()) // Patch file must exist
+        entry = editDialog.CreatePatchEntry();
+        QString result = ValidateNewEntry(currentEntries, entry);
+        if(result != "")
         {
-            QMessageBox::information(this, "About", QString("File does not exist: ") + entry.FileName);
-            goto error;
+            QMessageBox::information(this, "About", result);
+            goto retry;
         }
-        QString relativeFN = GetPathRelativeToROM(entry.FileName);
-        if(relativeFN.isEmpty()) // Patch file must be within the directory tree of the ROM file
-        {
-            QMessageBox::information(this, "About", QString("File must be within directory subtree of ROM file: ") + ROMUtils::ROMFilePath);
-            goto error;
-        }
-        entry.FileName = relativeFN;
-        bool fileNameIsValid = !std::any_of(currentEntries.begin(), currentEntries.end(),
-            [entry](struct PatchEntryItem e){ return e.FileName == entry.FileName; });
-        if(!fileNameIsValid) // Cannot add two patch entries using the same file
-        {
-            QMessageBox::information(this, "About", QString("Another entry already exists with the filename: ") + entry.FileName);
-            goto error;
-        }
-        bool hookIsValid = !entry.HookAddress || !std::any_of(currentEntries.begin(), currentEntries.end(),
-            [entry](struct PatchEntryItem e){ return e.HookAddress == entry.HookAddress; });
-        if(!hookIsValid) // Cannot use two patches on same hook address
-        {
-            QMessageBox::information(this, "About", QString("Another entry already exists with the hook address: ") + QString::number(entry.HookAddress));
-            goto error;
-        }
-
         PatchTable->AddEntry(entry);
+        ui->savePatchButton->setEnabled(true);
     }
-    delete editDialog;
-    return;
-
-error:
-    // Re-run the edit dialog
-    delete editDialog;
-    editDialog = new PatchEditDialog(this, entry);
-    goto retry;
 }
 
 /// <summary>
@@ -140,55 +201,24 @@ void PatchManagerDialog::on_editPatchButton_clicked()
         struct PatchEntryItem entry;
         int selectedIndex = -1;
         std::find_if(currentEntries.begin(), currentEntries.end(),
-            [selectedEntry, &selectedIndex](struct PatchEntryItem e){ ++selectedIndex; return selectedEntry.FileName == e.FileName; });
+            [selectedEntry, &selectedIndex](struct PatchEntryItem e){ ++selectedIndex; return selectedEntry.HookAddress == e.HookAddress; });
         currentEntries.remove(selectedIndex);
 
         // Execute the edit dialog
-        PatchEditDialog *editDialog = new PatchEditDialog(this, selectedEntry);
+        PatchEditDialog editDialog(this, selectedEntry);
 retry:
-        if(editDialog->exec() == QDialog::Accepted)
+        if(editDialog.exec() == QDialog::Accepted)
         {
-            entry = editDialog->CreatePatchEntry();
-
-            // Validate that the entry can be added
-            QFile file(entry.FileName);
-            if(!file.exists())
+            entry = editDialog.CreatePatchEntry();
+            QString result = ValidateNewEntry(currentEntries, entry);
+            if(result != "")
             {
-                QMessageBox::information(this, "About", QString("File does not exist: ") + entry.FileName);
-                goto error;
+                QMessageBox::information(this, "About", result);
+                goto retry;
             }
-            QString relativeFN = GetPathRelativeToROM(entry.FileName);
-            if(relativeFN == "")
-            {
-                QMessageBox::information(this, "About", QString("File must be within directory subtree of ROM file: ") + ROMUtils::ROMFilePath);
-                goto error;
-            }
-            entry.FileName = relativeFN;
-            bool fileNameIsValid = !std::any_of(currentEntries.begin(), currentEntries.end(),
-                [entry](struct PatchEntryItem e){ return e.FileName == entry.FileName; });
-            if(!fileNameIsValid)
-            {
-                QMessageBox::information(this, "About", QString("Another entry already exists with the filename: ") + entry.FileName);
-                goto error;
-            }
-            bool hookIsValid = !entry.HookAddress || !std::any_of(currentEntries.begin(), currentEntries.end(),
-                [entry](struct PatchEntryItem e){ return e.HookAddress == entry.HookAddress; });
-            if(!hookIsValid)
-            {
-                QMessageBox::information(this, "About", QString("Another entry already exists with the hook address: ") + QString::number(entry.HookAddress));
-                goto error;
-            }
-
             PatchTable->UpdateEntry(selectedIndex, entry);
+            ui->savePatchButton->setEnabled(true);
         }
-        delete editDialog;
-        return;
-
-error:
-        // Re-run the edit dialog
-        delete editDialog;
-        editDialog = new PatchEditDialog(this, entry);
-        goto retry;
     }
     else if(!selectedRows.size())
     {
@@ -208,6 +238,14 @@ void PatchManagerDialog::on_removePatchButton_clicked()
     PatchTable->RemoveSelected();
     ui->removePatchButton->setEnabled(false);
     ui->editPatchButton->setEnabled(false);
+    if(PatchTable->GetAllEntries().size())
+    {
+        ui->savePatchButton->setEnabled(true);
+    }
+    else
+    {
+        ui->savePatchButton->setEnabled(initialEntries);
+    }
 }
 
 /// <summary>

@@ -39,13 +39,13 @@ void PatchManagerTableView::UpdateTableView()
     // Populate the table header
     EntryTableModel.clear();
     EntryTableModel.setHorizontalHeaderLabels(QStringList() <<
-        "File" << "Type" << "Hook Address" << "Patch Address" << "Hook string" << "Patch addr offset");
+        "File" << "Type" << "Hook address" << "Patch address" << "Hook string" << "Hook length" << "Address offset");
     int row = 0;
 
     // Populate the table items
     for(const struct PatchEntryItem patchEntry : EntryTableModel.entries)
     {
-        EntryTableModel.setItem(row, 0, new QStandardItem(patchEntry.FileName));
+        EntryTableModel.setItem(row, 0, new QStandardItem(patchEntry.FileName.length() ? patchEntry.FileName : "(no file)"));
         const char *typeStrings[3] =
         {
             "Binary",
@@ -58,12 +58,12 @@ void PatchManagerTableView::UpdateTableView()
             continue;
         }
         EntryTableModel.setItem(row, 1, new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
-        EntryTableModel.setItem(row, 2, new QStandardItem(!patchEntry.HookAddress ?
-            "none" : "0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
+        EntryTableModel.setItem(row, 2, new QStandardItem("0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
         EntryTableModel.setItem(row, 3, new QStandardItem(!patchEntry.PatchAddress ?
-            "pending" : "0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
+            "N/A" : "0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
         EntryTableModel.setItem(row, 4, new QStandardItem(patchEntry.HookString));
-        EntryTableModel.setItem(row, 5, new QStandardItem(patchEntry.PatchOffsetInHookString == (unsigned int) -1 ?
+        EntryTableModel.setItem(row, 5, new QStandardItem(QString::number(patchEntry.GetHookLength(), 10).toUpper()));
+        EntryTableModel.setItem(row, 6, new QStandardItem(patchEntry.PatchOffsetInHookString == (unsigned int) -1 ?
             "no patch addr" : QString::number(patchEntry.PatchOffsetInHookString, 10).toUpper()));
         ++row;
     }
