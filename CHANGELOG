@@ -1,38 +1,40 @@
 beta-10:
+(major changes)
+- Add patch manager feature which allows you to add or remove patches, ranging from simple hex edits to custom C code called from an asm hook.
+- Added INI program settings and support Opening Recent ROM in File menu.
+- Add Tileset editor feature.
+- Add menu item "Export" which renders visible layers as a PNG file.
+- Support running JavaScript in the editor, which can be used to programmatically modify layers.
+- Added output widget which shows debug info and warnings.
+(minor changes)
+- Support drag & drop for door and entity; double-click to open the door dialog instead of left-click.
 - Fix a bug for the EditMode DockWidget, now switching to different Rooms won't change the visibility settings
 - Fix edge cases of drawing Tile on Layer 0 when the size of Layer 0 is different from the Room's size
 - Fix Layer alpha setting problem in RoomConfigDialog.
-- Add ROM Patch functionalities.
 - Stability after saving has improved.
-- Added INI program settings, Support Opening Recent ROM in File menu.
-- Support drag & drop for door and entity, now double-click open the door dialog instead of left-click.
-- Add Tileset editor dialog.
 - Adjust the EditMode dock widget, Support showing hidden coins in breakable blocks.
 - Fix some entities rendering glitches caused by wrong tile loading.
 - Add another available Camera control type, Vertical Seperate.
 - Support tristate for Entities Layers visibility checkbox to support not rendering position boxes for entities.
-- Add menu item "Export" and support saving current Room rendered in the graphicview in the mainwindow into PNG file, flexible in disabling layers.
 - Add Room size limitation.
 - Use the Phantomstyle UI theme.
-- Add Icon.
-- Support running js script in the editor.
+- Add program Icon.
 - Support showing mouse position in status bar.
 - Update the UI of Door Config Dialog.
 - Fix an edge case bug in Door Config Dialog, when the destination door and the current door are in the same room, the destination door previewer cannot update the changes of the current door.
 - In the Door Config Dialog, both graphicviews of the door preview and the destination door preview will auto-reset scrollbars when you reset them.
 - Fix an edge case bug in Layer data compression procedure.
-- contributors in about dialog are listed in alphabetical order now.
-- shortcuts bugfixes and menu tweaks for clearing everything in current room(ctrl + delete) and switching to different room in current level(pageup & pagedown).
+- Contributors in about dialog are listed in alphabetical order now.
+- Shortcuts bugfixes and menu tweaks for clearing everything in current room (ctrl + delete) and switching to different room in current level (pageup & pagedown).
 - Fix color blending problems when editing layers.
-- All the output information will be shown in the output window now.
 - Support setting layer 0 size different from room size.
 - Support using direction keys to set selected tile16 when editing layers.
-- Support scaling the main graphicview, by both menu and shortcuts.
+- Support zooming for the main graphicview scale, via menu and shortcuts.
 - Support Rect-select in Tile16 selector dock widget.
 - Support loading debug level.
 - Support Rect-select and moving around tile16s in main editor window.
 - Fix cannot de-select Door or Entity when switching between editing modes.
-- Seperate operation lists into global list and room lists.
+- Separate operation lists into global list and room lists in the backend ("global" undo/redo not implemented yet).
 
 beta-9:
 - Fix clear-all only clears hardmode entities
