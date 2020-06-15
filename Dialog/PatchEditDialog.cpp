@@ -46,53 +46,6 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     // Set Validator for lineEdit_HookText
     ui->lineEdit_HookText->setValidator(addressvalidator = new QRegExpValidator(hookStringRegex, this));
 
-#ifdef _WIN32
-    QString file1 = "C:/Users/Andrew/Desktop/PatchCode/UnlimitedRockBouncing.c";
-    QString file2 = "C:/Users/Andrew/Desktop/PatchCode/WarioSpeedResetWithCondCheck.c";
-#else // linux
-    QString file1 = "/home/andrew/Desktop/PatchCode/UnlimitedRockBouncing.c";
-    QString file2 = "/home/andrew/Desktop/PatchCode/WarioSpeedResetWithCondCheck.c";
-#endif
-    static int initializations = 0;
-    if(initializations == 0)
-    {
-        patchEntry = {
-            file1,
-            PatchType::C,
-            0x6C75E,
-            QString("034886460148004702E067C70608C046C046C046C046C046C046C046C046C046C046"),
-            (unsigned int) 10,
-            0,
-            "",
-            "Allows rocks to bounce against each other infinitely"
-        };
-    } else if(initializations == 1)
-    {
-        patchEntry = {
-            file2,
-            PatchType::C,
-            0x12BB2,
-            QString("034886460148004702E0BB2B0108C046C046C046C046C046C046C046C046"),
-            (unsigned int) 10,
-            0,
-            "",
-            "Do not reset Wario's speed in midair when he throws an object"
-        };
-    } else if(initializations == 2)
-    {
-        patchEntry = {
-            "",
-            PatchType::C,
-            0x12E28,
-            QString("FF"),
-            (unsigned int) -1,
-            0,
-            "",
-            "Moon jump"
-        };
-    }
-    initializations++;
-
     // Initialize the components with the patch entry item
     InitializeComponents(patchEntry);
 }

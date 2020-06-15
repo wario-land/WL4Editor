@@ -102,7 +102,6 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
         return QString("Description contains a semicolon, which is not allowed: ") + newEntry.Description;
     }
 
-
     if(newEntry.FileName.length())
     {
         // If a file name is specified, the file must exist.
@@ -170,6 +169,7 @@ void PatchManagerDialog::on_addPatchButton_clicked()
 
     // Execute the edit dialog
     PatchEditDialog editDialog(this);
+
 retry:
     if(editDialog.exec() == QDialog::Accepted)
     {
@@ -206,6 +206,7 @@ void PatchManagerDialog::on_editPatchButton_clicked()
 
         // Execute the edit dialog
         PatchEditDialog editDialog(this, selectedEntry);
+
 retry:
         if(editDialog.exec() == QDialog::Accepted)
         {

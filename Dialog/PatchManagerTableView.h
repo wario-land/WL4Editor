@@ -27,6 +27,7 @@ class PatchManagerTableView : public QTableView
 
 private:
     PatchEntryTableModel EntryTableModel;
+    ~PatchManagerTableView();
 
 public:
     PatchManagerTableView(QWidget *param);

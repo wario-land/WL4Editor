@@ -26,9 +26,27 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
         EntryTableModel.AddEntry(patch);
     }
 
-    horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     setVerticalHeader(new PersistentHeader(Qt::Vertical, this));
     UpdateTableView();
+}
+
+/// <summary>
+/// Construct an instance of the PatchManagerTableView.
+/// </summary>
+/// <param name="parent">
+/// The parent QWidget.
+/// </param>
+PatchManagerTableView::~PatchManagerTableView()
+{
+    while(EntryTableModel.rowCount())
+    {
+        QList<QStandardItem*> row = EntryTableModel.takeRow(0);
+        for(QStandardItem *item : row)
+        {
+            delete item;
+        }
+    }
 }
 
 /// <summary>
@@ -38,14 +56,15 @@ void PatchManagerTableView::UpdateTableView()
 {
     // Populate the table header
     EntryTableModel.clear();
-    EntryTableModel.setHorizontalHeaderLabels(QStringList() <<
-        "File" << "Type" << "Hook address" << "Patch address" << "Hook string" << "Hook length" << "Address offset");
+    QStringList headerLabels;
+    headerLabels << "File" << "Type" << "Hook address" << "Patch address" <<
+        "Hook string" << "Hook length" << "Address offset";
+    EntryTableModel.setHorizontalHeaderLabels(headerLabels);
     int row = 0;
 
     // Populate the table items
     for(const struct PatchEntryItem patchEntry : EntryTableModel.entries)
     {
-        EntryTableModel.setItem(row, 0, new QStandardItem(patchEntry.FileName.length() ? patchEntry.FileName : "(no file)"));
         const char *typeStrings[3] =
         {
             "Binary",
@@ -57,31 +76,32 @@ void PatchManagerTableView::UpdateTableView()
             singleton->GetOutputWidgetPtr()->PrintString("Internal error: Patch entry type out of range: " + QString::number(patchEntry.PatchType));
             continue;
         }
-        EntryTableModel.setItem(row, 1, new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
-        EntryTableModel.setItem(row, 2, new QStandardItem("0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
-        EntryTableModel.setItem(row, 3, new QStandardItem(!patchEntry.PatchAddress ?
-            "N/A" : "0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
-        EntryTableModel.setItem(row, 4, new QStandardItem(patchEntry.HookString));
-        EntryTableModel.setItem(row, 5, new QStandardItem(QString::number(patchEntry.GetHookLength(), 10).toUpper()));
-        EntryTableModel.setItem(row, 6, new QStandardItem(patchEntry.PatchOffsetInHookString == (unsigned int) -1 ?
-            "no patch addr" : QString::number(patchEntry.PatchOffsetInHookString, 10).toUpper()));
-        ++row;
-    }
 
-    // Resize the table columns
-    int remain = width(), colCount = EntryTableModel.columnCount();
-    for(int i = 0; i < colCount; ++i)
-    {
-        if(i == colCount - 1)
+        // Create the cells for the table row
+        QVector<QStandardItem*> items;
+        items.append(new QStandardItem(patchEntry.FileName.length() ? patchEntry.FileName : "(no file)"));
+        items.append(new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
+        items.append(new QStandardItem("0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
+        items.append(new QStandardItem(!patchEntry.PatchAddress ?
+            "N/A" : "0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
+        items.append(new QStandardItem(patchEntry.HookString));
+        items.append(new QStandardItem(QString::number(patchEntry.GetHookLength(), 10).toUpper()));
+        items.append(new QStandardItem(patchEntry.PatchOffsetInHookString == (unsigned int) -1 ?
+            "no patch addr" : QString::number(patchEntry.PatchOffsetInHookString, 10).toUpper()));
+
+        if(headerLabels.size() != items.size())
         {
-            setColumnWidth(i, remain);
+            singleton->GetOutputWidgetPtr()->PrintString("(Warning) Internal error: Column count mismatch while constructing PatchManagerTableView");
         }
-        else
+
+        // Add tooltips to them and add the cells to the table
+        for(int i = 0; i < qMin(headerLabels.size(), items.size()); ++i)
         {
-            int w = width() / colCount;
-            setColumnWidth(i, w);
-            remain -= w;
+            items[i]->setToolTip(patchEntry.Description);
+            EntryTableModel.setItem(row, i, items[i]);
         }
+
+        ++row;
     }
 }
 
