@@ -604,7 +604,6 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             {
                 chunksToAdd.clear();
             }
-
         } while(!chunksToAdd.empty());
 
         // Apply source pointer modifications to applicable chunk types

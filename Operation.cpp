@@ -33,29 +33,35 @@ void PerformOperation(struct OperationParams *operation)
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
             unsigned int index;
-            if (!tcp->targetLayer) { // i.e. targetLayer is Layer 0
+            if (!tcp->targetLayer) // i.e. targetLayer is Layer 0
+            {
                 index = tcp->tileX + tcp->tileY * room->GetLayer0Width();
-            } else {
+            }
+            else
+            {
                 index = tcp->tileX + tcp->tileY * room->GetWidth();
             }
             layer->GetLayerData()[index] = tcp->newTile;
 
-            if(tl1 == -1) {
+            if(tl1 == -1)
+            {
                 tl1 = tcp->targetLayer;
             }
-            if(tl1 != -1 && tl2 == -1 && tl1 != tcp->targetLayer) {
+            if(tl1 != -1 && tl2 == -1 && tl1 != tcp->targetLayer)
+            {
                 tl2 = tcp->targetLayer;
             }
             struct LevelComponents::Tileinfo tinfo;
             tinfo.tileX = tcp->tileX;
             tinfo.tileY = tcp->tileY;
             tinfo.tileID = tcp->newTile;
-            if(tl1 == tcp->targetLayer) {
-
+            if(tl1 == tcp->targetLayer)
+            {
                 tilechangelist.push_back(tinfo);
                 continue;
             }
-            if(tl2 == tcp->targetLayer) {
+            if(tl2 == tcp->targetLayer)
+            {
                 tilechangelist2.push_back(tinfo);
                 continue;
             }
@@ -80,7 +86,8 @@ void PerformOperation(struct OperationParams *operation)
         struct ObjectMoveParams *om=operation->objectMoveParams;
         /*om->previousPositionX = pX;
         om->previousPositionY = pY;*/
-        if (om->type == ObjectMoveParams::DOOR_TYPE) {
+        if (om->type == ObjectMoveParams::DOOR_TYPE)
+        {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
             LevelComponents::Door *selectedDoor = currentRoom->GetDoor(om->objectID);
 
@@ -91,18 +98,22 @@ void PerformOperation(struct OperationParams *operation)
             int deltaY = selectedDoor->GetY2()-py1;
 
             // If the door exists and if it is still in the room
-            if (om->objectID != -1 && selectedDoor) {
-                if (currentRoom->IsNewDoorPositionInsideRoom(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY+deltaY))
+            if (om->objectID != -1 && selectedDoor)
+            {
+                if (currentRoom->IsNewDoorPositionInsideRoom(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY + deltaY))
                 {
-                    selectedDoor->SetDoorPlace(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY+deltaY);
+                    selectedDoor->SetDoorPlace(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY + deltaY);
                     singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
                 }
             }
-        } else if (om->type == ObjectMoveParams::ENTITY_TYPE) {
+        }
+        else if (om->type == ObjectMoveParams::ENTITY_TYPE)
+        {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
 
             // If the entity exists
-            if (om->objectID != -1) {
+            if (om->objectID != -1)
+            {
                 if (currentRoom->IsNewEntityPositionInsideRoom(om->nextPositionX, om->nextPositionY))
                 {
                     currentRoom->SetEntityPosition(om->nextPositionX, om->nextPositionY, om->objectID);
@@ -156,28 +167,35 @@ void BackTrackOperation(struct OperationParams *operation)
             struct TileChangeParams *tcp = *iter;
             LevelComponents::Layer *layer = room->GetLayer(tcp->targetLayer);
             unsigned int index;
-            if (!tcp->targetLayer) { // i.e. targetLayer is Layer 0
+            if (!tcp->targetLayer) // i.e. targetLayer is Layer 0
+            {
                 index = tcp->tileX + tcp->tileY * room->GetLayer0Width();
-            } else {
+            }
+            else
+            {
                 index = tcp->tileX + tcp->tileY * room->GetWidth();
             }
             layer->GetLayerData()[index] = tcp->oldTile;
 
-            if(tl1 == -1) {
+            if(tl1 == -1)
+            {
                 tl1 = tcp->targetLayer;
             }
-            if(tl1 != -1 && tl2 == -1 && tl1 != tcp->targetLayer) {
+            if(tl1 != -1 && tl2 == -1 && tl1 != tcp->targetLayer)
+            {
                 tl2 = tcp->targetLayer;
             }
             struct LevelComponents::Tileinfo tinfo;
             tinfo.tileX = tcp->tileX;
             tinfo.tileY = tcp->tileY;
             tinfo.tileID = tcp->oldTile;
-            if(tl1 == tcp->targetLayer) {
+            if(tl1 == tcp->targetLayer)
+            {
                 tilechangelist.push_back(tinfo);
                 continue;
             }
-            if(tl2 == tcp->targetLayer) {
+            if(tl2 == tcp->targetLayer)
+            {
                 tilechangelist2.push_back(tinfo);
                 continue;
             }
@@ -201,7 +219,8 @@ void BackTrackOperation(struct OperationParams *operation)
         struct ObjectMoveParams *om=operation->objectMoveParams;
         /*om->previousPositionX = pX;
         om->previousPositionY = pY;*/
-        if (om->type == ObjectMoveParams::DOOR_TYPE) {
+        if (om->type == ObjectMoveParams::DOOR_TYPE)
+        {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
             LevelComponents::Door *selectedDoor = currentRoom->GetDoor(om->objectID);
 
@@ -214,13 +233,14 @@ void BackTrackOperation(struct OperationParams *operation)
             // If the door exists and if it is still in the room
             if (om->objectID != -1)
             {
-                if (currentRoom->IsNewDoorPositionInsideRoom(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY+deltaY))
+                if (currentRoom->IsNewDoorPositionInsideRoom(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY + deltaY))
                 {
-                    selectedDoor->SetDoorPlace(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY+deltaY);
+                    selectedDoor->SetDoorPlace(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY + deltaY);
                     singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
                 }
             }
-        } else if (om->type == ObjectMoveParams::ENTITY_TYPE) {
+        } else if (om->type == ObjectMoveParams::ENTITY_TYPE)
+        {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
 
             // If the entity exists and if it is still in the room

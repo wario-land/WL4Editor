@@ -307,7 +307,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
-        if ((editMode == Ui::LayerEditMode))
+        if (editMode == Ui::LayerEditMode)
         {
             if(!rectSelectMode)
             {
@@ -322,7 +322,9 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                     // Change textmaps and layer graphics
                     SetTiles(tileX, tileY);
                 }
-            } else {
+            }
+            else
+            {
                 if(!has_a_rect) return;
 
                 if(!Isdraggingrect)
@@ -339,23 +341,28 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                     rect->setPos(rectx * 16, recty * 16);
                     rect->setZValue(14); // assume every layer in room is enabled, and rect should be above selectedrectgraphic
                     rect->setVisible(true);
-                } else {
+                }
+                else
+                {
                     rectx = tmpLTcornerTileX - dragInitmouseX + tileX;
                     recty = tmpLTcornerTileY - dragInitmouseY + tileY;
                     rect->setPos(rectx * 16, recty * 16);
                     selectedrectgraphic->setPos(rectx * 16, recty * 16);
                 }
             }
-        } else if(editMode == Ui::EntityEditMode) {
-            if (holdingEntityOrDoor && SelectedEntityID != -1) {
-
+        }
+        else if(editMode == Ui::EntityEditMode)
+        {
+            if (holdingEntityOrDoor && SelectedEntityID != -1)
+            {
                 LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
                 // If the entity position has changed
                 int px = currentRoom->GetEntityX(SelectedEntityID);
                 int py = currentRoom->GetEntityY(SelectedEntityID);
 
                 // If the entity position has changed
-                if (px != tileX || py != tileY) {
+                if (px != tileX || py != tileY)
+                {
                     if (currentRoom->IsNewEntityPositionInsideRoom(tileX, tileY))
                     {
                         currentRoom->SetEntityPosition(tileX, tileY, SelectedEntityID);
@@ -366,8 +373,11 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                     }
                 }
             }
-        } else if((editMode == Ui::DoorEditMode)) {
-            if (holdingEntityOrDoor && SelectedDoorID != -1) {
+        }
+        else if(editMode == Ui::DoorEditMode)
+        {
+            if (holdingEntityOrDoor && SelectedDoorID != -1)
+            {
                 LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
                 LevelComponents::Door *selectedDoor = currentRoom->GetDoor(SelectedDoorID);
 
@@ -378,7 +388,8 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                 int deltaY = selectedDoor->GetY2()-py1;
 
                 // If the door position has changed
-                if (px1 != tileX || py1 != tileY) {
+                if (px1 != tileX || py1 != tileY)
+                {
                     if (currentRoom->IsNewDoorPositionInsideRoom(tileX, tileX+deltaX, tileY, tileY+deltaY))
                     {
                         selectedDoor->SetDoorPlace(tileX, tileX+deltaX, tileY, tileY+deltaY);
