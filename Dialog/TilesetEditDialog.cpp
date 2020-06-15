@@ -352,7 +352,6 @@ void TilesetEditDialog::ResetPaletteBarGraphicView(int paletteId)
     // Add the highlighted tile rectangle in SelectionBox_Color
     QPixmap selectionPixmap3(8, 16);
     selectionPixmap3.fill(Qt::transparent);
-    const QColor highlightColor(0xFF, 0, 0, 0x7F);
     QPainter SelectionBoxRectPainter(&selectionPixmap3);
     SelectionBoxRectPainter.setPen(QPen(QBrush(Qt::blue), 2));
     SelectionBoxRectPainter.drawRect(1, 1, 7, 15);
@@ -713,7 +712,7 @@ void TilesetEditDialog::on_pushButton_SetAnimatedTileSlot_clicked()
 void TilesetEditDialog::on_pushButton_ExportTile8x8Map_clicked()
 {
     QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile8x8 map to a file"),
-                                                     QString(""), tr("PNG files (*.png)"));
+                                                     QString(""), tr("PNG file (*.png)"));
     if (qFilePath.compare(""))
     {
         int CR_width, CR_height;
@@ -733,7 +732,7 @@ void TilesetEditDialog::on_pushButton_ExportTile8x8Map_clicked()
 void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
 {
     QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile16 map to a file"),
-                                                     QString(""), tr("PNG files (*.png)"));
+                                                     QString(""), tr("PNG file (*.png)"));
     if (qFilePath.compare(""))
     {
         int CR_width, CR_height;
@@ -747,6 +746,9 @@ void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
     }
 }
 
+/// <summary>
+/// Inport Tile8x8 graphic data from bin file.
+/// </summary>
 void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 {
     // Check SelectedTile8x8, cannot overwrite animated Tile8x8s
@@ -758,8 +760,8 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 
     // Load gfx bin file
     QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Load Tileset bin file"), QString(""),
-                                                    tr("bin files (*.bin)"));
+                                                    tr("Load Tileset graphic bin file"), QString(""),
+                                                    tr("bin file (*.bin)"));
 
     // load data into QBytearray
     QByteArray tmptile8x8data, tmptile8x8data_final;
@@ -783,7 +785,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     // Load palette data from bin file
     fileName = QFileDialog::getOpenFileName(this,
                                             tr("Load palette bin file"), QString(""),
-                                            tr("bin files (*.bin)"));
+                                            tr("bin file (*.bin)"));
     QByteArray tmppalettedata;
     QFile palbinfile(fileName);
     if(!palbinfile.open(QIODevice::ReadOnly))
@@ -796,24 +798,28 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 
     QVector<QRgb> tmppalette;
     unsigned short *tmppaldata = new unsigned short[16];
-    memcpy(tmppaldata, tmppalettedata.data(), 32);
+    memset(tmppaldata, 0, 32);
+    memcpy(tmppaldata, tmppalettedata.data(), qMin(32, tmppalettedata.size()));
+    ROMUtils::LoadPalette(&tmppalette, tmppaldata, true);
+    delete[] tmppaldata;
 
     // Get transparent color id in the palette
-    bool ok;
-    int transparentcolorId = QInputDialog::getInt(this, tr("Dialog"),
-                                         tr("Input the transparent-substitute color id in the palette bin file:"), 0,
-                                         0, 15, 1, &ok);
-    if (!ok)
+    int transparentcolorId = -1;
+    SelectColorDialog scdialog;
+    scdialog.SetPalette(tmppalette);
+    scdialog.SetColor(0);
+    if(scdialog.exec() == QDialog::Accepted)
+    {
+        transparentcolorId = scdialog.GetSelectedColorId();
+    } else {
         return;
+    }
 
     // transparent-substitute color replacement and load palette
-    tmppaldata[transparentcolorId] = 0x7FFF;
-    ROMUtils::LoadPalette(&tmppalette, tmppaldata);
-    delete[] tmppaldata;
     tmppalette[0] = 0xFF000000;
     tmppalette[transparentcolorId] = 0;
 
-    // half-byte exchange not needed
+    // nybble exchange not needed
     // reset bytearray according to the palette bin file
     for(int i = 0; i != 16; ++i)
     {
@@ -938,4 +944,98 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     ReRenderTile8x8Map(SelectedPaletteId);
     SetSelectedTile8x8(SelectedTile8x8, false);
     ReRenderTile16Map();
+}
+
+/// <summary>
+/// Save Tile16 conbination data into file.
+/// </summary>
+void TilesetEditDialog::on_pushButton_ExportTile16sCombinationData_clicked()
+{
+    QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile16 map combination data to a file"),
+                                                     QString(""), tr("bin file (*.bin)"));
+    if (qFilePath.compare(""))
+    {
+        /* The first part (0x300 * 2 * 4 bytes) is used for Tile16 combination data
+        ** the second part (0x300 * 2 bytes) is used for Tile16 event table data
+        ** the third part (0x300 bytes) is used for Tile16 terrain type table data */
+        // Generate Tile16 combination data
+        const int filesize = 0x300 * 2 * 4 + 0x300 * 2 + 0x300;
+        unsigned short map16tilePtr[filesize / 2];
+        memset(&map16tilePtr, 0, filesize);
+
+        auto map16data = tilesetEditParams->newTileset->GetMap16arrayPtr();
+        for (int j = 0; j < 0x300; ++j)
+        {
+            map16tilePtr[j * 4] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPLEFT)->GetValue();
+            map16tilePtr[j * 4 + 1] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPRIGHT)->GetValue();
+            map16tilePtr[j * 4 + 2] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMLEFT)->GetValue();
+            map16tilePtr[j * 4 + 3] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMRIGHT)->GetValue();
+        }
+        // Generate part 2 and 3 data
+        memcpy(reinterpret_cast<unsigned char*>(&map16tilePtr[0x300 * 4]),
+                reinterpret_cast<unsigned char*>(tilesetEditParams->newTileset->GetEventTablePtr()), 0x300 * 2);
+        memcpy(reinterpret_cast<unsigned char*>(&map16tilePtr[0x300 * 4 + 0x300]),
+                tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr(), 0x300);
+
+        QFile file(qFilePath);
+        file.open(QIODevice::WriteOnly);
+        if (file.isOpen())
+        {
+            file.write(reinterpret_cast<const char*>(map16tilePtr), filesize);
+        } else {
+            QMessageBox::critical(this, QString("Error"), QString("Cannot save file!"));
+        }
+        file.close();
+    }
+}
+
+/// <summary>
+/// Import Tile16 conbination data from file.
+/// </summary>
+void TilesetEditDialog::on_pushButton_ImportTile16sCombinationData_clicked()
+{
+    // load data into QBytearray
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                    tr("Load Tileset Tile16 map combination data bin file"), QString(""),
+                                                    tr("bin file (*.bin)"));
+    QByteArray tmptile8x8data;
+    QFile binfile(fileName);
+    if(!binfile.open(QIODevice::ReadOnly))
+    {
+        QMessageBox::critical(this, QString("Error"), QString("Cannot open file!"));
+        return;
+    }
+    tmptile8x8data = binfile.readAll();
+    binfile.close();
+
+    // Check size
+    int filesize = 0x300 * 2 * 4 + 0x300 * 2 + 0x300;
+    if(tmptile8x8data.size() != filesize)
+    {
+        QMessageBox::critical(this, QString("Error"), QString("Illegal file size!"));
+        return;
+    }
+    for (int tile16Id = 0; tile16Id < 0x300; ++tile16Id)
+    {
+        LevelComponents::TileMap16* tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16Id];
+        for (int tile8x8Id = 0; tile8x8Id < 4; ++tile8x8Id)
+        {
+            unsigned short value = static_cast<unsigned char>(tmptile8x8data.data()[tile16Id * 8 + tile8x8Id * 2]) |
+                                      static_cast<unsigned char>(tmptile8x8data.data()[tile16Id * 8 + tile8x8Id * 2 + 1]) << 8;
+            int newTile8x8_Id = value & 0x3FF;
+            int new_paletteIndex = (value >> 12) & 0xF;
+            bool xflip = (value >> 10) & 1;
+            bool yflip = (value >> 11) & 1;
+            tile16Data->ResetTile8x8(tilesetEditParams->newTileset->GetTile8x8arrayPtr()[newTile8x8_Id], tile8x8Id, newTile8x8_Id, new_paletteIndex, xflip, yflip);
+        }
+    }
+    // Generate part 2 and 3 data
+    memcpy(reinterpret_cast<unsigned char*>(tilesetEditParams->newTileset->GetEventTablePtr()),
+           reinterpret_cast<unsigned char*>(&tmptile8x8data.data()[0x300 * 8]), 0x300 * 2);
+    memcpy(tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr(),
+           reinterpret_cast<unsigned char*>(&tmptile8x8data.data()[(0x300 * 4 + 0x300) * 2]), 0x300);
+    // Update Graphic
+    ReRenderTile16Map();
+    // Update UI and select the first Tile16
+    SetSelectedTile16(0, true);
 }

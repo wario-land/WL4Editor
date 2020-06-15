@@ -33,6 +33,8 @@ private:
     Ui::WL4EditorWindow *ui;
     QLabel *statusBarLabel;
     QLabel *statusBarLabel_MousePosition;
+    QLabel *statusBarLabel_Scalerate;
+    QLabel *statusBarLabel_rectselectMode;
     Tile16DockWidget *Tile16SelecterWidget;
     EditModeDockWidget *EditModeWidget;
     EntitySetDockWidget *EntitySetWidget;
@@ -63,7 +65,7 @@ public:
     void RenderScreenFull();
     void RenderScreenVisibilityChange();
     void RenderScreenElementsLayersUpdate(unsigned int DoorId, int EntityId);
-    void RenderScreenTileChange(int tileX, int tileY, unsigned short tileID, int LayerID);
+    void RenderScreenTilesChange(QVector<LevelComponents::Tileinfo> tilelist, int LayerID);
     void SetStatusBarText(char *str);
     void LoadRoomUIUpdate();
     Tile16DockWidget *GetTile16DockWidgetPtr() { return Tile16SelecterWidget; }
@@ -78,7 +80,7 @@ public:
     void OpenROM();
     void UIStartUp(int currentTilesetID);
     void SetEditModeDockWidgetLayerEditability();
-    bool *GetLayersVisibilityArray() { return EditModeWidget->GetLayersVisibilityArray(); }
+    QVector<bool> GetLayersVisibilityArray() { return EditModeWidget->GetLayersVisibilityArray(); }
     void Graphicsview_UnselectDoorAndEntity();
     void RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig,
                          DialogParams::RoomConfigParams *nextroomconfig);
@@ -99,6 +101,11 @@ public:
     void LoadROMDataFromFile(QString qFilePath);
     void PrintMousePos(uint x, uint y);
     uint GetGraphicViewScalerate() { return graphicViewScalerate; }
+    void SetGraphicViewScalerate(uint scalerate);
+    void RefreshRectSelectHint(bool state);
+    void SetRectSelectMode(bool state);
+    QGraphicsView *Getgraphicview();
+    void SetChangeCurrentRoomEnabled(bool state);
 
 private slots:
     // called slots
@@ -137,6 +144,9 @@ private slots:
     void on_actionRun_from_file_triggered();
     void on_actionOutput_window_triggered();
     void on_actionClear_all_triggered();
+    void on_actionZoom_in_triggered();
+    void on_actionZoom_out_triggered();
+    void on_actionRect_Select_Mode_toggled(bool arg1);
     void on_actionUndo_global_triggered();
     void on_actionRedo_global_triggered();
 };

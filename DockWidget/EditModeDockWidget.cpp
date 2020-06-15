@@ -100,26 +100,18 @@ void EditModeDockWidget::SetDifficultyRadioBox(int modeid)
     }
 }
 
-bool *EditModeDockWidget::GetLayersVisibilityArray()
+QVector<bool> EditModeDockWidget::GetLayersVisibilityArray()
 {
-    bool *LayersVisibilityArray = new bool[8];
-    LayersVisibilityArray[0] = ui->CheckBox_Layer0View->isChecked();
-    LayersVisibilityArray[1] = ui->CheckBox_Layer1View->isChecked();
-    LayersVisibilityArray[2] = ui->CheckBox_Layer2View->isChecked();
-    LayersVisibilityArray[3] = ui->CheckBox_Layer3View->isChecked();
-    LayersVisibilityArray[4] = (ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
-    LayersVisibilityArray[5] = ui->CheckBox_DoorView->isChecked();
-    LayersVisibilityArray[6] = ui->CheckBox_CameraView->isChecked();
-    LayersVisibilityArray[7] = ui->CheckBox_AlphaView->isChecked();
+    QVector<bool> LayersVisibilityArray;
+    LayersVisibilityArray.push_back(ui->CheckBox_Layer0View->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_Layer1View->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_Layer2View->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_Layer3View->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_EntityView->checkState() != Qt::Unchecked);
+    LayersVisibilityArray.push_back(ui->CheckBox_DoorView->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_CameraView->isChecked());
+    LayersVisibilityArray.push_back(ui->CheckBox_AlphaView->isChecked());
     return LayersVisibilityArray;
-}
-
-/// <summary>
-/// Uncheck CheckBox_hiddencoinsView.
-/// </summary>
-void EditModeDockWidget::UncheckHiddencoinsViewCheckbox()
-{
-    ui->CheckBox_hiddencoinsView->setCheckState(Qt::Unchecked);
 }
 
 /// <summary>
@@ -182,7 +174,7 @@ void EditModeDockWidget::on_CheckBox_Layer0View_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_Layer1View_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenFull();
+    singleton->RenderScreenVisibilityChange();
 }
 
 /// <summary>
@@ -194,7 +186,7 @@ void EditModeDockWidget::on_CheckBox_Layer1View_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_Layer2View_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenFull();
+    singleton->RenderScreenVisibilityChange();
 }
 
 /// <summary>
@@ -206,7 +198,7 @@ void EditModeDockWidget::on_CheckBox_Layer2View_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_Layer3View_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenFull();
+    singleton->RenderScreenVisibilityChange();
 }
 
 /// <summary>
@@ -267,6 +259,7 @@ void EditModeDockWidget::on_RadioButton_DoorMode_toggled(bool checked)
 {
     if (!checked)
     {
+        // Disable entity selection
         singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
@@ -281,7 +274,8 @@ void EditModeDockWidget::on_RadioButton_NMode_toggled(bool checked)
 {
     if (!checked)
     {
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        // Disable entity selection
+        singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
 
@@ -295,7 +289,8 @@ void EditModeDockWidget::on_RadioButton_HMode_toggled(bool checked)
 {
     if (!checked)
     {
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        // Disable entity selection
+        singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
 
@@ -309,7 +304,8 @@ void EditModeDockWidget::on_RadioButton_SHMode_toggled(bool checked)
 {
     if (!checked)
     {
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        // Disable entity selection
+        singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
 
@@ -326,6 +322,8 @@ void EditModeDockWidget::on_RadioButton_LayerMode_toggled(bool checked)
         singleton->HideEntitySetDockWidget();
         singleton->HideCameraControlDockWidget();
         singleton->ShowTile16DockWidget();
+    } else {
+        singleton->SetRectSelectMode(false);
     }
     QFocusEvent *tmp = nullptr;
     singleton->GetTile16DockWidgetPtr()->FocusInEvent(tmp);
@@ -345,9 +343,8 @@ void EditModeDockWidget::on_RadioButton_EntityMode_toggled(bool checked)
         singleton->HideCameraControlDockWidget();
         //        singleton->ResetEntitySetDockWidget();
         singleton->ShowEntitySetDockWidget();
-    }
-    else
-    {
+    } else {
+        // Disable entity selection
         singleton->Graphicsview_UnselectDoorAndEntity();
     }
 }
@@ -376,6 +373,5 @@ void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
 /// </param>
 void EditModeDockWidget::on_CheckBox_hiddencoinsView_stateChanged(int arg1)
 {
-    (void) arg1;
-    singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+    singleton->RenderScreenVisibilityChange();
 }

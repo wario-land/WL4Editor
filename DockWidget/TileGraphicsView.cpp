@@ -20,17 +20,67 @@ static bool initialized = false; // Used to allow the vertical scrollbar to init
 /// </param>
 void TileGraphicsView::mousePressEvent(QMouseEvent *event)
 {
+    holdingmouse = true;
+
     // Get the ID of the tile that was clicked
     int X = event->x() + horizontalScrollBar()->sliderPosition();
     int Y = event->y() + verticalScrollBar()->sliderPosition();
-    if (X > 32 * 8 || Y > 32 * 0x60)
+    if (X >= 32 * 8 || Y >= 32 * 0x60)
         return;
     int tileX = X / 32;
     int tileY = Y / 32;
+    if(tx == tileX && ty == tileY)
+        return;
     int tileID = tileX + tileY * 8;
+    tx = tileX;
+    ty = tileY;
 
     // Set the selected tile location for the graphics view
     Map16DockWidget->SetSelectedTile((unsigned short) tileID, false);
+}
+
+/// <summary>
+/// this function will be called when the mouse is moving on the graphic view in the dock widget.
+/// </summary>
+/// <param name="event">
+/// The mouse click event.
+/// </param>
+void TileGraphicsView::mouseMoveEvent(QMouseEvent *event)
+{
+    if(!holdingmouse) return;
+
+    int X = event->x() + horizontalScrollBar()->sliderPosition();
+    int Y = event->y() + verticalScrollBar()->sliderPosition();
+    if (X >= 32 * 8 || Y >= 32 * 0x60)
+        return;
+    int tileX = X / 32;
+    int tileY = Y / 32;
+    if(tx > tileX || ty > tileY) // you cannot drag to directions if it not right-down side
+        return;
+
+    Map16DockWidget->RectSelectTiles(tileX - tx + 1, tileY - ty + 1);
+}
+
+/// <summary>
+/// this function will be called when the mouse is dragging out from the graphic view in the dock widget.
+/// </summary>
+/// <param name="event">
+/// The drag leave event.
+/// </param>
+void TileGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    holdingmouse = false;
+}
+
+/// <summary>
+/// this function will be called when the graphic view in the dock widget is clicked then mouse release.
+/// </summary>
+/// <param name="event">
+/// The mouse click event.
+/// </param>
+void TileGraphicsView::mouseReleaseEvent(QMouseEvent *event)
+{
+    holdingmouse = false;
 }
 
 /// <summary>

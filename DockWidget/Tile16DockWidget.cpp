@@ -70,17 +70,14 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
     Tile16MAPScene->addPixmap(SelectedTileset->RenderAllTile16(1));
     ui->tileSetIDLabel->setText("Tileset ID: 0x" + QString::number(_tilesetIndex, 16).toUpper());
 
-    // Add the highlighted tile rectangle
-    QPixmap selectionPixmap(16, 16);
-    const QColor highlightColor(0xFF, 0, 0, 0x7F);
-    selectionPixmap.fill(highlightColor);
-    SelectionBox = Tile16MAPScene->addPixmap(selectionPixmap);
-    SelectionBox->setVisible(false);
-
     ui->graphicsView->setScene(Tile16MAPScene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
     // Re-initialize other settings
+    SelectionBox = nullptr; // to avoid memory problem when resetting Tileset
+                            // it is deleted by the Qt graphic engine when resetting graphic scene
+                            // but it still uses the old pointer, so in SetSelectedTile(0, true);
+                            // doing SelectionBox->setPixmap(selectionPixmap); causes crash
     SetSelectedTile(0, true);
 
     return 0;
@@ -105,9 +102,19 @@ void Tile16DockWidget::SetTileInfoText(QString str) { ui->tileInfoTextBox->setTe
 /// </param>
 void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
 {
-    // Paint red Box to show selected Tile16
+    rw = rh = 1;
+
+    // Paint red Box (i.e. highlighted tile rectangle) to show selected Tile16
     int X = tile & 7;
     int Y = tile >> 3;
+    QPixmap selectionPixmap(16, 16);
+    selectionPixmap.fill(highlightColor);
+    if(SelectionBox == nullptr)
+    {
+        SelectionBox = Tile16MAPScene->addPixmap(selectionPixmap);
+    } else {
+        SelectionBox->setPixmap(selectionPixmap);
+    }
     SelectionBox->setPos(X * 16, Y * 16);
     SelectionBox->setVisible(true);
     SelectedTile = tile;
@@ -124,4 +131,31 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
     // Set vertical scrollbar of braphicview
     if (resetscrollbar)
         ui->graphicsView->verticalScrollBar()->setValue(scalerate * 16 * (tile / 8));
+}
+
+/// <summary>
+/// Rect-selecte tiles in the dock widget by resetting the highlight rectangle.
+/// </summary>
+/// <param name="rect_width">
+/// With of the highlight rectangle.
+/// </param>
+/// <param name="rect_height">
+/// Height of the highlight rectangle.
+/// </param>
+void Tile16DockWidget::RectSelectTiles(int rect_width, int rect_height)
+{
+    qreal xpos = SelectionBox->pos().x();
+    qreal ypos = SelectionBox->pos().y();
+    QPixmap selectionPixmap(rect_width * 16, rect_height * 16);
+    selectionPixmap.fill(highlightColor);
+    if(SelectionBox == nullptr)
+    {
+        SelectionBox = Tile16MAPScene->addPixmap(selectionPixmap);
+    } else {
+        SelectionBox->setPixmap(selectionPixmap);
+    }
+    SelectionBox->setPos(xpos, ypos);
+    SelectionBox->setVisible(true);
+
+    rw = rect_width; rh = rect_height;
 }

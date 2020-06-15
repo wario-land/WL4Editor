@@ -31,6 +31,8 @@ CONFIG += c++11 strict_c++
 QMAKE_CXXFLAGS = -fpermissive
 
 SOURCES += \
+    Dialog/SelectColorDialog.cpp \
+    Dialog/SelectColorDialog_PaletteBar.cpp \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \
     DockWidget/OutputDockWidget.cpp \
     ScriptInterface.cpp \
@@ -69,6 +71,8 @@ SOURCES += \
     Dialog/TilesetEditor_PaletteGraphicView.cpp
 
 HEADERS += \
+    Dialog/SelectColorDialog.h \
+    Dialog/SelectColorDialog_PaletteBar.h \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.h \
     DockWidget/OutputDockWidget.h \
     ScriptInterface.h \
@@ -110,6 +114,7 @@ HEADERS += \
     Themes.h
 
 FORMS += \
+    Dialog/SelectColorDialog.ui \
     DockWidget/OutputDockWidget.ui \
     WL4EditorWindow.ui \
     Dialog/ChooseLevelDialog.ui \

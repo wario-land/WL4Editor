@@ -26,10 +26,11 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
     holdingmouse = true;
 
     // Get the ID of the tile that was clicked
+    uint scalerate = singleton->GetGraphicViewScalerate();
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
-    unsigned int tileX = X / 32;
-    unsigned int tileY = Y / 32;
+    unsigned int tileX = X / (16 * scalerate);
+    unsigned int tileY = Y / (16 * scalerate);
 
     // Different cases for different editting mode
     LevelComponents::Room *room = singleton->GetCurrentRoom();
@@ -43,18 +44,101 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 
         if (editMode == Ui::LayerEditMode)
         {
-            // If we use right click then copy the tile
-            if (event->button() == Qt::RightButton)
+            if(!rectSelectMode)
             {
-                CopyTile(tileX, tileY);
+                // Use right click then copy the tile
+                if (event->button() == Qt::RightButton)
+                {
+                    CopyTile(tileX, tileY);
+                }
+                else // Otherwise just place the tile
+                {
+                    // Change textmaps and layer graphics
+                    SetTiles(tileX, tileY);
+                }
+            } else {
+                if (event->button() == Qt::LeftButton)
+                {
+                    if(!singleton->Getgraphicview()->scene()) return;
+                    singleton->SetChangeCurrentRoomEnabled(false);
+
+                    if(has_a_rect)
+                    {
+                        // De-rect-select if need
+                        if(tileX < rectx || tileX > (rectx + rectwidth - 1) ||
+                                tileY < recty || tileY > (recty + rectheight - 1))
+                        {
+                            if(rect != nullptr)
+                            {
+                                delete rect; rect = nullptr;
+                            }
+                            if(selectedrectgraphic != nullptr)
+                            {
+                                delete selectedrectgraphic; selectedrectgraphic = nullptr;
+                            }
+                            has_a_rect = false;
+
+                            // Do Operation (and update layer data)
+                            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+                            unsigned short *Layerdata = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerData();
+                            int layerwidth = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerWidth();
+                            int layerheight = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerHeight();
+                            struct OperationParams *params = new struct OperationParams();
+                            params->type = ChangeTileOperation;
+                            params->tileChange = true;
+                            int rectcuttopheight, rectcutleftsidewidth;
+                            int rectcutbottomheight, rectcutrightsidewidth;
+                            rectcuttopheight = qMax(-recty, 0);
+                            rectcutleftsidewidth = qMax(-rectx, 0);
+                            rectcutbottomheight = qMax(recty + rectheight - 1 - (layerheight - 1), 0);
+                            rectcutrightsidewidth = qMax(rectx + rectwidth - 1 - (layerwidth - 1), 0);
+                            for(int j = rectcuttopheight; j < (rectheight - rectcutbottomheight); ++j) // paste rect
+                            {
+                                for(int i = rectcutleftsidewidth; i < (rectwidth - rectcutrightsidewidth); ++i)
+                                {
+                                    params->tileChangeParams.push_back(
+                                        TileChangeParams::Create(rectx + i, recty + j, selectedLayer,
+                                                                 rectdata[i + j * rectwidth],
+                                                                 Layerdata[rectx + i + (recty + j) * layerwidth]));
+                                }
+                            }
+                            ExecuteOperation(params);
+                            // Reset variables
+                            rectx = recty = -1;
+                            tmpLTcornerTileX = rectselectstartTileX = tmpLTcornerTileY = rectselectstartTileY = -1;
+                            rectwidth = rectheight = 0;
+                            has_a_rect = false;
+                            dragInitmouseX = dragInitmouseY = -1;
+                            rectdata.clear();
+                            singleton->SetChangeCurrentRoomEnabled(true);
+                            return;
+                        }
+
+                        // Start holding the mouse inside the rect
+                        Isdraggingrect = true;
+                        dragInitmouseX = tileX;
+                        dragInitmouseY = tileY;
+                    } else {
+                        // reset rect
+                        QPixmap selectionPixmap(16, 16);
+                        selectionPixmap.fill(highlightColor);
+                        if(rect == nullptr)
+                        {
+                            rect = singleton->Getgraphicview()->scene()->addPixmap(selectionPixmap);
+                        } else {
+                            rect->setPixmap(selectionPixmap);
+                        }
+                        rectx = tmpLTcornerTileX = rectselectstartTileX = tileX;
+                        recty = tmpLTcornerTileY = rectselectstartTileY = tileY;
+                        rectwidth = rectheight = 1;
+                        rect->setPos(tileX * 16, tileY * 16);
+                        rect->setZValue(14); // assume every layer in room is enabled, and rect should be above selectedrectgraphic
+                        rect->setVisible(true);
+                        has_a_rect = true;
+                    }
+                }
             }
-            else // Otherwise just place the tile
-            {
-                // Uncheck hiddencoinsView Checkbox
-                singleton->GetEditModeWidgetPtr()->UncheckHiddencoinsViewCheckbox();
-                // Change textmaps and layer graphics
-                SetTile(tileX, tileY);
-            }
+
         }
         else if (editMode == Ui::DoorEditMode) // select a door
         {
@@ -121,10 +205,11 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
         return;
 
     // Get the ID of the tile that was clicked
+    uint scalerate = singleton->GetGraphicViewScalerate();
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
-    unsigned int tileX = X / 32;
-    unsigned int tileY = Y / 32;
+    unsigned int tileX = X / (16 * scalerate);
+    unsigned int tileY = Y / (16 * scalerate);
 
     // Different cases for different editting mode
     LevelComponents::Room *room = singleton->GetCurrentRoom();
@@ -212,7 +297,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
-    // Draw the new tile
+    // main part
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) && tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
     {
@@ -222,29 +307,62 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
-        if ((editMode == Ui::LayerEditMode))
+        if (editMode == Ui::LayerEditMode)
         {
-            // If we hold right click then copy the tile
-            // event->button() cannot work, event->buttons() return the correct mouseState according to the Qt code
-            if (event->buttons() == Qt::RightButton)
+            if(!rectSelectMode)
             {
-               CopyTile(tileX, tileY);
+                // If we hold right click then copy the tile
+                // event->button() cannot work, event->buttons() return the correct mouseState according to the Qt code
+                if (event->buttons() == Qt::RightButton)
+                {
+                    CopyTile(tileX, tileY);
+                }
+                else // Otherwise just place the tile
+                {
+                    // Change textmaps and layer graphics
+                    SetTiles(tileX, tileY);
+                }
             }
-            else // Otherwise just place the tile
+            else
             {
-                // Change textmaps and layer graphics
-                SetTile(tileX, tileY);
-            }
-        } else if((editMode == Ui::EntityEditMode)) {
-            if (holdingEntityOrDoor && SelectedEntityID != -1) {
+                if(!has_a_rect) return;
 
+                if(!Isdraggingrect)
+                {
+                    if(tileX < rectselectstartTileX || tileY < rectselectstartTileY)
+                        return;
+
+                    // reset rect
+                    rectwidth = tileX - rectselectstartTileX + 1;
+                    rectheight = tileY - rectselectstartTileY + 1;
+                    QPixmap selectionPixmap(16 * rectwidth, 16 * rectheight);
+                    selectionPixmap.fill(highlightColor);
+                    rect->setPixmap(selectionPixmap);
+                    rect->setPos(rectx * 16, recty * 16);
+                    rect->setZValue(14); // assume every layer in room is enabled, and rect should be above selectedrectgraphic
+                    rect->setVisible(true);
+                }
+                else
+                {
+                    rectx = tmpLTcornerTileX - dragInitmouseX + tileX;
+                    recty = tmpLTcornerTileY - dragInitmouseY + tileY;
+                    rect->setPos(rectx * 16, recty * 16);
+                    selectedrectgraphic->setPos(rectx * 16, recty * 16);
+                }
+            }
+        }
+        else if(editMode == Ui::EntityEditMode)
+        {
+            if (holdingEntityOrDoor && SelectedEntityID != -1)
+            {
                 LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
                 // If the entity position has changed
                 int px = currentRoom->GetEntityX(SelectedEntityID);
                 int py = currentRoom->GetEntityY(SelectedEntityID);
 
                 // If the entity position has changed
-                if (px != tileX || py != tileY) {
+                if (px != tileX || py != tileY)
+                {
                     if (currentRoom->IsNewEntityPositionInsideRoom(tileX, tileY))
                     {
                         currentRoom->SetEntityPosition(tileX, tileY, SelectedEntityID);
@@ -255,8 +373,11 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                     }
                 }
             }
-        } else if((editMode == Ui::DoorEditMode)) {
-            if (holdingEntityOrDoor && SelectedDoorID != -1) {
+        }
+        else if(editMode == Ui::DoorEditMode)
+        {
+            if (holdingEntityOrDoor && SelectedDoorID != -1)
+            {
                 LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
                 LevelComponents::Door *selectedDoor = currentRoom->GetDoor(SelectedDoorID);
 
@@ -267,7 +388,8 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                 int deltaY = selectedDoor->GetY2()-py1;
 
                 // If the door position has changed
-                if (px1 != tileX || py1 != tileY) {
+                if (px1 != tileX || py1 != tileY)
+                {
                     if (currentRoom->IsNewDoorPositionInsideRoom(tileX, tileX+deltaX, tileY, tileY+deltaY))
                     {
                         selectedDoor->SetDoorPlace(tileX, tileX+deltaX, tileY, tileY+deltaY);
@@ -300,13 +422,13 @@ void MainGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
 /// <param name="tileY">
 /// The Y position of the tile (unit: map16)
 /// </param>
-void MainGraphicsView::SetTile(int tileX, int tileY)
+void MainGraphicsView::SetTiles(int tileX, int tileY)
 {
     // Update which tile has last been drawn, for the tile painting functionality
     drawingTileX = tileX;
     drawingTileY = tileY;
 
-    // Create an execute a tile change operation for the changed tile
+    // Execute a tile change operation for the changed tile
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     unsigned short selectedTile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
     if (selectedTile == 0xFFFF)
@@ -319,19 +441,35 @@ void MainGraphicsView::SetTile(int tileX, int tileY)
         return; // temporarily skip the condition when the current Layer's MappingType is 0x20 to avoid incorrect
                 // rendering
     int selectedTileIndex;
+    int drawwidth = singleton->GetTile16DockWidgetPtr()->getrw();
+    int drawheight = singleton->GetTile16DockWidgetPtr()->getrh();
+    int drawlayerwidth = 0;
     if (selectedLayer)
     {
-        selectedTileIndex = tileX + tileY * room->GetWidth();
+        drawlayerwidth = room->GetWidth();
+        selectedTileIndex = tileX + tileY * drawlayerwidth;
+        drawwidth = qMin(drawlayerwidth - tileX, drawwidth);
+        drawheight = qMin(static_cast<int>(room->GetHeight()) - tileY, drawheight);
     } else {
-        selectedTileIndex = tileX + tileY * room->GetLayer0Width();
+        drawlayerwidth = room->GetLayer0Width();
+        selectedTileIndex = tileX + tileY * drawlayerwidth;
+        drawwidth = qMin(drawlayerwidth - tileX, drawwidth);
+        drawheight = qMin(static_cast<int>(room->GetLayer0Height()) - tileY, drawheight);
     }
-    if (layer->GetLayerData()[selectedTileIndex] == selectedTile)
+    if (layer->GetLayerData()[selectedTileIndex] == selectedTile && drawwidth == 1 && drawheight == 1)
         return;
     struct OperationParams *params = new struct OperationParams();
     params->type = ChangeTileOperation;
     params->tileChange = true;
-    params->tileChangeParams.push_back(
-        TileChangeParams::Create(tileX, tileY, selectedLayer, selectedTile, layer->GetLayerData()[selectedTileIndex]));
+    for(int j = 0; j < drawheight; ++j)
+    {
+        for(int i = 0; i < drawwidth; ++i)
+        {
+            params->tileChangeParams.push_back(
+                TileChangeParams::Create(tileX + i, tileY + j, selectedLayer, selectedTile + i + 8 * j,
+                                         layer->GetLayerData()[selectedTileIndex + i + j * drawlayerwidth]));
+        }
+    }
     ExecuteOperation(params);
 }
 
@@ -371,31 +509,70 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     holdingmouse = false;
 
     // Get the ID of the tile where the mouse was released
+    uint scalerate = singleton->GetGraphicViewScalerate();
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
-    unsigned int pX = X / 32;
-    unsigned int pY = Y / 32;
+    unsigned int tileX = X / (16 * scalerate);
+    unsigned int tileY = Y / (16 * scalerate);
 
     enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
     //Temporary Remove because of a bug
     //Add a move operation for door (for CTRL-Z)
-    if (editMode == Ui::DoorEditMode) {
+    if (editMode == Ui::LayerEditMode) {
+        if(!has_a_rect)
+        {
+            return;
+        }
+
+        if(!Isdraggingrect)
+        {
+            // Update layer rect graphic
+            int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+            QPixmap layerrectpixmap(singleton->GetCurrentRoom()->GetLayerPixmap(selectedLayer,
+                                                                                rectselectstartTileX,
+                                                                                rectselectstartTileY,
+                                                                                rectwidth,
+                                                                                rectheight));
+            if(selectedrectgraphic == nullptr)
+            {
+                selectedrectgraphic = singleton->Getgraphicview()->scene()->addPixmap(layerrectpixmap);
+            } else {
+                selectedrectgraphic->setPixmap(layerrectpixmap);
+            }
+            selectedrectgraphic->setPos(rectx * 16, recty * 16);
+            selectedrectgraphic->setZValue(13);
+            selectedrectgraphic->setVisible(true);
+            // Update rectdata
+            unsigned short *Layerdata = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerData();
+            int layerwidth = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerWidth();
+            for (int j = rectselectstartTileY; j < (rectselectstartTileY + rectheight); ++j)
+            {
+                for (int i = rectselectstartTileX; i < (rectselectstartTileX + rectwidth); ++i)
+                {
+                    rectdata.push_back(Layerdata[i + j * layerwidth]);
+                }
+            }
+        } else {
+            dragInitmouseX = dragInitmouseY = -1;
+            tmpLTcornerTileX = rectx; tmpLTcornerTileY = recty;
+            Isdraggingrect = false;
+        }
+    } else if (editMode == Ui::DoorEditMode) { // Add a move operation for entity (for CTRL-Z)
         if (holdingEntityOrDoor && SelectedDoorID != -1) {
             struct OperationParams *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
             params->objectPositionChange = true;
-            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, pX, pY,ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
+            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY,ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
             // Only perform and not execute because of a bug after deletion and undo
             PerformOperation(params);
         }
-    // Add a move operation for entity (for CTRL-Z)
-    } else if (editMode == Ui::EntityEditMode) {
+    } else if (editMode == Ui::EntityEditMode) { // Add a move operation for entity (for CTRL-Z)
         if (holdingEntityOrDoor && SelectedEntityID != -1) {
             struct OperationParams *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
             params->objectPositionChange = true;
-            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, pX, pY,ObjectMoveParams::ENTITY_TYPE,SelectedEntityID);
+            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY,ObjectMoveParams::ENTITY_TYPE,SelectedEntityID);
             // Only perform and not execute because of a bug after deletion and undo
             PerformOperation(params);
         }
@@ -418,8 +595,13 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 {
     // If an entity is selected
-    if (SelectedEntityID != -1)
+    enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
+
+    switch(editMode)
     {
+    case(Ui::EntityEditMode):
+    {
+        if(SelectedEntityID == -1) return;
         switch (event->key())
         {
         // Delete selected entity if BSP or DEL is pressed
@@ -432,8 +614,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
             singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
             singleton->SetUnsavedChanges(true);
-            break;
-        }
+        }; break;
 
         // Move selected entity when a direction key is pressed
         case Qt::Key_Right:
@@ -479,13 +660,12 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 // Only perform and not execute because of a bug after deletion and undo
                 PerformOperation(params);
             }
-            break;
+        }; break;
         }
-        }
-        // If a door is selected
-    }
-    else if (SelectedDoorID != -1)
+    }; break;
+    case(Ui::DoorEditMode):
     {
+        if(SelectedDoorID == -1) return;
         switch (event->key())
         {
         // Delete selected door if BSP or DEL is pressed
@@ -496,15 +676,14 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             {
                 QMessageBox::critical(nullptr, QString("Error"),
                                       QString("Deleting the last Door in a Room is not allowed!"));
-                break;
+                return;
             }
             singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
             SelectedDoorID = -1;
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
             singleton->ResetEntitySetDockWidget();
             singleton->SetUnsavedChanges(true);
-            break;
-        }
+        }; break;
         // Move selected door when a direction key is pressed
         case Qt::Key_Right:
         case Qt::Key_Left:
@@ -555,18 +734,111 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 // Only perform and not execute because of a bug after deletion and undo
                 PerformOperation(params);
             }
-            break;
+        }; break;
         }
+    }; break;
+    case(Ui::LayerEditMode):
+    {
+        if (!rectSelectMode) {
+            // Reset selected tiles
+            unsigned short tile = singleton->GetTile16DockWidgetPtr()->GetSelectedTile();
+            if (event->key() == Qt::Key_Left)
+            {
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile((tile > 0) ? tile - 1: tile, true);
+            }
+            else if (event->key() == Qt::Key_Right)
+            {
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile(qMin(tile + 1, 0x2FF), true);
+            }
+            else if (event->key() == Qt::Key_Up)
+            {
+                singleton->GetTile16DockWidgetPtr()->SetSelectedTile((tile > 7) ? tile - 8: tile, true);
+            }
+            else if (event->key() == Qt::Key_Down)
+            {
+                if(tile <= (0x2FF - 8))
+                {
+                    singleton->GetTile16DockWidgetPtr()->SetSelectedTile(tile + 8, true);
+                }
+            }
+        } else {
+            if (has_a_rect) {
+                if(event->key() == Qt::Key_Backspace || event->key() == Qt::Key_Delete)
+                {
+                    if (rectselectstartTileX == rectx)
+                    {
+                        int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
+                        struct OperationParams *params = new struct OperationParams();
+                        params->type = ChangeTileOperation;
+                        params->tileChange = true;
+                        for(int j = 0; j < rectheight; ++j) // delete rect
+                        {
+                            for(int i = 0; i < rectwidth; ++i)
+                            {
+                                params->tileChangeParams.push_back(
+                                            TileChangeParams::Create(rectselectstartTileX + i, rectselectstartTileY + j, selectedLayer,
+                                                                     0,
+                                                                     rectdata[i + j * rectwidth]));
+                            }
+                        }
+                        ExecuteOperation(params);
+                    }
+                    // Reset variables
+                    if(rect != nullptr)
+                    {
+                        delete rect; rect = nullptr;
+                    }
+                    if(selectedrectgraphic != nullptr)
+                    {
+                        delete selectedrectgraphic; selectedrectgraphic = nullptr;
+                    }
+                    rectx = recty = -1;
+                    tmpLTcornerTileX = tmpLTcornerTileY = rectselectstartTileX = rectselectstartTileY = -1;
+                    rectwidth = rectheight = 0;
+                    has_a_rect = false;
+                    dragInitmouseX = dragInitmouseY = -1;
+                    rectdata.clear();
+                    singleton->SetChangeCurrentRoomEnabled(true);
+                    return;
+                }
+            }
         }
+    }; break;
     }
 }
 
 /// <summary>
 /// This function will deselect doors and entities.
 /// </summary>
-void MainGraphicsView::DeselectDoorAndEntity()
+void MainGraphicsView::DeselectDoorAndEntity(bool updateRenderArea)
 {
     SelectedDoorID = -1;
     SelectedEntityID = -1;
+    if(!updateRenderArea)
+        return;
     singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+}
+
+void MainGraphicsView::SetRectSelectMode(bool state)
+{
+    rectSelectMode = state;
+    singleton->RefreshRectSelectHint(rectSelectMode);
+    if(rect != nullptr)
+    {
+        delete rect;
+        rect = nullptr;
+    }
+    if(selectedrectgraphic != nullptr)
+    {
+        delete selectedrectgraphic;
+        selectedrectgraphic = nullptr;
+    }
+    // Reset variables
+    rectx = recty = -1;
+    tmpLTcornerTileX = tmpLTcornerTileY = rectselectstartTileX = rectselectstartTileY = -1;
+    rectwidth = rectheight = 0;
+    has_a_rect = false;
+    dragInitmouseX = dragInitmouseY = -1;
+    holdingmouse = false;
+    rectdata.clear();
 }

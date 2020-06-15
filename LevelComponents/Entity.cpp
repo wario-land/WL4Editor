@@ -134,27 +134,27 @@ namespace LevelComponents
                     offsetID = tileID + (y + 14) * 0x20 + x;
                     offsetPal = 15;
                 }
-                else if (EntityGlobalID == 0x18)
+                else if (EntityGlobalID == 0x18) // Boss: Cuckoo Condor
                 {
                     offsetID = tileID + y * 0x20 + x;
                     offsetPal = palNum + 1;
                 }
-                else if ((EntityGlobalID == 0x2C) || (EntityGlobalID == 0x51))
+                else if ((EntityGlobalID == 0x2C) || (EntityGlobalID == 0x51)) // Boss: Spoiled Rotten and Catbat
                 {
                     offsetID = tileID + y * 0x20 + x;
                     offsetPal = palNum + 8;
                 }
-                else if (EntityGlobalID == 0x76)
+                else if (EntityGlobalID == 0x76) // Boss: Cractus
                 {
                     offsetID = tileID + y * 0x20 + x;
                     offsetPal = palNum + 8;
                 } // only showing flowerpot
-                else if (EntityGlobalID == 0x7D)
+                else if (EntityGlobalID == 0x7D) // Boss: Golden Diva
                 {
                     offsetID = tileID + y * 0x20 + x;
                     offsetPal = palNum + 3;
                 } // Golden Diva is a Frog Switch ??
-                else if (EntityGlobalID == 0x69)
+                else if (EntityGlobalID == 0x69) // Boss: Aerodent
                 {
                     offsetID = tileID + y * 0x20 + x;
                     offsetPal = palNum + 5;

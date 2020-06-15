@@ -22,6 +22,9 @@ public:
     void PrintString(QString str);
     void ClearTextEdit();
 
+private slots:
+    void on_pushButton_Execute_clicked();
+
 private:
     Ui::OutputDockWidget *ui;
     ScriptInterface *interface;

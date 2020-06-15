@@ -49,9 +49,15 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     ui->graphicsView->scale(graphicViewScalerate, graphicViewScalerate);
     statusBarLabel = new QLabel("Open a ROM file");
     statusBarLabel_MousePosition = new QLabel();
+    statusBarLabel_rectselectMode = new QLabel("Rect Select: Off");
+    statusBarLabel_Scalerate = new QLabel("scale rate: " + QString::number(graphicViewScalerate) + "00%");
     statusBarLabel->setMargin(3);
     statusBarLabel_MousePosition->setMargin(3);
+    statusBarLabel_rectselectMode->setMargin(3);
+    statusBarLabel_Scalerate->setMargin(3);
     ui->statusBar->addWidget(statusBarLabel);
+    ui->statusBar->addWidget(statusBarLabel_rectselectMode);
+    ui->statusBar->addWidget(statusBarLabel_Scalerate);
     ui->statusBar->addWidget(statusBarLabel_MousePosition);
     switch (themeId) {
     case 0:
@@ -106,6 +112,8 @@ WL4EditorWindow::~WL4EditorWindow()
     delete CameraControlWidget;
     delete statusBarLabel;
     delete statusBarLabel_MousePosition;
+    delete statusBarLabel_rectselectMode;
+    delete statusBarLabel_Scalerate;
 
     // Decomstruct all Tileset singletons
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
@@ -268,6 +276,70 @@ void WL4EditorWindow::PrintMousePos(uint x, uint y)
 }
 
 /// <summary>
+/// Set graphicView scalerate.
+/// </summary>
+void WL4EditorWindow::SetGraphicViewScalerate(uint scalerate)
+{
+    ui->graphicsView->scale((qreal)scalerate / (qreal)graphicViewScalerate, (qreal)scalerate / (qreal)graphicViewScalerate);
+    graphicViewScalerate = scalerate;
+    // TODO: find a method to get mouse pos instantly
+//    int mouse_x = ui->graphicsView->mapFromGlobal(QCursor::pos()).x();
+//    int mouse_y = ui->graphicsView->mapFromGlobal(QCursor::pos()).y();
+//    PrintMousePos(mouse_x, mouse_y);
+    statusBarLabel_MousePosition->setText("Move your mouse to show position again!");
+    statusBarLabel_Scalerate->setText("scale rate: " + QString::number(graphicViewScalerate) + "00%");
+}
+
+/// <summary>
+/// Show the rect select state in the main graphic view.
+/// </summary>
+/// <param name="state">
+/// The toggle state of rect select
+/// </param>
+void WL4EditorWindow::RefreshRectSelectHint(bool state)
+{
+    statusBarLabel_rectselectMode->setText(state ? "Rect Select: On" : "Rect Select: Off");
+}
+
+/// <summary>
+/// Unset the rect select state in the main graphic view.
+/// </summary>
+/// <param name="state">
+/// The toggle state of rect select
+/// </param>
+void WL4EditorWindow::SetRectSelectMode(bool state)
+{
+    ui->actionRect_Select_Mode->setChecked(state);
+}
+
+/// <summary>
+/// Get the pointer of the main graphic view.
+/// </summary>
+QGraphicsView *WL4EditorWindow::Getgraphicview()
+{
+    return ui->graphicsView;
+}
+
+/// <summary>
+/// Set enable for buttons to go to a different room.
+/// </summary>
+/// <param name="state">
+/// The toggle state of rect select
+/// </param>
+void WL4EditorWindow::SetChangeCurrentRoomEnabled(bool state)
+{
+    if (state) {
+        if (selectedRoom)
+            ui->roomDecreaseButton->setEnabled(state);
+        if (selectedRoom < (CurrentLevel->GetRooms().size() - 1))
+            ui->roomIncreaseButton->setEnabled(state);
+    } else {
+        ui->roomDecreaseButton->setEnabled(state);
+        ui->roomIncreaseButton->setEnabled(state);
+    }
+}
+
+/// <summary>
 /// Update the UI after loading a ROM.
 /// </summary>
 void WL4EditorWindow::UIStartUp(int currentTilesetID)
@@ -296,6 +368,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionUndo->setEnabled(true);
         ui->actionUndo_global->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
+        ui->actionManager->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -383,7 +456,7 @@ void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 /// <summary>
 /// Deselect doors or entities that are currently selected.
 /// </summary>
-void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity() { ui->graphicsView->DeselectDoorAndEntity(); }
+void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity() { ui->graphicsView->DeselectDoorAndEntity(true); }
 
 /// <summary>
 /// Reset the Room with a new/old RoomConfigParams.
@@ -416,11 +489,26 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         currentRoom->GetLayer(2)->SetDisabled();
     }
 
+    if (nextroomconfig->Layer0Width != currentroomconfig->Layer0Width ||
+            nextroomconfig->Layer0Height != currentroomconfig->Layer0Height)
+    {
+        if ((currentroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
+        {
+            // save previous Layer data
+            size_t datasize1 = 0;
+            datasize1 = 2 * currentroomconfig->Layer0Width * currentroomconfig->Layer0Height;
+            unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
+            memcpy(tmpLayerdata1, currentRoom->GetLayer(0)->GetLayerData(), datasize1);
+            currentroomconfig->LayerData[0] = tmpLayerdata1;
+        } else {
+            currentroomconfig->LayerData[0] = nullptr;
+        }
+    }
     if (!currentroomconfig->Layer0Enable && nextroomconfig->Layer0Enable)
     {
-        if ((nextroomconfig->Layer0MappingTypeParam & 0x30) == 0x10)
+        if ((nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
         {
-            currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+            currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
         }
         else
         {
@@ -433,6 +521,20 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     else if (currentroomconfig->Layer0Enable && !nextroomconfig->Layer0Enable)
     {
         currentRoom->GetLayer(0)->SetDisabled();
+    }
+
+    if ((currentroomconfig->Layer0Enable & 0x30) != LevelComponents::LayerTile8x8 &&
+            (nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerTile8x8)
+    {
+        LevelComponents::Layer *currentLayer0 = currentRoom->GetLayer(0);
+        delete currentLayer0;
+        currentLayer0 = new LevelComponents::Layer(nextroomconfig->Layer0DataPtr, LevelComponents::LayerTile8x8);
+        currentRoom->SetLayer(0, currentLayer0);
+    }
+    else if((currentroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerTile8x8 &&
+            (nextroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerTile8x8)
+    {
+        currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
     }
 
     if (nextroomconfig->BackgroundLayerEnable)
@@ -449,7 +551,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     }
 
     if (nextroomconfig->RoomWidth != currentroomconfig->RoomWidth ||
-        nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
+            nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
     {
         // Deal with out-of-range Doors, Entities, Camera limitators
         // TODO: support Undo/Redo on these elements
@@ -553,41 +655,51 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         delete[] deleteLimitatorIdlist;
 
         // Reset Layers
-        for (int i = 0; i < 3; ++i)
+        for (int i = 1; i < 3; ++i)
         {
-            if (currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16)
+            if ((currentRoom->GetLayer(i)->GetMappingType() & 0x30) == LevelComponents::LayerMap16)
             {
-                if (currentroomconfig->LayerData[i] == nullptr)
-                {
-                    // save previous Layer data
-                    size_t datasize1 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
-                    unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
-                    memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
-                    currentroomconfig->LayerData[i] = tmpLayerdata1;
+                // save previous Layer data
+                size_t datasize1 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
+                unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
+                memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
+                currentroomconfig->LayerData[i] = tmpLayerdata1;
 
-                    // reset Layer size
-                    currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+                // reset Layer size
+                currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
 
-                    // save result Layer data
-                    size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
-                    unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
-                    memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
-                    nextroomconfig->LayerData[i] = tmpLayerdata2;
-                }
-                else
-                {
-                    currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
-                    delete[] currentRoom->GetLayer(i)->GetLayerData();
-                    size_t size = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
-                    unsigned short *tmpData = new unsigned short[size];
-                    memcpy(tmpData, nextroomconfig->LayerData[i], size);
-                    currentRoom->GetLayer(i)->SetLayerData(tmpData);
-                }
+                // save result Layer data
+                size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
+                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
+                nextroomconfig->LayerData[i] = tmpLayerdata2;
             }
         }
     }
 
-    // reset all the Parameters in Room class. TODO: except new layer data pointers, generate them on saving
+    if (nextroomconfig->Layer0Width != currentroomconfig->Layer0Width ||
+            nextroomconfig->Layer0Height != currentroomconfig->Layer0Height)
+    {
+        if ((nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
+        {
+            if((currentroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerTile8x8)
+            {
+                // reset Layer size
+                size_t datasize2 = 0;
+                currentRoom->GetLayer(0)->ChangeDimensions(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
+                datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
+
+                // save result Layer data
+                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
+                nextroomconfig->LayerData[0] = tmpLayerdata2;
+            }
+        } else {
+            nextroomconfig->LayerData[0] = nullptr;
+        }
+    }
+
+    // reset all the Parameters in Room class, except new layer data pointers, generate them on saving
     currentRoom->SetHeight(nextroomconfig->RoomHeight);
     currentRoom->SetWidth(nextroomconfig->RoomWidth);
     currentRoom->SetLayer0MappingParam(nextroomconfig->Layer0MappingTypeParam);
@@ -600,7 +712,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetBGLayerAutoScrollEnabled(nextroomconfig->BackgroundLayerAutoScrollEnable);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
 
-    // reset LayerDataPtr in RoomHeader because Layer::SetDisabled() cannot change the data in RoomHeader
+    // reset LayerDataPtr in RoomHeader because Layer::SetDisabled() doesn't change the data in RoomHeader
     for (int i = 0; i < 3; ++i)
     {
         if (currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerDisabled)
@@ -738,6 +850,7 @@ void WL4EditorWindow::RenderScreenFull()
     {
         delete oldScene;
     }
+    ui->graphicsView->ClearRectPointer();
 
     // Perform a full render of the screen
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::FullRender);
@@ -778,16 +891,14 @@ void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId, int 
 }
 
 /// <summary>
-/// Perform a re-render of a single changed tile.
+/// Perform a re-render of multiple tiles changes.
 /// </summary>
-void WL4EditorWindow::RenderScreenTileChange(int tileX, int tileY, unsigned short tileID, int LayerID)
+void WL4EditorWindow::RenderScreenTilesChange(QVector<LevelComponents::Tileinfo> tilelist, int LayerID)
 {
-    struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::SingleTile);
+    struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::TileChanges);
     renderParams.mode = EditModeWidget->GetEditModeParams();
     renderParams.mode.selectedLayer = LayerID;
-    renderParams.tileX = tileX;
-    renderParams.tileY = tileY;
-    renderParams.tileID = tileID;
+    renderParams.tilechangelist = tilelist;
     CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
 }
 
@@ -860,7 +971,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         return;
 
     // Deselect Door and Entity
-    ui->graphicsView->DeselectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity(true);
 
     // Load the selected level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
@@ -1047,8 +1158,10 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     if (!selectedRoom)
         return;
 
+    // Deselect rect
+    // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
-    ui->graphicsView->DeselectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity(true);
 
     // Load the previous room
     --selectedRoom;
@@ -1071,8 +1184,10 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     if (selectedRoom == (CurrentLevel->GetRooms().size() - 1))
         return;
 
+    // Deselect rect
+    // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
-    ui->graphicsView->DeselectDoorAndEntity();
+    ui->graphicsView->DeselectDoorAndEntity(true);
 
     // Load the next room
     ++selectedRoom;
@@ -1706,4 +1821,35 @@ void WL4EditorWindow::on_actionOutput_window_triggered()
 void WL4EditorWindow::on_actionClear_all_triggered()
 {
     CurrentRoomClearEverything();
+}
+
+/// <summary>
+/// Zoom in the graphic render for the current Room.
+/// </summary>
+void WL4EditorWindow::on_actionZoom_in_triggered()
+{
+    uint rate = GetGraphicViewScalerate();
+    rate += 1;
+    SetGraphicViewScalerate(rate);
+}
+
+/// <summary>
+/// Zoom out the graphic render for the current Room.
+/// </summary>
+void WL4EditorWindow::on_actionZoom_out_triggered()
+{
+    uint rate = GetGraphicViewScalerate();
+    if(rate > 1) rate -= 1;
+    SetGraphicViewScalerate(rate);
+}
+
+/// <summary>
+/// Toggle the rect select mode.
+/// </summary>
+/// <param name="arg1">
+/// bool state of the rect select mode.
+/// </param>
+void WL4EditorWindow::on_actionRect_Select_Mode_toggled(bool arg1)
+{
+    ui->graphicsView->SetRectSelectMode(arg1);
 }

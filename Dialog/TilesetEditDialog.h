@@ -15,6 +15,7 @@
 #include "ROMUtils.h"
 #include "RoomPreviewGraphicsView.h"
 #include "WL4Constants.h"
+#include "Dialog/SelectColorDialog.h"
 
 namespace DialogParams
 {
@@ -87,6 +88,8 @@ private slots:
     void on_pushButton_ExportTile8x8Map_clicked();
     void on_pushButton_ExportTile16Map_clicked();
     void on_pushButton_ImportTile8x8Graphic_clicked();
+    void on_pushButton_ExportTile16sCombinationData_clicked();
+    void on_pushButton_ImportTile16sCombinationData_clicked();
 
 private:
     Ui::TilesetEditDialog *ui;

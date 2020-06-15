@@ -237,6 +237,7 @@
     <addaction name="menuAdd"/>
     <addaction name="menuSwap"/>
     <addaction name="menuClear"/>
+    <addaction name="actionRect_Select_Mode"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -261,7 +262,15 @@
      <addaction name="actionLight"/>
      <addaction name="actionDark"/>
     </widget>
+    <widget class="QMenu" name="menuZoom">
+     <property name="title">
+      <string>Zoom</string>
+     </property>
+     <addaction name="actionZoom_in"/>
+     <addaction name="actionZoom_out"/>
+    </widget>
     <addaction name="menuThemes"/>
+    <addaction name="menuZoom"/>
    </widget>
    <widget class="QMenu" name="menuScript">
     <property name="title">
@@ -420,6 +429,9 @@
    </property>
   </action>
   <action name="actionManager">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Manager</string>
    </property>
@@ -483,6 +495,33 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Del</string>
+   </property>
+  </action>
+  <action name="actionZoom_in">
+   <property name="text">
+    <string>Zoom in</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+=</string>
+   </property>
+  </action>
+  <action name="actionZoom_out">
+   <property name="text">
+    <string>Zoom out</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+-</string>
+   </property>
+  </action>
+  <action name="actionRect_Select_Mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Rect Select Mode</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Tab</string>
    </property>
   </action>
   <action name="actionUndo_global">

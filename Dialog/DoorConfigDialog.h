@@ -87,7 +87,7 @@ private:
     // TableView
     void UpdateTableView();
 
-    static LevelComponents::EntitySet *entitiessets[83];
+    static LevelComponents::EntitySet *entitiessets[90];
     static LevelComponents::Entity *entities[129];
 
     // visible in EntitySet ComboBox
@@ -233,14 +233,14 @@ public:
         "0x73 Utsuboankō",
         "0x74 Togenobi",
         "0x75 Falling Icicle",
-        "0x76 Cractus",
+        "0x76 Boss: Cractus",
         "0x77 Dice",
         "0x78 Toy Car 10 points",
         "0x79 Onomī",
         "0x7A Cat in boss corridor",
         "0x7B PET Bottle",
         "0x7C Pearl Bird",
-        "0x7D Golden Diva",
+        "0x7D Boss: Golden Diva",
         "0x7E Falling Chandelier",
         "0x7F Crumbling Platform",
         "0x80 Arewo Shitain-Hakase"

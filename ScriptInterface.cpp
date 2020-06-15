@@ -61,7 +61,7 @@ void ScriptInterface::Test_DecompressData(int mappingtype, int address)
         tmph = ROMUtils::CurrentFile[address + 1];
         LayerData = reinterpret_cast<unsigned short *>(ROMUtils::LayerRLEDecompress(address + 2, tmpw * tmph * 2));
     } else {
-        singleton->GetOutputWidgetPtr()->PrintString("Mapping Type unavailable.");
+        singleton->GetOutputWidgetPtr()->PrintString("Corruption error: Invalid layer mapping type: 0x" + QString::number(mappingtype, 16).toUpper());
         return;
     }
     QString tmpstr;
@@ -73,7 +73,8 @@ void ScriptInterface::Test_DecompressData(int mappingtype, int address)
     }
 
     if(LayerData == nullptr) {
-        singleton->GetOutputWidgetPtr()->PrintString("Decompress error.");
+        singleton->GetOutputWidgetPtr()->PrintString("Corruption error: Decompression failure. Mapping type: 0x" +
+            QString::number(mappingtype, 16).toUpper() + ". Address: 0x" + QString::number(address, 16).toUpper());
         return;
     }
     singleton->GetOutputWidgetPtr()->PrintString(tmpstr);
@@ -108,6 +109,211 @@ unsigned int ScriptInterface::Test_GetLayerDecomdataPointer(int layerId)
     }
 }
 
+void ScriptInterface::Test_ExportLayerData()
+{
+    log("Export Layer Data from current Room.");
+    QString filePath =
+        QFileDialog::getSaveFileName(singleton, tr("Save Layer data file"), "", tr("bin files (*.bin)"));
+    if (filePath.compare(""))
+    {
+        int layerid = prompt("Input the Layer Id you want to save data:", "0").toInt();
+        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        int witdh = 0, height = 0;
+        if(layerid < 0 || layerid > 2)
+        {
+            log("Illegal Layer id!");
+            return;
+        }
+        if((room->GetLayer(layerid)->GetMappingType() & 0x30) != LevelComponents::LayerMap16)
+        {
+            log("Illegal Layer mapping type!");
+            return;
+        }
+        if(layerid == 0)
+        {
+            witdh = room->GetLayer0Width();
+            height = room->GetLayer0Height();
+        } else {
+            witdh = room->GetWidth();
+            height = room->GetHeight();
+        }
+        QFile file(filePath);
+        file.open(QIODevice::WriteOnly);
+        if (file.isOpen())
+        {
+            file.write(reinterpret_cast<const char*>(room->GetLayer(layerid)->GetLayerData()), 2 * witdh * height);
+        } else {
+            log("Cannot save data file!");
+            return;
+        }
+        file.close();
+    } else {
+        log("Invalid file path!");
+        return;
+    }
+    log("Done!");
+}
+
+void ScriptInterface::Test_ImportLayerData()
+{
+    log("Import Layer Data from current Room.");
+    // Load gfx bin file
+    QString fileName = QFileDialog::getOpenFileName(singleton,
+                                                    tr("Load Layer data bin file"), "",
+                                                    tr("bin files (*.bin)"));
+    if (!fileName.compare(""))
+    {
+        log("Invalid file path!");
+        return;
+    }
+
+    // load data into QBytearray
+    QByteArray tmptile8x8data;
+    QFile layerdatabinfile(fileName);
+    int datasize = 0;
+    if(!layerdatabinfile.open(QIODevice::ReadOnly))
+    {
+        log("Cannot open file!");
+        return;
+    }
+    tmptile8x8data = layerdatabinfile.readAll();
+    datasize = layerdatabinfile.size();
+    layerdatabinfile.close();
+    if(!datasize)
+    {
+        log("No available data in the file!");
+        return;
+    }
+
+    int layerid = prompt("Input the Layer Id you choose to replace data:", "0").toInt();
+    if(layerid < 0 || layerid > 2)
+    {
+        log("Illegal Layer id!");
+        return;
+    }
+
+    // Paste data
+    int witdh = 0, height = 0;
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    if((room->GetLayer(layerid)->GetMappingType() & 0x30) != LevelComponents::LayerMap16)
+    {
+        log("Illegal Layer mapping type!");
+        return;
+    }
+    if(layerid == 0)
+    {
+        witdh = room->GetLayer0Width();
+        height = room->GetLayer0Height();
+    } else {
+        witdh = room->GetWidth();
+        height = room->GetHeight();
+    }
+    if(datasize < 2 * witdh * height)
+    {
+        log("File size not match(too small)!");
+        return;
+    }
+    memcpy(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.data(), 2 * witdh * height);
+    room->GetLayer(layerid)->SetDirty(true);
+    singleton->SetUnsavedChanges(true);
+    singleton->RenderScreenFull();
+    log("Done!");
+}
+
+void ScriptInterface::Test_ExportEntityListData()
+{
+    log("Export Entity List Data from current Room.");
+    QString filePath =
+        QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), "", tr("bin files (*.bin)"));
+    if (filePath.compare(""))
+    {
+        int entitylistid = prompt("Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)", "0").toInt();
+        if(entitylistid < 0 || entitylistid > 2)
+        {
+            log("Illegal Entity list id!");
+            return;
+        }
+        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        QFile file(filePath);
+        file.open(QIODevice::WriteOnly);
+        if (file.isOpen())
+        {
+            std::vector<struct LevelComponents::EntityRoomAttribute> tmpvec = room->GetEntityListData(entitylistid);
+            int size = tmpvec.size() * sizeof(struct LevelComponents::EntityRoomAttribute);
+            if(!size)
+            {
+                log("No Entity in the list!");
+                file.close();
+                return;
+            }
+            QByteArray entitylistdata;
+            QDataStream stream(&entitylistdata, QIODevice::WriteOnly);
+            stream.setVersion(QDataStream::Qt_5_6);
+            for(auto entity: tmpvec)
+            {
+                stream << entity.YPos << entity.XPos << entity.EntityID;
+            }
+            file.write(entitylistdata.data(), size);
+        } else {
+            log("Cannot save data file!");
+            return;
+        }
+        file.close();
+    } else {
+        log("Invalid file path!");
+        return;
+    }
+    log("Done!");
+}
+
+void ScriptInterface::Test_ImportEntityListData()
+{
+    log("Import Entity List Data from current Room.");
+    QString fileName = QFileDialog::getOpenFileName(singleton,
+                                                    tr("Load Entity List Data bin file"), "",
+                                                    tr("bin files (*.bin)"));
+    if (!fileName.compare(""))
+    {
+        log("Invalid file path!");
+        return;
+    }
+
+    // load data into QBytearray
+    QByteArray entitylistdata;
+    QFile entitylistdatabinfile(fileName);
+    int datasize = 0;
+    if(!entitylistdatabinfile.open(QIODevice::ReadOnly))
+    {
+        log("Cannot open file!");
+        return;
+    }
+    entitylistdata = entitylistdatabinfile.readAll();
+    datasize = entitylistdatabinfile.size();
+    entitylistdatabinfile.close();
+    if(!datasize || (datasize % 3))
+    {
+        log("No available data in the file!");
+        return;
+    }
+
+    int entitylistid = prompt("Input the Entity list Id you want to replace data: 0(Hard) 1(Normal) 2(S Hard):", "0").toInt();
+    if(entitylistid < 0 || entitylistid > 2)
+    {
+        log("Illegal Entity list id!");
+        return;
+    }
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    room->ClearEntitylist(entitylistid);
+    for(int i = 0; i < (datasize / 3); ++i)
+    {
+        room->AddEntity(entitylistdata.at(1 + 3 * i), entitylistdata.at(3 * i), entitylistdata.at(2 + 3 * i), entitylistid);
+    }
+    room->SetEntityListDirty(entitylistid, true);
+    singleton->SetUnsavedChanges(true);
+    singleton->RenderScreenFull();
+    log("Done!");
+}
+
 void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
 {
     if(layerID > 2 || layerID < 0) {
@@ -130,7 +336,7 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
 
 void ScriptInterface::alert(QString message)
 {
-    QMessageBox::critical(nullptr, QString("Error"), message);
+    QMessageBox::critical(singleton, QString("Error"), message);
 }
 
 void ScriptInterface::clear()

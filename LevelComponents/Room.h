@@ -76,9 +76,16 @@ namespace LevelComponents
     enum RenderUpdateType
     {
         FullRender = 0,
-        SingleTile = 1,
+        TileChanges = 1,
         LayerEnable = 2,
         ElementsLayersUpdate = 3
+    };
+
+    struct Tileinfo
+    {
+        int tileX = 0;
+        int tileY = 0;
+        unsigned short tileID = 0;
     };
 
     // This struct defines the parameters necessary to perform a rendering update to the main graphics view
@@ -88,6 +95,7 @@ namespace LevelComponents
         int tileX = 0;
         int tileY = 0;
         unsigned short tileID = 0;
+        QVector<Tileinfo> tilechangelist;
         unsigned int SelectedDoorID = ~0u;
         int SelectedEntityID = -1;
         struct Ui::EditModeParams mode = {};
@@ -111,7 +119,6 @@ namespace LevelComponents
         unsigned int RoomID;
         unsigned int LevelID;
         unsigned int Width, Height;
-        unsigned int Layer0width, Layer0height;
         bool Layer0ColorBlending = false;
         int Layer0ColorBlendCoefficient_EVA = 16;
         int Layer0ColorBlendCoefficient_EVB = 0;
@@ -171,8 +178,8 @@ namespace LevelComponents
         int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
         unsigned int GetHeight() { return Height; }
         unsigned int GetWidth() { return Width; }
-        unsigned int GetLayer0Width() { return Layer0width; }
-        unsigned int GetLayer0Height() { return Layer0height; }
+        unsigned int GetLayer0Width() { return layers[0]->GetLayerWidth(); }
+        unsigned int GetLayer0Height() { return layers[0]->GetLayerHeight(); }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         int GetLayer0MappingParam() { return RoomHeader.Layer0MappingType; }
         int GetLayerDataPtr(unsigned int LayerNum);
@@ -192,7 +199,7 @@ namespace LevelComponents
 
         // Setters
         void AddDoor(Door *newdoor);
-        bool AddEntity(int XPos, int YPos, int localEntityId);
+        bool AddEntity(int XPos, int YPos, int localEntityId, int difficulty = -1);
         void DeleteCameraLimitator(int index);
         void DeleteDoor(int globalDoorIndex);
         void DeleteEntity(int index);
@@ -257,11 +264,12 @@ namespace LevelComponents
         unsigned int GetLocalDoorID(int globalDoorId);
         void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk,
                            ROMUtils::SaveData *cameraPointerTableChunk, unsigned int *cameraPointerTableIndex);
-        QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, struct RenderUpdateParams *renderParams);
+        QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, RenderUpdateParams *renderParams);
         void SetCameraLimitator(int index, __CameraControlRecord limitator_data);
         void SwapEntityLists(int first_list_id, int second_list_id);
         bool IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2);
         bool IsNewEntityPositionInsideRoom(int x, int y);
+        QPixmap GetLayerPixmap(int layerId, int x, int y, int w, int h);
     };
 } // namespace LevelComponents
 

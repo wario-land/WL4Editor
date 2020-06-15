@@ -4,6 +4,7 @@
 #include "Dialog/DoorConfigDialog.h"
 #include "LevelComponents/Level.h"
 #include "WL4EditorWindow.h"
+#include <QtGlobal>
 #include <QGraphicsView>
 
 class MainGraphicsView : public QGraphicsView
@@ -19,7 +20,9 @@ public:
     void mouseReleaseEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
     int GetSelectedDoorID() { return SelectedDoorID; }
-    void DeselectDoorAndEntity();
+    void DeselectDoorAndEntity(bool updateRenderArea = false);
+    void SetRectSelectMode(bool state);
+    void ClearRectPointer() { rect = nullptr; }
 
 private:
     int SelectedDoorID = -1;
@@ -30,8 +33,25 @@ private:
     int objectInitialY = -1;
     bool holdingEntityOrDoor = false;
     bool holdingmouse = false;
+    bool rectSelectMode = false;
+    const QColor highlightColor = QColor(0xFF, 0, 0, 0x7F);
+    QGraphicsPixmapItem *rect = nullptr;
+    QGraphicsPixmapItem *selectedrectgraphic = nullptr;
+    int rectx = -1; // runtime position
+    int recty = -1;
+    int rectselectstartTileX = -1; // start position
+    int rectselectstartTileY = -1;
+    int tmpLTcornerTileX = -1;
+    int tmpLTcornerTileY = -1;
+    int rectwidth = 0;
+    int rectheight = 0;
+    bool has_a_rect = false;
+    QVector<unsigned short> rectdata;
+    int dragInitmouseX = -1;
+    int dragInitmouseY = -1;
+    bool Isdraggingrect = false;
 
-    void SetTile(int tileX, int tileY);
+    void SetTiles(int tileX, int tileY);
     void CopyTile(int tileX, int tileY);
 };
 

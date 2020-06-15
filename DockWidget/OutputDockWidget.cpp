@@ -10,7 +10,7 @@ extern WL4EditorWindow *singleton;
 /// </summary>
 OutputDockWidget::OutputDockWidget(QWidget *parent) :
     QDockWidget(parent),
-    ui(new Ui::OutputDockWidget)
+    ui(new Ui::OutputDockWidget) // TODO memory leak
 {
     ui->setupUi(this);
 
@@ -60,7 +60,22 @@ void OutputDockWidget::PrintString(QString str)
     ui->textEdit_Output->append(str + QString('\n'));
 }
 
+/// <summary>
+/// Clear the textEdit_Output.
+/// </summary>
 void OutputDockWidget::ClearTextEdit()
 {
     ui->textEdit_Output->clear();
+}
+
+/// <summary>
+/// slot function when clicking pushButton_Execute.
+/// </summary>
+void OutputDockWidget::on_pushButton_Execute_clicked()
+{
+    if(ui->lineEdit_JsCode->text().length())
+    {
+        ExecuteJSScript(ui->lineEdit_JsCode->text());
+        ui->lineEdit_JsCode->clear();
+    }
 }

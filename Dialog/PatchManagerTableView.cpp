@@ -1,6 +1,9 @@
 #include "PatchManagerTableView.h"
+#include "WL4EditorWindow.h"
 #include <cassert>
 #include <QModelIndex>
+
+extern WL4EditorWindow *singleton;
 
 /// <summary>
 /// Construct an instance of the PatchManagerTableView.
@@ -14,41 +17,36 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
     // Configure the table
     setModel(&EntryTableModel);
     setSelectionBehavior(SelectionBehavior::SelectRows);
+    setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Populate the table
     QVector<struct PatchEntryItem> patches = PatchUtils::GetPatchesFromROM();
-    foreach(struct PatchEntryItem patch, patches)
+    for(struct PatchEntryItem patch : patches)
     {
         EntryTableModel.AddEntry(patch);
     }
 
-    // TODO delete this once the patch manager is complete
-    // TEST this is here for quick auto-population of the patch list while testing
-    /*
-    struct PatchEntryItem TEST1 { QString("foo.c"), PatchType::C, 0x1111AF, false, false, 0x800000, "01020304" };
-    struct PatchEntryItem TEST2 { QString("bar.c"), PatchType::C, 0x2222AF, false, true, 0x800001, "01020304" };
-    struct PatchEntryItem TEST3 { QString("baz.s"), PatchType::Assembly, 0x3333AF, true, false, 0x800002, "01020304" };
-    struct PatchEntryItem TEST4 { QString("file.bin"), PatchType::Binary, 0x4444AF, true, true, 0x800003, "01020304" };
-    EntryTableModel.AddEntry(TEST1);
-    EntryTableModel.AddEntry(TEST2);
-    EntryTableModel.AddEntry(TEST3);
-    EntryTableModel.AddEntry(TEST4);
-    */
-
-    struct PatchEntryItem TEST1 { QString("PatchCode/testfunc.c"), PatchType::C, 0x1F628, false, true, 0, "" };
-    struct PatchEntryItem TEST2 { QString("PatchCode/UnlimitedRockBouncing.c"), PatchType::C, 4, false, false, 0, "" };
-    EntryTableModel.AddEntry(TEST1);
-    EntryTableModel.AddEntry(TEST2);
-
+    horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    setVerticalHeader(new PersistentHeader(Qt::Vertical, this));
     UpdateTableView();
 }
 
 /// <summary>
-/// Deconstruct the PatchManagerTableView and clean up its instance objects on the heap.
+/// Construct an instance of the PatchManagerTableView.
 /// </summary>
+/// <param name="parent">
+/// The parent QWidget.
+/// </param>
 PatchManagerTableView::~PatchManagerTableView()
 {
-    // TODO
+    while(EntryTableModel.rowCount())
+    {
+        QList<QStandardItem*> row = EntryTableModel.takeRow(0);
+        for(QStandardItem *item : row)
+        {
+            delete item;
+        }
+    }
 }
 
 /// <summary>
@@ -56,27 +54,54 @@ PatchManagerTableView::~PatchManagerTableView()
 /// </summary>
 void PatchManagerTableView::UpdateTableView()
 {
+    // Populate the table header
     EntryTableModel.clear();
-    EntryTableModel.setHorizontalHeaderLabels(QStringList() <<
-        "File" << "Type" << "Hook Address" << "Patch Address" << "Function Pointer Replacement Mode" << "Architecture");
+    QStringList headerLabels;
+    headerLabels << "File" << "Type" << "Hook address" << "Patch address" <<
+        "Hook string" << "Hook length" << "Address offset";
+    EntryTableModel.setHorizontalHeaderLabels(headerLabels);
     int row = 0;
-    foreach(const struct PatchEntryItem patchEntry, EntryTableModel.entries)
+
+    // Populate the table items
+    for(const struct PatchEntryItem patchEntry : EntryTableModel.entries)
     {
-        EntryTableModel.setItem(row, 0, new QStandardItem(patchEntry.FileName));
         const char *typeStrings[3] =
         {
             "Binary",
             "Assembly",
             "C"
         };
-        assert(patchEntry.PatchType < sizeof(typeStrings) / sizeof(typeStrings[0]) /* Patch entry type out of range */);
-        EntryTableModel.setItem(row, 1, new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
-        EntryTableModel.setItem(row, 2, new QStandardItem(!patchEntry.HookAddress ?
-            "none" : "0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
-        EntryTableModel.setItem(row, 3, new QStandardItem(!patchEntry.PatchAddress ?
-            "pending" : "0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
-        EntryTableModel.setItem(row, 4, new QStandardItem(patchEntry.FunctionPointerReplacementMode ? "yes" : "no"));
-        EntryTableModel.setItem(row++, 5, new QStandardItem(patchEntry.ThumbMode ? "Thumb" : "ARM"));
+        if(patchEntry.PatchType >= sizeof(typeStrings) / sizeof(typeStrings[0]))
+        {
+            singleton->GetOutputWidgetPtr()->PrintString("Internal error: Patch entry type out of range: " + QString::number(patchEntry.PatchType));
+            continue;
+        }
+
+        // Create the cells for the table row
+        QVector<QStandardItem*> items;
+        items.append(new QStandardItem(patchEntry.FileName.length() ? patchEntry.FileName : "(no file)"));
+        items.append(new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
+        items.append(new QStandardItem("0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
+        items.append(new QStandardItem(!patchEntry.PatchAddress ?
+            "N/A" : "0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
+        items.append(new QStandardItem(patchEntry.HookString));
+        items.append(new QStandardItem(QString::number(patchEntry.GetHookLength(), 10).toUpper()));
+        items.append(new QStandardItem(patchEntry.PatchOffsetInHookString == (unsigned int) -1 ?
+            "no patch addr" : QString::number(patchEntry.PatchOffsetInHookString, 10).toUpper()));
+
+        if(headerLabels.size() != items.size())
+        {
+            singleton->GetOutputWidgetPtr()->PrintString("(Warning) Internal error: Column count mismatch while constructing PatchManagerTableView");
+        }
+
+        // Add tooltips to them and add the cells to the table
+        for(int i = 0; i < qMin(headerLabels.size(), items.size()); ++i)
+        {
+            items[i]->setToolTip(patchEntry.Description);
+            EntryTableModel.setItem(row, i, items[i]);
+        }
+
+        ++row;
     }
 }
 
@@ -101,7 +126,11 @@ struct PatchEntryItem PatchManagerTableView::GetSelectedEntry()
 {
     QItemSelectionModel *select = selectionModel();
     QModelIndexList selectedRows = select->selectedRows();
-    assert(selectedRows.size() == 1 /* PatchManagerTableView::GetSelectedEntry called when a single row is not selected */);
+    if(selectedRows.size() != 1)
+    {
+        singleton->GetOutputWidgetPtr()->PrintString("Internal error: PatchManagerTableView::GetSelectedEntry called when a single row is not selected");
+        if(!selectedRows.size()) selectedRows.append(QModelIndex());
+    }
     return EntryTableModel.entries[selectedRows[0].row()];
 }
 

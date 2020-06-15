@@ -49,7 +49,7 @@ namespace ROMUtils
         bool alignment;          // false: do not perform special alignment of the save chunk
         unsigned int dest_index; // 0: the address of the pointer that points to this chunk is in main ROM. Else, it is
                                  // in another chunk
-        unsigned int old_chunk_addr; // address of the old chunk that was pointed to
+        unsigned int old_chunk_addr; // address of the old chunk that was pointed to. This should point to the start of the chunk data, not the RATS tag
         enum SaveDataChunkType ChunkType;
     };
 
@@ -62,11 +62,12 @@ namespace ROMUtils
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
     bool SaveFile(QString fileName, QVector<struct SaveData> chunks,
-        std::function<void(QVector<struct SaveData>, std::map<int, int>)> ChunkAllocationCallback,
+        std::function<void(unsigned char*, QVector<struct SaveData>&, std::map<int, int>)> ChunkAllocationCallback,
         std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback);
     bool SaveLevel(QString fileName);
-    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr);
+    void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor = false);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
+    unsigned int EndianReverse(unsigned int n);
 
 } // namespace ROMUtils
 
