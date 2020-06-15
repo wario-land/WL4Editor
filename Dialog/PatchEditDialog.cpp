@@ -53,7 +53,7 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     QString file1 = "/home/andrew/Desktop/PatchCode/UnlimitedRockBouncing.c";
     QString file2 = "/home/andrew/Desktop/PatchCode/WarioSpeedResetWithCondCheck.c";
 #endif
-    static int initializations = 3;
+    static int initializations = 0;
     if(initializations == 0)
     {
         patchEntry = {
