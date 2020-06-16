@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <string>
+#include <QTextStream>
 
 class ScriptInterface : public QObject
 {
@@ -28,6 +29,7 @@ public:
 
     // Setter
     Q_INVOKABLE void SetCurRoomTile16(int layerID, int TileID, int x, int y);
+    Q_INVOKABLE void SetRoomSize(int roomwidth, int roomheight, int layer0width, int layer0height);
 
     // Localize JS function
     Q_INVOKABLE void alert(QString message);
@@ -37,6 +39,10 @@ public:
 
     // UI
     Q_INVOKABLE void UpdateRoomGFXFull();
+
+    // File operations
+    Q_INVOKABLE void WriteTxtFile(QString filepath, QString test);
+    Q_INVOKABLE QString ReadTxtFile(QString filepath);
 
 signals:
 

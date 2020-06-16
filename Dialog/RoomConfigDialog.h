@@ -121,6 +121,8 @@ private:
     LevelComponents::Tileset *currentTileset = nullptr;
 
     // Enumeration of the available tilesets
+    // This part is modified from xTibor/steaks
+    // Although he uses MIT license in that repository, but we think we had better point this out
     // clang-format off
     static constexpr const char *TilesetNamesSetData[0x5C] =
     {

@@ -334,6 +334,27 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
     singleton->SetUnsavedChanges(true);
 }
 
+void ScriptInterface::SetRoomSize(int roomwidth, int roomheight, int layer0width, int layer0height)
+{
+    if(roomwidth < 19 || layer0width < 19 || roomheight < 14 || layer0height < 14)
+    {
+        log("Room size and Layer size too small, Must be bigger than (18, 13).");
+        return;
+    }
+    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
+    DialogParams::RoomConfigParams *_currentRoomConfigParams =
+        new DialogParams::RoomConfigParams(singleton->GetCurrentRoom());
+    DialogParams::RoomConfigParams *_nextRoomConfigParams =
+        new DialogParams::RoomConfigParams(singleton->GetCurrentRoom());
+
+    _nextRoomConfigParams->RoomWidth = roomwidth;
+    _nextRoomConfigParams->RoomHeight = roomheight;
+    _nextRoomConfigParams->Layer0Width = layer0width;
+    _nextRoomConfigParams->Layer0Height = layer0height;
+
+    singleton->RoomConfigReset(_currentRoomConfigParams, _nextRoomConfigParams);
+}
+
 void ScriptInterface::alert(QString message)
 {
     QMessageBox::critical(singleton, QString("Error"), message);
@@ -364,4 +385,34 @@ QString ScriptInterface::prompt(QString message, QString defaultInput)
 void ScriptInterface::UpdateRoomGFXFull()
 {
     singleton->RenderScreenFull();
+}
+
+void ScriptInterface::WriteTxtFile(QString filepath, QString test)
+{
+    QFile file(filepath);
+    if(file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        // Stream text to the file
+        QTextStream out(&file);
+        out << test;
+
+        file.close();
+        log("Writing finished");
+    }
+    else
+    {
+        log("Write file failed !");
+    }
+}
+
+QString ScriptInterface::ReadTxtFile(QString filepath)
+{
+    QFile f(filepath);
+    if (!f.open(QFile::ReadOnly | QFile::Text))
+    {
+        log("Read file failed !");
+        return QString();
+    }
+    QTextStream in(&f);
+    return in.readAll();
 }
