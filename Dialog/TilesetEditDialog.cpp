@@ -982,10 +982,10 @@ void TilesetEditDialog::on_pushButton_ExportTile16sCombinationData_clicked()
         if (file.isOpen())
         {
             file.write(reinterpret_cast<const char*>(map16tilePtr), filesize);
+            file.close();
         } else {
             QMessageBox::critical(this, QString("Error"), QString("Cannot save file!"));
         }
-        file.close();
     }
 }
 
@@ -1038,4 +1038,92 @@ void TilesetEditDialog::on_pushButton_ImportTile16sCombinationData_clicked()
     ReRenderTile16Map();
     // Update UI and select the first Tile16
     SetSelectedTile16(0, true);
+}
+
+/// <summary>
+/// Export current palette data to a file.
+/// </summary>
+void TilesetEditDialog::on_pushButton_ExportPalette_clicked()
+{
+    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString selectedfilter;
+    QString qFilePath =
+        QFileDialog::getSaveFileName(this,
+                                     tr("Save palette file"),
+                                     romFileDir,
+                                     tr("usenti pal file (*.pal);;YY-CHR pal file (*.pal)"),
+                                     &selectedfilter);
+    if(qFilePath.isEmpty()) return;
+    QVector<QRgb> tmppalette = tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId];
+    if(selectedfilter.compare("usenti pal file (*.pal)") == 0)
+    {
+        QFile palfile(qFilePath);
+        if(palfile.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            // Stream text to the file
+            QTextStream out(&palfile);
+            out << QString("CLRX 8 16\n");
+            for(int j = 0; j < 4; ++j)
+            {
+                for(int i = 0; i < 4; ++i)
+                {
+                    // RGB888(QRgb) -> BGR888(usenti pal file)
+                    int color = ((tmppalette[i + 4 * j] & 0xFF0000) >> 16) |
+                            (tmppalette[i + 4 * j] & 0xFF00) |
+                            ((tmppalette[i + 4 * j] & 0xFF) << 16);
+                    out << QString("0x") + QString("%1").arg(color, 8, 16, QChar('0')) + QString(" ");
+                }
+                out << QString("\n");
+            }
+            palfile.close();
+        }
+    }
+    else if (selectedfilter.compare("YY-CHR pal file (*.pal)") == 0)
+    {
+        unsigned char *palettedata = new unsigned char[3 * 16];
+        for(int j = 0; j < 16; ++j)
+        {
+            palettedata[3 * j] = (tmppalette[j] & 0xFF0000) >> 16; // R
+            palettedata[3 * j + 1] = (tmppalette[j] & 0xFF00) >> 8; // G
+            palettedata[3 * j + 2] = tmppalette[j] & 0xFF; // B
+        }
+        QFile palfile(qFilePath);
+        palfile.open(QIODevice::WriteOnly);
+        if (palfile.isOpen())
+        {
+            palfile.write(reinterpret_cast<const char*>(palettedata), 3 * 16);
+            palfile.close();
+        } else {
+            QMessageBox::critical(this, QString("Error"), QString("Cannot save file!"));
+        }
+        delete[] palettedata;
+    }
+}
+
+/// <summary>
+/// Import current palette data from a file.
+/// </summary>
+void TilesetEditDialog::on_pushButton_ImportPalette_clicked()
+{
+    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString selectedfilter;
+    QString qFilePath = QFileDialog::getOpenFileName(
+                this,
+                tr("Open palette file"),
+                romFileDir,
+                tr("usenti pal file (*.pal);;YY-CHR pal file (*.pal)"),
+                &selectedfilter
+    );
+    if(qFilePath.isEmpty()) return;
+    QVector<QRgb> tmppalette = tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId];
+    if(selectedfilter.compare("usenti pal file (*.pal)") == 0)
+    {
+        // TODO, don't reset color 0
+    }
+    else if (selectedfilter.compare("YY-CHR pal file (*.pal)") == 0)
+    {
+        // TODO, don't reset color 0
+    }
+    ResetPaletteBarGraphicView(SelectedPaletteId);
+    SetSelectedColorId(0);
 }
