@@ -646,6 +646,7 @@ void TilesetEditDialog::on_horizontalSlider_valueChanged(int value)
     ResetPaletteBarGraphicView(value);
     SetSelectedTile8x8(0, true);
     SetSelectedColorId(0);
+    ReRenderTile16Map();
 }
 
 void TilesetEditDialog::TLTile8x8Reset()
@@ -1115,15 +1116,74 @@ void TilesetEditDialog::on_pushButton_ImportPalette_clicked()
                 &selectedfilter
     );
     if(qFilePath.isEmpty()) return;
-    QVector<QRgb> tmppalette = tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId];
+
+    // Check the file extension
+    if(!qFilePath.endsWith(".pal", Qt::CaseInsensitive))
+    {
+        QMessageBox::critical(this, QString("Error"), QString("Wrong file extension!"));
+        return;
+    }
+
+    // Set palette
     if(selectedfilter.compare("usenti pal file (*.pal)") == 0)
     {
-        // TODO, don't reset color 0
+        QFile palfile(qFilePath);
+        if(palfile.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            // Stream text from the file
+            QTextStream in(&palfile);
+            QString header = in.readLine();
+            if(header.compare("CLRX 8 16"))
+            {
+                QMessageBox::critical(this, QString("Error"), QString("Wrong file format!"));
+                return;
+            }
+            for(int j = 0; j < 4; ++j)
+            {
+                QString line = in.readLine();
+                QStringList fields = line.split(" ");
+                for(int i = 0; i < 4; ++i)
+                {
+                    if(i == 0 && j == 0) continue; // Skip the first color
+                    // BGR888(usenti pal file) -> RGB888(QRgb)
+                    int fileformatcolor = fields[i].toInt(nullptr, 16);
+                    int color = ((fileformatcolor & 0xFF0000) >> 16) |
+                            (fileformatcolor & 0xFF00) |
+                            ((fileformatcolor & 0xFF) << 16);
+                    QColor newcolor = QColor::fromRgb(color);
+                    newcolor.setAlpha(0xFF);
+                    tilesetEditParams->newTileset->SetColor(SelectedPaletteId, i + 4 * j, newcolor.rgba());
+                }
+            }
+            palfile.close();
+        }
     }
     else if (selectedfilter.compare("YY-CHR pal file (*.pal)") == 0)
     {
-        // TODO, don't reset color 0
+        QFile file(qFilePath);
+        file.open(QIODevice::ReadOnly);
+        int length;
+        if (!file.isOpen() || (length = (int) file.size()) < (3 * 16))
+        {
+            file.close();
+            QMessageBox::critical(this, QString("Error"), QString("File size too small! It should be >= 48 bytes."));
+            return;
+        }
+
+        // Read data
+        unsigned char *paldata = new unsigned char[length];
+        file.read((char *) paldata, length);
+        file.close();
+        for(int j = 1; j < 16; ++j) // Skip the first color
+        {
+            int color = (paldata[3 * j] << 16) |
+                    (paldata[3 * j + 1] << 8) |
+                    paldata[3 * j + 2];
+            QColor newcolor = QColor::fromRgb(color);
+            newcolor.setAlpha(0xFF);
+            tilesetEditParams->newTileset->SetColor(SelectedPaletteId, j, newcolor.rgba());
+        }
     }
     ResetPaletteBarGraphicView(SelectedPaletteId);
-    SetSelectedColorId(0);
+    ReRenderTile8x8Map(SelectedPaletteId);
 }
