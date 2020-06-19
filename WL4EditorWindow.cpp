@@ -340,6 +340,33 @@ void WL4EditorWindow::SetChangeCurrentRoomEnabled(bool state)
 }
 
 /// <summary>
+/// Set current room.
+/// </summary>
+/// <param name="roomid">
+/// The new room's id.
+/// </param>
+void WL4EditorWindow::SetCurrentRoomId(int roomid)
+{
+    if (!selectedRoom)
+        return;
+    if(roomid < 0 || roomid >= static_cast<int>(CurrentLevel->GetRooms().size()))
+        return;
+
+    // Deselect rect
+    // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
+    // Deselect Door and Entity
+    ui->graphicsView->DeselectDoorAndEntity(true);
+
+    // Load the previous room
+    selectedRoom = roomid;
+    LoadRoomUIUpdate();
+    int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
+    Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    ResetEntitySetDockWidget();
+    ResetCameraControlDockWidget();
+}
+
+/// <summary>
 /// Update the UI after loading a ROM.
 /// </summary>
 void WL4EditorWindow::UIStartUp(int currentTilesetID)

@@ -18,6 +18,8 @@ public:
     Q_INVOKABLE int GetCurRoomWidth();
     Q_INVOKABLE int GetCurRoomHeight();
     Q_INVOKABLE int GetCurRoomTile16(int layerID, int x, int y);
+    Q_INVOKABLE int GetRoomNum();
+    Q_INVOKABLE int GetCurRoomId();
 
     // Test
     Q_INVOKABLE void Test_DecompressData(int mappingtype, int address);
@@ -28,6 +30,7 @@ public:
     Q_INVOKABLE void Test_ImportEntityListData();
 
     // Setter
+    Q_INVOKABLE void SetCurrentRoomId(int roomid);
     Q_INVOKABLE void SetCurRoomTile16(int layerID, int TileID, int x, int y);
     Q_INVOKABLE void SetRoomSize(int roomwidth, int roomheight, int layer0width, int layer0height);
 

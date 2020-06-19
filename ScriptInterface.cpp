@@ -32,6 +32,16 @@ int ScriptInterface::GetCurRoomTile16(int layerID, int x, int y)
     return room->GetLayer(layerID)->GetTileData(x, y);
 }
 
+int ScriptInterface::GetRoomNum()
+{
+    return singleton->GetCurrentLevel()->GetRooms().size();
+}
+
+int ScriptInterface::GetCurRoomId()
+{
+    return singleton->GetCurrentRoomId();
+}
+
 void ScriptInterface::Test_DecompressData(int mappingtype, int address)
 {
     int tmpw = 0, tmph = 0;
@@ -312,6 +322,11 @@ void ScriptInterface::Test_ImportEntityListData()
     singleton->SetUnsavedChanges(true);
     singleton->RenderScreenFull();
     log("Done!");
+}
+
+void ScriptInterface::SetCurrentRoomId(int roomid)
+{
+    singleton->SetCurrentRoomId(roomid);
 }
 
 void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
