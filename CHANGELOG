@@ -1,3 +1,9 @@
+beta-11:
+- Added more script interface API functions
+- Support importing and exporting palette files in the tileset editor
+- Fix updating the palette does not update the graphicsview in the tileset editor
+- Fix that you could not provide a hook string with the patch address identifier "P" at the beginning of the string
+
 beta-10:
 (major changes)
 - Add patch manager feature which allows you to add or remove patches, ranging from simple hex edits to custom C code called from an asm hook.

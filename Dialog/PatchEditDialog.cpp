@@ -83,7 +83,7 @@ static unsigned int GetPatchOffset(QString str)
 {
     str = str.replace(" ", "").toUpper();
     int index = str.indexOf("P");
-    return index > 0 ? index / 2 : -1;
+    return index >= 0 ? index / 2 : -1;
 }
 
 /// <summary>
