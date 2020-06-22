@@ -24,10 +24,10 @@ public:
     // Test
     Q_INVOKABLE void Test_DecompressData(int mappingtype, int address);
     Q_INVOKABLE unsigned int Test_GetLayerDecomdataPointer(int layerId);
-    Q_INVOKABLE void Test_ExportLayerData();
-    Q_INVOKABLE void Test_ImportLayerData();
-    Q_INVOKABLE void Test_ExportEntityListData();
-    Q_INVOKABLE void Test_ImportEntityListData();
+    Q_INVOKABLE void Test_ExportLayerData(QString filePath = QString(""), int layerid = -1);
+    Q_INVOKABLE void Test_ImportLayerData(QString fileName = QString(""), int layerid = -1);
+    Q_INVOKABLE void Test_ExportEntityListData(QString filePath = QString(""), int entitylistid = -1);
+    Q_INVOKABLE void Test_ImportEntityListData(QString filePath = QString(""), int entitylistid = -1);
 
     // Setter
     Q_INVOKABLE void SetCurrentRoomId(int roomid);

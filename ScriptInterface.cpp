@@ -119,14 +119,15 @@ unsigned int ScriptInterface::Test_GetLayerDecomdataPointer(int layerId)
     }
 }
 
-void ScriptInterface::Test_ExportLayerData()
+void ScriptInterface::Test_ExportLayerData(QString filePath, int layerid)
 {
     log("Export Layer Data from current Room.");
-    QString filePath =
-        QFileDialog::getSaveFileName(singleton, tr("Save Layer data file"), "", tr("bin files (*.bin)"));
+    if(!filePath.compare(""))
+        filePath = QFileDialog::getSaveFileName(singleton, tr("Save Layer data file"), "", tr("bin files (*.bin)"));
     if (filePath.compare(""))
     {
-        int layerid = prompt("Input the Layer Id you want to save data:", "0").toInt();
+        if(layerid == -1)
+            layerid = prompt("Input the Layer Id you want to save data:", "0").toInt();
         LevelComponents::Room *room = singleton->GetCurrentRoom();
         int witdh = 0, height = 0;
         if(layerid < 0 || layerid > 2)
@@ -164,13 +165,16 @@ void ScriptInterface::Test_ExportLayerData()
     log("Done!");
 }
 
-void ScriptInterface::Test_ImportLayerData()
+void ScriptInterface::Test_ImportLayerData(QString fileName, int layerid)
 {
     log("Import Layer Data from current Room.");
     // Load gfx bin file
-    QString fileName = QFileDialog::getOpenFileName(singleton,
+    if(!fileName.compare(""))
+    {
+        fileName = QFileDialog::getOpenFileName(singleton,
                                                     tr("Load Layer data bin file"), "",
                                                     tr("bin files (*.bin)"));
+    }
     if (!fileName.compare(""))
     {
         log("Invalid file path!");
@@ -195,7 +199,8 @@ void ScriptInterface::Test_ImportLayerData()
         return;
     }
 
-    int layerid = prompt("Input the Layer Id you choose to replace data:", "0").toInt();
+    if(layerid == -1)
+        layerid = prompt("Input the Layer Id you choose to replace data:", "0").toInt();
     if(layerid < 0 || layerid > 2)
     {
         log("Illegal Layer id!");
@@ -218,9 +223,9 @@ void ScriptInterface::Test_ImportLayerData()
         witdh = room->GetWidth();
         height = room->GetHeight();
     }
-    if(datasize < 2 * witdh * height)
+    if(datasize != 2 * witdh * height)
     {
-        log("File size not match(too small)!");
+        log("File size not match (expected width:" + QString::number(witdh) + ", height:" + QString::number(height) + ")!");
         return;
     }
     memcpy(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.data(), 2 * witdh * height);
@@ -230,14 +235,15 @@ void ScriptInterface::Test_ImportLayerData()
     log("Done!");
 }
 
-void ScriptInterface::Test_ExportEntityListData()
+void ScriptInterface::Test_ExportEntityListData(QString filePath, int entitylistid)
 {
     log("Export Entity List Data from current Room.");
-    QString filePath =
-        QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), "", tr("bin files (*.bin)"));
+    if(!filePath.compare(""))
+        filePath = QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), "", tr("bin files (*.bin)"));
     if (filePath.compare(""))
     {
-        int entitylistid = prompt("Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)", "0").toInt();
+        if(entitylistid == -1)
+            entitylistid = prompt("Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)", "0").toInt();
         if(entitylistid < 0 || entitylistid > 2)
         {
             log("Illegal Entity list id!");
@@ -276,10 +282,11 @@ void ScriptInterface::Test_ExportEntityListData()
     log("Done!");
 }
 
-void ScriptInterface::Test_ImportEntityListData()
+void ScriptInterface::Test_ImportEntityListData(QString fileName, int entitylistid)
 {
     log("Import Entity List Data from current Room.");
-    QString fileName = QFileDialog::getOpenFileName(singleton,
+    if(!fileName.compare(""))
+        fileName = QFileDialog::getOpenFileName(singleton,
                                                     tr("Load Entity List Data bin file"), "",
                                                     tr("bin files (*.bin)"));
     if (!fileName.compare(""))
@@ -306,7 +313,8 @@ void ScriptInterface::Test_ImportEntityListData()
         return;
     }
 
-    int entitylistid = prompt("Input the Entity list Id you want to replace data: 0(Hard) 1(Normal) 2(S Hard):", "0").toInt();
+    if(entitylistid == -1)
+        entitylistid = prompt("Input the Entity list Id you want to replace data: 0(Hard) 1(Normal) 2(S Hard):", "0").toInt();
     if(entitylistid < 0 || entitylistid > 2)
     {
         log("Illegal Entity list id!");
