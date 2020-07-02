@@ -29,7 +29,7 @@
    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
   </property>
   <property name="windowTitle">
-   <string>Visibility and Editing Controls</string>
+   <string>View and Edit</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -100,7 +100,7 @@
        </size>
       </property>
       <property name="title">
-       <string>Visible Layers</string>
+       <string>View Layers</string>
       </property>
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="0">
@@ -228,7 +228,7 @@
        </size>
       </property>
       <property name="title">
-       <string>Extra</string>
+       <string>Extra View</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -268,7 +268,7 @@
        </size>
       </property>
       <property name="title">
-       <string>Selected Layer</string>
+       <string>Edit Layer</string>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
