@@ -7,7 +7,6 @@
 #include <QMouseEvent>
 #include <QScrollBar>
 
-#include <cassert>
 #include <iostream>
 
 extern WL4EditorWindow *singleton;
@@ -180,7 +179,10 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 // Add the new entity
                 bool success =
                     room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
-                assert(success /* Failure to add entity */); // TODO: Show information if failure
+                if(!success)
+                {
+                    singleton->GetOutputWidgetPtr()->PrintString("Cannot add more entity under the current difficulty in this room");
+                }
                 int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
                 room->SetEntityListDirty(difficulty, true);
                 singleton->SetUnsavedChanges(true);
