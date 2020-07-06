@@ -1185,5 +1185,7 @@ void TilesetEditDialog::on_pushButton_ImportPalette_clicked()
         }
     }
     ResetPaletteBarGraphicView(SelectedPaletteId);
+    SetSelectedColorId(0);
     ReRenderTile8x8Map(SelectedPaletteId);
+    ReRenderTile16Map();
 }
