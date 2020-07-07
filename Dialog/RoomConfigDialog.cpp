@@ -55,6 +55,9 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->CheckBox_Layer2Enable->setChecked(CurrentRoomParams->Layer2Enable);
     ui->CheckBox_BGLayerEnable->setChecked(CurrentRoomParams->BackgroundLayerEnable);
     ui->CheckBox_BGLayerAutoScroll->setChecked(CurrentRoomParams->BackgroundLayerAutoScrollEnable);
+    ui->spinBox_LayerGfxEffect01->setValue(CurrentRoomParams->LayerGFXEffect01);
+    ui->spinBox_LayerGfxEffect02->setValue(CurrentRoomParams->LayerGFXEffect02);
+    ui->spinBox_BgmVolume->setValue(CurrentRoomParams->Bgmvolume);
 
     // Initialize the selection for the BG selection combobox
     bool CurrentBGSelectionAvailable = false;
@@ -148,6 +151,9 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     }
     configParams.RoomHeight = ui->SpinBox_RoomHeight->value();
     configParams.RoomWidth = ui->SpinBox_RoomWidth->value();
+    configParams.LayerGFXEffect01 = ui->spinBox_LayerGfxEffect01->value();
+    configParams.LayerGFXEffect02 = ui->spinBox_LayerGfxEffect02->value();
+    configParams.Bgmvolume = ui->spinBox_BgmVolume->value();
 
     return configParams;
 }

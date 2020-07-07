@@ -738,6 +738,9 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
     currentRoom->SetBGLayerAutoScrollEnabled(nextroomconfig->BackgroundLayerAutoScrollEnable);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
+    currentRoom->SetLayerGFXEffect01(nextroomconfig->LayerGFXEffect01);
+    currentRoom->SetLayerGFXEffect02(nextroomconfig->LayerGFXEffect02);
+    currentRoom->SetBgmvolume(nextroomconfig->Bgmvolume);
 
     // reset LayerDataPtr in RoomHeader because Layer::SetDisabled() doesn't change the data in RoomHeader
     for (int i = 0; i < 3; ++i)

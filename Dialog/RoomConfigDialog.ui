@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>662</height>
+    <height>794</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -252,6 +252,57 @@
          </property>
          <property name="maximum">
           <number>255</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_LayerGfxEffect01">
+         <property name="text">
+          <string>Layer graphic effect flag 1(Hex):</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_LayerGfxEffect01">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_LayerGfxEffect02">
+         <property name="text">
+          <string>Layer graphic effect flag 2(Hex):</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_LayerGfxEffect02">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_BgmVolume">
+         <property name="text">
+          <string>BGM Volume(Hex):</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_BgmVolume">
+         <property name="maximum">
+          <number>65535</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
          </property>
         </widget>
        </item>

@@ -126,7 +126,7 @@ namespace LevelComponents
             layers[i] = new Layer(*room->GetLayer(i));
         }
 
-        SetLayerPriorityAndAlphaAttributes(room->GetRoomHeader().LayerEffects);
+        SetLayerPriorityAndAlphaAttributes(room->GetRoomHeader().LayerPriorityColorBlendingFlag);
 
         // Set up camera control data
         if (CameraControlType == LevelComponents::HasControlAttrs)
@@ -905,7 +905,7 @@ namespace LevelComponents
     {
         // Prioritize the layers
         int priorityFlag = layerPriorityAndAlphaAttr;
-        RoomHeader.LayerEffects = (unsigned char) layerPriorityAndAlphaAttr;
+        RoomHeader.LayerPriorityColorBlendingFlag = (unsigned char) layerPriorityAndAlphaAttr;
         switch (priorityFlag & 3)
         {
         case 0:
@@ -1176,9 +1176,10 @@ namespace LevelComponents
             Layer2MappingType(room->GetLayer(2)->GetMappingType()),
             Layer3MappingType(room->GetLayer(3)->GetMappingType()), Layer0Data(0), // set manually
             Layer1Data(0), Layer2Data(0), Layer3Data(0), CameraControlType(room->GetCameraControlType()),
-            Layer3Scrolling(room->GetBGScrollParameter()), LayerEffects(room->GetLayerEffectsParam()), DATA_1B(0),
+            Layer3Scrolling(room->GetBGScrollParameter()), LayerPriorityColorBlendingFlag(room->GetLayerEffectsParam()), DATA_1B(0),
             EntityTableHard(0), // set manually
-            EntityTableNormal(0), EntityTableSHard(0)
+            EntityTableNormal(0), EntityTableSHard(0), LayerGFXEffect01(room->GetLayerGFXEffect01()),
+            LayerGFXEffect02(room->GetLayerGFXEffect02()), Bgmvolume(room->GetBgmvolume())
     {}
 
     /// <summary>
