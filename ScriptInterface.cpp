@@ -32,6 +32,16 @@ int ScriptInterface::GetCurRoomTile16(int layerID, int x, int y)
     return room->GetLayer(layerID)->GetTileData(x, y);
 }
 
+int ScriptInterface::GetRoomNum()
+{
+    return singleton->GetCurrentLevel()->GetRooms().size();
+}
+
+int ScriptInterface::GetCurRoomId()
+{
+    return singleton->GetCurrentRoomId();
+}
+
 void ScriptInterface::Test_DecompressData(int mappingtype, int address)
 {
     int tmpw = 0, tmph = 0;
@@ -109,14 +119,15 @@ unsigned int ScriptInterface::Test_GetLayerDecomdataPointer(int layerId)
     }
 }
 
-void ScriptInterface::Test_ExportLayerData()
+void ScriptInterface::Test_ExportLayerData(QString filePath, int layerid)
 {
     log("Export Layer Data from current Room.");
-    QString filePath =
-        QFileDialog::getSaveFileName(singleton, tr("Save Layer data file"), "", tr("bin files (*.bin)"));
+    if(!filePath.compare(""))
+        filePath = QFileDialog::getSaveFileName(singleton, tr("Save Layer data file"), "", tr("bin files (*.bin)"));
     if (filePath.compare(""))
     {
-        int layerid = prompt("Input the Layer Id you want to save data:", "0").toInt();
+        if(layerid == -1)
+            layerid = prompt("Input the Layer Id you want to save data:", "0").toInt();
         LevelComponents::Room *room = singleton->GetCurrentRoom();
         int witdh = 0, height = 0;
         if(layerid < 0 || layerid > 2)
@@ -154,13 +165,16 @@ void ScriptInterface::Test_ExportLayerData()
     log("Done!");
 }
 
-void ScriptInterface::Test_ImportLayerData()
+void ScriptInterface::Test_ImportLayerData(QString fileName, int layerid)
 {
     log("Import Layer Data from current Room.");
     // Load gfx bin file
-    QString fileName = QFileDialog::getOpenFileName(singleton,
+    if(!fileName.compare(""))
+    {
+        fileName = QFileDialog::getOpenFileName(singleton,
                                                     tr("Load Layer data bin file"), "",
                                                     tr("bin files (*.bin)"));
+    }
     if (!fileName.compare(""))
     {
         log("Invalid file path!");
@@ -185,7 +199,8 @@ void ScriptInterface::Test_ImportLayerData()
         return;
     }
 
-    int layerid = prompt("Input the Layer Id you choose to replace data:", "0").toInt();
+    if(layerid == -1)
+        layerid = prompt("Input the Layer Id you choose to replace data:", "0").toInt();
     if(layerid < 0 || layerid > 2)
     {
         log("Illegal Layer id!");
@@ -208,9 +223,9 @@ void ScriptInterface::Test_ImportLayerData()
         witdh = room->GetWidth();
         height = room->GetHeight();
     }
-    if(datasize < 2 * witdh * height)
+    if(datasize != 2 * witdh * height)
     {
-        log("File size not match(too small)!");
+        log("File size not match (expected width:" + QString::number(witdh) + ", height:" + QString::number(height) + ")!");
         return;
     }
     memcpy(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.data(), 2 * witdh * height);
@@ -220,14 +235,15 @@ void ScriptInterface::Test_ImportLayerData()
     log("Done!");
 }
 
-void ScriptInterface::Test_ExportEntityListData()
+void ScriptInterface::Test_ExportEntityListData(QString filePath, int entitylistid)
 {
     log("Export Entity List Data from current Room.");
-    QString filePath =
-        QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), "", tr("bin files (*.bin)"));
+    if(!filePath.compare(""))
+        filePath = QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), "", tr("bin files (*.bin)"));
     if (filePath.compare(""))
     {
-        int entitylistid = prompt("Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)", "0").toInt();
+        if(entitylistid == -1)
+            entitylistid = prompt("Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)", "0").toInt();
         if(entitylistid < 0 || entitylistid > 2)
         {
             log("Illegal Entity list id!");
@@ -266,10 +282,11 @@ void ScriptInterface::Test_ExportEntityListData()
     log("Done!");
 }
 
-void ScriptInterface::Test_ImportEntityListData()
+void ScriptInterface::Test_ImportEntityListData(QString fileName, int entitylistid)
 {
     log("Import Entity List Data from current Room.");
-    QString fileName = QFileDialog::getOpenFileName(singleton,
+    if(!fileName.compare(""))
+        fileName = QFileDialog::getOpenFileName(singleton,
                                                     tr("Load Entity List Data bin file"), "",
                                                     tr("bin files (*.bin)"));
     if (!fileName.compare(""))
@@ -296,7 +313,8 @@ void ScriptInterface::Test_ImportEntityListData()
         return;
     }
 
-    int entitylistid = prompt("Input the Entity list Id you want to replace data: 0(Hard) 1(Normal) 2(S Hard):", "0").toInt();
+    if(entitylistid == -1)
+        entitylistid = prompt("Input the Entity list Id you want to replace data: 0(Hard) 1(Normal) 2(S Hard):", "0").toInt();
     if(entitylistid < 0 || entitylistid > 2)
     {
         log("Illegal Entity list id!");
@@ -312,6 +330,11 @@ void ScriptInterface::Test_ImportEntityListData()
     singleton->SetUnsavedChanges(true);
     singleton->RenderScreenFull();
     log("Done!");
+}
+
+void ScriptInterface::SetCurrentRoomId(int roomid)
+{
+    singleton->SetCurrentRoomId(roomid);
 }
 
 void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
@@ -332,6 +355,27 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
     room->GetLayer(layerID)->SetTileData(TileID & 0xFFFF, x, y);
     room->GetLayer(layerID)->SetDirty(true);
     singleton->SetUnsavedChanges(true);
+}
+
+void ScriptInterface::SetRoomSize(int roomwidth, int roomheight, int layer0width, int layer0height)
+{
+    if(roomwidth < 19 || layer0width < 19 || roomheight < 14 || layer0height < 14)
+    {
+        log("Room size and Layer size too small, Must be bigger than (18, 13).");
+        return;
+    }
+    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
+    DialogParams::RoomConfigParams *_currentRoomConfigParams =
+        new DialogParams::RoomConfigParams(singleton->GetCurrentRoom());
+    DialogParams::RoomConfigParams *_nextRoomConfigParams =
+        new DialogParams::RoomConfigParams(singleton->GetCurrentRoom());
+
+    _nextRoomConfigParams->RoomWidth = roomwidth;
+    _nextRoomConfigParams->RoomHeight = roomheight;
+    _nextRoomConfigParams->Layer0Width = layer0width;
+    _nextRoomConfigParams->Layer0Height = layer0height;
+
+    singleton->RoomConfigReset(_currentRoomConfigParams, _nextRoomConfigParams);
 }
 
 void ScriptInterface::alert(QString message)
@@ -364,4 +408,34 @@ QString ScriptInterface::prompt(QString message, QString defaultInput)
 void ScriptInterface::UpdateRoomGFXFull()
 {
     singleton->RenderScreenFull();
+}
+
+void ScriptInterface::WriteTxtFile(QString filepath, QString test)
+{
+    QFile file(filepath);
+    if(file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        // Stream text to the file
+        QTextStream out(&file);
+        out << test;
+
+        file.close();
+        log("Writing finished");
+    }
+    else
+    {
+        log("Write file failed !");
+    }
+}
+
+QString ScriptInterface::ReadTxtFile(QString filepath)
+{
+    QFile f(filepath);
+    if (!f.open(QFile::ReadOnly | QFile::Text))
+    {
+        log("Read file failed !");
+        return QString();
+    }
+    QTextStream in(&f);
+    return in.readAll();
 }

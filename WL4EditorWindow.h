@@ -74,6 +74,7 @@ public:
     OutputDockWidget *GetOutputWidgetPtr() { return OutputWidget; }
     void InvalidOutputWidgetPtr() { OutputWidget = nullptr; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
+    int GetCurrentRoomId() { return selectedRoom; }
     LevelComponents::Level *GetCurrentLevel() { return CurrentLevel; }
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
     bool FirstROMIsLoaded() { return firstROMLoaded; }
@@ -106,6 +107,7 @@ public:
     void SetRectSelectMode(bool state);
     QGraphicsView *Getgraphicview();
     void SetChangeCurrentRoomEnabled(bool state);
+    void SetCurrentRoomId(int roomid);
 
 private slots:
     // called slots

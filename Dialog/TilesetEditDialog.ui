@@ -72,6 +72,27 @@
         </widget>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="pushButton_ExportPalette">
+           <property name="text">
+            <string>Export Palette</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_ImportPalette">
+           <property name="text">
+            <string>Import Palette</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QLabel" name="label_RGB888Value">
          <property name="text">
           <string>RGB888: </string>

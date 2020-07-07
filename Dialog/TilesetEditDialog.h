@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QScrollBar>
 #include <QColorDialog>
+#include <QTextStream>
 #include "LevelComponents/Layer.h"
 #include "LevelComponents/Room.h"
 #include "LevelComponents/Tileset.h"
@@ -90,6 +91,8 @@ private slots:
     void on_pushButton_ImportTile8x8Graphic_clicked();
     void on_pushButton_ExportTile16sCombinationData_clicked();
     void on_pushButton_ImportTile16sCombinationData_clicked();
+    void on_pushButton_ExportPalette_clicked();
+    void on_pushButton_ImportPalette_clicked();
 
 private:
     Ui::TilesetEditDialog *ui;
