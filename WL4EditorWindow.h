@@ -151,6 +151,7 @@ private slots:
     void on_actionRect_Select_Mode_toggled(bool arg1);
     void on_actionUndo_global_triggered();
     void on_actionRedo_global_triggered();
+    void on_actionNew_Room_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

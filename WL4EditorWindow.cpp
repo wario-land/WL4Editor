@@ -771,7 +771,10 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 {
     // You cannot delete the vortex, it is always the first Door.
     if (globalDoorIndex == 0)
+    {
+        OutputWidget->PrintString("Deleting portal Door not permitted!");
         return;
+    }
 
     // Delete the Door from the Room Door list
     CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()]->DeleteDoor(globalDoorIndex);
@@ -1882,4 +1885,12 @@ void WL4EditorWindow::on_actionZoom_out_triggered()
 void WL4EditorWindow::on_actionRect_Select_Mode_toggled(bool arg1)
 {
     ui->graphicsView->SetRectSelectMode(arg1);
+}
+
+/// <summary>
+/// Add a new Room to the current Level.
+/// </summary>
+void WL4EditorWindow::on_actionNew_Room_triggered()
+{
+    // TODO
 }
