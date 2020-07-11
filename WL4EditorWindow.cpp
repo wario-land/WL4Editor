@@ -347,7 +347,7 @@ void WL4EditorWindow::SetChangeCurrentRoomEnabled(bool state)
 /// </param>
 void WL4EditorWindow::SetCurrentRoomId(int roomid)
 {
-    if (!selectedRoom)
+    if (static_cast<int>(selectedRoom) == roomid)
         return;
     if(roomid < 0 || roomid >= static_cast<int>(CurrentLevel->GetRooms().size()))
         return;
@@ -775,6 +775,11 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
         OutputWidget->PrintString("Deleting portal Door not permitted!");
         return;
     }
+    if (CurrentLevel->GetDoors().size() == 1)
+    {
+        OutputWidget->PrintString("Deleting the last Door in the Room not permitted! Spriteset is based on Doors.");
+        return;
+    }
 
     // Delete the Door from the Room Door list
     CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()]->DeleteDoor(globalDoorIndex);
@@ -1074,28 +1079,41 @@ bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
 /// Clear eventhing in the current room.
 /// But at least one door will be kept.
 /// </summary>
-void WL4EditorWindow::CurrentRoomClearEverything()
+/// <param name="no_warning">
+/// Optional param for showing warning of deleting doors.
+/// </param>
+/// <param name="roomId">
+/// Optional param for selecting a room to clear, set -1 as a default value for current room.
+/// </param>
+void WL4EditorWindow::ClearEverythingInRoom(bool no_warning, int roomId)
 {
     bool IfDeleteAllDoors = false;
     // Show asking deleting Doors messagebox
-    QMessageBox IfDeleteDoors;
-    IfDeleteDoors.setWindowTitle(tr("WL4Editor"));
-    IfDeleteDoors.setText(
-        "You just triggered the clear-all shortcut (current room).\nDo you want to delete all the doors, too?\n(One "
-        "door will be kept to render camera boxes correctly.\nCamera settings will be unaffected regardless.)");
-    QPushButton *CancelClearingButton = IfDeleteDoors.addButton(tr("Cancel Clearing"), QMessageBox::RejectRole);
-    QPushButton *NoButton = IfDeleteDoors.addButton(tr("No"), QMessageBox::NoRole);
-    QPushButton *YesButton = IfDeleteDoors.addButton(tr("Yes"), QMessageBox::ApplyRole);
-    IfDeleteDoors.setDefaultButton(CancelClearingButton);
-    IfDeleteDoors.exec();
+    if(no_warning == false)
+    {
+        QMessageBox IfDeleteDoors;
+        IfDeleteDoors.setWindowTitle(tr("WL4Editor"));
+        IfDeleteDoors.setText(
+            "You just triggered the clear-all shortcut (current room).\nDo you want to delete all the doors, too?\n(One "
+            "door will be kept to render camera boxes correctly.\nCamera settings will be unaffected regardless.)");
+        QPushButton *CancelClearingButton = IfDeleteDoors.addButton(tr("Cancel Clearing"), QMessageBox::RejectRole);
+        QPushButton *NoButton = IfDeleteDoors.addButton(tr("No"), QMessageBox::NoRole);
+        QPushButton *YesButton = IfDeleteDoors.addButton(tr("Yes"), QMessageBox::ApplyRole);
+        IfDeleteDoors.setDefaultButton(CancelClearingButton);
+        IfDeleteDoors.exec();
 
-    if (IfDeleteDoors.clickedButton() == YesButton)
+        if (IfDeleteDoors.clickedButton() == YesButton)
+        {
+            IfDeleteAllDoors = true;
+        }
+        else if (IfDeleteDoors.clickedButton() != NoButton)
+        {
+            return;
+        }
+    }
+    else
     {
         IfDeleteAllDoors = true;
-    }
-    else if (IfDeleteDoors.clickedButton() != NoButton)
-    {
-        return;
     }
 
     // Clear Layers 0, 1, 2
@@ -1853,7 +1871,7 @@ void WL4EditorWindow::on_actionOutput_window_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionClear_all_triggered()
 {
-    CurrentRoomClearEverything();
+    ClearEverythingInRoom();
 }
 
 /// <summary>
@@ -1892,5 +1910,46 @@ void WL4EditorWindow::on_actionRect_Select_Mode_toggled(bool arg1)
 /// </summary>
 void WL4EditorWindow::on_actionNew_Room_triggered()
 {
-    // TODO
+    // Create new Room based on current Room
+    int newRoomId = CurrentLevel->GetRooms().size();
+    if (newRoomId == 16)
+    {
+        OutputWidget->PrintString("Cannot add more Room to the current Level!");
+    }
+    int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + CurrentLevel->GetLevelID() * 4);
+    CurrentLevel->AddRoom(new LevelComponents::Room(roomTableAddress + selectedRoom * 0x2C, newRoomId, CurrentLevel->GetLevelID()));
+    OutputWidget->PrintString("Create new Room based on current Room.");
+
+    // Add one Door to the new Room as well as spriteset settings
+    {
+        // Create a new door struct with blank fields
+        LevelComponents::__DoorEntry newDoorEntry;
+        memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
+
+        // Initialize the fields
+        newDoorEntry.DoorTypeByte = (unsigned char) 2;
+        newDoorEntry.EntitySetID = (unsigned char) 1;
+        newDoorEntry.RoomID = (unsigned char) newRoomId;
+        newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
+        LevelComponents::Door *newDoor =
+            new LevelComponents::Door(newDoorEntry, (unsigned char) newRoomId, CurrentLevel->GetDoors().size());
+        int entitysetId = CurrentLevel->GetRooms()[selectedRoom]->GetCurrentEntitySetID();
+        newDoor->SetEntitySetID(entitysetId);
+        newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
+
+        // Add the new door to the Level object and re-render the screen
+        CurrentLevel->AddDoor(newDoor);
+
+        // Set Current Entity list
+        CurrentLevel->GetRooms()[newRoomId]->SetCurrentEntitySet(entitysetId);
+    }
+
+    // Reset LevelHeader param
+    CurrentLevel->GetLevelHeader()->NumOfMap++;
+
+    // UI updates
+    SetCurrentRoomId(newRoomId);
+
+    // Clear everything in the new room
+    ClearEverythingInRoom(true, selectedRoom);
 }

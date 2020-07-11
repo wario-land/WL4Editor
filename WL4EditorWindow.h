@@ -54,7 +54,7 @@ private:
     static bool SaveCurrentFile() { return ROMUtils::SaveLevel(ROMUtils::ROMFilePath); }
     bool SaveCurrentFileAs();
     bool UnsavedChangesPrompt(QString str);
-    void CurrentRoomClearEverything();
+    void ClearEverythingInRoom(bool no_warning = false, int roomId = -1);
 
 protected:
     void resizeEvent(QResizeEvent *event);

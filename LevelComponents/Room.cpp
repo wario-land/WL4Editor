@@ -22,6 +22,7 @@ namespace LevelComponents
     /// </param>
     /// <param name="_RoomID">
     /// Zero-based ID for the room in the level.
+    /// This won't be used to load data, so you can set roomId and load another room
     /// </param>
     /// <param name="_LevelID">
     /// Level index value from 0x03000023 at run-time.

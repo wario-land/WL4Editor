@@ -72,7 +72,9 @@ namespace LevelComponents
         int GetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty);
         std::vector<Door *> GetDoors() { return doors; } // get Doors without copying the data
         std::vector<Room *> GetRooms() { return rooms; }
+        void AddRoom(Room *newroom) { rooms.push_back(newroom); }
         std::string GetLevelName() { return LevelName; }
+        unsigned int GetLevelID() { return LevelID; }
         void SetLevelName(std::string newlevelname) { LevelName = newlevelname; }
         void RedistributeDoor();
         std::vector<Door *> GetRoomDoors(unsigned int roomId); // get Doors and copy the data
