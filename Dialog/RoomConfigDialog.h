@@ -21,7 +21,6 @@ namespace DialogParams
     struct RoomConfigParams
     {
         int CurrentTilesetIndex;
-        bool Layer0Enable;
         bool Layer0Alpha;
         int LayerPriorityAndAlphaAttr;
         int Layer0MappingTypeParam;
@@ -32,7 +31,7 @@ namespace DialogParams
         bool Layer2Enable;
         int Layer0DataPtr;
         bool BackgroundLayerEnable;
-        bool BackgroundLayerAutoScrollEnable;
+        unsigned char BGLayerScrollFlag;
         int BackgroundLayerDataPtr;
         unsigned short *LayerData[3]; //only use it when room & layer0 size change
         unsigned char LayerGFXEffect01;
@@ -44,7 +43,7 @@ namespace DialogParams
 
         // Construct this param struct using a Room object
         RoomConfigParams(LevelComponents::Room *room) :
-                CurrentTilesetIndex(room->GetTilesetID()), Layer0Enable(room->GetLayer0MappingParam() != 0),
+                CurrentTilesetIndex(room->GetTilesetID()),
                 Layer0Alpha(room->IsLayer0ColorBlendingEnabled()),
                 LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
                 Layer0MappingTypeParam(room->GetLayer0MappingParam()),
@@ -53,7 +52,7 @@ namespace DialogParams
                 BackgroundLayerEnable(room->IsBGLayerEnabled()), LayerGFXEffect01(room->GetLayerGFXEffect01()),
                 LayerGFXEffect02(room->GetLayerGFXEffect02()), Bgmvolume(room->GetBgmvolume())
         {
-            if((Layer0MappingTypeParam & 0x10) == 0x10){
+            if((Layer0MappingTypeParam & 0x10) == LevelComponents::LayerMap16){
                 Layer0Width = room->GetLayer(0)->GetLayerWidth(); Layer0Height = room->GetLayer(0)->GetLayerHeight();
             } else {
                 Layer0Width = 0; Layer0Height = 0;
@@ -66,13 +65,10 @@ namespace DialogParams
             if (BackgroundLayerEnable)
             {
                 BackgroundLayerDataPtr = room->GetLayerDataPtr(3);
-                BackgroundLayerAutoScrollEnable = room->IsBGLayerAutoScrollEnabled();
-            }
-            else
-            {
+            } else {
                 BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
-                BackgroundLayerAutoScrollEnable = false;
             }
+            BGLayerScrollFlag = room->GetBGLayerScrollFlag();
         }
 
         ~RoomConfigParams()
@@ -102,9 +98,7 @@ public:
     DialogParams::RoomConfigParams GetConfigParams();
 
 private slots:
-    void on_CheckBox_Layer0Enable_stateChanged(int state);
     void on_CheckBox_Layer0Alpha_stateChanged(int state);
-    void on_ComboBox_Layer0MappingType_currentIndexChanged(int index);
     void on_ComboBox_TilesetID_currentIndexChanged(int index);
     void on_CheckBox_BGLayerEnable_stateChanged(int state);
     void on_ComboBox_BGLayerPicker_currentIndexChanged(int index);
@@ -114,10 +108,11 @@ private slots:
     void on_SpinBox_RoomHeight_valueChanged(int arg1);
     void on_spinBox_Layer0Width_valueChanged(int arg1);
     void on_spinBox_Layer0Height_valueChanged(int arg1);
+    void on_spinBox_BGLayerScrollingFlag_valueChanged(int arg1);
+    void on_spinBox_Layer0MappingType_valueChanged(int arg1);
 
 private:
     bool ComboBoxInitialized = false;
-    bool DontEnableLayerSizeSpinboxes = false;
     Ui::RoomConfigDialog *ui;
     void ShowTilesetDetails(int tilesetIndex);
     void ShowMappingType20LayerDetails(int _layerdataAddr, LevelComponents::Layer *_tmpLayer);
@@ -247,13 +242,6 @@ private:
         "EVA 31%,  EVB 68%",
         "EVA 19%,  EVB 81%",
         "EVA 00%,  EVB 100%"
-    };
-
-    // Enumeration of the available layer mapping types
-    static constexpr const char *Layer0MappingTypeParamSetData[2] =
-    {
-        "Map16",
-        "Tile8x8"
     };
 
     // Enumeration of the available BGs per tileset (RLE format)

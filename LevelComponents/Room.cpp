@@ -1009,16 +1009,9 @@ namespace LevelComponents
     /// <summary>
     /// Set attributes relate to layer 3 autoscroll in Room header struct in sake of saving changes.
     /// </summary>
-    void Room::SetBGLayerAutoScrollEnabled(bool enability)
+    void Room::SetBGLayerScrollFlag(unsigned char flag)
     {
-        if (enability)
-        {
-            RoomHeader.Layer3Scrolling = '\x07';
-        }
-        else
-        {
-            RoomHeader.Layer3Scrolling = RoomHeader.Layer3MappingType ? '\x01' : '\x03';
-        }
+        RoomHeader.Layer3Scrolling = flag;
     }
 
     /// <summary>

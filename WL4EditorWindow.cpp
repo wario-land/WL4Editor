@@ -531,7 +531,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             currentroomconfig->LayerData[0] = nullptr;
         }
     }
-    if (!currentroomconfig->Layer0Enable && nextroomconfig->Layer0Enable)
+    if (!currentroomconfig->Layer0MappingTypeParam && nextroomconfig->Layer0MappingTypeParam)
     {
         if ((nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
         {
@@ -545,12 +545,12 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             currentRoom->SetLayer(0, currentLayer0);
         }
     }
-    else if (currentroomconfig->Layer0Enable && !nextroomconfig->Layer0Enable)
+    else if (currentroomconfig->Layer0MappingTypeParam && !nextroomconfig->Layer0MappingTypeParam)
     {
         currentRoom->GetLayer(0)->SetDisabled();
     }
 
-    if ((currentroomconfig->Layer0Enable & 0x30) != LevelComponents::LayerTile8x8 &&
+    if ((currentroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerTile8x8 &&
             (nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerTile8x8)
     {
         LevelComponents::Layer *currentLayer0 = currentRoom->GetLayer(0);
@@ -736,7 +736,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     if (nextroomconfig->Layer0DataPtr)
         currentRoom->SetLayerDataPtr(0, nextroomconfig->Layer0DataPtr);
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
-    currentRoom->SetBGLayerAutoScrollEnabled(nextroomconfig->BackgroundLayerAutoScrollEnable);
+    currentRoom->SetBGLayerScrollFlag(nextroomconfig->BGLayerScrollFlag);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
     currentRoom->SetLayerGFXEffect01(nextroomconfig->LayerGFXEffect01);
     currentRoom->SetLayerGFXEffect02(nextroomconfig->LayerGFXEffect02);

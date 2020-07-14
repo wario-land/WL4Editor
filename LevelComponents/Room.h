@@ -196,7 +196,7 @@ namespace LevelComponents
         int GetTilesetID() { return RoomHeader.TilesetID; }
         int GetEntityX(int index);
         int GetEntityY(int index);
-        bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == '\x07'; }
+        unsigned char GetBGLayerScrollFlag() { return RoomHeader.Layer3Scrolling; }
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
         bool IsCameraBoundaryDirty() { return CameraBoundaryDirty; }
         bool IsLayer0ColorBlendingEnabled() { return Layer0ColorBlending; }
@@ -214,7 +214,7 @@ namespace LevelComponents
         void SetLayerGFXEffect02(unsigned char flag) { RoomHeader.LayerGFXEffect02 = flag; }
         void SetBgmvolume(unsigned short bgmvolume) { RoomHeader.Bgmvolume = bgmvolume; }
         void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
-        void SetBGLayerAutoScrollEnabled(bool enability);
+        void SetBGLayerScrollFlag(unsigned char flag);
         void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }
         void SetCameraControlType(__CameraControlType new_control_type)
         {
