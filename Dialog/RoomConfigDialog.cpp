@@ -212,11 +212,11 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         }
         if (BGLayerdataPtrs[index].size() > 0)
         {
-            ui->CheckBox_BGLayerEnable->setChecked(true);
+            ui->CheckBox_BGLayerEnable->setEnabled(true);
         }
         else
         {
-            ui->CheckBox_BGLayerEnable->setChecked(false);
+            ui->CheckBox_BGLayerEnable->setEnabled(false);
         }
         ui->ComboBox_BGLayerPicker->addItems(elements);
         if(index == 0x21 && ui->spinBox_Layer0MappingType->value() >= 0x20)
@@ -227,7 +227,6 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         {
             ui->ComboBox_Layer0Picker->setEnabled(false);
         }
-        ui->CheckBox_Layer2Enable->setChecked(true);
 
         // Extra UI changes for Toxic Landfill dust Layer0
         if (ui->ComboBox_TilesetID->currentIndex() == 0x21)
