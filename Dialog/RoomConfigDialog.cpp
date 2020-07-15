@@ -35,6 +35,8 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->ComboBox_AlphaBlendAttribute->setCurrentIndex((CurrentRoomParams->LayerPriorityAndAlphaAttr - 4) >> 2);  // == (LayerPriorityAndAlphaAttr - 8) >> 2 + 1
     ui->spinBox_Layer0MappingType->setValue(CurrentRoomParams->Layer0MappingTypeParam);
     ui->ComboBox_Layer0Picker->setEnabled(CurrentRoomParams->Layer0MappingTypeParam >= 0x20);
+    ui->spinBox_Layer0Width->setValue(CurrentRoomParams->Layer0Width);
+    ui->spinBox_Layer0Height->setValue(CurrentRoomParams->Layer0Height);
     ui->SpinBox_RoomWidth->setValue(CurrentRoomParams->RoomWidth);
     ui->SpinBox_RoomHeight->setValue(CurrentRoomParams->RoomHeight);
     ui->CheckBox_Layer2Enable->setChecked(CurrentRoomParams->Layer2Enable);
