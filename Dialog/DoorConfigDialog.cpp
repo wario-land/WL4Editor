@@ -323,17 +323,6 @@ void DoorConfigDialog::ResetDoorRect()
     ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - currentdoor0->GetX1());
     ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - currentdoor0->GetY1());
     UpdateDoorLayerGraphicsView_Preview();
-
-    // when DestinationDoor and currentDoor are in the same Room, the DestinationDoor also needs an update.
-    if (!ui->ComboBox_DoorDestinationPicker->currentIndex()) return;
-    if(tmpDestinationRoom->GetRoomID() == tmpCurrentRoom->GetRoomID())
-    {
-        tmpDestinationRoom->GetDoor(DoorID)->SetDoorPlace(static_cast<unsigned char>(ui->SpinBox_DoorX->value()),
-                                                          static_cast<unsigned char>((ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1)),
-                                                          static_cast<unsigned char>(ui->SpinBox_DoorY->value()),
-                                                          static_cast<unsigned char>((ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1)));
-        UpdateDoorLayerGraphicsView_DestinationDoor();
-    }
 }
 
 /// <summary>
@@ -348,6 +337,17 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
     tparam.mode.hiddencoinsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
     tparam.mode.entitiesboxesDisabled = true;
     tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
+
+    // when DestinationDoor and currentDoor are in the same Room, the DestinationDoor also needs an update.
+    if (!ui->ComboBox_DoorDestinationPicker->currentIndex()) return;
+    if(tmpDestinationRoom->GetRoomID() == tmpCurrentRoom->GetRoomID())
+    {
+        tmpDestinationRoom->GetDoor(DoorID)->SetDoorPlace(static_cast<unsigned char>(ui->SpinBox_DoorX->value()),
+                                                          static_cast<unsigned char>((ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1)),
+                                                          static_cast<unsigned char>(ui->SpinBox_DoorY->value()),
+                                                          static_cast<unsigned char>((ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1)));
+        UpdateDoorLayerGraphicsView_DestinationDoor();
+    }
 }
 
 /// <summary>
