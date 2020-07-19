@@ -44,7 +44,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->spinBox_BGLayerScrollingFlag->setValue(CurrentRoomParams->BGLayerScrollFlag);
     ui->spinBox_LayerGfxEffect01->setValue(CurrentRoomParams->LayerGFXEffect01);
     ui->spinBox_LayerGfxEffect02->setValue(CurrentRoomParams->LayerGFXEffect02);
-    ui->spinBox_BgmVolume->setValue(CurrentRoomParams->Bgmvolume);
+    ui->spinBox_BgmVolume->setValue(CurrentRoomParams->BGMVolume);
 
     // Initialize the selection for the BG selection combobox
     bool CurrentBGSelectionAvailable = false;
@@ -129,7 +129,7 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     configParams.RoomWidth = ui->SpinBox_RoomWidth->value();
     configParams.LayerGFXEffect01 = ui->spinBox_LayerGfxEffect01->value();
     configParams.LayerGFXEffect02 = ui->spinBox_LayerGfxEffect02->value();
-    configParams.Bgmvolume = ui->spinBox_BgmVolume->value();
+    configParams.BGMVolume = ui->spinBox_BgmVolume->value();
 
     return configParams;
 }

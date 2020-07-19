@@ -1173,7 +1173,7 @@ namespace LevelComponents
             Layer3Scrolling(room->GetBGScrollParameter()), LayerPriorityColorBlendingFlag(room->GetLayerEffectsParam()), DATA_1B(0),
             EntityTableHard(0), // set manually
             EntityTableNormal(0), EntityTableSHard(0), LayerGFXEffect01(room->GetLayerGFXEffect01()),
-            LayerGFXEffect02(room->GetLayerGFXEffect02()), Bgmvolume(room->GetBgmvolume())
+            LayerGFXEffect02(room->GetLayerGFXEffect02()), BGMVolume(room->GetBgmvolume())
     {}
 
     /// <summary>

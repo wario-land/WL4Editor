@@ -36,7 +36,7 @@ namespace DialogParams
         unsigned short *LayerData[3]; //only use it when room & layer0 size change
         unsigned char LayerGFXEffect01;
         unsigned char LayerGFXEffect02;
-        unsigned short Bgmvolume;
+        unsigned short BGMVolume;
 
         // Default constructor
         RoomConfigParams() { memset(this, 0, sizeof(struct RoomConfigParams)); }
@@ -50,7 +50,7 @@ namespace DialogParams
                 RoomWidth(room->GetWidth()), RoomHeight(room->GetHeight()), Layer2Enable(room->IsLayer2Enabled()),
                 Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayerDataPtr(0) : 0),
                 BackgroundLayerEnable(room->IsBGLayerEnabled()), LayerGFXEffect01(room->GetLayerGFXEffect01()),
-                LayerGFXEffect02(room->GetLayerGFXEffect02()), Bgmvolume(room->GetBgmvolume())
+                LayerGFXEffect02(room->GetLayerGFXEffect02()), BGMVolume(room->GetBgmvolume())
         {
             if((Layer0MappingTypeParam & 0x10) == LevelComponents::LayerMap16){
                 Layer0Width = room->GetLayer(0)->GetLayerWidth(); Layer0Height = room->GetLayer(0)->GetLayerHeight();

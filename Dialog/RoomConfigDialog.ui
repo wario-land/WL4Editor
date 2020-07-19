@@ -128,7 +128,7 @@
           <bool>true</bool>
          </property>
          <property name="maximum">
-          <number>255</number>
+          <number>47</number>
          </property>
          <property name="displayIntegerBase">
           <number>16</number>
@@ -272,7 +272,7 @@
        <item>
         <widget class="QLabel" name="label_LayerGfxEffect01">
          <property name="text">
-          <string>Layer graphic effect flag 1(Hex):</string>
+          <string>Layer graphic effect flag 1 (Hex up to FF):</string>
          </property>
         </widget>
        </item>
@@ -289,7 +289,7 @@
        <item>
         <widget class="QLabel" name="label_LayerGfxEffect02">
          <property name="text">
-          <string>Layer graphic effect flag 2(Hex):</string>
+          <string>Layer graphic effect flag 2 (Hex up to FF):</string>
          </property>
         </widget>
        </item>
@@ -306,7 +306,7 @@
        <item>
         <widget class="QLabel" name="label_BgmVolume">
          <property name="text">
-          <string>BGM Volume(Hex):</string>
+          <string>BGM Volume (Hex up to FFFF):</string>
          </property>
         </widget>
        </item>

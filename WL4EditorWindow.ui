@@ -353,7 +353,7 @@
   </action>
   <action name="actionNew_Door">
    <property name="text">
-    <string>Door</string>
+    <string>New Door</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -549,7 +549,7 @@
   </action>
   <action name="actionNew_Room">
    <property name="text">
-    <string>Room</string>
+    <string>New Room</string>
    </property>
   </action>
  </widget>

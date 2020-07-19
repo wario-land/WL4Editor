@@ -740,7 +740,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
     currentRoom->SetLayerGFXEffect01(nextroomconfig->LayerGFXEffect01);
     currentRoom->SetLayerGFXEffect02(nextroomconfig->LayerGFXEffect02);
-    currentRoom->SetBgmvolume(nextroomconfig->Bgmvolume);
+    currentRoom->SetBgmvolume(nextroomconfig->BGMVolume);
 
     // reset LayerDataPtr in RoomHeader because Layer::SetDisabled() doesn't change the data in RoomHeader
     for (int i = 0; i < 3; ++i)
@@ -1117,7 +1117,7 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning, int roomId)
     }
 
     // Clear Layers 0, 1, 2
-    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[roomId];
     for (int i = 0; i < 3; ++i)
     {
         LevelComponents::Layer *layer = currentRoom->GetLayer(i);
@@ -1915,10 +1915,10 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     if (newRoomId == 16)
     {
         OutputWidget->PrintString("Cannot add more Room to the current Level!");
+        return;
     }
     int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + CurrentLevel->GetLevelID() * 4);
     CurrentLevel->AddRoom(new LevelComponents::Room(roomTableAddress + selectedRoom * 0x2C, newRoomId, CurrentLevel->GetLevelID()));
-    OutputWidget->PrintString("Create new Room based on current Room.");
 
     // Add one Door to the new Room as well as spriteset settings
     {
@@ -1949,6 +1949,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 
     // UI updates
     SetCurrentRoomId(newRoomId);
+    OutputWidget->PrintString("Created a new blank room (# " + QString::number(newRoomId) + ") using the current room's settings.");
 
     // Clear everything in the new room
     ClearEverythingInRoom(true, selectedRoom);

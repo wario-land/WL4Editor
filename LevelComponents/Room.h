@@ -37,7 +37,7 @@ namespace LevelComponents
         unsigned int EntityTableSHard;
         unsigned char LayerGFXEffect01;
         unsigned char LayerGFXEffect02;
-        unsigned short Bgmvolume;
+        unsigned short BGMVolume;
 
         __RoomHeader() {}
         __RoomHeader(Room *room);
@@ -156,7 +156,7 @@ namespace LevelComponents
         unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
         unsigned char GetLayerGFXEffect01() { return RoomHeader.LayerGFXEffect01; }
         unsigned char GetLayerGFXEffect02() { return RoomHeader.LayerGFXEffect02; }
-        unsigned short GetBgmvolume() { return RoomHeader.Bgmvolume; }
+        unsigned short GetBgmvolume() { return RoomHeader.BGMVolume; }
         std::vector<struct __CameraControlRecord *> GetCameraControlRecords(bool create_new_instances = false)
         {
             if (!create_new_instances)
@@ -212,7 +212,7 @@ namespace LevelComponents
         void ClearEntitylist(int difficulty);
         void SetLayerGFXEffect01(unsigned char flag) { RoomHeader.LayerGFXEffect01 = flag; }
         void SetLayerGFXEffect02(unsigned char flag) { RoomHeader.LayerGFXEffect02 = flag; }
-        void SetBgmvolume(unsigned short bgmvolume) { RoomHeader.Bgmvolume = bgmvolume; }
+        void SetBgmvolume(unsigned short bgmvolume) { RoomHeader.BGMVolume = bgmvolume; }
         void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
         void SetBGLayerScrollFlag(unsigned char flag);
         void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }
