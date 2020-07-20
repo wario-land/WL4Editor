@@ -1085,7 +1085,7 @@ bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
 /// <param name="roomId">
 /// Optional param for selecting a room to clear, set -1 as a default value for current room.
 /// </param>
-void WL4EditorWindow::ClearEverythingInRoom(bool no_warning, int roomId)
+void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
 {
     bool IfDeleteAllDoors = false;
     // Show asking deleting Doors messagebox
@@ -1117,7 +1117,7 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning, int roomId)
     }
 
     // Clear Layers 0, 1, 2
-    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[roomId];
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
     for (int i = 0; i < 3; ++i)
     {
         LevelComponents::Layer *layer = currentRoom->GetLayer(i);
@@ -1952,5 +1952,5 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     OutputWidget->PrintString("Created a new blank room (# " + QString::number(newRoomId) + ") using the current room's settings.");
 
     // Clear everything in the new room
-    ClearEverythingInRoom(true, selectedRoom);
+    ClearEverythingInRoom(true);
 }
