@@ -30,12 +30,14 @@ namespace LevelComponents
         unsigned int Layer3Data;
         unsigned char CameraControlType;
         unsigned char Layer3Scrolling;
-        unsigned char LayerEffects;
+        unsigned char LayerPriorityColorBlendingFlag;
         unsigned char DATA_1B;
         unsigned int EntityTableHard;
         unsigned int EntityTableNormal;
         unsigned int EntityTableSHard;
-        unsigned char DATA_28[4];
+        unsigned char LayerGFXEffect01;
+        unsigned char LayerGFXEffect02;
+        unsigned short BGMVolume;
 
         __RoomHeader() {}
         __RoomHeader(Room *room);
@@ -151,7 +153,10 @@ namespace LevelComponents
 
         // Getters
         size_t CountDoors() { return doors.size(); }
-        size_t GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
+        unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
+        unsigned char GetLayerGFXEffect01() { return RoomHeader.LayerGFXEffect01; }
+        unsigned char GetLayerGFXEffect02() { return RoomHeader.LayerGFXEffect02; }
+        unsigned short GetBgmvolume() { return RoomHeader.BGMVolume; }
         std::vector<struct __CameraControlRecord *> GetCameraControlRecords(bool create_new_instances = false)
         {
             if (!create_new_instances)
@@ -183,7 +188,7 @@ namespace LevelComponents
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         int GetLayer0MappingParam() { return RoomHeader.Layer0MappingType; }
         int GetLayerDataPtr(unsigned int LayerNum);
-        int GetLayerEffectsParam() { return RoomHeader.LayerEffects; }
+        int GetLayerEffectsParam() { return RoomHeader.LayerPriorityColorBlendingFlag; }
         unsigned int GetLevelID() { return LevelID; }
         struct __RoomHeader GetRoomHeader() { return RoomHeader; }
         unsigned int GetRoomID() { return RoomID; }
@@ -191,7 +196,7 @@ namespace LevelComponents
         int GetTilesetID() { return RoomHeader.TilesetID; }
         int GetEntityX(int index);
         int GetEntityY(int index);
-        bool IsBGLayerAutoScrollEnabled() { return RoomHeader.Layer3Scrolling == '\x07'; }
+        unsigned char GetBGLayerScrollFlag() { return RoomHeader.Layer3Scrolling; }
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
         bool IsCameraBoundaryDirty() { return CameraBoundaryDirty; }
         bool IsLayer0ColorBlendingEnabled() { return Layer0ColorBlending; }
@@ -205,8 +210,11 @@ namespace LevelComponents
         void DeleteEntity(int index);
         void DeleteEntity(int difficulty, int index);
         void ClearEntitylist(int difficulty);
+        void SetLayerGFXEffect01(unsigned char flag) { RoomHeader.LayerGFXEffect01 = flag; }
+        void SetLayerGFXEffect02(unsigned char flag) { RoomHeader.LayerGFXEffect02 = flag; }
+        void SetBgmvolume(unsigned short bgmvolume) { RoomHeader.BGMVolume = bgmvolume; }
         void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
-        void SetBGLayerAutoScrollEnabled(bool enability);
+        void SetBGLayerScrollFlag(unsigned char flag);
         void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }
         void SetCameraControlType(__CameraControlType new_control_type)
         {

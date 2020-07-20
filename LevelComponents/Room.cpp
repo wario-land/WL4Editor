@@ -22,6 +22,7 @@ namespace LevelComponents
     /// </param>
     /// <param name="_RoomID">
     /// Zero-based ID for the room in the level.
+    /// This won't be used to load data, so you can set roomId and load another room
     /// </param>
     /// <param name="_LevelID">
     /// Level index value from 0x03000023 at run-time.
@@ -126,7 +127,7 @@ namespace LevelComponents
             layers[i] = new Layer(*room->GetLayer(i));
         }
 
-        SetLayerPriorityAndAlphaAttributes(room->GetRoomHeader().LayerEffects);
+        SetLayerPriorityAndAlphaAttributes(room->GetRoomHeader().LayerPriorityColorBlendingFlag);
 
         // Set up camera control data
         if (CameraControlType == LevelComponents::HasControlAttrs)
@@ -905,7 +906,7 @@ namespace LevelComponents
     {
         // Prioritize the layers
         int priorityFlag = layerPriorityAndAlphaAttr;
-        RoomHeader.LayerEffects = (unsigned char) layerPriorityAndAlphaAttr;
+        RoomHeader.LayerPriorityColorBlendingFlag = (unsigned char) layerPriorityAndAlphaAttr;
         switch (priorityFlag & 3)
         {
         case 0:
@@ -1008,16 +1009,9 @@ namespace LevelComponents
     /// <summary>
     /// Set attributes relate to layer 3 autoscroll in Room header struct in sake of saving changes.
     /// </summary>
-    void Room::SetBGLayerAutoScrollEnabled(bool enability)
+    void Room::SetBGLayerScrollFlag(unsigned char flag)
     {
-        if (enability)
-        {
-            RoomHeader.Layer3Scrolling = '\x07';
-        }
-        else
-        {
-            RoomHeader.Layer3Scrolling = RoomHeader.Layer3MappingType ? '\x01' : '\x03';
-        }
+        RoomHeader.Layer3Scrolling = flag;
     }
 
     /// <summary>
@@ -1176,9 +1170,10 @@ namespace LevelComponents
             Layer2MappingType(room->GetLayer(2)->GetMappingType()),
             Layer3MappingType(room->GetLayer(3)->GetMappingType()), Layer0Data(0), // set manually
             Layer1Data(0), Layer2Data(0), Layer3Data(0), CameraControlType(room->GetCameraControlType()),
-            Layer3Scrolling(room->GetBGScrollParameter()), LayerEffects(room->GetLayerEffectsParam()), DATA_1B(0),
+            Layer3Scrolling(room->GetBGScrollParameter()), LayerPriorityColorBlendingFlag(room->GetLayerEffectsParam()), DATA_1B(0),
             EntityTableHard(0), // set manually
-            EntityTableNormal(0), EntityTableSHard(0)
+            EntityTableNormal(0), EntityTableSHard(0), LayerGFXEffect01(room->GetLayerGFXEffect01()),
+            LayerGFXEffect02(room->GetLayerGFXEffect02()), BGMVolume(room->GetBgmvolume())
     {}
 
     /// <summary>

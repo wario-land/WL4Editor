@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>662</height>
+    <height>762</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -71,22 +71,84 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="CheckBox_BGLayerAutoScroll">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="label_BGLayerScrolling">
+           <property name="text">
+            <string>Background Layer Scrolling Flag:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_CurBGLayerScrollingType">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_BGLayerScrollingFlag">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
-         <property name="text">
-          <string>Enable Background Autoscroll</string>
+         <property name="maximum">
+          <number>255</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="CheckBox_Layer0Enable">
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="L0MappingTypeLabel">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Layer 0 Mapping Type&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This property is hardly used. It's only used if you're using the Toxic Landfill Tileset with an existing dust foreground.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Layer 0 Mapping Type:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_CurLayer0MappingType">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_Layer0MappingType">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="maximum">
+          <number>47</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="L0Label">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Enable Layer 0&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Layer 0 is the only layer that's able to be used as the front layer for color blending.&lt;/p&gt;&lt;p&gt;This option, if check marked, enables Layer 0.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Use existing Layer 0&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Select the foreground layer pointer.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
-          <string>Enable Layer 0</string>
+          <string>Use existing Layer 0:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="ComboBox_Layer0Picker">
+         <property name="enabled">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -99,6 +161,9 @@
        </item>
        <item>
         <widget class="QSpinBox" name="spinBox_Layer0Width">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="minimum">
           <number>19</number>
          </property>
@@ -116,6 +181,9 @@
        </item>
        <item>
         <widget class="QSpinBox" name="spinBox_Layer0Height">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="minimum">
           <number>14</number>
          </property>
@@ -138,63 +206,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="alphaBlendingLabel">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Alpha Blend Attributes&lt;/span&gt;&lt;/p&gt;&lt;p&gt;See the Helpfile for information.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Alpha Blend Attributes:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QComboBox" name="ComboBox_AlphaBlendAttribute">
          <property name="enabled">
           <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="L0MappingTypeLabel">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Layer 0 Mapping Type&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This property is hardly used. It's only used if you're using the Toxic Landfill Tileset with an existing dust foreground.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Layer 0 Mapping Type:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="ComboBox_Layer0MappingType">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="L0Label">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Use existing Layer 0&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Select the foreground layer pointer.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Use existing Layer 0:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="ComboBox_Layer0Picker">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="CheckBox_Layer0AutoScroll">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Enable Layer 0 Autoscroll</string>
          </property>
         </widget>
        </item>
@@ -252,6 +266,57 @@
          </property>
          <property name="maximum">
           <number>255</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_LayerGfxEffect01">
+         <property name="text">
+          <string>Layer graphic effect flag 1 (Hex up to FF):</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_LayerGfxEffect01">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_LayerGfxEffect02">
+         <property name="text">
+          <string>Layer graphic effect flag 2 (Hex up to FF):</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_LayerGfxEffect02">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_BgmVolume">
+         <property name="text">
+          <string>BGM Volume (Hex up to FFFF):</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_BgmVolume">
+         <property name="maximum">
+          <number>65535</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
          </property>
         </widget>
        </item>

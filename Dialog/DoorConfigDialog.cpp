@@ -245,18 +245,20 @@ void DoorConfigDialog::RenderGraphicsView_Preview()
     int Y_av = (door_CurY1 + door_CurY2) / 2;
     float X_av_rate = static_cast<float>(X_av) / static_cast<float>(tmpCurrentRoom->GetWidth());
     float Y_av_rate = static_cast<float>(Y_av) / static_cast<float>(tmpCurrentRoom->GetHeight());
-    int V_all = ui->GraphicsView_Preview->verticalScrollBar()->pageStep() +
-            ui->GraphicsView_Preview->verticalScrollBar()->maximum();
-    int H_all = ui->GraphicsView_Preview->horizontalScrollBar()->pageStep() +
-            ui->GraphicsView_Preview->horizontalScrollBar()->maximum();
+    float Heightrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpCurrentRoom->GetHeight()) / static_cast<float>(tmpCurrentRoom->GetLayer0Height()));
+    float Widthrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpCurrentRoom->GetWidth()) / static_cast<float>(tmpCurrentRoom->GetLayer0Width()));
+    int V_all = Heightrate_L1_over_L0 * (ui->GraphicsView_Preview->verticalScrollBar()->pageStep() +
+            ui->GraphicsView_Preview->verticalScrollBar()->maximum());
+    int H_all = Widthrate_L1_over_L0 * (ui->GraphicsView_Preview->horizontalScrollBar()->pageStep() +
+            ui->GraphicsView_Preview->horizontalScrollBar()->maximum());
     int X_val = static_cast<int>(H_all * X_av_rate);
     int Y_val = static_cast<int>(V_all * Y_av_rate);
     ui->GraphicsView_Preview->verticalScrollBar()->setSliderPosition(
                 qMin(qMax(Y_val, 1) - ui->GraphicsView_Preview->verticalScrollBar()->pageStep() / 2,
-                     ui->GraphicsView_Preview->verticalScrollBar()->maximum()));
+                     (int)(Heightrate_L1_over_L0 * (float)ui->GraphicsView_Preview->verticalScrollBar()->maximum())));
     ui->GraphicsView_Preview->horizontalScrollBar()->setSliderPosition(
                 qMin(qMax(X_val, 1) - ui->GraphicsView_Preview->horizontalScrollBar()->pageStep() / 2,
-                     ui->GraphicsView_Preview->horizontalScrollBar()->maximum()));
+                     (int)(Widthrate_L1_over_L0 * (float)ui->GraphicsView_Preview->horizontalScrollBar()->maximum())));
 }
 
 /// <summary>
@@ -282,6 +284,15 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
     ui->GraphicsView_DestinationDoor->setScene(scene);
     ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
+    if(tmpDestinationRoom->GetRoomID() == tmpCurrentRoom->GetRoomID())
+    {
+        tmpDestinationRoom->GetDoor(DoorID)->SetDoorPlace(static_cast<unsigned char>(ui->SpinBox_DoorX->value()),
+                                                          static_cast<unsigned char>((ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1)),
+                                                          static_cast<unsigned char>(ui->SpinBox_DoorY->value()),
+                                                          static_cast<unsigned char>((ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1)));
+        UpdateDoorLayerGraphicsView_DestinationDoor();
+    }
+
     // Set scrollbars
     LevelComponents::Door *tmpdoor = tmpDestinationRoom->GetDoor(doorIDinRoom);
     door_DesX1 = tmpdoor->GetX1();
@@ -292,18 +303,20 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
     int Y_av = (door_DesY1 + door_DesY2) / 2;
     float X_av_rate = static_cast<float>(X_av) / static_cast<float>(tmpDestinationRoom->GetWidth());
     float Y_av_rate = static_cast<float>(Y_av) / static_cast<float>(tmpDestinationRoom->GetHeight());
-    int V_all = ui->GraphicsView_DestinationDoor->verticalScrollBar()->pageStep() +
-            ui->GraphicsView_DestinationDoor->verticalScrollBar()->maximum();
-    int H_all = ui->GraphicsView_DestinationDoor->horizontalScrollBar()->pageStep() +
-            ui->GraphicsView_DestinationDoor->horizontalScrollBar()->maximum();
+    float Heightrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpDestinationRoom->GetHeight()) / static_cast<float>(tmpDestinationRoom->GetLayer0Height()));
+    float Widthrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpDestinationRoom->GetWidth()) / static_cast<float>(tmpDestinationRoom->GetLayer0Width()));
+    int V_all = Heightrate_L1_over_L0 * (ui->GraphicsView_DestinationDoor->verticalScrollBar()->pageStep() +
+            ui->GraphicsView_DestinationDoor->verticalScrollBar()->maximum());
+    int H_all = Widthrate_L1_over_L0 * (ui->GraphicsView_DestinationDoor->horizontalScrollBar()->pageStep() +
+            ui->GraphicsView_DestinationDoor->horizontalScrollBar()->maximum());
     int X_val = static_cast<int>(H_all * X_av_rate);
     int Y_val = static_cast<int>(V_all * Y_av_rate);
     ui->GraphicsView_DestinationDoor->verticalScrollBar()->setSliderPosition(
                 qMin(qMax(Y_val, 1) - ui->GraphicsView_DestinationDoor->verticalScrollBar()->pageStep() / 2,
-                     ui->GraphicsView_DestinationDoor->verticalScrollBar()->maximum()));
+                     (int)(Heightrate_L1_over_L0 * (float)ui->GraphicsView_DestinationDoor->verticalScrollBar()->maximum())));
     ui->GraphicsView_DestinationDoor->horizontalScrollBar()->setSliderPosition(
                 qMin(qMax(X_val, 1) - ui->GraphicsView_DestinationDoor->horizontalScrollBar()->pageStep() / 2,
-                     ui->GraphicsView_DestinationDoor->horizontalScrollBar()->maximum()));
+                     (int)(Widthrate_L1_over_L0 * (float)ui->GraphicsView_DestinationDoor->horizontalScrollBar()->maximum())));
 }
 
 /// <summary>

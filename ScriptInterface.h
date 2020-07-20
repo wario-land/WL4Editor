@@ -22,12 +22,13 @@ public:
     Q_INVOKABLE int GetCurRoomId();
 
     // Test
-    Q_INVOKABLE void Test_DecompressData(int mappingtype, int address);
-    Q_INVOKABLE unsigned int Test_GetLayerDecomdataPointer(int layerId);
-    Q_INVOKABLE void Test_ExportLayerData(QString filePath = QString(""), int layerid = -1);
-    Q_INVOKABLE void Test_ImportLayerData(QString fileName = QString(""), int layerid = -1);
-    Q_INVOKABLE void Test_ExportEntityListData(QString filePath = QString(""), int entitylistid = -1);
-    Q_INVOKABLE void Test_ImportEntityListData(QString filePath = QString(""), int entitylistid = -1);
+    Q_INVOKABLE void _DecompressData(int mappingtype, int address);
+    Q_INVOKABLE unsigned int _GetLayerDecomdataPointer(int layerId);
+    Q_INVOKABLE void _PrintRoomHeader();
+    Q_INVOKABLE void _ExportLayerData(QString filePath = QString(""), int layerid = -1);
+    Q_INVOKABLE void _ImportLayerData(QString fileName = QString(""), int layerid = -1);
+    Q_INVOKABLE void _ExportEntityListData(QString filePath = QString(""), int entitylistid = -1);
+    Q_INVOKABLE void _ImportEntityListData(QString filePath = QString(""), int entitylistid = -1);
 
     // Setter
     Q_INVOKABLE void SetCurrentRoomId(int roomid);

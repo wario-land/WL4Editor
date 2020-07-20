@@ -42,7 +42,7 @@ int ScriptInterface::GetCurRoomId()
     return singleton->GetCurrentRoomId();
 }
 
-void ScriptInterface::Test_DecompressData(int mappingtype, int address)
+void ScriptInterface::_DecompressData(int mappingtype, int address)
 {
     int tmpw = 0, tmph = 0;
     unsigned short *LayerData = nullptr;
@@ -90,7 +90,7 @@ void ScriptInterface::Test_DecompressData(int mappingtype, int address)
     singleton->GetOutputWidgetPtr()->PrintString(tmpstr);
 }
 
-unsigned int ScriptInterface::Test_GetLayerDecomdataPointer(int layerId)
+unsigned int ScriptInterface::_GetLayerDecomdataPointer(int layerId)
 {
     switch(layerId)
     {
@@ -119,7 +119,20 @@ unsigned int ScriptInterface::Test_GetLayerDecomdataPointer(int layerId)
     }
 }
 
-void ScriptInterface::Test_ExportLayerData(QString filePath, int layerid)
+void ScriptInterface::_PrintRoomHeader()
+{
+    LevelComponents::__RoomHeader header = singleton->GetCurrentRoom()->GetRoomHeader();
+    QString roomheaderstr;
+    for(size_t i = 0; i < sizeof(LevelComponents::__RoomHeader); i++)
+    {
+        roomheaderstr.push_back(QString::number(((unsigned char *)&header)[i], 16).toUpper());
+        if((i + 1) % 4 == 0) roomheaderstr.push_back("  ");
+        roomheaderstr.push_back(" ");
+    }
+    log(roomheaderstr);
+}
+
+void ScriptInterface::_ExportLayerData(QString filePath, int layerid)
 {
     log("Export Layer Data from current Room.");
     if(!filePath.compare(""))
@@ -165,7 +178,7 @@ void ScriptInterface::Test_ExportLayerData(QString filePath, int layerid)
     log("Done!");
 }
 
-void ScriptInterface::Test_ImportLayerData(QString fileName, int layerid)
+void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
 {
     log("Import Layer Data from current Room.");
     // Load gfx bin file
@@ -235,7 +248,7 @@ void ScriptInterface::Test_ImportLayerData(QString fileName, int layerid)
     log("Done!");
 }
 
-void ScriptInterface::Test_ExportEntityListData(QString filePath, int entitylistid)
+void ScriptInterface::_ExportEntityListData(QString filePath, int entitylistid)
 {
     log("Export Entity List Data from current Room.");
     if(!filePath.compare(""))
@@ -282,7 +295,7 @@ void ScriptInterface::Test_ExportEntityListData(QString filePath, int entitylist
     log("Done!");
 }
 
-void ScriptInterface::Test_ImportEntityListData(QString fileName, int entitylistid)
+void ScriptInterface::_ImportEntityListData(QString fileName, int entitylistid)
 {
     log("Import Entity List Data from current Room.");
     if(!fileName.compare(""))

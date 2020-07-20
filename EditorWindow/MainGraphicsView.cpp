@@ -674,12 +674,6 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Backspace:
         case Qt::Key_Delete:
         {
-            if (singleton->GetCurrentRoom()->CountDoors() < 2)
-            {
-                QMessageBox::critical(nullptr, QString("Error"),
-                                      QString("Deleting the last Door in a Room is not allowed!"));
-                return;
-            }
             singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
             SelectedDoorID = -1;
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
