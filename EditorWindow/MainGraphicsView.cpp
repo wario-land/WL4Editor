@@ -565,7 +565,8 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
             struct OperationParams *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
             params->objectPositionChange = true;
-            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY,ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
+            LevelComponents::Door *curdoor = singleton->GetCurrentRoom()->GetDoor(SelectedDoorID);
+            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, curdoor->GetX1(), curdoor->GetY1(),ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
             // Only perform and not execute because of a bug after deletion and undo
             PerformOperation(params);
         }
