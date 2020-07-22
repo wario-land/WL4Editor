@@ -1,6 +1,9 @@
 #include "DoorConfigDialog.h"
 #include "ui_DoorConfigDialog.h"
 
+#include "WL4EditorWindow.h"
+extern WL4EditorWindow *singleton;
+
 // constexpr declarations for the initializers in the header
 constexpr const char *DoorConfigDialog::DoortypeSetData[5];
 constexpr const char *DoorConfigDialog::EntitynameSetData[128];
@@ -21,11 +24,7 @@ LevelComponents::Entity *DoorConfigDialog::entities[129];
 DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID,
                                    LevelComponents::Level *_level) :
         QDialog(parent),
-        ui(new Ui::DoorConfigDialog), _currentLevel(_level), CurrentRoom(currentroom),
-        tmpCurrentRoom(new LevelComponents::Room(currentroom)),
-        tmpDestinationRoom(new LevelComponents::Room(
-            _level->GetRooms()[currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()])),
-        DoorID(doorID)
+        ui(new Ui::DoorConfigDialog), _currentLevel(_level), CurrentRoom(currentroom), DoorID(doorID)
 {
     ui->setupUi(this);
 
@@ -51,37 +50,44 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     ui->TableView_EntityFilter->setModel(EntityFilterTable);
 
     // Distribute Doors into the temp CurrentRoom
+    tmpCurrentRoom = new LevelComponents::Room(currentroom);
     tmpCurrentRoom->SetDoorsVector(_level->GetRoomDoors(currentroom->GetRoomID()));
+    LevelComponents::Door *currentdoor = tmpCurrentRoom->GetDoor(doorID);
+    LevelComponents::__DoorEntry currentdoordata = _level->GetDoorDataList()[currentdoor->GetGlobalDoorID()];
+    tmpDestinationRoom = new LevelComponents::Room(_level->GetRooms()
+                               [_level->GetDoorDataList()[currentdoordata.LinkerDestination].RoomID]);
     tmpDestinationRoom->SetDoorsVector(
-        _level->GetRoomDoors(currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()));
+        _level->GetRoomDoors(_level->GetDoorDataList()[currentdoordata.LinkerDestination].RoomID));
 
     // Initialize UI elements
     ui->ComboBox_DoorType->addItems(DoortypeSet);
-    LevelComponents::Door *currentdoor = tmpCurrentRoom->GetDoor(doorID);
-    ui->ComboBox_DoorType->setCurrentIndex(currentdoor->GetDoorTypeNum() - 1);
-    ui->SpinBox_DoorX->setValue(currentdoor->GetX1());
-    ui->SpinBox_DoorY->setValue(currentdoor->GetY1());
-    int doorwidth = currentdoor->GetX2() - currentdoor->GetX1() + 1;
-    int doorheight = currentdoor->GetY2() - currentdoor->GetY1() + 1;
+    ui->ComboBox_DoorType->setCurrentIndex(currentdoordata.DoorTypeByte - 1);
+    ui->SpinBox_DoorX->setValue(currentdoordata.x1);
+    ui->SpinBox_DoorY->setValue(currentdoordata.y1);
+    int doorwidth = currentdoordata.x2 - currentdoordata.x1 + 1;
+    int doorheight = currentdoordata.y2 - currentdoordata.y1 + 1;
     ui->SpinBox_DoorWidth->setValue(doorwidth);
     ui->SpinBox_DoorHeight->setValue(doorheight);
-    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - currentdoor->GetX1());
-    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - currentdoor->GetY1());
+    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - currentdoordata.x1);
+    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - currentdoordata.y1);
     ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - doorwidth);
     ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetHeight() - doorheight);
-    ui->SpinBox_WarioX->setValue(currentdoor->GetDeltaX());
-    ui->SpinBox_WarioY->setValue(currentdoor->GetDeltaY());
-    ui->SpinBox_BGM_ID->setValue(currentdoor->GetBGM_ID());
+    ui->SpinBox_WarioX->setValue(currentdoordata.HorizontalDelta);
+    ui->SpinBox_WarioY->setValue(currentdoordata.VerticalDelta);
+    ui->SpinBox_BGM_ID->setValue(currentdoordata.BGM_ID);
+
+    // Copy current Door data to dialog instance
+    curdoordata = currentdoordata;
 
     // Initialize the selections for destination door combobox
     QStringList doorofLevelSet;
     doorofLevelSet << "Disable destination door";
-    for (unsigned int i = 1; i < _level->GetDoors().size(); ++i)
+    for (int i = 1; i < _level->GetDoorDataList().size(); ++i)
     {
-        doorofLevelSet << _level->GetDoors()[i]->GetDoorName();
+        doorofLevelSet << _level->GetDoorName(i);
     }
     ui->ComboBox_DoorDestinationPicker->addItems(doorofLevelSet);
-    ui->ComboBox_DoorDestinationPicker->setCurrentIndex(currentdoor->GetDestinationDoor()->GetGlobalDoorID());
+    ui->ComboBox_DoorDestinationPicker->setCurrentIndex(currentdoordata.LinkerDestination);
     RenderGraphicsView_Preview();
 
     // Initialize the EntitySet ComboBox
@@ -99,8 +105,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     UpdateTableView();
 
     // Set the current EntitySet in the ComboBox
-    int entitySetID = currentdoor->GetEntitySetID();
-    ui->ComboBox_EntitySetID->setCurrentIndex(entitySetID);
+    ui->ComboBox_EntitySetID->setCurrentIndex(currentdoordata.EntitySetID);
 
     IsInitialized = true;
 }
