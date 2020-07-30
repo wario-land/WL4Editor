@@ -854,26 +854,26 @@ namespace LevelComponents
                         QImage imageA = RenderedLayers[0]->pixmap().toImage();
                         QImage imageB = alphaPixmapTemp.toImage();
                         for(auto iter: renderParams->tilechangelist) {
-                            int substitudeEVA = Layer0ColorBlendCoefficient_EVA;
+                            int substituteEVA = Layer0ColorBlendCoefficient_EVA;
                             if ((static_cast<unsigned int>(iter.tileX) >= this->Width ||
                                     static_cast<unsigned int>(iter.tileY) >= this->Height) &&
                                     Layer0ColorBlendCoefficient_EVA != 16)
                             {
                                 // No color blending in areas where other layers do not exist
-                                substitudeEVA = 16;
+                                substituteEVA = 16;
                             }
                             for (int j = units * iter.tileY; j < (units * iter.tileY + units); ++j)
                             {
                                 for (int k = units * iter.tileX; k < (units * iter.tileX + units); ++k)
                                 {
                                     QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                    int R = qMin((substitudeEVA * PXA.red()) / 16 +
+                                    int R = qMin((substituteEVA * PXA.red()) / 16 +
                                                      (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
                                                  255);
-                                    int G = qMin((substitudeEVA * PXA.green()) / 16 +
+                                    int G = qMin((substituteEVA * PXA.green()) / 16 +
                                                      (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
                                                  255);
-                                    int B = qMin((substitudeEVA * PXA.blue()) / 16 +
+                                    int B = qMin((substituteEVA * PXA.blue()) / 16 +
                                                      (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
                                                  255);
                                     imageB.setPixel(k, j, QColor(R, G, B).rgb());

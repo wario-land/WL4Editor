@@ -1923,7 +1923,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
     if (roomCount <= static_cast<int>(selectedRoom))
     {
-        OutputWidget->PrintString("Cannot create room, current Room has not been saved in th rom yet!");
+        OutputWidget->PrintString("Cannot create room, current Room has not been saved in the rom yet!");
         return;
     }
 
