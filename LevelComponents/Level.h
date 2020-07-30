@@ -59,7 +59,6 @@ namespace LevelComponents
         std::vector<Room *> rooms;
         std::string LevelName;
         std::vector<Door *> doors;
-        QVector<LevelComponents::__DoorEntry> doordatalist;
         __LevelHeader LevelHeader;
         enum __passage passage;
         enum __stage stage;
@@ -77,17 +76,10 @@ namespace LevelComponents
         std::string GetLevelName() { return LevelName; }
         unsigned int GetLevelID() { return LevelID; }
         void SetLevelName(std::string newlevelname) { LevelName = newlevelname; }
-        void ReLoadDoorsList(QVector<LevelComponents::__DoorEntry> doorlist);
         void RedistributeDoor();
         std::vector<Door *> GetRoomDoors(unsigned int roomId); // get Doors and copy the data
-        QVector<LevelComponents::__DoorEntry> GetDoorDataList() { return doordatalist; }
-        QString GetDoorName(int doorId)
-        {
-            return "Room " + QString::number((int) doordatalist[doorId].RoomID, 16) + " Door " + QString::number(doorId, 10);
-        }
         void DeleteDoor(int globalDoorIndex);
         void AddDoor(Door *newdoor);
-        void DeleteAllDoorInstances();
         ~Level();
         void GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks);
         struct __LevelHeader *GetLevelHeader() { return &LevelHeader; }

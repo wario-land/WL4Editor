@@ -72,16 +72,29 @@ namespace LevelComponents
         memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
 
         // Load the door data
+        std::vector<int> destinations;
         int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + LevelID * 4);
         struct __DoorEntry *doorPtr = (struct __DoorEntry *) (ROMUtils::CurrentFile + doorStartAddress);
-
         unsigned char *firstByte;
+        int currentDoornum = 0;
         while (*(firstByte = (unsigned char *) doorPtr))
         {
-            doordatalist.push_back(*doorPtr);
+            Door *newDoor = new Door(*doorPtr, doorPtr->RoomID, currentDoornum);
+            newDoor->SetEntitySetID(doorPtr->EntitySetID);
+            newDoor->SetBGM(doorPtr->BGM_ID);
+            newDoor->SetDelta(doorPtr->HorizontalDelta, doorPtr->VerticalDelta);
+            doors.push_back(newDoor);
+            destinations.push_back(doorPtr->LinkerDestination);
             ++doorPtr;
+            ++currentDoornum;
         }
-        ReLoadDoorsList(doordatalist);
+        // Assign the destinations for the doors
+        for (unsigned int i = 0; i < doors.size(); ++i)
+        {
+            doors[i]->SetDestinationDoor(doors[destinations[i]]);
+        }
+        // Set the first Door be Vortex Door
+        doors[0]->SetAsVortex();
 
         // Load the room data
         int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + LevelID * 4);
@@ -107,7 +120,10 @@ namespace LevelComponents
     /// </summary>
     Level::~Level()
     {
-        DeleteAllDoorInstances();
+        for (auto iter = doors.begin(); iter != doors.end(); ++iter)
+        {
+            delete *iter; // Delete doors
+        }
         for (auto iter = rooms.begin(); iter != rooms.end(); ++iter)
         {
             delete *iter; // Delete rooms
@@ -174,38 +190,6 @@ namespace LevelComponents
             c = (int) LevelHeader.SHardModeSecondOnePlaceNum;
         }
         return (a * 60 + b * 10 + c);
-    }
-
-    /// <summary>
-    /// Create Door instances based on the door list data.
-    /// </summary>
-    /// <param name="doorlist">
-    /// The new Door list data.
-    /// </param>
-    void Level::ReLoadDoorsList(QVector<__DoorEntry> doorlist)
-    {
-        // Clear the old Door instances
-        DeleteAllDoorInstances();
-
-        // Create the new Door instances
-        std::vector<int> destinations;
-        for(int i = 0; i < doorlist.size(); ++i)
-        {
-            LevelComponents::__DoorEntry newdoorentry = doorlist[i];
-            Door *newDoor = new Door(newdoorentry, newdoorentry.RoomID, i);
-            newDoor->SetEntitySetID(newdoorentry.EntitySetID);
-            newDoor->SetBGM(newdoorentry.BGM_ID);
-            newDoor->SetDelta(newdoorentry.HorizontalDelta, newdoorentry.VerticalDelta);
-            doors.push_back(newDoor);
-            destinations.push_back(newdoorentry.LinkerDestination);
-        }
-        // Assign the destinations for the doors
-        for (unsigned int i = 0; i < doors.size(); ++i)
-        {
-            doors[i]->SetDestinationDoor(doors[destinations[i]]);
-        }
-        // Set the first Door be Vortex Door
-        doors[0]->SetAsVortex();
     }
 
     /// <summary>
@@ -276,18 +260,6 @@ namespace LevelComponents
     {
         doors.push_back(newdoor);
         rooms[newdoor->GetRoomID()]->AddDoor(newdoor);
-    }
-
-    /// <summary>
-    /// Delete every Door instance.
-    /// </summary>
-    void Level::DeleteAllDoorInstances()
-    {
-        for (auto iter = doors.begin(); iter != doors.end(); ++iter)
-        {
-            delete *iter; // Delete doors
-        }
-        doors.clear();
     }
 
     /// <summary>

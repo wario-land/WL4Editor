@@ -52,7 +52,14 @@ namespace LevelComponents
         Door(Door &door);
 
         // Getters
+        unsigned short GetBGM_ID() { return DoorEntry.BGM_ID; }
+        int GetDeltaX() { return DoorEntry.HorizontalDelta; }
+        int GetDeltaY() { return DoorEntry.VerticalDelta; }
         Door *GetDestinationDoor() { return DestinationDoor; }
+        QString GetDoorName()
+        {
+            return "Room " + QString::number((int) RoomID, 16) + " Door " + QString::number(DoorID, 10);
+        }
         int GetDoorTypeNum() { return DoorEntry.DoorTypeByte; }
         int GetEntitySetID() { return DoorEntry.EntitySetID; }
         struct __DoorEntry GetEntryStruct() { return DoorEntry; }

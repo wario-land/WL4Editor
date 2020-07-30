@@ -69,7 +69,6 @@ private:
     LevelComponents::Room *tmpCurrentRoom = nullptr; // Use this to render Door preview
     LevelComponents::Room *tmpDestinationRoom = nullptr;
     int DoorID = -1;
-    LevelComponents::__DoorEntry curdoordata;
     int door_CurX1 = 0, door_CurY1 = 0, door_CurX2 = 0, door_CurY2 = 0;
     int door_DesX1 = 0, door_DesY1 = 0, door_DesX2 = 0, door_DesY2 = 0;  // used in scrollbars reset
     bool IsInitialized = false;
