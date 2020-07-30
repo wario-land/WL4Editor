@@ -298,7 +298,9 @@ namespace LevelComponents
             {
                 delete scene;
             } // Make a new graphics scene to draw to
-            scene = new QGraphicsScene(0, 0, qMax(sceneWidth, 16 * this->GetLayer(0)->GetLayerWidth()), sceneHeight);
+            int layer0unit = (this->GetLayer(0)->GetMappingType() == LevelComponents::LayerTile8x8) ? 8 : 16;
+            scene = new QGraphicsScene(0, 0, qMax(sceneWidth, layer0unit * this->GetLayer(0)->GetLayerWidth()),
+                                       qMax(sceneHeight, layer0unit * this->GetLayer(0)->GetLayerHeight()));
 
             // This represents the EVA alpha layer, which will be rendered in passes before the alpha layer is finalized
             QPixmap alphaPixmap(sceneWidth, sceneHeight);
@@ -838,6 +840,9 @@ namespace LevelComponents
                     if ((layerqueue[i] != layers[0]) && LayersCurrentVisibilityTemp[drawLayers[i]->index])
                     {
                         for(auto iter: renderParams->tilechangelist) {
+                            if (static_cast<unsigned int>(iter.tileX) >= this->Width ||
+                                    static_cast<unsigned int>(iter.tileY) >= this->Height)
+                            { continue; }
                             QPixmap pm_tmp = RenderedLayers[drawLayers[i]->index]->pixmap().copy(
                                 iter.tileX * units, iter.tileY * units, units, units);
                             alphaPainterTemp.drawImage(iter.tileX * units, iter.tileY * units, pm_tmp.toImage());
@@ -849,18 +854,26 @@ namespace LevelComponents
                         QImage imageA = RenderedLayers[0]->pixmap().toImage();
                         QImage imageB = alphaPixmapTemp.toImage();
                         for(auto iter: renderParams->tilechangelist) {
+                            int substituteEVA = Layer0ColorBlendCoefficient_EVA;
+                            if ((static_cast<unsigned int>(iter.tileX) >= this->Width ||
+                                    static_cast<unsigned int>(iter.tileY) >= this->Height) &&
+                                    Layer0ColorBlendCoefficient_EVA != 16)
+                            {
+                                // No color blending in areas where other layers do not exist
+                                substituteEVA = 16;
+                            }
                             for (int j = units * iter.tileY; j < (units * iter.tileY + units); ++j)
                             {
                                 for (int k = units * iter.tileX; k < (units * iter.tileX + units); ++k)
                                 {
                                     QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                    int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
+                                    int R = qMin((substituteEVA * PXA.red()) / 16 +
                                                      (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
                                                  255);
-                                    int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
+                                    int G = qMin((substituteEVA * PXA.green()) / 16 +
                                                      (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
                                                  255);
-                                    int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
+                                    int B = qMin((substituteEVA * PXA.blue()) / 16 +
                                                      (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
                                                  255);
                                     imageB.setPixel(k, j, QColor(R, G, B).rgb());
