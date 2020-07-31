@@ -1006,7 +1006,11 @@ namespace LevelComponents
     /// </return>
     int Room::GetLayerDataPtr(unsigned int LayerNum)
     {
-        assert(!(LayerNum & 0xFFFFFFFC) /* LayerNum must be within range [0, 4) */);
+        if(LayerNum & 0xFFFFFFFC)
+        {
+            singleton->GetOutputWidgetPtr()->PrintString("Warning: Possible data corruption when using GetLayerDataPtr(unsigned int LayerNum),"
+                                                         "LayerNum must be within range [0, 4).");
+        }
         return ((unsigned int *) (&RoomHeader.Layer0Data))[LayerNum] & 0x7FFFFFF;
     }
 
@@ -1016,7 +1020,11 @@ namespace LevelComponents
     void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
     {
         // this can be used to set entity set data pointers too
-//        assert(!(LayerNum & 0xFFFFFFFC) /* LayerNum must be within range [0, 4) */);
+        if(LayerNum & 0xFFFFFFFC)
+        {
+            singleton->GetOutputWidgetPtr()->PrintString("Warning: Possible data corruption when using SetLayerDataPtr(int LayerNum, int dataPtr),"
+                                                         "LayerNum must be within range [0, 4).");
+        }
         ((unsigned int *) (&RoomHeader.Layer0Data))[LayerNum] = dataPtr;
     }
 
