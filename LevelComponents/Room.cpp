@@ -1015,7 +1015,8 @@ namespace LevelComponents
     /// </summary>
     void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
     {
-        assert(!(LayerNum & 0xFFFFFFFC) /* LayerNum must be within range [0, 4) */);
+        // this can be used to set entity set data pointers too
+//        assert(!(LayerNum & 0xFFFFFFFC) /* LayerNum must be within range [0, 4) */);
         ((unsigned int *) (&RoomHeader.Layer0Data))[LayerNum] = dataPtr;
     }
 

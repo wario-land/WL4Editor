@@ -259,11 +259,6 @@ namespace LevelComponents
         }
         void ResetTileSet();
         void SetEntityPosition(int XPos, int YPos, int index);
-        void SetLayerDataInRoomHeader(int layerid, unsigned int value)
-        {
-            unsigned int *ptr = &(RoomHeader.Layer0Data);
-            ptr[layerid] = value;
-        }
         void ResetRoomHeader(__RoomHeader newheader);
 
         // Functions
