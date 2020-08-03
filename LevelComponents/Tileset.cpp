@@ -46,17 +46,14 @@ namespace LevelComponents
 
         // Load the animated tiles
         /*
-         * the reason why not using this is that it will cause problem and worse in some situation,
-         * so before we know what the first case really used for, we should just use the simple one.
-         * TODO: find the usage of the first case
-         * [0300002E..03000032] are all set to zero at 6B8FA
-         * and the arrange just contains all the values the table start from 0x3F8C18 have
-         * if(ROMUtils::CurrentFile[0x3F8C18 + __TilesetID * 16 + v1] & 1)
-              tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile +
-                                                                                        __TilesetID * 32 + 2 * v1 + 0x3F91D8)));
-         * else
-         * tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile +
-                                                                                        __TilesetID * 32 + 2 * v1 + 0x3F8098)));
+         * bgAnimated_dat2_pack = 0x3F8C18
+         * bgAnimated_dat3_pack = 0x3F91D8
+         * bgAnimated_dat1_pack = 0x3F8098
+         * BgIntAnimated_PackNum_tbl = 0x3F7828
+         * if ( MapSw[bgAnimated_dat2_pack[16 * CurrentRoomHeader_TilesetId + v1]] & 1 ) // only when some switch flag is set to 1
+               AnimatedTilesHeaderPtr = (char *)&bgAnimated_dat3_pack + 32 * CurrentRoomHeader_TilesetId + v2;
+         * else // All the MapSw(MapSwitch) are all set to zero at rom:6B8FA, this is the case when loading Level
+               AnimatedTilesHeaderPtr = (char *)&bgAnimated_dat1_pack + 32 * CurrentRoomHeader_TilesetId + v2;
          */
         AnimatedTileData = new unsigned short[16];
         memcpy((unsigned char *)AnimatedTileData, ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableCase2, 32);

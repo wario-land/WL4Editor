@@ -106,9 +106,9 @@ public:
     // clang-format off
     static constexpr const char *DoortypeSetData[5] =
     {
-        "1: Portal",
-        "2: Room Edge",
-        "3: Door or Pipe",
+        "1: Portal & Door",
+        "2: Warp",
+        "3: Pipe",
         "4: Boss Door",
         "5: Item Shop Door"
     };
