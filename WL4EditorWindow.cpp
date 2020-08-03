@@ -747,13 +747,13 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     {
         if (currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerDisabled)
         {
-            currentRoom->SetLayerDataInRoomHeader(
+            currentRoom->SetLayerDataPtr(
                 i, WL4Constants::NormalLayerDefaultPtr); // TODO: need a fix for a Tileset in toxic landfill
         }
     }
     if (currentRoom->GetLayer(3)->GetMappingType() == LevelComponents::LayerDisabled)
     {
-        currentRoom->SetLayerDataInRoomHeader(3, WL4Constants::BGLayerDefaultPtr);
+        currentRoom->SetLayerDataPtr(3, WL4Constants::BGLayerDefaultPtr);
     }
 
     // Mark the layers as dirty
@@ -1956,6 +1956,17 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 
     // Reset LevelHeader param
     CurrentLevel->GetLevelHeader()->NumOfMap++;
+
+    // Reset pointers in RoomHeader to avoid save chunk invalidation corruption
+    int offsetlist[6] = {0, 1, 2, 5, 6, 7};
+    for(int _offset: offsetlist)
+    {
+        CurrentLevel->GetRooms()[newRoomId]->SetLayerDataPtr(_offset, 0);
+    }
+    for(int i = 0; i < 3; i++)
+    {
+        CurrentLevel->GetRooms()[newRoomId]->GetLayer(i)->SetDataPtr(0);
+    }
 
     // UI updates
     SetCurrentRoomId(newRoomId);
