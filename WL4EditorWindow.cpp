@@ -531,25 +531,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             currentroomconfig->LayerData[0] = nullptr;
         }
     }
-    if (!currentroomconfig->Layer0MappingTypeParam && nextroomconfig->Layer0MappingTypeParam)
-    {
-        if ((nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
-        {
-            currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
-        }
-        else
-        {
-            LevelComponents::Layer *currentLayer0 = currentRoom->GetLayer(0);
-            delete currentLayer0;
-            currentLayer0 = new LevelComponents::Layer(nextroomconfig->Layer0DataPtr, LevelComponents::LayerTile8x8);
-            currentRoom->SetLayer(0, currentLayer0);
-        }
-    }
-    else if (currentroomconfig->Layer0MappingTypeParam && !nextroomconfig->Layer0MappingTypeParam)
-    {
-        currentRoom->GetLayer(0)->SetDisabled();
-    }
-
     if ((currentroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerTile8x8 &&
             (nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerTile8x8)
     {
@@ -562,6 +543,10 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             (nextroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerTile8x8)
     {
         currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
+    }
+    if ((currentroomconfig->Layer0MappingTypeParam > 0x10) && (nextroomconfig->Layer0MappingTypeParam < 0x10))
+    {
+        currentRoom->GetLayer(0)->SetDisabled();
     }
 
     if (nextroomconfig->BackgroundLayerEnable)

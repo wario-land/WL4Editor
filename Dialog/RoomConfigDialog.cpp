@@ -46,7 +46,9 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->spinBox_LayerGfxEffect02->setValue(CurrentRoomParams->LayerGFXEffect02);
     ui->spinBox_BgmVolume->setValue(CurrentRoomParams->BGMVolume);
 
-    // Initialize the selection for the BG selection combobox and Layer 0 selection combobox
+    // Initialize the items for the BG selection combobox
+    // The hardcode layer 3 pointers have been added into the combobox when setting Tileset combobox id
+    // Add the current layer 3 pointer if it is not record and hardcode in the editor
     bool CurrentBGSelectionAvailable = false;
     std::vector<int> CurrentBGLayerdataPtrs = BGLayerdataPtrs[CurrentRoomParams->CurrentTilesetIndex];
     for (unsigned int i = 0; i < CurrentBGLayerdataPtrs.size(); ++i)
@@ -63,6 +65,9 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
         ui->ComboBox_BGLayerPicker->addItem(QString::number(CurrentRoomParams->BackgroundLayerDataPtr, 16).toUpper());
         ui->ComboBox_BGLayerPicker->setCurrentIndex(ui->ComboBox_BGLayerPicker->count() - 1);
     }
+    //  Initialize the items for the Layer 0 selection combobox
+    ui->ComboBox_Layer0Picker->addItem(
+                QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper());
     if(CurrentRoomParams->CurrentTilesetIndex == 0x21)
     {
         ui->ComboBox_Layer0Picker->addItem(
@@ -524,17 +529,9 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
         } else if (arg1 >= LevelComponents::LayerTile8x8) { //Map8
             ui->spinBox_Layer0Width->setEnabled(false);
             ui->spinBox_Layer0Height->setEnabled(false);
-            if(ui->ComboBox_TilesetID->currentIndex() == 0x21 || ui->ComboBox_TilesetID->currentIndex() == 0x45) // Extra UI changes for dust Layer0
-            {
-                ui->ComboBox_Layer0Picker->setEnabled(true);
-                ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
-            } else {
-                ui->ComboBox_Layer0Picker->setEnabled(false);
-            }
+            ui->ComboBox_Layer0Picker->setEnabled(true);
+            ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
             ui->ComboBox_LayerPriority->setCurrentIndex(0);
-        } else if (arg1 >= LevelComponents::LayerTile8x8) { //Dsiabled or other customized cases
-            ui->spinBox_Layer0Width->setEnabled(false);
-            ui->spinBox_Layer0Height->setEnabled(false);
         }
     }
     else // Disable L0
