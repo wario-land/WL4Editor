@@ -69,6 +69,7 @@ void TileGraphicsView::mouseMoveEvent(QMouseEvent *event)
 /// </param>
 void TileGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
 {
+    (void) event;
     holdingmouse = false;
 }
 
@@ -80,6 +81,7 @@ void TileGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
 /// </param>
 void TileGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
+    (void) event;
     holdingmouse = false;
 }
 

@@ -15,6 +15,15 @@ include(./ThirdParty/phantomstyle/src/phantom/phantom.pri)
 
 RC_ICONS = images/icon.ico
 
+# Include additional files in the build output
+Release:DESTDIR = release
+Debug:DESTDIR = debug
+copydata.commands = $(COPY_DIR) $$shell_path($$PWD/thumblibs/memcpy.o) $$shell_path($$OUT_PWD/$$DESTDIR)
+first.depends = $(first) copydata
+export(first.depends)
+export(copydata.commands)
+QMAKE_EXTRA_TARGETS += first copydata
+
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the

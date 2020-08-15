@@ -14,10 +14,12 @@
 #ifdef _WIN32
 #define EABI_GCC     "arm-none-eabi-gcc.exe"
 #define EABI_AS      "arm-none-eabi-as.exe"
+#define EABI_LD      "arm-none-eabi-ld.exe"
 #define EABI_OBJCOPY "arm-none-eabi-objcopy.exe"
 #else // _WIN32 (else linux)
 #define EABI_GCC     "arm-none-eabi-gcc"
 #define EABI_AS      "arm-none-eabi-as"
+#define EABI_LD      "arm-none-eabi-ld"
 #define EABI_OBJCOPY "arm-none-eabi-objcopy"
 #endif
 
@@ -202,18 +204,30 @@ static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
     return contents;
 }
 
+static QString RunProcess(QString executable, QStringList args)
+{
+    QProcess process;
+    process.start(executable, args);
+    process.waitForFinished();
+    return !process.exitCode() ? "" : QString(process.readAllStandardError());
+}
+
 /// <summary>
 /// Compile a C file into an assembly file.
 /// </summary>
 /// <param name="cfile">
 /// The C file to compile.
 /// </param>
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
 static QString CompileCFile(QString cfile)
 {
     if(!cfile.endsWith(".c"))
     {
-        singleton->GetOutputWidgetPtr()->PrintString("C file does not have correct extension (should be .c): " + cfile);
-        return "";
+        QString msg = QString("C file does not have correct extension (should be .c): ") + cfile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
     }
 
     // Create args
@@ -226,10 +240,7 @@ static QString CompileCFile(QString cfile)
         "-S" << cfile << "-o" << outfile;
 
     // Run GCC
-    QProcess process;
-    process.start(executable, args);
-    process.waitForFinished();
-    return !process.exitCode() ? "" : QString(process.readAllStandardError());
+    return RunProcess(executable, args);
 }
 
 /// <summary>
@@ -238,12 +249,16 @@ static QString CompileCFile(QString cfile)
 /// <param name="sfile">
 /// The ASM file to assemble.
 /// </param>
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
 static QString AssembleSFile(QString sfile)
 {
     if(!sfile.endsWith(".s"))
     {
-        singleton->GetOutputWidgetPtr()->PrintString("ASM file does not have correct extension (should be .s): " + sfile);
-        return "";
+        QString msg = QString("ASM file does not have correct extension (should be .s): ") + sfile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
     }
 
     // Create args
@@ -251,41 +266,112 @@ static QString AssembleSFile(QString sfile)
     REPLACE_EXT(outfile, ".s", ".o");
     QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_AS);
     QStringList args;
-    args << sfile << "-o" << outfile;
+    args << sfile << "-o" << outfile << "--defsym=memcpy=0x80950D9";
 
-    // Run GCC
-    QProcess process;
-    process.start(executable, args);
-    process.waitForFinished();
-    return !process.exitCode() ? "" : QString(process.readAllStandardError());
+    // Run AS
+    return RunProcess(executable, args);
+}
+
+/// <summary>
+/// Create the linker script for an object file.
+/// </summary>
+/// <param name="entry">
+/// The patch entry with information about the type of file.
+/// </param>
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
+static QString CreateLinkerScript(struct PatchEntryItem entry)
+{
+    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString ofile(romFileDir + "/" + entry.FileName);
+    QString ldfile(ofile);
+    REPLACE_EXT(ofile, ".c", ".o"); // works for .s files too
+    REPLACE_EXT(ldfile, ".c", ".ld");
+    QString memo(QCoreApplication::applicationDirPath() + "/memcpy.o");
+
+    QString pa = QString::number(0x8000000 | entry.PatchAddress, 16);
+    QString scriptContents =
+        QString("SECTIONS\n") +
+        "{\n" +
+        "    .text  0x" + pa + " : { " + ofile + " }\n" +
+        "    .dummy 0x8000000 (NOLOAD) : { " + memo + " }\n" +
+        "}\n" +
+        "memcpy = 0x80950D9;";
+
+    QFile file(ldfile);
+    file.open(QIODevice::WriteOnly);
+    if (!file.isOpen())
+    {
+        QString msg = QString("Could not open linker script file for writing: ") + ldfile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
+    }
+    else
+    {
+        file.write(scriptContents.toUtf8());
+    }
+    return "";
+}
+
+/// <summary>
+/// Link an object file into an ELF file.
+/// </summary>
+/// <param name="ofile">
+/// The object file to link into an ELF file.
+/// </param>
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
+static QString LinkOFile(QString ofile)
+{
+    if(!ofile.endsWith(".o"))
+    {
+        QString msg = QString("Object file does not have correct extension (should be .o): ") + ofile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
+    }
+
+    // Create args
+    QString outfile(ofile);
+    REPLACE_EXT(outfile, ".o", ".elf");
+    QString ldfile(ofile);
+    REPLACE_EXT(ldfile, ".o", ".ld");
+    QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_LD);
+    QStringList args;
+    args << "-T" << ldfile << "-o" << outfile ;
+
+    // Run LD
+    return RunProcess(executable, args);
 }
 
 /// <summary>
 /// Extract the binary from an object file.
 /// </summary>
-/// <param name="ofile">
-/// The object file from which to extract the binary.
+/// <param name="elfFile">
+/// The ELF file from which to extract the binary.
 /// </param>
-static QString ExtractOFile(QString ofile)
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
+static QString ExtractELFFile(QString elfFile)
 {
-    if(!ofile.endsWith(".o"))
+    if(!elfFile.endsWith(".elf"))
     {
-        singleton->GetOutputWidgetPtr()->PrintString("Object file does not have correct extension (should be .o): " + ofile);
-        return "";
+        QString msg = QString("ELF file does not have correct extension (should be .elf): ") + elfFile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
     }
 
     // Create args
-    QString outfile(ofile);
-    REPLACE_EXT(outfile, ".o", ".bin");
+    QString outfile(elfFile);
+    REPLACE_EXT(outfile, ".elf", ".bin");
     QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_OBJCOPY);
     QStringList args;
-    args << "-O" << "binary" << "--only-section=.text" << ofile << outfile;
+    args << "-O" << "binary" << "-j" << ".text" << "-j" << ".rodata" << elfFile << outfile;
 
-    // Run GCC
-    QProcess process;
-    process.start(executable, args);
-    process.waitForFinished();
-    return !process.exitCode() ? "" : QString(process.readAllStandardError());
+    // Run OBJCOPY
+    return RunProcess(executable, args);
 }
 
 /// <summary>
@@ -348,6 +434,57 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
 }
 
 /// <summary>
+/// Compile a patch entry file to get the binary to save to the ROM.
+/// </summary>
+/// <param name="entry">
+/// The patch entry to compile.
+/// </param>
+/// <returns>
+/// The error string if compilation failed, or empty if successful.
+/// </returns>
+static QString CompilePatchEntry(struct PatchEntryItem entry)
+{
+    if(!entry.FileName.length() || entry.PatchType == PatchType::Binary) return "";
+
+    QDir ROMdir(ROMUtils::ROMFilePath);
+    ROMdir.cdUp();
+    QString filename(ROMdir.absolutePath() + "/" + entry.FileName);
+
+    QString output;
+    switch(entry.PatchType)
+    {
+    case PatchType::C:
+        if((output = CompileCFile(filename)) != "")
+        {
+            return QString("Compiler error: ") + output;
+        }
+        REPLACE_EXT(filename, ".c", ".s");
+    case PatchType::Assembly:
+        if((output = AssembleSFile(filename)) != "")
+        {
+            return QString("Assembler error: ") + output;
+        }
+        REPLACE_EXT(filename, ".s", ".o");
+        if((output = CreateLinkerScript(entry)) != "")
+        {
+            return QString("Error creating linker script: ") + output;
+        }
+        if((output = LinkOFile(filename)) != "")
+        {
+            return QString("Linker error: ") + output;
+        }
+        REPLACE_EXT(filename, ".o", ".elf");
+        if((output = ExtractELFFile(filename)) != "")
+        {
+            return QString("ObjCopy error: ") + output;
+        }
+        break;
+    default:;
+    }
+    return ""; // success
+}
+
+/// <summary>
 /// Compile files in a list of patches to save to the ROM.
 /// </summary>
 /// <param name="entries">
@@ -358,55 +495,15 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
 /// </returns>
 static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
 {
-    QDir ROMdir(ROMUtils::ROMFilePath);
-    ROMdir.cdUp();
-
-    // Create binaries from C and asm
-    QVector<struct CompileEntry> compileEntries;
+    QString output;
     for(struct PatchEntryItem entry : entries)
     {
-        if(!entry.FileName.length()) continue;
-
-        QString fname(entry.FileName);
-        switch(entry.PatchType)
+        if((output = CompilePatchEntry(entry)) != "")
         {
-        case PatchType::C:
-            compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::C});
-        case PatchType::Assembly:
-            REPLACE_EXT(fname, ".c", ".s");
-            compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Assembly});
-            REPLACE_EXT(fname, ".s", ".o");
-            compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Binary});
-        default:;
+            return output;
         }
     }
-    std::sort(compileEntries.begin(), compileEntries.end(),
-        [](const struct CompileEntry& c1, const struct CompileEntry& c2){ return c1.Type > c2.Type; });
-    for(struct CompileEntry entry : compileEntries)
-    {
-        QString output;
-        switch(entry.Type)
-        {
-        case PatchType::C:
-            if((output = CompileCFile(entry.FileName)) != "")
-            {
-                return QString("Compiler error: ") + output;
-            }
-            break;
-        case PatchType::Assembly:
-            if((output = AssembleSFile(entry.FileName)) != "")
-            {
-                return QString("Assembler error: ") + output;
-            }
-            break;
-        case PatchType::Binary:
-            if((output = ExtractOFile(entry.FileName)) != "")
-            {
-                return QString("ObjCopy error: ") + output;
-            }
-        }
-    }
-    return ""; // success
+    return "";
 }
 
 /// <summary>
@@ -468,6 +565,43 @@ static QVector<struct PatchEntryItem> DetermineRemainingPatches(QVector<struct P
             [p1](struct PatchEntryItem p2){return p1.HookAddress == p2.HookAddress;}) != removalPatches.end();});
     remainingPatches.erase(removeItr, remainingPatches.end());
     return remainingPatches;
+}
+
+/// <summary>
+/// Create a save chunk for a patch list entry
+/// </summary>
+/// <param name="patch">
+/// The patch entry for which to create a save chunk.
+/// </param>
+/// <returns>
+/// The save chunk.
+/// </returns>
+static struct ROMUtils::SaveData CreatePatchSaveChunk(struct PatchEntryItem patch)
+{
+    QString binName(patch.FileName);
+    binName.chop(1);
+    binName += "bin";
+
+    // Get data from bin file
+    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QFile binFile(romFileDir + "/" + binName);
+    binFile.open(QIODevice::ReadOnly);
+    QByteArray binContents = binFile.readAll();
+    unsigned char *data = new unsigned char[binFile.size()];
+    memcpy(data, binContents.constData(), binFile.size());
+
+    // Create the save chunk
+    return
+    {
+        0,
+        static_cast<unsigned int>(binFile.size()),
+        data,
+        ROMUtils::SaveDataIndex++,
+        true,
+        0,
+        0,
+        ROMUtils::SaveDataChunkType::PatchChunk
+    };
 }
 
 namespace PatchUtils
@@ -558,30 +692,11 @@ namespace PatchUtils
             binName.chop(1);
             binName += "bin";
 
-            // Get data from bin file
-            QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
-            QFile binFile(romFileDir + "/" + binName);
-            binFile.open(QIODevice::ReadOnly);
-            QByteArray binContents = binFile.readAll();
-            unsigned char *data = new unsigned char[binFile.size()];
-            memcpy(data, binContents.constData(), binFile.size());
+            struct ROMUtils::SaveData patchChunk = CreatePatchSaveChunk(patch);
 
             // Save the mapping for the save chunk onto the added patch
             saveChunkIndexToMetadata[ROMUtils::SaveDataIndex] = std::find_if(entries.begin(), entries.end(),
                 [patch](struct PatchEntryItem origPatch){return patch.HookAddress == origPatch.HookAddress;});
-
-            // Create the save chunk
-            struct ROMUtils::SaveData patchChunk =
-            {
-                0,
-                static_cast<unsigned int>(binFile.size()),
-                data,
-                ROMUtils::SaveDataIndex++,
-                true,
-                0,
-                0,
-                ROMUtils::SaveDataChunkType::PatchChunk
-            };
 
             chunks.append(patchChunk);
         }
@@ -637,7 +752,7 @@ namespace PatchUtils
             // ChunkAllocationCallback
 
             [firstCallback, &entries, &saveChunkIndexToMetadata, removePatches, noPatches]
-            (unsigned char *TempFile, QVector<struct ROMUtils::SaveData>& addedSaveChunks, std::map<int, int> indexToChunkPtr) mutable
+            (unsigned char *TempFile, QVector<struct ROMUtils::SaveData>& addedSaveChunks, std::map<int, int> indexToChunkPtr) mutable -> QString
             {
                 // Create and add PatchListChunk after patch chunk locations have been allocated by SaveFile()
                 if(firstCallback)
@@ -666,6 +781,18 @@ namespace PatchUtils
                                     return mdPtr ? mdPtr->HookAddress == patch.HookAddress : false;
                                 });
                             patch.PatchAddress = saveChunk != addedSaveChunks.end() ? chunkPtr : 0;
+
+                            // Recompile the patch now that the patch address can be used in the linker script for .org directive
+                            CompilePatchEntry(patch);
+                            struct ROMUtils::SaveData tempSaveData = CreatePatchSaveChunk(patch);
+                            if(saveChunk->size != tempSaveData.size)
+                            {
+                                QString msg = QString("Validation error in chunk allocation callback: Mismatch between precompiled and postcompiled size of patch data: ") + patch.FileName;
+                                singleton->GetOutputWidgetPtr()->PrintString(msg);
+                                return msg;
+                            }
+                            delete saveChunk->data;
+                            saveChunk->data = tempSaveData.data;
 
                             // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
                             int hookLength = patch.HookString.length() / 2; // hook string is hex string, 2 digits per byte
@@ -700,6 +827,7 @@ namespace PatchUtils
                     firstCallback = false;
                 }
                 else addedSaveChunks.clear();
+                return "";
             },
 
             // PostProcessingCallback
@@ -729,6 +857,7 @@ namespace PatchUtils
                     memcpy(TempFile + patch.HookAddress, hookData, hookString.length() / 2);
                     delete[] hookData;
                 }
+                return "";
             }
         );
 
@@ -762,7 +891,12 @@ namespace PatchUtils
             eabiBinDir.cd(EABI_AS);
             goto error;
         }
-        if(!eabiBinDir.exists(EABI_OBJCOPY)) // extracting binary from object file
+        if(!eabiBinDir.exists(EABI_LD)) // linking object into ELF
+        {
+            eabiBinDir.cd(EABI_LD);
+            goto error;
+        }
+        if(!eabiBinDir.exists(EABI_OBJCOPY)) // extracting binary from ELF file
         {
             eabiBinDir.cd(EABI_OBJCOPY);
             goto error;

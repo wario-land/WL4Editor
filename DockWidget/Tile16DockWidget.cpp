@@ -41,7 +41,11 @@ Tile16DockWidget::~Tile16DockWidget()
 /// <summary>
 /// This function will be triggered when the dock widget get focus.
 /// </summary>
-void Tile16DockWidget::FocusInEvent(QFocusEvent *e) { SetSelectedTile(0, true); }
+void Tile16DockWidget::FocusInEvent(QFocusEvent *e)
+{
+    (void) e;
+    SetSelectedTile(0, true);
+}
 
 /// <summary>
 /// Set the tileset for the dock widget.

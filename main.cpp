@@ -89,5 +89,28 @@ int main(int argc, char *argv[])
     WL4EditorWindow window;
     window.show();
 
+        // Quickly test or debug by automatically loading the ROM without UI
+    //-------------------------------------------------------------------
+#ifdef _WIN32 // Windows
+    QString restoreFilePath = "C:\\Users\\Andrew\\Desktop\\WL4 2.gba";
+    QString filePath = "C:\\Users\\Andrew\\Desktop\\WL4.gba";
+#else // Linux
+    QString restoreFilePath = "/home/andrew/Desktop/WL4 2.gba";
+    QString filePath = "/home/andrew/Desktop/WL4.gba";
+#endif
+    QFile restoreFile(restoreFilePath);
+    QFile testFile(filePath);
+    testFile.remove();
+    restoreFile.copy(filePath);
+    if(testFile.exists())
+    {
+        window.LoadROMDataFromFile(filePath);
+    }
+    testFile.close();
+    //-------------------------------------------------------------------
+
+    return application.exec();
+    testFile.close();
+
     return application.exec();
 }

@@ -411,6 +411,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 /// </param>
 void MainGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
 {
+    (void) event;
     holdingmouse = false;
 }
 
@@ -801,6 +802,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             }
         }
     }; break;
+    default:;
     }
 }
 

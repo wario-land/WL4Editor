@@ -1809,7 +1809,7 @@ void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
 void WL4EditorWindow::on_actionManager_triggered()
 {
     PatchManagerDialog dialog(this);
-    auto result = dialog.exec();
+    dialog.exec();
 }
 
 /// <summary>

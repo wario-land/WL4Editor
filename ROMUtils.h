@@ -61,9 +61,9 @@ namespace ROMUtils
     int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
-    bool SaveFile(QString fileName, QVector<struct SaveData> chunks,
-        std::function<void(unsigned char*, QVector<struct SaveData>&, std::map<int, int>)> ChunkAllocationCallback,
-        std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback);
+    bool SaveFile(QString filePath, QVector<struct SaveData> chunks,
+        std::function<QString (unsigned char*, QVector<struct SaveData>&, std::map<int, int>)> ChunkAllocationCallback,
+        std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback);
     bool SaveLevel(QString fileName);
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor = false);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);

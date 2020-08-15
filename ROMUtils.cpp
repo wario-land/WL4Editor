@@ -485,16 +485,18 @@ namespace ROMUtils
     /// <param name="ChunkAllocationCallback">
     /// Callback function that allocates additional chunks based on data from chunks which have been
     /// allocated by this function before saving to ROM. This function may not allocate invalidation chunks.
+    /// This function returns an error string if unsuccessful, or an empty string if successful.
     /// </param>
     /// <param name="PostProcessingCallback">
     /// Post-processing to perform after writing the save chunks, but before saving the file itself.
+    /// This function returns an error string if unsuccessful, or an empty string if successful.
     /// </param>
     /// <returns>
     /// True if the save was successful.
     /// </returns>
     bool SaveFile(QString filePath, QVector<struct SaveData> chunks,
-        std::function<void(unsigned char*, QVector<struct SaveData>&, std::map<int, int>)> ChunkAllocationCallback,
-        std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback)
+        std::function<QString (unsigned char*, QVector<struct SaveData>&, std::map<int, int>)> ChunkAllocationCallback,
+        std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
         unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
@@ -597,7 +599,12 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             // Perform chunk allocation callback
             if(ChunkAllocationCallback)
             {
-                ChunkAllocationCallback(TempFile, chunksToAdd, indexToChunkPtr);
+                QString ret(ChunkAllocationCallback(TempFile, chunksToAdd, indexToChunkPtr));
+                if(ret != "")
+                {
+                    success = false;
+                    goto error;
+                }
                 chunks.append(chunksToAdd); // Add any additional chunks created in the callback
             }
             else
@@ -615,6 +622,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             case SaveDataChunkType::PatchListChunk:
             case SaveDataChunkType::PatchChunk:
                 continue; // the above chunk types are not associated with a modified pointer in main ROM
+            default:;
             }
 
             unsigned char *ptrLoc = chunk.dest_index ?
@@ -661,7 +669,12 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         // Perform post-processing before saving the file
         if(PostProcessingCallback)
         {
-            PostProcessingCallback(TempFile, indexToChunkPtr);
+            QString ret(PostProcessingCallback(TempFile, indexToChunkPtr));
+            if(ret != "")
+            {
+                success = false;
+                goto error;
+            }
         }
 
         { // Prevent goto from crossing initialization of variables here
@@ -773,6 +786,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                         // singletonTilesets[i]->SetChanged(false);
                     }
                 }
+                return QString("");
             });
         if(!ret) return false;
 
