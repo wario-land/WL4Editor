@@ -352,17 +352,25 @@ namespace LevelComponents
                         {
                             for (int k = 0; k < qMin(sceneWidth, imageA.width()); ++k)
                             {
-                                QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
-                                                 (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
-                                             255);
-                                int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
-                                                 (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
-                                             255);
-                                int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
-                                                 (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
-                                             255);
-                                imageA.setPixel(k, j, QColor(R, G, B).rgb());
+                                if(imageA.pixelColor(k, j).alpha() == 0xFF) // Layer 0 current pixel not transparent
+                                {
+                                    QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
+                                    int R = qMin(((Layer0ColorBlendCoefficient_EVA * PXA.red()) >> 4) +
+                                                 ((Layer0ColorBlendCoefficient_EVB * PXB.red()) >> 4),
+                                                 255);
+                                    int G = qMin(((Layer0ColorBlendCoefficient_EVA * PXA.green()) >> 4) +
+                                                 ((Layer0ColorBlendCoefficient_EVB * PXB.green()) >> 4),
+                                                 255);
+                                    int B = qMin(((Layer0ColorBlendCoefficient_EVA * PXA.blue()) >> 4) +
+                                                 ((Layer0ColorBlendCoefficient_EVB * PXB.blue()) >> 4),
+                                                 255);
+                                    imageA.setPixel(k, j, QColor(R, G, B).rgb());
+                                }
+                                else
+                                {
+                                    imageB.setPixel(k, j, imageB.pixelColor(k, j).rgb());
+                                    imageA.setPixel(k, j, imageA.pixelColor(k, j).rgb());
+                                }
                             }
                         }
 
@@ -755,17 +763,25 @@ namespace LevelComponents
                             {
                                 for (int k = 0; k < qMin(sceneWidth, imageA.width()); ++k)
                                 {
-                                    QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                    int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
-                                                 255);
-                                    int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
-                                                 255);
-                                    int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
-                                                 255);
-                                    imageB.setPixel(k, j, QColor(R, G, B).rgb());
+                                    if(imageA.pixelColor(k, j).alpha() == 0xFF) // Layer 0 current pixel not transparent
+                                    {
+                                        QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
+                                        int R = qMin(((Layer0ColorBlendCoefficient_EVA * PXA.red()) >> 4) +
+                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.red()) >> 4),
+                                                     255);
+                                        int G = qMin(((Layer0ColorBlendCoefficient_EVA * PXA.green()) >> 4) +
+                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.green()) >> 4),
+                                                     255);
+                                        int B = qMin(((Layer0ColorBlendCoefficient_EVA * PXA.blue()) >> 4) +
+                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.blue()) >> 4),
+                                                     255);
+                                        imageB.setPixel(k, j, QColor(R, G, B).rgb());
+                                    }
+                                    else
+                                    {
+                                        imageB.setPixel(k, j, imageB.pixelColor(k, j).rgb());
+                                        imageA.setPixel(k, j, imageA.pixelColor(k, j).rgb());
+                                    }
                                 }
                             }
                             alphalayeritem->setPixmap(QPixmap::fromImage(imageB));
@@ -866,17 +882,25 @@ namespace LevelComponents
                             {
                                 for (int k = units * iter.tileX; k < (units * iter.tileX + units); ++k)
                                 {
-                                    QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                    int R = qMin((substituteEVA * PXA.red()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
-                                                 255);
-                                    int G = qMin((substituteEVA * PXA.green()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
-                                                 255);
-                                    int B = qMin((substituteEVA * PXA.blue()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
-                                                 255);
-                                    imageB.setPixel(k, j, QColor(R, G, B).rgb());
+                                    if(imageA.pixelColor(k, j).alpha() == 0xFF) // Layer 0 current pixel not transparent
+                                    {
+                                        QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
+                                        int R = qMin(((substituteEVA * PXA.red()) >> 4) +
+                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.red()) >> 4),
+                                                     255);
+                                        int G = qMin(((substituteEVA * PXA.green()) >> 4) +
+                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.green()) >> 4),
+                                                     255);
+                                        int B = qMin(((substituteEVA * PXA.blue()) >> 4) +
+                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.blue()) >> 4),
+                                                     255);
+                                        imageB.setPixel(k, j, QColor(R, G, B).rgb());
+                                    }
+                                    else
+                                    {
+                                        imageB.setPixel(k, j, imageB.pixelColor(k, j).rgb());
+                                        imageA.setPixel(k, j, imageA.pixelColor(k, j).rgb());
+                                    }
                                 }
                             }
                         }
