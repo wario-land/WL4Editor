@@ -352,7 +352,7 @@ namespace LevelComponents
                         {
                             for (int k = 0; k < qMin(sceneWidth, imageA.width()); ++k)
                             {
-                                if(imageA.pixelColor(k, j).alpha() == 0xFF) // Layer 0 current pixel not transparent
+                                if(imageA.pixelColor(k, j).alpha() == 0xFF && imageB.pixelColor(k, j).alpha() == 0xFF) // current pixels not transparent
                                 {
                                     QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
                                     int R = qMin(((Layer0ColorBlendCoefficient_EVA * PXA.red()) >> 4) +
@@ -763,7 +763,7 @@ namespace LevelComponents
                             {
                                 for (int k = 0; k < qMin(sceneWidth, imageA.width()); ++k)
                                 {
-                                    if(imageA.pixelColor(k, j).alpha() == 0xFF) // Layer 0 current pixel not transparent
+                                    if(imageA.pixelColor(k, j).alpha() == 0xFF && imageB.pixelColor(k, j).alpha() == 0xFF) // current pixels not transparent
                                     {
                                         QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
                                         int R = qMin(((Layer0ColorBlendCoefficient_EVA * PXA.red()) >> 4) +
@@ -882,7 +882,7 @@ namespace LevelComponents
                             {
                                 for (int k = units * iter.tileX; k < (units * iter.tileX + units); ++k)
                                 {
-                                    if(imageA.pixelColor(k, j).alpha() == 0xFF) // Layer 0 current pixel not transparent
+                                    if(imageA.pixelColor(k, j).alpha() == 0xFF && imageB.pixelColor(k, j).alpha() == 0xFF) // current pixels not transparent
                                     {
                                         QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
                                         int R = qMin(((substituteEVA * PXA.red()) >> 4) +
