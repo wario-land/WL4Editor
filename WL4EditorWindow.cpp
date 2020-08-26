@@ -719,8 +719,8 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
     currentRoom->SetBGLayerScrollFlag(nextroomconfig->BGLayerScrollFlag);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
-    currentRoom->SetLayerGFXEffect01(nextroomconfig->LayerGFXEffect01);
-    currentRoom->SetLayerGFXEffect02(nextroomconfig->LayerGFXEffect02);
+    currentRoom->SetLayerGFXEffect01(nextroomconfig->RasterType);
+    currentRoom->SetLayerGFXEffect02(nextroomconfig->Water);
     currentRoom->SetBgmvolume(nextroomconfig->BGMVolume);
 
     // reset LayerDataPtr in RoomHeader because Layer::SetDisabled() doesn't change the data in RoomHeader
