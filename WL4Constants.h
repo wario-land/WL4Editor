@@ -25,6 +25,7 @@ namespace WL4Constants
     const unsigned int BGLayerDefaultPtr           = 0x58DA7C;
     const unsigned int NormalLayerDefaultPtr       = 0x3F2263;
     const unsigned int ToxicLandfillDustyLayer0Ptr = 0x601854;
+    const unsigned int FieryCavernDustyLayer0Ptr   = 0x60D934;
     const unsigned int UniversalSpritesPalette     = 0x556DDC;
     const unsigned int UniversalSpritesPalette2    = 0x400A68;
     const unsigned int TreasureBoxGFXTiles         = 0x352CF0;

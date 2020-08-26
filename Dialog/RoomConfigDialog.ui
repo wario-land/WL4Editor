@@ -272,7 +272,7 @@
        <item>
         <widget class="QLabel" name="label_LayerGfxEffect01">
          <property name="text">
-          <string>Layer graphic effect flag 1 (Hex up to FF):</string>
+          <string>Raster type (Hex up to FF):</string>
          </property>
         </widget>
        </item>
@@ -289,7 +289,7 @@
        <item>
         <widget class="QLabel" name="label_LayerGfxEffect02">
          <property name="text">
-          <string>Layer graphic effect flag 2 (Hex up to FF):</string>
+          <string>Water (Hex up to FF):</string>
          </property>
         </widget>
        </item>

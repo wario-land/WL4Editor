@@ -267,6 +267,7 @@ namespace LevelComponents
         unsigned int GetLocalDoorID(int globalDoorId);
         void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk,
                            ROMUtils::SaveData *cameraPointerTableChunk, unsigned int *cameraPointerTableIndex);
+        QImage AlphaBlend(int eva, int evb, int scrH, int scrW, QImage imgA, QImage imgB);
         QGraphicsScene *RenderGraphicsScene(QGraphicsScene *scene, RenderUpdateParams *renderParams);
         void SetCameraLimitator(int index, __CameraControlRecord limitator_data);
         void SwapEntityLists(int first_list_id, int second_list_id);

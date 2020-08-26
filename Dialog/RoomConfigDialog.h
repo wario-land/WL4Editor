@@ -340,6 +340,13 @@ private:
         0,
         0
     };
+
+    // Enumeration of the Tileset id contains Map8x8 layer 0
+    static constexpr const unsigned int UseMap8x8Layer0DefaultTilesetIds[2] =
+    {
+        0x21,
+        0x45
+    };
     // clang-format on
 };
 

@@ -8,10 +8,12 @@ constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
 constexpr const char *RoomConfigDialog::LayerPrioritySetData[3];
 constexpr const char *RoomConfigDialog::AlphaBlendAttrsSetData[12];
 constexpr unsigned int RoomConfigDialog::BGLayerdataPtrsData[166];
+constexpr unsigned int RoomConfigDialog::UseMap8x8Layer0DefaultTilesetIds[2];
 
 // static variables used by RoomConfigDialog
 static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet;
 static std::vector<int> BGLayerdataPtrs[0x5C];
+static std::vector<int> Map8x8Layer0Tilesetlist[2];
 
 /// <summary>
 /// Construct the instance of the RoomConfigDialog.
@@ -46,7 +48,9 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->spinBox_LayerGfxEffect02->setValue(CurrentRoomParams->LayerGFXEffect02);
     ui->spinBox_BgmVolume->setValue(CurrentRoomParams->BGMVolume);
 
-    // Initialize the selection for the BG selection combobox
+    // Initialize the items for the BG selection combobox
+    // The hardcode layer 3 pointers have been added into the combobox when setting Tileset combobox id
+    // Add the current layer 3 pointer if it is not record and hardcode in the editor
     bool CurrentBGSelectionAvailable = false;
     std::vector<int> CurrentBGLayerdataPtrs = BGLayerdataPtrs[CurrentRoomParams->CurrentTilesetIndex];
     for (unsigned int i = 0; i < CurrentBGLayerdataPtrs.size(); ++i)
@@ -63,6 +67,27 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
         ui->ComboBox_BGLayerPicker->addItem(QString::number(CurrentRoomParams->BackgroundLayerDataPtr, 16).toUpper());
         ui->ComboBox_BGLayerPicker->setCurrentIndex(ui->ComboBox_BGLayerPicker->count() - 1);
     }
+    //  Initialize the items for the Layer 0 selection combobox
+    ui->ComboBox_Layer0Picker->addItem(
+                QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper());
+    if(CurrentRoomParams->CurrentTilesetIndex == Map8x8Layer0Tilesetlist->at(0))
+    {
+        ui->ComboBox_Layer0Picker->addItem(
+                    QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
+    }
+    else if(CurrentRoomParams->CurrentTilesetIndex == Map8x8Layer0Tilesetlist->at(1))
+    {
+        ui->ComboBox_Layer0Picker->addItem(
+            QString::number(WL4Constants::FieryCavernDustyLayer0Ptr, 16).toUpper());
+    }
+    if(CurrentRoomParams->Layer0DataPtr &&
+            CurrentRoomParams->Layer0DataPtr != WL4Constants::ToxicLandfillDustyLayer0Ptr &&
+            CurrentRoomParams->Layer0DataPtr != WL4Constants::FieryCavernDustyLayer0Ptr)
+    {
+        ui->ComboBox_Layer0Picker->addItem(
+            QString::number(CurrentRoomParams->Layer0DataPtr, 16).toUpper());
+    }
+    ui->ComboBox_Layer0Picker->setCurrentIndex(ui->ComboBox_Layer0Picker->count() - 1); // use the last one in the list for now
 
     // Initialize the graphic view layers
     ui->graphicsView->infoLabel = ui->graphicViewDetailsLabel;
@@ -168,6 +193,12 @@ void RoomConfigDialog::StaticComboBoxesInitialization()
         }
         BGLayerdataPtrs[i] = vec;
     }
+
+    // Initialize the Tileset list which contains map8x8 layer 0
+    for (unsigned int i = 0; i < sizeof(UseMap8x8Layer0DefaultTilesetIds) / sizeof(UseMap8x8Layer0DefaultTilesetIds[0]); ++i)
+    {
+        Map8x8Layer0Tilesetlist->push_back(UseMap8x8Layer0DefaultTilesetIds[i]);
+    }
 }
 
 /// <summary>
@@ -229,10 +260,15 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         }
 
         // Extra UI changes for Toxic Landfill dust Layer0
-        if (ui->ComboBox_TilesetID->currentIndex() == 0x21)
+        if (ui->ComboBox_TilesetID->currentIndex() == Map8x8Layer0Tilesetlist->at(0))
         {
             ui->ComboBox_Layer0Picker->addItem(
                 QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
+        }
+        else if (ui->ComboBox_TilesetID->currentIndex() == Map8x8Layer0Tilesetlist->at(1))
+        {
+            ui->ComboBox_Layer0Picker->addItem(
+                QString::number(WL4Constants::FieryCavernDustyLayer0Ptr, 16).toUpper());
         }
         else
         {
@@ -501,17 +537,9 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
         } else if (arg1 >= LevelComponents::LayerTile8x8) { //Map8
             ui->spinBox_Layer0Width->setEnabled(false);
             ui->spinBox_Layer0Height->setEnabled(false);
-            if(ui->ComboBox_TilesetID->currentIndex() == 0x21) // Extra UI changes for Toxic Landfill dust Layer0
-            {
-                ui->ComboBox_Layer0Picker->setEnabled(true);
-                ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
-            } else {
-                ui->ComboBox_Layer0Picker->setEnabled(false);
-            }
+            ui->ComboBox_Layer0Picker->setEnabled(true);
+            ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
             ui->ComboBox_LayerPriority->setCurrentIndex(0);
-        } else if (arg1 >= LevelComponents::LayerTile8x8) { //Dsiabled or other customized cases
-            ui->spinBox_Layer0Width->setEnabled(false);
-            ui->spinBox_Layer0Height->setEnabled(false);
         }
     }
     else // Disable L0

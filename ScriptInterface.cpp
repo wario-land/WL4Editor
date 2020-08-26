@@ -8,28 +8,46 @@ ScriptInterface::ScriptInterface(QObject *parent) : QObject(parent)
     // installation
 }
 
-int ScriptInterface::GetCurRoomWidth()
+int ScriptInterface::GetCurRoomLayerWidth(int layerId)
 {
-    return static_cast<int>(singleton->GetCurrentRoom()->GetWidth());
+    return static_cast<int>(singleton->GetCurrentRoom()->GetLayer(layerId)->GetLayerWidth());
 }
 
-int ScriptInterface::GetCurRoomHeight()
+int ScriptInterface::GetCurRoomLayerHeight(int layerId)
 {
-    return static_cast<int>(singleton->GetCurrentRoom()->GetHeight());
+    return static_cast<int>(singleton->GetCurrentRoom()->GetLayer(layerId)->GetLayerHeight());
 }
 
 int ScriptInterface::GetCurRoomTile16(int layerID, int x, int y)
 {
-    LevelComponents::Room *room = singleton->GetCurrentRoom();
-    if(room->GetLayer(layerID)->GetMappingType() != LevelComponents::LayerMap16)
+    LevelComponents::Layer *layer = singleton->GetCurrentRoom()->GetLayer(layerID);
+    if(layer->GetMappingType() != LevelComponents::LayerMap16)
         return -1;
-    int width = static_cast<int>(room->GetWidth());
-    int height = static_cast<int>(room->GetHeight());
+    int width = static_cast<int>(layer->GetLayerWidth());
+    int height = static_cast<int>(layer->GetLayerHeight());
     if(x >= width || y >= height) {
-        log(QString("position out of range!\n"));
+        log("ScriptInterface::GetCurRoomTile16(): Tile position (" +
+            QString::number(x) + ", " + QString::number(y) +
+            ") out of bounds on layer L (dimensions: " + QString::number(width) + ", " + QString::number(height) + ")");
         return -1;
     }
-    return room->GetLayer(layerID)->GetTileData(x, y);
+    return layer->GetTileData(x, y);
+}
+
+int ScriptInterface::GetCurRoomTile8(int layerID, int x, int y)
+{
+    LevelComponents::Layer *layer = singleton->GetCurrentRoom()->GetLayer(layerID);
+    if(layer->GetMappingType() != LevelComponents::LayerTile8x8)
+        return -1;
+    int width = static_cast<int>(layer->GetLayerWidth());
+    int height = static_cast<int>(layer->GetLayerHeight());
+    if(x >= width || y >= height) {
+        log("ScriptInterface::GetCurRoomTile8(): Tile position (" +
+            QString::number(x) + ", " + QString::number(y) +
+            ") out of bounds on layer L (dimensions: " + QString::number(width) + ", " + QString::number(height) + ")");
+        return -1;
+    }
+    return layer->GetTileData(x, y) & 0x3FF;
 }
 
 int ScriptInterface::GetRoomNum()
