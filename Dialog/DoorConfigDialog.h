@@ -240,7 +240,7 @@ public:
         "0x7A Cat in boss corridor",
         "0x7B PET Bottle",
         "0x7C mouja",
-        "0x7D Boss: Golden Diva, yuka",
+        "0x7D Boss: Golden Diva, yuki",
         "0x7E Falling Chandelier",
         "0x7F Crumbling Platform",
         "0x80 Arewo Shitain-Hakase"

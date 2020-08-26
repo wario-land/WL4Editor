@@ -8,10 +8,12 @@ constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
 constexpr const char *RoomConfigDialog::LayerPrioritySetData[3];
 constexpr const char *RoomConfigDialog::AlphaBlendAttrsSetData[12];
 constexpr unsigned int RoomConfigDialog::BGLayerdataPtrsData[166];
+constexpr unsigned int RoomConfigDialog::UseMap8x8Layer0DefaultTilesetIds[2];
 
 // static variables used by RoomConfigDialog
 static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet;
 static std::vector<int> BGLayerdataPtrs[0x5C];
+static std::vector<int> Map8x8Layer0Tilesetlist[2];
 
 /// <summary>
 /// Construct the instance of the RoomConfigDialog.
@@ -68,12 +70,12 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     //  Initialize the items for the Layer 0 selection combobox
     ui->ComboBox_Layer0Picker->addItem(
                 QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper());
-    if(CurrentRoomParams->CurrentTilesetIndex == 0x21)
+    if(CurrentRoomParams->CurrentTilesetIndex == Map8x8Layer0Tilesetlist->at(0))
     {
         ui->ComboBox_Layer0Picker->addItem(
                     QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
     }
-    else if(CurrentRoomParams->CurrentTilesetIndex == 0x45)
+    else if(CurrentRoomParams->CurrentTilesetIndex == Map8x8Layer0Tilesetlist->at(1))
     {
         ui->ComboBox_Layer0Picker->addItem(
             QString::number(WL4Constants::FieryCavernDustyLayer0Ptr, 16).toUpper());
@@ -191,6 +193,12 @@ void RoomConfigDialog::StaticComboBoxesInitialization()
         }
         BGLayerdataPtrs[i] = vec;
     }
+
+    // Initialize the Tileset list which contains map8x8 layer 0
+    for (unsigned int i = 0; i < sizeof(UseMap8x8Layer0DefaultTilesetIds) / sizeof(UseMap8x8Layer0DefaultTilesetIds[0]); ++i)
+    {
+        Map8x8Layer0Tilesetlist->push_back(UseMap8x8Layer0DefaultTilesetIds[i]);
+    }
 }
 
 /// <summary>
@@ -252,12 +260,12 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         }
 
         // Extra UI changes for Toxic Landfill dust Layer0
-        if (ui->ComboBox_TilesetID->currentIndex() == 0x21)
+        if (ui->ComboBox_TilesetID->currentIndex() == Map8x8Layer0Tilesetlist->at(0))
         {
             ui->ComboBox_Layer0Picker->addItem(
                 QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
         }
-        else if (ui->ComboBox_TilesetID->currentIndex() == 0x45)
+        else if (ui->ComboBox_TilesetID->currentIndex() == Map8x8Layer0Tilesetlist->at(1))
         {
             ui->ComboBox_Layer0Picker->addItem(
                 QString::number(WL4Constants::FieryCavernDustyLayer0Ptr, 16).toUpper());

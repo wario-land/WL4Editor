@@ -516,6 +516,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         currentRoom->GetLayer(2)->SetDisabled();
     }
 
+    // Need to change layer 0 data when Layer 0 size changed
     if (nextroomconfig->Layer0Width != currentroomconfig->Layer0Width ||
             nextroomconfig->Layer0Height != currentroomconfig->Layer0Height)
     {
@@ -527,10 +528,23 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
             memcpy(tmpLayerdata1, currentRoom->GetLayer(0)->GetLayerData(), datasize1);
             currentroomconfig->LayerData[0] = tmpLayerdata1;
+
+            // reset Layer size
+            size_t datasize2 = 0;
+            currentRoom->GetLayer(0)->ChangeDimensions(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
+            datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
+
+            // save result Layer data
+            unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+            memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
+            nextroomconfig->LayerData[0] = tmpLayerdata2;
         } else {
             currentroomconfig->LayerData[0] = nullptr;
+            nextroomconfig->LayerData[0] = nullptr;
         }
     }
+
+    // Deal with the cases that the new room use Tile8x8 layer 0
     if ((currentroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerTile8x8 &&
             (nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerTile8x8)
     {
@@ -544,11 +558,14 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     {
         currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
     }
+
+    // Layer 0 is disabled (or customized) in the new settings
     if ((currentroomconfig->Layer0MappingTypeParam > 0x10) && (nextroomconfig->Layer0MappingTypeParam < 0x10))
     {
         currentRoom->GetLayer(0)->SetDisabled();
     }
 
+    // Create new Layer 3
     if (nextroomconfig->BackgroundLayerEnable)
     {
         LevelComponents::Layer *currentLayer3 = currentRoom->GetLayer(3);
@@ -562,6 +579,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         currentRoom->GetLayer(3)->SetDisabled();
     }
 
+    // Need to change layers data and modify the inside doors, entities, camera boxes when Room size changed
     if (nextroomconfig->RoomWidth != currentroomconfig->RoomWidth ||
             nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
     {
@@ -686,28 +704,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                 memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
                 nextroomconfig->LayerData[i] = tmpLayerdata2;
             }
-        }
-    }
-
-    if (nextroomconfig->Layer0Width != currentroomconfig->Layer0Width ||
-            nextroomconfig->Layer0Height != currentroomconfig->Layer0Height)
-    {
-        if ((nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
-        {
-            if((currentroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerTile8x8)
-            {
-                // reset Layer size
-                size_t datasize2 = 0;
-                currentRoom->GetLayer(0)->ChangeDimensions(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
-                datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
-
-                // save result Layer data
-                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
-                memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
-                nextroomconfig->LayerData[0] = tmpLayerdata2;
-            }
-        } else {
-            nextroomconfig->LayerData[0] = nullptr;
         }
     }
 
