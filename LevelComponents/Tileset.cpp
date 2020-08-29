@@ -56,11 +56,11 @@ namespace LevelComponents
                AnimatedTilesHeaderPtr = (char *)&bgAnimated_dat1_pack + 32 * CurrentRoomHeader_TilesetId + v2;
          */
         AnimatedTileData[0] = new unsigned short[16];
-        memcpy((unsigned char *)&AnimatedTileData[0], ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableSwitchOff, 32);
+        memcpy((unsigned char *)AnimatedTileData[0], ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableSwitchOff, 32);
         AnimatedTileSwitchTable = new unsigned char[16];
         memcpy(AnimatedTileSwitchTable, ROMUtils::CurrentFile + __TilesetID * 16 + WL4Constants::AnimatedTileSwitchInfoTable, 16);
         AnimatedTileData[1] = new unsigned short[16];
-        memcpy((unsigned char *)&AnimatedTileData[1], ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableSwitchOn, 32);
+        memcpy((unsigned char *)AnimatedTileData[1], ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableSwitchOn, 32);
         for (int v1 = 0; v1 < 16; ++v1)
         {
             SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
@@ -180,11 +180,11 @@ namespace LevelComponents
 
         // Get Animated Tile Data
         AnimatedTileData[0] = new unsigned short[16];
-        memcpy(&AnimatedTileData[0], old_tileset->GetAnimatedTileData(0), 32 * sizeof(unsigned char));
+        memcpy(AnimatedTileData[0], old_tileset->GetAnimatedTileData(0), 32 * sizeof(unsigned char));
         AnimatedTileData[1] = new unsigned short[16];
-        memcpy(&AnimatedTileData[1], old_tileset->GetAnimatedTileData(1), 32 * sizeof(unsigned char));
+        memcpy(AnimatedTileData[1], old_tileset->GetAnimatedTileData(1), 32 * sizeof(unsigned char));
         AnimatedTileSwitchTable = new unsigned char[16];
-        memcpy(&AnimatedTileSwitchTable, old_tileset->GetAnimatedTileSwitchTable(), 16 * sizeof(unsigned char));
+        memcpy(AnimatedTileSwitchTable, old_tileset->GetAnimatedTileSwitchTable(), 16 * sizeof(unsigned char));
 
         hasconstructed = true;
     }
