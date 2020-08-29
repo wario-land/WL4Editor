@@ -55,11 +55,15 @@ namespace LevelComponents
          * else // All the MapSw(MapSwitch) are all set to zero at rom:6B8FA, this is the case when loading Level
                AnimatedTilesHeaderPtr = (char *)&bgAnimated_dat1_pack + 32 * CurrentRoomHeader_TilesetId + v2;
          */
-        AnimatedTileData = new unsigned short[16];
-        memcpy((unsigned char *)AnimatedTileData, ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableCase2, 32);
+        AnimatedTileData[0] = new unsigned short[16];
+        memcpy((unsigned char *)&AnimatedTileData[0], ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableSwitchOff, 32);
+        AnimatedTileSwitchTable = new unsigned char[16];
+        memcpy(AnimatedTileSwitchTable, ROMUtils::CurrentFile + __TilesetID * 16 + WL4Constants::AnimatedTileSwitchInfoTable, 16);
+        AnimatedTileData[1] = new unsigned short[16];
+        memcpy((unsigned char *)&AnimatedTileData[1], ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableSwitchOn, 32);
         for (int v1 = 0; v1 < 16; ++v1)
         {
-            SetAnimatedTile(AnimatedTileData[v1], 4 * v1);
+            SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
         }
 
         // Load the 8x8 tile graphics
@@ -175,8 +179,12 @@ namespace LevelComponents
         memcpy(TilesetPaletteData, old_tileset->GetTilesetPaletteDataPtr(), 16 * 16 * sizeof(unsigned short));
 
         // Get Animated Tile Data
-        AnimatedTileData = new unsigned short[16];
-        memcpy(AnimatedTileData, old_tileset->GetAnimatedTileData(), 32 * sizeof(unsigned char));
+        AnimatedTileData[0] = new unsigned short[16];
+        memcpy(&AnimatedTileData[0], old_tileset->GetAnimatedTileData(0), 32 * sizeof(unsigned char));
+        AnimatedTileData[1] = new unsigned short[16];
+        memcpy(&AnimatedTileData[1], old_tileset->GetAnimatedTileData(1), 32 * sizeof(unsigned char));
+        AnimatedTileSwitchTable = new unsigned char[16];
+        memcpy(&AnimatedTileSwitchTable, old_tileset->GetAnimatedTileSwitchTable(), 16 * sizeof(unsigned char));
 
         hasconstructed = true;
     }
@@ -190,9 +198,12 @@ namespace LevelComponents
     /// <param name="startTile8x8Id">
     /// the first tile8x8 id in Tileset you want to render the animated tile group.
     /// </param>
-    void Tileset::SetAnimatedTile(int tile8x8groupId, int startTile8x8Id)
+    void Tileset::SetAnimatedTile(int tile8x8groupId, int tile8x8group2Id, int SwitchId, int startTile8x8Id)
     {
-        AnimatedTileData[startTile8x8Id / 4] = tile8x8groupId;
+        // TODO: Only save graphics from animated tile table 0 for now, need to load tiles from table 1 in the future. --ssp
+        AnimatedTileData[0][startTile8x8Id >> 2] = tile8x8groupId;
+        AnimatedTileData[1][startTile8x8Id >> 2] = tile8x8group2Id;
+        AnimatedTileSwitchTable[startTile8x8Id >> 2] = SwitchId;
         int tmpAnimatedTilesHeaderPtr = 0x3F7828 + 8 * tile8x8groupId;
         int tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
         int tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
@@ -260,10 +271,12 @@ namespace LevelComponents
             palettes[i].clear();
         }
 
-        delete Map16EventTable;
-        delete Map16TerrainTypeIDTable;
-        delete TilesetPaletteData;
-        delete AnimatedTileData;
+        delete[] Map16EventTable;
+        delete[] Map16TerrainTypeIDTable;
+        delete[] TilesetPaletteData;
+        delete[] AnimatedTileData[0];
+        delete[] AnimatedTileData[1];
+        delete[] AnimatedTileSwitchTable;
     }
 
     /// <summary>

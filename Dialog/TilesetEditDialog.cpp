@@ -573,9 +573,13 @@ void TilesetEditDialog::SetSelectedTile8x8(unsigned short tileId, bool resetscro
     if(tileId < 64)
     {
         int slotId = tileId >> 2;
-        int tilegroupId = tilesetEditParams->newTileset->GetAnimatedTileData()[slotId];
+        int tilegroupId = tilesetEditParams->newTileset->GetAnimatedTileData(0)[slotId];
+        int tilegroup2Id = tilesetEditParams->newTileset->GetAnimatedTileData(1)[slotId];
+        unsigned char SWId = tilesetEditParams->newTileset->GetAnimatedTileSwitchTable()[slotId];
         ui->spinBox_AnimatedTileSlot->setValue(slotId);
         ui->spinBox_AnimatedTileGroupId->setValue(tilegroupId);
+        ui->spinBox_AnimatedTileGroup2Id->setValue(tilegroup2Id);
+        ui->spinBox_AnimatedTileSwitchId->setValue(SWId);
     }
 }
 
@@ -702,7 +706,10 @@ void TilesetEditDialog::on_checkBox_paletteBrush_toggled(bool checked)
 /// </summary>
 void TilesetEditDialog::on_pushButton_SetAnimatedTileSlot_clicked()
 {
-    tilesetEditParams->newTileset->SetAnimatedTile(ui->spinBox_AnimatedTileGroupId->value(), 4 * ui->spinBox_AnimatedTileSlot->value());
+    tilesetEditParams->newTileset->SetAnimatedTile(ui->spinBox_AnimatedTileGroupId->value(),
+                                                   ui->spinBox_AnimatedTileGroup2Id->value(),
+                                                   ui->spinBox_AnimatedTileSwitchId->value(),
+                                                   ui->spinBox_AnimatedTileSlot->value() << 2);
     ReRenderTile16Map();
     ReRenderTile8x8Map(SelectedPaletteId);
 }

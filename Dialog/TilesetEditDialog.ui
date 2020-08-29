@@ -129,13 +129,6 @@
             <property name="topMargin">
              <number>0</number>
             </property>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_AnimatedTIleGroupSlot">
-              <property name="text">
-               <string>Slot</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="1">
              <widget class="QLabel" name="label_AnimatedTileGroupId">
               <property name="text">
@@ -150,6 +143,20 @@
               </property>
              </widget>
             </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_AnimatedTileSwitchId">
+              <property name="text">
+               <string>Switch ID:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_AnimatedTIleGroupSlot">
+              <property name="text">
+               <string>Slot</string>
+              </property>
+             </widget>
+            </item>
             <item row="1" column="1">
              <widget class="QSpinBox" name="spinBox_AnimatedTileGroupId">
               <property name="maximum">
@@ -157,6 +164,27 @@
               </property>
               <property name="displayIntegerBase">
                <number>16</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_AnimatedTileGroup2Id">
+              <property name="text">
+               <string>Group 2 ID:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QSpinBox" name="spinBox_AnimatedTileGroup2Id">
+              <property name="maximum">
+               <number>65535</number>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QSpinBox" name="spinBox_AnimatedTileSwitchId">
+              <property name="maximum">
+               <number>4</number>
               </property>
              </widget>
             </item>
