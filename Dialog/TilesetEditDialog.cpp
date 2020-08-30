@@ -805,7 +805,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     delete[] tmppaldata;
 
     // Get transparent color id in the palette
-    int transparentcolorId = -1;
+    int transparentcolorId = 0;
     SelectColorDialog scdialog;
     scdialog.SetPalette(tmppalette);
     scdialog.SetColor(0);
