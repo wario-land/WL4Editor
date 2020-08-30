@@ -18,7 +18,7 @@ public:
 
 private:
     SelectColorDialog *pdialog = nullptr;
-    int SelectedColorId = -1;
+    int SelectedColorId = 0;
     int mouseX_Release = 0;
     int mouseY_Release = 0;
 };
