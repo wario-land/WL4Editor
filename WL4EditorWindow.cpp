@@ -473,11 +473,12 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
 /// </summary>
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 {
-    EditModeWidget->SetLayersCheckBoxEnabled(0, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled());
+    bool layer0enable = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled();
+    EditModeWidget->SetLayersCheckBoxEnabled(0, layer0enable);
     EditModeWidget->SetLayersCheckBoxEnabled(1, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(2, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(3, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3)->IsEnabled());
-    EditModeWidget->SetLayersCheckBoxEnabled(7, CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(7, layer0enable && CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnabled());
 }
 
 /// <summary>

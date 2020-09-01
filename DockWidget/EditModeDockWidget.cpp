@@ -246,7 +246,7 @@ void EditModeDockWidget::on_CheckBox_CameraView_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_AlphaView_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenVisibilityChange(); // TODO this should probably be a full re-render
+    singleton->RenderScreenVisibilityChange();
 }
 
 /// <summary>

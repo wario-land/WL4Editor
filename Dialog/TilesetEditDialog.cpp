@@ -925,15 +925,15 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     // compare (number of the new Tile8x8 + selected Tile8x8 Id + 1) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)
     // if (number of the new Tile8x8 + selected Tile8x8 Id + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32) then
     // tilesetEditParams->newTileset->SetfgGFXlen(number of the new Tile8x8 + selected Tile8x8 Id)
-    // also (number of the new Tile8x8 + selected Tile8x8 Id) should be < (0x600 - tilesetEditParams->newTileset->GetbgGFXlen() / 32) or return
+    // also (newtilenum + SelectedTile8x8 + 1) should be less than or equal to 0x400 or return
     // create new Tile8x8 by using 32-byte length data
     // overwrite and replace the old TIle8x8 instances down-through from selected Tile8x8
     unsigned char* newtmpdata = new unsigned char[32];
     if((newtilenum + SelectedTile8x8 + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32))
     {
-        if((newtilenum + SelectedTile8x8 + 1 + tilesetEditParams->newTileset->GetbgGFXlen() / 32 + 1) > 0x600)
+        if((newtilenum + SelectedTile8x8 + 1) > 0x400)
         {
-            QMessageBox::critical(this, QString("Load Error"), QString("Cannot overwrite background Tiles!"));
+            QMessageBox::critical(this, QString("Load Error"), QString("You can only use 0x400 foreground tiles at most!"));
             return;
         }
         else
