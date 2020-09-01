@@ -36,8 +36,15 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
     if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) && tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
     {
         if (singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer != 0)
+        {
             if (tileX >= room->GetWidth() || tileY >= room->GetHeight())
                 return;
+        }
+        else // singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer == 0
+        {
+            if (tileX >= room->GetLayer0Width() || tileY >= room->GetLayer0Height())
+                return;
+        }
 
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
@@ -304,8 +311,15 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
     if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) && tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
     {
         if (singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer != 0)
+        {
             if (tileX >= room->GetWidth() || tileY >= room->GetHeight())
                 return;
+        }
+        else // singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer == 0
+        {
+            if (tileX >= room->GetLayer0Width() || tileY >= room->GetLayer0Height())
+                return;
+        }
 
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
