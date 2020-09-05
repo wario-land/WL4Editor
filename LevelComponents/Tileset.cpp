@@ -293,6 +293,7 @@ namespace LevelComponents
         {
             for (int j = 0; j < 16; ++j)
             {
+                if (tile8x8array[i * 16 + j] == blankTile) continue;
                 tile8x8array[i * 16 + j]->SetPaletteIndex(paletteId);
                 tile8x8array[i * 16 + j]->DrawTile(&pixmap, j * 8, i * 8);
             }
@@ -372,6 +373,48 @@ namespace LevelComponents
                 int g = (tmp_color.green() >> 3) & 0x1F;
                 int r = (tmp_color.red() >> 3) & 0x1F;
                 TilesetPaletteData[16 * i + j] = (unsigned short) ((b << 10) | (g << 5) | r);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Delete a Tile8x8 from the Tileset and reset the Tile16 map.
+    /// </summary>
+    /// <param name="tile8x8Id">
+    /// the Id of the Tile8x8 needs to be deleted.
+    /// </param>
+    void Tileset::DelTile8x8(int tile8x8Id)
+    {
+        LevelComponents::Tile8x8* tile = tile8x8array[tile8x8Id];
+        if(tile == blankTile)
+            return;
+        delete tile;
+        for(int i = tile8x8Id; i < (0x40 + fgGFXlen / 32); i++)
+        {
+            tile8x8array[i] = tile8x8array[i + 1];
+        }
+        tile8x8array[0x40 + fgGFXlen / 32] = blankTile;
+        fgGFXlen -= 32;
+
+        // update Tile16 map
+        for(int i = 0; i < 0x300; ++i)
+        {
+            LevelComponents::TileMap16* tile16 = map16array[i];
+            for(int j = 0; j < 4; ++j)
+            {
+                LevelComponents::Tile8x8* tmptile = tile16->GetTile8X8(j);
+                int oldid = tmptile->GetIndex();
+                int pal = tmptile->GetPaletteIndex();
+                bool xflip = tmptile->GetFlipX();
+                bool yflip = tmptile->GetFlipY();
+                if(oldid > tile8x8Id)
+                {
+                    tile16->ResetTile8x8(tile8x8array[oldid - 1], j, oldid - 1, pal, xflip, yflip);
+                }
+                else if(oldid == tile8x8Id)
+                {
+                    tile16->ResetTile8x8(tile8x8array[0x40], j, 0x40, 0, false, false);
+                }
             }
         }
     }

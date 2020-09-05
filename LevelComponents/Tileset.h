@@ -62,6 +62,8 @@ namespace LevelComponents
         void SetChanged(bool changed) {newtileset = changed;}
         bool IsNewTileset() {return newtileset; }
         Tile8x8 *GetblankTile() { return blankTile; }
+
+        void DelTile8x8(int tile8x8Id);
     };
 } // namespace LevelComponents
 

@@ -108,6 +108,29 @@ void TilesetEditDialog::SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8
 }
 
 /// <summary>
+/// Delete a foreground TIle8x8 from the Tileset and keep all the Tile16 using the correct tile8x8s
+/// </summary>
+/// <param name="tile8x8id">
+/// id of the Tile8x8 which are going to be deleted, the first foreground tile8x8 is indexed 0x41.
+/// </param>
+void TilesetEditDialog::DeleteFGTile8x8(int tile8x8id)
+{
+    tilesetEditParams->newTileset->DelTile8x8(tile8x8id);
+
+    // UI update
+    if(tile8x8id < (0x40 + tilesetEditParams->newTileset->GetfgGFXlen() / 32))
+    {
+        SetSelectedTile8x8(tile8x8id, false);
+    }
+    else
+    {
+        SetSelectedTile8x8(tile8x8id - 1, false);
+    }
+    ReRenderTile16Map();
+    ReRenderTile8x8Map(SelectedPaletteId);
+}
+
+/// <summary>
 /// Set Tile16 Palette id for all the 4 TIle8x8 in it
 /// </summary>
 /// <param name="tile16ID">
@@ -779,12 +802,17 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         QMessageBox::critical(this, QString("Error"), QString("Cannot open file!"));
         return;
     }
+    if(!gfxbinfile.size())
+    {
+        QMessageBox::critical(this, QString("Error"), QString("File size is 0!"));
+        return;
+    }
     tmptile8x8data = gfxbinfile.readAll();
     tmptile8x8data_final = gfxbinfile.readAll(); // Init
     gfxbinfile.close();
 
     // Check size
-    if(tmptile8x8data.size() % 8)
+    if(tmptile8x8data.size() & 7)
     {
         QMessageBox::critical(this, QString("Error"), QString("Illegal file size!"));
         return;
@@ -902,25 +930,8 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     }
 
     // find the first blank Tile8x8
-    int k;
     int newtilenum = 0;
-    for(int i = 0; i < (tmptile8x8data_final.size() / 32); ++i)
-    {
-        k = 0;
-        while((tmptile8x8data.at(i * 32 + k) == 0x11) || (tmptile8x8data.at(i * 32 + k) == 0x22)) // tmptile8x8data[i * 32 + k] == 0x11 or 0x22
-        {
-            ++k;
-            if(k == 16) break;
-        }
-        if(k == 16)
-        {
-            newtilenum = i; break;
-        }
-    }
-    if(!newtilenum) // if newtilenum == 0
-    {
-        newtilenum = tmptile8x8data_final.size() / 32;
-    }
+    newtilenum = tmptile8x8data_final.size() >> 5;
 
     // compare (number of the new Tile8x8 + selected Tile8x8 Id + 1) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)
     // if (number of the new Tile8x8 + selected Tile8x8 Id + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32) then
