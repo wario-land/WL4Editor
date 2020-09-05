@@ -145,25 +145,11 @@ namespace LevelComponents
 
         memset(tile8x8array, 0, Tile8x8DefaultNum * sizeof(tile8x8array[0]));
         memset(map16array, 0, Tile16DefaultNum * sizeof(map16array[0]));
-
-        // Create all 16 color palettes
-        for (unsigned int i = 0; i < 16; ++i)
+        // Initialize the 8x8 tiles by setting all the tiles to blank tiles
+        blankTile = Tile8x8::CreateBlankTile(palettes);
+        for (int i = 0; i < Tile8x8DefaultNum; ++i)
         {
-            palettes[i] = old_tileset->GetPalettes()[i];
-        }
-
-        // Copy all the Tile8x8
-        Tile8x8 **oldTile8x8Data = old_tileset->GetTile8x8arrayPtr();
-        for (unsigned int i = 0; i < Tile8x8DefaultNum; ++i)
-        {
-            tile8x8array[i] = new Tile8x8(oldTile8x8Data[i], palettes);
-        }
-
-        // Copy all the Tile16
-        TileMap16 **oldTileMap16Data = old_tileset->GetMap16arrayPtr();
-        for (unsigned int i = 0; i < Tile16DefaultNum; ++i)
-        {
-            map16array[i] = new TileMap16(oldTileMap16Data[i], palettes);
+            tile8x8array[i] = blankTile;
         }
 
         // Get pointer to the map16 event table
@@ -185,6 +171,46 @@ namespace LevelComponents
         memcpy(AnimatedTileData[1], old_tileset->GetAnimatedTileData(1), 32 * sizeof(unsigned char));
         AnimatedTileSwitchTable = new unsigned char[16];
         memcpy(AnimatedTileSwitchTable, old_tileset->GetAnimatedTileSwitchTable(), 16 * sizeof(unsigned char));
+
+        // Create all 16 color palettes
+        for (unsigned int i = 0; i < 16; ++i)
+        {
+            palettes[i] = old_tileset->GetPalettes()[i];
+        }
+
+        // Copy all the Tile8x8
+        for (int v1 = 0; v1 < 16; ++v1)
+        {
+            SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
+        }
+        Tile8x8 **oldTile8x8Data = old_tileset->GetTile8x8arrayPtr();
+        int fgGFXcount = fgGFXlen / 32;
+        for (int i = 0; i < fgGFXcount; ++i)
+        {
+            tile8x8array[i + 0x41] = new Tile8x8(oldTile8x8Data[i + 0x41], palettes);
+        }
+        int bgGFXcount = bgGFXlen / 32;
+        for (int i = 0; i < bgGFXcount; ++i)
+        {
+            tile8x8array[Tile8x8DefaultNum - 1 - bgGFXcount + i] = new Tile8x8(oldTile8x8Data[Tile8x8DefaultNum - 1 - bgGFXcount + i], palettes);
+        }
+
+        // Copy all the Tile16
+        TileMap16 **oldTileMap16Data = old_tileset->GetMap16arrayPtr();
+        for (int i = 0; i < Tile16DefaultNum; ++i)
+        {
+            Tile8x8 *tiles[4];
+            for (int j = 0; j < 4; ++j)
+            {
+                int index = oldTileMap16Data[i]->GetTile8X8(j)->GetIndex();
+                tiles[j] = new Tile8x8(tile8x8array[index]);
+                tiles[j]->SetIndex(index);
+                tiles[j]->SetFlipX(oldTileMap16Data[i]->GetTile8X8(j)->GetFlipX());
+                tiles[j]->SetFlipY(oldTileMap16Data[i]->GetTile8X8(j)->GetFlipY());
+                tiles[j]->SetPaletteIndex(oldTileMap16Data[i]->GetTile8X8(j)->GetPaletteIndex());
+            }
+            map16array[i] = new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]);
+        }
 
         hasconstructed = true;
     }
