@@ -52,12 +52,9 @@ LevelConfigDialog::~LevelConfigDialog() { delete ui; }
 /// <param name="SHModeTimer">
 /// Number of seconds after pressing the frog switch in super hard mode.
 /// </param>
-void LevelConfigDialog::InitTextBoxes(std::string _levelname, int HModeTimer, int NModeTimer, int SHModeTimer)
+void LevelConfigDialog::InitTextBoxes(QString _levelname, int HModeTimer, int NModeTimer, int SHModeTimer)
 {
-    // trimmed(_levelname) and Show LevelName
-    _levelname.erase(0, _levelname.find_first_not_of(" "));
-    _levelname.erase(_levelname.find_last_not_of(" ") + 1);
-    ui->LevelName_TextBox->setText(QString::fromStdString(_levelname));
+    ui->LevelName_TextBox->setText(_levelname.trimmed());
 
     // Parse and Show Timers
     int a, b, c;

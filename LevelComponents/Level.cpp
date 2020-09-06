@@ -1,9 +1,81 @@
 #include "Level.h"
 #include "ROMUtils.h"
 #include "WL4Constants.h"
+#include "WL4EditorWindow.h"
 
 #include <cassert>
 #include <cstring>
+
+extern WL4EditorWindow *singleton;
+
+/// <summary>
+/// Helper function to create a level name string from a data address in the ROM.
+/// </summary>
+/// <param name="address">
+/// Starting address of the level name string.
+/// </param>
+/// <returns>
+/// The string, as a QString
+/// </returns>
+static QString ConvertDataToLevelName(int address)
+{
+    QString ret = "";
+    for (int i = 0; i < 26; i++)
+    {
+        unsigned char chr = ROMUtils::CurrentFile[address + i];
+        if (chr <= 0x09)
+        {
+            ret += chr + 48;
+        }
+        else if (chr >= 0x0A && chr <= 0x23)
+        {
+            ret += chr + 55;
+        }
+        else if (chr >= 0x24 && chr <= 0x3D)
+        {
+            ret += chr + 61;
+        }
+        else
+        {
+            ret += (unsigned char) 32;
+        }
+    }
+    return ret;
+}
+
+/// <summary>
+/// Helper function to write a QString level name to a 26-byte data buffer for saving
+/// </summary>
+/// <param name="levelName">
+/// The name of the level.
+/// </param>
+/// <param name="buffer">
+/// The buffer to write the level name to.
+/// </param>
+static void ConvertLevelNameToData(QString levelName, unsigned char *buffer)
+{
+    for (unsigned int i = 0; i < 26; ++i)
+    {
+        char c = levelName[i].toLatin1();
+        if (c == ' ')
+        {
+            c = '\xFF';
+        }
+        else if (c <= 57)
+        {
+            c -= 48;
+        }
+        else if (c >= 65 && c <= 90)
+        {
+            c -= 55;
+        }
+        else
+        {
+            c -= 61;
+        }
+        buffer[i] = c;
+    }
+}
 
 namespace LevelComponents
 {
@@ -110,7 +182,7 @@ namespace LevelComponents
         // Load the level name
         int LevelNameAddress =
             ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4);
-        LoadLevelName(LevelNameAddress);
+        LevelName = ConvertDataToLevelName(LevelNameAddress);
 
         // TODO
     }
@@ -263,36 +335,6 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Helper function to populate LevelName with the name string from the ROM.
-    /// </summary>
-    /// <param name="address">
-    /// Starting address of the level name string.
-    /// </param>
-    void Level::LoadLevelName(int address)
-    {
-        for (int i = 0; i < 26; i++)
-        {
-            unsigned char chr = ROMUtils::CurrentFile[address + i];
-            if (chr <= 0x09)
-            {
-                LevelName.append(1, chr + 48);
-            }
-            else if (chr >= 0x0A && chr <= 0x23)
-            {
-                LevelName.append(1, chr + 55);
-            }
-            else if (chr >= 0x24 && chr <= 0x3D)
-            {
-                LevelName.append(1, chr + 61);
-            }
-            else
-            {
-                LevelName.append(1, (unsigned char) 32);
-            }
-        }
-    }
-
-    /// <summary>
     /// Populate a vector with save data chunks for a level.
     /// </summary>
     /// <param name="chunks">
@@ -349,9 +391,10 @@ namespace LevelComponents
             *(int *) (cameraPointerTable->data + boundaryEntries * 4) = GBAptrSentinel;
 
             // Create null entries in the chunk data which will be used to invalidate old camera boundary chunks
-            unsigned int cameraBoundaryListEntryPtr = ROMUtils::PointerFromData(cameraPointerTablePtr);
-            while (*(int *) (ROMUtils::CurrentFile + cameraBoundaryListEntryPtr) != GBAptrSentinel)
+            unsigned int cameraBoundaryListEntryAddress = ROMUtils::PointerFromData(cameraPointerTablePtr);
+            while (*(int *) (ROMUtils::CurrentFile + cameraBoundaryListEntryAddress) != GBAptrSentinel)
             {
+                unsigned int cameraBoundaryListEntryPtr = ROMUtils::PointerFromData(cameraBoundaryListEntryAddress);
                 struct ROMUtils::SaveData invalidationEntry = { 0,
                                                                 0,
                                                                 nullptr,
@@ -361,7 +404,7 @@ namespace LevelComponents
                                                                 cameraBoundaryListEntryPtr,
                                                                 ROMUtils::SaveDataChunkType::InvalidationChunk };
                 chunks.append(invalidationEntry);
-                cameraBoundaryListEntryPtr += 4;
+                cameraBoundaryListEntryAddress += 4;
             }
         }
 
@@ -407,29 +450,15 @@ namespace LevelComponents
                                                      0,
                                                      ROMUtils::PointerFromData(LevelNamePtr),
                                                      ROMUtils::SaveDataChunkType::LevelNameChunkType };
-        assert(LevelName.size() == 26 /* Level name must be internally represented as 26 characters in length */);
-        for (unsigned int i = 0; i < 26; ++i)
+        QString levelName = QString(LevelName);
+        if(levelName.length() != 26)
         {
-            char c = LevelName[i];
-            if (c == ' ')
-            {
-                c = '\xFF';
-            }
-            else if (c <= 57)
-            {
-                c -= 48;
-            }
-            else if (c >= 65 && c <= 90)
-            {
-                c -= 55;
-            }
-            else
-            {
-                c -= 61;
-            }
-            levelNameChunk.data[i] = c;
+            singleton->GetOutputWidgetPtr()->PrintString(QString("Internal error: Level name has invalid length (") + levelName.length() + "): \"" + levelName + "\"");
+            levelName.truncate(26);
         }
+        ConvertLevelNameToData(levelName, levelNameChunk.data);
 
+        // Append all the save chunks which have been created
         chunks.append(roomHeaders);
         chunks.append(doorChunk);
         chunks.append(levelNameChunk);

@@ -1253,7 +1253,7 @@ void WL4EditorWindow::on_actionLevel_Config_triggered()
     auto acc = dialog.exec();
     if (acc == QDialog::Accepted)
     {
-        CurrentLevel->SetLevelName(dialog.GetPaddedLevelName());
+        CurrentLevel->SetLevelName(QString::fromUtf8(dialog.GetPaddedLevelName().c_str()));
         CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int) dialog.GetHModeTimer());
         CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int) dialog.GetNModeTimer());
         CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int) dialog.GetSHModeTimer());
