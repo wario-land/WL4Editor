@@ -1,10 +1,14 @@
 #include "TilesetEditDialog.h"
 #include "ui_TilesetEditDialog.h"
 
+#include <iostream>
 #include <QFile>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QFileDevice>
 #include <QMessageBox>
+#include "WL4EditorWindow.h"
+extern WL4EditorWindow *singleton;
 
 TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditParams *tilesetEditParam) :
     QDialog(parent),
@@ -769,7 +773,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     QFile gfxbinfile(fileName);
     if(!gfxbinfile.open(QIODevice::ReadOnly))
     {
-        QMessageBox::critical(this, QString("Error"), QString("Cannot open file!"));
+        QMessageBox::critical(this, QString("Error"), QString("Cannot open file! \n").append(gfxbinfile.errorString()));
         return;
     }
     tmptile8x8data = gfxbinfile.readAll();
@@ -894,39 +898,21 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         }
     }
 
-    // find the first blank Tile8x8
-    int k;
-    int newtilenum = 0;
-    for(int i = 0; i < (tmptile8x8data_final.size() / 32); ++i)
-    {
-        k = 0;
-        while((tmptile8x8data.at(i * 32 + k) == 0x11) || (tmptile8x8data.at(i * 32 + k) == 0x22)) // tmptile8x8data[i * 32 + k] == 0x11 or 0x22
-        {
-            ++k;
-            if(k == 16) break;
-        }
-        if(k == 16)
-        {
-            newtilenum = i; break;
-        }
-    }
-    if(!newtilenum) // if newtilenum == 0
-    {
-        newtilenum = tmptile8x8data_final.size() / 32;
-    }
+    //Assume the file is  fully filled with tiles
+    int newtilenum = tmptile8x8data_final.size() / 32;
 
     // compare (number of the new Tile8x8 + selected Tile8x8 Id + 1) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)
     // if (number of the new Tile8x8 + selected Tile8x8 Id + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32) then
     // tilesetEditParams->newTileset->SetfgGFXlen(number of the new Tile8x8 + selected Tile8x8 Id)
-    // also (number of the new Tile8x8 + selected Tile8x8 Id) should be < (0x600 - tilesetEditParams->newTileset->GetbgGFXlen() / 32) or return
+    // also (newtilenum + SelectedTile8x8 + 1) should be less than or equal to 0x400 or return
     // create new Tile8x8 by using 32-byte length data
     // overwrite and replace the old TIle8x8 instances down-through from selected Tile8x8
     unsigned char* newtmpdata = new unsigned char[32];
     if((newtilenum + SelectedTile8x8 + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32))
     {
-        if((newtilenum + SelectedTile8x8 + 1 + tilesetEditParams->newTileset->GetbgGFXlen() / 32 + 1) > 0x600)
+        if((newtilenum + SelectedTile8x8 + 1) > 0x400)
         {
-            QMessageBox::critical(this, QString("Load Error"), QString("Cannot overwrite background Tiles!"));
+            QMessageBox::critical(this, QString("Load Error"), QString("You can only use 0x400 foreground tiles at most!"));
             return;
         }
         else
@@ -1052,7 +1038,7 @@ void TilesetEditDialog::on_pushButton_ExportPalette_clicked()
         QFileDialog::getSaveFileName(this,
                                      tr("Save palette file"),
                                      romFileDir,
-                                     tr("usenti pal file (*.pal);;YY-CHR pal file (*.pal)"),
+                                     tr("usenti pal file (*.pal);;YY-CHR pal file (*.pal);;Raw Binary palette (*.bin)"),
                                      &selectedfilter);
     if(qFilePath.isEmpty()) return;
     QVector<QRgb> tmppalette = tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId];
@@ -1099,6 +1085,44 @@ void TilesetEditDialog::on_pushButton_ExportPalette_clicked()
         }
         delete[] palettedata;
     }
+    else if(selectedfilter.compare("Raw Binary palette (*.bin)") == 0)
+    {
+            unsigned short *palettedata = new unsigned short[16];
+            for(int j = 0; j < 16; ++j)
+            {
+                int red = (tmppalette[j] & 0xFF0000) >> 16; // R
+                int green = (tmppalette[j] & 0xFF00) >> 8; // G
+                int blue = tmppalette[j] & 0xFF; // B
+
+                //Going from 8 bits to 5 bits
+                red >>=3;
+                green >>=3;
+                blue >>=3;
+
+                //Assemble color from left to right with OR operator (blue->green->red)
+                short newcolor=0;
+                newcolor|=blue;
+                newcolor <<=5;
+                newcolor|=green;
+                newcolor <<=5;
+                newcolor|=red;
+                palettedata[j]=newcolor;
+            }
+            QFile palfile(qFilePath);
+            palfile.open(QIODevice::WriteOnly);
+            if (palfile.isOpen())
+            {
+                QDataStream out(&palfile);
+                out.setByteOrder(QDataStream::LittleEndian); // *** set little endian byte order
+                for (int i=0 ; i<16; i++) {
+                    out<<quint16(palettedata[i]);
+                }
+                palfile.close();
+            } else {
+                QMessageBox::critical(this, QString("Error"), QString("Cannot save file! \n").append(palfile.errorString()));
+            }
+            delete[] palettedata;
+    }
 }
 
 /// <summary>
@@ -1112,15 +1136,15 @@ void TilesetEditDialog::on_pushButton_ImportPalette_clicked()
                 this,
                 tr("Open palette file"),
                 romFileDir,
-                tr("usenti pal file (*.pal);;YY-CHR pal file (*.pal)"),
+                tr("usenti pal file (*.pal);;YY-CHR pal file (*.pal);;Raw Binary palette (*.bin)"),
                 &selectedfilter
     );
     if(qFilePath.isEmpty()) return;
 
     // Check the file extension
-    if(!qFilePath.endsWith(".pal", Qt::CaseInsensitive))
+    if((!qFilePath.endsWith(".pal", Qt::CaseInsensitive)) && (!qFilePath.endsWith(".bin", Qt::CaseInsensitive)))
     {
-        QMessageBox::critical(this, QString("Error"), QString("Wrong file extension!"));
+        QMessageBox::critical(this, QString("Error"), QString("Wrong file extension! (.bin, .pal) allowed"));
         return;
     }
 
@@ -1183,6 +1207,32 @@ void TilesetEditDialog::on_pushButton_ImportPalette_clicked()
             newcolor.setAlpha(0xFF);
             tilesetEditParams->newTileset->SetColor(SelectedPaletteId, j, newcolor.rgba());
         }
+    }
+
+    else if (selectedfilter.compare("Raw Binary palette (*.bin)") == 0)
+    {
+         QByteArray tmppalettedata;
+         QFile palbinfile(qFilePath);
+         if(!palbinfile.open(QIODevice::ReadOnly))
+         {
+             QMessageBox::critical(this, QString("Error"), QString("Cannot open file! \n").append(palbinfile.errorString()));
+             return;
+         }
+         tmppalettedata = palbinfile.readAll();
+         if (palbinfile.size() != 32) {
+             singleton->GetOutputWidgetPtr()->PrintString(QString(tr("Internal error: File size isn't 32 bytes, current size: ")) +QString::number(palbinfile.size()));
+         }
+         palbinfile.close();
+
+         QVector<QRgb> tmppalette;
+         unsigned short *tmppaldata = new unsigned short[16];
+         memset(tmppaldata, 0, 32);
+         memcpy(tmppaldata, tmppalettedata.data(), qMin(32, tmppalettedata.size()));
+         ROMUtils::LoadPalette(&tmppalette, tmppaldata, true);
+         for (int i=1 ; i <16; i++) { // Skip the first color
+             tilesetEditParams->newTileset->SetColor(SelectedPaletteId, i, tmppalette[i]);
+         }
+         delete[] tmppaldata;
     }
     ResetPaletteBarGraphicView(SelectedPaletteId);
     SetSelectedColorId(0);
