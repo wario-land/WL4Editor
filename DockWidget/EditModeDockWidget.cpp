@@ -73,7 +73,6 @@ void EditModeDockWidget::SetLayersCheckBoxEnabled(int index, bool usable)
         break;
     case 7:
         ui->CheckBox_AlphaView->setEnabled(usable);
-        ui->CheckBox_AlphaView->setChecked(usable);
         break;
     }
     ui->RadioButton_EditOnLayer1->setChecked(true);
@@ -246,7 +245,7 @@ void EditModeDockWidget::on_CheckBox_CameraView_stateChanged(int arg1)
 void EditModeDockWidget::on_CheckBox_AlphaView_stateChanged(int arg1)
 {
     (void) arg1;
-    singleton->RenderScreenVisibilityChange(); // TODO this should probably be a full re-render
+    singleton->RenderScreenVisibilityChange();
 }
 
 /// <summary>

@@ -473,7 +473,8 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
 /// </summary>
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 {
-    EditModeWidget->SetLayersCheckBoxEnabled(0, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled());
+    bool layer0enable = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled();
+    EditModeWidget->SetLayersCheckBoxEnabled(0, layer0enable);
     EditModeWidget->SetLayersCheckBoxEnabled(1, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(2, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled());
     EditModeWidget->SetLayersCheckBoxEnabled(3, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3)->IsEnabled());
@@ -719,8 +720,8 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
     currentRoom->SetBGLayerScrollFlag(nextroomconfig->BGLayerScrollFlag);
     currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
-    currentRoom->SetLayerGFXEffect01(nextroomconfig->LayerGFXEffect01);
-    currentRoom->SetLayerGFXEffect02(nextroomconfig->LayerGFXEffect02);
+    currentRoom->SetLayerGFXEffect01(nextroomconfig->RasterType);
+    currentRoom->SetLayerGFXEffect02(nextroomconfig->Water);
     currentRoom->SetBgmvolume(nextroomconfig->BGMVolume);
 
     // reset LayerDataPtr in RoomHeader because Layer::SetDisabled() doesn't change the data in RoomHeader

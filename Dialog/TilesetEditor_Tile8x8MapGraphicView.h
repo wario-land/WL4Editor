@@ -14,6 +14,7 @@ class TilesetEditor_Tile8x8MapGraphicView : public QGraphicsView
 public:
     TilesetEditor_Tile8x8MapGraphicView(QWidget *param) : QGraphicsView(param) {}
     void mousePressEvent(QMouseEvent *event);
+    void keyPressEvent(QKeyEvent *event);
     void SetCurrentTilesetEditor(TilesetEditDialog *currentEditor) { TilesetEditor = currentEditor; }
 
 private:
