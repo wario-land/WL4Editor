@@ -34,8 +34,8 @@ namespace DialogParams
         unsigned char BGLayerScrollFlag;
         int BackgroundLayerDataPtr;
         unsigned short *LayerData[3]; //only use it when room & layer0 size change
-        unsigned char LayerGFXEffect01;
-        unsigned char LayerGFXEffect02;
+        unsigned char RasterType;
+        unsigned char Water;
         unsigned short BGMVolume;
 
         // Default constructor
@@ -49,8 +49,8 @@ namespace DialogParams
                 Layer0MappingTypeParam(room->GetLayer0MappingParam()),
                 RoomWidth(room->GetWidth()), RoomHeight(room->GetHeight()), Layer2Enable(room->IsLayer2Enabled()),
                 Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayerDataPtr(0) : 0),
-                BackgroundLayerEnable(room->IsBGLayerEnabled()), LayerGFXEffect01(room->GetLayerGFXEffect01()),
-                LayerGFXEffect02(room->GetLayerGFXEffect02()), BGMVolume(room->GetBgmvolume())
+                BackgroundLayerEnable(room->IsBGLayerEnabled()), RasterType(room->GetLayerGFXEffect01()),
+                Water(room->GetLayerGFXEffect02()), BGMVolume(room->GetBgmvolume())
         {
             if((Layer0MappingTypeParam & 0x10) == LevelComponents::LayerMap16){
                 Layer0Width = room->GetLayer(0)->GetLayerWidth(); Layer0Height = room->GetLayer(0)->GetLayerHeight();
@@ -110,6 +110,7 @@ private slots:
     void on_spinBox_Layer0Height_valueChanged(int arg1);
     void on_spinBox_BGLayerScrollingFlag_valueChanged(int arg1);
     void on_spinBox_Layer0MappingType_valueChanged(int arg1);
+    void on_spinBox_RasterType_valueChanged(int arg1);
 
 private:
     bool ComboBoxInitialized = false;
@@ -339,6 +340,13 @@ private:
         0,
         0,
         0
+    };
+
+    // Enumeration of the Tileset id contains Map8x8 layer 0
+    static constexpr const unsigned int UseMap8x8Layer0DefaultTilesetIds[2] =
+    {
+        0x21,
+        0x45
     };
     // clang-format on
 };

@@ -8,10 +8,12 @@ constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
 constexpr const char *RoomConfigDialog::LayerPrioritySetData[3];
 constexpr const char *RoomConfigDialog::AlphaBlendAttrsSetData[12];
 constexpr unsigned int RoomConfigDialog::BGLayerdataPtrsData[166];
+constexpr unsigned int RoomConfigDialog::UseMap8x8Layer0DefaultTilesetIds[2];
 
 // static variables used by RoomConfigDialog
 static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet;
 static std::vector<int> BGLayerdataPtrs[0x5C];
+static std::vector<int> Map8x8Layer0Tilesetlist[2];
 
 /// <summary>
 /// Construct the instance of the RoomConfigDialog.
@@ -42,11 +44,13 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->CheckBox_Layer2Enable->setChecked(CurrentRoomParams->Layer2Enable);
     ui->CheckBox_BGLayerEnable->setChecked(CurrentRoomParams->BackgroundLayerEnable);
     ui->spinBox_BGLayerScrollingFlag->setValue(CurrentRoomParams->BGLayerScrollFlag);
-    ui->spinBox_LayerGfxEffect01->setValue(CurrentRoomParams->LayerGFXEffect01);
-    ui->spinBox_LayerGfxEffect02->setValue(CurrentRoomParams->LayerGFXEffect02);
+    ui->spinBox_RasterType->setValue(CurrentRoomParams->RasterType);
+    ui->spinBox_Water->setValue(CurrentRoomParams->Water);
     ui->spinBox_BgmVolume->setValue(CurrentRoomParams->BGMVolume);
 
-    // Initialize the selection for the BG selection combobox
+    // Initialize the items for the BG selection combobox
+    // The hardcode layer 3 pointers have been added into the combobox when setting Tileset combobox id
+    // Add the current layer 3 pointer if it is not record and hardcode in the editor
     bool CurrentBGSelectionAvailable = false;
     std::vector<int> CurrentBGLayerdataPtrs = BGLayerdataPtrs[CurrentRoomParams->CurrentTilesetIndex];
     for (unsigned int i = 0; i < CurrentBGLayerdataPtrs.size(); ++i)
@@ -63,6 +67,27 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
         ui->ComboBox_BGLayerPicker->addItem(QString::number(CurrentRoomParams->BackgroundLayerDataPtr, 16).toUpper());
         ui->ComboBox_BGLayerPicker->setCurrentIndex(ui->ComboBox_BGLayerPicker->count() - 1);
     }
+    //  Initialize the items for the Layer 0 selection combobox
+    ui->ComboBox_Layer0Picker->addItem(
+                QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper());
+    if(CurrentRoomParams->CurrentTilesetIndex == Map8x8Layer0Tilesetlist->at(0))
+    {
+        ui->ComboBox_Layer0Picker->addItem(
+                    QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
+    }
+    else if(CurrentRoomParams->CurrentTilesetIndex == Map8x8Layer0Tilesetlist->at(1))
+    {
+        ui->ComboBox_Layer0Picker->addItem(
+            QString::number(WL4Constants::FieryCavernDustyLayer0Ptr, 16).toUpper());
+    }
+    if(CurrentRoomParams->Layer0DataPtr &&
+            CurrentRoomParams->Layer0DataPtr != WL4Constants::ToxicLandfillDustyLayer0Ptr &&
+            CurrentRoomParams->Layer0DataPtr != WL4Constants::FieryCavernDustyLayer0Ptr)
+    {
+        ui->ComboBox_Layer0Picker->addItem(
+            QString::number(CurrentRoomParams->Layer0DataPtr, 16).toUpper());
+    }
+    ui->ComboBox_Layer0Picker->setCurrentIndex(ui->ComboBox_Layer0Picker->count() - 1); // use the last one in the list for now
 
     // Initialize the graphic view layers
     ui->graphicsView->infoLabel = ui->graphicViewDetailsLabel;
@@ -127,8 +152,8 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     }
     configParams.RoomHeight = ui->SpinBox_RoomHeight->value();
     configParams.RoomWidth = ui->SpinBox_RoomWidth->value();
-    configParams.LayerGFXEffect01 = ui->spinBox_LayerGfxEffect01->value();
-    configParams.LayerGFXEffect02 = ui->spinBox_LayerGfxEffect02->value();
+    configParams.RasterType = ui->spinBox_RasterType->value();
+    configParams.Water = ui->spinBox_Water->value();
     configParams.BGMVolume = ui->spinBox_BgmVolume->value();
 
     return configParams;
@@ -167,6 +192,12 @@ void RoomConfigDialog::StaticComboBoxesInitialization()
             vec.push_back(BGLayerdataPtrsData[idx++]);
         }
         BGLayerdataPtrs[i] = vec;
+    }
+
+    // Initialize the Tileset list which contains map8x8 layer 0
+    for (unsigned int i = 0; i < sizeof(UseMap8x8Layer0DefaultTilesetIds) / sizeof(UseMap8x8Layer0DefaultTilesetIds[0]); ++i)
+    {
+        Map8x8Layer0Tilesetlist->push_back(UseMap8x8Layer0DefaultTilesetIds[i]);
     }
 }
 
@@ -229,10 +260,15 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         }
 
         // Extra UI changes for Toxic Landfill dust Layer0
-        if (ui->ComboBox_TilesetID->currentIndex() == 0x21)
+        if (ui->ComboBox_TilesetID->currentIndex() == Map8x8Layer0Tilesetlist->at(0))
         {
             ui->ComboBox_Layer0Picker->addItem(
                 QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
+        }
+        else if (ui->ComboBox_TilesetID->currentIndex() == Map8x8Layer0Tilesetlist->at(1))
+        {
+            ui->ComboBox_Layer0Picker->addItem(
+                QString::number(WL4Constants::FieryCavernDustyLayer0Ptr, 16).toUpper());
         }
         else
         {
@@ -501,22 +537,38 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
         } else if (arg1 >= LevelComponents::LayerTile8x8) { //Map8
             ui->spinBox_Layer0Width->setEnabled(false);
             ui->spinBox_Layer0Height->setEnabled(false);
-            if(ui->ComboBox_TilesetID->currentIndex() == 0x21) // Extra UI changes for Toxic Landfill dust Layer0
-            {
-                ui->ComboBox_Layer0Picker->setEnabled(true);
-                ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
-            } else {
-                ui->ComboBox_Layer0Picker->setEnabled(false);
-            }
+            ui->ComboBox_Layer0Picker->setEnabled(true);
+            ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
             ui->ComboBox_LayerPriority->setCurrentIndex(0);
-        } else if (arg1 >= LevelComponents::LayerTile8x8) { //Dsiabled or other customized cases
-            ui->spinBox_Layer0Width->setEnabled(false);
-            ui->spinBox_Layer0Height->setEnabled(false);
         }
     }
     else // Disable L0
     {
         ui->CheckBox_Layer0Alpha->setChecked(false);
         ui->CheckBox_Layer0Alpha->setEnabled(false);
+    }
+}
+
+/// <summary>
+/// Slot function for spinBox_RasterType.
+/// </summary>
+/// <param name="arg1">
+/// The spinbox value.
+/// </param>
+void RoomConfigDialog::on_spinBox_RasterType_valueChanged(int arg1)
+{
+    switch(arg1)
+    {
+    case 0x00: ui->label_CurRasterType->setText("No Raster type effect"); break;
+    case 0x01: ui->label_CurRasterType->setText("Layer 3 Water effect 1"); break;
+    case 0x02: ui->label_CurRasterType->setText("Layer 3 Water effect 2"); break;
+    case 0x03: ui->label_CurRasterType->setText("Layer 0 Fog effect"); break;
+    case 0x04: ui->label_CurRasterType->setText("Layer 3 Fire effect 1"); break;
+    case 0x05: ui->label_CurRasterType->setText("Layer 3 Fire effect 2"); break;
+    case 0x06: ui->label_CurRasterType->setText("Layer 3 DOUBLE-SCR(A): top AUTO(1/8),bottom(non)"); break;
+    case 0x07: ui->label_CurRasterType->setText("Layer 3 DOUBLE-SCR(A): top(non),bottom AUTO(1/8)"); break;
+    case 0x08: ui->label_CurRasterType->setText("alpha Fire effect 1"); break;
+    case 0x09: ui->label_CurRasterType->setText("alpha Fire effect 2"); break;
+    default: ui->label_CurRasterType->setText("Undefined");
     }
 }

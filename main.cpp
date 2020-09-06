@@ -42,7 +42,7 @@ bool LoadROMFile(QString filePath)
     file.close();
 
     // To check ROM correct
-    if (strncmp((const char *) (ROMAddr + 0xA0), "WARIOLANDE", 10))
+    if (strncmp((const char *) (ROMAddr + 0xA0), "WARIOLAND", 9))
     { // if loaded a wrong ROM
         delete[] ROMAddr;
         return false;

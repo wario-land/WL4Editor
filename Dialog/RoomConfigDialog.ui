@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>762</height>
+    <height>764</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -270,14 +270,28 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_LayerGfxEffect01">
-         <property name="text">
-          <string>Layer graphic effect flag 1 (Hex up to FF):</string>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <property name="topMargin">
+          <number>0</number>
          </property>
-        </widget>
+         <item>
+          <widget class="QLabel" name="label_RasterType">
+           <property name="text">
+            <string>Raster type (Hex up to FF):</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_CurRasterType">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
-        <widget class="QSpinBox" name="spinBox_LayerGfxEffect01">
+        <widget class="QSpinBox" name="spinBox_RasterType">
          <property name="maximum">
           <number>255</number>
          </property>
@@ -287,14 +301,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_LayerGfxEffect02">
+        <widget class="QLabel" name="label_Water">
          <property name="text">
-          <string>Layer graphic effect flag 2 (Hex up to FF):</string>
+          <string>Water (Hex up to FF):</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="spinBox_LayerGfxEffect02">
+        <widget class="QSpinBox" name="spinBox_Water">
          <property name="maximum">
           <number>255</number>
          </property>

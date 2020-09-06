@@ -15,9 +15,10 @@ public:
     explicit ScriptInterface(QObject *parent = nullptr);
 
     // Getter
-    Q_INVOKABLE int GetCurRoomWidth();
-    Q_INVOKABLE int GetCurRoomHeight();
+    Q_INVOKABLE int GetCurRoomLayerWidth(int layerId);
+    Q_INVOKABLE int GetCurRoomLayerHeight(int layerId);
     Q_INVOKABLE int GetCurRoomTile16(int layerID, int x, int y);
+    Q_INVOKABLE int GetCurRoomTile8(int layerID, int x, int y);
     Q_INVOKABLE int GetRoomNum();
     Q_INVOKABLE int GetCurRoomId();
 

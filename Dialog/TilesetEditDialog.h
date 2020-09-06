@@ -59,8 +59,13 @@ public:
     void SetColor(int newcolorId);
     void CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile16);
     void SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
+    void DeleteFGTile8x8(int tile8x8id);
     int PaletteBrushValue() {return paletteBrushVal; }
     void SetTile16PaletteId(int tile16ID);
+
+    int GetSelectedTile8x8() { return SelectedTile8x8; }
+    int GetFGTile8x8Num() { return tilesetEditParams->newTileset->GetfgGFXlen() / 32; }
+
     ~TilesetEditDialog();
 
 private slots:

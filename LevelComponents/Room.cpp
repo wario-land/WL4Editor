@@ -348,26 +348,15 @@ namespace LevelComponents
                         Z--;
                         QImage imageA = RenderedLayers[0]->pixmap().toImage();
                         QImage imageB = alphaPixmap.toImage();
-                        for (int j = 0; j < qMin(sceneHeight, imageA.height()); ++j)
-                        {
-                            for (int k = 0; k < qMin(sceneWidth, imageA.width()); ++k)
-                            {
-                                QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
-                                                 (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
-                                             255);
-                                int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
-                                                 (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
-                                             255);
-                                int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
-                                                 (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
-                                             255);
-                                imageA.setPixel(k, j, QColor(R, G, B).rgb());
-                            }
-                        }
 
                         // Add the alpha pixmap above the non-blended layer 0, but below the next one to be rendered
-                        QGraphicsPixmapItem *alphaItem = scene->addPixmap(QPixmap::fromImage(imageA));
+                        QGraphicsPixmapItem *alphaItem = scene->addPixmap(
+                                    QPixmap::fromImage(AlphaBlend(Layer0ColorBlendCoefficient_EVA,
+                                                                  Layer0ColorBlendCoefficient_EVB,
+                                                                  sceneHeight,
+                                                                  sceneWidth,
+                                                                  imageA,
+                                                                  imageB)));
                         alphaItem->setZValue(Z);
                         Z += 2;
                         EntityLayerZValue[i] = Z - 1;
@@ -751,24 +740,13 @@ namespace LevelComponents
                             // Blend the EVA and EVB pixels for the new layer
                             QImage imageA = RenderedLayers[0]->pixmap().toImage();
                             QImage imageB = alphaPixmapTemp.toImage();
-                            for (int j = 0; j < qMin(sceneHeight, imageA.height()); ++j)
-                            {
-                                for (int k = 0; k < qMin(sceneWidth, imageA.width()); ++k)
-                                {
-                                    QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                    int R = qMin((Layer0ColorBlendCoefficient_EVA * PXA.red()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
-                                                 255);
-                                    int G = qMin((Layer0ColorBlendCoefficient_EVA * PXA.green()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
-                                                 255);
-                                    int B = qMin((Layer0ColorBlendCoefficient_EVA * PXA.blue()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
-                                                 255);
-                                    imageB.setPixel(k, j, QColor(R, G, B).rgb());
-                                }
-                            }
-                            alphalayeritem->setPixmap(QPixmap::fromImage(imageB));
+                            alphalayeritem->setPixmap(
+                                        QPixmap::fromImage(AlphaBlend(Layer0ColorBlendCoefficient_EVA,
+                                                                      Layer0ColorBlendCoefficient_EVB,
+                                                                      sceneHeight,
+                                                                      sceneWidth,
+                                                                      imageA,
+                                                                      imageB)));
                             break;
                         };
                     }
@@ -866,17 +844,25 @@ namespace LevelComponents
                             {
                                 for (int k = units * iter.tileX; k < (units * iter.tileX + units); ++k)
                                 {
-                                    QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
-                                    int R = qMin((substituteEVA * PXA.red()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.red()) / 16,
-                                                 255);
-                                    int G = qMin((substituteEVA * PXA.green()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.green()) / 16,
-                                                 255);
-                                    int B = qMin((substituteEVA * PXA.blue()) / 16 +
-                                                     (Layer0ColorBlendCoefficient_EVB * PXB.blue()) / 16,
-                                                 255);
-                                    imageB.setPixel(k, j, QColor(R, G, B).rgb());
+                                    if(imageA.pixelColor(k, j).alpha() == 0xFF && imageB.pixelColor(k, j).alpha() == 0xFF) // current pixels not transparent
+                                    {
+                                        QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
+                                        int R = qMin(((substituteEVA * PXA.red()) >> 4) +
+                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.red()) >> 4),
+                                                     255);
+                                        int G = qMin(((substituteEVA * PXA.green()) >> 4) +
+                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.green()) >> 4),
+                                                     255);
+                                        int B = qMin(((substituteEVA * PXA.blue()) >> 4) +
+                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.blue()) >> 4),
+                                                     255);
+                                        imageB.setPixel(k, j, QColor(R, G, B).rgb());
+                                    }
+                                    else
+                                    {
+                                        imageB.setPixel(k, j, imageB.pixelColor(k, j).rgb());
+                                        imageA.setPixel(k, j, imageA.pixelColor(k, j).rgb());
+                                    }
                                 }
                             }
                         }
@@ -1006,7 +992,11 @@ namespace LevelComponents
     /// </return>
     int Room::GetLayerDataPtr(unsigned int LayerNum)
     {
-        assert(!(LayerNum & 0xFFFFFFFC) /* LayerNum must be within range [0, 4) */);
+        if(LayerNum & 0xFFFFFFFC)
+        {
+            singleton->GetOutputWidgetPtr()->PrintString("Warning: Possible data corruption when using GetLayerDataPtr(unsigned int LayerNum),"
+                                                         "LayerNum must be within range [0, 4).");
+        }
         return ((unsigned int *) (&RoomHeader.Layer0Data))[LayerNum] & 0x7FFFFFF;
     }
 
@@ -1015,7 +1005,12 @@ namespace LevelComponents
     /// </summary>
     void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
     {
-        assert(!(LayerNum & 0xFFFFFFFC) /* LayerNum must be within range [0, 4) */);
+        // this can be used to set entity set data pointers too
+        if(LayerNum & 0xFFFFFFFC)
+        {
+            singleton->GetOutputWidgetPtr()->PrintString("Warning: Possible data corruption when using SetLayerDataPtr(int LayerNum, int dataPtr),"
+                                                         "LayerNum must be within range [0, 4).");
+        }
         ((unsigned int *) (&RoomHeader.Layer0Data))[LayerNum] = dataPtr;
     }
 
@@ -1166,6 +1161,39 @@ namespace LevelComponents
 
             chunks.append(cameraChunk);
         }
+    }
+
+    /// <summary>
+    /// Alpha Blend 2 images.
+    /// </summary>
+    QImage Room::AlphaBlend(int eva, int evb, int scrH, int scrW, QImage imgA, QImage imgB)
+    {
+        for (int j = 0; j < qMin(scrH, imgA.height()); ++j)
+        {
+            for (int k = 0; k < qMin(scrW, imgA.width()); ++k)
+            {
+                if(imgA.pixelColor(k, j).alpha() == 0xFF && imgB.pixelColor(k, j).alpha() == 0xFF) // current pixels not transparent
+                {
+                    QColor PXA = QColor(imgA.pixel(k, j)), PXB = QColor(imgB.pixel(k, j));
+                    int R = qMin(((eva * PXA.red()) >> 4) +
+                                 ((evb * PXB.red()) >> 4),
+                                 255);
+                    int G = qMin(((eva * PXA.green()) >> 4) +
+                                 ((evb * PXB.green()) >> 4),
+                                 255);
+                    int B = qMin(((eva * PXA.blue()) >> 4) +
+                                 ((evb * PXB.blue()) >> 4),
+                                 255);
+                    imgA.setPixel(k, j, QColor(R, G, B).rgb());
+                }
+                else
+                {
+                    imgA.setPixel(k, j, imgB.pixelColor(k, j).rgb());
+                    imgA.setPixel(k, j, imgA.pixelColor(k, j).rgb()); // overwrite
+                }
+            }
+        }
+        return imgA;
     }
 
     /// <summary>

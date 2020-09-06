@@ -46,23 +46,24 @@ namespace LevelComponents
 
         // Load the animated tiles
         /*
-         * the reason why not using this is that it will cause problem and worse in some situation,
-         * so before we know what the first case really used for, we should just use the simple one.
-         * TODO: find the usage of the first case
-         * [0300002E..03000032] are all set to zero at 6B8FA
-         * and the arrange just contains all the values the table start from 0x3F8C18 have
-         * if(ROMUtils::CurrentFile[0x3F8C18 + __TilesetID * 16 + v1] & 1)
-              tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile +
-                                                                                        __TilesetID * 32 + 2 * v1 + 0x3F91D8)));
-         * else
-         * tmpAnimatedTilesHeaderPtr = 0x3F7828 + (int) (8 * (*(unsigned short*) (ROMUtils::CurrentFile +
-                                                                                        __TilesetID * 32 + 2 * v1 + 0x3F8098)));
+         * bgAnimated_dat2_pack = 0x3F8C18
+         * bgAnimated_dat3_pack = 0x3F91D8
+         * bgAnimated_dat1_pack = 0x3F8098
+         * BgIntAnimated_PackNum_tbl = 0x3F7828
+         * if ( MapSw[bgAnimated_dat2_pack[16 * CurrentRoomHeader_TilesetId + v1]] & 1 ) // only when some switch flag is set to 1
+               AnimatedTilesHeaderPtr = (char *)&bgAnimated_dat3_pack + 32 * CurrentRoomHeader_TilesetId + v2;
+         * else // All the MapSw(MapSwitch) are all set to zero at rom:6B8FA, this is the case when loading Level
+               AnimatedTilesHeaderPtr = (char *)&bgAnimated_dat1_pack + 32 * CurrentRoomHeader_TilesetId + v2;
          */
-        AnimatedTileData = new unsigned short[16];
-        memcpy((unsigned char *)AnimatedTileData, ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableCase2, 32);
+        AnimatedTileData[0] = new unsigned short[16];
+        memcpy((unsigned char *)AnimatedTileData[0], ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableSwitchOff, 32);
+        AnimatedTileSwitchTable = new unsigned char[16];
+        memcpy(AnimatedTileSwitchTable, ROMUtils::CurrentFile + __TilesetID * 16 + WL4Constants::AnimatedTileSwitchInfoTable, 16);
+        AnimatedTileData[1] = new unsigned short[16];
+        memcpy((unsigned char *)AnimatedTileData[1], ROMUtils::CurrentFile + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableSwitchOn, 32);
         for (int v1 = 0; v1 < 16; ++v1)
         {
-            SetAnimatedTile(AnimatedTileData[v1], 4 * v1);
+            SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
         }
 
         // Load the 8x8 tile graphics
@@ -152,18 +153,11 @@ namespace LevelComponents
             palettes[i] = old_tileset->GetPalettes()[i];
         }
 
-        // Copy all the Tile8x8
-        Tile8x8 **oldTile8x8Data = old_tileset->GetTile8x8arrayPtr();
-        for (unsigned int i = 0; i < Tile8x8DefaultNum; ++i)
+        // Initialize the 8x8 tiles by setting all the tiles to blank tiles
+        blankTile = Tile8x8::CreateBlankTile(palettes);
+        for (int i = 0; i < Tile8x8DefaultNum; ++i)
         {
-            tile8x8array[i] = new Tile8x8(oldTile8x8Data[i], palettes);
-        }
-
-        // Copy all the Tile16
-        TileMap16 **oldTileMap16Data = old_tileset->GetMap16arrayPtr();
-        for (unsigned int i = 0; i < Tile16DefaultNum; ++i)
-        {
-            map16array[i] = new TileMap16(oldTileMap16Data[i], palettes);
+            tile8x8array[i] = blankTile;
         }
 
         // Get pointer to the map16 event table
@@ -179,8 +173,46 @@ namespace LevelComponents
         memcpy(TilesetPaletteData, old_tileset->GetTilesetPaletteDataPtr(), 16 * 16 * sizeof(unsigned short));
 
         // Get Animated Tile Data
-        AnimatedTileData = new unsigned short[16];
-        memcpy(AnimatedTileData, old_tileset->GetAnimatedTileData(), 32 * sizeof(unsigned char));
+        AnimatedTileData[0] = new unsigned short[16];
+        memcpy(AnimatedTileData[0], old_tileset->GetAnimatedTileData(0), 32 * sizeof(unsigned char));
+        AnimatedTileData[1] = new unsigned short[16];
+        memcpy(AnimatedTileData[1], old_tileset->GetAnimatedTileData(1), 32 * sizeof(unsigned char));
+        AnimatedTileSwitchTable = new unsigned char[16];
+        memcpy(AnimatedTileSwitchTable, old_tileset->GetAnimatedTileSwitchTable(), 16 * sizeof(unsigned char));
+
+        // Copy all the Tile8x8
+        for (int v1 = 0; v1 < 16; ++v1)
+        {
+            SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
+        }
+        Tile8x8 **oldTile8x8Data = old_tileset->GetTile8x8arrayPtr();
+        int fgGFXcount = fgGFXlen / 32;
+        for (int i = 0; i < fgGFXcount; ++i)
+        {
+            tile8x8array[i + 0x41] = new Tile8x8(oldTile8x8Data[i + 0x41], palettes);
+        }
+        int bgGFXcount = bgGFXlen / 32;
+        for (int i = 0; i < bgGFXcount; ++i)
+        {
+            tile8x8array[Tile8x8DefaultNum - 1 - bgGFXcount + i] = new Tile8x8(oldTile8x8Data[Tile8x8DefaultNum - 1 - bgGFXcount + i], palettes);
+        }
+
+        // Copy all the Tile16
+        TileMap16 **oldTileMap16Data = old_tileset->GetMap16arrayPtr();
+        for (int i = 0; i < Tile16DefaultNum; ++i)
+        {
+            Tile8x8 *tiles[4];
+            for (int j = 0; j < 4; ++j)
+            {
+                int index = oldTileMap16Data[i]->GetTile8X8(j)->GetIndex();
+                tiles[j] = new Tile8x8(tile8x8array[index]);
+                tiles[j]->SetIndex(index);
+                tiles[j]->SetFlipX(oldTileMap16Data[i]->GetTile8X8(j)->GetFlipX());
+                tiles[j]->SetFlipY(oldTileMap16Data[i]->GetTile8X8(j)->GetFlipY());
+                tiles[j]->SetPaletteIndex(oldTileMap16Data[i]->GetTile8X8(j)->GetPaletteIndex());
+            }
+            map16array[i] = new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]);
+        }
 
         hasconstructed = true;
     }
@@ -194,9 +226,12 @@ namespace LevelComponents
     /// <param name="startTile8x8Id">
     /// the first tile8x8 id in Tileset you want to render the animated tile group.
     /// </param>
-    void Tileset::SetAnimatedTile(int tile8x8groupId, int startTile8x8Id)
+    void Tileset::SetAnimatedTile(int tile8x8groupId, int tile8x8group2Id, int SwitchId, int startTile8x8Id)
     {
-        AnimatedTileData[startTile8x8Id / 4] = tile8x8groupId;
+        // TODO: Only save graphics from animated tile table 0 for now, need to load tiles from table 1 in the future. --ssp
+        AnimatedTileData[0][startTile8x8Id >> 2] = tile8x8groupId;
+        AnimatedTileData[1][startTile8x8Id >> 2] = tile8x8group2Id;
+        AnimatedTileSwitchTable[startTile8x8Id >> 2] = SwitchId;
         int tmpAnimatedTilesHeaderPtr = 0x3F7828 + 8 * tile8x8groupId;
         int tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
         int tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
@@ -263,10 +298,12 @@ namespace LevelComponents
             palettes[i].clear();
         }
 
-        delete Map16EventTable;
-        delete Map16TerrainTypeIDTable;
-        delete TilesetPaletteData;
-        delete AnimatedTileData;
+        delete[] Map16EventTable;
+        delete[] Map16TerrainTypeIDTable;
+        delete[] TilesetPaletteData;
+        delete[] AnimatedTileData[0];
+        delete[] AnimatedTileData[1];
+        delete[] AnimatedTileSwitchTable;
     }
 
     /// <summary>
@@ -283,6 +320,7 @@ namespace LevelComponents
         {
             for (int j = 0; j < 16; ++j)
             {
+                if (tile8x8array[i * 16 + j] == blankTile) continue;
                 tile8x8array[i * 16 + j]->SetPaletteIndex(paletteId);
                 tile8x8array[i * 16 + j]->DrawTile(&pixmap, j * 8, i * 8);
             }
@@ -362,6 +400,48 @@ namespace LevelComponents
                 int g = (tmp_color.green() >> 3) & 0x1F;
                 int r = (tmp_color.red() >> 3) & 0x1F;
                 TilesetPaletteData[16 * i + j] = (unsigned short) ((b << 10) | (g << 5) | r);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Delete a Tile8x8 from the Tileset and reset the Tile16 map.
+    /// </summary>
+    /// <param name="tile8x8Id">
+    /// the Id of the Tile8x8 needs to be deleted.
+    /// </param>
+    void Tileset::DelTile8x8(int tile8x8Id)
+    {
+        LevelComponents::Tile8x8* tile = tile8x8array[tile8x8Id];
+        if(tile == blankTile)
+            return;
+        delete tile;
+        for(int i = tile8x8Id; i < (0x40 + fgGFXlen / 32); i++)
+        {
+            tile8x8array[i] = tile8x8array[i + 1];
+        }
+        tile8x8array[0x40 + fgGFXlen / 32] = blankTile;
+        fgGFXlen -= 32;
+
+        // update Tile16 map
+        for(int i = 0; i < 0x300; ++i)
+        {
+            LevelComponents::TileMap16* tile16 = map16array[i];
+            for(int j = 0; j < 4; ++j)
+            {
+                LevelComponents::Tile8x8* tmptile = tile16->GetTile8X8(j);
+                int oldid = tmptile->GetIndex();
+                int pal = tmptile->GetPaletteIndex();
+                bool xflip = tmptile->GetFlipX();
+                bool yflip = tmptile->GetFlipY();
+                if(oldid > tile8x8Id)
+                {
+                    tile16->ResetTile8x8(tile8x8array[oldid - 1], j, oldid - 1, pal, xflip, yflip);
+                }
+                else if(oldid == tile8x8Id)
+                {
+                    tile16->ResetTile8x8(tile8x8array[0x40], j, 0x40, 0, false, false);
+                }
             }
         }
     }

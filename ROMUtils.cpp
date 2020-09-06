@@ -773,8 +773,12 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                     if(singletonTilesets[i]->IsNewTileset())
                     {
                         // Save Animated Tile info table
-                        unsigned short *AnimatedTileInfoTable = singletonTilesets[i]->GetAnimatedTileData();
-                        memcpy(TempFile + i * 32 + WL4Constants::AnimatedTileIdTableCase2, (unsigned char*)AnimatedTileInfoTable, 32);
+                        unsigned short *AnimatedTileInfoTable = singletonTilesets[i]->GetAnimatedTileData(0);
+                        memcpy(TempFile + i * 32 + WL4Constants::AnimatedTileIdTableSwitchOff, (unsigned char*)AnimatedTileInfoTable, 32);
+                        unsigned short *AnimatedTileInfoTable2 = singletonTilesets[i]->GetAnimatedTileData(1);
+                        memcpy(TempFile + i * 32 + WL4Constants::AnimatedTileIdTableSwitchOn, (unsigned char*)AnimatedTileInfoTable2, 32);
+                        unsigned char *AnimatedTileSwitchInfoTable = singletonTilesets[i]->GetAnimatedTileSwitchTable();
+                        memcpy(TempFile + i * 16 + WL4Constants::AnimatedTileSwitchInfoTable, (unsigned char*)AnimatedTileSwitchInfoTable, 16);
 
                         // Reset size_of bgGFXLen and fgGBXLen
                         int tilesetPtr = singletonTilesets[i]->getTilesetPtr();

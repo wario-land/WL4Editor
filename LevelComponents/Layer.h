@@ -44,7 +44,7 @@ namespace LevelComponents
         }
         unsigned short GetTileData(unsigned char x, unsigned char y)
         {
-            if((x + 1 + y * Width) < (Width * Height))
+            if((x + y * Width) < (Width * Height))
                 return LayerData[x + y * Width];
             return 0xFFFF; // TODO
         }
