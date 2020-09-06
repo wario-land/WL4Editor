@@ -1,5 +1,11 @@
 #include "TilesetEditor_Tile8x8MapGraphicView.h"
 
+/// <summary>
+/// this function will be called when the TilesetEditor_Tile8x8MapGraphicView is clicked.
+/// </summary>
+/// <param name="event">
+/// The mouse click event.
+/// </param>
 void TilesetEditor_Tile8x8MapGraphicView::mousePressEvent(QMouseEvent *event)
 {
     mouseX_Press = event->x() + horizontalScrollBar()->sliderPosition();
@@ -8,6 +14,12 @@ void TilesetEditor_Tile8x8MapGraphicView::mousePressEvent(QMouseEvent *event)
     TilesetEditor->SetSelectedTile8x8(Tile8x8Id, false);
 }
 
+/// <summary>
+/// this function will be called when key-press happens in TilesetEditor_Tile8x8MapGraphicView.
+/// </summary>
+/// <param name="event">
+/// The key-press event.
+/// </param>
 void TilesetEditor_Tile8x8MapGraphicView::keyPressEvent(QKeyEvent *event)
 {
     int selectedtile = TilesetEditor->GetSelectedTile8x8();

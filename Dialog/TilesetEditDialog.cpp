@@ -814,7 +814,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     // Check size
     if(tmptile8x8data.size() & 7)
     {
-        QMessageBox::critical(this, QString("Error"), QString("Illegal file size!"));
+        QMessageBox::critical(this, QString("Error"), QString("Illegal file size!\nIt should be a multiple of 8 Bytes."));
         return;
     }
 
