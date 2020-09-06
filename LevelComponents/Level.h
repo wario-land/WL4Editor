@@ -64,6 +64,8 @@ namespace LevelComponents
         enum __stage stage;
         unsigned int LevelID;
 
+        bool DataHasCameraLimitators();
+
     public:
         Level(enum __passage passage, enum __stage stage);
         void SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int seconds);
