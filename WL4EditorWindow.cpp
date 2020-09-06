@@ -18,7 +18,6 @@
 bool LoadROMFile(QString); // Prototype for main.cpp function
 
 // Variables used by WL4EditorWindow
-QString statusBarText("Open a ROM file");
 bool editModeWidgetInitialized = false;
 
 // Global variables
@@ -47,10 +46,10 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
 
     // MainWindow UI Initialization
     ui->graphicsView->scale(graphicViewScalerate, graphicViewScalerate);
-    statusBarLabel = new QLabel("Open a ROM file");
+    statusBarLabel = new QLabel(tr("Open a ROM file"));
     statusBarLabel_MousePosition = new QLabel();
-    statusBarLabel_rectselectMode = new QLabel("Rect Select: Off");
-    statusBarLabel_Scalerate = new QLabel("scale rate: " + QString::number(graphicViewScalerate) + "00%");
+    statusBarLabel_rectselectMode = new QLabel(tr("Rect Select: Off"));
+    statusBarLabel_Scalerate = new QLabel(tr("scale rate: ") + QString::number(graphicViewScalerate) + "00%");
     statusBarLabel->setMargin(3);
     statusBarLabel_MousePosition->setMargin(3);
     statusBarLabel_rectselectMode->setMargin(3);
@@ -215,7 +214,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     std::string filePath = qFilePath.toStdString();
     if (!LoadROMFile(qFilePath))
     {
-        QMessageBox::critical(nullptr, QString("Load Error"), QString("You may have loaded an invalid ROM!"));
+        QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(tr("You may have loaded an invalid ROM!")));
         return;
     }
 
@@ -270,7 +269,7 @@ void WL4EditorWindow::PrintMousePos(uint x, uint y)
         mouseInTileArea = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
     }
     if(mouseInTileArea)
-        statusBarLabel_MousePosition->setText("Out of range!");
+        statusBarLabel_MousePosition->setText(tr("Out of range!"));
     else
         statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")");
 }
@@ -286,8 +285,8 @@ void WL4EditorWindow::SetGraphicViewScalerate(uint scalerate)
 //    int mouse_x = ui->graphicsView->mapFromGlobal(QCursor::pos()).x();
 //    int mouse_y = ui->graphicsView->mapFromGlobal(QCursor::pos()).y();
 //    PrintMousePos(mouse_x, mouse_y);
-    statusBarLabel_MousePosition->setText("Move your mouse to show position again!");
-    statusBarLabel_Scalerate->setText("scale rate: " + QString::number(graphicViewScalerate) + "00%");
+    statusBarLabel_MousePosition->setText(tr("Move your mouse to show position again!"));
+    statusBarLabel_Scalerate->setText(tr("scale rate: ") + QString::number(graphicViewScalerate) + "00%");
 }
 
 /// <summary>
@@ -298,7 +297,7 @@ void WL4EditorWindow::SetGraphicViewScalerate(uint scalerate)
 /// </param>
 void WL4EditorWindow::RefreshRectSelectHint(bool state)
 {
-    statusBarLabel_rectselectMode->setText(state ? "Rect Select: On" : "Rect Select: Off");
+    statusBarLabel_rectselectMode->setText(QString(tr("Rectangle Select: ")) + (state ? tr("On") : tr("Off")));
 }
 
 /// <summary>
@@ -754,12 +753,12 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
     // You cannot delete the vortex, it is always the first Door.
     if (globalDoorIndex == 0)
     {
-        OutputWidget->PrintString("Deleting portal Door not permitted!");
+        OutputWidget->PrintString(tr("Deleting portal Door not permitted!"));
         return;
     }
     if (CurrentLevel->GetDoors().size() == 1)
     {
-        OutputWidget->PrintString("Deleting the last Door in the Room not permitted! Spriteset is based on Doors.");
+        OutputWidget->PrintString(tr("Deleting the last Door in the Room not permitted! Spriteset is based on Doors."));
         return;
     }
 
@@ -844,7 +843,7 @@ void WL4EditorWindow::openRecentROM()
             delete RecentROMs[recentROMnum - 1];
         }
         recentROMnum--;
-        QMessageBox::critical(nullptr, QString("Load Error"), QString("This ROM no longer exists!"));
+        QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(tr("This ROM no longer exists!")));
         return;
     }
 
@@ -1075,9 +1074,9 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
     {
         QMessageBox IfDeleteDoors;
         IfDeleteDoors.setWindowTitle(tr("WL4Editor"));
-        IfDeleteDoors.setText(
+        IfDeleteDoors.setText(tr(
             "You just triggered the clear-all shortcut (current room).\nDo you want to delete all the doors, too?\n(One "
-            "door will be kept to render camera boxes correctly.\nCamera settings will be unaffected regardless.)");
+            "door will be kept to render camera boxes correctly.\nCamera settings will be unaffected regardless.)"));
         QPushButton *CancelClearingButton = IfDeleteDoors.addButton(tr("Cancel Clearing"), QMessageBox::RejectRole);
         QPushButton *NoButton = IfDeleteDoors.addButton(tr("No"), QMessageBox::NoRole);
         QPushButton *YesButton = IfDeleteDoors.addButton(tr("Yes"), QMessageBox::ApplyRole);
@@ -1401,9 +1400,11 @@ void WL4EditorWindow::on_actionSave_ROM_triggered()
 {
     if (SaveCurrentFile())
     {
-        OutputWidget->PrintString("Save successfully !");
-    } else {
-        OutputWidget->PrintString("Save failure !");
+        OutputWidget->PrintString(tr("Saved successfully!"));
+    }
+    else
+    {
+        OutputWidget->PrintString(tr("Save failure!"));
     }
 }
 
@@ -1414,9 +1415,11 @@ void WL4EditorWindow::on_actionSave_As_triggered()
 {
     if (SaveCurrentFileAs())
     {
-        OutputWidget->PrintString("Save successfully !");
-    } else {
-        OutputWidget->PrintString("Save failure !");
+        OutputWidget->PrintString(tr("Saved successfully!"));
+    }
+    else
+    {
+        OutputWidget->PrintString(tr("Save failure!"));
     }
 }
 

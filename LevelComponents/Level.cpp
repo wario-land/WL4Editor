@@ -369,6 +369,7 @@ namespace LevelComponents
         {
             // Camera boundary table chunk
             unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
+            unsigned int cameraBoundaryEntryAddress = ROMUtils::PointerFromData(cameraPointerTablePtr);
             struct ROMUtils::SaveData cameraPointerTableInvalidation = {
                 0,
                 0,
@@ -376,13 +377,12 @@ namespace LevelComponents
                 ROMUtils::SaveDataIndex++,
                 false,
                 0,
-                cameraPointerTablePtr,
+                cameraBoundaryEntryAddress,
                 ROMUtils::SaveDataChunkType::InvalidationChunk
             };
             chunks.append(cameraPointerTableInvalidation);
 
             // Camera boundary chunks
-            unsigned int cameraBoundaryEntryAddress = ROMUtils::PointerFromData(cameraPointerTablePtr);
             while(*(int*)(ROMUtils::CurrentFile + cameraBoundaryEntryAddress) != GBAptrSentinel)
             {
                 unsigned int cameraBoundaryListEntryPtr = ROMUtils::PointerFromData(cameraBoundaryEntryAddress);
