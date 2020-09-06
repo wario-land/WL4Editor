@@ -248,19 +248,6 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Deep copy constructor for TileMap16.
-    /// </summary>
-    /// <param name="other">
-    /// The source map16 tile.
-    /// </param>
-    TileMap16::TileMap16(TileMap16 *other, QVector<QRgb> *newpalettes) : TileMap16(
-        new Tile8x8(other->GetTile8X8(TILE8_TOPLEFT), newpalettes),
-        new Tile8x8(other->GetTile8X8(TILE8_TOPRIGHT), newpalettes),
-        new Tile8x8(other->GetTile8X8(TILE8_BOTTOMLEFT), newpalettes),
-        new Tile8x8(other->GetTile8X8(TILE8_BOTTOMRIGHT), newpalettes))
-    { }
-
-    /// <summary>
     /// Deconstruct the TileMap16 and clean up its instance objects on the heap.
     /// </summary>
     TileMap16::~TileMap16()

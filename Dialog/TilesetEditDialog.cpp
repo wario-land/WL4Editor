@@ -118,7 +118,9 @@ void TilesetEditDialog::DeleteFGTile8x8(int tile8x8id)
     tilesetEditParams->newTileset->DelTile8x8(tile8x8id);
 
     // UI update
-    if(tile8x8id < (0x40 + tilesetEditParams->newTileset->GetfgGFXlen() / 32))
+    ReRenderTile16Map();
+    ReRenderTile8x8Map(SelectedPaletteId);
+    if(tile8x8id <= (0x40 + tilesetEditParams->newTileset->GetfgGFXlen() / 32))
     {
         SetSelectedTile8x8(tile8x8id, false);
     }
@@ -126,8 +128,6 @@ void TilesetEditDialog::DeleteFGTile8x8(int tile8x8id)
     {
         SetSelectedTile8x8(tile8x8id - 1, false);
     }
-    ReRenderTile16Map();
-    ReRenderTile8x8Map(SelectedPaletteId);
 }
 
 /// <summary>

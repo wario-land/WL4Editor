@@ -145,6 +145,13 @@ namespace LevelComponents
 
         memset(tile8x8array, 0, Tile8x8DefaultNum * sizeof(tile8x8array[0]));
         memset(map16array, 0, Tile16DefaultNum * sizeof(map16array[0]));
+
+        // Create all 16 color palettes
+        for (unsigned int i = 0; i < 16; ++i)
+        {
+            palettes[i] = old_tileset->GetPalettes()[i];
+        }
+
         // Initialize the 8x8 tiles by setting all the tiles to blank tiles
         blankTile = Tile8x8::CreateBlankTile(palettes);
         for (int i = 0; i < Tile8x8DefaultNum; ++i)
@@ -171,12 +178,6 @@ namespace LevelComponents
         memcpy(AnimatedTileData[1], old_tileset->GetAnimatedTileData(1), 32 * sizeof(unsigned char));
         AnimatedTileSwitchTable = new unsigned char[16];
         memcpy(AnimatedTileSwitchTable, old_tileset->GetAnimatedTileSwitchTable(), 16 * sizeof(unsigned char));
-
-        // Create all 16 color palettes
-        for (unsigned int i = 0; i < 16; ++i)
-        {
-            palettes[i] = old_tileset->GetPalettes()[i];
-        }
 
         // Copy all the Tile8x8
         for (int v1 = 0; v1 < 16; ++v1)
