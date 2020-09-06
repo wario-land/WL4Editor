@@ -135,7 +135,7 @@ static struct PatchEntryItem DeserializePatchMetadata(QStringList patchTuples)
     unsigned int patchAddress = patchTuples[3].toUInt(Q_NULLPTR, 16);
     unsigned int patchAddressOffset = patchTuples[5].toUInt(Q_NULLPTR, 16);
     bool hasPointer = patchAddressOffset != (unsigned int) -1;
-    unsigned int hookLength = patchTuples[4].length() / 2 + (hasPointer ? 4 : 0); // if patch includes a save chunk, the hook also has a 4-byte pointer in it
+    unsigned int hookLength = patchTuples[4].length() / 2;
     QString hookString = BinaryToHexString(ROMUtils::CurrentFile + hookAddress, hookLength); // obtain hook string directly from the patched rom data
     if(hasPointer)
     {
