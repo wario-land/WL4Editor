@@ -57,14 +57,14 @@ namespace LevelComponents
     {
     private:
         std::vector<Room *> rooms;
-        std::string LevelName;
+        QString LevelName;
         std::vector<Door *> doors;
         __LevelHeader LevelHeader;
         enum __passage passage;
         enum __stage stage;
         unsigned int LevelID;
 
-        void LoadLevelName(int address);
+        bool DataHasCameraLimitators();
 
     public:
         Level(enum __passage passage, enum __stage stage);
@@ -73,9 +73,9 @@ namespace LevelComponents
         std::vector<Door *> GetDoors() { return doors; } // get Doors without copying the data
         std::vector<Room *> GetRooms() { return rooms; }
         void AddRoom(Room *newroom) { rooms.push_back(newroom); }
-        std::string GetLevelName() { return LevelName; }
+        QString GetLevelName() { return LevelName; }
         unsigned int GetLevelID() { return LevelID; }
-        void SetLevelName(std::string newlevelname) { LevelName = newlevelname; }
+        void SetLevelName(QString newlevelname) { LevelName = newlevelname; }
         void RedistributeDoor();
         std::vector<Door *> GetRoomDoors(unsigned int roomId); // get Doors and copy the data
         void DeleteDoor(int globalDoorIndex);

@@ -1,9 +1,81 @@
 #include "Level.h"
 #include "ROMUtils.h"
 #include "WL4Constants.h"
+#include "WL4EditorWindow.h"
 
 #include <cassert>
 #include <cstring>
+
+extern WL4EditorWindow *singleton;
+
+/// <summary>
+/// Helper function to create a level name string from a data address in the ROM.
+/// </summary>
+/// <param name="address">
+/// Starting address of the level name string.
+/// </param>
+/// <returns>
+/// The string, as a QString
+/// </returns>
+static QString ConvertDataToLevelName(int address)
+{
+    QString ret = "";
+    for (int i = 0; i < 26; i++)
+    {
+        unsigned char chr = ROMUtils::CurrentFile[address + i];
+        if (chr <= 0x09)
+        {
+            ret += chr + 48;
+        }
+        else if (chr >= 0x0A && chr <= 0x23)
+        {
+            ret += chr + 55;
+        }
+        else if (chr >= 0x24 && chr <= 0x3D)
+        {
+            ret += chr + 61;
+        }
+        else
+        {
+            ret += (unsigned char) 32;
+        }
+    }
+    return ret;
+}
+
+/// <summary>
+/// Helper function to write a QString level name to a 26-byte data buffer for saving
+/// </summary>
+/// <param name="levelName">
+/// The name of the level.
+/// </param>
+/// <param name="buffer">
+/// The buffer to write the level name to.
+/// </param>
+static void ConvertLevelNameToData(QString levelName, unsigned char *buffer)
+{
+    for (unsigned int i = 0; i < 26; ++i)
+    {
+        char c = levelName[i].toLatin1();
+        if (c == ' ')
+        {
+            c = '\xFF';
+        }
+        else if (c <= 57)
+        {
+            c -= 48;
+        }
+        else if (c >= 65 && c <= 90)
+        {
+            c -= 55;
+        }
+        else
+        {
+            c -= 61;
+        }
+        buffer[i] = c;
+    }
+}
 
 namespace LevelComponents
 {
@@ -110,7 +182,7 @@ namespace LevelComponents
         // Load the level name
         int LevelNameAddress =
             ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4);
-        LoadLevelName(LevelNameAddress);
+        LevelName = ConvertDataToLevelName(LevelNameAddress);
 
         // TODO
     }
@@ -263,36 +335,6 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Helper function to populate LevelName with the name string from the ROM.
-    /// </summary>
-    /// <param name="address">
-    /// Starting address of the level name string.
-    /// </param>
-    void Level::LoadLevelName(int address)
-    {
-        for (int i = 0; i < 26; i++)
-        {
-            unsigned char chr = ROMUtils::CurrentFile[address + i];
-            if (chr <= 0x09)
-            {
-                LevelName.append(1, chr + 48);
-            }
-            else if (chr >= 0x0A && chr <= 0x23)
-            {
-                LevelName.append(1, chr + 55);
-            }
-            else if (chr >= 0x24 && chr <= 0x3D)
-            {
-                LevelName.append(1, chr + 61);
-            }
-            else
-            {
-                LevelName.append(1, (unsigned char) 32);
-            }
-        }
-    }
-
-    /// <summary>
     /// Populate a vector with save data chunks for a level.
     /// </summary>
     /// <param name="chunks">
@@ -310,6 +352,7 @@ namespace LevelComponents
         unsigned int doorTablePtr = WL4Constants::DoorTable + levelIndex * 4;
         unsigned int doorChunkSize = (doors.size() + 1) * sizeof(struct __DoorEntry);
         unsigned int LevelNamePtr = WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4;
+        const unsigned int GBAptrSentinel = 0x8000000 | WL4Constants::CameraRecordSentinel;
 
         // Create the contiguous room header chunk
         struct ROMUtils::SaveData roomHeaders = { roomTablePtr,
@@ -321,17 +364,49 @@ namespace LevelComponents
                                                   ROMUtils::PointerFromData(roomTablePtr),
                                                   ROMUtils::SaveDataChunkType::RoomHeaderChunkType };
 
-        // Create Room camera boundary pointer table chunk
-        // only do this if one of the rooms has dirty camera boundaries, and type HasControlAttrs
+        // If level had camera limitators before saving, invalidate old chunks
+        if(DataHasCameraLimitators())
+        {
+            // Camera boundary table chunk
+            unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
+            unsigned int cameraBoundaryEntryAddress = ROMUtils::PointerFromData(cameraPointerTablePtr);
+            struct ROMUtils::SaveData cameraPointerTableInvalidation = {
+                0,
+                0,
+                nullptr,
+                ROMUtils::SaveDataIndex++,
+                false,
+                0,
+                cameraBoundaryEntryAddress,
+                ROMUtils::SaveDataChunkType::InvalidationChunk
+            };
+            chunks.append(cameraPointerTableInvalidation);
+
+            // Camera boundary chunks
+            while(*(int*)(ROMUtils::CurrentFile + cameraBoundaryEntryAddress) != GBAptrSentinel)
+            {
+                unsigned int cameraBoundaryListEntryPtr = ROMUtils::PointerFromData(cameraBoundaryEntryAddress);
+                struct ROMUtils::SaveData invalidationEntry = {
+                    0,
+                    0,
+                    nullptr,
+                    ROMUtils::SaveDataIndex++,
+                    false,
+                    0,
+                    cameraBoundaryListEntryPtr,
+                    ROMUtils::SaveDataChunkType::InvalidationChunk
+                };
+                chunks.append(invalidationEntry);
+                cameraBoundaryEntryAddress += 4;
+            }
+        }
+
+        // If modified level has camera limitators, create new chunks
         struct ROMUtils::SaveData *cameraPointerTable = nullptr;
         if (rooms.end() != std::find_if(rooms.begin(), rooms.end(), [](Room *R) {
-                return R->IsCameraBoundaryDirty() &&
-                       R->GetCameraControlType() == __CameraControlType::HasControlAttrs &&
-                       R->GetCameraControlRecords().size();
+                return R->GetCameraControlType() == __CameraControlType::HasControlAttrs;
             }))
         {
-            const unsigned int GBAptrSentinel = 0x8000000 | WL4Constants::CameraRecordSentinel;
-
             // Create the camera boundary pointer table save chunk
             unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
             int boundaryEntries =
@@ -344,25 +419,9 @@ namespace LevelComponents
             cameraPointerTable->index = ROMUtils::SaveDataIndex++;
             cameraPointerTable->alignment = true;
             cameraPointerTable->dest_index = 0;
-            cameraPointerTable->old_chunk_addr = ROMUtils::PointerFromData(cameraPointerTablePtr);
+            cameraPointerTable->old_chunk_addr = 0;
             cameraPointerTable->ChunkType = ROMUtils::CameraPointerTableType;
             *(int *) (cameraPointerTable->data + boundaryEntries * 4) = GBAptrSentinel;
-
-            // Create null entries in the chunk data which will be used to invalidate old camera boundary chunks
-            unsigned int cameraBoundaryListEntryPtr = ROMUtils::PointerFromData(cameraPointerTablePtr);
-            while (*(int *) (ROMUtils::CurrentFile + cameraBoundaryListEntryPtr) != GBAptrSentinel)
-            {
-                struct ROMUtils::SaveData invalidationEntry = { 0,
-                                                                0,
-                                                                nullptr,
-                                                                ROMUtils::SaveDataIndex++,
-                                                                false,
-                                                                0,
-                                                                cameraBoundaryListEntryPtr,
-                                                                ROMUtils::SaveDataChunkType::InvalidationChunk };
-                chunks.append(invalidationEntry);
-                cameraBoundaryListEntryPtr += 4;
-            }
         }
 
         // Populate chunks with room data
@@ -407,29 +466,15 @@ namespace LevelComponents
                                                      0,
                                                      ROMUtils::PointerFromData(LevelNamePtr),
                                                      ROMUtils::SaveDataChunkType::LevelNameChunkType };
-        assert(LevelName.size() == 26 /* Level name must be internally represented as 26 characters in length */);
-        for (unsigned int i = 0; i < 26; ++i)
+        QString levelName = QString(LevelName);
+        if(levelName.length() != 26)
         {
-            char c = LevelName[i];
-            if (c == ' ')
-            {
-                c = '\xFF';
-            }
-            else if (c <= 57)
-            {
-                c -= 48;
-            }
-            else if (c >= 65 && c <= 90)
-            {
-                c -= 55;
-            }
-            else
-            {
-                c -= 61;
-            }
-            levelNameChunk.data[i] = c;
+            singleton->GetOutputWidgetPtr()->PrintString(QString("Internal error: Level name has invalid length (") + levelName.length() + "): \"" + levelName + "\"");
+            levelName.truncate(26);
         }
+        ConvertLevelNameToData(levelName, levelNameChunk.data);
 
+        // Append all the save chunks which have been created
         chunks.append(roomHeaders);
         chunks.append(doorChunk);
         chunks.append(levelNameChunk);
@@ -439,4 +484,31 @@ namespace LevelComponents
             free(cameraPointerTable);
         }
     }
+
+    /// <summary>
+    /// This function does a low-level dig through the data to find if the current level
+    /// has at least one camera limitator record
+    /// </summary>
+    /// <returns>
+    /// true if one of the rooms uses camera limitators
+    /// </returns>
+    bool Level::DataHasCameraLimitators()
+    {
+        int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
+        int levelHeaderIndex = ROMUtils::IntFromData(offset);
+        int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
+        struct __LevelHeader *levelHeader = (struct __LevelHeader*)(ROMUtils::CurrentFile + levelHeaderPointer);
+        int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + levelHeader->HeaderPointerIndex * 4);
+        for(int i = 0; i < levelHeader->NumOfMap; ++i)
+        {
+            int roomDataPtr = roomTableAddress + i * 0x2C;
+            struct __RoomHeader *roomHeader = (struct __RoomHeader*)(ROMUtils::CurrentFile + roomDataPtr);
+            if(roomHeader->CameraControlType == __CameraControlType::HasControlAttrs)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
 } // namespace LevelComponents
