@@ -54,8 +54,9 @@ private slots:
 public:
     explicit CameraControlDockWidget(QWidget *parent = 0);
     ~CameraControlDockWidget();
-    void SetCameraControlInfo(LevelComponents::Room *currentroom);
+    void PopulateCameraControlInfo(LevelComponents::Room *currentroom);
     static void StaticInitialization();
+    static const unsigned int MAX_CAMERA_LIMITATORS = 100;
 
     // clang-format off
     static constexpr const char *CameraLimitatorResetSideTypeNameData[5] =

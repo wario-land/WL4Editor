@@ -137,7 +137,6 @@ namespace LevelComponents
         std::vector<Door *> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem
             *RenderedLayers[13]; // L0 - 3, E(Entities boxes), D, C, A (may not exist), E0 - 3, hidden coins
-        bool CameraBoundaryDirty = false;
         bool IsCopy = false;
 
         // Helper functions
@@ -198,7 +197,6 @@ namespace LevelComponents
         int GetEntityY(int index);
         unsigned char GetBGLayerScrollFlag() { return RoomHeader.Layer3Scrolling; }
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
-        bool IsCameraBoundaryDirty() { return CameraBoundaryDirty; }
         bool IsLayer0ColorBlendingEnabled() { return Layer0ColorBlending; }
         bool IsLayer2Enabled() { return RoomHeader.Layer2MappingType; }
 
@@ -215,7 +213,6 @@ namespace LevelComponents
         void SetBgmvolume(unsigned short bgmvolume) { RoomHeader.BGMVolume = bgmvolume; }
         void SetBGLayerEnabled(bool enability) { RoomHeader.Layer3MappingType = enability ? '\x20' : '\x00'; }
         void SetBGLayerScrollFlag(unsigned char flag);
-        void SetCameraBoundaryDirty(bool dirty) { CameraBoundaryDirty = dirty; }
         void SetCameraControlType(__CameraControlType new_control_type)
         {
             CameraControlType = new_control_type;
