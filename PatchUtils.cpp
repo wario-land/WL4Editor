@@ -193,7 +193,7 @@ static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
     int chunkVersion = ROMUtils::CurrentFile[chunkDataAddr + 12];
     if(chunkVersion > PATCH_CHUNK_VERSION)
     {
-        singleton->GetOutputWidgetPtr()->PrintString(QString("Patch list chunk either corrupt or this verison of WL4Editor is old and doesn't support the saved format. Version found: ") + QString::number(chunkVersion));
+        singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Patch list chunk either corrupt or this verison of WL4Editor is old and doesn't support the saved format. Version found: ")) + QString::number(chunkVersion));
         return "";
     }
     QString contents = QString::fromLocal8Bit(reinterpret_cast<const char*>(ROMUtils::CurrentFile + chunkDataAddr + 13), contentSize);
@@ -225,7 +225,7 @@ static QString CompileCFile(QString cfile)
 {
     if(!cfile.endsWith(".c"))
     {
-        QString msg = QString("C file does not have correct extension (should be .c): ") + cfile;
+        QString msg = QString(QT_TR_NOOP("C file does not have correct extension (should be .c): ")) + cfile;
         singleton->GetOutputWidgetPtr()->PrintString(msg);
         return msg;
     }
@@ -256,7 +256,7 @@ static QString AssembleSFile(QString sfile)
 {
     if(!sfile.endsWith(".s"))
     {
-        QString msg = QString("ASM file does not have correct extension (should be .s): ") + sfile;
+        QString msg = QString(QT_TR_NOOP("ASM file does not have correct extension (should be .s): ")) + sfile;
         singleton->GetOutputWidgetPtr()->PrintString(msg);
         return msg;
     }
@@ -303,7 +303,7 @@ static QString CreateLinkerScript(struct PatchEntryItem entry)
     file.open(QIODevice::WriteOnly);
     if (!file.isOpen())
     {
-        QString msg = QString("Could not open linker script file for writing: ") + ldfile;
+        QString msg = QString(QT_TR_NOOP("Could not open linker script file for writing: ")) + ldfile;
         singleton->GetOutputWidgetPtr()->PrintString(msg);
         return msg;
     }
@@ -327,7 +327,7 @@ static QString LinkOFile(QString ofile)
 {
     if(!ofile.endsWith(".o"))
     {
-        QString msg = QString("Object file does not have correct extension (should be .o): ") + ofile;
+        QString msg = QString(QT_TR_NOOP("Object file does not have correct extension (should be .o): ")) + ofile;
         singleton->GetOutputWidgetPtr()->PrintString(msg);
         return msg;
     }
@@ -358,7 +358,7 @@ static QString ExtractELFFile(QString elfFile)
 {
     if(!elfFile.endsWith(".elf"))
     {
-        QString msg = QString("ELF file does not have correct extension (should be .elf): ") + elfFile;
+        QString msg = QString(QT_TR_NOOP("ELF file does not have correct extension (should be .elf): ")) + elfFile;
         singleton->GetOutputWidgetPtr()->PrintString(msg);
         return msg;
     }
@@ -393,7 +393,7 @@ static bool BinaryMatchWithROM(QString file, unsigned int startAddr, unsigned in
 {
     if(length > 0xFFFF)
     {
-        singleton->GetOutputWidgetPtr()->PrintString(QString("Invalid comparison length in BinaryMatchWithROM: 0x") + QString::number(length, 16).toUpper());
+        singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Invalid comparison length in BinaryMatchWithROM: 0x")) + QString::number(length, 16).toUpper());
         return false;
     }
 
@@ -456,27 +456,27 @@ static QString CompilePatchEntry(struct PatchEntryItem entry)
     case PatchType::C:
         if((output = CompileCFile(filename)) != "")
         {
-            return QString("Compiler error: ") + output;
+            return QString(QT_TR_NOOP("Compiler error: ")) + output;
         }
         REPLACE_EXT(filename, ".c", ".s");
     case PatchType::Assembly:
         if((output = AssembleSFile(filename)) != "")
         {
-            return QString("Assembler error: ") + output;
+            return QString(QT_TR_NOOP("Assembler error: ")) + output;
         }
         REPLACE_EXT(filename, ".s", ".o");
         if((output = CreateLinkerScript(entry)) != "")
         {
-            return QString("Error creating linker script: ") + output;
+            return QString(QT_TR_NOOP("Error creating linker script: ")) + output;
         }
         if((output = LinkOFile(filename)) != "")
         {
-            return QString("Linker error: ") + output;
+            return QString(QT_TR_NOOP("Linker error: ")) + output;
         }
         REPLACE_EXT(filename, ".o", ".elf");
         if((output = ExtractELFFile(filename)) != "")
         {
-            return QString("ObjCopy error: ") + output;
+            return QString(QT_TR_NOOP("ObjCopy error: ")) + output;
         }
         break;
     default:;
@@ -638,13 +638,13 @@ namespace PatchUtils
             QString contents = GetUpgradedPatchListChunkData(patchListAddr);
             if(!contents.length())
             {
-                singleton->GetOutputWidgetPtr()->PrintString("ROM contains an empty patch list chunk (this should not be possible)");
+                singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("ROM contains an empty patch list chunk (this should not be possible)"));
                 return patchEntries;
             }
             QStringList patchTuples = contents.split(";");
             if(patchTuples.count() % PATCH_FIELD_COUNT)
             {
-                singleton->GetOutputWidgetPtr()->PrintString("ROM contains a corrupted patch list chunk (field count is not a multiple of " + QString::number(PATCH_FIELD_COUNT) + ")");
+                singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("ROM contains a corrupted patch list chunk (field count is not a multiple of ") + QString::number(PATCH_FIELD_COUNT) + ")");
                 return patchEntries;
             }
             for(int i = 0; i < patchTuples.count(); i += PATCH_FIELD_COUNT)
@@ -652,7 +652,7 @@ namespace PatchUtils
                 struct PatchEntryItem entry = DeserializePatchMetadata(patchTuples.mid(i, PATCH_FIELD_COUNT));
                 if(!std::find_if(patchChunks.begin(), patchChunks.end(), [entry](unsigned int addr){return addr == entry.PatchAddress;}))
                 {
-                    singleton->GetOutputWidgetPtr()->PrintString("Corruption error: Patch chunk list entry refers to an invalid patch address: 0x" + QString::number(entry.PatchAddress, 16).toUpper());
+                    singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Corruption error: Patch chunk list entry refers to an invalid patch address: 0x") + QString::number(entry.PatchAddress, 16).toUpper());
                     continue;
                 }
                 patchEntries.append(entry);
@@ -787,7 +787,7 @@ namespace PatchUtils
                             struct ROMUtils::SaveData tempSaveData = CreatePatchSaveChunk(patch);
                             if(saveChunk->size != tempSaveData.size)
                             {
-                                QString msg = QString("Validation error in chunk allocation callback: Mismatch between precompiled and postcompiled size of patch data: ") + patch.FileName;
+                                QString msg = QString(QT_TR_NOOP("Validation error in chunk allocation callback: Mismatch between precompiled and postcompiled size of patch data: ")) + patch.FileName;
                                 singleton->GetOutputWidgetPtr()->PrintString(msg);
                                 return msg;
                             }
@@ -862,7 +862,7 @@ namespace PatchUtils
         );
 
         // Success
-        return ret ? "" : "Error saving ROM file";
+        return ret ? "" : QT_TR_NOOP("Error saving ROM file");
     }
 
     /// <summary>

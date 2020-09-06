@@ -4,6 +4,7 @@
 #include "WL4EditorWindow.h"
 #include <cassert>
 #include <iostream>
+#include <QTranslator>
 
 extern WL4EditorWindow *singleton;
 
@@ -67,7 +68,7 @@ namespace ROMUtils
         unsigned int ret = IntFromData(address) & 0x7FFFFFF;
         if(ret >= CurrentFileSize)
         {
-            singleton->GetOutputWidgetPtr()->PrintString("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size");
+            singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size"));
         }
         return ret;
     }
@@ -522,8 +523,8 @@ namespace ROMUtils
                 }
                 else
                 {
-                    singleton->GetOutputWidgetPtr()->PrintString("Internal error while saving changes to ROM: Invalidation chunk references an invalid RATS identifier for existing chunk. Save chunk index: " +
-                        QString::number(chunk.index) + ". Address: 0x" + QString::number(chunk.old_chunk_addr - 12, 16).toUpper() + ". Changes not saved.");
+                    singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk references an invalid RATS identifier for existing chunk. Save chunk index: ") +
+                        QString::number(chunk.index) + QT_TR_NOOP(". Address: 0x") + QString::number(chunk.old_chunk_addr - 12, 16).toUpper() + QT_TR_NOOP(". Changes not saved."));
                     return false;
                 }
             }
@@ -555,8 +556,8 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                             // Realloc failed due to system memory constraints
                             QMessageBox::warning(
                                 singleton,
-                                "Out of memory",
-                                "Unable to save changes because your computer is out of memory.",
+                                QT_TR_NOOP("Out of memory"),
+                                QT_TR_NOOP("Unable to save changes because your computer is out of memory."),
                                 QMessageBox::Ok,
                                 QMessageBox::Ok
                             );
@@ -573,9 +574,8 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                         QMessageBox::warning(
                             singleton,
                             "ROM too large",
-                            QString("Unable to save changes because ") + QString::number(chunkSize) +
-                                " contiguous free bytes are necessary, but such a region could not be"
-                                " found, and the ROM file cannot be expanded larger than 32MB.",
+                            QString(QT_TR_NOOP("Unable to save changes because ")) + QString::number(chunkSize) +
+                                QT_TR_NOOP(" contiguous free bytes are necessary, but such a region could not be found, and the ROM file cannot be expanded larger than 32MB."),
                             QMessageBox::Ok,
                             QMessageBox::Ok
                         );
@@ -647,11 +647,10 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             {
                 // Chunk size must be a 16-bit value
                 QMessageBox::warning(singleton, "RATS chunk too large",
-                     QString("Unable to save changes because ") + QString::number(chunk.size) +
-                         " contiguous free bytes are necessary for some save chunk of type " +
+                     QString(QT_TR_NOOP("Unable to save changes because ")) + QString::number(chunk.size) +
+                         QT_TR_NOOP(" contiguous free bytes are necessary for some save chunk of type ") +
                          QString::number(chunk.ChunkType) +
-                         ", but the editor currently"
-                         " only supports up to size " +
+                         QT_TR_NOOP(", but the editor currently only supports up to size ") +
                          QString::number(0xFFFF) + ".",
                      QMessageBox::Ok, QMessageBox::Ok);
                 goto error;
@@ -688,8 +687,8 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             else
             {
                 // Couldn't open the file to save the ROM
-                QMessageBox::warning(singleton, "Could not save file",
-                     "Unable to write to or create the ROM file for saving.", QMessageBox::Ok,
+                QMessageBox::warning(singleton, QT_TR_NOOP("Could not save file"),
+                     QT_TR_NOOP("Unable to write to or create the ROM file for saving."), QMessageBox::Ok,
                      QMessageBox::Ok);
                 goto error;
             }

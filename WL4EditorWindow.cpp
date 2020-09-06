@@ -1899,7 +1899,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     int newRoomId = CurrentLevel->GetRooms().size();
     if (newRoomId == 16)
     {
-        OutputWidget->PrintString("Cannot add more Room to the current Level!");
+        OutputWidget->PrintString(tr("Cannot add another Room to the current Level!"));
         return;
     }
     int offset = WL4Constants::LevelHeaderIndexTable + selectedLevel._PassageIndex * 24 + selectedLevel._LevelIndex * 4;
@@ -1908,7 +1908,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
     if (roomCount <= static_cast<int>(selectedRoom))
     {
-        OutputWidget->PrintString("Cannot create room, current Room has not been saved in the rom yet!");
+        OutputWidget->PrintString(tr("Cannot create room, current Room has not been saved to the ROM yet!"));
         return;
     }
 
@@ -1955,7 +1955,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 
     // UI updates
     SetCurrentRoomId(newRoomId);
-    OutputWidget->PrintString("Created a new blank room (# " + QString::number(newRoomId) + ") using the current room's data saved in the rom.");
+    OutputWidget->PrintString(QString(tr("Created a new blank room")) + " (# " + QString::number(newRoomId) + ") " + tr("using the current room's data saved in the ROM."));
 
     // Clear everything in the new room
     ClearEverythingInRoom(true);
