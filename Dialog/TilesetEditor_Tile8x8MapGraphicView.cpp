@@ -30,6 +30,7 @@ void TilesetEditor_Tile8x8MapGraphicView::keyPressEvent(QKeyEvent *event)
     if(TilesetEditor->GetFGTile8x8Num() == 1)
     {
         QMessageBox::critical(this, tr("Error"), tr("You cannot delete the last tile in the tileset,\nbut you can overwrite it."));
+        return;
     }
     if(event->key() == Qt::Key_Backspace || event->key() == Qt::Key_Delete)
     {
