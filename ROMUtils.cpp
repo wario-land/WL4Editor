@@ -738,7 +738,10 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         int levelHeaderOffset = WL4Constants::LevelHeaderIndexTable + currentLevel->GetPassage() * 24 + currentLevel->GetStage() * 4;
         int levelHeaderIndex = ROMUtils::IntFromData(levelHeaderOffset);
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-        currentLevel->GetSaveChunks(chunks);
+        if(!currentLevel->GetSaveChunks(chunks))
+        {
+            return false;
+        }
 
         // Get Tilesets chunks
         for(int i = 0; i < 92; ++i)
@@ -805,7 +808,6 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                 (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
             unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
             LevelComponents::Room *room = rooms[i];
-            room->SetCameraBoundaryDirty(false);
             for(unsigned int j = 0; j < 4; ++j)
             {
                 LevelComponents::Layer *layer = room->GetLayer(j);
