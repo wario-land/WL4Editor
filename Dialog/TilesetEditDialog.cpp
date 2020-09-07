@@ -112,6 +112,29 @@ void TilesetEditDialog::SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8
 }
 
 /// <summary>
+/// Delete a foreground TIle8x8 from the Tileset and keep all the Tile16 using the correct tile8x8s
+/// </summary>
+/// <param name="tile8x8id">
+/// id of the Tile8x8 which are going to be deleted, the first foreground tile8x8 is indexed 0x41.
+/// </param>
+void TilesetEditDialog::DeleteFGTile8x8(int tile8x8id)
+{
+    tilesetEditParams->newTileset->DelTile8x8(tile8x8id);
+
+    // UI update
+    ReRenderTile16Map();
+    ReRenderTile8x8Map(SelectedPaletteId);
+    if(tile8x8id <= (0x40 + tilesetEditParams->newTileset->GetfgGFXlen() / 32))
+    {
+        SetSelectedTile8x8(tile8x8id, false);
+    }
+    else
+    {
+        SetSelectedTile8x8(tile8x8id - 1, false);
+    }
+}
+
+/// <summary>
 /// Set Tile16 Palette id for all the 4 TIle8x8 in it
 /// </summary>
 /// <param name="tile16ID">
@@ -577,9 +600,13 @@ void TilesetEditDialog::SetSelectedTile8x8(unsigned short tileId, bool resetscro
     if(tileId < 64)
     {
         int slotId = tileId >> 2;
-        int tilegroupId = tilesetEditParams->newTileset->GetAnimatedTileData()[slotId];
+        int tilegroupId = tilesetEditParams->newTileset->GetAnimatedTileData(0)[slotId];
+        int tilegroup2Id = tilesetEditParams->newTileset->GetAnimatedTileData(1)[slotId];
+        unsigned char SWId = tilesetEditParams->newTileset->GetAnimatedTileSwitchTable()[slotId];
         ui->spinBox_AnimatedTileSlot->setValue(slotId);
         ui->spinBox_AnimatedTileGroupId->setValue(tilegroupId);
+        ui->spinBox_AnimatedTileGroup2Id->setValue(tilegroup2Id);
+        ui->spinBox_AnimatedTileSwitchId->setValue(SWId);
     }
 }
 
@@ -706,7 +733,10 @@ void TilesetEditDialog::on_checkBox_paletteBrush_toggled(bool checked)
 /// </summary>
 void TilesetEditDialog::on_pushButton_SetAnimatedTileSlot_clicked()
 {
-    tilesetEditParams->newTileset->SetAnimatedTile(ui->spinBox_AnimatedTileGroupId->value(), 4 * ui->spinBox_AnimatedTileSlot->value());
+    tilesetEditParams->newTileset->SetAnimatedTile(ui->spinBox_AnimatedTileGroupId->value(),
+                                                   ui->spinBox_AnimatedTileGroup2Id->value(),
+                                                   ui->spinBox_AnimatedTileSwitchId->value(),
+                                                   ui->spinBox_AnimatedTileSlot->value() << 2);
     ReRenderTile16Map();
     ReRenderTile8x8Map(SelectedPaletteId);
 }
@@ -776,14 +806,19 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         QMessageBox::critical(this, QString("Error"), QString("Cannot open file! \n").append(gfxbinfile.errorString()));
         return;
     }
+    if(!gfxbinfile.size())
+    {
+        QMessageBox::critical(this, QString("Error"), QString("File size is 0!"));
+        return;
+    }
     tmptile8x8data = gfxbinfile.readAll();
     tmptile8x8data_final = gfxbinfile.readAll(); // Init
     gfxbinfile.close();
 
     // Check size
-    if(tmptile8x8data.size() % 8)
+    if(tmptile8x8data.size() & 7)
     {
-        QMessageBox::critical(this, QString("Error"), QString("Illegal file size!"));
+        QMessageBox::critical(this, QString("Error"), QString("Illegal file size!\nIt should be a multiple of 8 Bytes."));
         return;
     }
 
@@ -898,7 +933,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         }
     }
 
-    //Assume the file is  fully filled with tiles
+    // Assume the file is fully filled with tiles
     int newtilenum = tmptile8x8data_final.size() / 32;
 
     // compare (number of the new Tile8x8 + selected Tile8x8 Id + 1) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)

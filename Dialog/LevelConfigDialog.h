@@ -21,7 +21,7 @@ private:
 public:
     explicit LevelConfigDialog(QWidget *parent = 0);
     ~LevelConfigDialog();
-    void InitTextBoxes(std::string _levelname, int HModeTimer, int NModeTimer, int SHModeTimer);
+    void InitTextBoxes(QString _levelname, int HModeTimer, int NModeTimer, int SHModeTimer);
     std::string GetPaddedLevelName();
     int GetHModeTimer();
     int GetNModeTimer();

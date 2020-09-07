@@ -44,8 +44,8 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->CheckBox_Layer2Enable->setChecked(CurrentRoomParams->Layer2Enable);
     ui->CheckBox_BGLayerEnable->setChecked(CurrentRoomParams->BackgroundLayerEnable);
     ui->spinBox_BGLayerScrollingFlag->setValue(CurrentRoomParams->BGLayerScrollFlag);
-    ui->spinBox_LayerGfxEffect01->setValue(CurrentRoomParams->LayerGFXEffect01);
-    ui->spinBox_LayerGfxEffect02->setValue(CurrentRoomParams->LayerGFXEffect02);
+    ui->spinBox_RasterType->setValue(CurrentRoomParams->RasterType);
+    ui->spinBox_Water->setValue(CurrentRoomParams->Water);
     ui->spinBox_BgmVolume->setValue(CurrentRoomParams->BGMVolume);
 
     // Initialize the items for the BG selection combobox
@@ -152,8 +152,8 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     }
     configParams.RoomHeight = ui->SpinBox_RoomHeight->value();
     configParams.RoomWidth = ui->SpinBox_RoomWidth->value();
-    configParams.LayerGFXEffect01 = ui->spinBox_LayerGfxEffect01->value();
-    configParams.LayerGFXEffect02 = ui->spinBox_LayerGfxEffect02->value();
+    configParams.RasterType = ui->spinBox_RasterType->value();
+    configParams.Water = ui->spinBox_Water->value();
     configParams.BGMVolume = ui->spinBox_BgmVolume->value();
 
     return configParams;
@@ -546,5 +546,29 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
     {
         ui->CheckBox_Layer0Alpha->setChecked(false);
         ui->CheckBox_Layer0Alpha->setEnabled(false);
+    }
+}
+
+/// <summary>
+/// Slot function for spinBox_RasterType.
+/// </summary>
+/// <param name="arg1">
+/// The spinbox value.
+/// </param>
+void RoomConfigDialog::on_spinBox_RasterType_valueChanged(int arg1)
+{
+    switch(arg1)
+    {
+    case 0x00: ui->label_CurRasterType->setText("No Raster type effect"); break;
+    case 0x01: ui->label_CurRasterType->setText("Layer 3 Water effect 1"); break;
+    case 0x02: ui->label_CurRasterType->setText("Layer 3 Water effect 2"); break;
+    case 0x03: ui->label_CurRasterType->setText("Layer 0 Fog effect"); break;
+    case 0x04: ui->label_CurRasterType->setText("Layer 3 Fire effect 1"); break;
+    case 0x05: ui->label_CurRasterType->setText("Layer 3 Fire effect 2"); break;
+    case 0x06: ui->label_CurRasterType->setText("Layer 3 DOUBLE-SCR(A): top AUTO(1/8),bottom(non)"); break;
+    case 0x07: ui->label_CurRasterType->setText("Layer 3 DOUBLE-SCR(A): top(non),bottom AUTO(1/8)"); break;
+    case 0x08: ui->label_CurRasterType->setText("alpha Fire effect 1"); break;
+    case 0x09: ui->label_CurRasterType->setText("alpha Fire effect 2"); break;
+    default: ui->label_CurRasterType->setText("Undefined");
     }
 }

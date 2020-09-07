@@ -140,7 +140,6 @@ namespace LevelComponents
     public:
         TileMap16() : Tile(TileTypeMap16) {}
         TileMap16(Tile8x8 *t0, Tile8x8 *t1, Tile8x8 *t2, Tile8x8 *t3);
-        TileMap16(TileMap16 *other, QVector<QRgb> *newpalettes);
         void DrawTile(QPixmap *layerPixmap, int x, int y);
         Tile8x8* GetTile8X8(int position);
         const static int TILE8_TOPLEFT=0;
