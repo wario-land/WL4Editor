@@ -409,7 +409,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
     // Modify UI every time when a ROM is loaded
     EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
     Tile16SelecterWidget->SetTileset(currentTilesetID);
-    CameraControlWidget->SetCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
+    CameraControlWidget->PopulateCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
 
     // Modify Recent ROM menu
     int findedInRecentFile = -1; // start by 0
@@ -679,7 +679,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             if (deleteLimitatorIdlist[i] != 0)
             {
                 currentRoom->DeleteCameraLimitator(deleteLimitatorIdlist[i] - 1);
-                currentRoom->SetCameraBoundaryDirty(true);
             }
         }
         delete[] deleteLimitatorIdlist;

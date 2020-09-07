@@ -2,6 +2,7 @@
 #include "ROMUtils.h"
 #include "WL4Constants.h"
 #include "WL4EditorWindow.h"
+#include "DockWidget/CameraControlDockWidget.h"
 
 #include <cassert>
 #include <cstring>
@@ -340,7 +341,7 @@ namespace LevelComponents
     /// <param name="chunks">
     /// The vector to populate.
     /// </param>
-    void Level::GetSaveChunks(QVector<ROMUtils::SaveData> &chunks)
+    bool Level::GetSaveChunks(QVector<ROMUtils::SaveData> &chunks)
     {
         // Calculate some values needed to initialize the save data
         int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
@@ -383,8 +384,15 @@ namespace LevelComponents
             chunks.append(cameraPointerTableInvalidation);
 
             // Camera boundary chunks
+            unsigned int iterations = 0;
             while(*(int*)(ROMUtils::CurrentFile + cameraBoundaryEntryAddress) != GBAptrSentinel)
             {
+                if(++iterations > CameraControlDockWidget::MAX_CAMERA_LIMITATORS)
+                {
+                    singleton->GetOutputWidgetPtr()->PrintString(QString("Save error: Infinitely looping through camera boundary entries. Address: 0x") +
+                        QString::number(ROMUtils::PointerFromData(cameraPointerTablePtr), 16).toUpper());
+                    return false;
+                }
                 unsigned int cameraBoundaryListEntryPtr = ROMUtils::PointerFromData(cameraBoundaryEntryAddress);
                 struct ROMUtils::SaveData invalidationEntry = {
                     0,
@@ -483,6 +491,7 @@ namespace LevelComponents
             chunks.append(*cameraPointerTable);
             free(cameraPointerTable);
         }
+        return true;
     }
 
     /// <summary>
