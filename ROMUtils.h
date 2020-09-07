@@ -40,6 +40,13 @@ namespace ROMUtils
         TilesetPaletteDataChunkType           = '\x0E'
     };
 
+    enum ChunkAllocationStatus
+    {
+        Success           = '\x00',
+        InsufficientSpace = '\x01',
+        NoMoreChunks      = '\x02'
+    };
+
     struct SaveData
     {
         unsigned int ptr_addr;
@@ -53,16 +60,21 @@ namespace ROMUtils
         enum SaveDataChunkType ChunkType;
     };
 
+    struct FreeSpaceRegion
+    {
+        unsigned int addr;
+        unsigned int size;
+    };
+
     // Global functions
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
-    int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
-    bool SaveFile(QString filePath, QVector<struct SaveData> chunks,
-        std::function<QString (unsigned char*, QVector<struct SaveData>&, std::map<int, int>)> ChunkAllocationCallback,
+    bool SaveFile(QString filePath,
+        std::function<ChunkAllocationStatus (struct FreeSpaceRegion, struct SaveData*)> ChunkAllocator,
         std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback);
     bool SaveLevel(QString fileName);
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor = false);

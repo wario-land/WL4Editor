@@ -747,6 +747,7 @@ namespace PatchUtils
 
         // Save the chunks to the ROM
         bool firstCallback = true;
+        /*
         bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, chunks,
 
             // ChunkAllocationCallback
@@ -860,6 +861,7 @@ namespace PatchUtils
                 return "";
             }
         );
+        */ bool ret = true;
 
         // Success
         return ret ? "" : QT_TR_NOOP("Error saving ROM file");
