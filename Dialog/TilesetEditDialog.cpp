@@ -804,7 +804,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
      * blanktile (indexed 0x40)
      * blanktiles not attached to the tail of the foreground tileset
      * background tileset
-     * blanktile (indexed 0x3FF)
+     * blanktile (indexed 0x5FF)
     **/
     if(SelectedTile8x8 < 65 || (SelectedTile8x8 > GetFGTile8x8Num() + 0x41))
     {
