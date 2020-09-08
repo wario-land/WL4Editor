@@ -6,17 +6,17 @@
 namespace WL4Constants
 {
     // Definitions for the beginning of tables
-    const unsigned int TilesetDataTable          = 0x3F2298;
-    const unsigned int LevelHeaderTable          = 0x639068;
-    const unsigned int LevelHeaderIndexTable     = 0x6391C4;
-    const unsigned int LevelNamePointerTable     = 0x63A3AC;
-    const unsigned int DoorTable                 = 0x78F21C;
-    const unsigned int RoomDataTable             = 0x78F280;
-    const unsigned int CameraControlPointerTable = 0x78F540;
-    const unsigned int EntitySetInfoPointerTable = 0x78EF78;
-    const unsigned int EntityTilesetPointerTable = 0x78EBF0;
-    const unsigned int EntityPalettePointerTable = 0x78EDB4;
-    const unsigned int EntityTilesetLengthTable  = 0x3B2C90;
+    const unsigned int TilesetDataTable              = 0x3F2298;
+    const unsigned int LevelHeaderTable              = 0x639068;
+    const unsigned int LevelHeaderIndexTable         = 0x6391C4;
+    const unsigned int LevelNamePointerTable         = 0x63A3AC;
+    const unsigned int DoorTable                     = 0x78F21C;
+    const unsigned int RoomDataTable                 = 0x78F280;
+    const unsigned int CameraControlPointerTable     = 0x78F540;
+    const unsigned int EntitySetInfoPointerTable     = 0x78EF78;
+    const unsigned int EntityTilesetPointerTable     = 0x78EBF0;
+    const unsigned int EntityPalettePointerTable     = 0x78EDB4;
+    const unsigned int EntityTilesetLengthTable      = 0x3B2C90;
     const unsigned int AnimatedTileIdTableSwitchOff  = 0x3F8098;
     const unsigned int AnimatedTileIdTableSwitchOn   = 0x3F91D8;
     const unsigned int AnimatedTileSwitchInfoTable   = 0x3F8C18;
