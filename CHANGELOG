@@ -1,8 +1,34 @@
 beta-11:
-- Added more script interface API functions
+(major changes)
+- Added more script interface API functions and changed some of their names
 - Support importing and exporting palette files in the tileset editor
-- Fix updating the palette does not update the graphicsview in the tileset editor
+- Fixed camera limitators (issue #230)
+- Support adding additional rooms to a level (up to 16 total)
 - Fix that you could not provide a hook string with the patch address identifier "P" at the beginning of the string
+- Fixed hook string is appended with garbage when reopening patch manager after saving a C patch (issue #256)
+- Fixed animated tiles in-game not changing after global switches change (issue #252)
+(minor changes)
+- Fix updating the palette does not update the graphicsview in the tileset editor
+- Fix assertion failure when adding too many entities to a room
+- Support configuring raster type and water flags in room config dialog
+- Support configuring layer 0 and layer 3 scrolling parameters in room config dialog
+- Fixed layer 0 autoscroll not populated correctly in room config dialog (issue #233)
+- Fixed error when converting layer 0 from map16 to tile8x8 mapping type in room config dialog (issue #234)
+- Fixed incorrect population of checkboxes in room config dialog when changing tileset (issue #235)
+- Fixed graphical bug with destination preview in door config dialog when both doors are in the same room
+- Fixed issue with scrollbars not working properly in door config dialog when layers 0 and 1 have a different size (issue #229)
+- Fixed layer 0 editing is buggy when it's a different size from layer 1 in beta-10 (issue #238)
+- Fixed selecting a door will change its position (issue #239)
+- Fixed cannot get the correct tile ID for tile16 in the script interface (issue #243)
+- Fixed issue with alpha blending not rendering correctly for transparent pixels (issue #250)
+- Fixed index out of bounds exception when importing 8x8 tiles into tileset in Linux
+- Support for editing Japanese ROM (except for level titles)
+- Fixed crash when an undefined area is edited in layer 0
+- Fixed wrong max number settings for adding new foreground tiles into the Tileset in the Tileset editor (issue #254)
+- Fixed Alpha layer will always be enabled when switching to a different Room with layer 0 turned off (issue #249)
+- Support deleting foreground tile8x8 in the Tileset editor, and now the Tileset editor will always import every tile into the Tileset from your data file
+- Show selected tile8x8 id with more hints in Tileset editor and optimize importing foreground tile8x8 loading a bit
+- Various minor UI tweaks
 
 beta-10:
 (major changes)
