@@ -61,6 +61,7 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
     {
         delete Tile16MAPScene;
     }
+    ui->graphicsView->Resetmembers();
 
     // Set up tileset
     SelectedTileset = ROMUtils::singletonTilesets[_tilesetIndex];
