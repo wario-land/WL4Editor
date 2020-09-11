@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>764</height>
+    <height>766</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -225,10 +225,10 @@
        <item>
         <widget class="QLabel" name="layerPriorityLabel">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Layer Priority&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;There's several available priority settings that Wario Land 4's game engine supports, you can use one of them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Layer Priority&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;There are several available priority settings that Wario Land 4's game engine supports; choose one of them. SP+ in some of the entries means that there is a sprite priority elevation performed on all the entities. This is in addition to the priority level from their OAM data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
-          <string>Layer Priority:</string>
+          <string>Layer priority and sprite priority elevation:</string>
          </property>
         </widget>
        </item>
