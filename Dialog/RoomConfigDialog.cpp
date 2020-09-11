@@ -5,7 +5,7 @@
 
 // constexpr declarations for the initializers in the header
 constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
-constexpr const char *RoomConfigDialog::LayerPrioritySetData[3];
+constexpr const char *RoomConfigDialog::LayerPrioritySetData[4];
 constexpr const char *RoomConfigDialog::AlphaBlendAttrsSetData[12];
 constexpr unsigned int RoomConfigDialog::BGLayerdataPtrsData[166];
 constexpr unsigned int RoomConfigDialog::UseMap8x8Layer0DefaultTilesetIds[2];
@@ -33,7 +33,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->ComboBox_TilesetID->setCurrentIndex(CurrentRoomParams->CurrentTilesetIndex);
     ui->CheckBox_Layer0Alpha->setChecked(CurrentRoomParams->Layer0Alpha);
     int LayerPriorityID = CurrentRoomParams->LayerPriorityAndAlphaAttr & 3;
-    ui->ComboBox_LayerPriority->setCurrentIndex((LayerPriorityID < 2) ? LayerPriorityID : (LayerPriorityID - 1));
+    ui->ComboBox_LayerPriority->setCurrentIndex(LayerPriorityID);
     ui->ComboBox_AlphaBlendAttribute->setCurrentIndex((CurrentRoomParams->LayerPriorityAndAlphaAttr - 4) >> 2);  // == (LayerPriorityAndAlphaAttr - 8) >> 2 + 1
     ui->spinBox_Layer0MappingType->setValue(CurrentRoomParams->Layer0MappingTypeParam);
     ui->ComboBox_Layer0Picker->setEnabled(CurrentRoomParams->Layer0MappingTypeParam >= 0x20);
@@ -127,18 +127,7 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     configParams.Layer0DataPtr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
 
     configParams.Layer2Enable = ui->CheckBox_Layer2Enable->isChecked();
-    switch (ui->ComboBox_LayerPriority->currentIndex())
-    {
-    case 0:
-        configParams.LayerPriorityAndAlphaAttr = 4;
-        break;
-    case 1:
-        configParams.LayerPriorityAndAlphaAttr = 5;
-        break;
-    case 2:
-        configParams.LayerPriorityAndAlphaAttr = 7;
-        break;
-    }
+    configParams.LayerPriorityAndAlphaAttr = ui->ComboBox_LayerPriority->currentIndex() + 4;
     configParams.LayerPriorityAndAlphaAttr += (ui->ComboBox_AlphaBlendAttribute->currentIndex() << 2);
     configParams.BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
     configParams.BGLayerScrollFlag = ui->spinBox_BGLayerScrollingFlag->value();
