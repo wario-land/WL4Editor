@@ -96,6 +96,7 @@ namespace LevelComponents
                 struct EntityRoomAttribute tmpEntityroomattribute;
                 memcpy(&tmpEntityroomattribute, ROMUtils::CurrentFile + Listaddress + 3 * k++,
                        sizeof(struct EntityRoomAttribute));
+                if(tmpEntityroomattribute.EntityID < 0x11) tmpEntityroomattribute.EntityID--;
                 EntityList[i].push_back(tmpEntityroomattribute);
             }
         }

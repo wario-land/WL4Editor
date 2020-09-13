@@ -117,19 +117,19 @@ namespace LevelComponents
                     offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
                     offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID, EntityGlobalID);
                 }
-                else if ((EntityGlobalID < 9) && (EntityGlobalID > 6)) // Diamond and Frog switch
+                else if ((EntityGlobalID < 8) && (EntityGlobalID > 5)) // Diamond and Frog switch
                 {
                     offsetID = tileID + y * 0x20 + x;
                     offsetPal = 5;
                 }
-                else if ((EntityGlobalID < 17) && (EntityGlobalID > 8)) // Keyzer
+                else if ((EntityGlobalID < 17) && (EntityGlobalID > 7)) // Keyzer
                 {
                     offsetID = tileID + y * 0x20 + x;
                     // the Keyzer use 2 palette (6 and 7), but the OAM data are set by only 1 palette
                     // Using palette 7 here makes the render result more similar to the real graphic
                     offsetPal = 7;
                 }
-                else if (EntityGlobalID < 7) // Boxes
+                else if (EntityGlobalID < 6) // Boxes
                 {
                     offsetID = tileID + (y + 14) * 0x20 + x;
                     offsetPal = 15;

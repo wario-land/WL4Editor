@@ -59,8 +59,7 @@ namespace LevelComponents
         // clang-format off
         static constexpr const unsigned int EntitiesFirstActionFrameSetsPtrsData[129] =
         {
-            0,                               // 0x00
-            WL4Constants::Entity01_0x3B4F94,
+            WL4Constants::Entity01_0x3B4F94, // 0x00
             WL4Constants::Entity02_0x3B4FA4,
             WL4Constants::Entity03_0x3B4F84,
             WL4Constants::Entity04_0x3B4F74,
@@ -69,6 +68,7 @@ namespace LevelComponents
             WL4Constants::Entity07_0x3B62AC,
             WL4Constants::Entity08_0x3B59EC,
             WL4Constants::Entity09_0x3B492C,
+            0,
             0,
             0,
             0,
@@ -192,8 +192,7 @@ namespace LevelComponents
 
         static constexpr const int EntityPositinalOffset[258] =
         {
-               0,    0, //0x00
-             -98,  -66,
+             -98,  -66, //0x00
              -98,  -66,
              -98,  -66,
              -98,  -66,
@@ -202,6 +201,7 @@ namespace LevelComponents
              -67,  -70,
              -98,  -66,
             -130, -130,
+               0,    0,
                0,    0,
                0,    0,
                0,    0,

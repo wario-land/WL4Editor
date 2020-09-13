@@ -27,8 +27,8 @@ private slots:
 private:
     Ui::EntitySetDockWidget *ui;
     LevelComponents::Room *currentRoom = nullptr;
-    int EntityAmount = 0;
-    int currentEntityId = 1; // local Entity id, start from 1
+    int EntityMaxNum = 0;
+    int currentEntityId = 0; // local Entity id
     void RenderEntityAndResetInfo();
 };
 

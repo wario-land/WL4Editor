@@ -3,7 +3,7 @@
 
 // constexpr declarations for the initializers in the header
 constexpr const char *DoorConfigDialog::DoortypeSetData[5];
-constexpr const char *DoorConfigDialog::EntitynameSetData[128];
+constexpr const char *DoorConfigDialog::EntitynameSetData[129];
 
 // static variables used by DoorConfigDialog
 static QStringList DoortypeSet;
@@ -92,7 +92,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     UpdateComboBoxEntitySet();
 
     // Initialize the entity list drop-down
-    for (unsigned int i = 1; i < sizeof(entities) / sizeof(entities[0]); ++i)
+    for (unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
     {
         EntityFilterTable->AddEntity(entities[i]);
     }
@@ -708,7 +708,7 @@ EntityFilterTableModel::~EntityFilterTableModel()
 void EntityFilterTableModel::AddEntity(LevelComponents::Entity *entity)
 {
     entities.push_back(
-        { entity, DoorConfigDialog::EntitynameSetData[entity->GetEntityGlobalID() - 1], entity->Render(), true });
+        { entity, DoorConfigDialog::EntitynameSetData[entity->GetEntityGlobalID()], entity->Render(), true });
 }
 
 /// <summary>
