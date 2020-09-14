@@ -17,6 +17,7 @@ protected:
 public:
     TileGraphicsView(QWidget *param) : QGraphicsView(param) {}
     void SetDockWidget(Tile16DockWidget *_dockWidget) { Map16DockWidget = _dockWidget; }
+    void Resetmembers() { tx = ty = 0; holdingmouse = false;}
 
     // mouse events
     void mousePressEvent(QMouseEvent *event);

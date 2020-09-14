@@ -9,6 +9,7 @@
 #include <QScrollBar>
 #include <QColorDialog>
 #include <QTextStream>
+#include <QMessageBox>
 #include "LevelComponents/Layer.h"
 #include "LevelComponents/Room.h"
 #include "LevelComponents/Tileset.h"

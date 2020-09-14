@@ -221,11 +221,12 @@ private:
     };
 
     // Enumeration of the available layer priority settings
-    static constexpr const char *LayerPrioritySetData[3] =
+    static constexpr const char *LayerPrioritySetData[4] =
     {
         "L0 (Top) > L1 > L2 > L3 (Bottom)",
         "L1 (Top) > L0 > L2 > L3 (Bottom)",
-        "L1 (Top) > L2 > L0 > L3 (Bottom)"
+        "L1 (Top) > L0 > L2 > L3 (Bottom) SP+",
+        "L1 (Top) > L2 > L0 > L3 (Bottom) SP+"
     };
 
     // Enumerations of the available alpha blend settings

@@ -601,7 +601,20 @@ void TilesetEditDialog::SetSelectedTile8x8(unsigned short tileId, bool resetscro
         ui->graphicsView_TilesetAllTile8x8->horizontalScrollBar()->setValue(0);
     }
 
-    ui->label_Tile8x8_ID->setText("Selected Tile8x8 Id: " + QString::number(tileId));
+    int fgtilenum = tilesetEditParams->newTileset->GetfgGFXlen() / 32;
+    int bgtilenum = tilesetEditParams->newTileset->GetbgGFXlen() / 32;
+    if((SelectedTile8x8 > (0x40 + fgtilenum)) && (SelectedTile8x8 < (0x5FF - bgtilenum)))
+    {
+        ui->label_Tile8x8_ID->setText("Selected Tile8x8 Id: " + QString::number(tileId) + " (undefined)");
+    }
+    else if(SelectedTile8x8 <= (0x40 + fgtilenum))
+    {
+        ui->label_Tile8x8_ID->setText("Selected Foreground Tile8x8 Id: " + QString::number(tileId));
+    }
+    else
+    {
+        ui->label_Tile8x8_ID->setText("Selected Background Tile8x8 Id: " + QString::number(tileId));
+    }
 
     // Tile8x8 Editor graphicview update
     QPixmap CurTile8x8Pixmap(8, 8);
@@ -801,10 +814,16 @@ void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
 /// </summary>
 void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 {
-    // Check SelectedTile8x8, cannot overwrite animated Tile8x8s
-    if(SelectedTile8x8 < 65)
+    /** Check SelectedTile8x8, cannot overwrite condition:
+     * animated Tile8x8s
+     * blanktile (indexed 0x40)
+     * blanktiles not attached to the tail of the foreground tileset
+     * background tileset
+     * blanktile (indexed 0x5FF)
+    **/
+    if(SelectedTile8x8 < 65 || (SelectedTile8x8 > GetFGTile8x8Num() + 0x41))
     {
-        QMessageBox::critical(this, QString("Error"), QString("Overwrite animated tiles not permit!"));
+        QMessageBox::critical(this, tr("Error"), tr("Overwrite animated tiles not permitted in this area!"));
         return;
     }
 
@@ -818,12 +837,12 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     QFile gfxbinfile(fileName);
     if(!gfxbinfile.open(QIODevice::ReadOnly))
     {
-        QMessageBox::critical(this, QString("Error"), QString("Cannot open file! \n").append(gfxbinfile.errorString()));
+        QMessageBox::critical(this, tr("Error"), tr("Cannot open file! \n").append(gfxbinfile.errorString()));
         return;
     }
     if(!gfxbinfile.size())
     {
-        QMessageBox::critical(this, QString("Error"), QString("File size is 0!"));
+        QMessageBox::critical(this, tr("Error"), tr("File size is 0!"));
         return;
     }
     tmptile8x8data = gfxbinfile.readAll();
@@ -831,9 +850,9 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     gfxbinfile.close();
 
     // Check size
-    if(tmptile8x8data.size() & 7)
+    if(tmptile8x8data.size() & 31)
     {
-        QMessageBox::critical(this, QString("Error"), QString("Illegal file size!\nIt should be a multiple of 8 Bytes."));
+        QMessageBox::critical(this, tr("Error"), tr("Illegal file size!\nIt should be a multiple of 32 Bytes."));
         return;
     }
 
@@ -845,7 +864,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     QFile palbinfile(fileName);
     if(!palbinfile.open(QIODevice::ReadOnly))
     {
-        QMessageBox::critical(this, QString("Error"), QString("Cannot open file!"));
+        QMessageBox::critical(this, tr("Error"), tr("Cannot open file!"));
         return;
     }
     tmppalettedata = palbinfile.readAll();
@@ -871,7 +890,6 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     }
 
     // transparent-substitute color replacement and load palette
-    tmppalette[0] = 0xFF000000;
     tmppalette[transparentcolorId] = 0;
 
     // nybble exchange not needed
@@ -879,6 +897,8 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     for(int i = 0; i != 16; ++i)
     {
         char count = 0;
+
+        // Find if the color[i] is in the current palette
         while(1)
         {
             if(tmppalette[i] == tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId][count])
@@ -890,7 +910,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
             {
                 if((tmppalette[i] != 0xFF000000) && (tmppalette[i] != 0xFFFFFFFF) && (tmppalette[i] != 0))
                 {
-                    QMessageBox::critical(this, QString("Error"), QString("Palette not suitable!"));
+                    QMessageBox::critical(this, tr("Error"), tr("Palette not suitable!"));
                     return;
                 }
                 else if(tmppalette[i] == 0xFF000000) // black
@@ -917,7 +937,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
                     }
                     break;
                 }
-                else if(tmppalette[i] == 0)
+                else if(tmppalette[i] == 0) // transparent
                 {
                     count = 0;
                     break;
@@ -928,6 +948,8 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         {
             count = 0;
         }
+
+        // replace the color[i] in tiledata with the correct id
         for(int j = 0; j < tmptile8x8data.size(); ++j) // TODO: bugfix here
         {
             char tmpchr = tmptile8x8data[j];
@@ -962,7 +984,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     {
         if((newtilenum + SelectedTile8x8 + 1) > 0x400)
         {
-            QMessageBox::critical(this, QString("Load Error"), QString("You can only use 0x400 foreground tiles at most!"));
+            QMessageBox::critical(this, tr("Load Error"), tr("You can only use 0x400 foreground tiles at most!"));
             return;
         }
         else
