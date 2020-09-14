@@ -1002,17 +1002,25 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Set Layer data pointer into the Room header struct in sake of saving changes.
+    /// Set a data pointer in RoomHeader struct used for changes based on saving and creating new Rooms.
     /// </summary>
-    void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
+    void Room::SetRoomHeaderDataPtr(int pointerId, int dataPtr)
     {
         // this can be used to set entity set data pointers too
-        if(LayerNum & 0xFFFFFFFC)
+        switch(pointerId)
         {
-            singleton->GetOutputWidgetPtr()->PrintString("Warning: Possible data corruption when using SetLayerDataPtr(int LayerNum, int dataPtr),"
-                                                         "LayerNum must be within range [0, 4).");
+        case 0:
+        case 1:
+        case 2:
+        case 5:
+        case 6:
+        case 7:
+            break;
+        default:
+            singleton->GetOutputWidgetPtr()->PrintString("Warning: Possible data corruption when using SetRoomHeaderDataPtr(int pointerId, int dataPtr),"
+                                                         "pointerId must be one of these numbers: 0, 1, 2, 5, 6, 7.");
         }
-        ((unsigned int *) (&RoomHeader.Layer0Data))[LayerNum] = dataPtr;
+        ((unsigned int *) (&RoomHeader.Layer0Data))[pointerId] = dataPtr;
     }
 
     /// <summary>
