@@ -1,3 +1,10 @@
+beta-12:
+(major changes)
+- Fix save corruption in beta-11 when on a room with camera limitators, you add a new room from there, and then save the ROM (issue #263)
+- Added additional sprite priority elevation choices to layer priorty setting in room config dialog
+(minor changes)
+- Fix previously selected tile in map16 cannot be re-selected when changing rooms (issue #269)
+
 beta-11:
 (major changes)
 - Added more script interface API functions and changed some of their names

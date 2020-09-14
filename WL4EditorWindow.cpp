@@ -1463,7 +1463,9 @@ void WL4EditorWindow::on_actionAbout_triggered()
                                "    shinespeciall\n"
                                "    xiazhanjian\n\n"
                                "Special Thanks:\n"
+                               "    becored\n"
                                "    randrew\n"
+                               "    Spleeeeen\n"
                                "    xTibor\n\n"
                                "Version: ") +
                        WL4EDITOR_VERSION);
@@ -1898,7 +1900,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     int newRoomId = CurrentLevel->GetRooms().size();
     if (newRoomId == 16)
     {
-        OutputWidget->PrintString("Cannot add more Room to the current Level!");
+        OutputWidget->PrintString("Cannot add more Rooms to the current Level!");
         return;
     }
     int offset = WL4Constants::LevelHeaderIndexTable + selectedLevel._PassageIndex * 24 + selectedLevel._LevelIndex * 4;
@@ -1951,6 +1953,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     {
         CurrentLevel->GetRooms()[newRoomId]->GetLayer(i)->SetDataPtr(0);
     }
+    CurrentLevel->GetRooms()[newRoomId]->SetCameraControlType(LevelComponents::__CameraControlType::NoLimit);
 
     // UI updates
     SetCurrentRoomId(newRoomId);
