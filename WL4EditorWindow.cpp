@@ -4,7 +4,6 @@
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
 #include "Themes.h"
-#include "LevelComponents/Room.h"
 
 #include <cstdio>
 #include <deque>
