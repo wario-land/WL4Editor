@@ -8,7 +8,7 @@ This repository contains the most feature complete Wario Land 4 Editor yet.
 
 Based on old and deprecated projects, we made a new one and are trying to make it the best one possible.
 
-![WL4Editor sample image](./images/Sample.png =1200x)
+![WL4Editor sample image](./images/Sample.png?s=1200)
 
 **Download**: [Releases](https://github.com/wario-land/WL4Editor/releases)
 
