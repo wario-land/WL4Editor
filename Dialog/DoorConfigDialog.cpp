@@ -666,7 +666,7 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
         entitiessets[currentEntitySetId]->GetEntityTable();
     for (unsigned int i = 0; i < currentEntityTable.size(); ++i)
     {
-        QString currentname = EntitynameSetData[currentEntityTable[i].Global_EntityID - 1];
+        QString currentname = EntitynameSetData[currentEntityTable[i].Global_EntityID];
         ui->TextEdit_AllTheEntities->append(currentname);
     }
     tmpCurrentRoom->GetDoor(DoorID)->SetEntitySetID((unsigned char) currentEntitySetId);

@@ -1124,8 +1124,18 @@ namespace LevelComponents
                                                               ROMUtils::SaveDataChunkType::EntityListChunk };
                 for (unsigned int j = 0; j < EntityList[i].size(); ++j)
                 {
-                    memcpy(entityListChunk.data + j * sizeof(struct EntityRoomAttribute), &EntityList[i][j],
+                    if(EntityList[i][j].EntityID > 0xF)
+                    {
+                        memcpy(entityListChunk.data + j * sizeof(struct EntityRoomAttribute), &EntityList[i][j],
                            sizeof(struct EntityRoomAttribute));
+                    }
+                    else
+                    {
+                        struct EntityRoomAttribute tmpentitydata = EntityList[i][j];
+                        tmpentitydata.EntityID++;
+                        memcpy(entityListChunk.data + j * sizeof(struct EntityRoomAttribute), &tmpentitydata,
+                           sizeof(struct EntityRoomAttribute));
+                    }
                 }
                 memset(entityListChunk.data + EntityList[i].size() * sizeof(struct EntityRoomAttribute), 0xFF,
                        sizeof(struct EntityRoomAttribute));
