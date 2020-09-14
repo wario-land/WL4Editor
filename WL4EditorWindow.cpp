@@ -1463,7 +1463,9 @@ void WL4EditorWindow::on_actionAbout_triggered()
                                "    shinespeciall\n"
                                "    xiazhanjian\n\n"
                                "Special Thanks:\n"
+                               "    becored\n"
                                "    randrew\n"
+                               "    Spleeeeen\n"
                                "    xTibor\n\n"
                                "Version: ") +
                        WL4EDITOR_VERSION);
