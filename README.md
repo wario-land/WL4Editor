@@ -1,6 +1,6 @@
 # WL4Editor
 
-![](./images/WL4Editor.png)
+![WL4Editor icon](./images/WL4Editor.png)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/wario-land/wl4editor/badge)](https://www.codefactor.io/repository/github/wario-land/wl4editor)
 
@@ -8,7 +8,11 @@ This repository contains the most feature complete Wario Land 4 Editor yet.
 
 Based on old and deprecated projects, we made a new one and are trying to make it the best one possible.
 
-If you're interested in our project and want to get the latest news and enjoy Wario Land hacking. You can join our discord server with the link down below. you can not only share levels in that discord server, but also in the website. You can also see what levels other people have done using the editor in the website, which is again, down below.
+![WL4Editor sample image](./images/Sample.png =1200x)
+
+**Download**: [Releases](https://github.com/wario-land/WL4Editor/releases)
+
+If you're interested in our project and want to get the latest news and enjoy Wario Land hacking, you can join our Discord server with the link down below. You can not only share levels there, but also in the website. You can also see what levels other people have made using the editor on the website (also below).
 
 ## Useful links
 
