@@ -10,6 +10,7 @@
 #include <QGraphicsScene>
 #include <algorithm> // find
 #include <vector>
+#include "ROMUtils.h"
 
 namespace LevelComponents
 {

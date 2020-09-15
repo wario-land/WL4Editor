@@ -1,7 +1,6 @@
 #ifndef ENTITYSET_H
 #define ENTITYSET_H
 
-#include "ROMUtils.h"
 #include "Tile.h"
 #include "WL4Constants.h"
 

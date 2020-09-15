@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include "ROMUtils.h"
 
 #include <QPainter>
 

@@ -1,4 +1,5 @@
 #include "EntitySet.h"
+#include "ROMUtils.h"
 
 constexpr unsigned int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
 constexpr int LevelComponents::EntitySet::EntityPositinalOffset[258];
