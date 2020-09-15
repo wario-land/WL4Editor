@@ -95,6 +95,8 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
 
     // Memory Initialization
     memset(ROMUtils::singletonTilesets, 0, sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0]));
+    memset(ROMUtils::entitiessets, 0, sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]));
+    memset(ROMUtils::entities, 0, sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0]));
 }
 
 /// <summary>
@@ -118,6 +120,14 @@ WL4EditorWindow::~WL4EditorWindow()
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
     {
         delete ROMUtils::singletonTilesets[i];
+    }
+    for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0])); i++)
+    {
+        delete ROMUtils::entitiessets[i];
+    }
+    for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0])); i++)
+    {
+        delete ROMUtils::entities[i];
     }
 
     if (CurrentLevel)
@@ -222,10 +232,18 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     if (CurrentLevel)
     {
         delete CurrentLevel;
-        // Decomstruct all Tileset singletons
+        // Decomstruct all singletons
         for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
         {
             delete ROMUtils::singletonTilesets[i];
+        }
+        for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0])); i++)
+        {
+            delete ROMUtils::entitiessets[i];
+        }
+        for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0])); i++)
+        {
+            delete ROMUtils::entities[i];
         }
     }
 
@@ -233,11 +251,22 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     std::string fileName = filePath.substr(filePath.rfind('/') + 1);
     setWindowTitle(fileName.c_str());
 
-    // Load all Tilesets as singletons
+    // Load all LevelComponents singletons
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
     {
         int tilesetPtr = WL4Constants::TilesetDataTable + i * 36;
         ROMUtils::singletonTilesets[i] = new LevelComponents::Tileset(tilesetPtr, i);
+    }
+    for (unsigned int i = 0; i < sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]); ++i)
+    {
+        ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i, WL4Constants::UniversalSpritesPalette);
+    }
+    for (unsigned int i = 0; i < sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0]); ++i)
+    {
+        struct LevelComponents::EntitySetAndEntitylocalId tmpEntitysetAndEntitylocalId =
+            LevelComponents::EntitySet::EntitySetFromEntityID(i);
+        ROMUtils::entities[i] = new LevelComponents::Entity(tmpEntitysetAndEntitylocalId.entitylocalId, i,
+                                                  ROMUtils::entitiessets[tmpEntitysetAndEntitylocalId.entitysetId]);
     }
 
     // Load the first level and render the screen
