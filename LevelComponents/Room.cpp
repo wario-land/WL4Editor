@@ -161,16 +161,12 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// release Entity instances list in this Room.
+    /// clear Entity instance list in this Room.
     /// </summary>
-    void Room::FreeCurrentEntityListSource()
+    void Room::ClearCurrentEntityListSource()
     {
         if (!currentEntityListSource.size())
             return;
-        foreach (Entity *entity, currentEntityListSource)
-        {
-            delete entity;
-        }
         currentEntityListSource.clear();
     }
 
@@ -182,20 +178,16 @@ namespace LevelComponents
     /// </param>
     void Room::ResetEntitySet(int entitysetId)
     {
-        if (currentEntitySet)
-            delete currentEntitySet;
-        FreeCurrentEntityListSource();
-        currentEntitySet = new EntitySet(entitysetId, tileset->GetUniversalSpritesTilesPalettePtr());
+        ClearCurrentEntityListSource();
+        currentEntitySet = ROMUtils::entitiessets[entitysetId];
         for (int i = 0; i < 17; ++i)
         {
-            Entity *newEntity = new Entity(-1, i, currentEntitySet);
-            currentEntityListSource.push_back(newEntity);
+            currentEntityListSource.push_back(ROMUtils::entities[i]);
         }
         for (int i = 0; i < (int) currentEntitySet->GetEntityTable().size(); ++i)
         {
             int _globalId = currentEntitySet->GetEntityTable().at(i).Global_EntityID;
-            Entity *newEntity = new Entity(i, _globalId, currentEntitySet);
-            currentEntityListSource.push_back(newEntity);
+            currentEntityListSource.push_back(ROMUtils::entities[_globalId]);
         }
     }
 
@@ -215,9 +207,7 @@ namespace LevelComponents
     {
         // Free drawlayer elements
         FreeDrawLayers();
-        if (currentEntitySet)
-            delete currentEntitySet;
-        FreeCurrentEntityListSource();
+        ClearCurrentEntityListSource();
         foreach (struct __CameraControlRecord *C, CameraControlRecords)
         {
             delete C;

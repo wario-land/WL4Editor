@@ -134,7 +134,6 @@ WL4EditorWindow::~WL4EditorWindow()
     {
         delete CurrentLevel;
     }
-    DoorConfigDialog::EntitySetsDeconstruction();
 }
 
 /// <summary>
@@ -232,7 +231,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     if (CurrentLevel)
     {
         delete CurrentLevel;
-        // Decomstruct all singletons
+        // Decomstruct all LevelComponents singletons
         for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
         {
             delete ROMUtils::singletonTilesets[i];
@@ -493,7 +492,6 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
 
     // UI update
     LoadRoomUIUpdate();
-    DoorConfigDialog::EntitySetsInitialization();
 }
 
 /// <summary>

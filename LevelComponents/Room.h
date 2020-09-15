@@ -4,13 +4,13 @@
 #include "Door.h"
 #include "Entity.h"
 #include "Layer.h"
-#include <DockWidget/EditModeDockWidget.h>
+#include "ROMUtils.h"
+#include "DockWidget/EditModeDockWidget.h"
 
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <algorithm> // find
 #include <vector>
-#include "ROMUtils.h"
 
 namespace LevelComponents
 {
@@ -142,7 +142,7 @@ namespace LevelComponents
 
         // Helper functions
         void FreeDrawLayers();
-        void FreeCurrentEntityListSource();
+        void ClearCurrentEntityListSource();
         void ResetEntitySet(int entitysetId);
 
     public:

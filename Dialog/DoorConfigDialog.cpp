@@ -1,5 +1,6 @@
 #include "DoorConfigDialog.h"
 #include "ui_DoorConfigDialog.h"
+#include "ROMUtils.h"
 
 // constexpr declarations for the initializers in the header
 constexpr const char *DoorConfigDialog::DoortypeSetData[5];
@@ -8,9 +9,6 @@ constexpr const char *DoorConfigDialog::EntitynameSetData[129];
 // static variables used by DoorConfigDialog
 static QStringList DoortypeSet;
 static QStringList EntitynameSet;
-
-LevelComponents::EntitySet *DoorConfigDialog::entitiessets[90];
-LevelComponents::Entity *DoorConfigDialog::entities[129];
 
 /// <summary>
 /// Construct an instance of DoorConfigDialog.
@@ -85,16 +83,16 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     RenderGraphicsView_Preview();
 
     // Initialize the EntitySet ComboBox
-    for (unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
+    for (unsigned int i = 0; i < sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]); ++i)
     {
         comboboxEntitySet.push_back({ (int) i, true });
     }
     UpdateComboBoxEntitySet();
 
     // Initialize the entity list drop-down
-    for (unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
+    for (unsigned int i = 0; i < sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0]); ++i)
     {
-        EntityFilterTable->AddEntity(entities[i]);
+        EntityFilterTable->AddEntity(ROMUtils::entities[i]);
     }
     UpdateTableView();
 
@@ -159,59 +157,6 @@ void DoorConfigDialog::StaticInitialization()
     for (unsigned int i = 0; i < sizeof(EntitynameSetData) / sizeof(EntitynameSetData[0]); ++i)
     {
         EntitynameSet << EntitynameSetData[i];
-    }
-
-    // Initialize all the Entitysets and the Entities pointers with nullptr
-    for (unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
-    {
-        entitiessets[i] = nullptr;
-    }
-    for (unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
-    {
-        entities[i] = nullptr;
-    }
-}
-
-/// <summary>
-/// Perform static initializtion of EntitySets and Entities for the dialog.
-/// </summary>
-void DoorConfigDialog::EntitySetsInitialization()
-{
-    EntitySetsDeconstruction();
-
-    // Initialize all the entitysets
-    for (unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
-    {
-        entitiessets[i] = new LevelComponents::EntitySet(i, WL4Constants::UniversalSpritesPalette);
-    }
-
-    // Initialize all the Entity
-    for (unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
-    {
-        struct LevelComponents::EntitySetAndEntitylocalId tmpEntitysetAndEntitylocalId =
-            LevelComponents::EntitySet::EntitySetFromEntityID(i);
-        entities[i] = new LevelComponents::Entity(tmpEntitysetAndEntitylocalId.entitylocalId, i,
-                                                  entitiessets[tmpEntitysetAndEntitylocalId.entitysetId]);
-    }
-}
-
-/// <summary>
-/// Perform static deconstruction of EntitySets and Entities for the dialog.
-/// </summary>
-void DoorConfigDialog::EntitySetsDeconstruction()
-{
-    // Initialize all the entitysets
-    for (unsigned int i = 0; i < sizeof(entitiessets) / sizeof(entitiessets[0]); ++i)
-    {
-        if (entitiessets[i])
-            delete entitiessets[i];
-    }
-
-    // Initialize all the Entity
-    for (unsigned int i = 0; i < sizeof(entities) / sizeof(entities[0]); ++i)
-    {
-        if (entities[i])
-            delete entities[i];
     }
 }
 
@@ -461,7 +406,7 @@ void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
     {
         for (auto &set : comboboxEntitySet)
         {
-            if (set.visible && !entitiessets[set.id]->IsEntityInside(it.entity->GetEntityGlobalID()))
+            if (set.visible && !ROMUtils::entitiessets[set.id]->IsEntityInside(it.entity->GetEntityGlobalID()))
             {
                 set.visible = false;
             }
@@ -486,7 +431,7 @@ void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
                 bool checked = model->item(i, 0)->checkState();
                 if (checked)
                 {
-                    if (!entitiessets[set.id]->IsEntityInside(model->entities[i].entity->GetEntityGlobalID()))
+                    if (!ROMUtils::entitiessets[set.id]->IsEntityInside(model->entities[i].entity->GetEntityGlobalID()))
                     {
                         visible = false;
                         break;
@@ -663,7 +608,7 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
         currentEntitySetId = ui->ComboBox_EntitySetID->currentText().toInt();
     ui->TextEdit_AllTheEntities->clear();
     std::vector<LevelComponents::EntitySetinfoTableElement> currentEntityTable =
-        entitiessets[currentEntitySetId]->GetEntityTable();
+        ROMUtils::entitiessets[currentEntitySetId]->GetEntityTable();
     for (unsigned int i = 0; i < currentEntityTable.size(); ++i)
     {
         QString currentname = EntitynameSetData[currentEntityTable[i].Global_EntityID];
