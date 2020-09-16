@@ -86,7 +86,7 @@ namespace LevelComponents
                 }
                 lastpalettePtr = palettePtr;
             }
-            k++;
+            if (k++ >= 0x1F) break;
         } while ((tmpEntityId != 0) && (currentpaletteID != 8));
         // Set palette before and not include 15 to be 0 if not exist
         if (currentpaletteID < 7)

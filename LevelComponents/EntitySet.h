@@ -51,7 +51,7 @@ namespace LevelComponents
         int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available
         QVector<QRgb> palettes[16];
         Tile8x8 *tile8x8data[0x480];
-        std::vector<EntitySetinfoTableElement> EntityinfoTable;
+        QVector<EntitySetinfoTableElement> EntityinfoTable; // max item number 0x20
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
 
