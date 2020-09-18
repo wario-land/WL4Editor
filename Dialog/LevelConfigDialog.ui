@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>422</width>
-    <height>246</height>
+    <height>293</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,12 +29,38 @@
         </font>
        </property>
        <property name="text">
-        <string>Level Name: </string>
+        <string>English Level Name: </string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLineEdit" name="LevelName_TextBox">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="maxLength">
+        <number>26</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_6">
+       <property name="font">
+        <font>
+         <pointsize>11</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Japanese Level Name:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="LevelNameJ_TextBox">
        <property name="font">
         <font>
          <pointsize>10</pointsize>

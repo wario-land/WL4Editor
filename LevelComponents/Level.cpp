@@ -21,22 +21,22 @@ extern WL4EditorWindow *singleton;
 static QString ConvertDataToLevelName(int address)
 {
     QString ret = "";
+    QString othercharacters = QString("0123456789ABCDEFGHIJKLMNOPQRSTUV"
+                                      "WXYZabcdefghijklmnopqrstuvwxyz,&"
+                                      "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみ"
+                                      "むめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜ"
+                                      "ぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタ"
+                                      "チツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィ"
+                                      "ゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
+                                      "ヴ'、。—~…!?()「」『』[]℃-");
     for (int i = 0; i < 26; i++)
     {
         unsigned char chr = ROMUtils::CurrentFile[address + i];
-        if (chr <= 0x09)
+        if (chr < othercharacters.size())
         {
-            ret += chr + 48;
+            ret += othercharacters.at(chr);
         }
-        else if (chr >= 0x0A && chr <= 0x23)
-        {
-            ret += chr + 55;
-        }
-        else if (chr >= 0x24 && chr <= 0x3D)
-        {
-            ret += chr + 61;
-        }
-        else
+        else // space
         {
             ret += (unsigned char) 32;
         }
