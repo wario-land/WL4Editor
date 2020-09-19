@@ -1,4 +1,4 @@
-#include "WL4EditorWindow.h"
+﻿#include "WL4EditorWindow.h"
 #include "Operation.h"
 #include "Dialog/PatchManagerDialog.h"
 #include "ROMUtils.h"
@@ -1243,6 +1243,7 @@ void WL4EditorWindow::on_actionLevel_Config_triggered()
     // Show a level config dialog to the user
     LevelConfigDialog dialog;
     dialog.InitTextBoxes(CurrentLevel->GetLevelName(),
+                         CurrentLevel->GetLevelName(1),
                          CurrentLevel->GetTimeCountdownCounter(LevelComponents::HardDifficulty),
                          CurrentLevel->GetTimeCountdownCounter(LevelComponents::NormalDifficulty),
                          CurrentLevel->GetTimeCountdownCounter(LevelComponents::SHardDifficulty));
@@ -1251,7 +1252,8 @@ void WL4EditorWindow::on_actionLevel_Config_triggered()
     auto acc = dialog.exec();
     if (acc == QDialog::Accepted)
     {
-        CurrentLevel->SetLevelName(QString::fromUtf8(dialog.GetPaddedLevelName().c_str()));
+        CurrentLevel->SetLevelName(dialog.GetPaddedLevelName());
+        CurrentLevel->SetLevelName(dialog.GetPaddedLevelName(1), 1);
         CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int) dialog.GetHModeTimer());
         CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int) dialog.GetNModeTimer());
         CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int) dialog.GetSHModeTimer());

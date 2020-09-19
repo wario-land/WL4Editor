@@ -9,7 +9,7 @@ QRegExp LevelnameRegx("^[A-Za-z0-9\\s\\.&"
                       "ぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタ"
                       "チツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィ"
                       "ゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
-                      "ヴ'、。—~…!\\?()「」『』\\[\\]℃\\-]+$");
+                      "ヴ'、。—~…!\\?\\(\\)「」『』\\[\\]℃\\-]+$");
 QRegExp TimerRegx("^[0-9]:[0-5][0-9]$");
 
 /// <summary>
@@ -25,8 +25,10 @@ LevelConfigDialog::LevelConfigDialog(QWidget *parent) : QDialog(parent), ui(new 
 {
     ui->setupUi(this);
 
-    ui->LevelName_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
+    ui->LevelName_TextBox->setAttribute(Qt::WA_InputMethodEnabled, true);
     ui->LevelName_TextBox->setValidator(new QRegExpValidator(LevelnameRegx, ui->LevelName_TextBox));
+    ui->LevelNameJ_TextBox->setAttribute(Qt::WA_InputMethodEnabled, true);
+    ui->LevelNameJ_TextBox->setValidator(new QRegExpValidator(LevelnameRegx, ui->LevelNameJ_TextBox));
     ui->HModeTimer_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
     ui->HModeTimer_TextBox->setValidator(new QRegExpValidator(TimerRegx, ui->HModeTimer_TextBox));
     ui->NModeTimer_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
@@ -58,9 +60,10 @@ LevelConfigDialog::~LevelConfigDialog() { delete ui; }
 /// <param name="SHModeTimer">
 /// Number of seconds after pressing the frog switch in super hard mode.
 /// </param>
-void LevelConfigDialog::InitTextBoxes(QString _levelname, int HModeTimer, int NModeTimer, int SHModeTimer)
+void LevelConfigDialog::InitTextBoxes(QString _levelname, QString _levelnameJ, int HModeTimer, int NModeTimer, int SHModeTimer)
 {
     ui->LevelName_TextBox->setText(_levelname.trimmed());
+    ui->LevelNameJ_TextBox->setText(_levelnameJ.trimmed());
 
     // Parse and Show Timers
     int a, b, c;
@@ -87,17 +90,21 @@ void LevelConfigDialog::InitTextBoxes(QString _levelname, int HModeTimer, int NM
 /// <return>
 /// The level name, padded to 26 characters with spaces.
 /// </return>
-std::string LevelConfigDialog::GetPaddedLevelName()
+QString LevelConfigDialog::GetPaddedLevelName(int levelnameid)
 {
-    QString tmplevelname = ui->LevelName_TextBox->text();
+    QString tmplevelname;
+    if(levelnameid)
+        tmplevelname = ui->LevelNameJ_TextBox->text();
+    else
+        tmplevelname = ui->LevelName_TextBox->text();
     int a, b;
-    a = (26 - tmplevelname.length()) / 2;
-    b = (26 - tmplevelname.length()) / 2 + (26 - tmplevelname.length()) % 2;
+    a = (26 - tmplevelname.size()) / 2;
+    b = (26 - tmplevelname.size()) / 2 + (26 - tmplevelname.size()) % 2;
     QString stra, strb;
     stra.fill(' ', a);
     strb.fill(' ', b);
     stra = stra + tmplevelname + strb;
-    return stra.toStdString();
+    return stra;
 }
 
 /// <summary>
@@ -184,6 +191,7 @@ void LevelConfigDialog::on_SHModeTimer_TextBox_textChanged(const QString &arg1)
     (void) arg1;
     QVector<QLineEdit *> textBoxes;
     textBoxes.append(ui->LevelName_TextBox);
+    textBoxes.append(ui->LevelNameJ_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
     textBoxes.append(ui->SHModeTimer_TextBox);
@@ -202,6 +210,7 @@ void LevelConfigDialog::on_NModeTimer_TextBox_textChanged(const QString &arg1)
     (void) arg1;
     QVector<QLineEdit *> textBoxes;
     textBoxes.append(ui->LevelName_TextBox);
+    textBoxes.append(ui->LevelNameJ_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
     textBoxes.append(ui->SHModeTimer_TextBox);
@@ -220,6 +229,7 @@ void LevelConfigDialog::on_HModeTimer_TextBox_textChanged(const QString &arg1)
     (void) arg1;
     QVector<QLineEdit *> textBoxes;
     textBoxes.append(ui->LevelName_TextBox);
+    textBoxes.append(ui->LevelNameJ_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
     textBoxes.append(ui->SHModeTimer_TextBox);
@@ -238,6 +248,26 @@ void LevelConfigDialog::on_LevelName_TextBox_textChanged(const QString &arg1)
     (void) arg1;
     QVector<QLineEdit *> textBoxes;
     textBoxes.append(ui->LevelName_TextBox);
+    textBoxes.append(ui->LevelNameJ_TextBox);
+    textBoxes.append(ui->NModeTimer_TextBox);
+    textBoxes.append(ui->HModeTimer_TextBox);
+    textBoxes.append(ui->SHModeTimer_TextBox);
+    SetOKButtonEnable(textBoxes, ui->buttonBox->button(QDialogButtonBox::Ok));
+}
+
+/// <summary>
+/// Enable or disable the OK button depending on the validity of the input fields, when the Japanese level name text box
+/// is changed.
+/// </summary>
+/// <param name="arg1">
+/// Unused.
+/// </param>
+void LevelConfigDialog::on_LevelNameJ_TextBox_textChanged(const QString &arg1)
+{
+    (void) arg1;
+    QVector<QLineEdit *> textBoxes;
+    textBoxes.append(ui->LevelName_TextBox);
+    textBoxes.append(ui->LevelNameJ_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
     textBoxes.append(ui->SHModeTimer_TextBox);
