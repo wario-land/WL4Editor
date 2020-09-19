@@ -124,15 +124,15 @@ namespace LevelComponents
         QString charstable = GetAvailableLevelNameChars();
         for (unsigned int i = 0; i < 26; ++i)
         {
+            buffer[i] = '\xFF';
             for(int j = 0; j < charstable.size(); ++j)
             {
                 if(charstable.at(j) == levelName.at(i))
                 {
-                    buffer[i] = j;
+                    buffer[i] = (unsigned char) j;
                     break;
                 }
             }
-            buffer[i] = '\xFF';
         }
     }
 
