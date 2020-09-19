@@ -77,6 +77,7 @@ namespace LevelComponents
         othercharacters.append(QString::fromUtf8((char *)tmpstr4));
         othercharacters.append("\x5b\x5d");
         othercharacters.append(QString::fromUtf8((char *)tmpstr5));
+        othercharacters.append("\x2d");
         return othercharacters;
     }
 
