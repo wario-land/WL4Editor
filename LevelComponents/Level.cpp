@@ -557,7 +557,7 @@ namespace LevelComponents
             singleton->GetOutputWidgetPtr()->PrintString(QString("Internal error: Japanese Level name has invalid length (") + levelNameJ.length() + "): \"" + levelName + "\"");
             levelNameJ.truncate(26);
         }
-        ConvertLevelNameToData(levelNameJ, levelNameChunk.data);
+        ConvertLevelNameToData(levelNameJ, levelNameJChunk.data);
 
         // Append all the save chunks which have been created
         chunks.append(roomHeaders);
