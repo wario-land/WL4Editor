@@ -1,9 +1,15 @@
-#include "LevelConfigDialog.h"
+﻿#include "LevelConfigDialog.h"
 #include "ui_LevelConfigDialog.h"
 
 #include <QPushButton>
 
-QRegExp LevelnameRegx("^[A-Za-z0-9\\s]+$");
+QRegExp LevelnameRegx("^[A-Za-z0-9\\s\\.&"
+                      "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみ"
+                      "むめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜ"
+                      "ぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタ"
+                      "チツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィ"
+                      "ゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
+                      "ヴ'、。—~…!\\?()「」『』\\[\\]℃\\-]+$");
 QRegExp TimerRegx("^[0-9]:[0-5][0-9]$");
 
 /// <summary>

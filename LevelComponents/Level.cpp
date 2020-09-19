@@ -21,14 +21,14 @@ extern WL4EditorWindow *singleton;
 static QString ConvertDataToLevelName(int address)
 {
     QString ret = "";
-    QString othercharacters = QString("0123456789ABCDEFGHIJKLMNOPQRSTUV"
-                                      "WXYZabcdefghijklmnopqrstuvwxyz,&"
-                                      "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみ"
-                                      "むめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜ"
-                                      "ぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタ"
-                                      "チツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィ"
-                                      "ゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
-                                      "ヴ'、。—~…!?()「」『』[]℃-");
+    QString othercharacters("0123456789ABCDEFGHIJKLMNOPQRSTUV"
+                            "WXYZabcdefghijklmnopqrstuvwxyz.&"
+                            "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみ"
+                            "むめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜ"
+                            "ぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタ"
+                            "チツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィ"
+                            "ゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
+                            "ヴ'、。—~…!?()「」『』[]℃-");
     for (int i = 0; i < 26; i++)
     {
         unsigned char chr = ROMUtils::CurrentFile[address + i];
@@ -38,7 +38,7 @@ static QString ConvertDataToLevelName(int address)
         }
         else // space
         {
-            ret += (unsigned char) 32;
+            ret += " ";
         }
     }
     return ret;
