@@ -1,18 +1,62 @@
 ﻿#include "LevelConfigDialog.h"
 #include "ui_LevelConfigDialog.h"
 
-#include <QPushButton>
-
-//QRegExp LevelnameRegx("^[A-Za-z0-9\\s\\.&"
-//                      "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみ"
-//                      "むめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜ"
-//                      "ぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタ"
-//                      "チツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィ"
-//                      "ゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
-//                      "ヴ'、。—~…!\\?\\(\\)「」『』\\[\\]℃\\-]+$");
-QRegExp LevelnameRegx("^[A-Za-z0-9\\s\\.\\&\u3041-\u308D\u308F\u3092\u3093\u30A1-\u30ED\u30EF\u30F2-\u30F4"
-                      "\\'\u3001\u3002\u2014\\~\u2026\\!\\?\\(\\)\u300C-\u300F\\[\\]\u2103\\-]+$");
+#include "LevelComponents/Level.h"
 QRegExp TimerRegx("^[0-9]:[0-5][0-9]$");
+
+/// <summary>
+/// Enable or disable the OK button depending on the validity of the input fields.
+/// All fields must be in the QValidator::State::Acceptable, or else the OK button will be disabled.
+/// </summary>
+/// <param name="textBoxes">
+/// The text boxes to validate.
+/// </param>
+/// <param name="okButton">
+/// The OK button which will be enabled or disabled based on the text boxes' validator states.
+/// </param>
+void LevelConfigDialog::SetOKButtonEnable(QVector<QLineEdit *> textBoxes, QPushButton *okButton)
+{
+    bool allValid = true;
+    for (auto iter = textBoxes.begin(); iter != textBoxes.end(); ++iter)
+    {
+        QLineEdit *line = *iter;
+        auto variable = line->text();
+        int pos = 0;
+        if (line->validator()->validate(variable, pos) != QValidator::State::Acceptable)
+        {
+            allValid = false;
+            break;
+        }
+    }
+    if(!allValid)
+    {
+        okButton->setEnabled(allValid);
+        return;
+    }
+    QString charstable = LevelComponents::Level::GetAvailableLevelNameChars();
+    for (int k = 0; k < 2; k++)
+    {
+        QString LevelName = k ? ui->LevelNameJ_TextBox->text() : ui->LevelName_TextBox->text();
+        for (int i = 0; i < LevelName.size(); i++)
+        {
+            for (int j = 0; j < charstable.size(); j++)
+            {
+                allValid = false;
+                if(LevelName.at(i) == charstable.at(j) || LevelName.at(i) == ' ')
+                {
+                    allValid = true;
+                    break;
+                }
+            }
+            if(!allValid)
+            {
+                okButton->setEnabled(allValid);
+                return;
+            }
+        }
+    }
+    okButton->setEnabled(allValid);
+}
 
 /// <summary>
 /// Construct the instance of the LevelConfigDialog.
@@ -28,9 +72,7 @@ LevelConfigDialog::LevelConfigDialog(QWidget *parent) : QDialog(parent), ui(new 
     ui->setupUi(this);
 
     ui->LevelName_TextBox->setAttribute(Qt::WA_InputMethodEnabled, true);
-    ui->LevelName_TextBox->setValidator(new QRegExpValidator(LevelnameRegx, ui->LevelName_TextBox));
     ui->LevelNameJ_TextBox->setAttribute(Qt::WA_InputMethodEnabled, true);
-    ui->LevelNameJ_TextBox->setValidator(new QRegExpValidator(LevelnameRegx, ui->LevelNameJ_TextBox));
     ui->HModeTimer_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
     ui->HModeTimer_TextBox->setValidator(new QRegExpValidator(TimerRegx, ui->HModeTimer_TextBox));
     ui->NModeTimer_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
@@ -155,33 +197,6 @@ int LevelConfigDialog::GetSHModeTimer()
 }
 
 /// <summary>
-/// Enable or disable the OK button depending on the validity of the input fields.
-/// All fields must be in the QValidator::State::Acceptable, or else the OK button will be disabled.
-/// </summary>
-/// <param name="textBoxes">
-/// The text boxes to validate.
-/// </param>
-/// <param name="okButton">
-/// The OK button which will be enabled or disabled based on the text boxes' validator states.
-/// </param>
-void SetOKButtonEnable(QVector<QLineEdit *> textBoxes, QPushButton *okButton)
-{
-    bool allValid = true;
-    for (auto iter = textBoxes.begin(); iter != textBoxes.end(); ++iter)
-    {
-        QLineEdit *line = *iter;
-        auto variable = line->text();
-        int pos = 0;
-        if (line->validator()->validate(variable, pos) != QValidator::State::Acceptable)
-        {
-            allValid = false;
-            break;
-        }
-    }
-    okButton->setEnabled(allValid);
-}
-
-/// <summary>
 /// Enable or disable the OK button depending on the validity of the input fields, when the super hard timer text box is
 /// changed.
 /// </summary>
@@ -192,8 +207,6 @@ void LevelConfigDialog::on_SHModeTimer_TextBox_textChanged(const QString &arg1)
 {
     (void) arg1;
     QVector<QLineEdit *> textBoxes;
-    textBoxes.append(ui->LevelName_TextBox);
-    textBoxes.append(ui->LevelNameJ_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
     textBoxes.append(ui->SHModeTimer_TextBox);
@@ -211,8 +224,6 @@ void LevelConfigDialog::on_NModeTimer_TextBox_textChanged(const QString &arg1)
 {
     (void) arg1;
     QVector<QLineEdit *> textBoxes;
-    textBoxes.append(ui->LevelName_TextBox);
-    textBoxes.append(ui->LevelNameJ_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
     textBoxes.append(ui->SHModeTimer_TextBox);
@@ -230,8 +241,6 @@ void LevelConfigDialog::on_HModeTimer_TextBox_textChanged(const QString &arg1)
 {
     (void) arg1;
     QVector<QLineEdit *> textBoxes;
-    textBoxes.append(ui->LevelName_TextBox);
-    textBoxes.append(ui->LevelNameJ_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
     textBoxes.append(ui->SHModeTimer_TextBox);
@@ -249,8 +258,6 @@ void LevelConfigDialog::on_LevelName_TextBox_textChanged(const QString &arg1)
 {
     (void) arg1;
     QVector<QLineEdit *> textBoxes;
-    textBoxes.append(ui->LevelName_TextBox);
-    textBoxes.append(ui->LevelNameJ_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
     textBoxes.append(ui->SHModeTimer_TextBox);
@@ -268,8 +275,6 @@ void LevelConfigDialog::on_LevelNameJ_TextBox_textChanged(const QString &arg1)
 {
     (void) arg1;
     QVector<QLineEdit *> textBoxes;
-    textBoxes.append(ui->LevelName_TextBox);
-    textBoxes.append(ui->LevelNameJ_TextBox);
     textBoxes.append(ui->NModeTimer_TextBox);
     textBoxes.append(ui->HModeTimer_TextBox);
     textBoxes.append(ui->SHModeTimer_TextBox);

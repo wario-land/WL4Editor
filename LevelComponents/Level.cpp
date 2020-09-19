@@ -9,132 +9,132 @@
 
 extern WL4EditorWindow *singleton;
 
-/// <summary>
-/// Helper function to Generate LevelName available character QString.
-/// </summary>
-static QString GetAvailableLevelNameChars()
-{
-    /*"0123456789ABCDEFGHIJKLMNOPQRSTUV"
-    "WXYZabcdefghijklmnopqrstuvwxyz.&"
-    "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみ"
-    "むめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜ"
-    "ぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタ"
-    "チツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィ"
-    "ゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
-    "ヴ'、。—~…!?()「」『』[]℃-"*/
-    unsigned char tmpstr[484] = "\xe3\x81\x82\xe3\x81\x84\xe3\x81\x86\xe3\x81\x88\xe3\x81\x8a"
-                                "\xe3\x81\x8b\xe3\x81\x8d\xe3\x81\x8f\xe3\x81\x91\xe3\x81\x93"
-                                "\xe3\x81\x95\xe3\x81\x97\xe3\x81\x99\xe3\x81\x9b\xe3\x81\x9d"
-                                "\xe3\x81\x9f\xe3\x81\xa1\xe3\x81\xa4\xe3\x81\xa6\xe3\x81\xa8"
-                                "\xe3\x81\xaa\xe3\x81\xab\xe3\x81\xac\xe3\x81\xad\xe3\x81\xae"
-                                "\xe3\x81\xaf\xe3\x81\xb2\xe3\x81\xb5\xe3\x81\xb8\xe3\x81\xbb"
-                                "\xe3\x81\xbe\xe3\x81\xbf\xe3\x82\x80\xe3\x82\x81\xe3\x82\x82"
-                                "\xe3\x82\x84\xe3\x82\x86\xe3\x82\x88\xe3\x82\x89\xe3\x82\x8a"
-                                "\xe3\x82\x8b\xe3\x82\x8c\xe3\x82\x8d\xe3\x82\x8f\xe3\x82\x92"
-                                "\xe3\x82\x93\xe3\x81\x81\xe3\x81\x83\xe3\x81\x85\xe3\x81\x87"
-                                "\xe3\x81\x89\xe3\x82\x83\xe3\x82\x85\xe3\x82\x87\xe3\x81\xa3"
-                                "\xe3\x81\x8c\xe3\x81\x8e\xe3\x81\x90\xe3\x81\x92\xe3\x81\x94"
-                                "\xe3\x81\x96\xe3\x81\x98\xe3\x81\x9a\xe3\x81\x9c\xe3\x81\x9e"
-                                "\xe3\x81\xa0\xe3\x81\xa2\xe3\x81\xa5\xe3\x81\xa7\xe3\x81\xa9"
-                                "\xe3\x81\xb0\xe3\x81\xb3\xe3\x81\xb6\xe3\x81\xb9\xe3\x81\xbc"
-                                "\xe3\x81\xb1\xe3\x81\xb4\xe3\x81\xb7\xe3\x81\xba\xe3\x81\xbd"
-                                "\xe3\x82\xa2\xe3\x82\xa4\xe3\x82\xa6\xe3\x82\xa8\xe3\x82\xaa"
-                                "\xe3\x82\xab\xe3\x82\xad\xe3\x82\xaf\xe3\x82\xb1\xe3\x82\xb3"
-                                "\xe3\x82\xb5\xe3\x82\xb7\xe3\x82\xb9\xe3\x82\xbb\xe3\x82\xbd"
-                                "\xe3\x82\xbf\xe3\x83\x81\xe3\x83\x84\xe3\x83\x86\xe3\x83\x88"
-                                "\xe3\x83\x8a\xe3\x83\x8b\xe3\x83\x8c\xe3\x83\x8d\xe3\x83\x8e"
-                                "\xe3\x83\x8f\xe3\x83\x92\xe3\x83\x95\xe3\x83\x98\xe3\x83\x9b"
-                                "\xe3\x83\x9e\xe3\x83\x9f\xe3\x83\xa0\xe3\x83\xa1\xe3\x83\xa2"
-                                "\xe3\x83\xa4\xe3\x83\xa6\xe3\x83\xa8\xe3\x83\xa9\xe3\x83\xaa"
-                                "\xe3\x83\xab\xe3\x83\xac\xe3\x83\xad\xe3\x83\xaf\xe3\x83\xb2"
-                                "\xe3\x83\xb3\xe3\x82\xa1\xe3\x82\xa3\xe3\x82\xa5\xe3\x82\xa7"
-                                "\xe3\x82\xa9\xe3\x83\xa3\xe3\x83\xa5\xe3\x83\xa7\xe3\x83\x83"
-                                "\xe3\x82\xac\xe3\x82\xae\xe3\x82\xb0\xe3\x82\xb2\xe3\x82\xb4"
-                                "\xe3\x82\xb6\xe3\x82\xb8\xe3\x82\xba\xe3\x82\xbc\xe3\x82\xbe"
-                                "\xe3\x83\x80\xe3\x83\x82\xe3\x83\x85\xe3\x83\x87\xe3\x83\x89"
-                                "\xe3\x83\x90\xe3\x83\x93\xe3\x83\x96\xe3\x83\x99\xe3\x83\x9c"
-                                "\xe3\x83\x91\xe3\x83\x94\xe3\x83\x97\xe3\x83\x9a\xe3\x83\x9d"
-                                "\xe3\x83\xb4"; // Hiragana and Katakana
-                                //"\x27" //'
-    unsigned char tmpstr2[10] = "\xe3\x80\x81\xe3\x80\x82\xe2\x80\x94"; // 、。—
-                                //"\x7e" //~
-    unsigned char tmpstr3[4]  = "\xe2\x80\xa6"; //…
-                                //"\x21\x3f\x28\x29" //!?()
-    unsigned char tmpstr4[13] = "\xe3\x80\x8c\xe3\x80\x8d\xe3\x80\x8e\xe3\x80\x8f"; //「」『』
-                                //"\x5b\x5d"//[]
-    unsigned char tmpstr5[4]  = "\xe2\x84\x83"; //℃
-                                //"\x2d"; //-
-    QString othercharacters = QString::fromUtf8((char *)tmpstr);
-    othercharacters.prepend("0123456789ABCDEFGHIJKLMNOPQRSTUV"
-                            "WXYZabcdefghijklmnopqrstuvwxyz.&");
-    othercharacters.append("\x27");
-    othercharacters.append(QString::fromUtf8((char *)tmpstr2));
-    othercharacters.append("\x7e");
-    othercharacters.append(QString::fromUtf8((char *)tmpstr3));
-    othercharacters.append("\x21\x3f\x28\x29");
-    othercharacters.append(QString::fromUtf8((char *)tmpstr4));
-    othercharacters.append("\x5b\x5d");
-    othercharacters.append(QString::fromUtf8((char *)tmpstr5));
-    return othercharacters;
-}
-
-
-/// <summary>
-/// Helper function to create a level name string from a data address in the ROM.
-/// </summary>
-/// <param name="address">
-/// Starting address of the level name string.
-/// </param>
-/// <returns>
-/// The string, as a QString
-/// </returns>
-static QString ConvertDataToLevelName(int address)
-{
-    QString ret = "";
-    QString avalialbechars = GetAvailableLevelNameChars();
-    for (int i = 0; i < 26; i++)
-    {
-        unsigned char chr = ROMUtils::CurrentFile[address + i];
-        if (chr < avalialbechars.size())
-        {
-            ret += avalialbechars.at(chr);
-        }
-        else // space
-        {
-            ret += ' ';
-        }
-    }
-    return ret;
-}
-
-/// <summary>
-/// Helper function to write a QString level name to a 26-byte data buffer for saving
-/// </summary>
-/// <param name="levelName">
-/// The name of the level.
-/// </param>
-/// <param name="buffer">
-/// The buffer to write the level name to.
-/// </param>
-static void ConvertLevelNameToData(QString levelName, unsigned char *buffer)
-{
-    QString charstable = GetAvailableLevelNameChars();
-    for (unsigned int i = 0; i < 26; ++i)
-    {
-        for(int j = 0; j < charstable.size(); ++j)
-        {
-            if(charstable.at(j) == levelName.at(i))
-            {
-                buffer[i] = j;
-                break;
-            }
-        }
-        buffer[i] = '\xFF';
-    }
-}
-
 namespace LevelComponents
 {
+    /// <summary>
+    /// Helper function to Generate LevelName available character QString.
+    /// </summary>
+    QString Level::GetAvailableLevelNameChars()
+    {
+        /*"0123456789ABCDEFGHIJKLMNOPQRSTUV"
+        "WXYZabcdefghijklmnopqrstuvwxyz.&"
+        "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみ"
+        "むめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜ"
+        "ぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタ"
+        "チツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィ"
+        "ゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
+        "ヴ'、。—~…!?()「」『』[]℃-"*/
+        unsigned char tmpstr[484] = "\xe3\x81\x82\xe3\x81\x84\xe3\x81\x86\xe3\x81\x88\xe3\x81\x8a"
+                                    "\xe3\x81\x8b\xe3\x81\x8d\xe3\x81\x8f\xe3\x81\x91\xe3\x81\x93"
+                                    "\xe3\x81\x95\xe3\x81\x97\xe3\x81\x99\xe3\x81\x9b\xe3\x81\x9d"
+                                    "\xe3\x81\x9f\xe3\x81\xa1\xe3\x81\xa4\xe3\x81\xa6\xe3\x81\xa8"
+                                    "\xe3\x81\xaa\xe3\x81\xab\xe3\x81\xac\xe3\x81\xad\xe3\x81\xae"
+                                    "\xe3\x81\xaf\xe3\x81\xb2\xe3\x81\xb5\xe3\x81\xb8\xe3\x81\xbb"
+                                    "\xe3\x81\xbe\xe3\x81\xbf\xe3\x82\x80\xe3\x82\x81\xe3\x82\x82"
+                                    "\xe3\x82\x84\xe3\x82\x86\xe3\x82\x88\xe3\x82\x89\xe3\x82\x8a"
+                                    "\xe3\x82\x8b\xe3\x82\x8c\xe3\x82\x8d\xe3\x82\x8f\xe3\x82\x92"
+                                    "\xe3\x82\x93\xe3\x81\x81\xe3\x81\x83\xe3\x81\x85\xe3\x81\x87"
+                                    "\xe3\x81\x89\xe3\x82\x83\xe3\x82\x85\xe3\x82\x87\xe3\x81\xa3"
+                                    "\xe3\x81\x8c\xe3\x81\x8e\xe3\x81\x90\xe3\x81\x92\xe3\x81\x94"
+                                    "\xe3\x81\x96\xe3\x81\x98\xe3\x81\x9a\xe3\x81\x9c\xe3\x81\x9e"
+                                    "\xe3\x81\xa0\xe3\x81\xa2\xe3\x81\xa5\xe3\x81\xa7\xe3\x81\xa9"
+                                    "\xe3\x81\xb0\xe3\x81\xb3\xe3\x81\xb6\xe3\x81\xb9\xe3\x81\xbc"
+                                    "\xe3\x81\xb1\xe3\x81\xb4\xe3\x81\xb7\xe3\x81\xba\xe3\x81\xbd"
+                                    "\xe3\x82\xa2\xe3\x82\xa4\xe3\x82\xa6\xe3\x82\xa8\xe3\x82\xaa"
+                                    "\xe3\x82\xab\xe3\x82\xad\xe3\x82\xaf\xe3\x82\xb1\xe3\x82\xb3"
+                                    "\xe3\x82\xb5\xe3\x82\xb7\xe3\x82\xb9\xe3\x82\xbb\xe3\x82\xbd"
+                                    "\xe3\x82\xbf\xe3\x83\x81\xe3\x83\x84\xe3\x83\x86\xe3\x83\x88"
+                                    "\xe3\x83\x8a\xe3\x83\x8b\xe3\x83\x8c\xe3\x83\x8d\xe3\x83\x8e"
+                                    "\xe3\x83\x8f\xe3\x83\x92\xe3\x83\x95\xe3\x83\x98\xe3\x83\x9b"
+                                    "\xe3\x83\x9e\xe3\x83\x9f\xe3\x83\xa0\xe3\x83\xa1\xe3\x83\xa2"
+                                    "\xe3\x83\xa4\xe3\x83\xa6\xe3\x83\xa8\xe3\x83\xa9\xe3\x83\xaa"
+                                    "\xe3\x83\xab\xe3\x83\xac\xe3\x83\xad\xe3\x83\xaf\xe3\x83\xb2"
+                                    "\xe3\x83\xb3\xe3\x82\xa1\xe3\x82\xa3\xe3\x82\xa5\xe3\x82\xa7"
+                                    "\xe3\x82\xa9\xe3\x83\xa3\xe3\x83\xa5\xe3\x83\xa7\xe3\x83\x83"
+                                    "\xe3\x82\xac\xe3\x82\xae\xe3\x82\xb0\xe3\x82\xb2\xe3\x82\xb4"
+                                    "\xe3\x82\xb6\xe3\x82\xb8\xe3\x82\xba\xe3\x82\xbc\xe3\x82\xbe"
+                                    "\xe3\x83\x80\xe3\x83\x82\xe3\x83\x85\xe3\x83\x87\xe3\x83\x89"
+                                    "\xe3\x83\x90\xe3\x83\x93\xe3\x83\x96\xe3\x83\x99\xe3\x83\x9c"
+                                    "\xe3\x83\x91\xe3\x83\x94\xe3\x83\x97\xe3\x83\x9a\xe3\x83\x9d"
+                                    "\xe3\x83\xb4"; // Hiragana and Katakana
+                                    //"\x27" //'
+        unsigned char tmpstr2[10] = "\xe3\x80\x81\xe3\x80\x82\xe2\x80\x94"; // 、。—
+                                    //"\x7e" //~
+        unsigned char tmpstr3[4]  = "\xe2\x80\xa6"; //…
+                                    //"\x21\x3f\x28\x29" //!?()
+        unsigned char tmpstr4[13] = "\xe3\x80\x8c\xe3\x80\x8d\xe3\x80\x8e\xe3\x80\x8f"; //「」『』
+                                    //"\x5b\x5d"//[]
+        unsigned char tmpstr5[4]  = "\xe2\x84\x83"; //℃
+                                    //"\x2d"; //-
+        QString othercharacters = QString::fromUtf8((char *)tmpstr);
+        othercharacters.prepend("0123456789ABCDEFGHIJKLMNOPQRSTUV"
+                                "WXYZabcdefghijklmnopqrstuvwxyz.&");
+        othercharacters.append("\x27");
+        othercharacters.append(QString::fromUtf8((char *)tmpstr2));
+        othercharacters.append("\x7e");
+        othercharacters.append(QString::fromUtf8((char *)tmpstr3));
+        othercharacters.append("\x21\x3f\x28\x29");
+        othercharacters.append(QString::fromUtf8((char *)tmpstr4));
+        othercharacters.append("\x5b\x5d");
+        othercharacters.append(QString::fromUtf8((char *)tmpstr5));
+        return othercharacters;
+    }
+
+
+    /// <summary>
+    /// Helper function to create a level name string from a data address in the ROM.
+    /// </summary>
+    /// <param name="address">
+    /// Starting address of the level name string.
+    /// </param>
+    /// <returns>
+    /// The string, as a QString
+    /// </returns>
+    QString Level::ConvertDataToLevelName(int address)
+    {
+        QString ret = "";
+        QString avalialbechars = GetAvailableLevelNameChars();
+        for (int i = 0; i < 26; i++)
+        {
+            unsigned char chr = ROMUtils::CurrentFile[address + i];
+            if (chr < avalialbechars.size())
+            {
+                ret += avalialbechars.at(chr);
+            }
+            else // space
+            {
+                ret += ' ';
+            }
+        }
+        return ret;
+    }
+
+    /// <summary>
+    /// Helper function to write a QString level name to a 26-byte data buffer for saving
+    /// </summary>
+    /// <param name="levelName">
+    /// The name of the level.
+    /// </param>
+    /// <param name="buffer">
+    /// The buffer to write the level name to.
+    /// </param>
+    void Level::ConvertLevelNameToData(QString levelName, unsigned char *buffer)
+    {
+        QString charstable = GetAvailableLevelNameChars();
+        for (unsigned int i = 0; i < 26; ++i)
+        {
+            for(int j = 0; j < charstable.size(); ++j)
+            {
+                if(charstable.at(j) == levelName.at(i))
+                {
+                    buffer[i] = j;
+                    break;
+                }
+            }
+            buffer[i] = '\xFF';
+        }
+    }
+
     /// <summary>
     /// This is a helper funtion that allows you to load a level based on a passage and stage number.
     /// This constructor will chain to the other constructor.

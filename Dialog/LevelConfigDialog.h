@@ -2,6 +2,8 @@
 #define LEVELCONFIGDIALOG_H
 
 #include <QDialog>
+#include <QPushButton>
+#include <QLineEdit>
 #include <QString>
 #include <QValidator> // include <QRegExp> and <QRegExpValidator>
 #include <string>
@@ -17,6 +19,7 @@ class LevelConfigDialog : public QDialog
 
 private:
     Ui::LevelConfigDialog *ui;
+    void SetOKButtonEnable(QVector<QLineEdit *> textBoxes, QPushButton *okButton);
 
 public:
     explicit LevelConfigDialog(QWidget *parent = 0);

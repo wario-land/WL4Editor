@@ -68,6 +68,9 @@ namespace LevelComponents
         bool DataHasCameraLimitators();
 
     public:
+        static QString GetAvailableLevelNameChars();
+        static QString ConvertDataToLevelName(int address);
+        static void ConvertLevelNameToData(QString levelName, unsigned char *buffer);
         Level(enum __passage passage, enum __stage stage);
         void SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int seconds);
         int GetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty);
