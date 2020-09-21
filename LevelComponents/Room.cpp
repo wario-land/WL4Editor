@@ -1,4 +1,4 @@
-#include "Room.h"
+﻿#include "Room.h"
 #include "ROMUtils.h"
 #include "WL4Constants.h"
 
@@ -997,21 +997,15 @@ namespace LevelComponents
     void Room::SetRoomHeaderDataPtr(int pointerId, int dataPtr)
     {
         // this can be used to set entity set data pointers too
-        switch(pointerId)
+        if((pointerId & 0xFFFFFFF8) || (pointerId == 4))
         {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 5:
-        case 6:
-        case 7:
-            break;
-        default:
-            singleton->GetOutputWidgetPtr()->PrintString("Warning: Possible data corruption when using SetRoomHeaderDataPtr(int pointerId, int dataPtr),"
+            singleton->GetOutputWidgetPtr()->PrintString("Invalid pointerId given to SetRoomHeaderDataPtr(int pointerId, int dataPtr),"
                                                          "pointerId must be one of these numbers: 0, 1, 2, 3, 5, 6, 7.");
         }
-        ((unsigned int *) (&RoomHeader.Layer0Data))[pointerId] = dataPtr;
+        else
+        {
+            ((unsigned int *) (&RoomHeader.Layer0Data))[pointerId] = dataPtr;
+        }
     }
 
     /// <summary>
