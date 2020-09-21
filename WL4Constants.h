@@ -10,6 +10,7 @@ namespace WL4Constants
     const unsigned int LevelHeaderTable              = 0x639068;
     const unsigned int LevelHeaderIndexTable         = 0x6391C4;
     const unsigned int LevelNamePointerTable         = 0x63A3AC;
+    const unsigned int LevelNameJPointerTable        = 0x63A31C;
     const unsigned int DoorTable                     = 0x78F21C;
     const unsigned int RoomDataTable                 = 0x78F280;
     const unsigned int CameraControlPointerTable     = 0x78F540;

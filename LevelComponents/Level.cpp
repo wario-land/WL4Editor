@@ -1,4 +1,4 @@
-#include "Level.h"
+﻿#include "Level.h"
 #include "ROMUtils.h"
 #include "WL4Constants.h"
 #include "WL4EditorWindow.h"
@@ -9,77 +9,133 @@
 
 extern WL4EditorWindow *singleton;
 
-/// <summary>
-/// Helper function to create a level name string from a data address in the ROM.
-/// </summary>
-/// <param name="address">
-/// Starting address of the level name string.
-/// </param>
-/// <returns>
-/// The string, as a QString
-/// </returns>
-static QString ConvertDataToLevelName(int address)
-{
-    QString ret = "";
-    for (int i = 0; i < 26; i++)
-    {
-        unsigned char chr = ROMUtils::CurrentFile[address + i];
-        if (chr <= 0x09)
-        {
-            ret += chr + 48;
-        }
-        else if (chr >= 0x0A && chr <= 0x23)
-        {
-            ret += chr + 55;
-        }
-        else if (chr >= 0x24 && chr <= 0x3D)
-        {
-            ret += chr + 61;
-        }
-        else
-        {
-            ret += (unsigned char) 32;
-        }
-    }
-    return ret;
-}
-
-/// <summary>
-/// Helper function to write a QString level name to a 26-byte data buffer for saving
-/// </summary>
-/// <param name="levelName">
-/// The name of the level.
-/// </param>
-/// <param name="buffer">
-/// The buffer to write the level name to.
-/// </param>
-static void ConvertLevelNameToData(QString levelName, unsigned char *buffer)
-{
-    for (unsigned int i = 0; i < 26; ++i)
-    {
-        char c = levelName[i].toLatin1();
-        if (c == ' ')
-        {
-            c = '\xFF';
-        }
-        else if (c <= 57)
-        {
-            c -= 48;
-        }
-        else if (c >= 65 && c <= 90)
-        {
-            c -= 55;
-        }
-        else
-        {
-            c -= 61;
-        }
-        buffer[i] = c;
-    }
-}
-
 namespace LevelComponents
 {
+    /// <summary>
+    /// Helper function to Generate LevelName available character QString.
+    /// </summary>
+    QString Level::GetAvailableLevelNameChars()
+    {
+        /*"0123456789ABCDEFGHIJKLMNOPQRSTUV"
+        "WXYZabcdefghijklmnopqrstuvwxyz.&"
+        "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみ"
+        "むめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜ"
+        "ぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタ"
+        "チツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィ"
+        "ゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
+        "ヴ'、。—~…!?()「」『』[]℃-"*/
+        const char *tmpstr =  "\xe3\x81\x82\xe3\x81\x84\xe3\x81\x86\xe3\x81\x88\xe3\x81\x8a"
+                              "\xe3\x81\x8b\xe3\x81\x8d\xe3\x81\x8f\xe3\x81\x91\xe3\x81\x93"
+                              "\xe3\x81\x95\xe3\x81\x97\xe3\x81\x99\xe3\x81\x9b\xe3\x81\x9d"
+                              "\xe3\x81\x9f\xe3\x81\xa1\xe3\x81\xa4\xe3\x81\xa6\xe3\x81\xa8"
+                              "\xe3\x81\xaa\xe3\x81\xab\xe3\x81\xac\xe3\x81\xad\xe3\x81\xae"
+                              "\xe3\x81\xaf\xe3\x81\xb2\xe3\x81\xb5\xe3\x81\xb8\xe3\x81\xbb"
+                              "\xe3\x81\xbe\xe3\x81\xbf\xe3\x82\x80\xe3\x82\x81\xe3\x82\x82"
+                              "\xe3\x82\x84\xe3\x82\x86\xe3\x82\x88\xe3\x82\x89\xe3\x82\x8a"
+                              "\xe3\x82\x8b\xe3\x82\x8c\xe3\x82\x8d\xe3\x82\x8f\xe3\x82\x92"
+                              "\xe3\x82\x93\xe3\x81\x81\xe3\x81\x83\xe3\x81\x85\xe3\x81\x87"
+                              "\xe3\x81\x89\xe3\x82\x83\xe3\x82\x85\xe3\x82\x87\xe3\x81\xa3"
+                              "\xe3\x81\x8c\xe3\x81\x8e\xe3\x81\x90\xe3\x81\x92\xe3\x81\x94"
+                              "\xe3\x81\x96\xe3\x81\x98\xe3\x81\x9a\xe3\x81\x9c\xe3\x81\x9e"
+                              "\xe3\x81\xa0\xe3\x81\xa2\xe3\x81\xa5\xe3\x81\xa7\xe3\x81\xa9"
+                              "\xe3\x81\xb0\xe3\x81\xb3\xe3\x81\xb6\xe3\x81\xb9\xe3\x81\xbc"
+                              "\xe3\x81\xb1\xe3\x81\xb4\xe3\x81\xb7\xe3\x81\xba\xe3\x81\xbd"
+                              "\xe3\x82\xa2\xe3\x82\xa4\xe3\x82\xa6\xe3\x82\xa8\xe3\x82\xaa"
+                              "\xe3\x82\xab\xe3\x82\xad\xe3\x82\xaf\xe3\x82\xb1\xe3\x82\xb3"
+                              "\xe3\x82\xb5\xe3\x82\xb7\xe3\x82\xb9\xe3\x82\xbb\xe3\x82\xbd"
+                              "\xe3\x82\xbf\xe3\x83\x81\xe3\x83\x84\xe3\x83\x86\xe3\x83\x88"
+                              "\xe3\x83\x8a\xe3\x83\x8b\xe3\x83\x8c\xe3\x83\x8d\xe3\x83\x8e"
+                              "\xe3\x83\x8f\xe3\x83\x92\xe3\x83\x95\xe3\x83\x98\xe3\x83\x9b"
+                              "\xe3\x83\x9e\xe3\x83\x9f\xe3\x83\xa0\xe3\x83\xa1\xe3\x83\xa2"
+                              "\xe3\x83\xa4\xe3\x83\xa6\xe3\x83\xa8\xe3\x83\xa9\xe3\x83\xaa"
+                              "\xe3\x83\xab\xe3\x83\xac\xe3\x83\xad\xe3\x83\xaf\xe3\x83\xb2"
+                              "\xe3\x83\xb3\xe3\x82\xa1\xe3\x82\xa3\xe3\x82\xa5\xe3\x82\xa7"
+                              "\xe3\x82\xa9\xe3\x83\xa3\xe3\x83\xa5\xe3\x83\xa7\xe3\x83\x83"
+                              "\xe3\x82\xac\xe3\x82\xae\xe3\x82\xb0\xe3\x82\xb2\xe3\x82\xb4"
+                              "\xe3\x82\xb6\xe3\x82\xb8\xe3\x82\xba\xe3\x82\xbc\xe3\x82\xbe"
+                              "\xe3\x83\x80\xe3\x83\x82\xe3\x83\x85\xe3\x83\x87\xe3\x83\x89"
+                              "\xe3\x83\x90\xe3\x83\x93\xe3\x83\x96\xe3\x83\x99\xe3\x83\x9c"
+                              "\xe3\x83\x91\xe3\x83\x94\xe3\x83\x97\xe3\x83\x9a\xe3\x83\x9d"
+                              "\xe3\x83\xb4"; // Hiragana and Katakana
+                              //"\x27" //'
+        const char *tmpstr2 = "\xe3\x80\x81\xe3\x80\x82\xe2\x80\x94"; // 、。—
+                              //"\x7e" //~
+        const char *tmpstr3 = "\xe2\x80\xa6"; //…
+                              //"\x21\x3f\x28\x29" //!?()
+        const char *tmpstr4 = "\xe3\x80\x8c\xe3\x80\x8d\xe3\x80\x8e\xe3\x80\x8f"; //「」『』
+                              //"\x5b\x5d"//[]
+        const char *tmpstr5 = "\xe2\x84\x83"; //℃
+                              //"\x2d"; //-
+        QString othercharacters = QString::fromUtf8(tmpstr);
+        othercharacters.prepend("0123456789ABCDEFGHIJKLMNOPQRSTUV"
+                                "WXYZabcdefghijklmnopqrstuvwxyz.&");
+        othercharacters.append("\x27");
+        othercharacters.append(QString::fromUtf8(tmpstr2));
+        othercharacters.append("\x7e");
+        othercharacters.append(QString::fromUtf8(tmpstr3));
+        othercharacters.append("\x21\x3f\x28\x29");
+        othercharacters.append(QString::fromUtf8(tmpstr4));
+        othercharacters.append("\x5b\x5d");
+        othercharacters.append(QString::fromUtf8(tmpstr5));
+        othercharacters.append("\x2d");
+        return othercharacters;
+    }
+
+
+    /// <summary>
+    /// Helper function to create a level name string from a data address in the ROM.
+    /// </summary>
+    /// <param name="address">
+    /// Starting address of the level name string.
+    /// </param>
+    /// <returns>
+    /// The string, as a QString
+    /// </returns>
+    QString Level::ConvertDataToLevelName(int address)
+    {
+        QString ret = "";
+        QString avalialbechars = GetAvailableLevelNameChars();
+        for (int i = 0; i < 26; i++)
+        {
+            unsigned char chr = ROMUtils::CurrentFile[address + i];
+            if (chr < avalialbechars.size())
+            {
+                ret += avalialbechars.at(chr);
+            }
+            else // space
+            {
+                ret += ' ';
+            }
+        }
+        return ret;
+    }
+
+    /// <summary>
+    /// Helper function to write a QString level name to a 26-byte data buffer for saving
+    /// </summary>
+    /// <param name="levelName">
+    /// The name of the level.
+    /// </param>
+    /// <param name="buffer">
+    /// The buffer to write the level name to.
+    /// </param>
+    void Level::ConvertLevelNameToData(QString levelName, unsigned char *buffer)
+    {
+        QString charstable = GetAvailableLevelNameChars();
+        for (unsigned int i = 0; i < 26; ++i)
+        {
+            buffer[i] = '\xFF';
+            for(int j = 0; j < charstable.size(); ++j)
+            {
+                if(charstable.at(j) == levelName.at(i))
+                {
+                    buffer[i] = (unsigned char) j;
+                    break;
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// This is a helper funtion that allows you to load a level based on a passage and stage number.
     /// This constructor will chain to the other constructor.
@@ -180,10 +236,13 @@ namespace LevelComponents
         // Distribute door data to every room
         RedistributeDoor();
 
-        // Load the level name
+        // Load the level names
         int LevelNameAddress =
             ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4);
         LevelName = ConvertDataToLevelName(LevelNameAddress);
+        LevelNameAddress =
+            ROMUtils::PointerFromData(WL4Constants::LevelNameJPointerTable + passage * 24 + stage * 4);
+        LevelNameJ = ConvertDataToLevelName(LevelNameAddress);
 
         // TODO
     }
@@ -353,6 +412,7 @@ namespace LevelComponents
         unsigned int doorTablePtr = WL4Constants::DoorTable + levelIndex * 4;
         unsigned int doorChunkSize = (doors.size() + 1) * sizeof(struct __DoorEntry);
         unsigned int LevelNamePtr = WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4;
+        unsigned int LevelNameJPtr = WL4Constants::LevelNameJPointerTable + passage * 24 + stage * 4;
         const unsigned int GBAptrSentinel = 0x8000000 | WL4Constants::CameraRecordSentinel;
 
         // Create the contiguous room header chunk
@@ -465,7 +525,8 @@ namespace LevelComponents
         }
         memset(doorChunk.data + doors.size() * sizeof(struct __DoorEntry), 0, sizeof(struct __DoorEntry));
 
-        // Create the level name chunk
+        // Create the level names chunk
+        // En
         struct ROMUtils::SaveData levelNameChunk = { LevelNamePtr,
                                                      26,
                                                      (unsigned char *) malloc(26),
@@ -477,15 +538,32 @@ namespace LevelComponents
         QString levelName = QString(LevelName);
         if(levelName.length() != 26)
         {
-            singleton->GetOutputWidgetPtr()->PrintString(QString("Internal error: Level name has invalid length (") + levelName.length() + "): \"" + levelName + "\"");
+            singleton->GetOutputWidgetPtr()->PrintString(QString("Internal error: English Level name has invalid length (") + levelName.length() + "): \"" + levelName + "\"");
             levelName.truncate(26);
         }
         ConvertLevelNameToData(levelName, levelNameChunk.data);
+        // Jp
+        struct ROMUtils::SaveData levelNameJChunk = { LevelNameJPtr,
+                                                     26,
+                                                     (unsigned char *) malloc(26),
+                                                     ROMUtils::SaveDataIndex++,
+                                                     false,
+                                                     0,
+                                                     ROMUtils::PointerFromData(LevelNameJPtr),
+                                                     ROMUtils::SaveDataChunkType::LevelNameChunkType };
+        QString levelNameJ = QString(LevelNameJ);
+        if(levelNameJ.length() != 26)
+        {
+            singleton->GetOutputWidgetPtr()->PrintString(QString("Internal error: Japanese Level name has invalid length (") + levelNameJ.length() + "): \"" + levelName + "\"");
+            levelNameJ.truncate(26);
+        }
+        ConvertLevelNameToData(levelNameJ, levelNameJChunk.data);
 
         // Append all the save chunks which have been created
         chunks.append(roomHeaders);
         chunks.append(doorChunk);
         chunks.append(levelNameChunk);
+        chunks.append(levelNameJChunk);
         if (cameraPointerTable)
         {
             chunks.append(*cameraPointerTable);
