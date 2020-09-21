@@ -30,32 +30,28 @@ void LevelConfigDialog::SetOKButtonEnable(QVector<QLineEdit *> textBoxes, QPushB
     }
     if(!allValid)
     {
-        okButton->setEnabled(allValid);
+        okButton->setEnabled(false);
         return;
     }
-    QString charstable = LevelComponents::Level::GetAvailableLevelNameChars();
+    QString charTable = LevelComponents::Level::GetAvailableLevelNameChars();
     for (int k = 0; k < 2; k++)
     {
         QString LevelName = k ? ui->LevelNameJ_TextBox->text() : ui->LevelName_TextBox->text();
         for (int i = 0; i < LevelName.size(); i++)
         {
-            for (int j = 0; j < charstable.size(); j++)
+            allValid = false;
+            if(charTable.contains(LevelName[i]) || LevelName.at(i) == ' ')
             {
-                allValid = false;
-                if(LevelName.at(i) == charstable.at(j) || LevelName.at(i) == ' ')
-                {
-                    allValid = true;
-                    break;
-                }
+                allValid = true;
             }
             if(!allValid)
             {
-                okButton->setEnabled(allValid);
+                okButton->setEnabled(false);
                 return;
             }
         }
     }
-    okButton->setEnabled(allValid);
+    okButton->setEnabled(true);
 }
 
 /// <summary>
