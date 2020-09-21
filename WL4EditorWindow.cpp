@@ -95,6 +95,8 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
 
     // Memory Initialization
     memset(ROMUtils::singletonTilesets, 0, sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0]));
+    memset(ROMUtils::entitiessets, 0, sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]));
+    memset(ROMUtils::entities, 0, sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0]));
 }
 
 /// <summary>
@@ -119,12 +121,19 @@ WL4EditorWindow::~WL4EditorWindow()
     {
         delete ROMUtils::singletonTilesets[i];
     }
+    for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0])); i++)
+    {
+        delete ROMUtils::entitiessets[i];
+    }
+    for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entities[0])); i++)
+    {
+        delete ROMUtils::entities[i];
+    }
 
     if (CurrentLevel)
     {
         delete CurrentLevel;
     }
-    DoorConfigDialog::EntitySetsDeconstruction();
 }
 
 /// <summary>
@@ -222,10 +231,18 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     if (CurrentLevel)
     {
         delete CurrentLevel;
-        // Decomstruct all Tileset singletons
+        // Decomstruct all LevelComponents singletons
         for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
         {
             delete ROMUtils::singletonTilesets[i];
+        }
+        for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0])); i++)
+        {
+            delete ROMUtils::entitiessets[i];
+        }
+        for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entities[0])); i++)
+        {
+            delete ROMUtils::entities[i];
         }
     }
 
@@ -233,11 +250,22 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     std::string fileName = filePath.substr(filePath.rfind('/') + 1);
     setWindowTitle(fileName.c_str());
 
-    // Load all Tilesets as singletons
+    // Load all LevelComponents singletons
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
     {
         int tilesetPtr = WL4Constants::TilesetDataTable + i * 36;
         ROMUtils::singletonTilesets[i] = new LevelComponents::Tileset(tilesetPtr, i);
+    }
+    for (unsigned int i = 0; i < sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]); ++i)
+    {
+        ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i, WL4Constants::UniversalSpritesPalette);
+    }
+    for (unsigned int i = 0; i < sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0]); ++i)
+    {
+        struct LevelComponents::EntitySetAndEntitylocalId tmpEntitysetAndEntitylocalId =
+            LevelComponents::EntitySet::EntitySetFromEntityID(i);
+        ROMUtils::entities[i] = new LevelComponents::Entity(tmpEntitysetAndEntitylocalId.entitylocalId, i,
+                                                  ROMUtils::entitiessets[tmpEntitysetAndEntitylocalId.entitysetId]);
     }
 
     // Load the first level and render the screen
@@ -464,7 +492,6 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
 
     // UI update
     LoadRoomUIUpdate();
-    DoorConfigDialog::EntitySetsInitialization();
 }
 
 /// <summary>
@@ -714,10 +741,10 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetLayerPriorityAndAlphaAttributes(nextroomconfig->LayerPriorityAndAlphaAttr);
     currentRoom->SetLayer2Enabled(nextroomconfig->Layer2Enable);
     if (nextroomconfig->Layer0DataPtr)
-        currentRoom->SetLayerDataPtr(0, nextroomconfig->Layer0DataPtr);
+        currentRoom->SetRoomHeaderDataPtr(0, nextroomconfig->Layer0DataPtr);
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
     currentRoom->SetBGLayerScrollFlag(nextroomconfig->BGLayerScrollFlag);
-    currentRoom->SetLayerDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
+    currentRoom->SetRoomHeaderDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
     currentRoom->SetLayerGFXEffect01(nextroomconfig->RasterType);
     currentRoom->SetLayerGFXEffect02(nextroomconfig->Water);
     currentRoom->SetBgmvolume(nextroomconfig->BGMVolume);
@@ -727,13 +754,13 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     {
         if (currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerDisabled)
         {
-            currentRoom->SetLayerDataPtr(
+            currentRoom->SetRoomHeaderDataPtr(
                 i, WL4Constants::NormalLayerDefaultPtr); // TODO: need a fix for a Tileset in toxic landfill
         }
     }
     if (currentRoom->GetLayer(3)->GetMappingType() == LevelComponents::LayerDisabled)
     {
-        currentRoom->SetLayerDataPtr(3, WL4Constants::BGLayerDefaultPtr);
+        currentRoom->SetRoomHeaderDataPtr(3, WL4Constants::BGLayerDefaultPtr);
     }
 
     // Mark the layers as dirty
@@ -1949,7 +1976,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     int offsetlist[6] = {0, 1, 2, 5, 6, 7};
     for(int _offset: offsetlist)
     {
-        CurrentLevel->GetRooms()[newRoomId]->SetLayerDataPtr(_offset, 0);
+        CurrentLevel->GetRooms()[newRoomId]->SetRoomHeaderDataPtr(_offset, 0);
     }
     for(int i = 0; i < 3; i++)
     {

@@ -1,4 +1,4 @@
-#include "Room.h"
+﻿#include "Room.h"
 #include "ROMUtils.h"
 #include "WL4Constants.h"
 
@@ -96,6 +96,7 @@ namespace LevelComponents
                 struct EntityRoomAttribute tmpEntityroomattribute;
                 memcpy(&tmpEntityroomattribute, ROMUtils::CurrentFile + Listaddress + 3 * k++,
                        sizeof(struct EntityRoomAttribute));
+                if(tmpEntityroomattribute.EntityID < 0x11) tmpEntityroomattribute.EntityID--;
                 EntityList[i].push_back(tmpEntityroomattribute);
             }
         }
@@ -160,16 +161,12 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// release Entity instances list in this Room.
+    /// clear Entity instance list in this Room.
     /// </summary>
-    void Room::FreeCurrentEntityListSource()
+    void Room::ClearCurrentEntityListSource()
     {
         if (!currentEntityListSource.size())
             return;
-        foreach (Entity *entity, currentEntityListSource)
-        {
-            delete entity;
-        }
         currentEntityListSource.clear();
     }
 
@@ -181,20 +178,16 @@ namespace LevelComponents
     /// </param>
     void Room::ResetEntitySet(int entitysetId)
     {
-        if (currentEntitySet)
-            delete currentEntitySet;
-        FreeCurrentEntityListSource();
-        currentEntitySet = new EntitySet(entitysetId, tileset->GetUniversalSpritesTilesPalettePtr());
+        ClearCurrentEntityListSource();
+        currentEntitySet = ROMUtils::entitiessets[entitysetId];
         for (int i = 0; i < 17; ++i)
         {
-            Entity *newEntity = new Entity(-1, i, currentEntitySet);
-            currentEntityListSource.push_back(newEntity);
+            currentEntityListSource.push_back(ROMUtils::entities[i]);
         }
         for (int i = 0; i < (int) currentEntitySet->GetEntityTable().size(); ++i)
         {
             int _globalId = currentEntitySet->GetEntityTable().at(i).Global_EntityID;
-            Entity *newEntity = new Entity(i, _globalId, currentEntitySet);
-            currentEntityListSource.push_back(newEntity);
+            currentEntityListSource.push_back(ROMUtils::entities[_globalId]);
         }
     }
 
@@ -214,9 +207,7 @@ namespace LevelComponents
     {
         // Free drawlayer elements
         FreeDrawLayers();
-        if (currentEntitySet)
-            delete currentEntitySet;
-        FreeCurrentEntityListSource();
+        ClearCurrentEntityListSource();
         foreach (struct __CameraControlRecord *C, CameraControlRecords)
         {
             delete C;
@@ -1001,17 +992,20 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Set Layer data pointer into the Room header struct in sake of saving changes.
+    /// Set a data pointer in RoomHeader struct used for changes based on saving and creating new Rooms.
     /// </summary>
-    void Room::SetLayerDataPtr(int LayerNum, int dataPtr)
+    void Room::SetRoomHeaderDataPtr(int pointerId, int dataPtr)
     {
         // this can be used to set entity set data pointers too
-        if(LayerNum & 0xFFFFFFFC)
+        if((pointerId & 0xFFFFFFF8) || (pointerId == 4))
         {
-            singleton->GetOutputWidgetPtr()->PrintString("Warning: Possible data corruption when using SetLayerDataPtr(int LayerNum, int dataPtr),"
-                                                         "LayerNum must be within range [0, 4).");
+            singleton->GetOutputWidgetPtr()->PrintString("Invalid pointerId given to SetRoomHeaderDataPtr(int pointerId, int dataPtr),"
+                                                         "pointerId must be one of these numbers: 0, 1, 2, 3, 5, 6, 7.");
         }
-        ((unsigned int *) (&RoomHeader.Layer0Data))[LayerNum] = dataPtr;
+        else
+        {
+            ((unsigned int *) (&RoomHeader.Layer0Data))[pointerId] = dataPtr;
+        }
     }
 
     /// <summary>
@@ -1123,8 +1117,18 @@ namespace LevelComponents
                                                               ROMUtils::SaveDataChunkType::EntityListChunk };
                 for (unsigned int j = 0; j < EntityList[i].size(); ++j)
                 {
-                    memcpy(entityListChunk.data + j * sizeof(struct EntityRoomAttribute), &EntityList[i][j],
+                    if(EntityList[i][j].EntityID > 0xF)
+                    {
+                        memcpy(entityListChunk.data + j * sizeof(struct EntityRoomAttribute), &EntityList[i][j],
                            sizeof(struct EntityRoomAttribute));
+                    }
+                    else
+                    {
+                        struct EntityRoomAttribute tmpentitydata = EntityList[i][j];
+                        tmpentitydata.EntityID++;
+                        memcpy(entityListChunk.data + j * sizeof(struct EntityRoomAttribute), &tmpentitydata,
+                           sizeof(struct EntityRoomAttribute));
+                    }
                 }
                 memset(entityListChunk.data + EntityList[i].size() * sizeof(struct EntityRoomAttribute), 0xFF,
                        sizeof(struct EntityRoomAttribute));
