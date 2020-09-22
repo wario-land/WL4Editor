@@ -1,4 +1,4 @@
-#ifndef LEVEL_H
+﻿#ifndef LEVEL_H
 #define LEVEL_H
 
 #include "Door.h"
@@ -58,6 +58,7 @@ namespace LevelComponents
     private:
         std::vector<Room *> rooms;
         QString LevelName;
+        QString LevelNameJ;
         std::vector<Door *> doors;
         __LevelHeader LevelHeader;
         enum __passage passage;
@@ -67,15 +68,18 @@ namespace LevelComponents
         bool DataHasCameraLimitators();
 
     public:
+        static QString GetAvailableLevelNameChars();
+        static QString ConvertDataToLevelName(int address);
+        static void ConvertLevelNameToData(QString levelName, unsigned char *buffer);
         Level(enum __passage passage, enum __stage stage);
         void SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int seconds);
         int GetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty);
         std::vector<Door *> GetDoors() { return doors; } // get Doors without copying the data
         std::vector<Room *> GetRooms() { return rooms; }
         void AddRoom(Room *newroom) { rooms.push_back(newroom); }
-        QString GetLevelName() { return LevelName; }
+        QString GetLevelName(int levelnameid = 0) { return levelnameid ? LevelNameJ : LevelName; }
         unsigned int GetLevelID() { return LevelID; }
-        void SetLevelName(QString newlevelname) { LevelName = newlevelname; }
+        void SetLevelName(QString newlevelname, int levelnameid = 0) { (levelnameid ? LevelNameJ : LevelName) = newlevelname; }
         void RedistributeDoor();
         std::vector<Door *> GetRoomDoors(unsigned int roomId); // get Doors and copy the data
         void DeleteDoor(int globalDoorIndex);

@@ -2,9 +2,7 @@
 #define ENTITY_H
 
 #include <QVector>
-
 #include "LevelComponents/EntitySet.h"
-#include "ROMUtils.h"
 
 namespace LevelComponents
 {

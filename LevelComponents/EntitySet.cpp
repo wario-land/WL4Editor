@@ -1,4 +1,5 @@
 #include "EntitySet.h"
+#include "ROMUtils.h"
 
 constexpr unsigned int LevelComponents::EntitySet::EntitiesFirstActionFrameSetsPtrsData[129];
 constexpr int LevelComponents::EntitySet::EntityPositinalOffset[258];
@@ -24,17 +25,7 @@ namespace LevelComponents
             if (palettes[i + startPaletteId].size())
                 palettes[i + startPaletteId].clear();
             // First color is transparent
-            palettes[i + startPaletteId].push_back(0);
-            int subPalettePtr = paletteSetPtr + i * 32;
-            for (int j = 1; j < 16; ++j)
-            {
-                unsigned short color555 = *(unsigned short *) (ROMUtils::CurrentFile + subPalettePtr + j * 2);
-                int r = ((color555 << 3) & 0xF8) | ((color555 >> 2) & 3);
-                int g = ((color555 >> 2) & 0xF8) | ((color555 >> 7) & 3);
-                int b = ((color555 >> 7) & 0xF8) | ((color555 >> 13) & 3);
-                int a = 0xFF;
-                palettes[i + startPaletteId].push_back(QColor(r, g, b, a).rgba());
-            }
+            ROMUtils::LoadPalette(&palettes[i + startPaletteId], (unsigned short *) (ROMUtils::CurrentFile + paletteSetPtr + i * 32));
         }
     }
 
@@ -95,7 +86,7 @@ namespace LevelComponents
                 }
                 lastpalettePtr = palettePtr;
             }
-            k++;
+            if (k++ >= 0x1F) break;
         } while ((tmpEntityId != 0) && (currentpaletteID != 8));
         // Set palette before and not include 15 to be 0 if not exist
         if (currentpaletteID < 7)

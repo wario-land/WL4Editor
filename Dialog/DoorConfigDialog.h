@@ -87,9 +87,6 @@ private:
     // TableView
     void UpdateTableView();
 
-    static LevelComponents::EntitySet *entitiessets[90];
-    static LevelComponents::Entity *entities[129];
-
     // visible in EntitySet ComboBox
     QList<EntitySetItem> comboboxEntitySet;
 
@@ -99,8 +96,6 @@ public:
     ~DoorConfigDialog();
     void UpdateCurrentDoorData();
     static void StaticInitialization();
-    static void EntitySetsInitialization();
-    static void EntitySetsDeconstruction();
 
     // Enumeration of Door type
     // clang-format off
@@ -114,17 +109,18 @@ public:
     };
 
     // Enumeration of Entity names
-    static constexpr const char *EntitynameSetData[128] =
+    static constexpr const char *EntitynameSetData[129] =
     {
-        "0x01 Gem box (top-right piece)",
-        "0x02 Gem box (bottom-right piece)",
-        "0x03 Gem box (bottom-left piece)",
-        "0x04 Gem box (top-left piece)",
-        "0x05 CD box",
-        "0x06 Full health box",
-        "0x07 Large diamond",
-        "0x08 Frog switch",
-        "0x09 Keyzer",
+        "0x00 Gem box (top-right piece)",
+        "0x01 Gem box (bottom-right piece)",
+        "0x02 Gem box (bottom-left piece)",
+        "0x03 Gem box (top-left piece)",
+        "0x04 CD box",
+        "0x05 Full health box",
+        "0x06 Large diamond",
+        "0x07 Frog switch",
+        "0x08 Keyzer",
+        "0x09 nothing",
         "0x0A nothing",
         "0x0B nothing",
         "0x0C nothing",

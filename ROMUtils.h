@@ -11,6 +11,8 @@
 
 #include "WL4Constants.h"
 #include "LevelComponents/Tileset.h"
+#include "LevelComponents/EntitySet.h"
+#include "LevelComponents/Entity.h"
 
 namespace ROMUtils
 {
@@ -20,6 +22,8 @@ namespace ROMUtils
     extern QString ROMFilePath;
     extern unsigned int SaveDataIndex;
     extern LevelComponents::Tileset *singletonTilesets[92];
+    extern LevelComponents::Entity *entities[129];
+    extern LevelComponents::EntitySet *entitiessets[90];
 
     enum SaveDataChunkType
     {

@@ -19,8 +19,8 @@ void EntitySetDockWidget::ResetEntitySet(LevelComponents::Room *currentroom)
 {
     currentRoom = currentroom;
     ui->label_EntitySetID->setText("EntitySet ID: " + QString::number(currentroom->GetCurrentEntitySetID(), 10));
-    EntityAmount = currentroom->GetCurrentEntityListSource().size() - 1;
-    currentEntityId = 1;
+    EntityMaxNum = currentroom->GetCurrentEntityListSource().size() - 1;
+    currentEntityId = 0;
     RenderEntityAndResetInfo();
     ui->pushButton_PreviousEntity->setEnabled(false);
     ui->pushButton_NextEntity->setEnabled(true);
@@ -79,11 +79,11 @@ void EntitySetDockWidget::RenderEntityAndResetInfo()
 void EntitySetDockWidget::on_pushButton_PreviousEntity_clicked()
 {
     ui->pushButton_NextEntity->setEnabled(true);
-    if (currentEntityId == 1)
+    if (currentEntityId == 0)
         return;
     --currentEntityId;
     RenderEntityAndResetInfo();
-    if (currentEntityId == 1)
+    if (currentEntityId == 0)
         ui->pushButton_PreviousEntity->setEnabled(false);
 }
 
@@ -97,10 +97,10 @@ void EntitySetDockWidget::on_pushButton_PreviousEntity_clicked()
 void EntitySetDockWidget::on_pushButton_NextEntity_clicked()
 {
     ui->pushButton_PreviousEntity->setEnabled(true);
-    if (EntityAmount == currentEntityId)
+    if (EntityMaxNum == currentEntityId)
         return;
     ++currentEntityId;
     RenderEntityAndResetInfo();
-    if (EntityAmount == currentEntityId)
+    if (EntityMaxNum == currentEntityId)
         ui->pushButton_NextEntity->setEnabled(false);
 }

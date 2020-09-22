@@ -1,7 +1,6 @@
 #ifndef ENTITYSET_H
 #define ENTITYSET_H
 
-#include "ROMUtils.h"
 #include "Tile.h"
 #include "WL4Constants.h"
 
@@ -52,15 +51,14 @@ namespace LevelComponents
         int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available
         QVector<QRgb> palettes[16];
         Tile8x8 *tile8x8data[0x480];
-        std::vector<EntitySetinfoTableElement> EntityinfoTable;
+        QVector<EntitySetinfoTableElement> EntityinfoTable; // max item number 0x20
         void LoadSubPalettes(int startPaletteId, int paletteNum, int paletteSetPtr);
         void LoadSpritesTiles(int tileaddress, int datalength, int startrow);
 
         // clang-format off
         static constexpr const unsigned int EntitiesFirstActionFrameSetsPtrsData[129] =
         {
-            0,                               // 0x00
-            WL4Constants::Entity01_0x3B4F94,
+            WL4Constants::Entity01_0x3B4F94, // 0x00
             WL4Constants::Entity02_0x3B4FA4,
             WL4Constants::Entity03_0x3B4F84,
             WL4Constants::Entity04_0x3B4F74,
@@ -69,6 +67,7 @@ namespace LevelComponents
             WL4Constants::Entity07_0x3B62AC,
             WL4Constants::Entity08_0x3B59EC,
             WL4Constants::Entity09_0x3B492C,
+            0,
             0,
             0,
             0,
@@ -192,8 +191,7 @@ namespace LevelComponents
 
         static constexpr const int EntityPositinalOffset[258] =
         {
-               0,    0, //0x00
-             -98,  -66,
+             -98,  -66, //0x00
              -98,  -66,
              -98,  -66,
              -98,  -66,
@@ -202,6 +200,7 @@ namespace LevelComponents
              -67,  -70,
              -98,  -66,
             -130, -130,
+               0,    0,
                0,    0,
                0,    0,
                0,    0,

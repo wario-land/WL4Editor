@@ -821,9 +821,14 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
      * background tileset
      * blanktile (indexed 0x5FF)
     **/
-    if(SelectedTile8x8 < 65 || (SelectedTile8x8 > GetFGTile8x8Num() + 0x41))
+    if(SelectedTile8x8 < 65)
     {
         QMessageBox::critical(this, tr("Error"), tr("Overwrite animated tiles not permitted in this area!"));
+        return;
+    }
+    else if(SelectedTile8x8 > GetFGTile8x8Num() + 0x41)
+    {
+        QMessageBox::critical(this, tr("Error"), tr("Skipped adding new tiles not allowed!\nYou cannot leave blank tiles in tileset data or overwrite the background tiles."));
         return;
     }
 

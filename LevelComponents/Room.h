@@ -4,7 +4,8 @@
 #include "Door.h"
 #include "Entity.h"
 #include "Layer.h"
-#include <DockWidget/EditModeDockWidget.h>
+#include "ROMUtils.h"
+#include "DockWidget/EditModeDockWidget.h"
 
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
@@ -141,7 +142,7 @@ namespace LevelComponents
 
         // Helper functions
         void FreeDrawLayers();
-        void FreeCurrentEntityListSource();
+        void ClearCurrentEntityListSource();
         void ResetEntitySet(int entitysetId);
 
     public:
@@ -247,7 +248,7 @@ namespace LevelComponents
             RoomHeader.Layer0MappingType = layer0MappingTypeParam;
         }
         void SetLayer2Enabled(bool enability) { RoomHeader.Layer2MappingType = enability ? '\x10' : '\x00'; }
-        void SetLayerDataPtr(int LayerNum, int dataPtr);
+        void SetRoomHeaderDataPtr(int pointerId, int dataPtr);
         void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
         void SetTileset(Tileset *newtileset, int tilesetID)
         {
