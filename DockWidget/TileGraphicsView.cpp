@@ -1,4 +1,4 @@
-#include "TileGraphicsView.h"
+﻿#include "TileGraphicsView.h"
 #include "LevelComponents/Tileset.h"
 
 #include <QMouseEvent>
@@ -27,8 +27,8 @@ void TileGraphicsView::mousePressEvent(QMouseEvent *event)
     int Y = event->y() + verticalScrollBar()->sliderPosition();
     if (X >= 32 * 8 || Y >= 32 * 0x60)
         return;
-    int tileX = X / 32;
-    int tileY = Y / 32;
+    int tileX = X >> 5;
+    int tileY = Y >> 5;
     if(tx == tileX && ty == tileY)
         return;
     int tileID = tileX + tileY * 8;
@@ -53,8 +53,8 @@ void TileGraphicsView::mouseMoveEvent(QMouseEvent *event)
     int Y = event->y() + verticalScrollBar()->sliderPosition();
     if (X >= 32 * 8 || Y >= 32 * 0x60)
         return;
-    int tileX = X / 32;
-    int tileY = Y / 32;
+    int tileX = X >> 5;
+    int tileY = Y >> 5;
     if(tx > tileX || ty > tileY) // you cannot drag to directions if it not right-down side
         return;
 
