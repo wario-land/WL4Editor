@@ -478,7 +478,7 @@ namespace LevelComponents
             // Create the camera boundary pointer table save chunk
             unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
             int boundaryEntries =
-                std::count_if(rooms.begin(), rooms.end(), [](Room *R) { return R->GetCameraControlRecords().size(); });
+                std::count_if(rooms.begin(), rooms.end(), [](Room *R) { return R->GetRoomHeader().CameraControlType == __CameraControlType::HasControlAttrs; });
             unsigned int cameraPointerTableSize = (boundaryEntries + 1) * 4;
             cameraPointerTable = (struct ROMUtils::SaveData *) malloc(sizeof(struct ROMUtils::SaveData));
             cameraPointerTable->ptr_addr = cameraPointerTablePtr;
