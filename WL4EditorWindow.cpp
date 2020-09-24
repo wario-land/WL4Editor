@@ -4,6 +4,7 @@
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
 #include "Themes.h"
+#include "LevelComponents/Layer.h"
 
 #include <cstdio>
 #include <deque>
@@ -283,23 +284,34 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
 /// Print Mouse Pos in the status bar
 /// </summary>
 /// <param name="x">
-/// current tile x position
+/// Mouse x position in scaled pixels
 /// </param>
 /// <param name="y">
-/// current tile y position
+/// Mouse y position in scaled pixels
 /// </param>
-void WL4EditorWindow::PrintMousePos(uint x, uint y)
+void WL4EditorWindow::PrintMousePos(int x, int y)
 {
-    bool mouseInTileArea;
-    if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam()) {
-        mouseInTileArea = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height());
-    } else {
-        mouseInTileArea = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
+    int selectedLayer = EditModeWidget->GetEditModeParams().selectedLayer;
+    LevelComponents::Layer *layer = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(selectedLayer);
+    int tileSize;
+    if(layer->GetMappingType() == LevelComponents::LayerMappingType::LayerDisabled)
+    {
+        statusBarLabel_MousePosition->setText(tr("Selected layer is disabled!"));
+        return;
     }
-    if(mouseInTileArea)
-        statusBarLabel_MousePosition->setText(tr("Out of range!"));
+    int is8x8 = layer->GetMappingType() == LevelComponents::LayerMappingType::LayerTile8x8;
+    tileSize = is8x8 ? 8 : 16;
+    int xBound = (x /= tileSize) < layer->GetLayerWidth();
+    int yBound = (y /= tileSize) < layer->GetLayerHeight();
+    if(xBound && yBound)
+    {
+        statusBarLabel_MousePosition->setText(QString("Mouse position: Layer %0 (%1, %2, %3)").arg(
+            QString::number(selectedLayer), QString(is8x8 ? "Tile8x8" : "Map16"), QString::number(x), QString::number(y)));
+    }
     else
-        statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")");
+    {
+        statusBarLabel_MousePosition->setText(tr("Mouse out of range!"));
+    }
 }
 
 /// <summary>

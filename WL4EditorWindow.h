@@ -100,7 +100,7 @@ public:
     void DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
     void LoadROMDataFromFile(QString qFilePath);
-    void PrintMousePos(uint x, uint y);
+    void PrintMousePos(int x, int y);
     uint GetGraphicViewScalerate() { return graphicViewScalerate; }
     void SetGraphicViewScalerate(uint scalerate);
     void RefreshRectSelectHint(bool state);
