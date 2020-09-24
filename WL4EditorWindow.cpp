@@ -290,13 +290,13 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
 /// </param>
 void WL4EditorWindow::PrintMousePos(uint x, uint y)
 {
-    bool mouseInTileArea;
-    if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam()) {
-        mouseInTileArea = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height());
-    } else {
-        mouseInTileArea = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
+    bool mouseOutofTileArea = false;
+    bool mouseOutofTileArea2 = false;
+    if(CurrentLevel->GetRooms()[selectedRoom]->GetLayer0MappingParam() & 0x10) {
+        mouseOutofTileArea = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Width()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetLayer0Height());
     }
-    if(mouseInTileArea)
+    mouseOutofTileArea2 = (x >= CurrentLevel->GetRooms()[selectedRoom]->GetWidth()) || (y >= CurrentLevel->GetRooms()[selectedRoom]->GetHeight());
+    if(mouseOutofTileArea && mouseOutofTileArea2)
         statusBarLabel_MousePosition->setText(tr("Out of range!"));
     else
         statusBarLabel_MousePosition->setText("(" + QString::number(x) + ", " + QString::number(y) + ")");
