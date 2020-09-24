@@ -309,12 +309,8 @@ void WL4EditorWindow::SetGraphicViewScalerate(uint scalerate)
 {
     ui->graphicsView->scale((qreal)scalerate / (qreal)graphicViewScalerate, (qreal)scalerate / (qreal)graphicViewScalerate);
     graphicViewScalerate = scalerate;
-    // TODO: find a method to get mouse pos instantly
-//    int mouse_x = ui->graphicsView->mapFromGlobal(QCursor::pos()).x();
-//    int mouse_y = ui->graphicsView->mapFromGlobal(QCursor::pos()).y();
-//    PrintMousePos(mouse_x, mouse_y);
     statusBarLabel_MousePosition->setText(tr("Move your mouse to show position again!"));
-    statusBarLabel_Scalerate->setText(tr("scale rate: ") + QString::number(graphicViewScalerate) + "00%");
+    statusBarLabel_Scalerate->setText(tr("Scale rate: ") + QString::number(graphicViewScalerate) + "00%");
 }
 
 /// <summary>
