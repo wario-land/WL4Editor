@@ -1,4 +1,4 @@
-#include "Tile16DockWidget.h"
+﻿#include "Tile16DockWidget.h"
 #include "ui_Tile16DockWidget.h"
 
 #include <QMouseEvent>
@@ -65,7 +65,6 @@ int Tile16DockWidget::SetTileset(int _tilesetIndex)
     {
         delete Tile16MAPScene;
     }
-    ui->graphicsView->Resetmembers();
 
     // Set up tileset
     SelectedTileset = ROMUtils::singletonTilesets[_tilesetIndex];
@@ -112,6 +111,7 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
     // Paint red Box (i.e. highlighted tile rectangle) to show selected Tile16
     int X = tile & 7;
     int Y = tile >> 3;
+    ui->graphicsView->Resetmembers(X, Y, true);
     QPixmap selectionPixmap(16, 16);
     selectionPixmap.fill(highlightColor);
     if(SelectionBox == nullptr)

@@ -1,4 +1,4 @@
-#ifndef TILEGRAPHICSVIEW_H
+﻿#ifndef TILEGRAPHICSVIEW_H
 #define TILEGRAPHICSVIEW_H
 
 #include "Tile16DockWidget.h"
@@ -17,7 +17,7 @@ protected:
 public:
     TileGraphicsView(QWidget *param) : QGraphicsView(param) {}
     void SetDockWidget(Tile16DockWidget *_dockWidget) { Map16DockWidget = _dockWidget; }
-    void Resetmembers() { tx = ty = 0; holdingmouse = false;}
+    void Resetmembers(int _tx = 0, int _ty = 0, bool _holdmouse = false) { tx = _tx; ty = _ty; holdingmouse = _holdmouse;}
 
     // mouse events
     void mousePressEvent(QMouseEvent *event);
