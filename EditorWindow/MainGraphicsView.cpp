@@ -295,11 +295,9 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
     unsigned int tileX = X / (16 * scalerate);
     unsigned int tileY = Y / (16 * scalerate);
-    unsigned int _tileX = X / scalerate;
-    unsigned int _tileY = Y / scalerate;
 
     // Print Mouse Position
-    singleton->PrintMousePos(_tileX, _tileY);
+    singleton->PrintMousePos(X / scalerate, Y / scalerate);
     if(!holdingmouse) return;
 
     // If we have moved within the same tile, do nothing
