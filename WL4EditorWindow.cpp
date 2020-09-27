@@ -435,6 +435,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionUndo_global->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->actionManager->setEnabled(true);
+        ui->actionEdit_Credits->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -2002,4 +2003,34 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 
     // Clear everything in the new room
     ClearEverythingInRoom(true);
+}
+
+void WL4EditorWindow::on_actionEdit_Credits_triggered()
+{
+    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
+    DialogParams::CreditsEditParams *creditsEditParams =
+        new DialogParams::CreditsEditParams();
+
+    // Show the dialog
+    CreditsEditDialog dialog(this, creditsEditParams);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        /*int currentTilesetId = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
+        DialogParams::TilesetEditParams *_oldRoomTilesetEditParams = new DialogParams::TilesetEditParams();
+        _oldRoomTilesetEditParams->currentTilesetIndex = currentTilesetId;
+        _oldRoomTilesetEditParams->newTileset = ROMUtils::singletonTilesets[currentTilesetId];
+        _currentRoomTilesetEditParams->newTileset->SetChanged(true);
+
+        // Execute Operation and add changes into the operation history
+        OperationParams *operation = new OperationParams;
+        operation->type = ChangeTilesetOperation;
+        operation->TilesetChange = true;
+        operation->lastTilesetEditParams = _oldRoomTilesetEditParams;
+        operation->newTilesetEditParams = _currentRoomTilesetEditParams;
+        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside*/
+    }
+    else
+    {
+        //delete _currentRoomTilesetEditParams->newTileset;
+    }
 }

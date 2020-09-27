@@ -68,7 +68,8 @@ SOURCES += \
     SettingsUtils.cpp \
     Dialog/TilesetEditor_Tile16MapGraphicView.cpp \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.cpp \
-    Dialog/TilesetEditor_PaletteGraphicView.cpp
+    Dialog/TilesetEditor_PaletteGraphicView.cpp \
+    Dialog/CreditsEditDialog.cpp
 
 HEADERS += \
     Dialog/SelectColorDialog.h \
@@ -111,7 +112,8 @@ HEADERS += \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.h \
     Dialog/TilesetEditor_PaletteGraphicView.h \
     ThirdParty/phantomstyle/src/phantom/phantomstyle.h \
-    Themes.h
+    Themes.h \
+    Dialog/CreditsEditDialog.h
 
 FORMS += \
     Dialog/SelectColorDialog.ui \
@@ -127,4 +129,5 @@ FORMS += \
     DockWidget/CameraControlDockWidget.ui \
     Dialog/PatchManagerDialog.ui \
     Dialog/PatchEditDialog.ui \
-    Dialog/TilesetEditDialog.ui
+    Dialog/TilesetEditDialog.ui \
+    Dialog/CreditsEditDialog.ui

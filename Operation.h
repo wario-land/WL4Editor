@@ -3,6 +3,7 @@
 
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/TilesetEditDialog.h"
+#include "Dialog/CreditsEditDialog.h"
 #include "LevelComponents/Tile.h"
 
 // Enumerate the type of operations that can be performed and undone
@@ -77,10 +78,13 @@ struct OperationParams
     DialogParams::RoomConfigParams *newRoomConfigParams;
     DialogParams::TilesetEditParams *lastTilesetEditParams;
     DialogParams::TilesetEditParams *newTilesetEditParams;
+    DialogParams::CreditsEditParams *lastCreditsEditParams;
+    DialogParams::CreditsEditParams *newCreditsEditParams;
     bool tileChange;
     bool roomConfigChange;
     bool objectPositionChange;
     bool TilesetChange;
+    bool CreditChange;
 
     OperationParams() :
             lastRoomConfigParams(nullptr),
@@ -88,7 +92,8 @@ struct OperationParams
             tileChange(false),
             roomConfigChange(false),
             objectPositionChange(false),
-            TilesetChange(false)
+            TilesetChange(false),
+            CreditChange(false)
     {}
 
     // Clean up the struct when it is deconstructed
