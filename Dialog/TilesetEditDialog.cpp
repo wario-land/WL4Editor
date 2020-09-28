@@ -1,4 +1,4 @@
-#include "TilesetEditDialog.h"
+﻿#include "TilesetEditDialog.h"
 #include "ui_TilesetEditDialog.h"
 
 #include <iostream>
@@ -763,14 +763,11 @@ void TilesetEditDialog::on_pushButton_ExportTile8x8Map_clicked()
                                                      QString(""), tr("PNG file (*.png)"));
     if (qFilePath.compare(""))
     {
-        int CR_width, CR_height;
-        CR_width = 8 * 16;
-        CR_height = 0x600 / 2;
-        QGraphicsScene *tmpscene = Tile8x8MAPScene;
-        QPixmap currentTile8x8mapPixmap(CR_width, CR_height);
-        QPainter tmppainter(&currentTile8x8mapPixmap);
-        tmpscene->render(&tmppainter);
-        currentTile8x8mapPixmap.save(qFilePath, "PNG", 100);
+        QPixmap Tile8x8Pixmap(8 * 16, 0x600 / 2);
+        Tile8x8Pixmap.fill(Qt::transparent);
+        QPainter Tile8x8PixmapPainter(&Tile8x8Pixmap);
+        Tile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderAllTile8x8(SelectedPaletteId).toImage());
+        Tile8x8Pixmap.save(qFilePath, "PNG", 100);
     }
 }
 
@@ -783,14 +780,12 @@ void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
                                                      QString(""), tr("PNG file (*.png)"));
     if (qFilePath.compare(""))
     {
-        int CR_width, CR_height;
-        CR_width = 8 * 16;
-        CR_height = 0x300 * 2;
-        QGraphicsScene *tmpscene = Tile16MAPScene;
-        QPixmap currentTile16mapPixmap(CR_width, CR_height);
-        QPainter tmppainter(&currentTile16mapPixmap);
-        tmpscene->render(&tmppainter);
-        currentTile16mapPixmap.save(qFilePath, "PNG", 100);
+        // draw pixmaps
+        QPixmap Tile16Pixmap(16 * 8, 0x300 * 2);
+        Tile16Pixmap.fill(Qt::transparent);
+        QPainter Tile16PixmapPainter(&Tile16Pixmap);
+        Tile16PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderAllTile16(1).toImage());
+        Tile16Pixmap.save(qFilePath, "PNG", 100);
     }
 }
 
