@@ -16,9 +16,7 @@ include(./ThirdParty/phantomstyle/src/phantom/phantom.pri)
 RC_ICONS = images/icon.ico
 
 # Include additional files in the build output
-Release:DESTDIR = release
-Debug:DESTDIR = debug
-copydata.commands = $(COPY_DIR) $$shell_path($$PWD/thumblibs/memcpy.o) $$shell_path($$OUT_PWD/$$DESTDIR)
+copydata.commands = $(COPY_DIR) $$shell_quote($$shell_path($$PWD/thumblibs/memcpy.o)) $$shell_quote($$shell_path($$OUT_PWD))
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)
