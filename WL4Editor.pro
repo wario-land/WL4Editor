@@ -33,7 +33,6 @@ QMAKE_CXXFLAGS = -fpermissive
 SOURCES += \
     Dialog/SelectColorDialog.cpp \
     Dialog/SelectColorDialog_PaletteBar.cpp \
-    Dialog/SpritesEditorDialog.cpp \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \
     DockWidget/OutputDockWidget.cpp \
     ScriptInterface.cpp \
@@ -74,7 +73,6 @@ SOURCES += \
 HEADERS += \
     Dialog/SelectColorDialog.h \
     Dialog/SelectColorDialog_PaletteBar.h \
-    Dialog/SpritesEditorDialog.h \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.h \
     DockWidget/OutputDockWidget.h \
     ScriptInterface.h \
@@ -117,7 +115,6 @@ HEADERS += \
 
 FORMS += \
     Dialog/SelectColorDialog.ui \
-    Dialog/SpritesEditorDialog.ui \
     DockWidget/OutputDockWidget.ui \
     WL4EditorWindow.ui \
     Dialog/ChooseLevelDialog.ui \
