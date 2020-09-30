@@ -1,4 +1,4 @@
-#include "ROMUtils.h"
+﻿#include "ROMUtils.h"
 #include "Compress.h"
 #include <QFile>
 #include "WL4EditorWindow.h"
@@ -599,17 +599,10 @@ resized:QVector<struct FreeSpaceRegion> freeSpaceRegions = FindAllFreeSpaceInROM
                 goto error;
             }
 
-            // Mark the region for the chunk as used, with RATS format
-spaceFound: struct FreeSpaceRegion freeSpace = freeSpaceRegions[i];
-            unsigned char *destPtr = TempFile + freeSpace.addr;
-            strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
-            unsigned short chunkLen = (unsigned short) sd.size;
-            *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
-            *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
-            *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
-            destPtr[8] = sd.ChunkType;
-
+spaceFound:
             // Split the free space region
+            struct FreeSpaceRegion freeSpace = freeSpaceRegions[i];
+            unsigned char *destPtr = TempFile + freeSpace.addr;
             freeSpaceRegions.remove(i);
             unsigned int alignedAddr = freeSpace.addr;
             if(sd.alignment)
@@ -624,15 +617,29 @@ spaceFound: struct FreeSpaceRegion freeSpace = freeSpaceRegions[i];
             if(alignmentOffset + sd.size < freeSpace.size)
             {
                 freeSpaceRegions.append({
-                    freeSpace.addr + alignmentOffset + sd.size,
-                    freeSpace.size - (alignmentOffset + sd.size)
+                    freeSpace.addr + alignmentOffset + sd.size + 12,
+                    freeSpace.size - (alignmentOffset + sd.size) - 12
                 });
             }
+            // Mark the region for the chunk as used, with RATS format
+            // Always writing chunk headers after the alignment setting of the next chunk being decided
+            destPtr += alignmentOffset;
+            strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
+            unsigned short chunkLen = (unsigned short) sd.size;
+            *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
+            *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
+            *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
+            destPtr[8] = sd.ChunkType;
 
             indexToChunkPtr[sd.index] = alignedAddr;
             chunksToAdd.append(sd);
 
         } while(1); allocationComplete:
+        // Generate chunkIDtoIndex map
+        for(int k = 0; k < chunksToAdd.size(); k++)
+        {
+            chunkIDtoIndex[chunksToAdd[k].index] = k;
+        }
 
         // Apply source pointer modifications to applicable chunk types
         for(struct SaveData chunk : chunksToAdd)
