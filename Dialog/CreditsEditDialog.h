@@ -11,6 +11,8 @@
 #include <QTextStream>
 #include <QMessageBox>
 #include <QTableView>
+#include <QHeaderView>
+#include <QStandardItem>
 #include <utility>
 #include <map>
 

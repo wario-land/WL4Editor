@@ -3,15 +3,10 @@
 #include "ui_CreditsEditDialog.h"
 
 #include <iostream>
-#include <QFile>
-#include <QFileDialog>
-#include <QInputDialog>
-#include <QFileDevice>
-#include <QMessageBox>
-#include <QTableView>
-#include <QHeaderView>
 
-#include "WL4EditorWindow.h"
+constexpr const short CreditsEditDialog::CreditTileMapData[0x108];
+std::map<short,char> CreditsEditDialog::CreditTileMap;
+
 
 CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditParams *creditsEditParam) :
     QDialog(parent),
