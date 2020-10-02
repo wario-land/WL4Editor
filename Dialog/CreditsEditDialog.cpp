@@ -1,4 +1,4 @@
-#include "Dialog/CreditsEditDialog.h"
+﻿#include "Dialog/CreditsEditDialog.h"
 #include "ROMUtils.h"
 #include "ui_CreditsEditDialog.h"
 
@@ -13,7 +13,9 @@
 #include <QHeaderView>
 #include <QStyledItemDelegate>
 
-#include "WL4EditorWindow.h"
+constexpr const short CreditsEditDialog::CreditTileMapData[0x108];
+std::map<short,char> CreditsEditDialog::CreditTileMap;
+
 
 CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditParams *creditsEditParam) :
     QDialog(parent),
@@ -34,7 +36,7 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
                 if (j>=30) {
                     newItem->setEditable(false);
                 }
-                newItem->setText(QString(this->map[data_to_save[k][j+i*32]]));
+                newItem->setText(QString(this->CreditTileMap[data_to_save[k][j+i*32]]));
                 model[k]->setItem(i, j, newItem);
             }
         }
@@ -65,11 +67,21 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
 }
 
 /// <summary>
-/// Deconstructor of CreditEditDialog class.
+/// Deconstructor of CreditsEditDialog class.
 /// </summary>
 CreditsEditDialog::~CreditsEditDialog()
 {
     delete ui;
 }
 
-
+/// <summary>
+/// Perform static initialization of constant data structures for the dialog.
+/// </summary>
+void CreditsEditDialog::StaticInitialization()
+{
+    // Initialize the selections for the Door type
+    for (unsigned int i = 0; i < sizeof(CreditTileMapData) / sizeof(CreditTileMapData[0]); i+=2)
+    {
+        CreditTileMap[CreditTileMapData[i]] = CreditTileMapData[i + 1];
+    }
+}
