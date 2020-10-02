@@ -1,4 +1,4 @@
-﻿#ifndef CREDITSEDITDIALOG_H
+#ifndef CREDITSEDITDIALOG_H
 #define CREDITSEDITDIALOG_H
 
 #include <QDialog>
@@ -13,15 +13,13 @@
 #include <QTableView>
 #include <QHeaderView>
 #include <QStandardItem>
-#include <utility>
-#include <map>
 
 #include "WL4Constants.h"
 #include "Dialog/SelectColorDialog.h"
 #include "Dialog/CustomQTableView.h"
-#include <unordered_map>
 // #include "ROMUtils.h" // can be find in Room.h
 #include "LevelComponents/Room.h"
+
 
 namespace DialogParams
 {
@@ -48,6 +46,8 @@ public:
     static void StaticInitialization();
 private slots:
 
+    void on_buttonBox_accepted();
+
 private:
     Ui::CreditsEditDialog *ui;
 
@@ -60,6 +60,7 @@ private:
     static std::map<short,char> CreditTileMap;
 
     // clang-format off
+    static std::map< std::pair<std::string,std::string>, short> CreditTileReverseMap;
     static constexpr const short CreditTileMapData[0x108] =
     {
         //One-tile high
@@ -92,7 +93,6 @@ private:
         0x435A,'.',
         0x435B,',',  // 0x37
 
-        //Two-tile high, upper half
         0x0360,'A',
         0x0361,'B',
         0x0362,'C',
@@ -203,6 +203,13 @@ private:
         0x03D9,'.'  // 0x9F + 0x68 = 0x107
     };
     // clang-format on
+
+
+    /*pair<string, string> key = make_pair("bob", "sue");
+    mymap[ key ] = 5; // you can inline make_pair if you prefer.
+
+    // or you can use insert method
+    mymap.insert( key, 5 );*/
 };
 
 #endif // CREDITSEDITDIALOG_H
