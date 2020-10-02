@@ -19,29 +19,21 @@
 #include "RoomPreviewGraphicsView.h"
 #include "WL4Constants.h"
 #include "Dialog/SelectColorDialog.h"
+#include "Dialog/CustomQTableView.h"
 #include <unordered_map>
 
 namespace DialogParams
 {
     struct CreditsEditParams
     {
-        /*int currentTilesetIndex;
-        LevelComponents::Tileset *newTileset = nullptr;*/
-
         // Default constructor
         CreditsEditParams() { memset(this, 0, sizeof(struct CreditsEditParams)); }
         ~CreditsEditParams() {}
     };
 }
 
-namespace Ui
-{
-    class RoomConfigDialog;
-}
-
-
 namespace Ui {
-class CreditsEditDialog;
+    class CreditsEditDialog;
 }
 
 class CreditsEditDialog : public QDialog
@@ -50,51 +42,9 @@ class CreditsEditDialog : public QDialog
 
 public:
     explicit CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditParams *creditsEditParams);
-    /*void SetSelectedTile16(int tile16ID, bool resetscrollbar);
-    void SetSelectedTile8x8(unsigned short tileId, bool resetscrollbar);
-    void SetSelectedColorId(int newcolorId);
-    void SetColor(int newcolorId);
-    void CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile16);
-    void SetSpinboxesTile8x8sInfo(LevelComponents::Tile8x8* tile8, QSpinBox* spinBoxID, QSpinBox* spinBoxTextureID, QCheckBox* checkBoxHFlip, QCheckBox* checkBoxVFlip);
-    void DeleteFGTile8x8(int tile8x8id);
-    int PaletteBrushValue() {return paletteBrushVal; }
-    void SetTile16PaletteId(int tile16ID);
-
-    int GetSelectedTile8x8() { return SelectedTile8x8; }
-    int GetFGTile8x8Num() { return tilesetEditParams->newTileset->GetfgGFXlen() / 32; }*/
-
     ~CreditsEditDialog();
 
-private slots:/*
-    void on_spinBox_valueChanged(int arg1);
-    void on_spinBox_EventId_valueChanged(int arg1);
-    void on_spinBox_TerrainId_valueChanged(int arg1);
-    void on_spinBox_TopLeftTileId_valueChanged(int arg1);
-    void on_spinBox_TopRightTileId_valueChanged(int arg1);
-    void on_spinBox_BottomLeftTileId_valueChanged(int arg1);
-    void on_spinBox_BottomRightTileId_valueChanged(int arg1);
-    void on_spinBox_TopLeftpaletteId_valueChanged(int arg1);
-    void on_spinBox_TopRightpaletteId_valueChanged(int arg1);
-    void on_spinBox_BottomLeftpaletteId_valueChanged(int arg1);
-    void on_spinBox_BottomRightpaletteId_valueChanged(int arg1);
-    void on_checkBox_TopLeftHFlip_toggled(bool checked);
-    void on_checkBox_TopRightHFlip_toggled(bool checked);
-    void on_checkBox_BottomLeftHFlip_toggled(bool checked);
-    void on_checkBox_BottomRightHFlip_toggled(bool checked);
-    void on_checkBox_TopLeftVFlip_toggled(bool checked);
-    void on_checkBox_TopRightVFlip_toggled(bool checked);
-    void on_checkBox_BottomLeftVFlip_toggled(bool checked);
-    void on_checkBox_BottomRightVFlip_toggled(bool checked);
-    void on_horizontalSlider_valueChanged(int value);
-    void on_checkBox_paletteBrush_toggled(bool checked);
-    void on_pushButton_SetAnimatedTileSlot_clicked();
-    void on_pushButton_ExportTile8x8Map_clicked();
-    void on_pushButton_ExportTile16Map_clicked();
-    void on_pushButton_ImportTile8x8Graphic_clicked();
-    void on_pushButton_ExportTile16sCombinationData_clicked();
-    void on_pushButton_ImportTile16sCombinationData_clicked();
-    void on_pushButton_ExportPalette_clicked();
-    void on_pushButton_ImportPalette_clicked();*/
+private slots:
 
 private:
     Ui::CreditsEditDialog *ui;
@@ -102,7 +52,8 @@ private:
     // members
     DialogParams::CreditsEditParams* creditsEditParams;
     QWidget* tabs[13];
-    QTableView* tables_view[13];
+    CustomQTableView* tables_view[13];
+    short data_to_save[13][1280]; //0x500
 
     std::unordered_map<short,char> map= {
         //One-tile high
@@ -245,39 +196,6 @@ private:
         {0x03D8,'y'},
         {0x03D9,'.'}
     };
-    /*bool HasInitialized = false;
-    QGraphicsScene *PaletteBarScene = nullptr;
-    QGraphicsPixmapItem *SelectionBox_Color = nullptr;
-    QGraphicsPixmapItem *Palettemapping = nullptr;
-    QGraphicsScene *Tile8x8MAPScene = nullptr;
-    QGraphicsPixmapItem *SelectionBox_Tile8x8 = nullptr;
-    QGraphicsPixmapItem *Tile8x8mapping = nullptr;
-    QGraphicsScene *Tile16MAPScene = nullptr;
-    QGraphicsPixmapItem *SelectionBox_Tile16 = nullptr;
-    QGraphicsPixmapItem *Tile16mapping = nullptr;
-    QGraphicsScene *Tile8x8EditorScene = nullptr;
-    QGraphicsPixmapItem *Tile8x8Editormapping = nullptr;
-
-    unsigned short SelectedTile8x8 = 0;
-    unsigned short SelectedTile16 = 0;
-    bool IsSelectingTile16 = false;
-    int SelectedColorId = 0;
-    int SelectedPaletteId = 0;
-    int paletteBrushVal = -1;
-
-    // Setters for Selected Tile16
-    void TLTile8x8Reset();
-    void TRTile8x8Reset();
-    void BLTile8x8Reset();
-    void BRTile8x8Reset();
-
-    // functions
-    void RenderInitialization();
-    void ResetPaletteBarGraphicView(int paletteId);
-    void ReRenderTile16Map();
-    void ReRenderTile8x8Map(int paletteId);
-    void UpdateATile8x8ForSelectedTile16InTilesetData(int tile16Id, int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip);
-    void OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(int posId, unsigned char *tiledata);*/
 };
 
 #endif // CREDITSEDITDIALOG_H
