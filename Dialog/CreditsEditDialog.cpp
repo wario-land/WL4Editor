@@ -1,4 +1,4 @@
-#include "Dialog/CreditsEditDialog.h"
+﻿#include "Dialog/CreditsEditDialog.h"
 #include "ROMUtils.h"
 #include "ui_CreditsEditDialog.h"
 
@@ -34,8 +34,8 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
                 short mapchar2=(short)((0xFFFF0000&twoShort)>>16);
                 //std::cout << std::hex << mapchar1 << " " << mapchar2 << std::endl;
 
-                newItem->setText(QString(this->map[mapchar1]));
-                newItem2->setText(QString(this->map[mapchar2]));
+                newItem->setText(QString(this->CreditTileMap[mapchar1]));
+                newItem2->setText(QString(this->CreditTileMap[mapchar2]));
                 model[k]->setItem(i, j, newItem);
                 model[k]->setItem(i, j+1, newItem2);
             }
@@ -73,9 +73,21 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
 }
 
 /// <summary>
-/// Deconstructor of TilesetEditDialog class.
+/// Deconstructor of CreditsEditDialog class.
 /// </summary>
 CreditsEditDialog::~CreditsEditDialog()
 {
     delete ui;
+}
+
+/// <summary>
+/// Perform static initialization of constant data structures for the dialog.
+/// </summary>
+void CreditsEditDialog::StaticInitialization()
+{
+    // Initialize the selections for the Door type
+    for (unsigned int i = 0; i < sizeof(CreditTileMapData) / sizeof(CreditTileMapData[0]); i+=2)
+    {
+        CreditTileMap[CreditTileMapData[i]] = CreditTileMapData[i + 1];
+    }
 }

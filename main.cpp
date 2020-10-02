@@ -1,6 +1,7 @@
-#include "Dialog/DoorConfigDialog.h"
+﻿#include "Dialog/DoorConfigDialog.h"
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/PatchEditDialog.h"
+#include "Dialog/CreditsEditDialog.h"
 #include "DockWidget/CameraControlDockWidget.h"
 #include "LevelComponents/Level.h"
 #include "ROMUtils.h"
@@ -64,6 +65,7 @@ static void StaticInitialization_BeforeROMLoading()
     RoomConfigDialog::StaticComboBoxesInitialization();
     DoorConfigDialog::StaticInitialization();
     CameraControlDockWidget::StaticInitialization();
+    CreditsEditDialog::StaticInitialization();
     PatchEditDialog::StaticComboBoxesInitialization();
 }
 
