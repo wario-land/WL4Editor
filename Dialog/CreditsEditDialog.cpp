@@ -14,6 +14,7 @@
 #include <QStyledItemDelegate>
 
 constexpr const short CreditsEditDialog::CreditTileMapData[0x108];
+std::map< std::pair<std::string,std::string>, short> CreditTileReverseMap;
 std::map<short,char> CreditsEditDialog::CreditTileMap;
 
 
@@ -33,16 +34,22 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
         for (int i=0;i<20;i++) {
             for (int j=0;j<32;j=j+1) {
                 QStandardItem *newItem = new QStandardItem();
+
+                //The two last column never appeared in game
                 if (j>=30) {
                     newItem->setEditable(false);
                     newItem->setData(QColor(Qt::gray), Qt::BackgroundRole);
                 } else {
                     short mapId=data_to_save[k][j+i*32];
                     newItem->setText(QString(this->CreditTileMap[mapId]));
+
+                    //One-tile high -> blue
                     if (mapId >= 0x4340 && mapId <= 0x435B) {
                         newItem->setData(QColor("#8080FF"), Qt::BackgroundRole);
+                    //Two-tile high, upper half -> red
                     } else if ((mapId >= 0x0360 && mapId <=0x0379) || (mapId >= 0x03A0 && mapId <= 0x03B9)) {
                         newItem->setData(QColor("#FF8080"), Qt::BackgroundRole);
+                    //Two-tile high, lower half -> green
                     } else if ((mapId >= 0x0380 && mapId <=0x0399) || (mapId >= 0x03C0 && mapId <= 0x03D9)) {
                         newItem->setData(QColor("#80FF80"), Qt::BackgroundRole);
                     }
@@ -59,6 +66,7 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
 
         tables_view[i]->setModel(model[i]);
 
+        //Needed in ordrer to have the smallest cells
         for (int j=0;j<32;j++) {
             tables_view[i]->setColumnWidth(j,1);
         }
@@ -69,6 +77,7 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
 
         tables_view[i]->setObjectName(QString::number(i+1));
 
+        //With this grid Layout the CustomQTableView takes all available size in the tab
         QGridLayout* layout = new QGridLayout;
         layout->addWidget(tables_view[i], 0,0);
         tabs[i]->setLayout(layout);
@@ -97,7 +106,7 @@ void CreditsEditDialog::StaticInitialization()
     }
 
     //One-tile high
-    //CreditTileReverseMap[std::pair("A","#8080FF")]=0x4340;
+    //CreditTileReverseMap[std::make_pair("A","#8080FF")]=0x4340;
 
     //CreditsEditDialog::CreditTileReverseMap[std::make_pair("a","b")] = 0x4320;
     /*CreditTileReverseMap.insert(std::make_pair(std::make_pair("B","#8080FF"),0x4341));
@@ -246,11 +255,11 @@ void CreditsEditDialog::on_buttonBox_accepted() {
             for (int j=0;j<32;j=j+1) {
                 QModelIndex model_index=tables_view[k]->model()->index(i,j);
                 QString first_letter=model_index.data(Qt::DisplayRole).value<QString>();
-                QString role=model_index.data(Qt::BackgroundRole).value<QString>();
+                QString role=model_index.data(Qt::BackgroundRole).value<QColor>().name();
 
                 std::string first_letter_string = first_letter.toUtf8().constData();
                 std::string role_string = role.toUtf8().constData();
-                first_letter_string=first_letter_string.at(0);
+                //first_letter_string=first_letter_string.at(0);
                 std::cout << role_string << std::endl;
             }
         }
