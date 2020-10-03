@@ -59,9 +59,9 @@ private:
     short data_to_save[13][1280]; //0x500
 
     static std::map<short,char> CreditTileMap;
-
-    // clang-format off
     static std::map< std::pair<std::string,std::string>, short> CreditTileReverseMap;
+    // clang-format off
+
     static constexpr const short CreditTileMapData[0x108] =
     {
         //One-tile high

@@ -40,7 +40,7 @@ CustomQTableView::CustomQTableView(QWidget *parent) :
 void CustomQTableView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles) {
     QString qs=topLeft.data().value<QString>();
     std::string utf8_text = qs.toUtf8().constData();
-    std::cout << "Changed here : " << utf8_text << std::endl;
+    //std::cout << "Changed here : " << utf8_text << std::endl;
 }
 
 
@@ -87,7 +87,8 @@ void CustomQTableView::doAction(QAction * action) {
 }
 
 /// <summary>
-/// Triggered when a key is pressed, makes the delete key remove selected cells
+/// Triggered when a key is pressed, makes the delete key remove selected cells or
+/// insert letters or use directionnal keys to move
 /// </summary>
 /// <param name="event">
 /// An event used to know the key value
@@ -104,6 +105,78 @@ void CustomQTableView::keyPressEvent(QKeyEvent *event) {
             if (column < 30) {
                 this->model()->setData(model_index,QColor("#FFFFFF"), Qt::BackgroundRole);
                 this->model()->setData(model_index,"", Qt::DisplayRole);
+            }
+        }
+    } else if (keycode >= Qt::Key_A && keycode <=Qt::Key_Z) {
+        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
+        for (int i=0;i<index_list.size();i++) {
+            QModelIndex model_index=index_list.at(i);
+            int column=model_index.column();
+
+            //If we are in the editable zone
+            if (column < 30) {
+                this->model()->setData(model_index,event->text().toUpper(), Qt::DisplayRole);
+                if (index_list.size() == 1) {
+                    QModelIndex model_index=index_list.at(0);
+                    int column=model_index.column();
+                    int row=model_index.row();
+                    column++;
+
+                    QModelIndex newindex=this->model()->index(row,column);
+                    this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
+                }
+            }
+        }
+    } else if (keycode == Qt::Key_Left) {
+        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
+        if (index_list.size() == 1) {
+            QModelIndex model_index=index_list.at(0);
+            int column=model_index.column();
+            int row=model_index.row();
+            column--;
+
+            if (column >= 0) {
+                QModelIndex newindex=this->model()->index(row,column);
+                this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
+            }
+        }
+    } else if (keycode == Qt::Key_Right) {
+        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
+        if (index_list.size() == 1) {
+            QModelIndex model_index=index_list.at(0);
+            int column=model_index.column();
+            int row=model_index.row();
+            column++;
+
+            if (column < 32) {
+                QModelIndex newindex=this->model()->index(row,column);
+                this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
+            }
+        }
+    } else if (keycode == Qt::Key_Up) {
+        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
+        if (index_list.size() == 1) {
+            QModelIndex model_index=index_list.at(0);
+            int column=model_index.column();
+            int row=model_index.row();
+            row--;
+
+            if (row >= 0) {
+                QModelIndex newindex=this->model()->index(row,column);
+                this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
+            }
+        }
+    } else if (keycode == Qt::Key_Down) {
+        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
+        if (index_list.size() == 1) {
+            QModelIndex model_index=index_list.at(0);
+            int column=model_index.column();
+            int row=model_index.row();
+            row++;
+
+            if (row < 20) {
+                QModelIndex newindex=this->model()->index(row,column);
+                this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
             }
         }
     }
