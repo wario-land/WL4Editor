@@ -48,7 +48,8 @@ namespace ROMUtils
     {
         Success           = '\x00',
         InsufficientSpace = '\x01',
-        NoMoreChunks      = '\x02'
+        NoMoreChunks      = '\x02',
+        ProcessingError   = '\x03'
     };
 
     struct SaveData
@@ -77,7 +78,7 @@ namespace ROMUtils
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
-    bool SaveFile(QString filePath,
+    bool SaveFile(QString filePath, QVector<unsigned int> invalidationChunks,
         std::function<ChunkAllocationStatus (struct FreeSpaceRegion, struct SaveData*)> ChunkAllocator,
         std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback);
     bool SaveLevel(QString fileName);

@@ -558,6 +558,8 @@ resized:QVector<struct FreeSpaceRegion> freeSpaceRegions = FindAllFreeSpaceInROM
                     goto spaceFound;
                 case NoMoreChunks:
                     goto allocationComplete;
+                case ProcessingError:
+                    goto error;
                 case InsufficientSpace:
                     lastSize = freeSpaceRegions[i].size;
                     continue;
@@ -604,16 +606,22 @@ spaceFound:
             struct FreeSpaceRegion freeSpace = freeSpaceRegions[i];
             unsigned char *destPtr = TempFile + freeSpace.addr;
             freeSpaceRegions.remove(i);
+
+            // Determine where the chunk starts if alignment would modify it
             unsigned int alignedAddr = freeSpace.addr;
             if(sd.alignment)
             {
                 alignedAddr = (alignedAddr + 3) & ~3;
             }
             unsigned int alignmentOffset = alignedAddr - freeSpace.addr;
+
+            // If chunk data starts at an offset due to alignment, split on left side of data
             if(alignmentOffset)
             {
                 freeSpaceRegions.append({freeSpace.addr, alignmentOffset});
             }
+
+            // If chunk data is smaller than free space, split on right side of data
             if(alignmentOffset + sd.size < freeSpace.size)
             {
                 freeSpaceRegions.append({
@@ -621,6 +629,7 @@ spaceFound:
                     freeSpace.size - (alignmentOffset + sd.size) - 12
                 });
             }
+
             // Mark the region for the chunk as used, with RATS format
             // Always writing chunk headers after the alignment setting of the next chunk being decided
             destPtr += alignmentOffset;
@@ -635,6 +644,7 @@ spaceFound:
             chunksToAdd.append(sd);
 
         } while(1); allocationComplete:
+
         // Generate chunkIDtoIndex map
         for(int k = 0; k < chunksToAdd.size(); k++)
         {
@@ -737,8 +747,7 @@ spaceFound:
         success = true;
         if (0)
         {
-        error:
-            free(TempFile);
+error:      free(TempFile); // free up temporary file if there was a processing error
         }
         for(struct SaveData chunk : chunksToAdd)
         {
@@ -804,6 +813,9 @@ spaceFound:
         // Save the level
         int chunkIndex = 0;
         bool ret = SaveFile(filePath, invalidationChunks,
+
+            // ChunkAllocator
+
             [&chunkIndex, addedChunks]
             (struct FreeSpaceRegion freeSpace, struct SaveData *sd)
             {
@@ -833,6 +845,9 @@ spaceFound:
                     return ChunkAllocationStatus::Success;
                 }
             },
+
+            // PostProcessingCallback
+
             [levelHeaderPointer, currentLevel, roomHeaderChunk, &roomHeaderInROM]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {

@@ -288,14 +288,14 @@ static QString CreateLinkerScript(struct PatchEntryItem entry)
     QString ldfile(ofile);
     REPLACE_EXT(ofile, ".c", ".o"); // works for .s files too
     REPLACE_EXT(ldfile, ".c", ".ld");
-    QString memo(QCoreApplication::applicationDirPath() + "/memcpy.o");
+    QString memcpy_o(QCoreApplication::applicationDirPath() + "/memcpy.o");
 
     QString pa = QString::number(0x8000000 | entry.PatchAddress, 16);
     QString scriptContents =
         QString("SECTIONS\n") +
         "{\n" +
         "    .text  0x" + pa + " : { " + ofile + " }\n" +
-        "    .dummy 0x8000000 (NOLOAD) : { " + memo + " }\n" +
+        "    .dummy 0x8000000 (NOLOAD) : { " + memcpy_o + " }\n" +
         "}\n" +
         "memcpy = 0x80950D9;";
 
@@ -579,7 +579,7 @@ static QVector<struct PatchEntryItem> DetermineRemainingPatches(QVector<struct P
 static struct ROMUtils::SaveData CreatePatchSaveChunk(struct PatchEntryItem patch)
 {
     QString binName(patch.FileName);
-    binName.chop(1);
+    binName.chop(binName.length() - binName.lastIndexOf('.') + 1);
     binName += "bin";
 
     // Get data from bin file
@@ -702,24 +702,14 @@ namespace PatchUtils
         }
         
         // Populate the chunk list with invalidation chunks for patches to be removed from the ROM
+        QVector<unsigned int> invalidationChunks;
         for(struct PatchEntryItem patch : removePatches)
         {
             if(!patch.FileName.length()) continue; // no save chunks to invalidate for hook-only patches
 
             saveChunkIndexToRemoval[ROMUtils::SaveDataIndex] = std::find_if(removePatches.begin(), removePatches.end(),
                 [patch](struct PatchEntryItem removePatch){return patch.HookAddress == removePatch.HookAddress;});
-            struct ROMUtils::SaveData invalidationChunk =
-            {
-                0,
-                0,
-                nullptr,
-                ROMUtils::SaveDataIndex++,
-                false,
-                0,
-                patch.PatchAddress + 12, // PatchAddress is of the start of the RATS tag. But invalidation chunks should specify address of the data itself here
-                ROMUtils::SaveDataChunkType::InvalidationChunk
-            };
-            chunks.append(invalidationChunk);
+            invalidationChunks.append(patch.PatchAddress + 12);
         }
 
         // We must invalidate the old patch list chunk (if it exists)
@@ -731,22 +721,102 @@ namespace PatchUtils
         );
         if(patchListChunkAddr)
         {
-            struct ROMUtils::SaveData PLinvalidationChunk =
-            {
-                0,
-                0,
-                nullptr,
-                ROMUtils::SaveDataIndex++,
-                false,
-                0,
-                patchListChunkAddr + 12, // patchListChunkAddr is of the start of the RATS tag
-                ROMUtils::SaveDataChunkType::InvalidationChunk
-            };
-            chunks.append(PLinvalidationChunk);
+            invalidationChunks.append(patchListChunkAddr + 12);
         }
 
-        // Save the chunks to the ROM
-        bool firstCallback = true;
+        // Start the iterator on the first patch which is not a hex edit
+        auto patchAllocIter = std::find_if(entries.begin(), entries.end(), []
+            (const struct PatchEntryItem p){return p.FileName.length();});
+        std::map<unsigned int, unsigned int> neededSizeMap; // key: hook address
+        QString errorMsg;
+        bool plcAllocated = !noPatches; // patch list chunk status
+
+        // Allocate and save the chunks to the ROM
+        bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, invalidationChunks,
+
+            // ChunkAllocator
+
+            [&neededSizeMap, &patchAllocIter, entries, &errorMsg, &plcAllocated]
+            (struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd)
+            {
+                if(patchAllocIter != entries.end())
+                {
+                    // If we have already reported insufficient space for this patch, then
+                    // reject all regions smaller than required space
+                    auto neededSizePair = std::find_if(neededSizeMap.begin(), neededSizeMap.end(), [patchAllocIter]
+                        (std::pair<const unsigned int, const unsigned int> p){return p.first == patchAllocIter->HookAddress;});
+                    if(neededSizePair != neededSizeMap.end())
+                    {
+                        unsigned int neededSize = (*neededSizePair).second;
+                        if(freeSpace.size < neededSize)
+                        {
+                            return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                        }
+                    }
+
+                    // If it is the first time processing this patch or we've been given a
+                    // new free space region for this patch, compile and link at proposed
+                    // address to find the required size
+                    int alignOffset = (freeSpace.addr + 3) & 3;
+                    patchAllocIter->PatchAddress = freeSpace.addr + alignOffset;
+                    if((errorMsg = CompilePatchEntry(*patchAllocIter)) != "")
+                    {
+                        return ROMUtils::ChunkAllocationStatus::ProcessingError;
+                    }
+
+                    // We must get the size of the compiled binary and check it against the space we were offered
+                    struct ROMUtils::SaveData saveData = CreatePatchSaveChunk(*patchAllocIter);
+                    if(saveData.size + alignOffset > freeSpace.size)
+                    {
+                        delete saveData.data;
+                        return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                    }
+
+                    // Allocation success
+                    *sd = saveData;
+
+                    // TODO maybe something to do with hook strings, I dunno
+
+                    // Advance patch iterator to next non-hex-edit patch
+                    patchAllocIter++;
+                    while(patchAllocIter != entries.end() && patchAllocIter->FileName.length())
+                    {
+                        patchAllocIter++;
+                    }
+
+                    return ROMUtils::ChunkAllocationStatus::Success;
+                }
+                else
+                {
+                    // Create patch list chunk after all patches have been processed
+                    if(!plcAllocated)
+                    {
+                        // TODO Create patch list chunk
+
+                        // TODO Check if there is sufficient space in this FreeSpaceRegion
+
+                        plcAllocated = true;
+                        return ROMUtils::ChunkAllocationStatus::Success;
+                    }
+
+                    return ROMUtils::ChunkAllocationStatus::NoMoreChunks;
+                }
+            },
+
+            // PostProcessingCallback
+
+            []
+            (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
+            {
+                // TODO
+
+                return QString("");
+            }
+        );
+
+
+
+
         /*
         bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, chunks,
 
@@ -861,10 +931,9 @@ namespace PatchUtils
                 return "";
             }
         );
-        */ bool ret = true;
+        */
 
-        // Success
-        return ret ? "" : QT_TR_NOOP("Error saving ROM file");
+        return ret ? "" : errorMsg;
     }
 
     /// <summary>
