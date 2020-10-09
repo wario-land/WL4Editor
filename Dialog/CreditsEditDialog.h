@@ -16,7 +16,7 @@
 
 #include "WL4Constants.h"
 #include "Dialog/SelectColorDialog.h"
-#include "Dialog/CustomQTableView.h"
+#include "Dialog/CreditEditor_TableView.h"
 
 // #include "ROMUtils.h" // can be find in Room.h
 #include "LevelComponents/Room.h"
@@ -55,7 +55,7 @@ private:
     // members
     DialogParams::CreditsEditParams* creditsEditParams;
     QWidget* tabs[13];
-    CustomQTableView* tables_view[13];
+    CreditEditor_TableView* tables_view[13];
     short data_to_save[13][1280]; //0x500
 
     static std::map<short,char> CreditTileMap;

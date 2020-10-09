@@ -1,4 +1,4 @@
-#include "Dialog/CustomQTableView.h"
+#include "Dialog/CreditEditor_TableView.h"
 #include <QTableView>
 #include <QStyledItemDelegate>
 #include <QMenu>
@@ -6,7 +6,7 @@
 #include <QPainter>
 #include <QKeyEvent>
 
-CustomQTableView::CustomQTableView(QWidget *parent) :
+CreditEditor_TableView::CreditEditor_TableView(QWidget *parent) :
     QTableView(parent)
 {
     menu=new QMenu("Menu", this);
@@ -37,7 +37,7 @@ CustomQTableView::CustomQTableView(QWidget *parent) :
 /// <param name="roles">
 /// Unused
 /// </param>
-void CustomQTableView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles) {
+void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles) {
     QString qs=topLeft.data().value<QString>();
     std::string utf8_text = qs.toUtf8().constData();
     //std::cout << "Changed here : " << utf8_text << std::endl;
@@ -50,7 +50,7 @@ void CustomQTableView::dataChanged(const QModelIndex &topLeft, const QModelIndex
 /// <param name="pos">
 /// The position of cursor.
 /// </param>
-void CustomQTableView::showContextMenu(const QPoint &pos) {
+void CreditEditor_TableView::showContextMenu(const QPoint &pos) {
     menu->exec(this->mapToGlobal(pos),action_one_tile);
 }
 
@@ -61,7 +61,7 @@ void CustomQTableView::showContextMenu(const QPoint &pos) {
 /// <param name="action">
 /// Action from the popup menu (One Tile, Upper Tile, Lower Tile, Delete).
 /// </param>
-void CustomQTableView::doAction(QAction * action) {
+void CreditEditor_TableView::doAction(QAction * action) {
      QString action_text=action->text();
 
      QModelIndexList index_list=this->selectionModel()->selectedIndexes();
@@ -93,7 +93,7 @@ void CustomQTableView::doAction(QAction * action) {
 /// <param name="event">
 /// An event used to know the key value
 /// </param>
-void CustomQTableView::keyPressEvent(QKeyEvent *event) {
+void CreditEditor_TableView::keyPressEvent(QKeyEvent *event) {
     int keycode=event->key();
     if (keycode == Qt::Key_Delete) {
         QModelIndexList index_list=this->selectionModel()->selectedIndexes();

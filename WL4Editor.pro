@@ -70,7 +70,7 @@ SOURCES += \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.cpp \
     Dialog/TilesetEditor_PaletteGraphicView.cpp \
     Dialog/CreditsEditDialog.cpp \
-    Dialog/CustomQTableView.cpp
+    Dialog/CreditEditor_TableView.cpp
 
 HEADERS += \
     Dialog/SelectColorDialog.h \
@@ -115,7 +115,7 @@ HEADERS += \
     ThirdParty/phantomstyle/src/phantom/phantomstyle.h \
     Themes.h \
     Dialog/CreditsEditDialog.h \
-    Dialog/CustomQTableView.h
+    Dialog/CreditEditor_TableView.h
 
 FORMS += \
     Dialog/SelectColorDialog.ui \

@@ -3,10 +3,10 @@
 
 #include <QTableView>
 
-class CustomQTableView : public QTableView {
+class CreditEditor_TableView : public QTableView {
     Q_OBJECT
 public:
-          CustomQTableView(QWidget *parent = nullptr);
+          CreditEditor_TableView(QWidget *parent = nullptr);
           //~CustomQTableView();
 private:
       QMenu* menu;

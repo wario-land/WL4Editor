@@ -9,7 +9,7 @@
 #include <QFileDevice>
 #include <QMessageBox>
 #include <QTableView>
-#include "Dialog/CustomQTableView.h"
+#include "Dialog/CreditEditor_TableView.h"
 #include <QHeaderView>
 #include <QStyledItemDelegate>
 
@@ -62,7 +62,7 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
 
     for (int i=0 ;i<13;i++) {
         tabs[i]=new QWidget;
-        tables_view[i]=new CustomQTableView(tabs[i]);
+        tables_view[i]=new CreditEditor_TableView(tabs[i]);
 
         tables_view[i]->setModel(model[i]);
 
