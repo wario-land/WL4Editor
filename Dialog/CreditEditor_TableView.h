@@ -1,7 +1,9 @@
-#ifndef CUSTOMQTABLEVIEW_H
+﻿#ifndef CUSTOMQTABLEVIEW_H
 #define CUSTOMQTABLEVIEW_H
 
 #include <QTableView>
+
+#include "SettingsUtils.h"
 
 class CreditEditor_TableView : public QTableView {
     Q_OBJECT

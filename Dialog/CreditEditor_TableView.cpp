@@ -1,4 +1,4 @@
-#include "Dialog/CreditEditor_TableView.h"
+﻿#include "Dialog/CreditEditor_TableView.h"
 #include <QTableView>
 #include <QStyledItemDelegate>
 #include <QMenu>
@@ -78,8 +78,12 @@ void CreditEditor_TableView::doAction(QAction * action) {
              } else if (action_text.compare("Lower Tile") == 0) {
                  this->model()->setData(model_index,QColor("#80FF80"), Qt::BackgroundRole);
              } else if (action_text.compare("Delete") == 0) {
-                 this->model()->setData(model_index,QColor("#FFFFFF"), Qt::BackgroundRole);
-                 this->model()->setData(model_index,"", Qt::DisplayRole);
+                 if(int light = 0; light != SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(6)).toInt()) {
+                     this->model()->setData(model_index, QColor(53, 54, 55), Qt::BackgroundRole); // perhaps inconsistant, idk, but looks not bad
+                 } else {
+                     this->model()->setData(model_index, QColor("#FFFFFF"), Qt::BackgroundRole);
+                 }
+                 this->model()->setData(model_index, "", Qt::DisplayRole);
              }
          }
      }
