@@ -45,13 +45,13 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
 
                     //One-tile high -> blue
                     if (mapId >= 0x4340 && mapId <= 0x435B) {
-                        newItem->setData(QColor("#8080FF"), Qt::BackgroundRole);
+                        newItem->setData(QColor("#8080ff"), Qt::BackgroundRole);
                     //Two-tile high, upper half -> red
                     } else if ((mapId >= 0x0360 && mapId <=0x0379) || (mapId >= 0x03A0 && mapId <= 0x03B9)) {
-                        newItem->setData(QColor("#FF8080"), Qt::BackgroundRole);
+                        newItem->setData(QColor("#ff8080"), Qt::BackgroundRole);
                     //Two-tile high, lower half -> green
                     } else if ((mapId >= 0x0380 && mapId <=0x0399) || (mapId >= 0x03C0 && mapId <= 0x03D9)) {
-                        newItem->setData(QColor("#80FF80"), Qt::BackgroundRole);
+                        newItem->setData(QColor("#80ff80"), Qt::BackgroundRole);
                     }
 
                 }

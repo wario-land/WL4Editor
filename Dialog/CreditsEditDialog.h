@@ -58,6 +58,7 @@ private:
     CreditEditor_TableView* tables_view[13];
     short data_to_save[13][1280]; //0x500
 
+public:
     static std::map<short,char> CreditTileMap;
     static std::map< std::pair<std::string,std::string>, short> CreditTileReverseMap;
     // clang-format off
