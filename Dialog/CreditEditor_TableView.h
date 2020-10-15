@@ -17,6 +17,7 @@ private:
       QAction* action_lower_tile;
       QAction* action_delete;
 
+      void deleteFunction(QModelIndex indexToDelete);
 protected:
       void keyPressEvent(QKeyEvent *event) override;
 

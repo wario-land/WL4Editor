@@ -78,12 +78,7 @@ void CreditEditor_TableView::doAction(QAction * action) {
              } else if (action_text.compare("Lower Tile") == 0) {
                  this->model()->setData(model_index,QColor("#80FF80"), Qt::BackgroundRole);
              } else if (action_text.compare("Delete") == 0) {
-                 if(int light = 0; light != SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(6)).toInt()) {
-                     this->model()->setData(model_index, QColor(53, 54, 55), Qt::BackgroundRole); // perhaps inconsistant, idk, but looks not bad
-                 } else {
-                     this->model()->setData(model_index, QColor("#FFFFFF"), Qt::BackgroundRole);
-                 }
-                 this->model()->setData(model_index, "", Qt::DisplayRole);
+                deleteFunction(model_index);
              }
          }
      }
@@ -107,8 +102,7 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event) {
 
             //If we are in the editable zone
             if (column < 30) {
-                this->model()->setData(model_index,QColor("#FFFFFF"), Qt::BackgroundRole);
-                this->model()->setData(model_index,"", Qt::DisplayRole);
+                deleteFunction(model_index);
             }
         }
     } else if (keycode >= Qt::Key_A && keycode <=Qt::Key_Z) {
@@ -184,6 +178,24 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event) {
             }
         }
     }
+}
+
+
+/// <summary>
+/// Delete function used (called by delete key or right click->delete)
+/// Delete is consistent across theme
+/// </summary>
+/// <param name="indexToDelete">
+/// An index of the cell to delete
+/// </param>
+void CreditEditor_TableView::deleteFunction(QModelIndex indexToDelete) {
+    int light = 0;
+    if(light != SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(6)).toInt()) {
+        this->model()->setData(indexToDelete, QColor(53, 54, 55), Qt::BackgroundRole); // perhaps inconsistant, idk, but looks not bad
+    } else {
+        this->model()->setData(indexToDelete, QColor("#FFFFFF"), Qt::BackgroundRole);
+    }
+    this->model()->setData(indexToDelete, "", Qt::DisplayRole);
 }
 
 
