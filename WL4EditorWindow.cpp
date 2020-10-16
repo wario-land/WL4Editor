@@ -1995,12 +1995,8 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     {
         CurrentLevel->GetRooms()[newRoomId]->SetRoomHeaderDataPtr(_offset, 0);
     }
-    for(int i = 0; i < 3; i++)
+    for(int i = offsetlist[0] ? 1 : 0; i < 3; i++)
     {
-        if(i == 0 && offsetlist[0] != 0)
-        {
-            continue;
-        }
         CurrentLevel->GetRooms()[newRoomId]->GetLayer(i)->SetDataPtr(0);
     }
     CurrentLevel->GetRooms()[newRoomId]->SetCameraControlType(LevelComponents::__CameraControlType::NoLimit);
