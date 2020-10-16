@@ -1,4 +1,4 @@
-#include "MainGraphicsView.h"
+﻿#include "MainGraphicsView.h"
 #include "LevelComponents/Door.h"
 #include "LevelComponents/Tile.h"
 #include "Operation.h"
@@ -293,11 +293,11 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
     uint scalerate = singleton->GetGraphicViewScalerate();
     unsigned int X = (unsigned int) event->x() + horizontalScrollBar()->sliderPosition();
     unsigned int Y = (unsigned int) event->y() + verticalScrollBar()->sliderPosition();
-    unsigned int tileX = X / scalerate;
-    unsigned int tileY = Y / scalerate;
+    unsigned int tileX = X / (16 * scalerate);
+    unsigned int tileY = Y / (16 * scalerate);
 
     // Print Mouse Position
-    singleton->PrintMousePos(tileX, tileY);
+    singleton->PrintMousePos(X / scalerate, Y / scalerate);
     if(!holdingmouse) return;
 
     // If we have moved within the same tile, do nothing

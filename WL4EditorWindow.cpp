@@ -1985,12 +1985,17 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     CurrentLevel->GetLevelHeader()->NumOfMap++;
 
     // Reset pointers in RoomHeader to avoid save chunk invalidation corruption
-    int offsetlist[6] = {0, 1, 2, 5, 6, 7};
+    QVector<int> offsetlist;
+    offsetlist << 0 << 1 << 2 << 5 << 6 << 7;
+    if((CurrentLevel->GetRooms()[newRoomId]->GetLayer(0)->GetMappingType() & 0x30) == 0x20)
+    {
+        offsetlist.pop_front();
+    }
     for(int _offset: offsetlist)
     {
         CurrentLevel->GetRooms()[newRoomId]->SetRoomHeaderDataPtr(_offset, 0);
     }
-    for(int i = 0; i < 3; i++)
+    for(int i = offsetlist[0] ? 1 : 0; i < 3; i++)
     {
         CurrentLevel->GetRooms()[newRoomId]->GetLayer(i)->SetDataPtr(0);
     }
