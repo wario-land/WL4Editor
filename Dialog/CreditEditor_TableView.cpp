@@ -27,8 +27,6 @@ CreditEditor_TableView::CreditEditor_TableView(QWidget *parent) :
     connect(menu, SIGNAL(triggered(QAction *)), this, SLOT(doAction(QAction *)));
 }
 
-
-
 /// <summary>
 /// Called each time a cell is changed
 /// </summary>
@@ -40,7 +38,6 @@ CreditEditor_TableView::CreditEditor_TableView(QWidget *parent) :
 /// Unused
 /// </param>
 void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles) {
-
     QString first_letter=topLeft.data(Qt::DisplayRole).value<QString>();
     QString role=topLeft.data(Qt::BackgroundRole).value<QColor>().name();
 
@@ -71,7 +68,6 @@ void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QMode
 void CreditEditor_TableView::showContextMenu(const QPoint &pos) {
     menu->exec(this->mapToGlobal(pos),action_one_tile);
 }
-
 
 /// <summary>
 /// When the popup menu is clicked set selected cells in the described category
@@ -211,7 +207,6 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event) {
         }
     }
 }
-
 
 /// <summary>
 /// Delete function used (called by delete key or right click->delete)

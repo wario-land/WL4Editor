@@ -53,7 +53,6 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
                     } else if ((mapId >= 0x0380 && mapId <=0x0399) || (mapId >= 0x03C0 && mapId <= 0x03D9)) {
                         newItem->setData(QColor("#80ff80"), Qt::BackgroundRole);
                     }
-
                 }
                 model[k]->setItem(i, j, newItem);
             }
@@ -83,7 +82,6 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
         tabs[i]->setLayout(layout);
         ui->tabWidget->addTab(tabs[i],QString::number(i+1));
     }
-
 }
 
 /// <summary>
@@ -246,7 +244,6 @@ void CreditsEditDialog::StaticInitialization()
     CreditTileReverseMap.insert(std::make_pair(std::make_pair(".","#80ff80"),0x03D9));
 
 }
-
 /// <summary>
 /// When the OK button is pressed all data in the model is stored into data_to_save and then in the temporary ROM
 /// </summary>
