@@ -1,15 +1,15 @@
-﻿#ifndef CUSTOMQTABLEVIEW_H
-#define CUSTOMQTABLEVIEW_H
+﻿#ifndef CREDITSEDITOR_TABLEVIEW_H
+#define CREDITSEDITOR_TABLEVIEW_H
 
 #include <QTableView>
 
 #include "SettingsUtils.h"
 
-class CreditEditor_TableView : public QTableView {
+class CreditEditor_TableView : public QTableView
+{
     Q_OBJECT
 public:
           CreditEditor_TableView(QWidget *parent = nullptr);
-          //~CustomQTableView();
 private:
       QMenu* menu;
       QAction* action_one_tile;
@@ -27,6 +27,4 @@ protected:
           void doAction(QAction *);
 
 };
-    //! [Widget definition]
-
-#endif // CUSTOMQTABLEVIEW_H
+#endif // CREDITSEDITOR_TABLEVIEW_H

@@ -18,9 +18,13 @@
 #include "Dialog/SelectColorDialog.h"
 #include "Dialog/CreditEditor_TableView.h"
 
-// #include "ROMUtils.h" // can be find in Room.h
-#include "LevelComponents/Room.h"
-
+#define NUMBEROFCREDITSSCREEN 13
+//Used for describing one tile
+#define BLUECOLOR "#8080ff"
+//Used for describing uppertile
+#define REDCOLOR "#ff8080"
+//Used for describing lowertile
+#define GREENCOLOR "#80ff80"
 
 namespace DialogParams
 {
@@ -54,9 +58,9 @@ private:
 
     // members
     DialogParams::CreditsEditParams* creditsEditParams;
-    QWidget* tabs[13];
-    CreditEditor_TableView* tables_view[13];
-    short data_to_save[13][1280]; //0x500
+    QWidget* tabs[NUMBEROFCREDITSSCREEN];
+    CreditEditor_TableView* tablesView[NUMBEROFCREDITSSCREEN];
+    short dataToSave[NUMBEROFCREDITSSCREEN][1280]; //0x500
 
 public:
     static std::map<short,char> CreditTileMap;

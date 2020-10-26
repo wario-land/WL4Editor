@@ -3,11 +3,27 @@
 #include <QTableView>
 #include <QStyledItemDelegate>
 #include <QMenu>
-#include <iostream>
 #include <QPainter>
 #include <QKeyEvent>
 
+#define WHITECOLOR "#ffffff"
+#define BLACKCOLOR "#000000"
+#define DARKBACKGROUNDCOLOR "#3b3c3d"
 
+//Used for describing one tile
+#define BLUECOLOR "#8080ff"
+//Used for describing uppertile
+#define REDCOLOR "#ff8080"
+//Used for describing lowertile
+#define GREENCOLOR "#80ff80"
+
+
+/// <summary>
+/// The main view who is also a QTableView, there is one for each tab (so one for each credit screen)
+/// </summary>
+/// <param name="parent">
+/// The parent object
+/// </param>
 CreditEditor_TableView::CreditEditor_TableView(QWidget *parent) :
     QTableView(parent)
 {
@@ -37,21 +53,27 @@ CreditEditor_TableView::CreditEditor_TableView(QWidget *parent) :
 /// <param name="roles">
 /// Unused
 /// </param>
-void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles) {
-    QString first_letter=topLeft.data(Qt::DisplayRole).value<QString>();
+void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
+{
+    (void) bottomRight;
+    (void) roles;
+
+    QString firstLetter=topLeft.data(Qt::DisplayRole).value<QString>();
     QString role=topLeft.data(Qt::BackgroundRole).value<QColor>().name();
 
-    std::string string = first_letter.toUpper().toUtf8().constData();
+    std::string displayStringUppercase = firstLetter.toUpper().toUtf8().constData();
 
-    if (string.size() > 0) {
-        std::string role_string = role.toUtf8().constData();
-        std::string first_letter_string(1,string.at(0));
+    if (displayStringUppercase.size() > 0) {
+        std::string roleString = role.toUtf8().constData();
+        std::string firstLetterString(1,displayStringUppercase.at(0));
 
         //If the tile is not valid
-        if (CreditsEditDialog::CreditTileReverseMap[std::make_pair(first_letter_string,role_string)] == 0) {
+        if (CreditsEditDialog::CreditTileReverseMap[std::make_pair(firstLetterString,roleString)] == 0)
+        {
 
             //If the tile is still not valid with the default background we delete it
-            if (CreditsEditDialog::CreditTileReverseMap[std::make_pair(first_letter_string,"#8080ff")] == 0) {
+            if (CreditsEditDialog::CreditTileReverseMap[std::make_pair(firstLetterString,BLUECOLOR)] == 0)
+            {
                 deleteFunction(topLeft);
             }
         }
@@ -65,7 +87,8 @@ void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QMode
 /// <param name="pos">
 /// The position of cursor.
 /// </param>
-void CreditEditor_TableView::showContextMenu(const QPoint &pos) {
+void CreditEditor_TableView::showContextMenu(const QPoint &pos)
+{
     menu->exec(this->mapToGlobal(pos),action_one_tile);
 }
 
@@ -75,24 +98,29 @@ void CreditEditor_TableView::showContextMenu(const QPoint &pos) {
 /// <param name="action">
 /// Action from the popup menu (One Tile, Upper Tile, Lower Tile, Delete).
 /// </param>
-void CreditEditor_TableView::doAction(QAction * action) {
-     QString action_text=action->text();
+void CreditEditor_TableView::doAction(QAction * action)
+{
+     QString actionText=action->text();
 
      QModelIndexList index_list=this->selectionModel()->selectedIndexes();
      for (int i=0;i<index_list.size();i++) {
-         QModelIndex model_index=index_list.at(i);
-         int column=model_index.column();
+         QModelIndex modelIndex=index_list.at(i);
+         int column=modelIndex.column();
 
          //If we are in the editable zone
          if (column < 30) {
-             if (action_text.compare("One Tile") == 0) {
-                 this->model()->setData(model_index,QColor("#8080ff"), Qt::BackgroundRole);
-             } else if (action_text.compare("Upper Tile") == 0) {
-                 this->model()->setData(model_index,QColor("#ff8080"), Qt::BackgroundRole);
-             } else if (action_text.compare("Lower Tile") == 0) {
-                 this->model()->setData(model_index,QColor("#80ff80"), Qt::BackgroundRole);
-             } else if (action_text.compare("Delete") == 0) {
-                deleteFunction(model_index);
+             if (actionText == "One Tile")
+             {
+                 this->model()->setData(modelIndex,QColor(BLUECOLOR), Qt::BackgroundRole);
+             } else if (actionText == "Upper Tile")
+             {
+                 this->model()->setData(modelIndex,QColor(REDCOLOR), Qt::BackgroundRole);
+             } else if (actionText == "Lower Tile")
+             {
+                 this->model()->setData(modelIndex,QColor(GREENCOLOR), Qt::BackgroundRole);
+             } else if (actionText == "Delete")
+             {
+                deleteFunction(modelIndex);
              }
          }
      }
@@ -106,101 +134,123 @@ void CreditEditor_TableView::doAction(QAction * action) {
 /// <param name="event">
 /// An event used to know the key value
 /// </param>
-void CreditEditor_TableView::keyPressEvent(QKeyEvent *event) {
+void CreditEditor_TableView::keyPressEvent(QKeyEvent *event)
+{
     int keycode=event->key();
-    if (keycode == Qt::Key_Delete) {
-        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
-        for (int i=0;i<index_list.size();i++) {
-            QModelIndex model_index=index_list.at(i);
-            int column=model_index.column();
+    if (keycode == Qt::Key_Delete)
+    {
+        QModelIndexList indexList=this->selectionModel()->selectedIndexes();
+        for (int i=0;i<indexList.size();i++)
+        {
+            QModelIndex modelIndex=indexList.at(i);
+            int column=modelIndex.column();
 
             //If we are in the editable zone
-            if (column < 30) {
-                deleteFunction(model_index);
+            if (column < 30)
+            {
+                deleteFunction(modelIndex);
             }
         }
-    } else if (keycode >= Qt::Key_A && keycode <=Qt::Key_Z) {
-        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
-        for (int i=0;i<index_list.size();i++) {
-            QModelIndex model_index=index_list.at(i);
-            int column=model_index.column();
+    } else if (keycode >= Qt::Key_A && keycode <=Qt::Key_Z)
+    {
+        QModelIndexList indexList=this->selectionModel()->selectedIndexes();
+        for (int i=0;i<indexList.size();i++)
+        {
+            QModelIndex modelIndex=indexList.at(i);
+            int column=modelIndex.column();
 
             //If we are in the editable zone
-            if (column < 30) {
+            if (column < 30)
+            {
 
                 //Getting the background string
-                QString role=model_index.data(Qt::BackgroundRole).value<QColor>().name();
+                QString role=modelIndex.data(Qt::BackgroundRole).value<QColor>().name();
                 std::string role_string = role.toUtf8().constData();
 
                 //Write the letter in the cell
-                this->model()->setData(model_index,event->text().toUpper(), Qt::DisplayRole);
+                this->model()->setData(modelIndex,event->text().toUpper(), Qt::DisplayRole);
 
                 //If there is no backgroud, we take the one tile layout by default
-                if (role_string == "#ffffff" || role_string == "#3b3c3d" || role_string == "#000000") {
-                    this->model()->setData(model_index,QColor("#8080ff"), Qt::BackgroundRole);
+                if (role_string == WHITECOLOR || role_string == DARKBACKGROUNDCOLOR || role_string == BLACKCOLOR)
+                {
+                    this->model()->setData(modelIndex,QColor(BLUECOLOR), Qt::BackgroundRole);
                 }
 
                 //Selecting next index
-                if (index_list.size() == 1) {
-                    QModelIndex model_index=index_list.at(0);
-                    int column=model_index.column();
-                    int row=model_index.row();
+                if (indexList.size() == 1)
+                {
+                    QModelIndex modelIndex=indexList.at(0);
+                    int column=modelIndex.column();
+                    int row=modelIndex.row();
                     column++;
 
+                    //Column 30 and 31 can be selected but not modified
                     QModelIndex newindex=this->model()->index(row,column);
                     this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
 
                 }
             }
         }
-    } else if (keycode == Qt::Key_Left) {
-        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
-        if (index_list.size() == 1) {
-            QModelIndex model_index=index_list.at(0);
-            int column=model_index.column();
-            int row=model_index.row();
+    } else if (keycode == Qt::Key_Left)
+    {
+        QModelIndexList indexList=this->selectionModel()->selectedIndexes();
+        if (indexList.size() == 1)
+        {
+            QModelIndex modelIndex=indexList.at(0);
+            int column=modelIndex.column();
+            int row=modelIndex.row();
             column--;
 
-            if (column >= 0) {
+            if (column >= 0)
+            {
                 QModelIndex newindex=this->model()->index(row,column);
                 this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
             }
         }
-    } else if (keycode == Qt::Key_Right || Qt::Key_Space) {
-        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
-        if (index_list.size() == 1) {
-            QModelIndex model_index=index_list.at(0);
-            int column=model_index.column();
-            int row=model_index.row();
+    } else if (keycode == Qt::Key_Right || keycode == Qt::Key_Space)
+    {
+        QModelIndexList indexList=this->selectionModel()->selectedIndexes();
+        if (indexList.size() == 1)
+        {
+            QModelIndex modelIndex=indexList.at(0);
+            int column=modelIndex.column();
+            int row=modelIndex.row();
             column++;
 
-            if (column < 32) {
+            if (column < 32)
+            {
                 QModelIndex newindex=this->model()->index(row,column);
                 this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
             }
         }
-    } else if (keycode == Qt::Key_Up) {
-        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
-        if (index_list.size() == 1) {
-            QModelIndex model_index=index_list.at(0);
-            int column=model_index.column();
-            int row=model_index.row();
+    } else if (keycode == Qt::Key_Up)
+    {
+        QModelIndexList indexList=this->selectionModel()->selectedIndexes();
+        if (indexList.size() == 1)
+        {
+            QModelIndex modelIndex=indexList.at(0);
+            int column=modelIndex.column();
+            int row=modelIndex.row();
             row--;
 
-            if (row >= 0) {
+            if (row >= 0)
+            {
                 QModelIndex newindex=this->model()->index(row,column);
                 this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
             }
         }
-    } else if (keycode == Qt::Key_Down) {
-        QModelIndexList index_list=this->selectionModel()->selectedIndexes();
-        if (index_list.size() == 1) {
-            QModelIndex model_index=index_list.at(0);
-            int column=model_index.column();
-            int row=model_index.row();
+    } else if (keycode == Qt::Key_Down)
+    {
+        QModelIndexList indexList=this->selectionModel()->selectedIndexes();
+        if (indexList.size() == 1)
+        {
+            QModelIndex modelIndex=indexList.at(0);
+            int column=modelIndex.column();
+            int row=modelIndex.row();
             row++;
 
-            if (row < 20) {
+            if (row < 20)
+            {
                 QModelIndex newindex=this->model()->index(row,column);
                 this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
             }
@@ -215,12 +265,15 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event) {
 /// <param name="indexToDelete">
 /// An index of the cell to delete
 /// </param>
-void CreditEditor_TableView::deleteFunction(QModelIndex indexToDelete) {
+void CreditEditor_TableView::deleteFunction(QModelIndex indexToDelete)
+{
     int light = 0;
-    if(light != SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(6)).toInt()) {
-        this->model()->setData(indexToDelete, QColor(53, 54, 55), Qt::BackgroundRole); // perhaps inconsistant, idk, but looks not bad
-    } else {
-        this->model()->setData(indexToDelete, QColor("#ffffff"), Qt::BackgroundRole);
+    if(light != SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(6)).toInt())
+    {
+        this->model()->setData(indexToDelete, QColor(DARKBACKGROUNDCOLOR), Qt::BackgroundRole); // perhaps inconsistant, idk, but looks not bad
+    } else
+    {
+        this->model()->setData(indexToDelete, QColor(WHITECOLOR), Qt::BackgroundRole);
     }
     this->model()->setData(indexToDelete, "", Qt::DisplayRole);
 }

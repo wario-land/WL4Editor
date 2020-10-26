@@ -2005,6 +2005,10 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     ClearEverythingInRoom(true);
 }
 
+/// <summary>
+/// Display the edit credits edit dialog.
+/// It contains 13 tabs to edit corresponding credits
+/// </summary>
 void WL4EditorWindow::on_actionEdit_Credits_triggered()
 {
     // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
@@ -2013,24 +2017,5 @@ void WL4EditorWindow::on_actionEdit_Credits_triggered()
 
     // Show the dialog
     CreditsEditDialog dialog(this, creditsEditParams);
-    if (dialog.exec() == QDialog::Accepted)
-    {
-        /*int currentTilesetId = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
-        DialogParams::TilesetEditParams *_oldRoomTilesetEditParams = new DialogParams::TilesetEditParams();
-        _oldRoomTilesetEditParams->currentTilesetIndex = currentTilesetId;
-        _oldRoomTilesetEditParams->newTileset = ROMUtils::singletonTilesets[currentTilesetId];
-        _currentRoomTilesetEditParams->newTileset->SetChanged(true);
-
-        // Execute Operation and add changes into the operation history
-        OperationParams *operation = new OperationParams;
-        operation->type = ChangeTilesetOperation;
-        operation->TilesetChange = true;
-        operation->lastTilesetEditParams = _oldRoomTilesetEditParams;
-        operation->newTilesetEditParams = _currentRoomTilesetEditParams;
-        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside*/
-    }
-    else
-    {
-        //delete _currentRoomTilesetEditParams->newTileset;
-    }
+    dialog.exec();
 }
