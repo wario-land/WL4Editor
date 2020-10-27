@@ -4,7 +4,6 @@
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
 #include "Themes.h"
-#include "LevelComponents/Layer.h"
 
 #include <cstdio>
 #include <deque>
@@ -257,16 +256,15 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         int tilesetPtr = WL4Constants::TilesetDataTable + i * 36;
         ROMUtils::singletonTilesets[i] = new LevelComponents::Tileset(tilesetPtr, i);
     }
+    std::map<int, int> entitiesIdAndRowSize;
     for (unsigned int i = 0; i < sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]); ++i)
     {
-        ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i, WL4Constants::UniversalSpritesPalette);
+        ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i);
     }
     for (unsigned int i = 0; i < sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0]); ++i)
     {
-        struct LevelComponents::EntitySetAndEntitylocalId tmpEntitysetAndEntitylocalId =
-            LevelComponents::EntitySet::EntitySetFromEntityID(i);
-        ROMUtils::entities[i] = new LevelComponents::Entity(tmpEntitysetAndEntitylocalId.entitylocalId, i,
-                                                  ROMUtils::entitiessets[tmpEntitysetAndEntitylocalId.entitysetId]);
+        // TODO: the palette param should be loaded differently for different Tileset
+        ROMUtils::entities[i] = new LevelComponents::Entity(i, WL4Constants::UniversalSpritesPalette);
     }
 
     // Load the first level and render the screen

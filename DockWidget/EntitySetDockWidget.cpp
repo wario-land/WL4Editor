@@ -1,4 +1,4 @@
-#include "EntitySetDockWidget.h"
+﻿#include "EntitySetDockWidget.h"
 #include "ui_EntitySetDockWidget.h"
 
 EntitySetDockWidget::EntitySetDockWidget(QWidget *parent) : QDockWidget(parent), ui(new Ui::EntitySetDockWidget)
@@ -55,7 +55,7 @@ void EntitySetDockWidget::RenderEntityAndResetInfo()
     EntityBoxPen.setJoinStyle(Qt::MiterJoin);
     EntityBoxPainter.setPen(EntityBoxPen);
     LevelComponents::EntityPositionalOffset position =
-        LevelComponents::EntitySet::GetEntityPositionalOffset(currentEntityPtr->GetEntityGlobalID());
+        LevelComponents::Entity::GetEntityPositionalOffset(currentEntityPtr->GetEntityGlobalID());
     EntityBoxPainter.drawRect(-((position.XOffset + 98) / 4 + currentEntityPtr->GetXOffset() + 8),
                               -((position.YOffset + 66) / 4 + currentEntityPtr->GetYOffset() + 16), 16, 16);
     scene->addPixmap(pixmap);
