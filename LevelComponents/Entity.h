@@ -68,6 +68,7 @@ namespace LevelComponents
         int OAMDataTablePtr = 0;
         int EntityDeltaX = 0, EntityDeltaY = 0;
         int Priority = 0;
+        int EntityPaletteNum = 0;
         int PaletteOffset = 0;
         bool SemiTransparent = false;
         bool UnusedEntity = false;
@@ -146,7 +147,7 @@ namespace LevelComponents
             WL4Constants::Entity41_0x3C7034,
             WL4Constants::Entity42_0x3C770C,
             WL4Constants::Entity43_0x3C798C,
-            WL4Constants::Entity44_0x3C798C,
+            /*WL4Constants::Entity44_0x3C798C*/0, // triangle receptor
             WL4Constants::Entity45_0x3C799C,
             WL4Constants::Entity46_0x3C79AC,
             WL4Constants::Entity47_0x3C7A5C,

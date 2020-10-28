@@ -54,7 +54,7 @@ namespace LevelComponents
         {
             int palettePtr =
                 ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable + 4 * (entityGlobalId - 0x10));
-            int EntityPaletteNum =
+            EntityPaletteNum =
                 ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (entityGlobalId - 0x10)) /
                 (32 * 32 * 2);
             LoadSubPalettes(EntityPaletteNum, palettePtr);
@@ -64,11 +64,13 @@ namespace LevelComponents
         }
         else if (EntityGlobalID < 6) // Boxes
         {
+            EntityPaletteNum = 1;
             LoadSubPalettes(1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable));
             LoadSpritesTiles(WL4Constants::TreasureBoxGFXTiles, 2048);
         }
         else // tho there will be perhaps some exception, but just assume all of them using the universal sprites tiles
         {
+            EntityPaletteNum = 5;
             LoadSubPalettes(1, basicElementPalettePtr);
             LoadSubPalettes(4, WL4Constants::UniversalSpritesPalette2, 1);
             LoadSpritesTiles(WL4Constants::SpritesBasicElementTiles, 0x3000);
@@ -137,11 +139,12 @@ namespace LevelComponents
                 struct EntityTile *entityTile = new struct EntityTile();
                 entityTile->deltaX = x * 8;
                 entityTile->deltaY = y * 8;
-                int offsetID, offsetPal;
+                int offsetID = 0, offsetPal = 0;
                 // Bosses' offsetID are loaded directly
                 if ((EntityGlobalID > 0x10) && (EntityGlobalID != 0x18) && (EntityGlobalID != 0x2C) &&
                     (EntityGlobalID != 0x51) && (EntityGlobalID != 0x69) && (EntityGlobalID != 0x76) &&
-                    (EntityGlobalID != 0x7D)) // Normal Entities
+                    (EntityGlobalID != 0x7D) && (EntityGlobalID != 0x1B) && (EntityGlobalID != 0x1F) &&
+                    (EntityGlobalID != 0x47)) // Normal Entities
                 {
                     offsetID = tileID + (y - 16) * 0x20 + x;
                     offsetPal = palNum;
@@ -149,14 +152,14 @@ namespace LevelComponents
                 else if ((EntityGlobalID < 8) && (EntityGlobalID > 5)) // Diamond and Frog switch
                 {
                     offsetID = tileID + (y - 4) * 0x20 + x;
-                    offsetPal = 1;
+                    offsetPal = 2;
                 }
                 else if ((EntityGlobalID < 16) && (EntityGlobalID > 7)) // Keyzer
                 {
                     offsetID = tileID + (y - 4) * 0x20 + x;
                     // the Keyzer use 2 palette (6 and 7), but the OAM data are set by only 1 palette
                     // Using palette 7 here makes the render result more similar to the real graphic
-                    offsetPal = 3;
+                    offsetPal = 4;
                 }
                 else if (EntityGlobalID < 6) // Boxes
                 {
@@ -166,7 +169,7 @@ namespace LevelComponents
                 else if (EntityGlobalID == 0x18) // Boss: Cuckoo Condor
                 {
                     offsetID = tileID + (y - 16) * 0x20 + x;
-                    offsetPal = palNum + 1;
+                    offsetPal = 1;
                 }
                 else if ((EntityGlobalID == 0x2C) || (EntityGlobalID == 0x51)) // Boss: Spoiled Rotten and Catbat
                 {
@@ -193,26 +196,27 @@ namespace LevelComponents
                     offsetID = tileID + (y - 4) * 0x20 + x;
                     offsetPal = palNum - 3;
                 }
-                else if (EntityGlobalID == 0x1B) // zako_moguramen, broken here, idk why
+                else if (EntityGlobalID == 0x1B || (EntityGlobalID == 0x1F))
                 {
-                    offsetID = tileID + (y) * 0x20 + x;
+                    // moguramen, Togerobo
+                    offsetID = tileID + (y - 16) * 0x20 + x;
                     offsetPal = 0;
+                }
+                else if (EntityGlobalID == 0x47)
+                {
+                    // toy door
+                    offsetID = tileID + (y - 16) * 0x20 + x;
+                    offsetPal = 1;
                 }
                 else // TODO: more cases
                 {
                     offsetID = tileID + (y - 16) * 0x20 + x;
                     offsetPal = palNum;
                 }
-                // palette reset
-                if (EntityGlobalID == 0x44)
-                    offsetPal = 0;
 
                 // these Entities have an extra relative palette offset
-                if ((EntityGlobalID == 0x12) || (EntityGlobalID == 0x1D) || (EntityGlobalID == 0x2B) ||
-                    (EntityGlobalID == 0x30) || (EntityGlobalID == 0x31) || (EntityGlobalID == 0x32) ||
-                    (EntityGlobalID == 0x33) || (EntityGlobalID == 0x34) || (EntityGlobalID == 0x35) ||
-                    (EntityGlobalID == 0x36) || (EntityGlobalID == 0x37) || (EntityGlobalID == 0x38) ||
-                    (EntityGlobalID == 0x39)) // blue spear mask and domino
+                // blue spear mask, harimenzetto, red marumen
+                if (EntityGlobalID == 0x12 || (EntityGlobalID == 0x1D) || (EntityGlobalID == 0x2B))
                 {
                     offsetPal++;
                 }
@@ -220,6 +224,27 @@ namespace LevelComponents
                 {
                     offsetPal += 2;
                 }
+                if ((EntityGlobalID == 0x30) ||
+                       (EntityGlobalID == 0x31) || (EntityGlobalID == 0x32) || (EntityGlobalID == 0x33) ||
+                       (EntityGlobalID == 0x34) || (EntityGlobalID == 0x35) || (EntityGlobalID == 0x36) ||
+                       (EntityGlobalID == 0x37) || (EntityGlobalID == 0x38) || (EntityGlobalID == 0x39) ||
+                       (EntityGlobalID == 0x58) || (EntityGlobalID == 0x59) || (EntityGlobalID == 0x5A) ||
+                       (EntityGlobalID == 0x5B) || (EntityGlobalID == 0x5C))
+                {
+                    offsetPal--;
+                }
+                if (EntityGlobalID == 0x5D || (EntityGlobalID == 0x70))
+                    offsetPal = 0;
+                if (EntityGlobalID == 0x71)
+                    offsetPal = 1;
+
+                assert(offsetID >= 0);
+                if(EntityGlobalID < 0x11)
+                    assert(offsetID < ((EntityPaletteNum + 1) * 32 * 2));
+                else
+                    assert(offsetID < (EntityPaletteNum * 32 * 2));
+                assert(offsetPal < EntityPaletteNum);
+                assert(offsetPal >= 0);
 
                 Tile8x8 *newTile = new Tile8x8(tile8x8data[offsetID]);
                 newTile->SetPaletteIndex(offsetPal);
