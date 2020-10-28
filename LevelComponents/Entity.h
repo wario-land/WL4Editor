@@ -1,8 +1,12 @@
 ﻿#ifndef ENTITY_H
 #define ENTITY_H
 
+#include "Tile.h"
+#include "WL4Constants.h"
+
+#include <QPixmap>
 #include <QVector>
-#include "LevelComponents/EntitySet.h"
+#include <QPainter>
 
 namespace LevelComponents
 {

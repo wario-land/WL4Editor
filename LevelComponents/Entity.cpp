@@ -1,8 +1,6 @@
 ﻿#include "Entity.h"
 #include "ROMUtils.h"
 
-#include <QPainter>
-
 constexpr unsigned int LevelComponents::Entity::EntitiesFirstActionFrameSetsPtrsData[129];
 constexpr int LevelComponents::Entity::EntityPositinalOffset[258];
 
@@ -29,14 +27,11 @@ namespace LevelComponents
     /// <summary>
     /// Construct an instance of Entity.
     /// </summary>
-    /// <param name="entityID">
-    /// Local entity ID in entity set.
-    /// </param>
     /// <param name="entityGlobalId">
     /// Global entity ID.
     /// </param>
-    /// </param name="_currentEntityset">
-    /// Entire set pointer.
+    /// </param name="basicElementPalettePtr">
+    /// Pointer for basic sprites element palette differs in every passage, usually used for gem color stuff.
     /// </param>
     Entity::Entity(int entityGlobalId, int basicElementPalettePtr) :
             xOffset(0x7FFFFFFF), yOffset(0x7FFFFFFF), EntityGlobalID(entityGlobalId)
@@ -79,15 +74,7 @@ namespace LevelComponents
         // Set the OAM tile information
         int spritesActionOAMTablePtr = ROMUtils::PointerFromData(animationDataPointer);
         OAMDataTablePtr = spritesActionOAMTablePtr;
-        ExtractSpritesTiles(spritesActionOAMTablePtr,
-                            0); // TODO: load a different frame when meet with some of the Entities
-
-        // Set the image offsets for the entity
-        foreach (OAMTile *ot, OAMTiles)
-        {
-            xOffset = qMin(xOffset, ot->Xoff);
-            yOffset = qMin(yOffset, ot->Yoff);
-        }
+        ExtractSpritesTiles(spritesActionOAMTablePtr, 0);
     }
 
     /// <summary>
@@ -318,7 +305,7 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// sub function used in EntitySet constructor for loading sub palettes for each Entity.
+    /// sub function used in Entity constructor for loading sub palettes for each Entity.
     /// </summary>
     /// <param name="paletteNum">
     /// Amount of palettes that will be reset.
@@ -341,7 +328,7 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// sub function used in EntitySet constructor for loading Tile8x8s for each Entity.
+    /// sub function used in Entity constructor for loading Tile8x8s for each Entity.
     /// </summary>
     /// <param name="tileaddress">
     /// Address of Entity tiles in ROM.
