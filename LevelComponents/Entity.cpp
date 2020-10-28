@@ -75,6 +75,13 @@ namespace LevelComponents
         int spritesActionOAMTablePtr = ROMUtils::PointerFromData(animationDataPointer);
         OAMDataTablePtr = spritesActionOAMTablePtr;
         ExtractSpritesTiles(spritesActionOAMTablePtr, 0);
+
+        // Set the image offsets for the entity
+        foreach (OAMTile *ot, OAMTiles)
+        {
+            xOffset = qMin(xOffset, ot->Xoff);
+            yOffset = qMin(yOffset, ot->Yoff);
+        }
     }
 
     /// <summary>

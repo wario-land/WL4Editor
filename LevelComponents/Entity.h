@@ -70,10 +70,8 @@ namespace LevelComponents
         int xOffset, yOffset;
         int EntityGlobalID = 0;
         int OAMDataTablePtr = 0;
-        int EntityDeltaX = 0, EntityDeltaY = 0;
         int Priority = 0;
         int EntityPaletteNum = 0;
-        int PaletteOffset = 0;
         bool SemiTransparent = false;
         bool UnusedEntity = false;
         QVector<OAMTile *> OAMTiles;
