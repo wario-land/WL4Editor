@@ -8,7 +8,7 @@
 
 #define WHITECOLOR "#ffffff"
 #define BLACKCOLOR "#000000"
-#define DARKBACKGROUNDCOLOR "#3b3c3d"
+#define DARKBACKGROUNDCOLOR "#353637"
 
 //Used for describing one tile
 #define BLUECOLOR "#8080ff"
