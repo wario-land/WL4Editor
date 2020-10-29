@@ -256,7 +256,6 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         int tilesetPtr = WL4Constants::TilesetDataTable + i * 36;
         ROMUtils::singletonTilesets[i] = new LevelComponents::Tileset(tilesetPtr, i);
     }
-    std::map<int, int> entitiesIdAndRowSize;
     for (unsigned int i = 0; i < sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]); ++i)
     {
         ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i);

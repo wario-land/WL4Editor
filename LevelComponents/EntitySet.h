@@ -2,7 +2,6 @@
 #define ENTITYSET_H
 
 #include "Tile.h"
-#include "WL4Constants.h"
 
 #include <QColor>
 #include <QPixmap>
