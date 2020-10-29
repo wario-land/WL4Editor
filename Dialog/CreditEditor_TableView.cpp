@@ -28,15 +28,15 @@ CreditEditor_TableView::CreditEditor_TableView(QWidget *parent) :
     QTableView(parent)
 {
     menu=new QMenu("Menu", this);
-    action_one_tile = new QAction("One Tile",menu);
-    action_upper_tile = new QAction("Upper Tile",menu);
-    action_lower_tile = new QAction("Lower Tile",menu);
-    action_delete = new QAction("Delete",menu);
+    actionOneTile = new QAction("One Tile",menu);
+    actionUpperTile = new QAction("Upper Tile",menu);
+    actionLowerTile = new QAction("Lower Tile",menu);
+    actionDelete = new QAction("Delete",menu);
 
-    menu->addAction(action_one_tile);
-    menu->addAction(action_upper_tile);
-    menu->addAction(action_lower_tile);
-    menu->addAction(action_delete);
+    menu->addAction(actionOneTile);
+    menu->addAction(actionUpperTile);
+    menu->addAction(actionLowerTile);
+    menu->addAction(actionDelete);
 
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(showContextMenu(const QPoint &)));
@@ -89,7 +89,7 @@ void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QMode
 /// </param>
 void CreditEditor_TableView::showContextMenu(const QPoint &pos)
 {
-    menu->exec(this->mapToGlobal(pos),action_one_tile);
+    menu->exec(this->mapToGlobal(pos),actionOneTile);
 }
 
 /// <summary>
@@ -100,25 +100,23 @@ void CreditEditor_TableView::showContextMenu(const QPoint &pos)
 /// </param>
 void CreditEditor_TableView::doAction(QAction * action)
 {
-     QString actionText=action->text();
-
-     QModelIndexList index_list=this->selectionModel()->selectedIndexes();
-     for (int i=0;i<index_list.size();i++) {
-         QModelIndex modelIndex=index_list.at(i);
+     QModelIndexList indexList=this->selectionModel()->selectedIndexes();
+     for (int i=0;i<indexList.size();i++) {
+         QModelIndex modelIndex=indexList.at(i);
          int column=modelIndex.column();
 
          //If we are in the editable zone
          if (column < 30) {
-             if (actionText == "One Tile")
+             if (action == actionOneTile)
              {
                  this->model()->setData(modelIndex,QColor(BLUECOLOR), Qt::BackgroundRole);
-             } else if (actionText == "Upper Tile")
+             } else if (action == actionUpperTile)
              {
                  this->model()->setData(modelIndex,QColor(REDCOLOR), Qt::BackgroundRole);
-             } else if (actionText == "Lower Tile")
+             } else if (action == actionLowerTile)
              {
                  this->model()->setData(modelIndex,QColor(GREENCOLOR), Qt::BackgroundRole);
-             } else if (actionText == "Delete")
+             } else if (action == actionDelete)
              {
                 deleteFunction(modelIndex);
              }
@@ -165,13 +163,13 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event)
 
                 //Getting the background string
                 QString role=modelIndex.data(Qt::BackgroundRole).value<QColor>().name();
-                std::string role_string = role.toUtf8().constData();
+                std::string roleString = role.toUtf8().constData();
 
                 //Write the letter in the cell
                 this->model()->setData(modelIndex,event->text().toUpper(), Qt::DisplayRole);
 
                 //If there is no backgroud, we take the one tile layout by default
-                if (role_string == WHITECOLOR || role_string == DARKBACKGROUNDCOLOR || role_string == BLACKCOLOR)
+                if (roleString == WHITECOLOR || roleString == DARKBACKGROUNDCOLOR || roleString == BLACKCOLOR)
                 {
                     this->model()->setData(modelIndex,QColor(BLUECOLOR), Qt::BackgroundRole);
                 }
@@ -185,8 +183,8 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event)
                     column++;
 
                     //Column 30 and 31 can be selected but not modified
-                    QModelIndex newindex=this->model()->index(row,column);
-                    this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
+                    QModelIndex newIndex=this->model()->index(row,column);
+                    this->selectionModel()->select(newIndex,QItemSelectionModel::SelectCurrent);
 
                 }
             }
@@ -203,8 +201,8 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event)
 
             if (column >= 0)
             {
-                QModelIndex newindex=this->model()->index(row,column);
-                this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
+                QModelIndex newIndex=this->model()->index(row,column);
+                this->selectionModel()->select(newIndex,QItemSelectionModel::SelectCurrent);
             }
         }
     } else if (keycode == Qt::Key_Right || keycode == Qt::Key_Space)
@@ -219,8 +217,8 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event)
 
             if (column < 32)
             {
-                QModelIndex newindex=this->model()->index(row,column);
-                this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
+                QModelIndex newIndex=this->model()->index(row,column);
+                this->selectionModel()->select(newIndex,QItemSelectionModel::SelectCurrent);
             }
         }
     } else if (keycode == Qt::Key_Up)
@@ -235,8 +233,8 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event)
 
             if (row >= 0)
             {
-                QModelIndex newindex=this->model()->index(row,column);
-                this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
+                QModelIndex newIndex=this->model()->index(row,column);
+                this->selectionModel()->select(newIndex,QItemSelectionModel::SelectCurrent);
             }
         }
     } else if (keycode == Qt::Key_Down)
@@ -251,8 +249,8 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event)
 
             if (row < 20)
             {
-                QModelIndex newindex=this->model()->index(row,column);
-                this->selectionModel()->select(newindex,QItemSelectionModel::SelectCurrent);
+                QModelIndex newIndex=this->model()->index(row,column);
+                this->selectionModel()->select(newIndex,QItemSelectionModel::SelectCurrent);
             }
         }
     }

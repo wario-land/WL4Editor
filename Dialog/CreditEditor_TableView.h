@@ -1,5 +1,5 @@
-﻿#ifndef CREDITSEDITOR_TABLEVIEW_H
-#define CREDITSEDITOR_TABLEVIEW_H
+﻿#ifndef CREDITEDITOR_TABLEVIEW_H
+#define CREDITEDITOR_TABLEVIEW_H
 
 #include <QTableView>
 
@@ -12,10 +12,10 @@ public:
           CreditEditor_TableView(QWidget *parent = nullptr);
 private:
       QMenu* menu;
-      QAction* action_one_tile;
-      QAction* action_upper_tile;
-      QAction* action_lower_tile;
-      QAction* action_delete;
+      QAction* actionOneTile;
+      QAction* actionUpperTile;
+      QAction* actionLowerTile;
+      QAction* actionDelete;
 
       void deleteFunction(QModelIndex indexToDelete);
 protected:
@@ -27,4 +27,4 @@ protected:
           void doAction(QAction *);
 
 };
-#endif // CREDITSEDITOR_TABLEVIEW_H
+#endif // CREDITEDITOR_TABLEVIEW_H

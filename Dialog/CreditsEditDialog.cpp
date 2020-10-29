@@ -180,20 +180,20 @@ void CreditsEditDialog::on_buttonBox_accepted()
     {
         for (int i=0;i<20;i++)
         {
-            for (int j=0;j<32;j=j+1)
+            for (int j=0;j<32;j=j++)
             {
-                QModelIndex model_index=tablesView[k]->model()->index(i,j);
-                QString first_letter=model_index.data(Qt::DisplayRole).value<QString>();
-                QString role=model_index.data(Qt::BackgroundRole).value<QColor>().name();
+                QModelIndex modelIndex=tablesView[k]->model()->index(i,j);
+                QString first_letter=modelIndex.data(Qt::DisplayRole).value<QString>();
+                QString role=modelIndex.data(Qt::BackgroundRole).value<QColor>().name();
 
                 std::string string = first_letter.toUtf8().constData();
 
                 if (string.size() > 0)
                 {
-                    std::string role_string = role.toUtf8().constData();
-                    std::string first_letter_string(1,string.at(0));
+                    std::string roleString = role.toUtf8().constData();
+                    std::string firstLetterString(1,string.at(0));
 
-                    dataToSave[k][j+i*32]=CreditTileReverseMap[std::make_pair(first_letter_string,role_string)];
+                    dataToSave[k][j+i*32]=CreditTileReverseMap[std::make_pair(firstLetterString,roleString)];
                 } else
                 {
                     dataToSave[k][j+i*32]=0x0000;
