@@ -3,16 +3,6 @@
 #include "ui_CreditsEditDialog.h"
 #include "WL4Constants.h"
 
-#include <QFile>
-#include <QFileDialog>
-#include <QInputDialog>
-#include <QFileDevice>
-#include <QMessageBox>
-#include <QTableView>
-#include "Dialog/CreditEditor_TableView.h"
-#include <QHeaderView>
-#include <QStyledItemDelegate>
-
 constexpr const short CreditsEditDialog::CreditTileMapData[0x108];
 std::map< std::pair<std::string,std::string>, short> CreditsEditDialog::CreditTileReverseMap;
 std::map<short,char> CreditsEditDialog::CreditTileMap;

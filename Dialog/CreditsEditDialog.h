@@ -1,21 +1,11 @@
-#ifndef CREDITSEDITDIALOG_H
+﻿#ifndef CREDITSEDITDIALOG_H
 #define CREDITSEDITDIALOG_H
 
 #include <QDialog>
 #include <QString>
-#include <QImage>
-#include <QSpinBox>
-#include <QCheckBox>
-#include <QScrollBar>
-#include <QColorDialog>
-#include <QTextStream>
-#include <QMessageBox>
-#include <QTableView>
-#include <QHeaderView>
 #include <QStandardItem>
-
-#include "WL4Constants.h"
-#include "Dialog/SelectColorDialog.h"
+#include <QTableView>
+#include <QStyledItemDelegate>
 #include "Dialog/CreditEditor_TableView.h"
 
 #define NUMBEROFCREDITSSCREEN 13
