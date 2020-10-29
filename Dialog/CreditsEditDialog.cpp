@@ -180,7 +180,7 @@ void CreditsEditDialog::on_buttonBox_accepted()
     {
         for (int i=0;i<20;i++)
         {
-            for (int j=0;j<32;j=j++)
+            for (int j=0;j<32;j++)
             {
                 QModelIndex modelIndex=tablesView[k]->model()->index(i,j);
                 QString first_letter=modelIndex.data(Qt::DisplayRole).value<QString>();

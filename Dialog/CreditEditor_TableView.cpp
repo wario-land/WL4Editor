@@ -63,7 +63,7 @@ void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QMode
 
     std::string displayStringUppercase = firstLetter.toUpper().toUtf8().constData();
 
-    if (displayStringUppercase.size() > 0) {
+    if (displayStringUppercase.size() == 1) {
         std::string roleString = role.toUtf8().constData();
         std::string firstLetterString(1,displayStringUppercase.at(0));
 
@@ -77,6 +77,10 @@ void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QMode
                 deleteFunction(topLeft);
             }
         }
+    //If there is more that one char or no char
+    } else
+    {
+        deleteFunction(topLeft);
     }
 
 }
