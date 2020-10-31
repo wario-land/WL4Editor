@@ -32,6 +32,7 @@ namespace WL4Constants
     const unsigned int UniversalSpritesPalette     = 0x556DDC;
     const unsigned int UniversalSpritesPalette2    = 0x400A68;
     const unsigned int TreasureBoxGFXTiles         = 0x352CF0;
+    const unsigned int CreditsTiles                = 0x789FCC;
 
     // Other
     const unsigned int AvailableSpaceBeginningInROM = 0x78F970;

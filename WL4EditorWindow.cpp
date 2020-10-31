@@ -435,6 +435,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionUndo_global->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->actionManager->setEnabled(true);
+        ui->actionEdit_Credits->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -2007,4 +2008,19 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 
     // Clear everything in the new room
     ClearEverythingInRoom(true);
+}
+
+/// <summary>
+/// Display the edit credits edit dialog.
+/// It contains 13 tabs to edit corresponding credits
+/// </summary>
+void WL4EditorWindow::on_actionEdit_Credits_triggered()
+{
+    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
+    DialogParams::CreditsEditParams *creditsEditParams =
+        new DialogParams::CreditsEditParams();
+
+    // Show the dialog
+    CreditsEditDialog dialog(this, creditsEditParams);
+    dialog.exec();
 }

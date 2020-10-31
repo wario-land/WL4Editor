@@ -26,7 +26,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++11 strict_c++
+CONFIG += c++17 strict_c++
 
 QMAKE_CXXFLAGS = -fpermissive
 
@@ -68,7 +68,9 @@ SOURCES += \
     SettingsUtils.cpp \
     Dialog/TilesetEditor_Tile16MapGraphicView.cpp \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.cpp \
-    Dialog/TilesetEditor_PaletteGraphicView.cpp
+    Dialog/TilesetEditor_PaletteGraphicView.cpp \
+    Dialog/CreditsEditDialog.cpp \
+    Dialog/CreditEditor_TableView.cpp
 
 HEADERS += \
     Dialog/SelectColorDialog.h \
@@ -110,8 +112,9 @@ HEADERS += \
     Dialog/TilesetEditor_Tile16MapGraphicView.h \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.h \
     Dialog/TilesetEditor_PaletteGraphicView.h \
-    ThirdParty/phantomstyle/src/phantom/phantomstyle.h \
-    Themes.h
+    Themes.h \
+    Dialog/CreditsEditDialog.h \
+    Dialog/CreditEditor_TableView.h
 
 FORMS += \
     Dialog/SelectColorDialog.ui \
@@ -127,4 +130,5 @@ FORMS += \
     DockWidget/CameraControlDockWidget.ui \
     Dialog/PatchManagerDialog.ui \
     Dialog/PatchEditDialog.ui \
-    Dialog/TilesetEditDialog.ui
+    Dialog/TilesetEditDialog.ui \
+    Dialog/CreditsEditDialog.ui
