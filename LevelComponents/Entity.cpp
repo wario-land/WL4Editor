@@ -256,6 +256,7 @@ namespace LevelComponents
                 tmptiles.push_back(new Tile8x8(tile8x8data[i]));
             }
         }
+        return tmptiles;
     }
 
     /// <summary>

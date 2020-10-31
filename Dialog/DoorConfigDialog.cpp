@@ -1,4 +1,4 @@
-#include "DoorConfigDialog.h"
+﻿#include "DoorConfigDialog.h"
 #include "ui_DoorConfigDialog.h"
 #include "ROMUtils.h"
 
@@ -607,7 +607,7 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
     if (IsInitialized == true)
         currentEntitySetId = ui->ComboBox_EntitySetID->currentText().toInt();
     ui->TextEdit_AllTheEntities->clear();
-    std::vector<LevelComponents::EntitySetinfoTableElement> currentEntityTable =
+    QVector<LevelComponents::EntitySetinfoTableElement> currentEntityTable =
         ROMUtils::entitiessets[currentEntitySetId]->GetEntityTable();
     for (unsigned int i = 0; i < currentEntityTable.size(); ++i)
     {
