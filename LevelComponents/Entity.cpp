@@ -220,6 +220,45 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Get palettes used by this Entity.
+    /// </summary>
+    /// <param name="palId">
+    /// Palette Id used to return the specified palette QVector.
+    /// </param>
+    QVector<QRgb> Entity::GetPalette(const int palId) const
+    {
+        if(palId > EntityPaletteNum || palId < 0)
+        {
+            QVector<QRgb> firstPalette(palettes[0]);
+            return firstPalette;
+        }
+        QVector<QRgb> temPalette(palettes[palId]);
+        return temPalette;
+    }
+
+    /// <summary>
+    /// Get tiles used by this Entity.
+    /// </summary>
+    /// <param name="newPal">
+    /// newPal should be provided so it can be migrated to some EntitySet instance.
+    /// </param>
+    QVector<Tile8x8 *> Entity::GetSpriteTiles(QVector<QRgb> *newPal) const
+    {
+        QVector<Tile8x8 *> tmptiles;
+        for(int i = 0; i < tile8x8data.size(); ++i)
+        {
+            if(newPal)
+            {
+                tmptiles.push_back(new Tile8x8(tile8x8data[i], newPal));
+            }
+            else
+            {
+                tmptiles.push_back(new Tile8x8(tile8x8data[i]));
+            }
+        }
+    }
+
+    /// <summary>
     /// sub function used in Entity constructor for loading sub palettes for each Entity.
     /// </summary>
     /// <param name="paletteNum">

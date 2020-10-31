@@ -56,6 +56,9 @@ namespace LevelComponents
         int GetEntityGlobalID() { return EntityGlobalID; }
         int GetXOffset() { return xOffset; }
         int GetYOffset() { return yOffset; }
+        int GetPalNum() const { return EntityPaletteNum; }
+        QVector<QRgb> GetPalette(const int palId) const;
+        QVector<Tile8x8*> GetSpriteTiles(QVector<QRgb> *newPal) const;
 
     private:
         QVector<QRgb> palettes[16]; //i don't want to do some memory management here, so i just set it to be 16

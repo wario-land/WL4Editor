@@ -406,7 +406,7 @@ void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
     {
         for (auto &set : comboboxEntitySet)
         {
-            if (set.visible && !ROMUtils::entitiessets[set.id]->IsEntityInside(it.entity->GetEntityGlobalID()))
+            if (set.visible && !ROMUtils::entitiessets[set.id]->FindEntity(it.entity->GetEntityGlobalID()))
             {
                 set.visible = false;
             }
@@ -431,7 +431,7 @@ void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
                 bool checked = model->item(i, 0)->checkState();
                 if (checked)
                 {
-                    if (!ROMUtils::entitiessets[set.id]->IsEntityInside(model->entities[i].entity->GetEntityGlobalID()))
+                    if (!ROMUtils::entitiessets[set.id]->FindEntity(model->entities[i].entity->GetEntityGlobalID()))
                     {
                         visible = false;
                         break;

@@ -1,4 +1,4 @@
-#include "Tileset.h"
+﻿#include "Tileset.h"
 #include "ROMUtils.h"
 
 #include <iostream>
@@ -137,8 +137,8 @@ namespace LevelComponents
         map16ptr(old_tileset->map16ptr)
     {
         newtileset = true;
-        tile8x8array = new Tile8x8* [0x600];
-        map16array = new TileMap16* [0x300];
+        tile8x8array = new Tile8x8* [Tile8x8DefaultNum];
+        map16array = new TileMap16* [Tile16DefaultNum];
 
         //Save the ROM pointer into the tileset object
         this->tilesetPtr = old_tileset->getTilesetPtr();

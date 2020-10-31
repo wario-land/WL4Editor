@@ -9,7 +9,7 @@ namespace LevelComponents
     /// <param name="_EntitySetID">
     /// Entity set ID.
     /// </param>
-    EntitySet::EntitySet(int _EntitySetID) : EntitySetID(_EntitySetID)
+    EntitySet::EntitySet(const int _EntitySetID) : EntitySetID(_EntitySetID)
     {
         int entitysetptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + _EntitySetID * 4);
         int tmpEntityId;
@@ -28,6 +28,17 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Copy construct an instance of EntitySet.
+    /// </summary>
+    /// <param name="entitySet">
+    /// The entitySet used to copy construct new EntitySet.
+    /// </param>
+    EntitySet::EntitySet(const EntitySet &entitySet): EntitySetID(entitySet.EntitySetID)
+    {
+        this->EntityinfoTable = entitySet.GetEntityTable();
+    }
+
+    /// <summary>
     /// Deconstruct an instance of EntitySet.
     /// </summary>
     EntitySet::~EntitySet()
@@ -41,7 +52,7 @@ namespace LevelComponents
     /// <param name="entityglobalId">
     /// Entity global id.
     /// </param>
-    bool EntitySet::IsEntityInside(int entityglobalId)
+    bool EntitySet::FindEntity(const int entityglobalId) const
     {
         if (entityglobalId >= 0 && entityglobalId <= 0x10)
             return true;
@@ -58,11 +69,60 @@ namespace LevelComponents
     /// <summary>
     /// Get a copy of EntitySetinfoTableElement from this EntitySet.
     /// </summary>
-    std::vector<EntitySetinfoTableElement> EntitySet::GetEntityTable()
+    QVector<EntitySetinfoTableElement> EntitySet::GetEntityTable() const
     {
-        std::vector<EntitySetinfoTableElement> newtable;
-        newtable.assign(EntityinfoTable.begin(), EntityinfoTable.end());
+        QVector<EntitySetinfoTableElement> newtable(EntityinfoTable);
         return newtable;
+    }
+
+    /// <summary>
+    /// Render the whole Entityset using one palette.
+    /// </summary>
+    QPixmap EntitySet::GetPixmap(const int palNum)
+    {
+        // Initialize the palettes
+        InitBlankSubPalette(0, 3);
+        // TODO: Load more palettes, and don't forget to delete the old ones
+
+        // Clean up and re-initialize the 8x8 tiles and set all the tiles to blank tiles
+        for (int i = 0; i < TilesDefaultNum; ++i)
+        {
+            if (tile8x8array[i] != blankTile)
+            {
+                delete tile8x8array[i];
+            }
+        }
+        delete blankTile;
+        tile8x8array = new Tile8x8* [TilesDefaultNum];
+        memset(tile8x8array, 0, TilesDefaultNum * sizeof(tile8x8array[0]));
+        blankTile = Tile8x8::CreateBlankTile(palettes);
+        for (int i = 0; i < TilesDefaultNum; ++i)
+        {
+            tile8x8array[i] = blankTile;
+        }
+
+        // TODO: Load sprites tiles from entities
+
+        return QPixmap();
+    }
+
+    /// <summary>
+    /// Check if an entity is inside this Entityset by global entity id.
+    /// </summary>
+    /// <param name="palId">
+    /// Id of palette to start initialize.
+    /// </param>
+    /// <param name="rowNum">
+    /// The row number to initialize.
+    /// </param>
+    void EntitySet::InitBlankSubPalette(const int palId, const int rowNum)
+    {
+        for (int i = palId; i < (palId + rowNum - 1); ++i)
+        {
+            palettes[i].clear();
+            for (int j = 0; j < 16; ++j)
+                palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+        }
     }
 
 } // namespace LevelComponents
