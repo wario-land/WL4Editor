@@ -127,7 +127,7 @@ public:
         "0x0D nothing",
         "0x0E nothing",
         "0x0F nothing",
-        "0x10 Gem box stuff",
+        "0x10 Treasure box utility entity",
         "0x11 Yellow Spear-Mask",
         "0x12 Blue Spear-Mask",
         "0x13 Red Spear-Mask",

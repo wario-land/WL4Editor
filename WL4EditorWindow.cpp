@@ -262,7 +262,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     }
     for (unsigned int i = 0; i < sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0]); ++i)
     {
-        // TODO: the palette param should be loaded differently for different Tileset
+        // TODO: the palette param should be loaded differently for different passages for gem palette
         ROMUtils::entities[i] = new LevelComponents::Entity(i, WL4Constants::UniversalSpritesPalette);
     }
 

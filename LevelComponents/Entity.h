@@ -3,9 +3,7 @@
 
 #include "Tile.h"
 
-#include <QPixmap>
 #include <QVector>
-#include <QPainter>
 
 namespace LevelComponents
 {

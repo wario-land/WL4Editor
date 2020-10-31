@@ -1,6 +1,9 @@
 ﻿#include "Entity.h"
 #include "ROMUtils.h"
 
+#include <QPixmap>
+#include <QPainter>
+
 constexpr unsigned char LevelComponents::Entity::EntitySampleOamNumArray[129];
 constexpr int LevelComponents::Entity::EntityPositinalOffset[258];
 constexpr unsigned short LevelComponents::Entity::EntitiesOamSampleSets[129][0x2A * 3];
@@ -120,7 +123,7 @@ namespace LevelComponents
         newOAM->OAMheight = OAMDimensions[2 * (SZ * 3 + SH) + 1];
         int tileID = attr2 & 0x3FF;
         int palNum = (attr2 >> 0xC) & 0xF;
-        SemiTransparent = (((attr0 >> 0xA) & 3) == 1) ? true : false;
+        SemiTransparent = ((attr0 >> 0xA) & 3) == 1;
         Priority = (attr2 >> 0xA) & 3;
 
         // Create the tile8x8 objects

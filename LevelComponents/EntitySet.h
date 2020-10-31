@@ -27,7 +27,6 @@ namespace LevelComponents
 
     private:
         int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available
-        QVector<int> entitylist; // global id list to store all the entity used in this entity set
         QVector<EntitySetinfoTableElement> EntityinfoTable; // max item number 0x20
     };
 } // namespace LevelComponents

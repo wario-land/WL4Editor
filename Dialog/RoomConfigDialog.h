@@ -1,4 +1,4 @@
-#ifndef ROOMCONFIGDIALOG_H
+﻿#ifndef ROOMCONFIGDIALOG_H
 #define ROOMCONFIGDIALOG_H
 
 #include <QDialog>
@@ -122,7 +122,7 @@ private:
 
     // Enumeration of the available tilesets
     // This part is modified from xTibor/steaks
-    // Although he uses MIT license in that repository, but we think we had better point this out
+    // Although he uses MIT license in that repository, we think we had better point this out
     // clang-format off
     static constexpr const char *TilesetNamesSetData[0x5C] =
     {
@@ -207,7 +207,7 @@ private:
         "4E  Boss corridor",
         "4F  Golden Diva",
         "50  Hall of Hieroglyphs",
-        "51  Jungle",
+        "51  Mystic Lake",
         "52  Wildflower",
         "53  Crescent Moon Village",
         "54  Crescent Moon Village",

@@ -19,7 +19,6 @@ namespace LevelComponents
             tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
             if (tmpEntityId == 0)
                 break;
-            entitylist.push_back(tmpEntityId);
             EntitySetinfoTableElement Tmp_entitytableElement;
             Tmp_entitytableElement.Global_EntityID = tmpEntityId;
             Tmp_entitytableElement.paletteOffset = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
