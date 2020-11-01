@@ -32,7 +32,8 @@ namespace LevelComponents
         Tile8x8 **tile8x8array = nullptr;
         Tile8x8 *blankTile = nullptr;
 
-        void InitBlankSubPalette(const int palId, const int rowNum);
+        void ResetPalettes();
+        void ResetTile8x8Array();
     };
 } // namespace LevelComponents
 

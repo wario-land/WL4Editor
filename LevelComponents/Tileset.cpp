@@ -311,7 +311,7 @@ namespace LevelComponents
     /// </summary>
     QPixmap Tileset::RenderAllTile8x8(int paletteId)
     {
-        int lineNum = 0x600 / 16;
+        int lineNum = Tile8x8DefaultNum / 16;
         QPixmap pixmap(8 * 16, 8 * lineNum);
         pixmap.fill(Qt::transparent);
 

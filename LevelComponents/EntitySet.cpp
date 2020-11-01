@@ -36,6 +36,14 @@ namespace LevelComponents
     EntitySet::EntitySet(const EntitySet &entitySet): EntitySetID(entitySet.EntitySetID)
     {
         this->EntityinfoTable = entitySet.GetEntityTable();
+
+        tile8x8array = new Tile8x8* [TilesDefaultNum];
+        memset(tile8x8array, 0, TilesDefaultNum * sizeof(tile8x8array[0]));
+        blankTile = Tile8x8::CreateBlankTile(palettes);
+        for (int i = 0; i < TilesDefaultNum; ++i)
+        {
+            tile8x8array[i] = blankTile;
+        }
     }
 
     /// <summary>
@@ -43,7 +51,14 @@ namespace LevelComponents
     /// </summary>
     EntitySet::~EntitySet()
     {
-        // Add some code here if necessary
+        for (int i = 0; i < TilesDefaultNum; ++i)
+        {
+            if (tile8x8array[i] != blankTile)
+            {
+                delete tile8x8array[i];
+            }
+        }
+        delete blankTile;
     }
 
     /// <summary>
@@ -78,50 +93,149 @@ namespace LevelComponents
     /// <summary>
     /// Render the whole Entityset using one palette.
     /// </summary>
+    /// <param name="palNum">
+    /// Palette number used to render the current entityset.
+    /// </param>
     QPixmap EntitySet::GetPixmap(const int palNum)
     {
         // Initialize the palettes
-        InitBlankSubPalette(0, 3);
-        // TODO: Load more palettes, and don't forget to delete the old ones
+        ResetPalettes();
+        ResetTile8x8Array();
 
+        // Render and return pixmap
+        QPixmap pixmap(8 * 32, 8 * 32);
+        pixmap.fill(Qt::transparent);
+
+        // drawing
+        for (int i = 0; i < 32; ++i)
+        {
+            for (int j = 0; j < 32; ++j)
+            {
+                if (tile8x8array[i * 32 + j] == blankTile) continue;
+                tile8x8array[i * 32 + j]->SetPaletteIndex(palNum);
+                tile8x8array[i * 32 + j]->DrawTile(&pixmap, j * 8, i * 8);
+            }
+        }
+        return pixmap;
+    }
+
+    /// <summary>
+    /// Re-Initialize palettes and delete the old ones.
+    /// </summary>
+    void EntitySet::ResetPalettes()
+    {
+        for (int i = 0; i < 3; ++i)
+        {
+            palettes[i].clear();
+            for (int j = 0; j < 16; ++j)
+                palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+        }
+        for (int i = 3; i < 15; ++i)
+        {
+            palettes[i].clear();
+        }
+        for (int i = 3; i < 8; ++i) // load universal palettes [3, 7]
+        {
+            palettes[i] << ROMUtils::entities[6]->GetPalette(i - 3);
+        }
+        int offset = 8;
+        int localEntityId = 0;
+        bool overwriteBoxtiles = false;
+        do
+        {
+            int tmpEntityGlobalId = EntityinfoTable[localEntityId].Global_EntityID;
+            int tmpEntityPalOffset = EntityinfoTable[localEntityId].paletteOffset;
+            ++localEntityId;
+
+            int tmpEntityPalNum = ROMUtils::entities[tmpEntityGlobalId]->GetPalNum();
+            offset = tmpEntityPalNum + tmpEntityPalOffset;
+            if (offset > 14)
+                overwriteBoxtiles = true;
+            if (offset > 15)
+            {
+                // TODO: deal with exception
+                continue;
+            }
+            for (int i = tmpEntityPalOffset; i < offset; ++i) // load specified sprites' tiles
+            {
+                palettes[i].clear(); // sometimes palettes will overwrite each other
+                palettes[i] << ROMUtils::entities[tmpEntityGlobalId]->GetPalette(i - tmpEntityPalOffset);
+            }
+        } while(EntityinfoTable.size() > localEntityId);
+        if(!overwriteBoxtiles)
+        {
+            palettes[15] << ROMUtils::entities[0]->GetPalette(0);
+        }
+        for (int i = 3; i < 16; ++i)
+        {
+            if (!palettes[i].size())
+            {
+                for (int j = 0; j < 16; ++j)
+                    palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+            }
+        }
+    }
+
+    /// <summary>
+    /// Re-Initialize tile8x8array and delete the old ones.
+    /// </summary>
+    void EntitySet::ResetTile8x8Array()
+    {
         // Clean up and re-initialize the 8x8 tiles and set all the tiles to blank tiles
-        for (int i = 0; i < TilesDefaultNum; ++i)
+        for (int i = (0x20 * 4); i < TilesDefaultNum; ++i)
         {
             if (tile8x8array[i] != blankTile)
             {
                 delete tile8x8array[i];
             }
         }
-        delete blankTile;
-        tile8x8array = new Tile8x8* [TilesDefaultNum];
-        memset(tile8x8array, 0, TilesDefaultNum * sizeof(tile8x8array[0]));
-        blankTile = Tile8x8::CreateBlankTile(palettes);
-        for (int i = 0; i < TilesDefaultNum; ++i)
+        // Load universal sprites
+        QVector<Tile8x8 *> tmptilesarray = ROMUtils::entities[6]->GetSpriteTiles(palettes);
+        for (int i = (0x20 * 3); i < (0x20 * 8); ++i)
         {
-            tile8x8array[i] = blankTile;
+            tile8x8array[i] = tmptilesarray[i - 0x20 * 3];
+            tile8x8array[i]->SetIndex(i);
         }
-
-        // TODO: Load sprites tiles from entities
-
-        return QPixmap();
-    }
-
-    /// <summary>
-    /// Check if an entity is inside this Entityset by global entity id.
-    /// </summary>
-    /// <param name="palId">
-    /// Id of palette to start initialize.
-    /// </param>
-    /// <param name="rowNum">
-    /// The row number to initialize.
-    /// </param>
-    void EntitySet::InitBlankSubPalette(const int palId, const int rowNum)
-    {
-        for (int i = palId; i < (palId + rowNum - 1); ++i)
+        int offset = 8;
+        int localEntityId = 0;
+        bool overwriteBoxtiles = false;
+        do
         {
-            palettes[i].clear();
-            for (int j = 0; j < 16; ++j)
-                palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+            int tmpEntityGlobalId = EntityinfoTable[localEntityId].Global_EntityID;
+            int tmpEntityPalOffset = EntityinfoTable[localEntityId].paletteOffset;
+            ++localEntityId;
+            tmptilesarray.clear();
+            tmptilesarray = ROMUtils::entities[tmpEntityGlobalId]->GetSpriteTiles(palettes);
+
+            int tmpEntityPalNum = ROMUtils::entities[tmpEntityGlobalId]->GetPalNum();
+            offset = tmpEntityPalNum + tmpEntityPalOffset;
+            if (offset > 14)
+                overwriteBoxtiles = true;
+            if (offset > 15)
+            {
+                // TODO: deal with exception
+                continue;
+            }
+            for (int i = (0x20 * tmpEntityPalOffset); i < (0x20 * offset); ++i) // load specified sprites' tiles
+            {
+                // sometimes palettes will overwrite each other
+                if (tile8x8array[i] != blankTile)
+                {
+                    delete tile8x8array[i];
+                }
+                tile8x8array[i] = tmptilesarray[i - 0x20 * tmpEntityPalOffset];
+                tile8x8array[i]->SetIndex(i);
+            }
+        } while(EntityinfoTable.size() > localEntityId);
+        if(!overwriteBoxtiles)
+        {
+            tmptilesarray.clear();
+            tmptilesarray = ROMUtils::entities[0]->GetSpriteTiles(palettes);
+            for (int i = (0x20 * 14); i < (0x20 * 15); ++i) // load treasure boxes tiles
+            {
+                tile8x8array[i] = tmptilesarray[i - 0x20 * 14];
+                tile8x8array[i]->SetIndex(i);
+            }
         }
     }
 
