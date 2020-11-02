@@ -25,13 +25,14 @@ namespace LevelComponents
         QPixmap GetPixmap(const int palNum);
 
     private:
-        int TilesDefaultNum = 1024;
+        const static int TilesDefaultNum = 1024;
         int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available
         QVector<EntitySetinfoTableElement> EntityinfoTable; // max item number 0x20
         QVector<QRgb> palettes[16];
         Tile8x8 **tile8x8array = nullptr;
         Tile8x8 *blankTile = nullptr;
 
+        void InitTile8x8array();
         void ResetPalettes();
         void ResetTile8x8Array();
     };

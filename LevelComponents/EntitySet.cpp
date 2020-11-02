@@ -25,6 +25,7 @@ namespace LevelComponents
             EntityinfoTable.push_back(Tmp_entitytableElement);
             k++;
         } while (1);
+        this->InitTile8x8array();
     }
 
     /// <summary>
@@ -36,14 +37,7 @@ namespace LevelComponents
     EntitySet::EntitySet(const EntitySet &entitySet): EntitySetID(entitySet.EntitySetID)
     {
         this->EntityinfoTable = entitySet.GetEntityTable();
-
-        tile8x8array = new Tile8x8* [TilesDefaultNum];
-        memset(tile8x8array, 0, TilesDefaultNum * sizeof(tile8x8array[0]));
-        blankTile = Tile8x8::CreateBlankTile(palettes);
-        for (int i = 0; i < TilesDefaultNum; ++i)
-        {
-            tile8x8array[i] = blankTile;
-        }
+        this->InitTile8x8array();
     }
 
     /// <summary>
@@ -120,6 +114,20 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Initialize tile8x8array.
+    /// </summary>
+    void EntitySet::InitTile8x8array()
+    {
+        tile8x8array = new Tile8x8* [TilesDefaultNum];
+        memset(tile8x8array, 0, TilesDefaultNum * sizeof(tile8x8array[0]));
+        blankTile = Tile8x8::CreateBlankTile(palettes);
+        for (int i = 0; i < TilesDefaultNum; ++i)
+        {
+            tile8x8array[i] = blankTile;
+        }
+    }
+
+    /// <summary>
     /// Re-Initialize palettes and delete the old ones.
     /// </summary>
     void EntitySet::ResetPalettes()
@@ -191,9 +199,9 @@ namespace LevelComponents
         }
         // Load universal sprites
         QVector<Tile8x8 *> tmptilesarray = ROMUtils::entities[6]->GetSpriteTiles(palettes);
-        for (int i = (0x20 * 3); i < (0x20 * 8); ++i)
+        for (int i = (0x20 * 4); i < (0x20 * 16); ++i)
         {
-            tile8x8array[i] = tmptilesarray[i - 0x20 * 3];
+            tile8x8array[i] = tmptilesarray[i - 0x20 * 4];
             tile8x8array[i]->SetIndex(i);
         }
         int offset = 8;
@@ -216,14 +224,14 @@ namespace LevelComponents
                 // TODO: deal with exception
                 continue;
             }
-            for (int i = (0x20 * tmpEntityPalOffset); i < (0x20 * offset); ++i) // load specified sprites' tiles
+            for (int i = (0x20 * tmpEntityPalOffset * 2); i < (0x20 * offset * 2); ++i) // load specified sprites' tiles
             {
                 // sometimes palettes will overwrite each other
                 if (tile8x8array[i] != blankTile)
                 {
                     delete tile8x8array[i];
                 }
-                tile8x8array[i] = tmptilesarray[i - 0x20 * tmpEntityPalOffset];
+                tile8x8array[i] = tmptilesarray[i - 0x20 * tmpEntityPalOffset * 2];
                 tile8x8array[i]->SetIndex(i);
             }
         } while(EntityinfoTable.size() > localEntityId);
@@ -231,9 +239,9 @@ namespace LevelComponents
         {
             tmptilesarray.clear();
             tmptilesarray = ROMUtils::entities[0]->GetSpriteTiles(palettes);
-            for (int i = (0x20 * 14); i < (0x20 * 15); ++i) // load treasure boxes tiles
+            for (int i = (0x20 * 15 * 2); i < (0x20 * 16 * 2); ++i) // load treasure boxes tiles
             {
-                tile8x8array[i] = tmptilesarray[i - 0x20 * 14];
+                tile8x8array[i] = tmptilesarray[i - 0x20 * 15 * 2];
                 tile8x8array[i]->SetIndex(i);
             }
         }

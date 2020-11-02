@@ -49,10 +49,11 @@ namespace LevelComponents
     {
     public:
         Entity(int entityGlobalId, int basicElementPalettePtr = 0);
+        Entity(const Entity &entity); // Copy constructor
         ~Entity();
         QImage Render();
         static EntityPositionalOffset GetEntityPositionalOffset(int entityglobalId);
-        int GetPriority() { return Priority; }
+//        int GetPriority() { return Priority; }
         int GetEntityGlobalID() { return EntityGlobalID; }
         int GetXOffset() { return xOffset; }
         int GetYOffset() { return yOffset; }
@@ -63,18 +64,18 @@ namespace LevelComponents
     private:
         QVector<QRgb> palettes[16]; //i don't want to do some memory management here, so i just set it to be 16
         QVector<Tile8x8*> tile8x8data;
-        void LoadSubPalettes(int paletteNum, int paletteSetPtr, int startPaletteId = 0);
-        void LoadSpritesTiles(int tileaddress, int datalength);
-        bool xFlip = false;
-        bool yFlip = false;
-        int xOffset, yOffset;
+        int xOffset = 0, yOffset = 0;
         int EntityGlobalID = 0;
-        int OAMDataTablePtr = 0;
-        int Priority = 0;
         int EntityPaletteNum = 0;
-        bool SemiTransparent = false;
         bool UnusedEntity = false;
         QVector<OAMTile *> OAMTiles;
+//        bool xFlip = false; // unused for now
+//        bool yFlip = false;
+//        int Priority = 0;
+//        bool SemiTransparent = false;
+
+        void LoadSubPalettes(int paletteNum, int paletteSetPtr, int startPaletteId = 0);
+        void LoadSpritesTiles(int tileaddress, int datalength);
         void OAMtoTiles(unsigned short *singleOAM);
         void ExtractSpritesTiles();
 

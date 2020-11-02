@@ -37,13 +37,11 @@ namespace LevelComponents
     /// </param name="basicElementPalettePtr">
     /// Pointer for basic sprites element palette differs in every passage, usually used for gem color stuff.
     /// </param>
-    Entity::Entity(int entityGlobalId, int basicElementPalettePtr) :
-            xOffset(0x7FFFFFFF), yOffset(0x7FFFFFFF), EntityGlobalID(entityGlobalId)
+    Entity::Entity(int entityGlobalId, int basicElementPalettePtr) : EntityGlobalID(entityGlobalId)
     {
         if (EntitySampleOamNumArray[entityGlobalId] == 0)
         {
             UnusedEntity = true;
-            xOffset = yOffset = 0;
             return;
         }
 
@@ -86,6 +84,25 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Copy construct an instance of Entity.
+    /// </summary>
+    /// <param name="entity">
+    /// The entity used to copy construct new Entity.
+    /// </param>
+    Entity::Entity(const Entity &entity) : xOffset(entity.xOffset), yOffset(entity.yOffset),
+        EntityGlobalID(entity.EntityGlobalID), EntityPaletteNum(entity.EntityPaletteNum), UnusedEntity(entity.UnusedEntity)
+    {
+        if (UnusedEntity) return;
+
+        for (int i = 0; i < EntityPaletteNum; ++i)
+        {
+            palettes[i] = entity.GetPalette(i);
+        }
+        tile8x8data = entity.GetSpriteTiles(palettes);
+        ExtractSpritesTiles();
+    }
+
+    /// <summary>
     /// Deconstruct an instance of Entity.
     /// </summary>
     Entity::~Entity()
@@ -123,8 +140,8 @@ namespace LevelComponents
         newOAM->OAMheight = OAMDimensions[2 * (SZ * 3 + SH) + 1];
         int tileID = attr2 & 0x3FF;
         int palNum = (attr2 >> 0xC) & 0xF;
-        SemiTransparent = ((attr0 >> 0xA) & 3) == 1;
-        Priority = (attr2 >> 0xA) & 3;
+//        SemiTransparent = ((attr0 >> 0xA) & 3) == 1;
+//        Priority = (attr2 >> 0xA) & 3;
 
         // Create the tile8x8 objects
         for (int y = 0; y < newOAM->OAMheight; ++y)
@@ -202,7 +219,7 @@ namespace LevelComponents
             OAMTile *ot = *iter;
             p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, ot->Render());
         }
-        return pm.toImage().mirrored(xFlip, yFlip);
+        return pm.toImage()/*.mirrored(xFlip, yFlip)*/;
     }
 
     /// <summary>
