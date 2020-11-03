@@ -1,5 +1,8 @@
-#ifndef TILESET_H
+﻿#ifndef TILESET_H
 #define TILESET_H
+
+#define Tile8x8DefaultNum 0x600
+#define Tile16DefaultNum 0x300
 
 #include <QColor>
 #include <QVector>
@@ -12,8 +15,6 @@ namespace LevelComponents
     {
     private:
         int tilesetPtr;
-        int Tile8x8DefaultNum = 0x600;
-        int Tile16DefaultNum = 0x300;
         Tile8x8 **tile8x8array = nullptr;
         TileMap16 **map16array = nullptr;
         QVector<QRgb> palettes[16];
