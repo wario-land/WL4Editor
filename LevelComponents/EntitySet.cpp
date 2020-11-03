@@ -1,6 +1,8 @@
-﻿#include <iostream>
-#include "EntitySet.h"
+﻿#include "EntitySet.h"
 #include "ROMUtils.h"
+
+#include "WL4EditorWindow.h"
+extern WL4EditorWindow *singleton;
 
 namespace LevelComponents
 {
@@ -163,7 +165,7 @@ namespace LevelComponents
             if (offset > 15)
             {
                 // TODO: deal with exception
-                std::cout << "load entityset error: too many palettes" << std::endl;
+                singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("load entityset error: loading palette's id out of bound."));
                 continue;
             }
             for (int i = tmpEntityPalOffset; i < offset; ++i) // load specified sprites' tiles
