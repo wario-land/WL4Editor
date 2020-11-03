@@ -140,8 +140,6 @@ namespace LevelComponents
         newOAM->OAMheight = OAMDimensions[2 * (SZ * 3 + SH) + 1];
         int tileID = attr2 & 0x3FF;
         int palNum = (attr2 >> 0xC) & 0xF;
-//        SemiTransparent = ((attr0 >> 0xA) & 3) == 1;
-//        Priority = (attr2 >> 0xA) & 3;
 
         // Create the tile8x8 objects
         for (int y = 0; y < newOAM->OAMheight; ++y)
@@ -219,7 +217,7 @@ namespace LevelComponents
             OAMTile *ot = *iter;
             p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, ot->Render());
         }
-        return pm.toImage()/*.mirrored(xFlip, yFlip)*/;
+        return pm.toImage();
     }
 
     /// <summary>
@@ -249,8 +247,8 @@ namespace LevelComponents
             QVector<QRgb> firstPalette(palettes[0]);
             return firstPalette;
         }
-        QVector<QRgb> temPalette(palettes[palId]);
-        return temPalette;
+        QVector<QRgb> tmpPalette(palettes[palId]);
+        return tmpPalette;
     }
 
     /// <summary>

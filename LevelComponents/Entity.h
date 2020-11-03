@@ -53,7 +53,6 @@ namespace LevelComponents
         ~Entity();
         QImage Render();
         static EntityPositionalOffset GetEntityPositionalOffset(int entityglobalId);
-//        int GetPriority() { return Priority; }
         int GetEntityGlobalID() { return EntityGlobalID; }
         int GetXOffset() { return xOffset; }
         int GetYOffset() { return yOffset; }
@@ -69,10 +68,6 @@ namespace LevelComponents
         int EntityPaletteNum = 0;
         bool UnusedEntity = false;
         QVector<OAMTile *> OAMTiles;
-//        bool xFlip = false; // unused for now
-//        bool yFlip = false;
-//        int Priority = 0;
-//        bool SemiTransparent = false;
 
         void LoadSubPalettes(int paletteNum, int paletteSetPtr, int startPaletteId = 0);
         void LoadSpritesTiles(int tileaddress, int datalength);

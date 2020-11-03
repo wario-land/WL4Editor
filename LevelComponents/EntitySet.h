@@ -1,6 +1,8 @@
 ﻿#ifndef ENTITYSET_H
 #define ENTITYSET_H
 
+#define TilesDefaultNum 1024
+
 #include "Tile.h"
 #include <QVector>
 #include <QPixmap>
@@ -25,7 +27,6 @@ namespace LevelComponents
         QPixmap GetPixmap(const int palNum);
 
     private:
-        const static int TilesDefaultNum = 1024;
         int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available
         QVector<EntitySetinfoTableElement> EntityinfoTable; // max item number 0x20
         QVector<QRgb> palettes[16];

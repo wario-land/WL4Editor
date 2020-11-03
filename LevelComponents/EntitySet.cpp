@@ -1,4 +1,5 @@
-﻿#include "EntitySet.h"
+﻿#include <iostream>
+#include "EntitySet.h"
 #include "ROMUtils.h"
 
 namespace LevelComponents
@@ -162,6 +163,7 @@ namespace LevelComponents
             if (offset > 15)
             {
                 // TODO: deal with exception
+                std::cout << "load entityset error: too many palettes" << std::endl;
                 continue;
             }
             for (int i = tmpEntityPalOffset; i < offset; ++i) // load specified sprites' tiles
@@ -204,8 +206,8 @@ namespace LevelComponents
             tile8x8array[i] = tmptilesarray[i - 0x20 * 4];
             tile8x8array[i]->SetIndex(i);
         }
-        int offset = 8;
-        int localEntityId = 0;
+        int offset = 8; // 2 rows count 1 in the offset, keep the loading progress the same as palette loading
+        int localEntityId = 0; // used to contain the current entity being loaded tiles
         bool overwriteBoxtiles = false;
         do
         {
