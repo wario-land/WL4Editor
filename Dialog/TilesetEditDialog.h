@@ -1,4 +1,4 @@
-#ifndef TILESETEDITDIALOG_H
+﻿#ifndef TILESETEDITDIALOG_H
 #define TILESETEDITDIALOG_H
 
 #include <QDialog>
@@ -10,13 +10,8 @@
 #include <QColorDialog>
 #include <QTextStream>
 #include <QMessageBox>
-#include "LevelComponents/Layer.h"
 #include "LevelComponents/Room.h"
-#include "LevelComponents/Tileset.h"
-#include "LevelComponents/Tile.h"
-#include "ROMUtils.h"
 #include "RoomPreviewGraphicsView.h"
-#include "WL4Constants.h"
 #include "Dialog/SelectColorDialog.h"
 
 namespace DialogParams

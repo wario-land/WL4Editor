@@ -2,8 +2,6 @@
 #include "Compress.h"
 #include <QFile>
 #include "WL4EditorWindow.h"
-#include <cassert>
-#include <iostream>
 
 extern WL4EditorWindow *singleton;
 

@@ -1,10 +1,9 @@
-#ifndef ROMUTILS_H
+﻿#ifndef ROMUTILS_H
 #define ROMUTILS_H
 
 #include <QString>
 #include <map>
 #include <functional>
-#include <cstdio> //include definition for FILE
 #include <cstring>
 #include <string>
 #include <vector>
