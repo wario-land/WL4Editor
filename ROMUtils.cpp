@@ -1,4 +1,4 @@
-#include "ROMUtils.h"
+﻿#include "ROMUtils.h"
 #include "Compress.h"
 #include <QFile>
 #include "WL4EditorWindow.h"
@@ -330,7 +330,7 @@ namespace ROMUtils
         // Create FGTile8x8GraphicData chunk
         int FGTileGfxDataLen = singletonTilesets[TilesetId]->GetfgGFXlen();
         unsigned char FGmap8x8tiledata[(1024 - 65) * 32];
-        LevelComponents::Tile8x8 **tile8x8array = singletonTilesets[TilesetId]->GetTile8x8arrayPtr();
+        QVector<LevelComponents::Tile8x8 *> tile8x8array = singletonTilesets[TilesetId]->GetTile8x8arrayPtr();
         for (int j = 0; j < (FGTileGfxDataLen / 32); ++j)
         {
             memcpy(&FGmap8x8tiledata[32 * j], tile8x8array[j + 0x41]->CreateGraphicsData().data(), 32);
@@ -372,7 +372,7 @@ namespace ROMUtils
         chunks.append(TilesetPalettechunk);
 
         // Create Map16Data chunk
-        LevelComponents::TileMap16** map16data = singletonTilesets[TilesetId]->GetMap16arrayPtr();
+        QVector<LevelComponents::TileMap16 *> map16data = singletonTilesets[TilesetId]->GetMap16arrayPtr();
         struct ROMUtils::SaveData Map16Datachunk = { static_cast<unsigned int>(tilesetPtr + 20),
                                                          0x300 * 8,
                                                          (unsigned char *) malloc(0x300 * 8),
