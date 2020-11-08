@@ -318,12 +318,8 @@ void WL4EditorWindow::SetGraphicViewScalerate(uint scalerate)
 {
     ui->graphicsView->scale((qreal)scalerate / (qreal)graphicViewScalerate, (qreal)scalerate / (qreal)graphicViewScalerate);
     graphicViewScalerate = scalerate;
-    // TODO: find a method to get mouse pos instantly
-//    int mouse_x = ui->graphicsView->mapFromGlobal(QCursor::pos()).x();
-//    int mouse_y = ui->graphicsView->mapFromGlobal(QCursor::pos()).y();
-//    PrintMousePos(mouse_x, mouse_y);
     statusBarLabel_MousePosition->setText(tr("Move your mouse to show position again!"));
-    statusBarLabel_Scalerate->setText(tr("scale rate: ") + QString::number(graphicViewScalerate) + "00%");
+    statusBarLabel_Scalerate->setText(tr("Scale rate: ") + QString::number(graphicViewScalerate) + "00%");
 }
 
 /// <summary>
@@ -1834,7 +1830,7 @@ void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
 void WL4EditorWindow::on_actionManager_triggered()
 {
     PatchManagerDialog dialog(this);
-    auto result = dialog.exec();
+    dialog.exec();
 }
 
 /// <summary>
@@ -1939,7 +1935,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     int newRoomId = CurrentLevel->GetRooms().size();
     if (newRoomId == 16)
     {
-        OutputWidget->PrintString("Cannot add more Rooms to the current Level!");
+        OutputWidget->PrintString(tr("Cannot add another Room to the current Level!"));
         return;
     }
     int offset = WL4Constants::LevelHeaderIndexTable + selectedLevel._PassageIndex * 24 + selectedLevel._LevelIndex * 4;
@@ -1948,7 +1944,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
     if (roomCount <= static_cast<int>(selectedRoom))
     {
-        OutputWidget->PrintString("Cannot create room, current Room has not been saved in the rom yet!");
+        OutputWidget->PrintString(tr("Cannot create room, current Room has not been saved to the ROM yet!"));
         return;
     }
 
@@ -2001,7 +1997,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 
     // UI updates
     SetCurrentRoomId(newRoomId);
-    OutputWidget->PrintString("Created a new blank room (# " + QString::number(newRoomId) + ") using the current room's data saved in the rom.");
+    OutputWidget->PrintString(QString(tr("Created a new blank room")) + " (# " + QString::number(newRoomId) + ") " + tr("using the current room's data saved in the ROM."));
 
     // Clear everything in the new room
     ClearEverythingInRoom(true);

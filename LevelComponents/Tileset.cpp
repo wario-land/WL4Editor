@@ -136,6 +136,7 @@ namespace LevelComponents
         bgGFXlen(old_tileset->bgGFXlen),
         map16ptr(old_tileset->map16ptr)
     {
+        (void) __TilesetID;
         newtileset = true;
         tile8x8array = new Tile8x8* [Tile8x8DefaultNum];
         map16array = new TileMap16* [Tile16DefaultNum];
@@ -251,12 +252,11 @@ namespace LevelComponents
             tile8x8array[i + startTile8x8Id] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes);
         }
 
-        // Update TIle16 data
+        // Update Tile16 data
         if(hasconstructed)
         {
             for (int i = 0; i < Tile16DefaultNum; ++i)
             {
-                Tile8x8 *tiles[4];
                 for (int j = 0; j < 4; ++j)
                 {
                     Tile8x8 *tile = map16array[i]->GetTile8X8(j);
