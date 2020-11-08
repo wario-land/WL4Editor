@@ -290,12 +290,13 @@ static QString CreateLinkerScript(struct PatchEntryItem entry)
     REPLACE_EXT(ldfile, ".c", ".ld");
     QString memcpy_o(QCoreApplication::applicationDirPath() + "/memcpy.o");
 
-    QString pa = QString::number(0x8000000 | entry.PatchAddress, 16);
+    QString pa = QString::number(0x8000000 | entry.PatchAddress + 12, 16);
     QString scriptContents =
         QString("SECTIONS\n") +
         "{\n" +
-        "    .text  0x" + pa + " : { " + ofile + " }\n" +
-        "    .dummy 0x8000000 (NOLOAD) : { " + memcpy_o + " }\n" +
+        "    .text   0x" + pa + " : { " + ofile + " (.text) }\n" +
+        "    .rodata : { " + ofile + " (.rodata) }\n" +
+        "    .dummy  0x8000000 (NOLOAD) : { " + memcpy_o + " }\n" +
         "}\n" +
         "memcpy = 0x80950D9;";
 
@@ -339,7 +340,7 @@ static QString LinkOFile(QString ofile)
     REPLACE_EXT(ldfile, ".o", ".ld");
     QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_LD);
     QStringList args;
-    args << "-T" << ldfile << "-o" << outfile ;
+    args << "-T" << ldfile << "-o" << outfile;
 
     // Run LD
     return RunProcess(executable, args);
@@ -546,28 +547,6 @@ static QVector<struct PatchEntryItem> DetermineRemovalPatches(QVector<struct Pat
 }
 
 /// <summary>
-/// Compile a list of patches which would remain in the ROM after removing some.
-/// </summary>
-/// <param name="existingPatches">
-/// The existing patch entries in the ROM.
-/// </param>
-/// <param name="removalPatches">
-/// The patches which will be removed from the ROM.
-/// </param>
-/// <returns>
-/// The list of patches which would remain in the ROM.
-/// </returns>
-static QVector<struct PatchEntryItem> DetermineRemainingPatches(QVector<struct PatchEntryItem> existingPatches, QVector<struct PatchEntryItem> removalPatches)
-{
-    QVector<struct PatchEntryItem> remainingPatches(existingPatches);
-    QVector<struct PatchEntryItem>::iterator removeItr = std::remove_if(remainingPatches.begin(), remainingPatches.end(),
-        [removalPatches](struct PatchEntryItem p1){return std::find_if(removalPatches.begin(), removalPatches.end(),
-            [p1](struct PatchEntryItem p2){return p1.HookAddress == p2.HookAddress;}) != removalPatches.end();});
-    remainingPatches.erase(removeItr, remainingPatches.end());
-    return remainingPatches;
-}
-
-/// <summary>
 /// Create a save chunk for a patch list entry
 /// </summary>
 /// <param name="patch">
@@ -576,10 +555,10 @@ static QVector<struct PatchEntryItem> DetermineRemainingPatches(QVector<struct P
 /// <returns>
 /// The save chunk.
 /// </returns>
-static struct ROMUtils::SaveData CreatePatchSaveChunk(struct PatchEntryItem patch)
+static struct ROMUtils::SaveData CreatePatchSaveChunk(struct PatchEntryItem &patch)
 {
     QString binName(patch.FileName);
-    binName.chop(binName.length() - binName.lastIndexOf('.') + 1);
+    binName.chop(binName.length() - binName.lastIndexOf('.') - 1);
     binName += "bin";
 
     // Get data from bin file
@@ -587,14 +566,15 @@ static struct ROMUtils::SaveData CreatePatchSaveChunk(struct PatchEntryItem patc
     QFile binFile(romFileDir + "/" + binName);
     binFile.open(QIODevice::ReadOnly);
     QByteArray binContents = binFile.readAll();
-    unsigned char *data = new unsigned char[binFile.size()];
-    memcpy(data, binContents.constData(), binFile.size());
+    int fileSize = binFile.size();
+    unsigned char *data = new unsigned char[fileSize];
+    memcpy(data, binContents.constData(), fileSize);
 
     // Create the save chunk
     return
     {
         0,
-        static_cast<unsigned int>(binFile.size()),
+        static_cast<unsigned int>(fileSize),
         data,
         ROMUtils::SaveDataIndex++,
         true,
@@ -679,8 +659,6 @@ namespace PatchUtils
         QVector<struct ROMUtils::SaveData> chunks;
         QVector<struct PatchEntryItem> existingPatches = GetPatchesFromROM();
         QVector<struct PatchEntryItem> removePatches = DetermineRemovalPatches(entries, existingPatches);
-        QVector<struct PatchEntryItem> remainingPatches = DetermineRemainingPatches(existingPatches, removePatches);
-        bool noPatches = !remainingPatches.size() && !entries.size();
         std::map<int, struct PatchEntryItem*> saveChunkIndexToMetadata, saveChunkIndexToRemoval;
 
         // Populate the chunk list with patches to add to the ROM
@@ -729,16 +707,45 @@ namespace PatchUtils
             (const struct PatchEntryItem p){return p.FileName.length();});
         std::map<unsigned int, unsigned int> neededSizeMap; // key: hook address
         QString errorMsg;
-        bool plcAllocated = !noPatches; // patch list chunk status
+        bool plcAllocated = !entries.size(); // patch list chunk status
+        bool firstCallback = true;
 
         // Allocate and save the chunks to the ROM
         bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, invalidationChunks,
 
             // ChunkAllocator
 
-            [&neededSizeMap, &patchAllocIter, entries, &errorMsg, &plcAllocated]
-            (struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd)
+            [&neededSizeMap, &patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback, removePatches]
+            (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd)
             {
+                // On the first callback, we must recalculate the substituted bytes for the hook strings
+                // of the unmodified ROM. This must occur strictly before the new patch list chunk is created.
+                if(firstCallback)
+                {
+                    // Undo removal patches (if there are patches to remove)
+                    for(struct PatchEntryItem patch : removePatches)
+                    {
+                        // Get patch hex string from removal patch struct, write into TempFile
+                        unsigned char *originalBytes = HexStringToBinary(patch.SubstitutedBytes);
+                        memcpy(TempFile + patch.HookAddress, originalBytes, patch.SubstitutedBytes.length() / 2);
+                        delete[] originalBytes;
+                    }
+
+                    // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
+                    for(struct PatchEntryItem &patch : entries)
+                    {
+                        int hookLength = patch.HookString.length() / 2; // hook string is hex string, 2 digits per byte
+                        if(patch.PatchOffsetInHookString != static_cast<unsigned int>(-1))
+                        {
+                            hookLength += 4;
+                        }
+                        patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
+                    }
+
+                    firstCallback = false;
+                }
+
+                // Create save data for all the patches in the iterator
                 if(patchAllocIter != entries.end())
                 {
                     // If we have already reported insufficient space for this patch, then
@@ -757,7 +764,7 @@ namespace PatchUtils
                     // If it is the first time processing this patch or we've been given a
                     // new free space region for this patch, compile and link at proposed
                     // address to find the required size
-                    int alignOffset = (freeSpace.addr + 3) & 3;
+                    int alignOffset = freeSpace.addr - ((freeSpace.addr + 3) & ~3);
                     patchAllocIter->PatchAddress = freeSpace.addr + alignOffset;
                     if((errorMsg = CompilePatchEntry(*patchAllocIter)) != "")
                     {
@@ -775,7 +782,8 @@ namespace PatchUtils
                     // Allocation success
                     *sd = saveData;
 
-                    // TODO maybe something to do with hook strings, I dunno
+                    // Set metadata of the patch entry based off accepted save location and binary size
+
 
                     // Advance patch iterator to next non-hex-edit patch
                     patchAllocIter++;
@@ -791,92 +799,14 @@ namespace PatchUtils
                     // Create patch list chunk after all patches have been processed
                     if(!plcAllocated)
                     {
-                        // TODO Create patch list chunk
-
-                        // TODO Check if there is sufficient space in this FreeSpaceRegion
-
-                        plcAllocated = true;
-                        return ROMUtils::ChunkAllocationStatus::Success;
-                    }
-
-                    return ROMUtils::ChunkAllocationStatus::NoMoreChunks;
-                }
-            },
-
-            // PostProcessingCallback
-
-            []
-            (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
-            {
-                // TODO
-
-                return QString("");
-            }
-        );
-
-
-
-
-        /*
-        bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, chunks,
-
-            // ChunkAllocationCallback
-
-            [firstCallback, &entries, &saveChunkIndexToMetadata, removePatches, noPatches]
-            (unsigned char *TempFile, QVector<struct ROMUtils::SaveData>& addedSaveChunks, std::map<int, int> indexToChunkPtr) mutable -> QString
-            {
-                // Create and add PatchListChunk after patch chunk locations have been allocated by SaveFile()
-                if(firstCallback)
-                {
-                    // Undo removal patches (if there are patches to remove)
-                    for(struct PatchEntryItem patch : removePatches)
-                    {
-                        // Get patch hex string from removal patch struct, write into TempFile
-                        unsigned char *originalBytes = HexStringToBinary(patch.SubstitutedBytes);
-                        memcpy(TempFile + patch.HookAddress, originalBytes, patch.SubstitutedBytes.length() / 2);
-                        delete[] originalBytes;
-                    }
-
-                    // Update entry structs with information from the added chunks
-                    if(!noPatches)
-                    {
-                        for(struct PatchEntryItem &patch : entries)
-                        {
-                            // Set the patch address that was calculated by the save chunk allocator
-                            int chunkPtr;
-                            struct ROMUtils::SaveData *saveChunk = std::find_if(addedSaveChunks.begin(), addedSaveChunks.end(),
-                                [patch, &chunkPtr, &indexToChunkPtr, &saveChunkIndexToMetadata](struct ROMUtils::SaveData sd)
-                                {
-                                    chunkPtr = indexToChunkPtr[sd.index];
-                                    struct PatchEntryItem *mdPtr = saveChunkIndexToMetadata[sd.index];
-                                    return mdPtr ? mdPtr->HookAddress == patch.HookAddress : false;
-                                });
-                            patch.PatchAddress = saveChunk != addedSaveChunks.end() ? chunkPtr : 0;
-
-                            // Recompile the patch now that the patch address can be used in the linker script for .org directive
-                            CompilePatchEntry(patch);
-                            struct ROMUtils::SaveData tempSaveData = CreatePatchSaveChunk(patch);
-                            if(saveChunk->size != tempSaveData.size)
-                            {
-                                QString msg = QString(QT_TR_NOOP("Validation error in chunk allocation callback: Mismatch between precompiled and postcompiled size of patch data: ")) + patch.FileName;
-                                singleton->GetOutputWidgetPtr()->PrintString(msg);
-                                return msg;
-                            }
-                            delete saveChunk->data;
-                            saveChunk->data = tempSaveData.data;
-
-                            // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
-                            int hookLength = patch.HookString.length() / 2; // hook string is hex string, 2 digits per byte
-                            if(patch.PatchOffsetInHookString != static_cast<unsigned int>(-1))
-                            {
-                                hookLength += 4;
-                            }
-                            patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
-                        }
-                        addedSaveChunks.clear();
-
-                        // Create the save chunk for the PatchListChunk
+                        // Create patch list chunk contents, make sure there is sufficient space
                         QString patchListChunkContents = CreatePatchListChunkData(entries);
+                        if((unsigned int)patchListChunkContents.length() + 1 > freeSpace.size)
+                        {
+                            return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                        }
+
+                        // Create the save chunk data
                         unsigned char *data = new unsigned char[patchListChunkContents.length() + 1];
                         memcpy(data + 1, patchListChunkContents.toLocal8Bit().constData(), patchListChunkContents.length());
                         data[0] = PATCH_CHUNK_VERSION;
@@ -891,19 +821,19 @@ namespace PatchUtils
                             0,
                             ROMUtils::SaveDataChunkType::PatchListChunk
                         };
-                        addedSaveChunks.append(patchListChunk);
-                    }
-                    else addedSaveChunks.clear();
+                        *sd = patchListChunk;
 
-                    firstCallback = false;
+                        plcAllocated = true;
+                        return ROMUtils::ChunkAllocationStatus::Success;
+                    }
+
+                    return ROMUtils::ChunkAllocationStatus::NoMoreChunks;
                 }
-                else addedSaveChunks.clear();
-                return "";
             },
 
             // PostProcessingCallback
 
-            [chunks, &entries]
+            [removePatches, chunks, &entries]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
                 (void)indexToChunkPtr;
@@ -928,10 +858,10 @@ namespace PatchUtils
                     memcpy(TempFile + patch.HookAddress, hookData, hookString.length() / 2);
                     delete[] hookData;
                 }
-                return "";
+
+                return QString("");
             }
         );
-        */
 
         return ret ? "" : errorMsg;
     }
