@@ -12,7 +12,6 @@
 #include <QMessageBox>
 #include "LevelComponents/Room.h"
 #include "RoomPreviewGraphicsView.h"
-#include "Dialog/SelectColorDialog.h"
 
 namespace DialogParams
 {

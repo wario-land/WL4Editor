@@ -544,7 +544,7 @@ void TilesetEditDialog::OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(int posI
     if(tile != tilesetEditParams->newTileset->GetblankTile())
         delete tile;
     tile = new LevelComponents::Tile8x8(tiledata, tilesetEditParams->newTileset->GetPalettes());
-    tilearray[posId] = tile;
+    tilesetEditParams->newTileset->SetTile8x8(tile, posId);
 
     // update Tile16 map
     for(int i = 0; i < 0x300; ++i)
@@ -815,177 +815,42 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
         return;
     }
 
-    // Load gfx bin file
-    QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Load Tileset graphic bin file"), QString(""),
-                                                    tr("bin file (*.bin)"));
-
-    // load data into QBytearray
-    QByteArray tmptile8x8data, tmptile8x8data_final;
-    QFile gfxbinfile(fileName);
-    if(!gfxbinfile.open(QIODevice::ReadOnly))
-    {
-        QMessageBox::critical(this, tr("Error"), tr("Cannot open file! \n").append(gfxbinfile.errorString()));
-        return;
-    }
-    if(!gfxbinfile.size())
-    {
-        QMessageBox::critical(this, tr("Error"), tr("File size is 0!"));
-        return;
-    }
-    tmptile8x8data = gfxbinfile.readAll();
-    tmptile8x8data_final = gfxbinfile.readAll(); // Init
-    gfxbinfile.close();
-
-    // Check size
-    if(tmptile8x8data.size() & 31)
-    {
-        QMessageBox::critical(this, tr("Error"), tr("Illegal file size!\nIt should be a multiple of 32 Bytes."));
-        return;
-    }
-
-    // Load palette data from bin file
-    fileName = QFileDialog::getOpenFileName(this,
-                                            tr("Load palette bin file"), QString(""),
-                                            tr("bin file (*.bin)"));
-    QByteArray tmppalettedata;
-    QFile palbinfile(fileName);
-    if(!palbinfile.open(QIODevice::ReadOnly))
-    {
-        QMessageBox::critical(this, tr("Error"), tr("Cannot open file!"));
-        return;
-    }
-    tmppalettedata = palbinfile.readAll();
-    palbinfile.close();
-
-    QVector<QRgb> tmppalette;
-    unsigned short *tmppaldata = new unsigned short[16];
-    memset(tmppaldata, 0, 32);
-    memcpy(tmppaldata, tmppalettedata.data(), qMin(32, tmppalettedata.size()));
-    ROMUtils::LoadPalette(&tmppalette, tmppaldata, true);
-    delete[] tmppaldata;
-
-    // Get transparent color id in the palette
-    int transparentcolorId = 0;
-    SelectColorDialog scdialog;
-    scdialog.SetPalette(tmppalette);
-    scdialog.SetColor(0);
-    if(scdialog.exec() == QDialog::Accepted)
-    {
-        transparentcolorId = scdialog.GetSelectedColorId();
-    } else {
-        return;
-    }
-
-    // transparent-substitute color replacement and load palette
-    tmppalette[transparentcolorId] = 0;
-
-    // nybble exchange not needed
-    // reset bytearray according to the palette bin file
-    for(int i = 0; i != 16; ++i)
-    {
-        char count = 0;
-
-        // Find if the color[i] is in the current palette
-        while(1)
+    LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
+    TilesetEditDialog *currenteditor = this;
+    int selTile8x8 = SelectedTile8x8;
+    FileIOUtils::ImportTile8x8GfxData(this,
+        tmp_newTilesetPtr->GetPalettes()[SelectedPaletteId],
+        [selTile8x8, tmp_newTilesetPtr, currenteditor] (QByteArray finaldata, QWidget *parentPtr)
         {
-            if(tmppalette[i] == tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId][count])
+            // Assume the file is fully filled with tiles
+            int newtilenum = finaldata.size() / 32;
+
+            // compare (number of the new Tile8x8 + selected Tile8x8 Id + 1) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)
+            // if (number of the new Tile8x8 + selected Tile8x8 Id + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32) then
+            // tilesetEditParams->newTileset->SetfgGFXlen(number of the new Tile8x8 + selected Tile8x8 Id)
+            // also (newtilenum + SelectedTile8x8 + 1) should be less than or equal to 0x400 or return
+            // create new Tile8x8 by using 32-byte length data
+            // overwrite and replace the old TIle8x8 instances down-through from selected Tile8x8
+            unsigned char* newtmpdata = new unsigned char[32];
+            if((newtilenum + selTile8x8 + 1) > (tmp_newTilesetPtr->GetfgGFXlen() / 32))
             {
-                break;
-            }
-            ++count;
-            if(count == 16)
-            {
-                if((tmppalette[i] != 0xFF000000) && (tmppalette[i] != 0xFFFFFFFF) && (tmppalette[i] != 0))
+                if((newtilenum + selTile8x8 + 1) > 0x400)
                 {
-                    QMessageBox::critical(this, tr("Error"), tr("Palette not suitable!"));
+                    QMessageBox::critical(parentPtr, tr("Load Error"), tr("You can only use 0x400 foreground tiles at most!"));
                     return;
                 }
-                else if(tmppalette[i] == 0xFF000000) // black
+                else
                 {
-                    auto iter = std::find_if(tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId].begin(),
-                                             tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId].end(), [&](const QRgb& value) {
-                                    return value == tmppalette[i]; });
-                    if (tmppalette.end() != iter) {
-                        count = iter - tmppalette.begin();
-                    } else {
-                    count = 0;
-                    }
-                    break;
-                }
-                else if(tmppalette[i] == 0xFFFFFFFF) // white
-                {
-                    auto iter = std::find_if(tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId].begin(),
-                                             tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId].end(), [&](const QRgb& value) {
-                                    return value == tmppalette[i]; });
-                    if (tmppalette.end() != iter) {
-                        count = iter - tmppalette.begin();
-                    } else {
-                    count = 0;
-                    }
-                    break;
-                }
-                else if(tmppalette[i] == 0) // transparent
-                {
-                    count = 0;
-                    break;
+                    tmp_newTilesetPtr->SetfgGFXlen(32 * (selTile8x8 - 65 + newtilenum));
                 }
             }
-        }
-        if(transparentcolorId == i)
-        {
-            count = 0;
-        }
-
-        // replace the color[i] in tiledata with the correct id
-        for(int j = 0; j < tmptile8x8data.size(); ++j) // TODO: bugfix here
-        {
-            char tmpchr = tmptile8x8data[j];
-            char l4b, h4b;
-            h4b = (tmpchr >> 4) & 0xF;
-            l4b = tmpchr & 0xF;
-            if (l4b == i) {
-                l4b = count;
-            } else {
-                l4b = tmptile8x8data_final[j] & 0xF;
+            for(int i = 0; i < newtilenum; ++i)
+            {
+                memcpy(newtmpdata, finaldata.data() + 32 * i, 32);
+                currenteditor->OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(selTile8x8 + i, newtmpdata);
             }
-            if (h4b == i) {
-                h4b = count;
-            } else {
-                h4b = (tmptile8x8data_final[j] >> 4) & 0xF;
-            }
-            tmptile8x8data_final[j] = (h4b << 4) | l4b;
-        }
-    }
-
-    // Assume the file is fully filled with tiles
-    int newtilenum = tmptile8x8data_final.size() / 32;
-
-    // compare (number of the new Tile8x8 + selected Tile8x8 Id + 1) with (tilesetEditParams->newTileset->GetfgGFXlen() / 32)
-    // if (number of the new Tile8x8 + selected Tile8x8 Id + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32) then
-    // tilesetEditParams->newTileset->SetfgGFXlen(number of the new Tile8x8 + selected Tile8x8 Id)
-    // also (newtilenum + SelectedTile8x8 + 1) should be less than or equal to 0x400 or return
-    // create new Tile8x8 by using 32-byte length data
-    // overwrite and replace the old TIle8x8 instances down-through from selected Tile8x8
-    unsigned char* newtmpdata = new unsigned char[32];
-    if((newtilenum + SelectedTile8x8 + 1) > (tilesetEditParams->newTileset->GetfgGFXlen() / 32))
-    {
-        if((newtilenum + SelectedTile8x8 + 1) > 0x400)
-        {
-            QMessageBox::critical(this, tr("Load Error"), tr("You can only use 0x400 foreground tiles at most!"));
-            return;
-        }
-        else
-        {
-            tilesetEditParams->newTileset->SetfgGFXlen(32 * (SelectedTile8x8 - 65 + newtilenum));
-        }
-    }
-    for(int i = 0; i < newtilenum; ++i)
-    {
-        memcpy(newtmpdata, tmptile8x8data_final.data() + 32 * i, 32);
-        OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(SelectedTile8x8 + i, newtmpdata);
-    }
-    delete[] newtmpdata;
+            delete[] newtmpdata;
+        });
 
     // update all the graphicviews
     ReRenderTile8x8Map(SelectedPaletteId);
@@ -1092,7 +957,7 @@ void TilesetEditDialog::on_pushButton_ImportTile16sCombinationData_clicked()
 /// </summary>
 void TilesetEditDialog::on_pushButton_ExportPalette_clicked()
 {
-    FileIOUtils::ExportPalette(tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId], this);
+    FileIOUtils::ExportPalette(this, tilesetEditParams->newTileset->GetPalettes()[SelectedPaletteId]);
 }
 
 /// <summary>
