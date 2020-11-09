@@ -1,6 +1,7 @@
-﻿#include "ROMUtils.h"
+#include "ROMUtils.h"
 #include "Compress.h"
 #include <QFile>
+#include <QTranslator>
 #include "WL4EditorWindow.h"
 
 extern WL4EditorWindow *singleton;
@@ -67,7 +68,7 @@ namespace ROMUtils
         unsigned int ret = IntFromData(address) & 0x7FFFFFF;
         if(ret >= CurrentFileSize)
         {
-            singleton->GetOutputWidgetPtr()->PrintString("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size");
+            singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size"));
         }
         return ret;
     }
@@ -248,60 +249,6 @@ namespace ROMUtils
     }
 
     /// <summary>
-    /// Find the next available address in ROM data that is free based on RATS.
-    /// </summary>
-    /// <param name="ROMData">
-    /// The pointer to the ROM data being processed.
-    /// </param>
-    /// <param name="ROMLength">
-    /// The length of the ROM data.
-    /// </param>
-    /// <param name="startAddr">
-    /// The start address to search from.
-    /// </param>
-    /// <param name="chunkSize">
-    /// The size of the chunk for which we must find free space.
-    /// </param>
-    /// <returns>
-    /// The pointer to the available space, or 0 if none exists.
-    /// </returns>
-    int FindSpaceInROM(unsigned char *ROMData, int ROMLength, int startAddr, int chunkSize)
-    {
-        int freeBytes = 0; // number of free bytes found from startAddr
-        if (startAddr + chunkSize > ROMLength)
-            return 0; // fail if not enough room in ROM
-        while (freeBytes < chunkSize)
-        {
-            // Optimize search by incrementing more with partial matches
-            int STARmatch = StrMatch(ROMData + startAddr + freeBytes, "STAR");
-            if (STARmatch < 4)
-            {
-                // STAR not found at current address
-                freeBytes += qMax(STARmatch, 1);
-            }
-            else
-            {
-                // STAR found at current address: validate the RATS checksum
-                if (ValidRATS(ROMData + startAddr + freeBytes))
-                {
-                    // Checksum pass: Restart the search at end of the chunk
-                    unsigned short chunkLen = *reinterpret_cast<unsigned short *>(ROMData + startAddr + freeBytes + 4);
-                    startAddr += freeBytes + 12 + chunkLen;
-                    if (startAddr + chunkSize > ROMLength)
-                        return 0; // fail if not enough room in ROM
-                    freeBytes = 0;
-                }
-                else
-                {
-                    // Checksum fail: Advance freeBytes past the invalid RATS identifier
-                    freeBytes += 4;
-                }
-            }
-        }
-        return startAddr;
-    }
-
-    /// <summary>
     /// Get the savedata chunks from a Tileset.
     /// </summary>
     /// <param name="TilesetId">
@@ -474,152 +421,250 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Find all free space regions in the ROM.
+    /// </summary>
+    /// <param name="ROMData">
+    /// The pointer to the ROM data being processed.
+    /// </param>
+    /// <param name="ROMLength">
+    /// The length of the ROM data.
+    /// </param>
+    /// <returns>
+    /// A list of all free space regions.
+    /// </returns>
+    QVector<struct FreeSpaceRegion> FindAllFreeSpaceInROM(unsigned char *ROMData, unsigned int ROMLength)
+    {
+        QVector<struct FreeSpaceRegion> freeSpace;
+        unsigned int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
+        unsigned int freeSpaceStart = startAddr;
+
+        // Search through ROM for chunks. The space between them is free space
+        while(startAddr < ROMLength)
+        {
+            // Optimize search by incrementing more with partial matches
+            int STARmatch = StrMatch(ROMData + startAddr, "STAR");
+            if(STARmatch < 4)
+            {
+                // STAR not found at current address
+                startAddr += qMax(STARmatch, 1);
+            }
+            else
+            {
+                // STAR found at current address: validate the RATS checksum and chunk type
+                if(ValidRATS(ROMData + startAddr))
+                {
+                    // Chunk found. The space up to this point is free space
+                    if(startAddr > freeSpaceStart)
+                    {
+                        freeSpace.append({freeSpaceStart, startAddr - freeSpaceStart});
+                    }
+
+                    // Continue search after this chunk
+                    unsigned int chunkLen = *reinterpret_cast<short *>(ROMData + startAddr + 4);
+                    startAddr += chunkLen;
+                    freeSpaceStart = startAddr;
+                }
+                else
+                {
+                    // Invalid RATS or chunk type not found: advance
+                    startAddr += 4;
+                }
+            }
+        }
+
+        // The last space in the ROM is a free space region
+        if(startAddr > freeSpaceStart)
+        {
+            freeSpace.append({freeSpaceStart, startAddr - freeSpaceStart});
+        }
+        return freeSpace;
+    }
+
+    /// <summary>
     /// Save a list of chunks to the ROM file.
     /// </summary>
     /// <param name="filePath">
     /// The file name to use when saving the ROM.
     /// </param>
-    /// <param name="chunks">
-    /// The chunks to save to the ROM.
+    /// <param name="invalidationChunks">
+    /// Addresses of chunks to invalidate.
     /// </param>
-    /// <param name="ChunkAllocationCallback">
-    /// Callback function that allocates additional chunks based on data from chunks which have been
-    /// allocated by this function before saving to ROM. This function may not allocate invalidation chunks.
+    /// <param name="ChunkAllocator">
+    /// Callback function that allocates chunks.
+    /// The SaveFile function will offer potential free areas to the allocator, which will then
+    /// accept or reject the free area depending on how much space is actually needed.
     /// </param>
     /// <param name="PostProcessingCallback">
     /// Post-processing to perform after writing the save chunks, but before saving the file itself.
+    /// This function returns an error string if unsuccessful, or an empty string if successful.
     /// </param>
     /// <returns>
     /// True if the save was successful.
     /// </returns>
-    bool SaveFile(QString filePath, QVector<struct SaveData> chunks,
-        std::function<void(unsigned char*, QVector<struct SaveData>&, std::map<int, int>)> ChunkAllocationCallback,
-        std::function<void(unsigned char*, std::map<int, int>)> PostProcessingCallback)
+    bool SaveFile(QString filePath, QVector<unsigned int> invalidationChunks,
+        std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*)> ChunkAllocator,
+        std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
         unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
         unsigned int TempLength = CurrentFileSize;
         memcpy(TempFile, CurrentFile, CurrentFileSize);
-        std::sort(chunks.begin(), chunks.end(),
-                  [](const struct SaveData &a, const struct SaveData &b) { return a.size < b.size; });
         std::map<int, int> chunkIDtoIndex;
-        for (int i = 0; i < chunks.size(); ++i)
-        {
-            chunkIDtoIndex[chunks[i].index] = i;
-        }
 
         // Invalidate old chunk data
-        for(struct SaveData chunk : chunks)
+        for(unsigned int invalidationChunk : invalidationChunks)
         {
-            if (chunk.old_chunk_addr > WL4Constants::AvailableSpaceBeginningInROM)
+            if (invalidationChunk > WL4Constants::AvailableSpaceBeginningInROM)
             {
-                unsigned char *RATSaddr = TempFile + chunk.old_chunk_addr - 12;
+                unsigned char *RATSaddr = TempFile + invalidationChunk - 12;
                 if (ValidRATS(RATSaddr)) // old_chunk_addr should point to the start of the chunk data, not the RATS tag
                 {
                     strncpy((char *) RATSaddr, "STAR_INV", 8);
                 }
                 else
                 {
-                    singleton->GetOutputWidgetPtr()->PrintString("Internal error while saving changes to ROM: Invalidation chunk references an invalid RATS identifier for existing chunk. Save chunk index: " +
-                        QString::number(chunk.index) + ". Address: 0x" + QString::number(chunk.old_chunk_addr - 12, 16).toUpper() + ". Changes not saved.");
+                    singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk references an invalid RATS identifier for existing chunk.")) +
+                        QT_TR_NOOP(". Address: 0x") + QString::number(invalidationChunk - 12, 16).toUpper() + QT_TR_NOOP(". Changes not saved."));
                     return false;
                 }
             }
         }
 
-        // Find space in the ROM for each chunk and assign addresses for the chunks
-        // also expand the ROM size as necessary (up to 32MB) to hold the new data.
-        bool success = false;
+        // Find free space in the ROM and attempt to offer the free regions to the chunk allocator
+resized:QVector<struct FreeSpaceRegion> freeSpaceRegions = FindAllFreeSpaceInROM(TempFile, TempLength);
+        QVector<struct SaveData> chunksToAdd;
         std::map<int, int> indexToChunkPtr;
-        QVector<struct SaveData> chunksToAdd(chunks);
-        do {
-            int startAddr = WL4Constants::AvailableSpaceBeginningInROM;
-            for(struct SaveData chunk : chunksToAdd)
+        bool success = false;
+        do
+        {
+            // Order free space regions by increasing size
+            std::sort(freeSpaceRegions.begin(), freeSpaceRegions.end(),
+                [](const struct FreeSpaceRegion &a, const struct FreeSpaceRegion &b)
+                {return a.size < b.size;});
+
+            // Offer free space to chunk allocator (starting with size of 12)
+            unsigned int lastSize = 11, newSize;
+            struct SaveData sd;
+            int i;
+            for(i = 0; i < freeSpaceRegions.size(); ++i)
             {
-                if(chunk.ChunkType == SaveDataChunkType::InvalidationChunk) continue; // do not allocate for invalidation chunks
-
-                int chunkSize = chunk.size + 12 + (chunk.alignment ? 3 : 0);
-findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, chunkSize);
-                if(chunk.alignment) chunkAddr = (chunkAddr + 3) & ~3; // align the chunk address
-                if(!chunkAddr)
+                if(freeSpaceRegions[i].size <= lastSize) continue;
+                ChunkAllocationStatus status = ChunkAllocator(TempFile, freeSpaceRegions[i], &sd);
+                switch(status)
                 {
-                    // Expand ROM (double the size and align to 8MB)
-                    unsigned int newSize = (TempLength << 1) & ~0x7FFFFF;
-                    if(newSize <= 0x2000000)
-                    {
-                        unsigned char *newTempFile = (unsigned char*) realloc(TempFile, newSize);
-                        if(!newTempFile)
-                        {
-                            // Realloc failed due to system memory constraints
-                            QMessageBox::warning(
-                                singleton,
-                                "Out of memory",
-                                "Unable to save changes because your computer is out of memory.",
-                                QMessageBox::Ok,
-                                QMessageBox::Ok
-                            );
-                            goto error;
-                        }
-                        TempFile = newTempFile;
-                        memset(TempFile + TempLength, 0xFF, newSize - TempLength);
-                        TempLength = newSize;
-                        goto findspace;
-                    }
-                    else
-                    {
-                        // Size cannot exceed 32MB
-                        QMessageBox::warning(
-                            singleton,
-                            "ROM too large",
-                            QString("Unable to save changes because ") + QString::number(chunkSize) +
-                                " contiguous free bytes are necessary, but such a region could not be"
-                                " found, and the ROM file cannot be expanded larger than 32MB.",
-                            QMessageBox::Ok,
-                            QMessageBox::Ok
-                        );
-                        goto error;
-                    }
+                case Success:
+                    goto spaceFound;
+                case NoMoreChunks:
+                    goto allocationComplete;
+                case ProcessingError:
+                    goto error;
+                case InsufficientSpace:
+                    lastSize = freeSpaceRegions[i].size;
+                    continue;
                 }
-                indexToChunkPtr[chunk.index] = chunkAddr;
-
-                // Mark the region for the chunk as used, with RATS
-                unsigned char *destPtr = TempFile + chunkAddr;
-                strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
-                unsigned short chunkLen = (unsigned short) chunk.size;
-                *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
-                *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
-                *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
-                destPtr[8] = chunk.ChunkType;
-
-                startAddr = chunkAddr + chunk.size + 12; // do not search through old areas of the ROM again
             }
 
-            // Perform chunk allocation callback
-            if(ChunkAllocationCallback)
+            // No free space regions capable of accommodating chunk. Expand ROM
+            newSize = (TempLength << 1) & ~0x7FFFFF;
+            if(newSize <= 0x2000000)
             {
-                ChunkAllocationCallback(TempFile, chunksToAdd, indexToChunkPtr);
-                chunks.append(chunksToAdd); // Add any additional chunks created in the callback
+                unsigned char *newTempFile = (unsigned char*) realloc(TempFile, newSize);
+                if(!newTempFile)
+                {
+                    // Realloc failed due to system memory constraints
+                    QMessageBox::warning(
+                        singleton,
+                        QT_TR_NOOP("Out of memory"),
+                        QT_TR_NOOP("Unable to save changes because your computer is out of memory."),
+                        QMessageBox::Ok,
+                        QMessageBox::Ok
+                    );
+                    goto error;
+                }
+                TempFile = newTempFile;
+                memset(TempFile + TempLength, 0xFF, newSize - TempLength);
+                TempLength = newSize;
+                goto resized;
             }
             else
             {
-                chunksToAdd.clear();
+                // ROM size cannot exceed 32MB
+                QMessageBox::warning(
+                    singleton,
+                    QT_TR_NOOP("ROM too large"),
+                    QString(QT_TR_NOOP("Unable to save changes because there is not enough free space, and the ROM file cannot be expanded larger than 32MB.")),
+                    QMessageBox::Ok,
+                    QMessageBox::Ok
+                );
+                goto error;
             }
-        } while(!chunksToAdd.empty());
+
+spaceFound:
+            // Split the free space region
+            struct FreeSpaceRegion freeSpace = freeSpaceRegions[i];
+            unsigned char *destPtr = TempFile + freeSpace.addr;
+            freeSpaceRegions.remove(i);
+
+            // Determine where the chunk starts if alignment would modify it
+            unsigned int alignedAddr = freeSpace.addr;
+            if(sd.alignment)
+            {
+                alignedAddr = (alignedAddr + 3) & ~3;
+            }
+            unsigned int alignmentOffset = alignedAddr - freeSpace.addr;
+
+            // If chunk data starts at an offset due to alignment, split on left side of data
+            if(alignmentOffset)
+            {
+                freeSpaceRegions.append({freeSpace.addr, alignmentOffset});
+            }
+
+            // If chunk data is smaller than free space, split on right side of data
+            if(alignmentOffset + sd.size < freeSpace.size)
+            {
+                freeSpaceRegions.append({
+                    freeSpace.addr + alignmentOffset + sd.size + 12,
+                    freeSpace.size - (alignmentOffset + sd.size) - 12
+                });
+            }
+
+            // Mark the region for the chunk as used, with RATS format
+            // Always writing chunk headers after the alignment setting of the next chunk being decided
+            destPtr += alignmentOffset;
+            strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
+            unsigned short chunkLen = (unsigned short) sd.size;
+            *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
+            *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
+            *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
+            destPtr[8] = sd.ChunkType;
+
+            indexToChunkPtr[sd.index] = alignedAddr;
+            chunksToAdd.append(sd);
+
+        } while(1); allocationComplete:
+
+        // Generate chunkIDtoIndex map
+        for(int k = 0; k < chunksToAdd.size(); k++)
+        {
+            chunkIDtoIndex[chunksToAdd[k].index] = k;
+        }
 
         // Apply source pointer modifications to applicable chunk types
-        for(struct SaveData chunk : chunks)
+        for(struct SaveData chunk : chunksToAdd)
         {
             switch(chunk.ChunkType)
             {
             case SaveDataChunkType::InvalidationChunk:
+                singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal error: Chunk allocator created an invalidation chunk"));
             case SaveDataChunkType::PatchListChunk:
             case SaveDataChunkType::PatchChunk:
                 continue; // the above chunk types are not associated with a modified pointer in main ROM
+            default:;
             }
 
             unsigned char *ptrLoc = chunk.dest_index ?
                 // Source pointer is in another chunk
-                chunks[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr
+                chunksToAdd[chunkIDtoIndex[chunk.dest_index]].data + chunk.ptr_addr
                     :
                 // Source pointer is in main ROM
                 TempFile + chunk.ptr_addr;
@@ -629,7 +674,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         }
 
         // Write each chunk to TempFile
-        for(struct SaveData chunk : chunks)
+        for(struct SaveData chunk : chunksToAdd)
         {
             if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk)
                 continue;
@@ -638,12 +683,11 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             if(chunk.size & 0xFFFF0000)
             {
                 // Chunk size must be a 16-bit value
-                QMessageBox::warning(singleton, "RATS chunk too large",
-                     QString("Unable to save changes because ") + QString::number(chunk.size) +
-                         " contiguous free bytes are necessary for some save chunk of type " +
+                QMessageBox::warning(singleton, QT_TR_NOOP("RATS chunk too large"),
+                     QString(QT_TR_NOOP("Unable to save changes because ")) + QString::number(chunk.size) +
+                         QT_TR_NOOP(" contiguous free bytes are necessary for some save chunk of type ") +
                          QString::number(chunk.ChunkType) +
-                         ", but the editor currently"
-                         " only supports up to size " +
+                         QT_TR_NOOP(", but the editor currently only supports up to size ") +
                          QString::number(0xFFFF) + ".",
                      QMessageBox::Ok, QMessageBox::Ok);
                 goto error;
@@ -661,7 +705,12 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         // Perform post-processing before saving the file
         if(PostProcessingCallback)
         {
-            PostProcessingCallback(TempFile, indexToChunkPtr);
+            QString ret(PostProcessingCallback(TempFile, indexToChunkPtr));
+            if(ret != "")
+            {
+                success = false;
+                goto error;
+            }
         }
 
         { // Prevent goto from crossing initialization of variables here
@@ -675,8 +724,8 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
             else
             {
                 // Couldn't open the file to save the ROM
-                QMessageBox::warning(singleton, "Could not save file",
-                     "Unable to write to or create the ROM file for saving.", QMessageBox::Ok,
+                QMessageBox::warning(singleton, QT_TR_NOOP("Could not save file"),
+                     QT_TR_NOOP("Unable to write to or create the ROM file for saving."), QMessageBox::Ok,
                      QMessageBox::Ok);
                 goto error;
             }
@@ -696,10 +745,9 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         success = true;
         if (0)
         {
-        error:
-            free(TempFile);
+error:      free(TempFile); // free up temporary file if there was a processing error
         }
-        for(struct SaveData chunk : chunks)
+        for(struct SaveData chunk : chunksToAdd)
         {
             if (chunk.ChunkType != SaveDataChunkType::InvalidationChunk)
                 free(chunk.data);
@@ -746,8 +794,60 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
         });
         unsigned int roomHeaderInROM;
 
+        QVector<unsigned int> invalidationChunks;
+        QVector<struct SaveData> addedChunks;
+        for(int i = 0; i < chunks.size(); ++i)
+        {
+            if(chunks[i].ChunkType == SaveDataChunkType::InvalidationChunk)
+            {
+                invalidationChunks.append(chunks[i].old_chunk_addr);
+            }
+            else
+            {
+                addedChunks.append(chunks[i]);
+            }
+        }
+
         // Save the level
-        bool ret = SaveFile(filePath, chunks, nullptr,
+        int chunkIndex = 0;
+        bool ret = SaveFile(filePath, invalidationChunks,
+
+            // ChunkAllocator
+
+            [&chunkIndex, addedChunks]
+            (unsigned char *TempFile, struct FreeSpaceRegion freeSpace, struct SaveData *sd)
+            {
+                (void) TempFile;
+
+                if(chunkIndex >= addedChunks.size())
+                {
+                    return ChunkAllocationStatus::NoMoreChunks;
+                }
+
+                // Get the size of the space that would be needed at this address depending on alignment
+                unsigned int alignOffset = 0;
+                if(addedChunks[chunkIndex].alignment)
+                {
+                    unsigned int startAddr = (freeSpace.addr + 3) & ~3;
+                    alignOffset = startAddr - freeSpace.addr;
+                }
+
+                // Check if there is space for the chunk in the offered area
+                if(addedChunks[chunkIndex].size > freeSpace.size + alignOffset)
+                {
+                    // This will request a larger free area
+                    return ChunkAllocationStatus::InsufficientSpace;
+                }
+                else
+                {
+                    // Accept the offered free area for this save chunk
+                    *sd = addedChunks[chunkIndex++];
+                    return ChunkAllocationStatus::Success;
+                }
+            },
+
+            // PostProcessingCallback
+
             [levelHeaderPointer, currentLevel, roomHeaderChunk, &roomHeaderInROM]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
@@ -780,6 +880,7 @@ findspace:      int chunkAddr = FindSpaceInROM(TempFile, TempLength, startAddr, 
                         // singletonTilesets[i]->SetChanged(false);
                     }
                 }
+                return QString("");
             });
         if(!ret) return false;
 

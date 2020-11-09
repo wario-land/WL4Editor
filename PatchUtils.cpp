@@ -14,10 +14,12 @@
 #ifdef _WIN32
 #define EABI_GCC     "arm-none-eabi-gcc.exe"
 #define EABI_AS      "arm-none-eabi-as.exe"
+#define EABI_LD      "arm-none-eabi-ld.exe"
 #define EABI_OBJCOPY "arm-none-eabi-objcopy.exe"
 #else // _WIN32 (else linux)
 #define EABI_GCC     "arm-none-eabi-gcc"
 #define EABI_AS      "arm-none-eabi-as"
+#define EABI_LD      "arm-none-eabi-ld"
 #define EABI_OBJCOPY "arm-none-eabi-objcopy"
 #endif
 
@@ -191,7 +193,7 @@ static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
     int chunkVersion = ROMUtils::CurrentFile[chunkDataAddr + 12];
     if(chunkVersion > PATCH_CHUNK_VERSION)
     {
-        singleton->GetOutputWidgetPtr()->PrintString(QString("Patch list chunk either corrupt or this verison of WL4Editor is old and doesn't support the saved format. Version found: ") + QString::number(chunkVersion));
+        singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Patch list chunk either corrupt or this verison of WL4Editor is old and doesn't support the saved format. Version found: ")) + QString::number(chunkVersion));
         return "";
     }
     QString contents = QString::fromLocal8Bit(reinterpret_cast<const char*>(ROMUtils::CurrentFile + chunkDataAddr + 13), contentSize);
@@ -202,18 +204,30 @@ static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
     return contents;
 }
 
+static QString RunProcess(QString executable, QStringList args)
+{
+    QProcess process;
+    process.start(executable, args);
+    process.waitForFinished();
+    return !process.exitCode() ? "" : QString(process.readAllStandardError());
+}
+
 /// <summary>
 /// Compile a C file into an assembly file.
 /// </summary>
 /// <param name="cfile">
 /// The C file to compile.
 /// </param>
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
 static QString CompileCFile(QString cfile)
 {
     if(!cfile.endsWith(".c"))
     {
-        singleton->GetOutputWidgetPtr()->PrintString("C file does not have correct extension (should be .c): " + cfile);
-        return "";
+        QString msg = QString(QT_TR_NOOP("C file does not have correct extension (should be .c): ")) + cfile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
     }
 
     // Create args
@@ -226,10 +240,7 @@ static QString CompileCFile(QString cfile)
         "-S" << cfile << "-o" << outfile;
 
     // Run GCC
-    QProcess process;
-    process.start(executable, args);
-    process.waitForFinished();
-    return !process.exitCode() ? "" : QString(process.readAllStandardError());
+    return RunProcess(executable, args);
 }
 
 /// <summary>
@@ -238,12 +249,16 @@ static QString CompileCFile(QString cfile)
 /// <param name="sfile">
 /// The ASM file to assemble.
 /// </param>
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
 static QString AssembleSFile(QString sfile)
 {
     if(!sfile.endsWith(".s"))
     {
-        singleton->GetOutputWidgetPtr()->PrintString("ASM file does not have correct extension (should be .s): " + sfile);
-        return "";
+        QString msg = QString(QT_TR_NOOP("ASM file does not have correct extension (should be .s): ")) + sfile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
     }
 
     // Create args
@@ -251,41 +266,113 @@ static QString AssembleSFile(QString sfile)
     REPLACE_EXT(outfile, ".s", ".o");
     QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_AS);
     QStringList args;
-    args << sfile << "-o" << outfile;
+    args << sfile << "-o" << outfile << "--defsym=memcpy=0x80950D9";
 
-    // Run GCC
-    QProcess process;
-    process.start(executable, args);
-    process.waitForFinished();
-    return !process.exitCode() ? "" : QString(process.readAllStandardError());
+    // Run AS
+    return RunProcess(executable, args);
+}
+
+/// <summary>
+/// Create the linker script for an object file.
+/// </summary>
+/// <param name="entry">
+/// The patch entry with information about the type of file.
+/// </param>
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
+static QString CreateLinkerScript(struct PatchEntryItem entry)
+{
+    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString ofile(romFileDir + "/" + entry.FileName);
+    QString ldfile(ofile);
+    REPLACE_EXT(ofile, ".c", ".o"); // works for .s files too
+    REPLACE_EXT(ldfile, ".c", ".ld");
+    QString memcpy_o(QCoreApplication::applicationDirPath() + "/memcpy.o");
+
+    QString pa = QString::number(0x8000000 | entry.PatchAddress + 12, 16);
+    QString scriptContents =
+        QString("SECTIONS\n") +
+        "{\n" +
+        "    .text   0x" + pa + " : { " + ofile + " (.text) }\n" +
+        "    .rodata : { " + ofile + " (.rodata) }\n" +
+        "    .dummy  0x8000000 (NOLOAD) : { " + memcpy_o + " }\n" +
+        "}\n" +
+        "memcpy = 0x80950D9;";
+
+    QFile file(ldfile);
+    file.open(QIODevice::WriteOnly);
+    if (!file.isOpen())
+    {
+        QString msg = QString(QT_TR_NOOP("Could not open linker script file for writing: ")) + ldfile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
+    }
+    else
+    {
+        file.write(scriptContents.toUtf8());
+    }
+    return "";
+}
+
+/// <summary>
+/// Link an object file into an ELF file.
+/// </summary>
+/// <param name="ofile">
+/// The object file to link into an ELF file.
+/// </param>
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
+static QString LinkOFile(QString ofile)
+{
+    if(!ofile.endsWith(".o"))
+    {
+        QString msg = QString(QT_TR_NOOP("Object file does not have correct extension (should be .o): ")) + ofile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
+    }
+
+    // Create args
+    QString outfile(ofile);
+    REPLACE_EXT(outfile, ".o", ".elf");
+    QString ldfile(ofile);
+    REPLACE_EXT(ldfile, ".o", ".ld");
+    QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_LD);
+    QStringList args;
+    args << "-T" << ldfile << "-o" << outfile;
+
+    // Run LD
+    return RunProcess(executable, args);
 }
 
 /// <summary>
 /// Extract the binary from an object file.
 /// </summary>
-/// <param name="ofile">
-/// The object file from which to extract the binary.
+/// <param name="elfFile">
+/// The ELF file from which to extract the binary.
 /// </param>
-static QString ExtractOFile(QString ofile)
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
+static QString ExtractELFFile(QString elfFile)
 {
-    if(!ofile.endsWith(".o"))
+    if(!elfFile.endsWith(".elf"))
     {
-        singleton->GetOutputWidgetPtr()->PrintString("Object file does not have correct extension (should be .o): " + ofile);
-        return "";
+        QString msg = QString(QT_TR_NOOP("ELF file does not have correct extension (should be .elf): ")) + elfFile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
     }
 
     // Create args
-    QString outfile(ofile);
-    REPLACE_EXT(outfile, ".o", ".bin");
+    QString outfile(elfFile);
+    REPLACE_EXT(outfile, ".elf", ".bin");
     QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_OBJCOPY);
     QStringList args;
-    args << "-O" << "binary" << "--only-section=.text" << ofile << outfile;
+    args << "-O" << "binary" << "-j" << ".text" << "-j" << ".rodata" << elfFile << outfile;
 
-    // Run GCC
-    QProcess process;
-    process.start(executable, args);
-    process.waitForFinished();
-    return !process.exitCode() ? "" : QString(process.readAllStandardError());
+    // Run OBJCOPY
+    return RunProcess(executable, args);
 }
 
 /// <summary>
@@ -307,7 +394,7 @@ static bool BinaryMatchWithROM(QString file, unsigned int startAddr, unsigned in
 {
     if(length > 0xFFFF)
     {
-        singleton->GetOutputWidgetPtr()->PrintString(QString("Invalid comparison length in BinaryMatchWithROM: 0x") + QString::number(length, 16).toUpper());
+        singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Invalid comparison length in BinaryMatchWithROM: 0x")) + QString::number(length, 16).toUpper());
         return false;
     }
 
@@ -348,6 +435,57 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
 }
 
 /// <summary>
+/// Compile a patch entry file to get the binary to save to the ROM.
+/// </summary>
+/// <param name="entry">
+/// The patch entry to compile.
+/// </param>
+/// <returns>
+/// The error string if compilation failed, or empty if successful.
+/// </returns>
+static QString CompilePatchEntry(struct PatchEntryItem entry)
+{
+    if(!entry.FileName.length() || entry.PatchType == PatchType::Binary) return "";
+
+    QDir ROMdir(ROMUtils::ROMFilePath);
+    ROMdir.cdUp();
+    QString filename(ROMdir.absolutePath() + "/" + entry.FileName);
+
+    QString output;
+    switch(entry.PatchType)
+    {
+    case PatchType::C:
+        if((output = CompileCFile(filename)) != "")
+        {
+            return QString(QT_TR_NOOP("Compiler error: ")) + output;
+        }
+        REPLACE_EXT(filename, ".c", ".s");
+    case PatchType::Assembly:
+        if((output = AssembleSFile(filename)) != "")
+        {
+            return QString(QT_TR_NOOP("Assembler error: ")) + output;
+        }
+        REPLACE_EXT(filename, ".s", ".o");
+        if((output = CreateLinkerScript(entry)) != "")
+        {
+            return QString(QT_TR_NOOP("Error creating linker script: ")) + output;
+        }
+        if((output = LinkOFile(filename)) != "")
+        {
+            return QString(QT_TR_NOOP("Linker error: ")) + output;
+        }
+        REPLACE_EXT(filename, ".o", ".elf");
+        if((output = ExtractELFFile(filename)) != "")
+        {
+            return QString(QT_TR_NOOP("ObjCopy error: ")) + output;
+        }
+        break;
+    default:;
+    }
+    return ""; // success
+}
+
+/// <summary>
 /// Compile files in a list of patches to save to the ROM.
 /// </summary>
 /// <param name="entries">
@@ -358,55 +496,15 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
 /// </returns>
 static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
 {
-    QDir ROMdir(ROMUtils::ROMFilePath);
-    ROMdir.cdUp();
-
-    // Create binaries from C and asm
-    QVector<struct CompileEntry> compileEntries;
+    QString output;
     for(struct PatchEntryItem entry : entries)
     {
-        if(!entry.FileName.length()) continue;
-
-        QString fname(entry.FileName);
-        switch(entry.PatchType)
+        if((output = CompilePatchEntry(entry)) != "")
         {
-        case PatchType::C:
-            compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::C});
-        case PatchType::Assembly:
-            REPLACE_EXT(fname, ".c", ".s");
-            compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Assembly});
-            REPLACE_EXT(fname, ".s", ".o");
-            compileEntries.append({ROMdir.absolutePath() + "/" + fname, PatchType::Binary});
-        default:;
+            return output;
         }
     }
-    std::sort(compileEntries.begin(), compileEntries.end(),
-        [](const struct CompileEntry& c1, const struct CompileEntry& c2){ return c1.Type > c2.Type; });
-    for(struct CompileEntry entry : compileEntries)
-    {
-        QString output;
-        switch(entry.Type)
-        {
-        case PatchType::C:
-            if((output = CompileCFile(entry.FileName)) != "")
-            {
-                return QString("Compiler error: ") + output;
-            }
-            break;
-        case PatchType::Assembly:
-            if((output = AssembleSFile(entry.FileName)) != "")
-            {
-                return QString("Assembler error: ") + output;
-            }
-            break;
-        case PatchType::Binary:
-            if((output = ExtractOFile(entry.FileName)) != "")
-            {
-                return QString("ObjCopy error: ") + output;
-            }
-        }
-    }
-    return ""; // success
+    return "";
 }
 
 /// <summary>
@@ -449,25 +547,41 @@ static QVector<struct PatchEntryItem> DetermineRemovalPatches(QVector<struct Pat
 }
 
 /// <summary>
-/// Compile a list of patches which would remain in the ROM after removing some.
+/// Create a save chunk for a patch list entry
 /// </summary>
-/// <param name="existingPatches">
-/// The existing patch entries in the ROM.
-/// </param>
-/// <param name="removalPatches">
-/// The patches which will be removed from the ROM.
+/// <param name="patch">
+/// The patch entry for which to create a save chunk.
 /// </param>
 /// <returns>
-/// The list of patches which would remain in the ROM.
+/// The save chunk.
 /// </returns>
-static QVector<struct PatchEntryItem> DetermineRemainingPatches(QVector<struct PatchEntryItem> existingPatches, QVector<struct PatchEntryItem> removalPatches)
+static struct ROMUtils::SaveData CreatePatchSaveChunk(struct PatchEntryItem &patch)
 {
-    QVector<struct PatchEntryItem> remainingPatches(existingPatches);
-    QVector<struct PatchEntryItem>::iterator removeItr = std::remove_if(remainingPatches.begin(), remainingPatches.end(),
-        [removalPatches](struct PatchEntryItem p1){return std::find_if(removalPatches.begin(), removalPatches.end(),
-            [p1](struct PatchEntryItem p2){return p1.HookAddress == p2.HookAddress;}) != removalPatches.end();});
-    remainingPatches.erase(removeItr, remainingPatches.end());
-    return remainingPatches;
+    QString binName(patch.FileName);
+    binName.chop(binName.length() - binName.lastIndexOf('.') - 1);
+    binName += "bin";
+
+    // Get data from bin file
+    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QFile binFile(romFileDir + "/" + binName);
+    binFile.open(QIODevice::ReadOnly);
+    QByteArray binContents = binFile.readAll();
+    int fileSize = binFile.size();
+    unsigned char *data = new unsigned char[fileSize];
+    memcpy(data, binContents.constData(), fileSize);
+
+    // Create the save chunk
+    return
+    {
+        0,
+        static_cast<unsigned int>(fileSize),
+        data,
+        ROMUtils::SaveDataIndex++,
+        true,
+        0,
+        0,
+        ROMUtils::SaveDataChunkType::PatchChunk
+    };
 }
 
 namespace PatchUtils
@@ -504,13 +618,13 @@ namespace PatchUtils
             QString contents = GetUpgradedPatchListChunkData(patchListAddr);
             if(!contents.length())
             {
-                singleton->GetOutputWidgetPtr()->PrintString("ROM contains an empty patch list chunk (this should not be possible)");
+                singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("ROM contains an empty patch list chunk (this should not be possible)"));
                 return patchEntries;
             }
             QStringList patchTuples = contents.split(";");
             if(patchTuples.count() % PATCH_FIELD_COUNT)
             {
-                singleton->GetOutputWidgetPtr()->PrintString("ROM contains a corrupted patch list chunk (field count is not a multiple of " + QString::number(PATCH_FIELD_COUNT) + ")");
+                singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("ROM contains a corrupted patch list chunk (field count is not a multiple of ") + QString::number(PATCH_FIELD_COUNT) + ")");
                 return patchEntries;
             }
             for(int i = 0; i < patchTuples.count(); i += PATCH_FIELD_COUNT)
@@ -518,7 +632,7 @@ namespace PatchUtils
                 struct PatchEntryItem entry = DeserializePatchMetadata(patchTuples.mid(i, PATCH_FIELD_COUNT));
                 if(!std::find_if(patchChunks.begin(), patchChunks.end(), [entry](unsigned int addr){return addr == entry.PatchAddress;}))
                 {
-                    singleton->GetOutputWidgetPtr()->PrintString("Corruption error: Patch chunk list entry refers to an invalid patch address: 0x" + QString::number(entry.PatchAddress, 16).toUpper());
+                    singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Corruption error: Patch chunk list entry refers to an invalid patch address: 0x") + QString::number(entry.PatchAddress, 16).toUpper());
                     continue;
                 }
                 patchEntries.append(entry);
@@ -545,8 +659,6 @@ namespace PatchUtils
         QVector<struct ROMUtils::SaveData> chunks;
         QVector<struct PatchEntryItem> existingPatches = GetPatchesFromROM();
         QVector<struct PatchEntryItem> removePatches = DetermineRemovalPatches(entries, existingPatches);
-        QVector<struct PatchEntryItem> remainingPatches = DetermineRemainingPatches(existingPatches, removePatches);
-        bool noPatches = !remainingPatches.size() && !entries.size();
         std::map<int, struct PatchEntryItem*> saveChunkIndexToMetadata, saveChunkIndexToRemoval;
 
         // Populate the chunk list with patches to add to the ROM
@@ -558,53 +670,24 @@ namespace PatchUtils
             binName.chop(1);
             binName += "bin";
 
-            // Get data from bin file
-            QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
-            QFile binFile(romFileDir + "/" + binName);
-            binFile.open(QIODevice::ReadOnly);
-            QByteArray binContents = binFile.readAll();
-            unsigned char *data = new unsigned char[binFile.size()];
-            memcpy(data, binContents.constData(), binFile.size());
+            struct ROMUtils::SaveData patchChunk = CreatePatchSaveChunk(patch);
 
             // Save the mapping for the save chunk onto the added patch
             saveChunkIndexToMetadata[ROMUtils::SaveDataIndex] = std::find_if(entries.begin(), entries.end(),
                 [patch](struct PatchEntryItem origPatch){return patch.HookAddress == origPatch.HookAddress;});
 
-            // Create the save chunk
-            struct ROMUtils::SaveData patchChunk =
-            {
-                0,
-                static_cast<unsigned int>(binFile.size()),
-                data,
-                ROMUtils::SaveDataIndex++,
-                true,
-                0,
-                0,
-                ROMUtils::SaveDataChunkType::PatchChunk
-            };
-
             chunks.append(patchChunk);
         }
         
         // Populate the chunk list with invalidation chunks for patches to be removed from the ROM
+        QVector<unsigned int> invalidationChunks;
         for(struct PatchEntryItem patch : removePatches)
         {
             if(!patch.FileName.length()) continue; // no save chunks to invalidate for hook-only patches
 
             saveChunkIndexToRemoval[ROMUtils::SaveDataIndex] = std::find_if(removePatches.begin(), removePatches.end(),
                 [patch](struct PatchEntryItem removePatch){return patch.HookAddress == removePatch.HookAddress;});
-            struct ROMUtils::SaveData invalidationChunk =
-            {
-                0,
-                0,
-                nullptr,
-                ROMUtils::SaveDataIndex++,
-                false,
-                0,
-                patch.PatchAddress + 12, // PatchAddress is of the start of the RATS tag. But invalidation chunks should specify address of the data itself here
-                ROMUtils::SaveDataChunkType::InvalidationChunk
-            };
-            chunks.append(invalidationChunk);
+            invalidationChunks.append(patch.PatchAddress + 12);
         }
 
         // We must invalidate the old patch list chunk (if it exists)
@@ -616,30 +699,27 @@ namespace PatchUtils
         );
         if(patchListChunkAddr)
         {
-            struct ROMUtils::SaveData PLinvalidationChunk =
-            {
-                0,
-                0,
-                nullptr,
-                ROMUtils::SaveDataIndex++,
-                false,
-                0,
-                patchListChunkAddr + 12, // patchListChunkAddr is of the start of the RATS tag
-                ROMUtils::SaveDataChunkType::InvalidationChunk
-            };
-            chunks.append(PLinvalidationChunk);
+            invalidationChunks.append(patchListChunkAddr + 12);
         }
 
-        // Save the chunks to the ROM
+        // Start the iterator on the first patch which is not a hex edit
+        auto patchAllocIter = std::find_if(entries.begin(), entries.end(), []
+            (const struct PatchEntryItem p){return p.FileName.length();});
+        std::map<unsigned int, unsigned int> neededSizeMap; // key: hook address
+        QString errorMsg;
+        bool plcAllocated = !entries.size(); // patch list chunk status
         bool firstCallback = true;
-        bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, chunks,
 
-            // ChunkAllocationCallback
+        // Allocate and save the chunks to the ROM
+        bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, invalidationChunks,
 
-            [firstCallback, &entries, &saveChunkIndexToMetadata, removePatches, noPatches]
-            (unsigned char *TempFile, QVector<struct ROMUtils::SaveData>& addedSaveChunks, std::map<int, int> indexToChunkPtr) mutable
+            // ChunkAllocator
+
+            [&neededSizeMap, &patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback, removePatches]
+            (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd)
             {
-                // Create and add PatchListChunk after patch chunk locations have been allocated by SaveFile()
+                // On the first callback, we must recalculate the substituted bytes for the hook strings
+                // of the unmodified ROM. This must occur strictly before the new patch list chunk is created.
                 if(firstCallback)
                 {
                     // Undo removal patches (if there are patches to remove)
@@ -651,34 +731,82 @@ namespace PatchUtils
                         delete[] originalBytes;
                     }
 
-                    // Update entry structs with information from the added chunks
-                    if(!noPatches)
+                    // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
+                    for(struct PatchEntryItem &patch : entries)
                     {
-                        for(struct PatchEntryItem &patch : entries)
+                        int hookLength = patch.HookString.length() / 2; // hook string is hex string, 2 digits per byte
+                        if(patch.PatchOffsetInHookString != static_cast<unsigned int>(-1))
                         {
-                            // Set the patch address that was calculated by the save chunk allocator
-                            int chunkPtr;
-                            struct ROMUtils::SaveData *saveChunk = std::find_if(addedSaveChunks.begin(), addedSaveChunks.end(),
-                                [patch, &chunkPtr, &indexToChunkPtr, &saveChunkIndexToMetadata](struct ROMUtils::SaveData sd)
-                                {
-                                    chunkPtr = indexToChunkPtr[sd.index];
-                                    struct PatchEntryItem *mdPtr = saveChunkIndexToMetadata[sd.index];
-                                    return mdPtr ? mdPtr->HookAddress == patch.HookAddress : false;
-                                });
-                            patch.PatchAddress = saveChunk != addedSaveChunks.end() ? chunkPtr : 0;
-
-                            // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
-                            int hookLength = patch.HookString.length() / 2; // hook string is hex string, 2 digits per byte
-                            if(patch.PatchOffsetInHookString != static_cast<unsigned int>(-1))
-                            {
-                                hookLength += 4;
-                            }
-                            patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
+                            hookLength += 4;
                         }
-                        addedSaveChunks.clear();
+                        patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
+                    }
 
-                        // Create the save chunk for the PatchListChunk
+                    firstCallback = false;
+                }
+
+                // Create save data for all the patches in the iterator
+                if(patchAllocIter != entries.end())
+                {
+                    // If we have already reported insufficient space for this patch, then
+                    // reject all regions smaller than required space
+                    auto neededSizePair = std::find_if(neededSizeMap.begin(), neededSizeMap.end(), [patchAllocIter]
+                        (std::pair<const unsigned int, const unsigned int> p){return p.first == patchAllocIter->HookAddress;});
+                    if(neededSizePair != neededSizeMap.end())
+                    {
+                        unsigned int neededSize = (*neededSizePair).second;
+                        if(freeSpace.size < neededSize)
+                        {
+                            return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                        }
+                    }
+
+                    // If it is the first time processing this patch or we've been given a
+                    // new free space region for this patch, compile and link at proposed
+                    // address to find the required size
+                    int alignOffset = freeSpace.addr - ((freeSpace.addr + 3) & ~3);
+                    patchAllocIter->PatchAddress = freeSpace.addr + alignOffset;
+                    if((errorMsg = CompilePatchEntry(*patchAllocIter)) != "")
+                    {
+                        return ROMUtils::ChunkAllocationStatus::ProcessingError;
+                    }
+
+                    // We must get the size of the compiled binary and check it against the space we were offered
+                    struct ROMUtils::SaveData saveData = CreatePatchSaveChunk(*patchAllocIter);
+                    if(saveData.size + alignOffset > freeSpace.size)
+                    {
+                        delete saveData.data;
+                        return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                    }
+
+                    // Allocation success
+                    *sd = saveData;
+
+                    // Set metadata of the patch entry based off accepted save location and binary size
+
+
+                    // Advance patch iterator to next non-hex-edit patch
+                    patchAllocIter++;
+                    while(patchAllocIter != entries.end() && patchAllocIter->FileName.length())
+                    {
+                        patchAllocIter++;
+                    }
+
+                    return ROMUtils::ChunkAllocationStatus::Success;
+                }
+                else
+                {
+                    // Create patch list chunk after all patches have been processed
+                    if(!plcAllocated)
+                    {
+                        // Create patch list chunk contents, make sure there is sufficient space
                         QString patchListChunkContents = CreatePatchListChunkData(entries);
+                        if((unsigned int)patchListChunkContents.length() + 1 > freeSpace.size)
+                        {
+                            return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                        }
+
+                        // Create the save chunk data
                         unsigned char *data = new unsigned char[patchListChunkContents.length() + 1];
                         memcpy(data + 1, patchListChunkContents.toLocal8Bit().constData(), patchListChunkContents.length());
                         data[0] = PATCH_CHUNK_VERSION;
@@ -693,18 +821,19 @@ namespace PatchUtils
                             0,
                             ROMUtils::SaveDataChunkType::PatchListChunk
                         };
-                        addedSaveChunks.append(patchListChunk);
-                    }
-                    else addedSaveChunks.clear();
+                        *sd = patchListChunk;
 
-                    firstCallback = false;
+                        plcAllocated = true;
+                        return ROMUtils::ChunkAllocationStatus::Success;
+                    }
+
+                    return ROMUtils::ChunkAllocationStatus::NoMoreChunks;
                 }
-                else addedSaveChunks.clear();
             },
 
             // PostProcessingCallback
 
-            [chunks, &entries]
+            [removePatches, chunks, &entries]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
                 (void)indexToChunkPtr;
@@ -729,11 +858,12 @@ namespace PatchUtils
                     memcpy(TempFile + patch.HookAddress, hookData, hookString.length() / 2);
                     delete[] hookData;
                 }
+
+                return QString("");
             }
         );
 
-        // Success
-        return ret ? "" : "Error saving ROM file";
+        return ret ? "" : errorMsg;
     }
 
     /// <summary>
@@ -762,7 +892,12 @@ namespace PatchUtils
             eabiBinDir.cd(EABI_AS);
             goto error;
         }
-        if(!eabiBinDir.exists(EABI_OBJCOPY)) // extracting binary from object file
+        if(!eabiBinDir.exists(EABI_LD)) // linking object into ELF
+        {
+            eabiBinDir.cd(EABI_LD);
+            goto error;
+        }
+        if(!eabiBinDir.exists(EABI_OBJCOPY)) // extracting binary from ELF file
         {
             eabiBinDir.cd(EABI_OBJCOPY);
             goto error;

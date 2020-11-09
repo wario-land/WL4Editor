@@ -10,7 +10,10 @@ class WL4Application : public QApplication
 private:
     bool notify(QObject *receiver, QEvent *event)
     {
+        (void) receiver;
+        (void) event;
         // TODO
+        return false;
     }
 
 public:
