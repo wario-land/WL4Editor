@@ -256,14 +256,14 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         int tilesetPtr = WL4Constants::TilesetDataTable + i * 36;
         ROMUtils::singletonTilesets[i] = new LevelComponents::Tileset(tilesetPtr, i);
     }
-    for (unsigned int i = 0; i < sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]); ++i)
-    {
-        ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i);
-    }
     for (unsigned int i = 0; i < sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0]); ++i)
     {
         // TODO: the palette param should be loaded differently for different passages for gem palette
         ROMUtils::entities[i] = new LevelComponents::Entity(i, WL4Constants::UniversalSpritesPalette);
+    }
+    for (unsigned int i = 0; i < sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]); ++i)
+    {
+        ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i);
     }
 
     // Load the first level and render the screen

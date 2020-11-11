@@ -28,7 +28,6 @@ namespace LevelComponents
             EntityinfoTable.push_back(Tmp_entitytableElement);
             k++;
         } while (1);
-        this->InitTile8x8array();
     }
 
     /// <summary>
@@ -40,7 +39,6 @@ namespace LevelComponents
     EntitySet::EntitySet(const EntitySet &entitySet): EntitySetID(entitySet.EntitySetID)
     {
         this->EntityinfoTable = entitySet.GetEntityTable();
-        this->InitTile8x8array();
     }
 
     /// <summary>
@@ -193,6 +191,9 @@ namespace LevelComponents
     /// </summary>
     void EntitySet::ResetTile8x8Array()
     {
+        if (blankTile) // nulptr is convertible to bool
+            InitTile8x8array();
+
         // Clean up and re-initialize the 8x8 tiles and set all the tiles to blank tiles
         for (int i = (0x20 * 4); i < TilesDefaultNum; ++i)
         {
