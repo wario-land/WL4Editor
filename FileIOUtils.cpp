@@ -26,14 +26,18 @@ bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
 {
     QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
     QString selectedfilter;
+    QString usentiFilter(QObject::tr("usenti pal file") + " (*.pal)"),
+            yychrFilter(QObject::tr("YY-CHR pal file") + " (*.pal)"),
+            binaryFilter(QObject::tr("Raw Binary palette") + " (*.bin)");
     QString qFilePath =
         QFileDialog::getSaveFileName(parent,
                                      QObject::tr("Save palette file"),
                                      romFileDir,
-                                     QObject::tr("usenti pal file (*.pal);;YY-CHR pal file (*.pal);;Raw Binary palette (*.bin)"),
+                                     usentiFilter + ";;" + yychrFilter + ";;" + binaryFilter,
                                      &selectedfilter);
-    if(qFilePath.isEmpty()) goto ExportPalette_error;
-    if(selectedfilter == "usenti pal file (*.pal)")
+    if(qFilePath.isEmpty()) return false;
+
+    if(selectedfilter == usentiFilter)
     {
         QFile palfile(qFilePath);
         if(palfile.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -57,10 +61,11 @@ bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
         }
         else
         {
+            singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("File IO error: Unable to open palette output file \"%1\" for writing. Filter: %2").arg(palfile.fileName()).arg(usentiFilter));
             goto ExportPalette_error;
         }
     }
-    else if (selectedfilter == "YY-CHR pal file (*.pal)")
+    else if (selectedfilter == yychrFilter)
     {
         unsigned char palettedata[3 * 16];
         for(int j = 0; j < 16; ++j)
@@ -78,10 +83,11 @@ bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
         }
         else
         {
+            singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("File IO error: Unable to open palette output file \"%1\" for writing. Filter: %2").arg(palfile.fileName()).arg(yychrFilter));
             goto ExportPalette_error;
         }
     }
-    else if(selectedfilter == "Raw Binary palette (*.bin)")
+    else if(selectedfilter == binaryFilter)
     {
         unsigned short palettedata[16];
         for(int j = 0; j < 16; ++j)
@@ -109,7 +115,7 @@ bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
         if (palfile.isOpen())
         {
             QDataStream out(&palfile);
-            out.setByteOrder(QDataStream::LittleEndian); // *** set little endian byte order
+            out.setByteOrder(QDataStream::LittleEndian); // set little endian byte order
             for (int i = 0; i < 16; i++)
             {
                 out << quint16(palettedata[i]);
@@ -118,10 +124,17 @@ bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
         }
         else
         {
+            singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("File IO error: Unable to open palette output file \"%1\" for writing. Filter: %2").arg(palfile.fileName()).arg(binaryFilter));
             goto ExportPalette_error;
         }
     }
+    else
+    {
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Internal error: Invalid filter selection for palette export"));
+        return false;
+    }
     return true;
+
 ExportPalette_error:
     QMessageBox::critical(parent, QString(QObject::tr("Error")), QString(QObject::tr("Cannot save file!")));
     singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Failed to save palette to file."));
@@ -252,7 +265,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
          palbinfile.close();
 
          QVector<QRgb> tmppalette;
-         unsigned short *tmppaldata = new unsigned short[16];
+         unsigned short tmppaldata[16];
          memset(tmppaldata, 0, 32);
          memcpy(tmppaldata, tmppalettedata.data(), qMin(32, tmppalettedata.size()));
          ROMUtils::LoadPalette(&tmppalette, tmppaldata, true);
@@ -260,7 +273,6 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
          {
              SetColorFunction(selectedPalId, i, tmppalette[i]);
          }
-         delete[] tmppaldata;
     }
     return true;
 }
@@ -291,19 +303,19 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
     // Load gfx bin file
     QString fileName = QFileDialog::getOpenFileName(parent,
                                                     QObject::tr("Load Tileset graphic bin file"), QString(""),
-                                                    QObject::tr("bin file (*.bin)"));
+                                                    QObject::tr("bin file") + " (*.bin)");
 
     // load data into QBytearray
     QByteArray tmptile8x8data, tmptile8x8data_final;
     QFile gfxbinfile(fileName);
     if(!gfxbinfile.open(QIODevice::ReadOnly))
     {
-        QMessageBox::critical(parent, QObject::tr("Error"), QObject::tr("Cannot open file! \n").append(gfxbinfile.errorString()));
+        QMessageBox::critical(parent, QObject::tr("Error"), QObject::tr("Cannot open file: %1").arg(gfxbinfile.errorString()));
         return false;
     }
     if(!gfxbinfile.size())
     {
-        QMessageBox::critical(parent, QObject::tr("Error"), QObject::tr("File size is 0!"));
+        QMessageBox::critical(parent, QObject::tr("Error"), QObject::tr("File size is 0: %1").arg(gfxbinfile.fileName()));
         return false;
     }
     tmptile8x8data = gfxbinfile.readAll();
@@ -313,7 +325,7 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
     // Check size
     if(tmptile8x8data.size() & 31)
     {
-        QMessageBox::critical(parent, QObject::tr("Error"), QObject::tr("Illegal file size!\nIt should be a multiple of 32 Bytes."));
+        QMessageBox::critical(parent, QObject::tr("Error"), QObject::tr("Illegal file size. (should be a multiple of 32 Bytes) File: %1").arg(gfxbinfile.fileName()));
         return false;
     }
 
@@ -345,7 +357,9 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
     if(scdialog.exec() == QDialog::Accepted)
     {
         transparentcolorId = scdialog.GetSelectedColorId();
-    } else {
+    }
+    else
+    {
         return false;
     }
 
@@ -356,78 +370,49 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
     // reset bytearray according to the palette bin file
     for(int i = 0; i < 16; ++i)
     {
-        char count = 0;
-
-        // Find if the color[i] is in the current palette
-        while(1)
+        char colorIndex = 0;
+        if(i != transparentcolorId)
         {
-            if(tmppalette[i] == ref_palette[count])
+            // Get the index of the color in the current palette
+            QRgb findColor = tmppalette[i];
+            auto paletteFound = std::find_if(ref_palette.begin(), ref_palette.end(),
+                [findColor](const QRgb& c) {return c == findColor;});
+            char colorIndex = std::distance(ref_palette.begin(), paletteFound);
+
+            // Edge cases if color not found
+            if(paletteFound == ref_palette.end())
             {
-                break;
-            }
-            ++count;
-            if(count == 16)
-            {
-                if((tmppalette[i] != 0xFF000000) && (tmppalette[i] != 0xFFFFFFFF) && (tmppalette[i] != 0))
+                colorIndex = 0;
+                if(findColor != 0xFF000000 && findColor != 0xFFFFFFFF && findColor) // black, white or transparent
                 {
-                    QMessageBox::critical(parent,
-                                          QObject::tr("Error"),
-                                          QObject::tr("Color ")) + \
-                            QString::number(tmppalette[i] & 0xFFFFFF, 16).toUpper() + \
-                            QObject::tr(" does not exist in the current palette!");
+                    QMessageBox::critical(parent, QObject::tr("Error"),
+                        QObject::tr("Color %1 does not exist in the current palette!").arg(QString::number(findColor & 0xFFFFFF, 16).toUpper()));
                     return false;
                 }
-                else if(tmppalette[i] == 0xFF000000) // black
-                {
-                    auto iter = std::find_if(ref_palette.begin(),
-                                             ref_palette.end(), [&](const QRgb& value) {
-                                    return value == tmppalette[i]; });
-                    if (tmppalette.end() != iter) {
-                        count = iter - tmppalette.begin();
-                    } else {
-                    count = 0;
-                    }
-                    break;
-                }
-                else if(tmppalette[i] == 0xFFFFFFFF) // white
-                {
-                    auto iter = std::find_if(ref_palette.begin(),
-                                             ref_palette.end(), [&](const QRgb& value) {
-                                    return value == tmppalette[i]; });
-                    if (tmppalette.end() != iter) {
-                        count = iter - tmppalette.begin();
-                    } else {
-                    count = 0;
-                    }
-                    break;
-                }
-                else if(tmppalette[i] == 0) // transparent
-                {
-                    count = 0;
-                    break;
-                }
             }
         }
-        if(transparentcolorId == i)
-        {
-            count = 0;
-        }
 
-        // replace the color[i] in tiledata with the correct id
+        // Replace the color[i] in tiledata with the correct id
         for(int j = 0; j < tmptile8x8data.size(); ++j)
         {
             char tmpchr = tmptile8x8data[j];
             char lower4bits, upper4bits;
             upper4bits = (tmpchr >> 4) & 0xF;
             lower4bits = tmpchr & 0xF;
-            if (lower4bits == i) {
-                lower4bits = count;
-            } else {
+            if (lower4bits == i)
+            {
+                lower4bits = colorIndex;
+            }
+            else
+            {
                 lower4bits = tmptile8x8data_final[j] & 0xF;
             }
-            if (upper4bits == i) {
-                upper4bits = count;
-            } else {
+            if (upper4bits == i)
+            {
+                upper4bits = colorIndex;
+            }
+            else
+            {
                 upper4bits = (tmptile8x8data_final[j] >> 4) & 0xF;
             }
             tmptile8x8data_final[j] = (upper4bits << 4) | lower4bits;

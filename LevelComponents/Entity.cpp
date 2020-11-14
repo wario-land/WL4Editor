@@ -4,6 +4,8 @@
 #include <QPixmap>
 #include <QPainter>
 
+#include <cassert>
+
 constexpr unsigned char LevelComponents::Entity::EntitySampleOamNumArray[129];
 constexpr int LevelComponents::Entity::EntityPositinalOffset[258];
 constexpr unsigned short LevelComponents::Entity::EntitiesOamSampleSets[129][0x2A * 3];
