@@ -23,11 +23,6 @@ namespace LevelComponents
         //Save the ROM pointer into the tileset object
         this->tilesetPtr = tilesetPtr;
 
-        tile8x8array = new Tile8x8* [0x600];
-        map16array = new TileMap16* [0x300];
-        memset(tile8x8array, 0, Tile8x8DefaultNum * sizeof(tile8x8array[0]));
-        memset(map16array, 0, Tile16DefaultNum * sizeof(map16array[0]));
-
         // Create all 16 color palettes
         paletteAddress = ROMUtils::PointerFromData(tilesetPtr + 8);
         for (int i = 0; i < 16; ++i)
@@ -41,7 +36,7 @@ namespace LevelComponents
         blankTile = Tile8x8::CreateBlankTile(palettes);
         for (int i = 0; i < Tile8x8DefaultNum; ++i)
         {
-            tile8x8array[i] = blankTile;
+            tile8x8array.push_back(blankTile);
         }
 
         // Load the animated tiles
@@ -104,15 +99,15 @@ namespace LevelComponents
                 tiles[j]->SetFlipY(FlipY);
                 tiles[j]->SetPaletteIndex(paletteIndex);
             }
-            map16array[i] = new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]);
+            map16array.push_back(new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]));
         }
 
         // Get pointer to the map16 event table
-        Map16EventTable = new unsigned short[0x300];
+        Map16EventTable = new unsigned short[Tile16DefaultNum];
         memcpy(Map16EventTable, (unsigned short *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 28)), Tile16DefaultNum * sizeof(unsigned short));
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
-        Map16TerrainTypeIDTable = new unsigned char[0x300];
+        Map16TerrainTypeIDTable = new unsigned char[Tile16DefaultNum];
         memcpy(Map16TerrainTypeIDTable, (unsigned char *) (ROMUtils::CurrentFile + ROMUtils::PointerFromData(tilesetPtr + 24)), Tile16DefaultNum * sizeof(unsigned char));
 
         // Get pointer of Universal Sprites tiles Palette
@@ -138,14 +133,9 @@ namespace LevelComponents
     {
         (void) __TilesetID;
         newtileset = true;
-        tile8x8array = new Tile8x8* [Tile8x8DefaultNum];
-        map16array = new TileMap16* [Tile16DefaultNum];
 
         //Save the ROM pointer into the tileset object
         this->tilesetPtr = old_tileset->getTilesetPtr();
-
-        memset(tile8x8array, 0, Tile8x8DefaultNum * sizeof(tile8x8array[0]));
-        memset(map16array, 0, Tile16DefaultNum * sizeof(map16array[0]));
 
         // Create all 16 color palettes
         for (unsigned int i = 0; i < 16; ++i)
@@ -157,15 +147,15 @@ namespace LevelComponents
         blankTile = Tile8x8::CreateBlankTile(palettes);
         for (int i = 0; i < Tile8x8DefaultNum; ++i)
         {
-            tile8x8array[i] = blankTile;
+            tile8x8array.push_back(blankTile);
         }
 
         // Get pointer to the map16 event table
-        Map16EventTable = new unsigned short[0x300];
+        Map16EventTable = new unsigned short[Tile16DefaultNum];
         memcpy(Map16EventTable, old_tileset->GetEventTablePtr(), Tile16DefaultNum * sizeof(unsigned short));
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
-        Map16TerrainTypeIDTable = new unsigned char[0x300];
+        Map16TerrainTypeIDTable = new unsigned char[Tile16DefaultNum];
         memcpy(Map16TerrainTypeIDTable, old_tileset->GetTerrainTypeIDTablePtr(), Tile16DefaultNum * sizeof(unsigned char));
 
         // Get pointer of Universal Sprites tiles Palette
@@ -185,7 +175,7 @@ namespace LevelComponents
         {
             SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
         }
-        Tile8x8 **oldTile8x8Data = old_tileset->GetTile8x8arrayPtr();
+        QVector<Tile8x8 *> oldTile8x8Data = old_tileset->GetTile8x8arrayPtr();
         int fgGFXcount = fgGFXlen / 32;
         for (int i = 0; i < fgGFXcount; ++i)
         {
@@ -198,7 +188,7 @@ namespace LevelComponents
         }
 
         // Copy all the Tile16
-        TileMap16 **oldTileMap16Data = old_tileset->GetMap16arrayPtr();
+        QVector<TileMap16 *> oldTileMap16Data = old_tileset->GetMap16arrayPtr();
         for (int i = 0; i < Tile16DefaultNum; ++i)
         {
             Tile8x8 *tiles[4];
@@ -211,7 +201,7 @@ namespace LevelComponents
                 tiles[j]->SetFlipY(oldTileMap16Data[i]->GetTile8X8(j)->GetFlipY());
                 tiles[j]->SetPaletteIndex(oldTileMap16Data[i]->GetTile8X8(j)->GetPaletteIndex());
             }
-            map16array[i] = new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]);
+            map16array.push_back(new TileMap16(tiles[0], tiles[1], tiles[2], tiles[3]));
         }
 
         hasconstructed = true;
@@ -424,7 +414,7 @@ namespace LevelComponents
         fgGFXlen -= 32;
 
         // update Tile16 map
-        for(int i = 0; i < 0x300; ++i)
+        for(int i = 0; i < Tile16DefaultNum; ++i)
         {
             LevelComponents::TileMap16* tile16 = map16array[i];
             for(int j = 0; j < 4; ++j)

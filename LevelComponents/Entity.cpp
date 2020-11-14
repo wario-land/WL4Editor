@@ -4,6 +4,8 @@
 #include <QPixmap>
 #include <QPainter>
 
+#include <cassert>
+
 constexpr unsigned char LevelComponents::Entity::EntitySampleOamNumArray[129];
 constexpr int LevelComponents::Entity::EntityPositinalOffset[258];
 constexpr unsigned short LevelComponents::Entity::EntitiesOamSampleSets[129][0x2A * 3];
@@ -197,6 +199,10 @@ namespace LevelComponents
     /// </returns>
     QImage Entity::Render()
     {
+        if (UnusedEntity)
+        {
+            return QImage();
+        }
         int maxX = 0x80000000, maxY = 0x80000000;
         foreach (OAMTile *ot, OAMTiles)
         {
@@ -206,10 +212,6 @@ namespace LevelComponents
         int width = maxX - xOffset, height = maxY - yOffset;
         QPixmap pm(width, height);
         pm.fill(Qt::transparent);
-        if (UnusedEntity)
-        {
-            return pm.toImage();
-        }
         QPainter p(&pm);
         // OAM tiles must be rendered in reverse order as per the GBA graphical specifications
         for (auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)

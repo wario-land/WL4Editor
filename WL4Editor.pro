@@ -42,6 +42,7 @@ SOURCES += \
     Dialog/SelectColorDialog_PaletteBar.cpp \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \
     DockWidget/OutputDockWidget.cpp \
+    FileIOUtils.cpp \
     ScriptInterface.cpp \
     main.cpp \
     WL4EditorWindow.cpp \
@@ -84,6 +85,7 @@ HEADERS += \
     Dialog/SelectColorDialog_PaletteBar.h \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.h \
     DockWidget/OutputDockWidget.h \
+    FileIOUtils.h \
     ScriptInterface.h \
     WL4EditorWindow.h \
     LevelComponents/Level.h \
