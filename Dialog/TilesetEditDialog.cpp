@@ -846,7 +846,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
             // also (newtilenum + SelectedTile8x8 + 1) should be less than or equal to 0x400 or return
             // create new Tile8x8 by using 32-byte length data
             // overwrite and replace the old TIle8x8 instances down-through from selected Tile8x8
-            unsigned char* newtmpdata = new unsigned char[32];
+            unsigned char newtmpdata[32];
             if((newtilenum + selTile8x8 + 1) > (tmp_newTilesetPtr->GetfgGFXlen() / 32))
             {
                 if((newtilenum + selTile8x8 + 1) > 0x400)
@@ -864,7 +864,6 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
                 memcpy(newtmpdata, finaldata.data() + 32 * i, 32);
                 currenteditor->OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(selTile8x8 + i, newtmpdata);
             }
-            delete[] newtmpdata;
         });
 
     // update all the graphicviews

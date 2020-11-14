@@ -2,7 +2,7 @@
 #define FILEIOUTILS_H
 
 #include <QVector>
-#include <QPixmap>
+#include <QColor>
 #include <functional>
 
 #include "Dialog/TilesetEditDialog.h"

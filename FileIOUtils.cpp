@@ -33,7 +33,7 @@ bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
                                      QObject::tr("usenti pal file (*.pal);;YY-CHR pal file (*.pal);;Raw Binary palette (*.bin)"),
                                      &selectedfilter);
     if(qFilePath.isEmpty()) goto ExportPalette_error;
-    if(selectedfilter.compare("usenti pal file (*.pal)") == 0)
+    if(selectedfilter == "usenti pal file (*.pal)")
     {
         QFile palfile(qFilePath);
         if(palfile.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -60,9 +60,9 @@ bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
             goto ExportPalette_error;
         }
     }
-    else if (selectedfilter.compare("YY-CHR pal file (*.pal)") == 0)
+    else if (selectedfilter == "YY-CHR pal file (*.pal)")
     {
-        unsigned char *palettedata = new unsigned char[3 * 16];
+        unsigned char palettedata[3 * 16];
         for(int j = 0; j < 16; ++j)
         {
             palettedata[3 * j] = (palette[j] & 0xFF0000) >> 16; // R
@@ -75,17 +75,15 @@ bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
         {
             palfile.write(reinterpret_cast<const char*>(palettedata), 3 * 16);
             palfile.close();
-            delete[] palettedata;
         }
         else
         {
-            delete[] palettedata;
             goto ExportPalette_error;
         }
     }
-    else if(selectedfilter.compare("Raw Binary palette (*.bin)") == 0)
+    else if(selectedfilter == "Raw Binary palette (*.bin)")
     {
-        unsigned short *palettedata = new unsigned short[16];
+        unsigned short palettedata[16];
         for(int j = 0; j < 16; ++j)
         {
             int red = (palette[j] & 0xFF0000) >> 16; // R
@@ -117,17 +115,16 @@ bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
                 out << quint16(palettedata[i]);
             }
             palfile.close();
-            delete[] palettedata;
         }
         else
         {
-            delete[] palettedata;
             goto ExportPalette_error;
         }
     }
     return true;
 ExportPalette_error:
     QMessageBox::critical(parent, QString(QObject::tr("Error")), QString(QObject::tr("Cannot save file!")));
+    singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Failed to save palette to file."));
     return false;
 }
 
@@ -167,7 +164,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
     }
 
     // Set palette
-    if(selectedfilter.compare("usenti pal file (*.pal)") == 0)
+    if(selectedfilter == "usenti pal file (*.pal)")
     {
         QFile palfile(qFilePath);
         if(palfile.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -175,7 +172,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
             // Stream text from the file
             QTextStream in(&palfile);
             QString header = in.readLine();
-            if(header.compare("CLRX 8 16"))
+            if(header == "CLRX 8 16")
             {
                 QMessageBox::critical(parent, QString(QObject::tr("Error")), QString(QObject::tr("Wrong file format!")));
                 return false;
@@ -183,6 +180,13 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
             for(int j = 0; j < 4; ++j)
             {
                 QString line = in.readLine();
+                if (line.isEmpty())
+                {
+                    QMessageBox::critical(parent,
+                                          QString(QObject::tr("Error")),
+                                          QString(QObject::tr("No enough color data in the file!")));
+                    return false;
+                }
                 QStringList fields = line.split(" ");
                 for(int i = 0; i < 4; ++i)
                 {
@@ -200,7 +204,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
             palfile.close();
         }
     }
-    else if (selectedfilter.compare("YY-CHR pal file (*.pal)") == 0)
+    else if (selectedfilter == "YY-CHR pal file (*.pal)")
     {
         QFile file(qFilePath);
         file.open(QIODevice::ReadOnly);
@@ -227,7 +231,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
         }
     }
 
-    else if (selectedfilter.compare("Raw Binary palette (*.bin)") == 0)
+    else if (selectedfilter == "Raw Binary palette (*.bin)")
     {
          QByteArray tmppalettedata;
          QFile palbinfile(qFilePath);
@@ -278,6 +282,12 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
 /// </returns>
 bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palette, std::function<void (QByteArray&, QWidget *)> TilesReplaceCallback)
 {
+    if (ref_palette.size() != 16)
+    {
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Internal Error: ref_palette should have a size of 16."));
+        return false;
+    }
+
     // Load gfx bin file
     QString fileName = QFileDialog::getOpenFileName(parent,
                                                     QObject::tr("Load Tileset graphic bin file"), QString(""),
@@ -322,11 +332,10 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
     palbinfile.close();
 
     QVector<QRgb> tmppalette;
-    unsigned short *tmppaldata = new unsigned short[16];
+    unsigned short tmppaldata[16];
     memset(tmppaldata, 0, 32);
     memcpy(tmppaldata, tmppalettedata.data(), qMin(32, tmppalettedata.size()));
     ROMUtils::LoadPalette(&tmppalette, tmppaldata, true);
-    delete[] tmppaldata;
 
     // Get transparent color id in the palette
     int transparentcolorId = 0;
@@ -345,7 +354,7 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
 
     // nybble exchange not needed
     // reset bytearray according to the palette bin file
-    for(int i = 0; i != 16; ++i)
+    for(int i = 0; i < 16; ++i)
     {
         char count = 0;
 
@@ -361,7 +370,11 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
             {
                 if((tmppalette[i] != 0xFF000000) && (tmppalette[i] != 0xFFFFFFFF) && (tmppalette[i] != 0))
                 {
-                    QMessageBox::critical(parent, QObject::tr("Error"), QObject::tr("Palette not suitable!"));
+                    QMessageBox::critical(parent,
+                                          QObject::tr("Error"),
+                                          QObject::tr("Color ")) + \
+                            QString::number(tmppalette[i] & 0xFFFFFF, 16).toUpper() + \
+                            QObject::tr(" does not exist in the current palette!");
                     return false;
                 }
                 else if(tmppalette[i] == 0xFF000000) // black
@@ -401,23 +414,23 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
         }
 
         // replace the color[i] in tiledata with the correct id
-        for(int j = 0; j < tmptile8x8data.size(); ++j) // TODO: bugfix here
+        for(int j = 0; j < tmptile8x8data.size(); ++j)
         {
             char tmpchr = tmptile8x8data[j];
-            char l4b, h4b;
-            h4b = (tmpchr >> 4) & 0xF;
-            l4b = tmpchr & 0xF;
-            if (l4b == i) {
-                l4b = count;
+            char lower4bits, upper4bits;
+            upper4bits = (tmpchr >> 4) & 0xF;
+            lower4bits = tmpchr & 0xF;
+            if (lower4bits == i) {
+                lower4bits = count;
             } else {
-                l4b = tmptile8x8data_final[j] & 0xF;
+                lower4bits = tmptile8x8data_final[j] & 0xF;
             }
-            if (h4b == i) {
-                h4b = count;
+            if (upper4bits == i) {
+                upper4bits = count;
             } else {
-                h4b = (tmptile8x8data_final[j] >> 4) & 0xF;
+                upper4bits = (tmptile8x8data_final[j] >> 4) & 0xF;
             }
-            tmptile8x8data_final[j] = (h4b << 4) | l4b;
+            tmptile8x8data_final[j] = (upper4bits << 4) | lower4bits;
         }
     }
 
