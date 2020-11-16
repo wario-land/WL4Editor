@@ -24,6 +24,8 @@ namespace LevelComponents
         int GetEntitySetId() { return EntitySetID; }
         bool FindEntity(const int entityglobalId) const;
         QVector<EntitySetinfoTableElement> GetEntityTable() const;
+        void ClearEntityLoadTable() { EntityinfoTable.clear(); }
+        void EntityLoadTablePushBack(EntitySetinfoTableElement newelement) {if(EntityinfoTable.size() < 0x1F) EntityinfoTable.push_back(newelement); }
         QPixmap GetPixmap(const int palNum);
 
     private:

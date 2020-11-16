@@ -223,6 +223,34 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Get tilemap image used by this Entity.
+    /// </summary>
+    /// <param name="palNum">
+    /// Palette number used to render the current entityset.
+    /// </param>
+    /// <returns>
+    /// The rendered QImage object.
+    /// </returns>
+    QImage Entity::GetTileMap(const int palNum)
+    {
+        // Render and return pixmap
+        int rowNum = tile8x8data.size() >> 5; // tile8x8data.size() / 32
+        QPixmap pixmap(8 * 32, 8 * rowNum);
+        pixmap.fill(Qt::transparent);
+
+        // drawing
+        for (int i = 0; i < rowNum; ++i)
+        {
+            for (int j = 0; j < 32; ++j)
+            {
+                tile8x8data[i * 32 + j]->SetPaletteIndex(palNum);
+                tile8x8data[i * 32 + j]->DrawTile(&pixmap, j * 8, i * 8);
+            }
+        }
+        return pixmap.toImage();
+    }
+
+    /// <summary>
     /// Get Entity Positional offset by its global id.
     /// </summary>
     /// <param name="entityglobalId">

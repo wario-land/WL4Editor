@@ -1,4 +1,4 @@
-#include "OutputDockWidget.h"
+﻿#include "OutputDockWidget.h"
 #include "ui_OutputDockWidget.h"
 #include "WL4EditorWindow.h"
 #include <QQmlEngine>
@@ -57,7 +57,7 @@ OutputDockWidget::~OutputDockWidget()
 /// </summary>
 void OutputDockWidget::PrintString(QString str)
 {
-    ui->textEdit_Output->append(str + QString('\n'));
+    ui->textEdit_Output->append(str); // append function add a new paragraph to the textedit, no need to add an extra \n
 }
 
 /// <summary>

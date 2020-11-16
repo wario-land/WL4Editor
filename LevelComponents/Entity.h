@@ -52,6 +52,7 @@ namespace LevelComponents
         Entity(const Entity &entity); // Copy constructor
         ~Entity();
         QImage Render();
+        QImage GetTileMap(const int palNum);
         static EntityPositionalOffset GetEntityPositionalOffset(int entityglobalId);
         int GetEntityGlobalID() { return EntityGlobalID; }
         int GetXOffset() { return xOffset; }
@@ -59,6 +60,7 @@ namespace LevelComponents
         int GetPalNum() const { return EntityPaletteNum; }
         QVector<QRgb> GetPalette(const int palId) const;
         QVector<Tile8x8*> GetSpriteTiles(QVector<QRgb> *newPal) const;
+        int GetTilesNum() { return tile8x8data.size(); }
 
     private:
         QVector<QRgb> palettes[16]; //i don't want to do some memory management here, so i just set it to be 16

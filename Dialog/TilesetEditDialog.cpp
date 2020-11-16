@@ -13,6 +13,9 @@
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
 
+/// <summary>
+/// Constructor of TilesetEditDialog class.
+/// </summary>
 TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditParams *tilesetEditParam) :
     QDialog(parent),
     ui(new Ui::TilesetEditDialog)

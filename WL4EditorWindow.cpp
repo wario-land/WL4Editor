@@ -429,6 +429,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionRun_from_file->setEnabled(true);
         ui->actionManager->setEnabled(true);
         ui->actionEdit_Credits->setEnabled(true);
+        ui->actionEdit_Entity_EntitySet->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -2016,4 +2017,23 @@ void WL4EditorWindow::on_actionEdit_Credits_triggered()
     // Show the dialog
     CreditsEditDialog dialog(this, creditsEditParams);
     dialog.exec();
+}
+
+/// <summary>
+/// Trigger to open a dialog to edit Entities and Entitysets.
+/// </summary>
+void WL4EditorWindow::on_actionEdit_Entity_EntitySet_triggered()
+{
+    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
+    DialogParams::EntitiesAndEntitySetsEditParams *_currentEntitiesAndEntitysetsEditParams =
+        new DialogParams::EntitiesAndEntitySetsEditParams();
+
+    // Show the dialog
+    SpritesEditorDialog dialog(this, _currentEntitiesAndEntitysetsEditParams);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        // Execute Operation and add changes into the operation history
+        // Set changed bools in multiple places
+        // TODO
+    }
 }
