@@ -162,9 +162,9 @@ namespace LevelComponents
 
             int tmpEntityPalNum = ROMUtils::entities[tmpEntityGlobalId]->GetPalNum();
             offset = tmpEntityPalNum + tmpEntityPalOffset + 8;
-            if (offset > 14)
-                overwriteBoxtiles = true;
             if (offset > 15)
+                overwriteBoxtiles = true;
+            if (offset > 16)
             {
                 // TODO: deal with exception
                 singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("load entityset error: loading palette's id out of bound.") + \
@@ -226,9 +226,9 @@ namespace LevelComponents
 
             int tmpEntityPalNum = ROMUtils::entities[tmpEntityGlobalId]->GetPalNum();
             offset = 2 * (tmpEntityPalNum + tmpEntityPalOffset) + 16;
-            if (offset > 30)
-                overwriteBoxtiles = true;
             if (offset > 31)
+                overwriteBoxtiles = true;
+            if (offset > 32)
             {
                 // TODO: deal with exception
                 continue;
