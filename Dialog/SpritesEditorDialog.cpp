@@ -2,6 +2,7 @@
 #include "ui_SpritesEditorDialog.h"
 
 #include <QStringList>
+#include <QScrollBar>
 #include <QMessageBox>
 #include "ROMUtils.h"
 
@@ -82,6 +83,7 @@ void SpritesEditorDialog::RenderSpritesTileMap()
     // Set up scenes
     SpriteTileMAPScene->clear();
     SpriteTilemapping = SpriteTileMAPScene->addPixmap(SpriteTilePixmap);
+    ui->graphicsView_SpriteTileMap->verticalScrollBar()->setValue(0);
 
     // Add the highlighted tile rectangle
     QPixmap selectionPixmap(8, 8);

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>782</width>
-    <height>605</height>
+    <width>707</width>
+    <height>674</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -40,11 +40,25 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_spritetiles">
-          <property name="text">
-           <string>Sprite Tiles:</string>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <property name="topMargin">
+           <number>0</number>
           </property>
-         </widget>
+          <item>
+           <widget class="QLabel" name="label_spritetiles">
+            <property name="text">
+             <string>Sprite Tiles:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_spriteTileID">
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="QGraphicsView" name="graphicsView_SpriteTileMap"/>
@@ -71,9 +85,30 @@
          </layout>
         </item>
         <item>
-         <widget class="QLabel" name="label_SpritePal">
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_SpritePal">
+            <property name="text">
+             <string>Available Palettes:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_PalID">
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_CurColorValue">
           <property name="text">
-           <string>Available Palettes:</string>
+           <string>RGB555 RGB888</string>
           </property>
          </widget>
         </item>
@@ -87,6 +122,12 @@
           </property>
           <item>
            <widget class="QPushButton" name="pushButton_SpritePaletteImport">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>Import</string>
             </property>
@@ -94,8 +135,54 @@
           </item>
           <item>
            <widget class="QPushButton" name="pushButton_SpritePaletteExport">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>Export</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_DeletePal">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Delete</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_AddPal">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Add</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QPushButton" name="pushButton_ExchangePal">
+            <property name="text">
+             <string>Exchange</string>
             </property>
            </widget>
           </item>
