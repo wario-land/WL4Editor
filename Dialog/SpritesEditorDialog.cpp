@@ -23,10 +23,16 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
     SpritesetTileMAPScene = new QGraphicsScene(0, 0, 8 * 32, 8 * 32);
     ui->graphicsView_SpritesetTileMap->setScene(SpritesetTileMAPScene);
     ui->graphicsView_SpritesetTileMap->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    PaletteBarScene = new QGraphicsScene(0, 0, 16 * 8, 16 * 8);
+    // TODO: PaletteBarScene->setBackgroundBrush();
+    ui->graphicsView_SpritePals->setScene(PaletteBarScene);
+    ui->graphicsView_SpritePals->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_SpritePals->scale(2, 2);
 
     // Seems the spinboxes won't trigger the valuechanged event when loading UI
     // We need to load graphics manually
     RenderSpritesTileMap();
+    RenderSpritesPalette();
     RenderSpritesetTileMapAndResetLoadTable();
 }
 
@@ -48,6 +54,7 @@ void SpritesEditorDialog::on_spinBox_GlobalSpriteId_valueChanged(int arg1)
 {
     currentEntityID = arg1;
     RenderSpritesTileMap();
+    RenderSpritesPalette();
 }
 
 /// <summary>
@@ -91,6 +98,53 @@ void SpritesEditorDialog::RenderSpritesTileMap()
     selectionPixmap.fill(highlightColor);
     SelectionBox_Sprite = SpriteTileMAPScene->addPixmap(selectionPixmap);
     SelectionBox_Sprite->setVisible(false);
+}
+
+/// <summary>
+/// Reset sprite palettes graphicview
+/// </summary>
+void SpritesEditorDialog::RenderSpritesPalette()
+{
+    // Find if new entity data exist
+    LevelComponents::Entity *oldEntity = ROMUtils::entities[currentEntityID];
+    LevelComponents::Entity *curEntity = oldEntity; // init
+
+    auto entityFound = std::find_if(entitiesAndEntitySetsEditParam->entities.begin(),
+                                    entitiesAndEntitySetsEditParam->entities.end(),
+        [oldEntity](LevelComponents::Entity *entity) {return entity->GetEntityGlobalID() == oldEntity->GetEntityGlobalID();});
+    int spriteIdInChangelist = std::distance(entitiesAndEntitySetsEditParam->entities.begin(), entityFound);
+
+    // If the current entity has a new unsaved instance in the dialog
+    if(entityFound != entitiesAndEntitySetsEditParam->entities.end())
+    {
+        curEntity = entitiesAndEntitySetsEditParam->entities[spriteIdInChangelist];
+    }
+
+    // Render palettes
+    int palnum = curEntity->GetPalNum();
+    QPixmap PaletteBarpixmap(8 * 16, palnum * 16);
+    PaletteBarpixmap.fill(Qt::transparent);
+    QPainter PaletteBarPainter(&PaletteBarpixmap);
+    for (int j = 0; j < palnum; ++j)
+    {
+        QVector<QRgb> palettetable = curEntity->GetPalette(j);
+        for (int i = 1; i < 16; ++i) // Ignore the first color
+        {
+            PaletteBarPainter.fillRect(8 * i, 16 * j, 8, 16, palettetable[i]);
+        }
+    }
+    PaletteBarScene->clear();
+    Palettemapping = PaletteBarScene->addPixmap(PaletteBarpixmap);
+    ui->graphicsView_SpritePals->verticalScrollBar()->setValue(0);
+
+    // Add Color selection box
+    QPixmap selectionPixmap3(8, 16);
+    selectionPixmap3.fill(Qt::transparent);
+    QPainter SelectionBoxRectPainter(&selectionPixmap3);
+    SelectionBoxRectPainter.setPen(QPen(QBrush(Qt::blue), 2));
+    SelectionBoxRectPainter.drawRect(1, 1, 7, 15);
+    SelectionBox_Color = PaletteBarScene->addPixmap(selectionPixmap3);
+    SelectionBox_Color->setVisible(false);
 }
 
 /// <summary>

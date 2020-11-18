@@ -28,7 +28,7 @@
         <item>
          <widget class="QLabel" name="label_GlobalSpriteId">
           <property name="text">
-           <string>Global Sprite ID:</string>
+           <string>Global Sprite ID (Hex):</string>
           </property>
          </widget>
         </item>
@@ -36,6 +36,9 @@
          <widget class="QSpinBox" name="spinBox_GlobalSpriteId">
           <property name="maximum">
            <number>128</number>
+          </property>
+          <property name="displayIntegerBase">
+           <number>16</number>
           </property>
          </widget>
         </item>
@@ -113,7 +116,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QGraphicsView" name="graphicsView"/>
+         <widget class="QGraphicsView" name="graphicsView_SpritePals"/>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">

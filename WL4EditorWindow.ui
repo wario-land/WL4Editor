@@ -567,7 +567,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Edit Entities</string>
+    <string>Edit Entities and EntitySets</string>
    </property>
   </action>
  </widget>

@@ -48,9 +48,13 @@ private:
     QGraphicsPixmapItem *SpriteTilemapping = nullptr;
     QGraphicsScene *SpritesetTileMAPScene = nullptr; // no need selestionbox for spriteset graphicview
     QGraphicsPixmapItem *SpritesetTilemapping = nullptr;
+    QGraphicsScene *PaletteBarScene = nullptr;
+    QGraphicsPixmapItem *SelectionBox_Color = nullptr;
+    QGraphicsPixmapItem *Palettemapping = nullptr;
 
     // Functions
     void RenderSpritesTileMap();
+    void RenderSpritesPalette();
     void RenderSpritesetTileMapAndResetLoadTable();
 };
 
