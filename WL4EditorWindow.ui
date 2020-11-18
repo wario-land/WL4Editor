@@ -227,6 +227,25 @@
      <addaction name="separator"/>
      <addaction name="actionClear_all"/>
     </widget>
+    <widget class="QMenu" name="menuCopy">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>Copy</string>
+     </property>
+     <widget class="QMenu" name="menuEntity_lists_2">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="title">
+       <string>Entity lists</string>
+      </property>
+      <addaction name="action_copy_Normal_Hard"/>
+      <addaction name="action_copy_Hard_S_Hard"/>
+     </widget>
+     <addaction name="menuEntity_lists_2"/>
+    </widget>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
     <addaction name="actionUndo_global"/>
@@ -237,6 +256,7 @@
     <addaction name="actionEdit_Tileset"/>
     <addaction name="actionEdit_Credits"/>
     <addaction name="menuAdd"/>
+    <addaction name="menuCopy"/>
     <addaction name="menuSwap"/>
     <addaction name="menuClear"/>
     <addaction name="actionRect_Select_Mode"/>
@@ -559,6 +579,22 @@
    </property>
    <property name="text">
     <string>Edit Credits</string>
+   </property>
+  </action>
+  <action name="action_copy_Normal_Hard">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Normal =&gt; Hard</string>
+   </property>
+  </action>
+  <action name="action_copy_Hard_S_Hard">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hard =&gt; S-Hard</string>
    </property>
   </action>
  </widget>

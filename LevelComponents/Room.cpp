@@ -1457,6 +1457,20 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Copy the first Entity list to the second.
+    /// </summary>
+    /// <param name="first_list_id">
+    /// First Entity list id.
+    /// </param>
+    /// <param name="second_list_id">
+    /// Second Entity list id.
+    /// </param>
+    void Room::CopyEntityLists(int first_list_id, int second_list_id)
+    {
+        EntityList[second_list_id]=EntityList[first_list_id];
+    }
+
+    /// <summary>
     /// Check if the new Door position is in the Room.
     /// </summary>
     /// <param name="x1">

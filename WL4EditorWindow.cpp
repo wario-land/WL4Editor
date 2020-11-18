@@ -409,26 +409,28 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         firstROMLoaded = true;
 
         // Enable UI that requires a ROM file to be loaded
-        ui->loadLevelButton->setEnabled(true);
-        ui->actionLevel_Config->setEnabled(true);
-        ui->actionRoom_Config->setEnabled(true);
         ui->actionSave_ROM->setEnabled(true);
         ui->actionSave_As->setEnabled(true);
         ui->actionSave_Room_s_graphic->setEnabled(true);
+        ui->actionUndo->setEnabled(true);
+        ui->actionRedo->setEnabled(true);
+        ui->actionUndo_global->setEnabled(true);
+        ui->actionRedo_global->setEnabled(true);
+        ui->actionLevel_Config->setEnabled(true);
+        ui->actionRoom_Config->setEnabled(true);
         ui->actionEdit_Tileset->setEnabled(true);
+        ui->actionEdit_Credits->setEnabled(true);
         ui->menuAdd->setEnabled(true);
+        ui->menuCopy->setEnabled(true);
+        ui->menuEntity_lists_2->setEnabled(true);
         ui->menuSwap->setEnabled(true);
         ui->menuClear->setEnabled(true);
         ui->menu_clear_Layer->setEnabled(true);
         ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionClear_all->setEnabled(true);
-        ui->actionRedo->setEnabled(true);
-        ui->actionRedo_global->setEnabled(true);
-        ui->actionUndo->setEnabled(true);
-        ui->actionUndo_global->setEnabled(true);
-        ui->actionRun_from_file->setEnabled(true);
         ui->actionManager->setEnabled(true);
-        ui->actionEdit_Credits->setEnabled(true);
+        ui->actionRun_from_file->setEnabled(true);
+        ui->loadLevelButton->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -2016,4 +2018,40 @@ void WL4EditorWindow::on_actionEdit_Credits_triggered()
     // Show the dialog
     CreditsEditDialog dialog(this, creditsEditParams);
     dialog.exec();
+}
+
+/// <summary>
+/// Copy Normal Entity list into Hard Entity list
+/// </summary>
+void WL4EditorWindow::on_action_copy_Normal_Hard_triggered()
+{
+    // copy  Normal Entity list into Hard Entity list
+    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(1, 0);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Copy Hard Entity list into Super Hard Entity list
+/// </summary>
+void WL4EditorWindow::on_action_copy_Hard_S_Hard_triggered()
+{
+    // copy  Hard Entity list into Super Hard Entity list
+    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(0, 2);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
+    SetUnsavedChanges(true);
 }

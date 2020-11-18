@@ -115,17 +115,24 @@ private slots:
 
     // Auto-generated
     void on_actionOpen_ROM_triggered();
+    void on_actionSave_ROM_triggered();
+    void on_actionSave_As_triggered();
+    void on_actionSave_Room_s_graphic_triggered();
     void on_loadLevelButton_clicked();
     void on_roomDecreaseButton_clicked();
     void on_roomIncreaseButton_clicked();
-    void on_actionLevel_Config_triggered();
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
+    void on_actionUndo_global_triggered();
+    void on_actionRedo_global_triggered();
+    void on_actionLevel_Config_triggered();
     void on_actionRoom_Config_triggered();
+    void on_actionEdit_Tileset_triggered();
+    void on_actionEdit_Credits_triggered();
     void on_actionNew_Door_triggered();
-    void on_actionSave_ROM_triggered();
-    void on_actionAbout_triggered();
-    void on_actionSave_As_triggered();
+    void on_actionNew_Room_triggered();
+    void on_action_copy_Normal_Hard_triggered();
+    void on_action_copy_Hard_S_Hard_triggered();
     void on_action_swap_Layer_0_Layer_1_triggered();
     void on_action_swap_Layer_1_Layer_2_triggered();
     void on_action_swap_Layer_0_Layer_2_triggered();
@@ -138,21 +145,17 @@ private slots:
     void on_action_clear_Normal_triggered();
     void on_action_clear_Hard_triggered();
     void on_action_clear_S_Hard_triggered();
-    void on_actionSave_Room_s_graphic_triggered();
+    void on_actionClear_all_triggered();
+    void on_actionRect_Select_Mode_toggled(bool arg1);
     void on_actionManager_triggered();
-    void on_actionEdit_Tileset_triggered();
+    void on_actionRun_from_file_triggered();
     void on_actionLight_triggered();
     void on_actionDark_triggered();
-    void on_actionRun_from_file_triggered();
-    void on_actionOutput_window_triggered();
-    void on_actionClear_all_triggered();
     void on_actionZoom_in_triggered();
     void on_actionZoom_out_triggered();
-    void on_actionRect_Select_Mode_toggled(bool arg1);
-    void on_actionUndo_global_triggered();
-    void on_actionRedo_global_triggered();
-    void on_actionNew_Room_triggered();
-    void on_actionEdit_Credits_triggered();
+    void on_actionOutput_window_triggered();
+    void on_actionAbout_triggered();
+
 };
 
 #endif // WL4EDITORWINDOW_H
