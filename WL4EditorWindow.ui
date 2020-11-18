@@ -227,12 +227,12 @@
      <addaction name="separator"/>
      <addaction name="actionClear_all"/>
     </widget>
-    <widget class="QMenu" name="menuCopy">
+    <widget class="QMenu" name="menuDuplicate">
      <property name="enabled">
       <bool>false</bool>
      </property>
      <property name="title">
-      <string>Copy</string>
+      <string>Duplicate to</string>
      </property>
      <widget class="QMenu" name="menuEntity_lists_2">
       <property name="enabled">
@@ -241,8 +241,9 @@
       <property name="title">
        <string>Entity lists</string>
       </property>
-      <addaction name="action_copy_Normal_Hard"/>
-      <addaction name="action_copy_Hard_S_Hard"/>
+      <addaction name="action_duplicate_Normal"/>
+      <addaction name="action_duplicate_Hard"/>
+      <addaction name="action_duplicate_S_Hard"/>
      </widget>
      <addaction name="menuEntity_lists_2"/>
     </widget>
@@ -256,7 +257,7 @@
     <addaction name="actionEdit_Tileset"/>
     <addaction name="actionEdit_Credits"/>
     <addaction name="menuAdd"/>
-    <addaction name="menuCopy"/>
+    <addaction name="menuDuplicate"/>
     <addaction name="menuSwap"/>
     <addaction name="menuClear"/>
     <addaction name="actionRect_Select_Mode"/>
@@ -581,20 +582,25 @@
     <string>Edit Credits</string>
    </property>
   </action>
-  <action name="action_copy_Normal_Hard">
+  <action name="action_duplicate_Normal">
    <property name="enabled">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Normal =&gt; Hard</string>
+    <string>=&gt; Normal</string>
    </property>
   </action>
-  <action name="action_copy_Hard_S_Hard">
+  <action name="action_duplicate_Hard">
    <property name="enabled">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Hard =&gt; S-Hard</string>
+    <string>=&gt; Hard</string>
+   </property>
+  </action>
+  <action name="action_duplicate_S_Hard">
+   <property name="text">
+    <string>=&gt; S-Hard</string>
    </property>
   </action>
  </widget>

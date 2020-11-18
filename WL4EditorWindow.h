@@ -131,8 +131,9 @@ private slots:
     void on_actionEdit_Credits_triggered();
     void on_actionNew_Door_triggered();
     void on_actionNew_Room_triggered();
-    void on_action_copy_Normal_Hard_triggered();
-    void on_action_copy_Hard_S_Hard_triggered();
+    void on_action_duplicate_Normal_triggered();
+    void on_action_duplicate_Hard_triggered();
+    void on_action_duplicate_S_Hard_triggered();
     void on_action_swap_Layer_0_Layer_1_triggered();
     void on_action_swap_Layer_1_Layer_2_triggered();
     void on_action_swap_Layer_0_Layer_2_triggered();
@@ -155,6 +156,7 @@ private slots:
     void on_actionZoom_out_triggered();
     void on_actionOutput_window_triggered();
     void on_actionAbout_triggered();
+
 
 };
 

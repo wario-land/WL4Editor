@@ -421,7 +421,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionEdit_Tileset->setEnabled(true);
         ui->actionEdit_Credits->setEnabled(true);
         ui->menuAdd->setEnabled(true);
-        ui->menuCopy->setEnabled(true);
+        ui->menuDuplicate->setEnabled(true);
         ui->menuEntity_lists_2->setEnabled(true);
         ui->menuSwap->setEnabled(true);
         ui->menuClear->setEnabled(true);
@@ -2021,12 +2021,34 @@ void WL4EditorWindow::on_actionEdit_Credits_triggered()
 }
 
 /// <summary>
-/// Copy Normal Entity list into Hard Entity list
+/// Copy current difficulty Entity list into Normal Entity list
 /// </summary>
-void WL4EditorWindow::on_action_copy_Normal_Hard_triggered()
+void WL4EditorWindow::on_action_duplicate_Normal_triggered()
 {
-    // copy  Normal Entity list into Hard Entity list
-    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(1, 0);
+    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+
+    // copy  Hard Entity list into Super Hard Entity list
+    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 1);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Copy current difficulty Entity list into Hard Entity list
+/// </summary>
+void WL4EditorWindow::on_action_duplicate_Hard_triggered()
+{
+    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+
+    // copy  Hard Entity list into Super Hard Entity list
+    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 0);
 
     // TODO: add history record
 
@@ -2039,12 +2061,14 @@ void WL4EditorWindow::on_action_copy_Normal_Hard_triggered()
 }
 
 /// <summary>
-/// Copy Hard Entity list into Super Hard Entity list
+/// Copy current difficulty Entity list into Super Hard Entity list
 /// </summary>
-void WL4EditorWindow::on_action_copy_Hard_S_Hard_triggered()
+void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
 {
+    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+
     // copy  Hard Entity list into Super Hard Entity list
-    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(0, 2);
+    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 2);
 
     // TODO: add history record
 
