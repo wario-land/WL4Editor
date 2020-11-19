@@ -29,6 +29,9 @@ class SpritesEditorDialog : public QDialog
 public:
     explicit SpritesEditorDialog(QWidget *parent, DialogParams::EntitiesAndEntitySetsEditParams *entitiesAndEntitySetsEditParams);
     ~SpritesEditorDialog();
+    void SetSelectedEntityColorId(int colorID);
+    void SetSelectedEntityPaletteId(int paletteID);
+    void SetColor(int paletteId, int colorId);
 
 private slots:
     void on_spinBox_GlobalSpriteId_valueChanged(int arg1);
@@ -42,6 +45,8 @@ private:
 
     int currentEntityID = 0;
     int currentEntitySetID = 0;
+    int entityPalId = 0;
+    int entityColorIdInPalette = 0;
 
     QGraphicsScene *SpriteTileMAPScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Sprite = nullptr;
@@ -56,6 +61,8 @@ private:
     void RenderSpritesTileMap();
     void RenderSpritesPalette();
     void RenderSpritesetTileMapAndResetLoadTable();
+    LevelComponents::Entity *FindCurEntity();
+    LevelComponents::EntitySet *FindCurEntitySet();
 };
 
 #endif // SPRITESEDITORDIALOG_H

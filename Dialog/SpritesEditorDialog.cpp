@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <QScrollBar>
 #include <QMessageBox>
+#include <QColorDialog>
 #include "ROMUtils.h"
 
 /// <summary>
@@ -28,11 +29,13 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
     ui->graphicsView_SpritePals->setScene(PaletteBarScene);
     ui->graphicsView_SpritePals->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     ui->graphicsView_SpritePals->scale(2, 2);
+    ui->graphicsView_SpritePals->SetCurrentSpritesEditor(this);
 
     // Seems the spinboxes won't trigger the valuechanged event when loading UI
     // We need to load graphics manually
     RenderSpritesTileMap();
     RenderSpritesPalette();
+    SetSelectedEntityColorId(0);
     RenderSpritesetTileMapAndResetLoadTable();
 }
 
@@ -42,6 +45,57 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
 SpritesEditorDialog::~SpritesEditorDialog()
 {
     delete ui;
+}
+
+void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
+{
+    entityColorIdInPalette = colorID;
+    SelectionBox_Color->setPos(colorID * 8, entityPalId * 8);
+    SelectionBox_Color->setVisible(true);
+    QColor color = FindCurEntity()->GetPalette(entityPalId)[colorID];
+    ui->label_CurColorValue->setText(QString("RGB888: (") +
+                                    QString::number(color.red(), 10) + QString(", ") +
+                                    QString::number(color.green(), 10) + QString(", ") +
+                                    QString::number(color.blue(), 10) + QString(") RGB555: (") +
+                                    QString::number(color.red() >> 3, 10) + QString(", ") +
+                                    QString::number(color.green() >> 3, 10) + QString(", ") +
+                                    QString::number(color.blue() >> 3, 10) + QString(")"));
+}
+
+/// <summary>
+/// Reset sprite palette Id
+/// </summary>
+/// <param name="paletteID">
+/// New palette id value.
+/// </param>
+void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
+{
+    entityPalId = paletteID;
+    RenderSpritesTileMap();
+}
+
+/// <summary>
+/// Reset sprite color in one specified palette.
+/// </summary>
+/// <param name="paletteId">
+/// palette id value to find color to set.
+/// </param>
+/// <param name="colorId">
+/// color id value to find color to set.
+/// </param>
+void SpritesEditorDialog::SetColor(int paletteId, int colorId)
+{
+    QColor color = QColorDialog::getColor(Qt::black, this);
+    color.setAlpha(0xFF);
+    if(color.isValid())
+    {
+        // Find if new entity data exist
+        LevelComponents::Entity *curEntity = FindCurEntity(); // init
+        curEntity->SetColor(paletteId, colorId, color.rgba());
+
+        // Update Palette Graphicview
+        RenderSpritesPalette();
+    }
 }
 
 /// <summary>
@@ -63,19 +117,7 @@ void SpritesEditorDialog::on_spinBox_GlobalSpriteId_valueChanged(int arg1)
 void SpritesEditorDialog::RenderSpritesTileMap()
 {
     // Find if new entity data exist
-    LevelComponents::Entity *oldEntity = ROMUtils::entities[currentEntityID];
-    LevelComponents::Entity *curEntity = oldEntity; // init
-
-    auto entityFound = std::find_if(entitiesAndEntitySetsEditParam->entities.begin(),
-                                    entitiesAndEntitySetsEditParam->entities.end(),
-        [oldEntity](LevelComponents::Entity *entity) {return entity->GetEntityGlobalID() == oldEntity->GetEntityGlobalID();});
-    int spriteIdInChangelist = std::distance(entitiesAndEntitySetsEditParam->entities.begin(), entityFound);
-
-    // If the current entity has a new unsaved instance in the dialog
-    if(entityFound != entitiesAndEntitySetsEditParam->entities.end())
-    {
-        curEntity = entitiesAndEntitySetsEditParam->entities[spriteIdInChangelist];
-    }
+    LevelComponents::Entity *curEntity = FindCurEntity(); // init
 
     // Calculate size
     int tilenum = curEntity->GetTilesNum();
@@ -85,7 +127,7 @@ void SpritesEditorDialog::RenderSpritesTileMap()
     QPixmap SpriteTilePixmap(8 * 32, rownum * 8);
     SpriteTilePixmap.fill(Qt::transparent);
     QPainter SpriteTilePixmapPainter(&SpriteTilePixmap);
-    SpriteTilePixmapPainter.drawImage(0, 0, curEntity->GetTileMap(0)); // Use a variable to change palette ID
+    SpriteTilePixmapPainter.drawImage(0, 0, curEntity->GetTileMap(entityPalId));
 
     // Set up scenes
     SpriteTileMAPScene->clear();
@@ -106,23 +148,11 @@ void SpritesEditorDialog::RenderSpritesTileMap()
 void SpritesEditorDialog::RenderSpritesPalette()
 {
     // Find if new entity data exist
-    LevelComponents::Entity *oldEntity = ROMUtils::entities[currentEntityID];
-    LevelComponents::Entity *curEntity = oldEntity; // init
-
-    auto entityFound = std::find_if(entitiesAndEntitySetsEditParam->entities.begin(),
-                                    entitiesAndEntitySetsEditParam->entities.end(),
-        [oldEntity](LevelComponents::Entity *entity) {return entity->GetEntityGlobalID() == oldEntity->GetEntityGlobalID();});
-    int spriteIdInChangelist = std::distance(entitiesAndEntitySetsEditParam->entities.begin(), entityFound);
-
-    // If the current entity has a new unsaved instance in the dialog
-    if(entityFound != entitiesAndEntitySetsEditParam->entities.end())
-    {
-        curEntity = entitiesAndEntitySetsEditParam->entities[spriteIdInChangelist];
-    }
+    LevelComponents::Entity *curEntity = FindCurEntity(); // init
 
     // Render palettes
     int palnum = curEntity->GetPalNum();
-    QPixmap PaletteBarpixmap(8 * 16, palnum * 16);
+    QPixmap PaletteBarpixmap(8 * 16, palnum * 8);
     PaletteBarpixmap.fill(Qt::transparent);
     QPainter PaletteBarPainter(&PaletteBarpixmap);
     for (int j = 0; j < palnum; ++j)
@@ -130,7 +160,7 @@ void SpritesEditorDialog::RenderSpritesPalette()
         QVector<QRgb> palettetable = curEntity->GetPalette(j);
         for (int i = 1; i < 16; ++i) // Ignore the first color
         {
-            PaletteBarPainter.fillRect(8 * i, 16 * j, 8, 16, palettetable[i]);
+            PaletteBarPainter.fillRect(8 * i, 8 * j, 8, 8, palettetable[i]);
         }
     }
     PaletteBarScene->clear();
@@ -138,11 +168,11 @@ void SpritesEditorDialog::RenderSpritesPalette()
     ui->graphicsView_SpritePals->verticalScrollBar()->setValue(0);
 
     // Add Color selection box
-    QPixmap selectionPixmap3(8, 16);
+    QPixmap selectionPixmap3(8, 8);
     selectionPixmap3.fill(Qt::transparent);
     QPainter SelectionBoxRectPainter(&selectionPixmap3);
     SelectionBoxRectPainter.setPen(QPen(QBrush(Qt::blue), 2));
-    SelectionBoxRectPainter.drawRect(1, 1, 7, 15);
+    SelectionBoxRectPainter.drawRect(1, 1, 7, 7);
     SelectionBox_Color = PaletteBarScene->addPixmap(selectionPixmap3);
     SelectionBox_Color->setVisible(false);
 }
@@ -153,19 +183,7 @@ void SpritesEditorDialog::RenderSpritesPalette()
 void SpritesEditorDialog::RenderSpritesetTileMapAndResetLoadTable()
 {
     // Find if new entityset data exist
-    LevelComponents::EntitySet *oldEntityset = ROMUtils::entitiessets[currentEntitySetID];
-    LevelComponents::EntitySet *curEntityset = oldEntityset; // init
-
-    auto entitySetFound = std::find_if(entitiesAndEntitySetsEditParam->entitySets.begin(),
-                                    entitiesAndEntitySetsEditParam->entitySets.end(),
-        [oldEntityset](LevelComponents::EntitySet *entityset) {return entityset->GetEntitySetId() == oldEntityset->GetEntitySetId();});
-    int spritesetIdInChangelist = std::distance(entitiesAndEntitySetsEditParam->entitySets.begin(), entitySetFound);
-
-    // If the current entity has a new unsaved instance in the dialog
-    if(entitySetFound != entitiesAndEntitySetsEditParam->entitySets.end())
-    {
-        curEntityset = entitiesAndEntitySetsEditParam->entitySets[spritesetIdInChangelist];
-    }
+    LevelComponents::EntitySet *curEntityset = FindCurEntitySet(); // init
 
     // draw pixmaps
     QPixmap SpriteSetTilePixmap(8 * 32, 8 * 32);
@@ -185,6 +203,55 @@ void SpritesEditorDialog::RenderSpritesetTileMapAndResetLoadTable()
         outputstr += QString("%1 %2 ").arg(element.Global_EntityID, 2, 16, QChar('0')).arg(element.paletteOffset, 2, 16, QChar('0'));
     }
     ui->lineEdit_SpritesetLoadTable->setText(outputstr);
+}
+
+/// <summary>
+/// Find and return entity pointer points to current entity
+/// </summary>
+/// <return>
+/// current entity pointer
+/// </return>
+LevelComponents::Entity *SpritesEditorDialog::FindCurEntity()
+{
+    // Find if new entity data exist
+    LevelComponents::Entity *oldEntity = ROMUtils::entities[currentEntityID];
+    LevelComponents::Entity *curEntity = oldEntity; // init
+
+    auto entityFound = std::find_if(entitiesAndEntitySetsEditParam->entities.begin(),
+                                    entitiesAndEntitySetsEditParam->entities.end(),
+        [oldEntity](LevelComponents::Entity *entity) {return entity->GetEntityGlobalID() == oldEntity->GetEntityGlobalID();});
+    int spriteIdInChangelist = std::distance(entitiesAndEntitySetsEditParam->entities.begin(), entityFound);
+
+    // If the current entity has a new unsaved instance in the dialog
+    if(entityFound != entitiesAndEntitySetsEditParam->entities.end())
+    {
+        curEntity = entitiesAndEntitySetsEditParam->entities[spriteIdInChangelist];
+    }
+    return curEntity;
+}
+
+/// <summary>
+/// Find and return entityset pointer points to current entityset
+/// </summary>
+/// <return>
+/// current entityset pointer
+/// </return>
+LevelComponents::EntitySet *SpritesEditorDialog::FindCurEntitySet()
+{
+    LevelComponents::EntitySet *oldEntityset = ROMUtils::entitiessets[currentEntitySetID];
+    LevelComponents::EntitySet *curEntityset = oldEntityset; // init
+
+    auto entitySetFound = std::find_if(entitiesAndEntitySetsEditParam->entitySets.begin(),
+                                    entitiesAndEntitySetsEditParam->entitySets.end(),
+        [oldEntityset](LevelComponents::EntitySet *entityset) {return entityset->GetEntitySetId() == oldEntityset->GetEntitySetId();});
+    int spritesetIdInChangelist = std::distance(entitiesAndEntitySetsEditParam->entitySets.begin(), entitySetFound);
+
+    // If the current entity has a new unsaved instance in the dialog
+    if(entitySetFound != entitiesAndEntitySetsEditParam->entitySets.end())
+    {
+        curEntityset = entitiesAndEntitySetsEditParam->entitySets[spritesetIdInChangelist];
+    }
+    return curEntityset;
 }
 
 /// <summary>
@@ -225,7 +292,7 @@ void SpritesEditorDialog::on_pushButton_ResetLoadTable_clicked()
     // If the current entity has no new unsaved instance in the dialog
     if(entitySetFound == entitiesAndEntitySetsEditParam->entitySets.end())
     {
-        curEntityset = new LevelComponents::EntitySet(*ROMUtils::entitiessets[currentEntitySetID]);
+        curEntityset = new LevelComponents::EntitySet(*ROMUtils::entitiessets[currentEntitySetID]); // create new instance
         entitiesAndEntitySetsEditParam->entitySets.push_back(curEntityset);
     }
     else

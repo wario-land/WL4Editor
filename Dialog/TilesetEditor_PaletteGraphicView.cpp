@@ -1,6 +1,11 @@
-#include "TilesetEditor_PaletteGraphicView.h"
+﻿#include "TilesetEditor_PaletteGraphicView.h"
 
-
+/// <summary>
+/// Mouse release event in Palette graphicsview.
+/// </summary>
+/// <param name="event">
+/// QMouseEvent signal sent by the Qt kernal.
+/// </param>
 void TilesetEditor_PaletteGraphicView::mouseReleaseEvent(QMouseEvent *event)
 {
     mouseX_Release = event->x() + horizontalScrollBar()->sliderPosition();

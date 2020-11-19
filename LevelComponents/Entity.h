@@ -61,6 +61,7 @@ namespace LevelComponents
         QVector<QRgb> GetPalette(const int palId) const;
         QVector<Tile8x8*> GetSpriteTiles(QVector<QRgb> *newPal) const;
         int GetTilesNum() { return tile8x8data.size(); }
+        void SetColor(int paletteId, int colorId, QRgb newcolor) { palettes[paletteId][colorId] = newcolor; }
 
     private:
         QVector<QRgb> palettes[16]; //i don't want to do some memory management here, so i just set it to be 16

@@ -116,7 +116,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QGraphicsView" name="graphicsView_SpritePals"/>
+         <widget class="SpritesEditorDialog_PaletteGraphicView" name="graphicsView_SpritePals"/>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -293,6 +293,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SpritesEditorDialog_PaletteGraphicView</class>
+   <extends>QGraphicsView</extends>
+   <header>Dialog/SpritesEditorDialog_PaletteGraphicView.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

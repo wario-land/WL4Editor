@@ -41,6 +41,7 @@ SOURCES += \
     Dialog/SelectColorDialog.cpp \
     Dialog/SelectColorDialog_PaletteBar.cpp \
     Dialog/SpritesEditorDialog.cpp \
+    Dialog/SpritesEditorDialog_PaletteGraphicView.cpp \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \
     DockWidget/OutputDockWidget.cpp \
     FileIOUtils.cpp \
@@ -85,6 +86,7 @@ HEADERS += \
     Dialog/SelectColorDialog.h \
     Dialog/SelectColorDialog_PaletteBar.h \
     Dialog/SpritesEditorDialog.h \
+    Dialog/SpritesEditorDialog_PaletteGraphicView.h \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.h \
     DockWidget/OutputDockWidget.h \
     FileIOUtils.h \
