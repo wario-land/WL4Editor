@@ -14,7 +14,6 @@ void SpritesEditorDialog_PaletteGraphicView::mouseReleaseEvent(QMouseEvent *even
     mouseY_Release = event->y() + verticalScrollBar()->sliderPosition();
     int selectingColorId = qMin((mouseX_Release >> 4), 0xF);
     int selectingPalId = qMin((mouseY_Release >> 4), 0xF);
-    if (selectingColorId > 15) return;
     if(event->button() == Qt::LeftButton)
     {
         spritesEditor->SetSelectedEntityPaletteId(selectingPalId);

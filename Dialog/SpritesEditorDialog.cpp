@@ -21,6 +21,7 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
     SpriteTileMAPScene = new QGraphicsScene(0, 0, 8 * 32, 8 * 32);
     ui->graphicsView_SpriteTileMap->setScene(SpriteTileMAPScene);
     ui->graphicsView_SpriteTileMap->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_SpriteTileMap->scale(2, 2);
     SpritesetTileMAPScene = new QGraphicsScene(0, 0, 8 * 32, 8 * 32);
     ui->graphicsView_SpritesetTileMap->setScene(SpritesetTileMAPScene);
     ui->graphicsView_SpritesetTileMap->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -49,6 +50,7 @@ SpritesEditorDialog::~SpritesEditorDialog()
 
 void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
 {
+    if (colorID > 15) colorID = 15;
     entityColorIdInPalette = colorID;
     SelectionBox_Color->setPos(colorID * 8, entityPalId * 8);
     SelectionBox_Color->setVisible(true);
@@ -70,7 +72,9 @@ void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
 /// </param>
 void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 {
+    if (int palnum = FindCurEntity()->GetPalNum(); paletteID >= palnum) paletteID = palnum - 1;
     entityPalId = paletteID;
+    ui->label_PalID->setText(QString::number(paletteID));
     RenderSpritesTileMap();
 }
 
@@ -85,6 +89,8 @@ void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 /// </param>
 void SpritesEditorDialog::SetColor(int paletteId, int colorId)
 {
+    if (int palnum = FindCurEntity()->GetPalNum(); paletteId >= palnum) paletteId = palnum - 1;
+    if (colorId > 15) colorId = 15;
     QColor color = QColorDialog::getColor(Qt::black, this);
     color.setAlpha(0xFF);
     if(color.isValid())
@@ -109,6 +115,7 @@ void SpritesEditorDialog::on_spinBox_GlobalSpriteId_valueChanged(int arg1)
     currentEntityID = arg1;
     RenderSpritesTileMap();
     RenderSpritesPalette();
+    SetSelectedEntityColorId(0);
 }
 
 /// <summary>
@@ -133,6 +140,7 @@ void SpritesEditorDialog::RenderSpritesTileMap()
     SpriteTileMAPScene->clear();
     SpriteTilemapping = SpriteTileMAPScene->addPixmap(SpriteTilePixmap);
     ui->graphicsView_SpriteTileMap->verticalScrollBar()->setValue(0);
+    ui->graphicsView_SpriteTileMap->horizontalScrollBar()->setValue(0);
 
     // Add the highlighted tile rectangle
     QPixmap selectionPixmap(8, 8);
