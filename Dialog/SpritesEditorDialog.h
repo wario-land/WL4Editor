@@ -32,6 +32,7 @@ public:
     void SetSelectedEntityColorId(int colorID);
     void SetSelectedEntityPaletteId(int paletteID);
     void SetColor(int paletteId, int colorId);
+    void SetSelectedSpriteTile(const int tileID);
 
 private slots:
     void on_spinBox_GlobalSpriteId_valueChanged(int arg1);
@@ -45,8 +46,9 @@ private:
 
     int currentEntityID = 0;
     int currentEntitySetID = 0;
-    int entityPalId = 0;
-    int entityColorIdInPalette = 0;
+    int curEntityPalId = 0;
+    int curEntityColorIdInPalette = 0;
+    int curEntityTileId = 0;
 
     QGraphicsScene *SpriteTileMAPScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Sprite = nullptr;

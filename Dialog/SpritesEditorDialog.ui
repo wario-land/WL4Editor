@@ -64,7 +64,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QGraphicsView" name="graphicsView_SpriteTileMap"/>
+         <widget class="SpritesEditorDialog_SpriteTileMapGraphicView" name="graphicsView_SpriteTileMap"/>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -298,6 +298,11 @@
    <class>SpritesEditorDialog_PaletteGraphicView</class>
    <extends>QGraphicsView</extends>
    <header>Dialog/SpritesEditorDialog_PaletteGraphicView.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SpritesEditorDialog_SpriteTileMapGraphicView</class>
+   <extends>QGraphicsView</extends>
+   <header>Dialog/SpritesEditorDialog_SpriteTileMapGraphicView.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

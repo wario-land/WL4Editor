@@ -22,6 +22,7 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
     ui->graphicsView_SpriteTileMap->setScene(SpriteTileMAPScene);
     ui->graphicsView_SpriteTileMap->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     ui->graphicsView_SpriteTileMap->scale(2, 2);
+    ui->graphicsView_SpriteTileMap->SetCurrentSpritesEditor(this);
     SpritesetTileMAPScene = new QGraphicsScene(0, 0, 8 * 32, 8 * 32);
     ui->graphicsView_SpritesetTileMap->setScene(SpritesetTileMAPScene);
     ui->graphicsView_SpritesetTileMap->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -35,6 +36,7 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
     // Seems the spinboxes won't trigger the valuechanged event when loading UI
     // We need to load graphics manually
     RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
     RenderSpritesPalette();
     SetSelectedEntityColorId(0);
     RenderSpritesetTileMapAndResetLoadTable();
@@ -51,10 +53,10 @@ SpritesEditorDialog::~SpritesEditorDialog()
 void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
 {
     if (colorID > 15) colorID = 15;
-    entityColorIdInPalette = colorID;
-    SelectionBox_Color->setPos(colorID * 8, entityPalId * 8);
+    curEntityColorIdInPalette = colorID;
+    SelectionBox_Color->setPos(colorID * 8, curEntityPalId * 8);
     SelectionBox_Color->setVisible(true);
-    QColor color = FindCurEntity()->GetPalette(entityPalId)[colorID];
+    QColor color = FindCurEntity()->GetPalette(curEntityPalId)[colorID];
     ui->label_CurColorValue->setText(QString("RGB888: (") +
                                     QString::number(color.red(), 10) + QString(", ") +
                                     QString::number(color.green(), 10) + QString(", ") +
@@ -73,9 +75,10 @@ void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
 void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 {
     if (int palnum = FindCurEntity()->GetPalNum(); paletteID >= palnum) paletteID = palnum - 1;
-    entityPalId = paletteID;
+    curEntityPalId = paletteID;
     ui->label_PalID->setText(QString::number(paletteID));
     RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
 }
 
 /// <summary>
@@ -102,6 +105,27 @@ void SpritesEditorDialog::SetColor(int paletteId, int colorId)
         // Update Palette Graphicview
         RenderSpritesPalette();
     }
+}
+
+/// <summary>
+/// Reset sprite color in one specified palette.
+/// </summary>
+/// <param name="paletteId">
+/// palette id value to find color to set.
+/// </param>
+void SpritesEditorDialog::SetSelectedSpriteTile(const int tileID)
+{
+    if (int tilenum = FindCurEntity()->GetTilesNum(); tileID >= tilenum)
+    {
+        curEntityTileId = (((tilenum >> 5) - 1) << 5) + (tileID & 31);
+    }
+    else
+    {
+        curEntityTileId = tileID;
+    }
+    SelectionBox_Sprite->setPos((curEntityTileId & 31) << 3, curEntityTileId >> 5 << 3);
+    SelectionBox_Sprite->setVisible(true);
+    ui->label_spriteTileID->setText(QString::number(curEntityTileId, 16));
 }
 
 /// <summary>
@@ -134,7 +158,7 @@ void SpritesEditorDialog::RenderSpritesTileMap()
     QPixmap SpriteTilePixmap(8 * 32, rownum * 8);
     SpriteTilePixmap.fill(Qt::transparent);
     QPainter SpriteTilePixmapPainter(&SpriteTilePixmap);
-    SpriteTilePixmapPainter.drawImage(0, 0, curEntity->GetTileMap(entityPalId));
+    SpriteTilePixmapPainter.drawImage(0, 0, curEntity->GetTileMap(curEntityPalId));
 
     // Set up scenes
     SpriteTileMAPScene->clear();
