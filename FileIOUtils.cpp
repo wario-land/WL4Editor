@@ -3,6 +3,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTextStream>
+#include <QColorDialog>
 #include "ROMUtils.h"
 #include "Dialog/SelectColorDialog.h"
 

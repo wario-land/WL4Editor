@@ -3,6 +3,7 @@
 
 #include <QVector>
 #include <QColor>
+#include <QImage>
 #include <functional>
 
 #include "Dialog/TilesetEditDialog.h"

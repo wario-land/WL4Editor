@@ -59,9 +59,12 @@ namespace LevelComponents
         int GetYOffset() { return yOffset; }
         int GetPalNum() const { return EntityPaletteNum; }
         QVector<QRgb> GetPalette(const int palId) const;
-        QVector<Tile8x8*> GetSpriteTiles(QVector<QRgb> *newPal) const;
+        QVector<Tile8x8*> GetSpriteTiles(QVector<QRgb> *newPal = nullptr) const;
         int GetTilesNum() { return tile8x8data.size(); }
         void SetColor(int paletteId, int colorId, QRgb newcolor) { palettes[paletteId][colorId] = newcolor; }
+        void SetTile8x8(Tile8x8 *newtile, int tileId) { tile8x8data[tileId] = newtile; }
+        QVector<QRgb> *GetPalettes() { return palettes; }
+        void ExtractSpritesTiles();
 
     private:
         QVector<QRgb> palettes[16]; //i don't want to do some memory management here, so i just set it to be 16
@@ -75,7 +78,6 @@ namespace LevelComponents
         void LoadSubPalettes(int paletteNum, int paletteSetPtr, int startPaletteId = 0);
         void LoadSpritesTiles(int tileaddress, int datalength);
         void OAMtoTiles(unsigned short *singleOAM);
-        void ExtractSpritesTiles();
 
         // clang-format off
         static constexpr const unsigned char EntitySampleOamNumArray[129] =

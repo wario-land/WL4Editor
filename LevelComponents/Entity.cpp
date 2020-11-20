@@ -349,6 +349,14 @@ namespace LevelComponents
     /// </summary>
     void Entity::ExtractSpritesTiles()
     {
+        // Clear old oams if exist
+        for (OAMTile *oam: OAMTiles)
+        {
+            delete oam;
+        }
+        OAMTiles.clear();
+
+        // Reset oams
         for (int i = 0; i < EntitySampleOamNumArray[EntityGlobalID]; ++i)
         {
             OAMtoTiles(const_cast<unsigned short *>(EntitiesOamSampleSets[EntityGlobalID]) + i * 3);

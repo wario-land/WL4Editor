@@ -5,7 +5,9 @@
 #include <QScrollBar>
 #include <QMessageBox>
 #include <QColorDialog>
+#include <QFileDialog>
 #include "ROMUtils.h"
+#include "FileIOUtils.h"
 
 /// <summary>
 /// Constructor of SpritesEditorDialog class.
@@ -56,7 +58,7 @@ void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
     curEntityColorIdInPalette = colorID;
     SelectionBox_Color->setPos(colorID * 8, curEntityPalId * 8);
     SelectionBox_Color->setVisible(true);
-    QColor color = FindCurEntity()->GetPalette(curEntityPalId)[colorID];
+    QColor color = GetCurEntityPtr()->GetPalette(curEntityPalId)[colorID];
     ui->label_CurColorValue->setText(QString("RGB888: (") +
                                     QString::number(color.red(), 10) + QString(", ") +
                                     QString::number(color.green(), 10) + QString(", ") +
@@ -74,7 +76,7 @@ void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
 /// </param>
 void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 {
-    if (int palnum = FindCurEntity()->GetPalNum(); paletteID >= palnum) paletteID = palnum - 1;
+    if (int palnum = GetCurEntityPtr()->GetPalNum(); paletteID >= palnum) paletteID = palnum - 1;
     curEntityPalId = paletteID;
     ui->label_PalID->setText(QString::number(paletteID));
     RenderSpritesTileMap();
@@ -92,14 +94,14 @@ void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 /// </param>
 void SpritesEditorDialog::SetColor(int paletteId, int colorId)
 {
-    if (int palnum = FindCurEntity()->GetPalNum(); paletteId >= palnum) paletteId = palnum - 1;
+    if (int palnum = GetCurEntityPtr()->GetPalNum(); paletteId >= palnum) paletteId = palnum - 1;
     if (colorId > 15) colorId = 15;
     QColor color = QColorDialog::getColor(Qt::black, this);
     color.setAlpha(0xFF);
     if(color.isValid())
     {
         // Find if new entity data exist
-        LevelComponents::Entity *curEntity = FindCurEntity(); // init
+        LevelComponents::Entity *curEntity = GetCurEntityPtr(true);
         curEntity->SetColor(paletteId, colorId, color.rgba());
 
         // Update Palette Graphicview
@@ -115,7 +117,7 @@ void SpritesEditorDialog::SetColor(int paletteId, int colorId)
 /// </param>
 void SpritesEditorDialog::SetSelectedSpriteTile(const int tileID)
 {
-    if (int tilenum = FindCurEntity()->GetTilesNum(); tileID >= tilenum)
+    if (int tilenum = GetCurEntityPtr()->GetTilesNum(); tileID >= tilenum)
     {
         curEntityTileId = (((tilenum >> 5) - 1) << 5) + (tileID & 31);
     }
@@ -148,7 +150,7 @@ void SpritesEditorDialog::on_spinBox_GlobalSpriteId_valueChanged(int arg1)
 void SpritesEditorDialog::RenderSpritesTileMap()
 {
     // Find if new entity data exist
-    LevelComponents::Entity *curEntity = FindCurEntity(); // init
+    LevelComponents::Entity *curEntity = GetCurEntityPtr(); // init
 
     // Calculate size
     int tilenum = curEntity->GetTilesNum();
@@ -180,7 +182,7 @@ void SpritesEditorDialog::RenderSpritesTileMap()
 void SpritesEditorDialog::RenderSpritesPalette()
 {
     // Find if new entity data exist
-    LevelComponents::Entity *curEntity = FindCurEntity(); // init
+    LevelComponents::Entity *curEntity = GetCurEntityPtr(); // init
 
     // Render palettes
     int palnum = curEntity->GetPalNum();
@@ -215,7 +217,7 @@ void SpritesEditorDialog::RenderSpritesPalette()
 void SpritesEditorDialog::RenderSpritesetTileMapAndResetLoadTable()
 {
     // Find if new entityset data exist
-    LevelComponents::EntitySet *curEntityset = FindCurEntitySet(); // init
+    LevelComponents::EntitySet *curEntityset = GetCurEntitySetPtr(); // init
 
     // draw pixmaps
     QPixmap SpriteSetTilePixmap(8 * 32, 8 * 32);
@@ -243,7 +245,7 @@ void SpritesEditorDialog::RenderSpritesetTileMapAndResetLoadTable()
 /// <return>
 /// current entity pointer
 /// </return>
-LevelComponents::Entity *SpritesEditorDialog::FindCurEntity()
+LevelComponents::Entity *SpritesEditorDialog::GetCurEntityPtr(bool createNewEntity)
 {
     // Find if new entity data exist
     LevelComponents::Entity *oldEntity = ROMUtils::entities[currentEntityID];
@@ -259,6 +261,14 @@ LevelComponents::Entity *SpritesEditorDialog::FindCurEntity()
     {
         curEntity = entitiesAndEntitySetsEditParam->entities[spriteIdInChangelist];
     }
+    else
+    {
+        if (createNewEntity)
+        {
+            curEntity = new LevelComponents::Entity(*oldEntity);
+            entitiesAndEntitySetsEditParam->entities.push_back(curEntity);
+        }
+    }
     return curEntity;
 }
 
@@ -268,7 +278,7 @@ LevelComponents::Entity *SpritesEditorDialog::FindCurEntity()
 /// <return>
 /// current entityset pointer
 /// </return>
-LevelComponents::EntitySet *SpritesEditorDialog::FindCurEntitySet()
+LevelComponents::EntitySet *SpritesEditorDialog::GetCurEntitySetPtr(bool createNewEntitySet)
 {
     LevelComponents::EntitySet *oldEntityset = ROMUtils::entitiessets[currentEntitySetID];
     LevelComponents::EntitySet *curEntityset = oldEntityset; // init
@@ -282,6 +292,14 @@ LevelComponents::EntitySet *SpritesEditorDialog::FindCurEntitySet()
     if(entitySetFound != entitiesAndEntitySetsEditParam->entitySets.end())
     {
         curEntityset = entitiesAndEntitySetsEditParam->entitySets[spritesetIdInChangelist];
+    }
+    else
+    {
+        if (createNewEntitySet)
+        {
+            curEntityset = new LevelComponents::EntitySet(*oldEntityset);
+            entitiesAndEntitySetsEditParam->entitySets.push_back(curEntityset);
+        }
     }
     return curEntityset;
 }
@@ -310,27 +328,13 @@ void SpritesEditorDialog::on_spinBox_SpritesetPaletteID_valueChanged(int arg1)
     RenderSpritesetTileMapAndResetLoadTable();
 }
 
+/// <summary>
+/// Reset Spriteset Load Table when click pushButton_ResetLoadTable
+/// </summary>
 void SpritesEditorDialog::on_pushButton_ResetLoadTable_clicked()
 {
     // Find if new entityset data exist
-    LevelComponents::EntitySet *curEntityset = nullptr;
-    int entitysetId = currentEntitySetID;
-
-    auto entitySetFound = std::find_if(entitiesAndEntitySetsEditParam->entitySets.begin(),
-                                    entitiesAndEntitySetsEditParam->entitySets.end(),
-        [entitysetId](LevelComponents::EntitySet *entityset) {return entityset->GetEntitySetId() == entitysetId;});
-    int spritesetIdInChangelist = std::distance(entitiesAndEntitySetsEditParam->entitySets.begin(), entitySetFound);
-
-    // If the current entity has no new unsaved instance in the dialog
-    if(entitySetFound == entitiesAndEntitySetsEditParam->entitySets.end())
-    {
-        curEntityset = new LevelComponents::EntitySet(*ROMUtils::entitiessets[currentEntitySetID]); // create new instance
-        entitiesAndEntitySetsEditParam->entitySets.push_back(curEntityset);
-    }
-    else
-    {
-        curEntityset = entitiesAndEntitySetsEditParam->entitySets[spritesetIdInChangelist];
-    }
+    LevelComponents::EntitySet *curEntityset = GetCurEntitySetPtr(true);
 
     // Generate Entityset Load Table and update them into the new entityset instance
     QStringList loadtableStrData = ui->lineEdit_SpritesetLoadTable->text().split(QChar(' '), Qt::SkipEmptyParts);
@@ -375,5 +379,65 @@ void SpritesEditorDialog::on_pushButton_ResetLoadTable_clicked()
     }
 
     // UI update
+    RenderSpritesetTileMapAndResetLoadTable();
+}
+
+/// <summary>
+/// Export sprite tiles map to file when hit pushButton_SpriteTilesExport
+/// </summary>
+void SpritesEditorDialog::on_pushButton_SpriteTilesExport_clicked()
+{
+    QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile8x8 map to a file"),
+                                                     QString(""), tr("PNG file (*.png)"));
+    if (qFilePath.compare(""))
+    {
+        LevelComponents::Entity *curEntity = GetCurEntityPtr();
+        int tileNum = curEntity->GetTilesNum();
+        QPixmap SpriteTilesPixmap(8 * 32, (tileNum / 32) * 8);
+        QPainter SpriteTilemapPixmapPainter(&SpriteTilesPixmap);
+        QColor color = QColorDialog::getColor(Qt::black, this, QString(tr("Choose a background color")));
+        color.setAlpha(0xFF);
+        if(color.isValid())
+        {
+            // TODO
+            SpriteTilemapPixmapPainter.drawImage(0, 0, curEntity->GetTileMap(curEntityPalId));
+        }
+        SpriteTilesPixmap.save(qFilePath, "PNG", 100);
+    }
+}
+
+/// <summary>
+/// Import sprite tiles map from file when hit pushButton_SpriteTilesImport
+/// </summary>
+void SpritesEditorDialog::on_pushButton_SpriteTilesImport_clicked()
+{
+    LevelComponents::Entity *curEntity = GetCurEntityPtr(true);
+    FileIOUtils::ImportTile8x8GfxData(this,
+        curEntity->GetPalette(curEntityPalId),
+        [curEntity] (QByteArray finaldata, QWidget *parentPtr)
+        {
+            // Assume the file is fully filled with tiles
+            int newtilenum = finaldata.size() / 32;
+            unsigned char newtmpdata[32];
+            if(newtilenum > curEntity->GetTilesNum())
+            {
+                QMessageBox::critical(parentPtr, tr("Load Error"), QString(tr("You can only import %1 tiles at most!")).arg(newtilenum));
+                return;
+            }
+            QVector<LevelComponents::Tile8x8 *> curTilearray = curEntity->GetSpriteTiles();
+            for(int i = 0; i < newtilenum; ++i)
+            {
+                memcpy(newtmpdata, finaldata.data() + 32 * i, 32);
+                LevelComponents::Tile8x8* tile = curTilearray.at(i);
+                delete tile;
+                tile = new LevelComponents::Tile8x8((unsigned char *)(finaldata.data() + 32 * i), curEntity->GetPalettes());
+                curEntity->SetTile8x8(tile, i);
+            }
+        });
+
+    // update all the graphicviews
+    RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
+    curEntity->ExtractSpritesTiles();
     RenderSpritesetTileMapAndResetLoadTable();
 }

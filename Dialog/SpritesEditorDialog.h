@@ -39,6 +39,8 @@ private slots:
     void on_spinBox_SpritesetID_valueChanged(int arg1);
     void on_spinBox_SpritesetPaletteID_valueChanged(int arg1);
     void on_pushButton_ResetLoadTable_clicked();
+    void on_pushButton_SpriteTilesExport_clicked();
+    void on_pushButton_SpriteTilesImport_clicked();
 
 private:
     Ui::SpritesEditorDialog *ui;
@@ -63,8 +65,8 @@ private:
     void RenderSpritesTileMap();
     void RenderSpritesPalette();
     void RenderSpritesetTileMapAndResetLoadTable();
-    LevelComponents::Entity *FindCurEntity();
-    LevelComponents::EntitySet *FindCurEntitySet();
+    LevelComponents::Entity *GetCurEntityPtr(bool createNewEntity = false);
+    LevelComponents::EntitySet *GetCurEntitySetPtr(bool createNewEntitySet = false);
 };
 
 #endif // SPRITESEDITORDIALOG_H
