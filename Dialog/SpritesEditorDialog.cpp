@@ -395,13 +395,7 @@ void SpritesEditorDialog::on_pushButton_SpriteTilesExport_clicked()
         int tileNum = curEntity->GetTilesNum();
         QPixmap SpriteTilesPixmap(8 * 32, (tileNum / 32) * 8);
         QPainter SpriteTilemapPixmapPainter(&SpriteTilesPixmap);
-        QColor color = QColorDialog::getColor(Qt::black, this, QString(tr("Choose a background color")));
-        color.setAlpha(0xFF);
-        if(color.isValid())
-        {
-            // TODO
-            SpriteTilemapPixmapPainter.drawImage(0, 0, curEntity->GetTileMap(curEntityPalId));
-        }
+        SpriteTilemapPixmapPainter.drawImage(0, 0, FileIOUtils::SetBGColor(curEntity->GetTileMap(curEntityPalId), this));
         SpriteTilesPixmap.save(qFilePath, "PNG", 100);
     }
 }

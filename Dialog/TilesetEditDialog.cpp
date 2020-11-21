@@ -787,7 +787,7 @@ void TilesetEditDialog::on_pushButton_ExportTile8x8Map_clicked()
         QPixmap Tile8x8Pixmap(8 * 16, 0x600 / 2);
         Tile8x8Pixmap.fill(Qt::transparent);
         QPainter Tile8x8PixmapPainter(&Tile8x8Pixmap);
-        Tile8x8PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderAllTile8x8(SelectedPaletteId).toImage());
+        Tile8x8PixmapPainter.drawImage(0, 0, FileIOUtils::SetBGColor(tilesetEditParams->newTileset->RenderAllTile8x8(SelectedPaletteId).toImage(), this));
         Tile8x8Pixmap.save(qFilePath, "PNG", 100);
     }
 }
@@ -805,7 +805,7 @@ void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
         QPixmap Tile16Pixmap(16 * 8, 0x300 * 2);
         Tile16Pixmap.fill(Qt::transparent);
         QPainter Tile16PixmapPainter(&Tile16Pixmap);
-        Tile16PixmapPainter.drawImage(0, 0, tilesetEditParams->newTileset->RenderAllTile16(1).toImage());
+        Tile16PixmapPainter.drawImage(0, 0, FileIOUtils::SetBGColor(tilesetEditParams->newTileset->RenderAllTile16(1).toImage(), this));
         Tile16Pixmap.save(qFilePath, "PNG", 100);
     }
 }

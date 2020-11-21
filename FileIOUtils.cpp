@@ -423,3 +423,29 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
     TilesReplaceCallback(tmptile8x8data_final, parent);
     return true;
 }
+
+/// <summary>
+/// Set Image background color for exporting image to graphic file.
+/// </summary>
+/// <param name="image">
+/// The QImage to replace background color.
+/// </param>
+QImage FileIOUtils::SetBGColor(QImage image, QWidget *parent)
+{
+    QColor color = QColorDialog::getColor(Qt::black, parent, QString(QObject::tr("Choose a background color")));
+    color.setAlpha(0xFF);
+    if(color.isValid())
+    {
+        for (int j = 0; j < image.height(); ++j)
+        {
+            for (int k = 0; k < image.width(); ++k)
+            {
+                if(image.pixelColor(k, j).alpha() == 0) // current pixel is transparent
+                {
+                    image.setPixel(k, j, color.rgb());
+                }
+            }
+        }
+    }
+    return image;
+}
