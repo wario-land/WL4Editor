@@ -219,6 +219,9 @@ void SpritesEditorDialog::RenderSpritesetTileMapAndResetLoadTable()
     // Find if new entityset data exist
     LevelComponents::EntitySet *curEntityset = GetCurEntitySetPtr(); // init
 
+    // Add Extra entities instances
+    curEntityset->SetExtraEntities(entitiesAndEntitySetsEditParam->entities);
+
     // draw pixmaps
     QPixmap SpriteSetTilePixmap(8 * 32, 8 * 32);
     SpriteSetTilePixmap.fill(Qt::transparent);
@@ -228,6 +231,9 @@ void SpritesEditorDialog::RenderSpritesetTileMapAndResetLoadTable()
     // Set up scenes
     SpritesetTileMAPScene->clear();
     SpritesetTilemapping = SpritesetTileMAPScene->addPixmap(SpriteSetTilePixmap);
+
+    // Clear Extra entities instances vector table
+    curEntityset->ClearExtraEntities();
 
     // Set Load Table
     QVector<LevelComponents::EntitySetinfoTableElement> loadtable = curEntityset->GetEntityTable();

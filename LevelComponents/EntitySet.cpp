@@ -160,7 +160,16 @@ namespace LevelComponents
             int tmpEntityPalOffset = EntityinfoTable[localEntityId].paletteOffset;
             ++localEntityId;
 
-            int tmpEntityPalNum = ROMUtils::entities[tmpEntityGlobalId]->GetPalNum();
+            Entity *curEntity = ROMUtils::entities[tmpEntityGlobalId];
+            for (int i = 0; i < extraEntities.size(); ++i)
+            {
+                if (tmpEntityGlobalId == extraEntities[i]->GetEntityGlobalID())
+                {
+                    curEntity = extraEntities[i];
+                    break;
+                }
+            }
+            int tmpEntityPalNum = curEntity->GetPalNum();
             offset = tmpEntityPalNum + tmpEntityPalOffset + 8;
             if (offset > 15)
                 overwriteBoxtiles = true;
@@ -174,7 +183,7 @@ namespace LevelComponents
             for (int i = tmpEntityPalOffset + 8; i < offset; ++i) // load specified sprites' tiles
             {
                 palettes[i].clear(); // sometimes palettes will overwrite each other
-                palettes[i] << ROMUtils::entities[tmpEntityGlobalId]->GetPalette(i - tmpEntityPalOffset - 8);
+                palettes[i] << curEntity->GetPalette(i - tmpEntityPalOffset - 8);
             }
         } while(EntityinfoTable.size() > localEntityId);
         if(!overwriteBoxtiles)
@@ -221,10 +230,20 @@ namespace LevelComponents
             int tmpEntityGlobalId = EntityinfoTable[localEntityId].Global_EntityID;
             int tmpEntityPalOffset = EntityinfoTable[localEntityId].paletteOffset;
             ++localEntityId;
-            tmptilesarray.clear();
-            tmptilesarray = ROMUtils::entities[tmpEntityGlobalId]->GetSpriteTiles(palettes);
 
-            int tmpEntityPalNum = ROMUtils::entities[tmpEntityGlobalId]->GetPalNum();
+            Entity *curEntity = ROMUtils::entities[tmpEntityGlobalId];
+            for (int i = 0; i < extraEntities.size(); ++i)
+            {
+                if (tmpEntityGlobalId == extraEntities[i]->GetEntityGlobalID())
+                {
+                    curEntity = extraEntities[i];
+                    break;
+                }
+            }
+            tmptilesarray.clear();
+            tmptilesarray = curEntity->GetSpriteTiles(palettes);
+
+            int tmpEntityPalNum = curEntity->GetPalNum();
             offset = 2 * (tmpEntityPalNum + tmpEntityPalOffset) + 16;
             if (offset > 31)
                 overwriteBoxtiles = true;
@@ -235,7 +254,7 @@ namespace LevelComponents
             }
             for (int i = (0x20 * (tmpEntityPalOffset * 2 + 16)); i < (0x20 * offset); ++i) // load specified sprites' tiles
             {
-                // sometimes palettes will overwrite each other
+                // sometimes sprites' tiles will overwrite each other
                 if (tile8x8array[i] != blankTile)
                 {
                     delete tile8x8array[i];
