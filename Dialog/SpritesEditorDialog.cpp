@@ -441,3 +441,32 @@ void SpritesEditorDialog::on_pushButton_SpriteTilesImport_clicked()
     curEntity->ExtractSpritesTiles();
     RenderSpritesetTileMapAndResetLoadTable();
 }
+
+/// <summary>
+/// Import sprite palette on the current row when clicking pushButton_SpritePaletteImport
+/// </summary>
+void SpritesEditorDialog::on_pushButton_SpritePaletteImport_clicked()
+{
+    SpritesEditorDialog *curEditor = this;
+    LevelComponents::Entity *curEntity = nullptr; // have to create instance after checking file format successful
+    FileIOUtils::ImportPalette(this,
+        [curEditor, curEntity] (int selectedPalId, int colorId, QRgb newColor) mutable
+        {
+            curEntity = curEditor->GetCurEntityPtr(true);
+            curEntity->SetColor(selectedPalId, colorId, newColor);
+        },
+        curEntityPalId);
+    RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
+    RenderSpritesPalette();
+    SetSelectedEntityColorId(0);
+    RenderSpritesetTileMapAndResetLoadTable();
+}
+
+/// <summary>
+/// Export sprite palette on the current row when clicking pushButton_SpritePaletteImport
+/// </summary>
+void SpritesEditorDialog::on_pushButton_SpritePaletteExport_clicked()
+{
+    FileIOUtils::ExportPalette(this, GetCurEntityPtr()->GetPalette(curEntityPalId));
+}

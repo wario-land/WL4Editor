@@ -183,9 +183,9 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QPushButton" name="pushButton_ExchangePal">
+           <widget class="QPushButton" name="pushButton_SwapPal">
             <property name="text">
-             <string>Exchange</string>
+             <string>Swap</string>
             </property>
            </widget>
           </item>

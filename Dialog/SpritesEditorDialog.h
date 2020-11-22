@@ -41,6 +41,8 @@ private slots:
     void on_pushButton_ResetLoadTable_clicked();
     void on_pushButton_SpriteTilesExport_clicked();
     void on_pushButton_SpriteTilesImport_clicked();
+    void on_pushButton_SpritePaletteImport_clicked();
+    void on_pushButton_SpritePaletteExport_clicked();
 
 private:
     Ui::SpritesEditorDialog *ui;
