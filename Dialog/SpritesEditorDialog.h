@@ -33,6 +33,7 @@ public:
     void SetSelectedEntityPaletteId(int paletteID);
     void SetColor(int paletteId, int colorId);
     void SetSelectedSpriteTile(const int tileID);
+    int GetcurEntityId() { return currentEntityID; }
 
 private slots:
     void on_spinBox_GlobalSpriteId_valueChanged(int arg1);
@@ -43,6 +44,9 @@ private slots:
     void on_pushButton_SpriteTilesImport_clicked();
     void on_pushButton_SpritePaletteImport_clicked();
     void on_pushButton_SpritePaletteExport_clicked();
+    void on_pushButton_DeletePal_clicked();
+    void on_pushButton_AddPal_clicked();
+    void on_pushButton_SwapPal_clicked();
 
 private:
     Ui::SpritesEditorDialog *ui;

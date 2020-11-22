@@ -65,10 +65,15 @@ namespace LevelComponents
         void SetTile8x8(Tile8x8 *newtile, int tileId) { tile8x8data[tileId] = newtile; }
         QVector<QRgb> *GetPalettes() { return palettes; }
         void ExtractSpritesTiles();
+        void AddTilesAndPaletteByOneRow();
+        void DeleteTilesAndPaletteByOneRow(int palID);
+        void SwapPalettes(int palID_1, int palID_2);
+        Tile8x8 *GetBlankTile() { return blankTile; }
 
     private:
         QVector<QRgb> palettes[16]; //i don't want to do some memory management here, so i just set it to be 16
         QVector<Tile8x8*> tile8x8data;
+        Tile8x8 *blankTile = nullptr;
         int xOffset = 0, yOffset = 0;
         int EntityGlobalID = 0;
         int EntityPaletteNum = 0;

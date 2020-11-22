@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <QScrollBar>
 #include <QMessageBox>
+#include <QInputDialog>
 #include <QColorDialog>
 #include <QFileDialog>
 #include "ROMUtils.h"
@@ -128,6 +129,14 @@ void SpritesEditorDialog::SetSelectedSpriteTile(const int tileID)
     SelectionBox_Sprite->setPos((curEntityTileId & 31) << 3, curEntityTileId >> 5 << 3);
     SelectionBox_Sprite->setVisible(true);
     ui->label_spriteTileID->setText(QString::number(curEntityTileId, 16));
+
+    bool enability = true;
+    if (tileID < 0x11) enability = false;
+    ui->pushButton_SpriteTilesImport->setEnabled(enability);
+    ui->pushButton_AddPal->setEnabled(enability);
+    ui->pushButton_DeletePal->setEnabled(enability);
+    ui->pushButton_SpritePaletteImport->setEnabled(enability);
+    ui->pushButton_SwapPal->setEnabled(enability);
 }
 
 /// <summary>
@@ -412,9 +421,10 @@ void SpritesEditorDialog::on_pushButton_SpriteTilesExport_clicked()
 void SpritesEditorDialog::on_pushButton_SpriteTilesImport_clicked()
 {
     LevelComponents::Entity *curEntity = GetCurEntityPtr(true);
+    LevelComponents::Tile8x8 *blanktileref = curEntity->GetBlankTile();
     FileIOUtils::ImportTile8x8GfxData(this,
         curEntity->GetPalette(curEntityPalId),
-        [curEntity] (QByteArray finaldata, QWidget *parentPtr)
+        [curEntity, blanktileref] (QByteArray finaldata, QWidget *parentPtr)
         {
             // Assume the file is fully filled with tiles
             int newtilenum = finaldata.size() / 32;
@@ -429,7 +439,7 @@ void SpritesEditorDialog::on_pushButton_SpriteTilesImport_clicked()
             {
                 memcpy(newtmpdata, finaldata.data() + 32 * i, 32);
                 LevelComponents::Tile8x8* tile = curTilearray.at(i);
-                delete tile;
+                if (tile != blanktileref) delete tile;
                 tile = new LevelComponents::Tile8x8((unsigned char *)(finaldata.data() + 32 * i), curEntity->GetPalettes());
                 curEntity->SetTile8x8(tile, i);
             }
@@ -469,4 +479,61 @@ void SpritesEditorDialog::on_pushButton_SpritePaletteImport_clicked()
 void SpritesEditorDialog::on_pushButton_SpritePaletteExport_clicked()
 {
     FileIOUtils::ExportPalette(this, GetCurEntityPtr()->GetPalette(curEntityPalId));
+}
+
+/// <summary>
+/// Delete sprite's palette and tiles when clicking pushButton_DeletePal
+/// </summary>
+void SpritesEditorDialog::on_pushButton_DeletePal_clicked()
+{
+    GetCurEntityPtr(true)->DeleteTilesAndPaletteByOneRow(curEntityPalId);
+    RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
+    RenderSpritesPalette();
+    SetSelectedEntityColorId(0);
+    RenderSpritesetTileMapAndResetLoadTable();
+}
+
+/// <summary>
+/// Add sprite's palette and tiles when clicking pushButton_AddPal
+/// </summary>
+void SpritesEditorDialog::on_pushButton_AddPal_clicked()
+{
+    GetCurEntityPtr(true)->AddTilesAndPaletteByOneRow();
+    RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
+    RenderSpritesPalette();
+    SetSelectedEntityColorId(0);
+    RenderSpritesetTileMapAndResetLoadTable();
+}
+
+/// <summary>
+/// Swap 2 sprite's palettes when clicking pushButton_SwapPal
+/// </summary>
+void SpritesEditorDialog::on_pushButton_SwapPal_clicked()
+{
+    bool ok;
+    int maxval = GetCurEntityPtr()->GetPalNum() - 1;
+    int result_1 = QInputDialog::getInt(nullptr, tr("InputBox"),
+                                         tr("Input the palette Id you want to delete.\nRelevant tiles will be deleted too."),
+                                        0, 0, maxval, 1, &ok);
+    if (ok && (result_1 < 0 || result_1 > maxval))
+    {
+        QMessageBox::critical(this, tr("Error"), QString(tr("Illegal input!")));
+        return;
+    }
+    int result_2 = QInputDialog::getInt(nullptr, tr("InputBox"),
+                                         tr("Input the palette Id you want to delete.\nRelevant tiles will be deleted too."),
+                                        0, 0, maxval, 1, &ok);
+    if (ok && (result_2 < 0 || result_2 > maxval))
+    {
+        QMessageBox::critical(this, tr("Error"), QString(tr("Illegal input!")));
+        return;
+    }
+    GetCurEntityPtr(true)->SwapPalettes(result_1, result_2);
+    RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
+    RenderSpritesPalette();
+    SetSelectedEntityColorId(0);
+    RenderSpritesetTileMapAndResetLoadTable();
 }

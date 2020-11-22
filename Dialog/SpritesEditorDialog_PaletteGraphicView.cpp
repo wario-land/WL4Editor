@@ -21,7 +21,8 @@ void SpritesEditorDialog_PaletteGraphicView::mouseReleaseEvent(QMouseEvent *even
     }
     else if(event->button() == Qt::RightButton)
     {
-        if(selectingColorId == 0) return;
+        if (selectingColorId == 0) return;
+        if (spritesEditor->GetcurEntityId() < 0x11) return;
         spritesEditor->SetSelectedEntityPaletteId(selectingPalId);
         spritesEditor->SetSelectedEntityColorId(selectingColorId);
         spritesEditor->SetColor(selectingPalId, selectingColorId);
