@@ -1400,6 +1400,7 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
     else
     {
         delete _currentRoomTilesetEditParams->newTileset;
+        delete _currentRoomTilesetEditParams;
     }
 }
 
@@ -2024,7 +2025,7 @@ void WL4EditorWindow::on_actionEdit_Credits_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionEdit_Entity_EntitySet_triggered()
 {
-    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
+    // Set up parameters for the new entities and entitysets, for the purpose of initializing the dialog's selections
     DialogParams::EntitiesAndEntitySetsEditParams *_currentEntitiesAndEntitysetsEditParams =
         new DialogParams::EntitiesAndEntitySetsEditParams();
 
@@ -2032,8 +2033,36 @@ void WL4EditorWindow::on_actionEdit_Entity_EntitySet_triggered()
     SpritesEditorDialog dialog(this, _currentEntitiesAndEntitysetsEditParams);
     if (dialog.exec() == QDialog::Accepted)
     {
-        // Execute Operation and add changes into the operation history
+        // Generate operation history data
         // Set changed bools in multiple places
-        // TODO
+        DialogParams::EntitiesAndEntitySetsEditParams *_oldEntitiesAndEntitysetsEditParams =
+            new DialogParams::EntitiesAndEntitySetsEditParams();
+        for (LevelComponents::Entity *entityIter: _currentEntitiesAndEntitysetsEditParams->entities)
+        {
+            _oldEntitiesAndEntitysetsEditParams->entities.push_back(ROMUtils::entities[entityIter->GetEntityGlobalID()]);
+            entityIter->SetChanged(true);
+        }
+        for (LevelComponents::EntitySet *entitySetIter: _currentEntitiesAndEntitysetsEditParams->entitySets)
+        {
+            _oldEntitiesAndEntitysetsEditParams->entitySets.push_back(ROMUtils::entitiessets[entitySetIter->GetEntitySetId()]);
+            entitySetIter->SetChanged(true);
+        }
+
+        // Execute Operation
+        OperationParams *operation = new OperationParams;
+        operation->type = ChangeSpritesAndSpritesetsOperation;
+        operation->SpritesSpritesetChange = true;
+        operation->lastSpritesAndSetParam = _oldEntitiesAndEntitysetsEditParams;
+        operation->newSpritesAndSetParam = _currentEntitiesAndEntitysetsEditParams;
+        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
+    }
+    else
+    {
+        // We don't call the operation deconstructor, so we need to manually delete them if cancel the changes
+        for (LevelComponents::Entity *entityIter: _currentEntitiesAndEntitysetsEditParams->entities)
+            delete entityIter;
+        for (LevelComponents::EntitySet *entitySetIter: _currentEntitiesAndEntitysetsEditParams->entitySets)
+            delete entitySetIter;
+        delete _currentEntitiesAndEntitysetsEditParams;
     }
 }

@@ -69,6 +69,7 @@ namespace LevelComponents
         void DeleteTilesAndPaletteByOneRow(int palID);
         void SwapPalettes(int palID_1, int palID_2);
         Tile8x8 *GetBlankTile() { return blankTile; }
+        void SetChanged(bool change) { Changed = change; }
 
     private:
         QVector<QRgb> palettes[16]; //i don't want to do some memory management here, so i just set it to be 16
@@ -79,6 +80,7 @@ namespace LevelComponents
         int EntityPaletteNum = 0;
         bool UnusedEntity = false;
         QVector<OAMTile *> OAMTiles;
+        bool Changed = false;
 
         void LoadSubPalettes(int paletteNum, int paletteSetPtr, int startPaletteId = 0);
         void LoadSpritesTiles(int tileaddress, int datalength);

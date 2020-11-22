@@ -1,4 +1,4 @@
-#include "Operation.h"
+﻿#include "Operation.h"
 #include "WL4EditorWindow.h"
 
 #include <deque>
@@ -139,7 +139,31 @@ void PerformOperation(struct OperationParams *operation)
             }
         }
 
-        singleton->GetTile16DockWidgetPtr()->SetTileset(operation->newTilesetEditParams->currentTilesetIndex);
+        singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
+    }
+    if (operation->SpritesSpritesetChange)
+    {
+        // Update new Entities and Entitysets to global singeltons
+        for (LevelComponents::Entity *entityIter: operation->newSpritesAndSetParam->entities)
+        {
+            ROMUtils::entities[entityIter->GetEntityGlobalID()] = entityIter;
+        }
+        for (LevelComponents::EntitySet *entitySetIter: operation->newSpritesAndSetParam->entitySets)
+        {
+            ROMUtils::entitiessets[entitySetIter->GetEntitySetId()] = entitySetIter;
+        }
+
+        // Update Rooms's Entities and Entitysets in CurrentLevel
+        int roomnum = singleton->GetCurrentLevel()->GetRooms().size();
+        for(int i = 0; i < roomnum; ++i)
+        {
+            LevelComponents::Room *curRoom = singleton->GetCurrentLevel()->GetRooms()[i];
+            curRoom->SetCurrentEntitySet(curRoom->GetCurrentEntitySetID());
+        }
+
+        singleton->GetEntitySetDockWidgetPtr()->ResetEntitySet(singleton->GetCurrentRoom());
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
     }
@@ -272,6 +296,30 @@ void BackTrackOperation(struct OperationParams *operation)
 
         singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
         singleton->RenderScreenFull();
+    }
+    if (operation->SpritesSpritesetChange)
+    {
+        // Update old Entities and Entitysets to global singeltons
+        for (LevelComponents::Entity *entityIter: operation->lastSpritesAndSetParam->entities)
+        {
+            ROMUtils::entities[entityIter->GetEntityGlobalID()] = entityIter;
+        }
+        for (LevelComponents::EntitySet *entitySetIter: operation->lastSpritesAndSetParam->entitySets)
+        {
+            ROMUtils::entitiessets[entitySetIter->GetEntitySetId()] = entitySetIter;
+        }
+
+        // Update Rooms's Entities and Entitysets in CurrentLevel
+        int roomnum = singleton->GetCurrentLevel()->GetRooms().size();
+        for(int i = 0; i < roomnum; ++i)
+        {
+            LevelComponents::Room *curRoom = singleton->GetCurrentLevel()->GetRooms()[i];
+            curRoom->SetCurrentEntitySet(curRoom->GetCurrentEntitySetID());
+        }
+
+        singleton->GetEntitySetDockWidgetPtr()->ResetEntitySet(singleton->GetCurrentRoom());
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
     }
 }
 

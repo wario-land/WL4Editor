@@ -129,14 +129,6 @@ void SpritesEditorDialog::SetSelectedSpriteTile(const int tileID)
     SelectionBox_Sprite->setPos((curEntityTileId & 31) << 3, curEntityTileId >> 5 << 3);
     SelectionBox_Sprite->setVisible(true);
     ui->label_spriteTileID->setText(QString::number(curEntityTileId, 16));
-
-    bool enability = true;
-    if (tileID < 0x11) enability = false;
-    ui->pushButton_SpriteTilesImport->setEnabled(enability);
-    ui->pushButton_AddPal->setEnabled(enability);
-    ui->pushButton_DeletePal->setEnabled(enability);
-    ui->pushButton_SpritePaletteImport->setEnabled(enability);
-    ui->pushButton_SwapPal->setEnabled(enability);
 }
 
 /// <summary>
@@ -148,9 +140,10 @@ void SpritesEditorDialog::SetSelectedSpriteTile(const int tileID)
 void SpritesEditorDialog::on_spinBox_GlobalSpriteId_valueChanged(int arg1)
 {
     currentEntityID = arg1;
-    RenderSpritesTileMap();
     RenderSpritesPalette();
     SetSelectedEntityColorId(0);
+    RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
 }
 
 /// <summary>
@@ -183,6 +176,14 @@ void SpritesEditorDialog::RenderSpritesTileMap()
     selectionPixmap.fill(highlightColor);
     SelectionBox_Sprite = SpriteTileMAPScene->addPixmap(selectionPixmap);
     SelectionBox_Sprite->setVisible(false);
+
+    bool enability = true;
+    if (GetCurEntityPtr()->GetEntityGlobalID() < 0x11) enability = false;
+    ui->pushButton_SpriteTilesImport->setEnabled(enability);
+    ui->pushButton_AddPal->setEnabled(enability);
+    ui->pushButton_DeletePal->setEnabled(enability);
+    ui->pushButton_SpritePaletteImport->setEnabled(enability);
+    ui->pushButton_SwapPal->setEnabled(enability);
 }
 
 /// <summary>
@@ -190,6 +191,10 @@ void SpritesEditorDialog::RenderSpritesTileMap()
 /// </summary>
 void SpritesEditorDialog::RenderSpritesPalette()
 {
+    // Data reset
+    curEntityPalId = 0;
+    curEntityColorIdInPalette = 0;
+
     // Find if new entity data exist
     LevelComponents::Entity *curEntity = GetCurEntityPtr(); // init
 
@@ -466,10 +471,10 @@ void SpritesEditorDialog::on_pushButton_SpritePaletteImport_clicked()
             curEntity->SetColor(selectedPalId, colorId, newColor);
         },
         curEntityPalId);
-    RenderSpritesTileMap();
-    SetSelectedSpriteTile(0);
     RenderSpritesPalette();
     SetSelectedEntityColorId(0);
+    RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
     RenderSpritesetTileMapAndResetLoadTable();
 }
 
@@ -487,10 +492,10 @@ void SpritesEditorDialog::on_pushButton_SpritePaletteExport_clicked()
 void SpritesEditorDialog::on_pushButton_DeletePal_clicked()
 {
     GetCurEntityPtr(true)->DeleteTilesAndPaletteByOneRow(curEntityPalId);
-    RenderSpritesTileMap();
-    SetSelectedSpriteTile(0);
     RenderSpritesPalette();
     SetSelectedEntityColorId(0);
+    RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
     RenderSpritesetTileMapAndResetLoadTable();
 }
 
@@ -500,10 +505,10 @@ void SpritesEditorDialog::on_pushButton_DeletePal_clicked()
 void SpritesEditorDialog::on_pushButton_AddPal_clicked()
 {
     GetCurEntityPtr(true)->AddTilesAndPaletteByOneRow();
-    RenderSpritesTileMap();
-    SetSelectedSpriteTile(0);
     RenderSpritesPalette();
     SetSelectedEntityColorId(0);
+    RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
     RenderSpritesetTileMapAndResetLoadTable();
 }
 
@@ -531,9 +536,9 @@ void SpritesEditorDialog::on_pushButton_SwapPal_clicked()
         return;
     }
     GetCurEntityPtr(true)->SwapPalettes(result_1, result_2);
-    RenderSpritesTileMap();
-    SetSelectedSpriteTile(0);
     RenderSpritesPalette();
     SetSelectedEntityColorId(0);
+    RenderSpritesTileMap();
+    SetSelectedSpriteTile(0);
     RenderSpritesetTileMapAndResetLoadTable();
 }

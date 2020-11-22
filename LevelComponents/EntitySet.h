@@ -29,6 +29,7 @@ namespace LevelComponents
         QPixmap GetPixmap(const int palNum);
         void SetExtraEntities(QVector<LevelComponents::Entity*> newEntities) { extraEntities = newEntities; }
         void ClearExtraEntities() { extraEntities.clear(); }
+        void SetChanged(bool change) { Changed = change; }
 
     private:
         int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available
@@ -36,6 +37,7 @@ namespace LevelComponents
         QVector<QRgb> palettes[16];
         Tile8x8 **tile8x8array = nullptr;
         Tile8x8 *blankTile = nullptr;
+        bool Changed = false;
 
         QVector<LevelComponents::Entity*> extraEntities; // only used in sprites editor
 
