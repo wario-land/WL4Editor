@@ -169,7 +169,7 @@ namespace LevelComponents
                 assert(palNum >= 0);
 #endif
 
-                if (tile8x8data[offsetID] != blankTile) continue; // skip dummy tiles if used
+                if (tile8x8data[offsetID] == blankTile) continue; // skip dummy tiles if used
                 Tile8x8 *newTile = new Tile8x8(tile8x8data[offsetID]);
                 newTile->SetPaletteIndex(palNum);
                 entityTile->objTile = newTile;
