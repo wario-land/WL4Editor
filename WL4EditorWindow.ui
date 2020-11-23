@@ -227,6 +227,26 @@
      <addaction name="separator"/>
      <addaction name="actionClear_all"/>
     </widget>
+    <widget class="QMenu" name="menuDuplicate">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>Duplicate to</string>
+     </property>
+     <widget class="QMenu" name="menuEntity_lists_2">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="title">
+       <string>Entity lists</string>
+      </property>
+      <addaction name="action_duplicate_Normal"/>
+      <addaction name="action_duplicate_Hard"/>
+      <addaction name="action_duplicate_S_Hard"/>
+     </widget>
+     <addaction name="menuEntity_lists_2"/>
+    </widget>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
     <addaction name="actionUndo_global"/>
@@ -238,6 +258,7 @@
     <addaction name="actionEdit_Entity_EntitySet"/>
     <addaction name="actionEdit_Credits"/>
     <addaction name="menuAdd"/>
+    <addaction name="menuDuplicate"/>
     <addaction name="menuSwap"/>
     <addaction name="menuClear"/>
     <addaction name="actionRect_Select_Mode"/>
@@ -568,6 +589,27 @@
    </property>
    <property name="text">
     <string>Edit Entities and EntitySets</string>
+   </property>
+  </action>
+  <action name="action_duplicate_Normal">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>=&gt; Normal</string>
+   </property>
+  </action>
+  <action name="action_duplicate_Hard">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>=&gt; Hard</string>
+   </property>
+  </action>
+  <action name="action_duplicate_S_Hard">
+   <property name="text">
+    <string>=&gt; S-Hard</string>
    </property>
   </action>
  </widget>
