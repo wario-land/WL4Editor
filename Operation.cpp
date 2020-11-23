@@ -163,7 +163,7 @@ void PerformOperation(struct OperationParams *operation)
             curRoom->SetCurrentEntitySet(curRoom->GetCurrentEntitySetID());
         }
 
-        singleton->GetEntitySetDockWidgetPtr()->ResetEntitySet(singleton->GetCurrentRoom());
+        singleton->ResetEntitySetDockWidget();
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
     }
