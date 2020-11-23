@@ -1060,6 +1060,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         QVector<LevelComponents::EntitySetinfoTableElement> loadtable = entitiessets[EntitySetId]->GetEntityTable();
         int tablesize = loadtable.size() * 2 + 2; // add 2 extra 0x00 as an end mark
         unsigned char *loadtabledata = new unsigned char[tablesize];
+        memset(loadtabledata, 0, tablesize);
         for (int j = 0; j < loadtable.size(); ++j)
         {
             loadtabledata[2 * j] = loadtable[j].Global_EntityID;
