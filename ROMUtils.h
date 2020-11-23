@@ -40,7 +40,10 @@ namespace ROMUtils
         TilesetMap16EventTableChunkType       = '\x0B',
         TilesetMap16TerrainChunkType          = '\x0C',
         TilesetMap16DataChunkType             = '\x0D',
-        TilesetPaletteDataChunkType           = '\x0E'
+        TilesetPaletteDataChunkType           = '\x0E',
+        EntityTile8x8DataChunkType            = '\x0F',
+        EntityPaletteDataChunkType            = '\x10',
+        EntitySetLoadTableChunkType           = '\x11'
     };
 
     enum ChunkAllocationStatus
@@ -83,6 +86,8 @@ namespace ROMUtils
     bool SaveLevel(QString fileName);
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor = false);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
+    void GenerateEntitySaveChunks(int GlobalEntityId, QVector<struct ROMUtils::SaveData> &chunks);
+    void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);
     unsigned int EndianReverse(unsigned int n);
 
 } // namespace ROMUtils

@@ -61,6 +61,7 @@ namespace LevelComponents
         QVector<QRgb> GetPalette(const int palId) const;
         QVector<Tile8x8*> GetSpriteTiles(QVector<QRgb> *newPal = nullptr) const;
         int GetTilesNum() { return tile8x8data.size(); }
+        QVector<Tile8x8 *> GetTile8x8array() { return tile8x8data; }
         void SetColor(int paletteId, int colorId, QRgb newcolor) { palettes[paletteId][colorId] = newcolor; }
         void SetTile8x8(Tile8x8 *newtile, int tileId) { tile8x8data[tileId] = newtile; }
         QVector<QRgb> *GetPalettes() { return palettes; }
@@ -70,6 +71,7 @@ namespace LevelComponents
         void SwapPalettes(int palID_1, int palID_2);
         Tile8x8 *GetBlankTile() { return blankTile; }
         void SetChanged(bool change) { Changed = change; }
+        bool IsNewEntity() { return Changed; }
 
     private:
         QVector<QRgb> palettes[16]; //i don't want to do some memory management here, so i just set it to be 16

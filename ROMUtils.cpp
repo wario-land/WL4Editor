@@ -1,4 +1,4 @@
-#include "ROMUtils.h"
+﻿#include "ROMUtils.h"
 #include "Compress.h"
 #include <QFile>
 #include <QTranslator>
@@ -779,12 +779,26 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             return false;
         }
 
-        // Get Tilesets chunks
+        // Get Global instances chunks
         for(int i = 0; i < 92; ++i)
         {
             if(singletonTilesets[i]->IsNewTileset())
             {
                 GenerateTilesetSaveChunks(i, chunks);
+            }
+        }
+        for(int i = 0x11; i < 129; ++i) // we skip the first 0x10 sprites, they should be addressed differently
+        {
+            if(entities[i]->IsNewEntity())
+            {
+                GenerateEntitySaveChunks(i, chunks);
+            }
+        }
+        for(int i = 0; i < 90; ++i)
+        {
+            if(entitiessets[i]->IsNewEntity())
+            {
+                GenerateEntitySetSaveChunks(i, chunks);
             }
         }
 
@@ -857,7 +871,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                 // Write the level header to the ROM
                 memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
 
-                // Write Tileset data length info
+                // Write Tileset data length and animtated tiles info
                 for(int i = 0; i < 92; ++i)
                 {
                     if(singletonTilesets[i]->IsNewTileset())
@@ -878,6 +892,15 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                         *(int *) (TempFile + tilesetPtr + 16) = bgGFXLenaddr;
                         // don't needed, because this is done in the following internal pointers reset code
                         // singletonTilesets[i]->SetChanged(false);
+                    }
+                }
+
+                // Write Sprite data length info
+                for(int i = 0x11; i < 129; ++i) // we skip the first 0x10 sprites, they should be addressed differently
+                {
+                    if(entities[i]->IsNewEntity())
+                    {
+                        *(unsigned int *) (TempFile + WL4Constants::EntityTilesetLengthTable + 4 * (i - 0x10)) = entities[i]->GetPalNum() * (32 * 32 * 2);
                     }
                 }
                 return QString("");
@@ -923,6 +946,22 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                 singletonTilesets[i]->SetChanged(false);
             }
         }
+
+        // Entities and Entitysets members reset
+        for(int i = 0x11; i < 129; ++i) // we skip the first 0x10 sprites, they should be addressed differently
+        {
+            if(entities[i]->IsNewEntity())
+            {
+                entities[i]->SetChanged(false);
+            }
+        }
+        for(int i = 0; i < 90; ++i)
+        {
+            if(entitiessets[i]->IsNewEntity())
+            {
+                entitiessets[i]->SetChanged(false);
+            }
+        }
         // --------------------------------------------------------------------
         return true;
     }
@@ -955,6 +994,88 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             int a = 0xFF;
             palette->push_back(QColor(r, g, b, a).rgba());
         }
+    }
+
+    void GenerateEntitySaveChunks(int GlobalEntityId, QVector<SaveData> &chunks)
+    {
+        int SpriteTilesetPtrAddr = WL4Constants::EntityTilesetPointerTable + 4 * (GlobalEntityId - 0x10);
+
+        // Create FGTile8x8GraphicData chunk
+        int TileGfxDataLen = entities[GlobalEntityId]->GetTilesNum() * 32;
+        unsigned char map8x8tiledata[512 * 32];
+        QVector<LevelComponents::Tile8x8 *> tile8x8array = entities[GlobalEntityId]->GetTile8x8array();
+        for (int j = 0; j < (TileGfxDataLen / 32); ++j)
+        {
+            memcpy(&map8x8tiledata[32 * j], tile8x8array[j]->CreateGraphicsData().data(), 32);
+        }
+        struct ROMUtils::SaveData Tile8x8GraphicDataChunk = { static_cast<unsigned int>(SpriteTilesetPtrAddr),
+                                                         static_cast<unsigned int>(TileGfxDataLen),
+                                                         (unsigned char *) malloc(TileGfxDataLen),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(SpriteTilesetPtrAddr),
+                                                         ROMUtils::SaveDataChunkType::EntityTile8x8DataChunkType };
+        memcpy(Tile8x8GraphicDataChunk.data, map8x8tiledata, TileGfxDataLen);
+        chunks.append(Tile8x8GraphicDataChunk);
+
+        // Save palettes
+        QVector<QRgb> *palettes = entities[GlobalEntityId]->GetPalettes();
+        int palNum = entities[GlobalEntityId]->GetPalNum();
+        unsigned char *TilesetPaletteData = new unsigned char[palNum * 16 * 2];
+        memset(TilesetPaletteData, 0, 16 * 16 * 2);
+        QColor tmp_color;
+        for(int i = 0; i < palNum; ++i)
+        {
+            // First color is transparent
+            // RGB555 format: bbbbbgggggrrrrr
+            for(int j = 1; j < 16; ++j)
+            {
+                tmp_color.setRgb(palettes[i][j]);
+                int b = (tmp_color.blue() >> 3) & 0x1F;
+                int g = (tmp_color.green() >> 3) & 0x1F;
+                int r = (tmp_color.red() >> 3) & 0x1F;
+                TilesetPaletteData[16 * i + j] = (unsigned short) ((b << 10) | (g << 5) | r);
+            }
+        }
+        delete[] TilesetPaletteData;
+        int SpritePalettePtrAddr = WL4Constants::EntityPalettePointerTable + 4 * (GlobalEntityId - 0x10);
+        struct ROMUtils::SaveData TilesetPalettechunk = { static_cast<unsigned int>(SpritePalettePtrAddr),
+                                                         static_cast<unsigned int>(palNum * 16 * 2),
+                                                         (unsigned char *) malloc(palNum * 16 * 2),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(SpritePalettePtrAddr),
+                                                         ROMUtils::SaveDataChunkType::EntityPaletteDataChunkType };
+        memcpy(TilesetPalettechunk.data, TilesetPaletteData, 16 * 16 * 2);
+        chunks.append(TilesetPalettechunk);
+    }
+
+    void GenerateEntitySetSaveChunks(int EntitySetId, QVector<SaveData> &chunks)
+    {
+        int EntitySetLoadTablePtrAddr = WL4Constants::EntitySetInfoPointerTable + EntitySetId * 4;
+
+        // Create LoadTable Data chunk
+        QVector<LevelComponents::EntitySetinfoTableElement> loadtable = entitiessets[EntitySetId]->GetEntityTable();
+        int tablesize = loadtable.size() * 2 + 2; // add 2 extra 0x00 as an end mark
+        unsigned char *loadtabledata = new unsigned char[tablesize];
+        for (int j = 0; j < loadtable.size(); ++j)
+        {
+            loadtabledata[2 * j] = loadtable[j].Global_EntityID;
+            loadtabledata[2 * j + 1] = loadtable[j].paletteOffset;
+        }
+        struct ROMUtils::SaveData Tile8x8GraphicDataChunk = { static_cast<unsigned int>(EntitySetLoadTablePtrAddr),
+                                                         static_cast<unsigned int>(tablesize),
+                                                         (unsigned char *) malloc(tablesize),
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(EntitySetLoadTablePtrAddr),
+                                                         ROMUtils::SaveDataChunkType::EntitySetLoadTableChunkType };
+        memcpy(Tile8x8GraphicDataChunk.data, loadtabledata, tablesize);
+        delete[] loadtabledata;
+        chunks.append(Tile8x8GraphicDataChunk);
     }
 
 } // namespace ROMUtils
