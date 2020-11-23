@@ -796,7 +796,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         }
         for(int i = 0; i < 90; ++i)
         {
-            if(entitiessets[i]->IsNewEntity())
+            if(entitiessets[i]->IsNewEntitySet())
             {
                 GenerateEntitySetSaveChunks(i, chunks);
             }
@@ -957,7 +957,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         }
         for(int i = 0; i < 90; ++i)
         {
-            if(entitiessets[i]->IsNewEntity())
+            if(entitiessets[i]->IsNewEntitySet())
             {
                 entitiessets[i]->SetChanged(false);
             }

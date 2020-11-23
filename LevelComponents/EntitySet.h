@@ -30,7 +30,7 @@ namespace LevelComponents
         void SetExtraEntities(QVector<LevelComponents::Entity*> newEntities) { extraEntities = newEntities; }
         void ClearExtraEntities() { extraEntities.clear(); }
         void SetChanged(bool change) { Changed = change; }
-        bool IsNewEntity() { return Changed; }
+        bool IsNewEntitySet() { return Changed; }
 
     private:
         int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available

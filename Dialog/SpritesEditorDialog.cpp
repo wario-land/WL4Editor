@@ -43,6 +43,16 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
     RenderSpritesPalette();
     SetSelectedEntityColorId(0);
     RenderSpritesetTileMapAndResetLoadTable();
+
+    // Add ToolTip Text
+    ui->lineEdit_SpritesetLoadTable->setToolTip(tr("Non-universal Entities can only be loaded start from tile line 16 and palette line 8.\n"
+                                                   "Every entity use 2 bytes, the first byte is global entity id,\n"
+                                                   "the second one is the offset used to calculate the address to DMA the palettes and tiles data into the ram.\n"
+                                                   "According to the vanilla game engine, the previous loaded palettes and tiles can be overwritten by the others'\n"
+                                                   "So set the load table carefully.\n"
+                                                   "The editor use different palettes for every entity, but ingame, some of them share the same palettes and tiles\n"
+                                                   "you will find the editor act differently from the real game play.\n"
+                                                   "In this case, you need to modify all of the entities who sharing the same tiles and palettes."));
 }
 
 /// <summary>
