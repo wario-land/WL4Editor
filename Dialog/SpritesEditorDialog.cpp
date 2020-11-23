@@ -107,6 +107,10 @@ void SpritesEditorDialog::SetColor(int paletteId, int colorId)
 
         // Update Palette Graphicview
         RenderSpritesPalette();
+        SetSelectedEntityPaletteId(paletteId);
+        SetSelectedEntityColorId(colorId);
+        RenderSpritesTileMap();
+        SetSelectedSpriteTile(0);
     }
 }
 

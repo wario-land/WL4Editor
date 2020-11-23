@@ -1022,8 +1022,8 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         // Save palettes
         QVector<QRgb> *palettes = entities[GlobalEntityId]->GetPalettes();
         int palNum = entities[GlobalEntityId]->GetPalNum();
-        unsigned char *TilesetPaletteData = new unsigned char[palNum * 16 * 2];
-        memset(TilesetPaletteData, 0, 16 * 16 * 2);
+        unsigned short *TilesetPaletteData = new unsigned short[palNum * 16];
+        memset((unsigned char *)TilesetPaletteData, 0, palNum * 16 * 2);
         QColor tmp_color;
         for(int i = 0; i < palNum; ++i)
         {
@@ -1038,7 +1038,6 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                 TilesetPaletteData[16 * i + j] = (unsigned short) ((b << 10) | (g << 5) | r);
             }
         }
-        delete[] TilesetPaletteData;
         int SpritePalettePtrAddr = WL4Constants::EntityPalettePointerTable + 4 * (GlobalEntityId - 0x10);
         struct ROMUtils::SaveData TilesetPalettechunk = { static_cast<unsigned int>(SpritePalettePtrAddr),
                                                          static_cast<unsigned int>(palNum * 16 * 2),
@@ -1048,7 +1047,8 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                                                          0,
                                                          ROMUtils::PointerFromData(SpritePalettePtrAddr),
                                                          ROMUtils::SaveDataChunkType::EntityPaletteDataChunkType };
-        memcpy(TilesetPalettechunk.data, TilesetPaletteData, 16 * 16 * 2);
+        memcpy(TilesetPalettechunk.data, (unsigned char *)TilesetPaletteData, palNum * 16 * 2);
+        delete[] TilesetPaletteData;
         chunks.append(TilesetPalettechunk);
     }
 
