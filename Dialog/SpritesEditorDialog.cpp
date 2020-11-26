@@ -87,7 +87,8 @@ void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
 /// </param>
 void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 {
-    if (int palnum = GetCurEntityPtr()->GetPalNum(); paletteID >= palnum) paletteID = palnum - 1;
+    int palnum = GetCurEntityPtr()->GetPalNum();
+    if (paletteID >= palnum) paletteID = palnum - 1;
     curEntityPalId = paletteID;
     ui->label_PalID->setText(QString::number(paletteID));
     RenderSpritesTileMap();
@@ -105,7 +106,8 @@ void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 /// </param>
 void SpritesEditorDialog::SetColor(int paletteId, int colorId)
 {
-    if (int palnum = GetCurEntityPtr()->GetPalNum(); paletteId >= palnum) paletteId = palnum - 1;
+    int palnum = GetCurEntityPtr()->GetPalNum();
+    if (paletteId >= palnum) paletteId = palnum - 1;
     if (colorId > 15) colorId = 15;
     QColor color = QColorDialog::getColor(Qt::black, this);
     color.setAlpha(0xFF);
@@ -132,7 +134,8 @@ void SpritesEditorDialog::SetColor(int paletteId, int colorId)
 /// </param>
 void SpritesEditorDialog::SetSelectedSpriteTile(const int tileID)
 {
-    if (int tilenum = GetCurEntityPtr()->GetTilesNum(); tileID >= tilenum)
+    int tilenum = GetCurEntityPtr()->GetTilesNum();
+    if (tileID >= tilenum)
     {
         curEntityTileId = (((tilenum >> 5) - 1) << 5) + (tileID & 31);
     }
