@@ -1,5 +1,8 @@
-#ifndef TILESET_H
+﻿#ifndef TILESET_H
 #define TILESET_H
+
+#define Tile8x8DefaultNum 0x600
+#define Tile16DefaultNum 0x300
 
 #include <QColor>
 #include <QVector>
@@ -12,10 +15,8 @@ namespace LevelComponents
     {
     private:
         int tilesetPtr;
-        int Tile8x8DefaultNum = 0x600;
-        int Tile16DefaultNum = 0x300;
-        Tile8x8 **tile8x8array = nullptr;
-        TileMap16 **map16array = nullptr;
+        QVector<Tile8x8 *> tile8x8array;
+        QVector<TileMap16 *> map16array;
         QVector<QRgb> palettes[16];
         Tile8x8 *blankTile = nullptr;
         int UniversalSpritesTilesPalettePtr = 0;
@@ -33,10 +34,11 @@ namespace LevelComponents
         Tileset(Tileset *old_tileset, int __TilesetID);
         void SetAnimatedTile(int tile8x8groupId, int tile8x8group2Id, int SwitchId, int startTile8x8Id);
         int getTilesetPtr() { return tilesetPtr; }
-        Tile8x8 **GetTile8x8arrayPtr() { return tile8x8array; }
-        TileMap16 **GetMap16arrayPtr() { return map16array; }
+        QVector<Tile8x8 *> GetTile8x8arrayPtr() { return tile8x8array; }
+        QVector<TileMap16 *> GetMap16arrayPtr() { return map16array; }
         QVector<QRgb> *GetPalettes() { return palettes; }
         void SetColor(int paletteId, int colorId, QRgb newcolor) { palettes[paletteId][colorId] = newcolor; }
+        void SetTile8x8(Tile8x8 *newtile, int tileId) { tile8x8array[tileId] = newtile; }
         ~Tileset();
         QPixmap RenderAllTile8x8(int paletteId);
         QPixmap RenderAllTile16(int columns);

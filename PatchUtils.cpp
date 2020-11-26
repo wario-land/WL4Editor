@@ -204,6 +204,18 @@ static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
     return contents;
 }
 
+/// <summary>
+/// Helper function for running a process (since it is used in several places)
+/// </summary>
+/// <param name="executable">
+/// The executable to run.
+/// </param>
+/// <param name="args">
+/// The arguments to the process.
+/// </param>
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
 static QString RunProcess(QString executable, QStringList args)
 {
     QProcess process;
@@ -240,7 +252,20 @@ static QString CompileCFile(QString cfile)
         "-S" << cfile << "-o" << outfile;
 
     // Run GCC
-    return RunProcess(executable, args);
+    QString ret = RunProcess(executable, args);
+
+    // Replace memcpy symbol with the address of the memcpy function in the ROM
+    QByteArray fileData;
+    QFile sfile(outfile);
+    sfile.open(stderr, QIODevice::ReadWrite);
+    fileData = sfile.readAll();
+    QString text(fileData);
+    text.replace("memcpy", "0x80950D9");
+    sfile.seek(0);
+    sfile.write(text.toUtf8());
+    sfile.close();
+
+    return ret;
 }
 
 /// <summary>
@@ -266,7 +291,7 @@ static QString AssembleSFile(QString sfile)
     REPLACE_EXT(outfile, ".s", ".o");
     QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_AS);
     QStringList args;
-    args << sfile << "-o" << outfile << "--defsym=memcpy=0x80950D9";
+    args << sfile << "-o" << outfile;
 
     // Run AS
     return RunProcess(executable, args);
@@ -294,11 +319,9 @@ static QString CreateLinkerScript(struct PatchEntryItem entry)
     QString scriptContents =
         QString("SECTIONS\n") +
         "{\n" +
-        "    .text   0x" + pa + " : { " + ofile + " (.text) }\n" +
-        "    .rodata : { " + ofile + " (.rodata) }\n" +
-        "    .dummy  0x8000000 (NOLOAD) : { " + memcpy_o + " }\n" +
-        "}\n" +
-        "memcpy = 0x80950D9;";
+        "    .text   0x" + pa + " : { \"" + ofile + "\" (.text) }\n" +
+        "    .rodata : { \"" + ofile + "\" (.rodata) }\n" +
+        "}";
 
     QFile file(ldfile);
     file.open(QIODevice::WriteOnly);
@@ -782,9 +805,6 @@ namespace PatchUtils
                     // Allocation success
                     *sd = saveData;
 
-                    // Set metadata of the patch entry based off accepted save location and binary size
-
-
                     // Advance patch iterator to next non-hex-edit patch
                     patchAllocIter++;
                     while(patchAllocIter != entries.end() && patchAllocIter->FileName.length())
@@ -846,7 +866,7 @@ namespace PatchUtils
                     // Splice patch address into hook string
                     if(patch.PatchOffsetInHookString != static_cast<unsigned int>(-1))
                     {
-                        uint32_t patchAddress = 0x8000000 | (patch.PatchAddress + 13); // STAR header + 1 so that BLX goes into thumb mode
+                        uint32_t patchAddress = 0x8000000 | (patch.PatchAddress + 13); // STAR header + 1 so that BL goes into thumb mode
                         patchAddress = ROMUtils::EndianReverse(patchAddress);
                         QString patchAddressString = QString("%1").arg(patchAddress, 8, 16, QChar('0')).toUpper();
                         hookString = hookString.mid(0, patch.PatchOffsetInHookString * 2) +

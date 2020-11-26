@@ -387,11 +387,11 @@ namespace LevelComponents
                                           : (layers[2]->GetLayerPriority());
                     EntityPainter[tmppriority]->drawImage(
                         16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 +
-                            (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
+                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
                              98) /
                                 4,
                         16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 +
-                            (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
+                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
                              66) /
                                 4,
                         currententity->Render());
@@ -400,11 +400,11 @@ namespace LevelComponents
                 {
                     EntityPainter[layers[0]->GetLayerPriority()]->drawImage(
                         16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 +
-                            (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
+                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
                              98) /
                                 4,
                         16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 +
-                            (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
+                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
                              66) /
                                 4,
                         currententity->Render());
@@ -413,11 +413,11 @@ namespace LevelComponents
                 {
                     EntityPainter[layers[1]->GetLayerPriority() + 1]->drawImage(
                         16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 +
-                            (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
+                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
                              98) /
                                 4,
                         16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 +
-                            (currentEntitySet->GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
+                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
                              66) /
                                 4,
                         currententity->Render());

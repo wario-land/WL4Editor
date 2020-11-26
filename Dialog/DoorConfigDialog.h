@@ -1,4 +1,4 @@
-#ifndef DOORCONFIGDIALOG_H
+﻿#ifndef DOORCONFIGDIALOG_H
 #define DOORCONFIGDIALOG_H
 
 #include <QAbstractTableModel>
@@ -127,7 +127,7 @@ public:
         "0x0D nothing",
         "0x0E nothing",
         "0x0F nothing",
-        "0x10 Cat",
+        "0x10 Treasure box utility entity",
         "0x11 Yellow Spear-Mask",
         "0x12 Blue Spear-Mask",
         "0x13 Red Spear-Mask",

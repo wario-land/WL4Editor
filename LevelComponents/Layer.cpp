@@ -1,4 +1,4 @@
-#include "Layer.h"
+﻿#include "Layer.h"
 #include "ROMUtils.h"
 
 #include <cassert>
@@ -170,7 +170,7 @@ namespace LevelComponents
             tiles = std::vector<Tile *>(Width * Height);
 
             // For 16x16 tiles, just copy the tiles from the map16
-            TileMap16 **map16 = tileset->GetMap16arrayPtr();
+            QVector<TileMap16 *> map16 = tileset->GetMap16arrayPtr();
             for (int i = 0; i < Width * Height; ++i)
             {
                 tiles[i] = map16[LayerData[i]];
@@ -185,7 +185,7 @@ namespace LevelComponents
             tiles = std::vector<Tile *>(Width * Height);
 
             // For 8x8 tiles, we must use the copy constructor and set each tile's properties
-            Tile8x8 **tile8x8 = tileset->GetTile8x8arrayPtr();
+            QVector<Tile8x8 *> tile8x8 = tileset->GetTile8x8arrayPtr();
             for (int i = 0; i < Width * Height; ++i)
             {
                 unsigned short tileData = LayerData[i];

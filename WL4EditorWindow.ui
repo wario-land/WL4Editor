@@ -126,7 +126,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -235,6 +235,7 @@
     <addaction name="actionLevel_Config"/>
     <addaction name="actionRoom_Config"/>
     <addaction name="actionEdit_Tileset"/>
+    <addaction name="actionEdit_Credits"/>
     <addaction name="menuAdd"/>
     <addaction name="menuSwap"/>
     <addaction name="menuClear"/>
@@ -550,6 +551,14 @@
   <action name="actionNew_Room">
    <property name="text">
     <string>New Room</string>
+   </property>
+  </action>
+  <action name="actionEdit_Credits">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit Credits</string>
    </property>
   </action>
  </widget>

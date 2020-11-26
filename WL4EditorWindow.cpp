@@ -4,7 +4,6 @@
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
 #include "Themes.h"
-#include "LevelComponents/Layer.h"
 
 #include <cstdio>
 #include <deque>
@@ -257,16 +256,14 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         int tilesetPtr = WL4Constants::TilesetDataTable + i * 36;
         ROMUtils::singletonTilesets[i] = new LevelComponents::Tileset(tilesetPtr, i);
     }
-    for (unsigned int i = 0; i < sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]); ++i)
-    {
-        ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i, WL4Constants::UniversalSpritesPalette);
-    }
     for (unsigned int i = 0; i < sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0]); ++i)
     {
-        struct LevelComponents::EntitySetAndEntitylocalId tmpEntitysetAndEntitylocalId =
-            LevelComponents::EntitySet::EntitySetFromEntityID(i);
-        ROMUtils::entities[i] = new LevelComponents::Entity(tmpEntitysetAndEntitylocalId.entitylocalId, i,
-                                                  ROMUtils::entitiessets[tmpEntitysetAndEntitylocalId.entitysetId]);
+        // TODO: the palette param should be loaded differently for different passages for gem palette
+        ROMUtils::entities[i] = new LevelComponents::Entity(i, WL4Constants::UniversalSpritesPalette);
+    }
+    for (unsigned int i = 0; i < sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]); ++i)
+    {
+        ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i);
     }
 
     // Load the first level and render the screen
@@ -431,6 +428,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionUndo_global->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->actionManager->setEnabled(true);
+        ui->actionEdit_Credits->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -1981,12 +1979,17 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     CurrentLevel->GetLevelHeader()->NumOfMap++;
 
     // Reset pointers in RoomHeader to avoid save chunk invalidation corruption
-    int offsetlist[6] = {0, 1, 2, 5, 6, 7};
+    QVector<int> offsetlist;
+    offsetlist << 0 << 1 << 2 << 5 << 6 << 7;
+    if((CurrentLevel->GetRooms()[newRoomId]->GetLayer(0)->GetMappingType() & 0x30) == 0x20)
+    {
+        offsetlist.pop_front();
+    }
     for(int _offset: offsetlist)
     {
         CurrentLevel->GetRooms()[newRoomId]->SetRoomHeaderDataPtr(_offset, 0);
     }
-    for(int i = 0; i < 3; i++)
+    for(int i = offsetlist[0] ? 1 : 0; i < 3; i++)
     {
         CurrentLevel->GetRooms()[newRoomId]->GetLayer(i)->SetDataPtr(0);
     }
@@ -1998,4 +2001,19 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 
     // Clear everything in the new room
     ClearEverythingInRoom(true);
+}
+
+/// <summary>
+/// Display the edit credits edit dialog.
+/// It contains 13 tabs to edit corresponding credits
+/// </summary>
+void WL4EditorWindow::on_actionEdit_Credits_triggered()
+{
+    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
+    DialogParams::CreditsEditParams *creditsEditParams =
+        new DialogParams::CreditsEditParams();
+
+    // Show the dialog
+    CreditsEditDialog dialog(this, creditsEditParams);
+    dialog.exec();
 }

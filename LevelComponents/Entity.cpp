@@ -1,7 +1,14 @@
-#include "Entity.h"
+﻿#include "Entity.h"
 #include "ROMUtils.h"
 
+#include <QPixmap>
 #include <QPainter>
+
+#include <cassert>
+
+constexpr unsigned char LevelComponents::Entity::EntitySampleOamNumArray[129];
+constexpr int LevelComponents::Entity::EntityPositinalOffset[258];
+constexpr unsigned short LevelComponents::Entity::EntitiesOamSampleSets[129][0x2A * 3];
 
 // tuples of (width, height) in 8x8 tiles; see TONC table. Row major: size attribute
 // clang-format off
@@ -26,32 +33,49 @@ namespace LevelComponents
     /// <summary>
     /// Construct an instance of Entity.
     /// </summary>
-    /// <param name="entityID">
-    /// Local entity ID in entity set.
-    /// </param>
     /// <param name="entityGlobalId">
     /// Global entity ID.
     /// </param>
-    /// </param name="_currentEntityset">
-    /// Entire set pointer.
+    /// </param name="basicElementPalettePtr">
+    /// Pointer for basic sprites element palette differs in every passage, usually used for gem color stuff.
     /// </param>
-    Entity::Entity(int entityID, int entityGlobalId, EntitySet *_currentEntityset) :
-            xOffset(0x7FFFFFFF), yOffset(0x7FFFFFFF), EntityID(entityID), EntityGlobalID(entityGlobalId),
-            currentEntityset(_currentEntityset)
+    Entity::Entity(int entityGlobalId, int basicElementPalettePtr) : EntityGlobalID(entityGlobalId)
     {
-        if (EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId) == 0)
+        if (EntitySampleOamNumArray[entityGlobalId] == 0)
         {
             UnusedEntity = true;
-            xOffset = yOffset = 0;
             return;
         }
 
+        // Load tiles and palettes
+        if (entityGlobalId > 0x10)
+        {
+            int palettePtr =
+                ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable + 4 * (entityGlobalId - 0x10));
+            EntityPaletteNum =
+                ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (entityGlobalId - 0x10)) /
+                (32 * 32 * 2);
+            LoadSubPalettes(EntityPaletteNum, palettePtr);
+            int tiledataptr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable + 4 * (entityGlobalId - 0x10));
+            int tiledatalength = ROMUtils::IntFromData(WL4Constants::EntityTilesetLengthTable + 4 * (entityGlobalId - 0x10));
+            LoadSpritesTiles(tiledataptr, tiledatalength);
+        }
+        else if (EntityGlobalID < 6) // Boxes
+        {
+            EntityPaletteNum = 1;
+            LoadSubPalettes(1, ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable));
+            LoadSpritesTiles(WL4Constants::TreasureBoxGFXTiles, 2048);
+        }
+        else // tho there will be perhaps some exception, but just assume all of them using the universal sprites tiles
+        {
+            EntityPaletteNum = 5;
+            LoadSubPalettes(1, basicElementPalettePtr);
+            LoadSubPalettes(4, WL4Constants::UniversalSpritesPalette2, 1);
+            LoadSpritesTiles(WL4Constants::SpritesBasicElementTiles, 0x3000);
+        }
+
         // Set the OAM tile information
-        int spritesActionOAMTablePtr =
-            ROMUtils::PointerFromData(EntitySet::GetEntityFirstActionFrameSetPtr(entityGlobalId));
-        OAMDataTablePtr = spritesActionOAMTablePtr;
-        ExtractSpritesTiles(spritesActionOAMTablePtr,
-                            0); // TODO: load a different frame when meet with some of the Entities
+        ExtractSpritesTiles();
 
         // Set the image offsets for the entity
         foreach (OAMTile *ot, OAMTiles)
@@ -59,8 +83,25 @@ namespace LevelComponents
             xOffset = qMin(xOffset, ot->Xoff);
             yOffset = qMin(yOffset, ot->Yoff);
         }
+    }
 
-        // TODO: Load other Entity informations
+    /// <summary>
+    /// Copy construct an instance of Entity.
+    /// </summary>
+    /// <param name="entity">
+    /// The entity used to copy construct new Entity.
+    /// </param>
+    Entity::Entity(const Entity &entity) : xOffset(entity.xOffset), yOffset(entity.yOffset),
+        EntityGlobalID(entity.EntityGlobalID), EntityPaletteNum(entity.EntityPaletteNum), UnusedEntity(entity.UnusedEntity)
+    {
+        if (UnusedEntity) return;
+
+        for (int i = 0; i < EntityPaletteNum; ++i)
+        {
+            palettes[i] = entity.GetPalette(i);
+        }
+        tile8x8data = entity.GetSpriteTiles(palettes);
+        ExtractSpritesTiles();
     }
 
     /// <summary>
@@ -70,6 +111,10 @@ namespace LevelComponents
     {
         // Free the Tile8x8 objects pushed to the entity tiles vector
         foreach (OAMTile *tile, OAMTiles)
+        {
+            delete tile;
+        }
+        foreach (Tile8x8 *tile, tile8x8data)
         {
             delete tile;
         }
@@ -96,81 +141,32 @@ namespace LevelComponents
         newOAM->OAMwidth = OAMDimensions[2 * (SZ * 3 + SH)]; // unit: 8x8 tiles
         newOAM->OAMheight = OAMDimensions[2 * (SZ * 3 + SH) + 1];
         int tileID = attr2 & 0x3FF;
-        int palNum = (attr2 >> 0xB) & 0xF;
-        SemiTransparent = (((attr0 >> 0xA) & 3) == 1) ? true : false;
-        Priority = (attr2 >> 0xA) & 3;
+        int palNum = (attr2 >> 0xC) & 0xF;
 
         // Create the tile8x8 objects
-        Tile8x8 **tileData = currentEntityset->GetTileData();
         for (int y = 0; y < newOAM->OAMheight; ++y)
         {
             for (int x = 0; x < newOAM->OAMwidth; ++x)
             {
                 struct EntityTile *entityTile = new struct EntityTile();
                 entityTile->deltaX = x * 8;
-                entityTile->deltaY = y * 8;
-                int offsetID, offsetPal;
-                // Bosses' offsetID are loaded directly
-                if ((EntityGlobalID > 0x10) && (EntityGlobalID != 0x18) && (EntityGlobalID != 0x2C) &&
-                    (EntityGlobalID != 0x51) && (EntityGlobalID != 0x69) && (EntityGlobalID != 0x76) &&
-                    (EntityGlobalID != 0x7D)) // Normal Entities
-                {
-                    offsetID = tileID + y * 0x20 + x + currentEntityset->GetEntityTileIdOffset(EntityID);
-                    offsetPal = palNum + currentEntityset->GetEntityPaletteOffset(EntityID, EntityGlobalID);
-                }
-                else if ((EntityGlobalID < 8) && (EntityGlobalID > 5)) // Diamond and Frog switch
-                {
-                    offsetID = tileID + y * 0x20 + x;
-                    offsetPal = 5;
-                }
-                else if ((EntityGlobalID < 17) && (EntityGlobalID > 7)) // Keyzer
-                {
-                    offsetID = tileID + y * 0x20 + x;
-                    // the Keyzer use 2 palette (6 and 7), but the OAM data are set by only 1 palette
-                    // Using palette 7 here makes the render result more similar to the real graphic
-                    offsetPal = 7;
-                }
-                else if (EntityGlobalID < 6) // Boxes
-                {
-                    offsetID = tileID + (y + 14) * 0x20 + x;
-                    offsetPal = 15;
-                }
-                else if (EntityGlobalID == 0x18) // Boss: Cuckoo Condor
-                {
-                    offsetID = tileID + y * 0x20 + x;
-                    offsetPal = palNum + 1;
-                }
-                else if ((EntityGlobalID == 0x2C) || (EntityGlobalID == 0x51)) // Boss: Spoiled Rotten and Catbat
-                {
-                    offsetID = tileID + y * 0x20 + x;
-                    offsetPal = palNum + 8;
-                }
-                else if (EntityGlobalID == 0x76) // Boss: Cractus
-                {
-                    offsetID = tileID + y * 0x20 + x;
-                    offsetPal = palNum + 8;
-                } // only showing flowerpot
-                else if (EntityGlobalID == 0x7D) // Boss: Golden Diva
-                {
-                    offsetID = tileID + y * 0x20 + x;
-                    offsetPal = palNum + 3;
-                } // Golden Diva is a Frog Switch ??
-                else if (EntityGlobalID == 0x69) // Boss: Aerodent
-                {
-                    offsetID = tileID + y * 0x20 + x;
-                    offsetPal = palNum + 5;
-                }
-                else // TODO: more cases
-                {
-                    offsetID = tileID + y * 0x20 + x;
-                    offsetPal = palNum;
-                }
-                // palette reset
-                if (EntityGlobalID == 0x44)
-                    offsetPal = 0;
+                entityTile->deltaY = y * 8;                
+                int offsetID = tileID + y * 0x20 + x;
 
-                Tile8x8 *newTile = new Tile8x8(tileData[offsetID]);
-                newTile->SetPaletteIndex(offsetPal);
+                // this part of logic will be needed when we want to support custom oam, so keep it here
+                // i put it here only for loading data testing -- ssp
+#ifndef QT_NO_DEBUG
+                assert(offsetID >= 0);
+                if(EntityGlobalID < 0x11)
+                    assert(offsetID < ((EntityPaletteNum + 1) * 32 * 2));
+                else
+                    assert(offsetID < (EntityPaletteNum * 32 * 2));
+                assert(palNum < EntityPaletteNum);
+                assert(palNum >= 0);
+#endif
+
+                Tile8x8 *newTile = new Tile8x8(tile8x8data[offsetID]);
+                newTile->SetPaletteIndex(palNum);
                 entityTile->objTile = newTile;
                 newOAM->tile8x8.push_back(entityTile);
             }
@@ -203,6 +199,10 @@ namespace LevelComponents
     /// </returns>
     QImage Entity::Render()
     {
+        if (UnusedEntity)
+        {
+            return QImage();
+        }
         int maxX = 0x80000000, maxY = 0x80000000;
         foreach (OAMTile *ot, OAMTiles)
         {
@@ -212,10 +212,6 @@ namespace LevelComponents
         int width = maxX - xOffset, height = maxY - yOffset;
         QPixmap pm(width, height);
         pm.fill(Qt::transparent);
-        if (UnusedEntity)
-        {
-            return pm.toImage();
-        }
         QPainter p(&pm);
         // OAM tiles must be rendered in reverse order as per the GBA graphical specifications
         for (auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
@@ -223,30 +219,111 @@ namespace LevelComponents
             OAMTile *ot = *iter;
             p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, ot->Render());
         }
-        return pm.toImage().mirrored(xFlip, yFlip);
+        return pm.toImage();
+    }
+
+    /// <summary>
+    /// Get Entity Positional offset by its global id.
+    /// </summary>
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
+    EntityPositionalOffset Entity::GetEntityPositionalOffset(int entityglobalId)
+    {
+        EntityPositionalOffset tmpEntityPositionalOffset;
+        tmpEntityPositionalOffset.XOffset = EntityPositinalOffset[2 * entityglobalId];
+        tmpEntityPositionalOffset.YOffset = EntityPositinalOffset[2 * entityglobalId + 1];
+        return tmpEntityPositionalOffset;
+    }
+
+    /// <summary>
+    /// Get palettes used by this Entity.
+    /// </summary>
+    /// <param name="palId">
+    /// Palette Id used to return the specified palette QVector.
+    /// </param>
+    QVector<QRgb> Entity::GetPalette(const int palId) const
+    {
+        if(palId > EntityPaletteNum || palId < 0)
+        {
+            QVector<QRgb> firstPalette(palettes[0]);
+            return firstPalette;
+        }
+        QVector<QRgb> tmpPalette(palettes[palId]);
+        return tmpPalette;
+    }
+
+    /// <summary>
+    /// Get tiles used by this Entity.
+    /// </summary>
+    /// <param name="newPal">
+    /// newPal should be provided so it can be migrated to some EntitySet instance.
+    /// </param>
+    QVector<Tile8x8 *> Entity::GetSpriteTiles(QVector<QRgb> *newPal) const
+    {
+        QVector<Tile8x8 *> tmptiles;
+        for(int i = 0; i < tile8x8data.size(); ++i)
+        {
+            if(newPal)
+            {
+                tmptiles.push_back(new Tile8x8(tile8x8data[i], newPal));
+            }
+            else
+            {
+                tmptiles.push_back(new Tile8x8(tile8x8data[i]));
+            }
+        }
+        return tmptiles;
+    }
+
+    /// <summary>
+    /// sub function used in Entity constructor for loading sub palettes for each Entity.
+    /// </summary>
+    /// <param name="paletteNum">
+    /// Amount of palettes that will be reset.
+    /// </param>
+    /// <param name="paletteSetPtr">
+    /// Palette data address in ROM.
+    /// </param>
+    /// <param name="startPaletteId">
+    /// Id of the palette where start to reset.
+    /// </param>
+    void Entity::LoadSubPalettes(int paletteNum, int paletteSetPtr, int startPaletteId)
+    {
+        for (int i = 0; i < paletteNum; ++i)
+        {
+            if (palettes[i + startPaletteId].size())
+                palettes[i + startPaletteId].clear();
+            // First color is transparent
+            ROMUtils::LoadPalette(&palettes[i + startPaletteId], (unsigned short *) (ROMUtils::CurrentFile + paletteSetPtr + i * 32));
+        }
+    }
+
+    /// <summary>
+    /// sub function used in Entity constructor for loading Tile8x8s for each Entity.
+    /// </summary>
+    /// <param name="tileaddress">
+    /// Address of Entity tiles in ROM.
+    /// </param>
+    /// <param name="datalength">
+    /// Length of Tiles' data.
+    /// </param>
+    void Entity::LoadSpritesTiles(int tileaddress, int datalength)
+    {
+        for (int i = 0; i < (datalength / 32); ++i)
+        {
+            tile8x8data.push_back(new Tile8x8(tileaddress + i * 32, palettes));
+        }
     }
 
     /// <summary>
     /// Extract all the Sprite tiles8x8 using frame data in one frame.
     /// </summary>
-    void Entity::ExtractSpritesTiles(int spritesFrameDataPtr, int frame)
+    void Entity::ExtractSpritesTiles()
     {
-        unsigned short *u16_attribute = (unsigned short *) (ROMUtils::CurrentFile + spritesFrameDataPtr);
-        int offset = 0, objectnum = 0, nowframe = 0;
-        while (nowframe <= frame)
+        for (int i = 0; i < EntitySampleOamNumArray[EntityGlobalID]; ++i)
         {
-            objectnum = (int) u16_attribute[offset];
-            if (nowframe < frame)
-            {
-                offset += 1 + 3 * objectnum;
-                ++nowframe;
-                continue;
-            }
-            for (int i = 0; i < objectnum; ++i)
-            {
-                OAMtoTiles(u16_attribute + i * 3 + 1);
-            }
-            break;
+            OAMtoTiles(const_cast<unsigned short *>(EntitiesOamSampleSets[EntityGlobalID]) + i * 3);
         }
     }
 } // namespace LevelComponents
