@@ -461,7 +461,7 @@ namespace ROMUtils
 
                     // Continue search after this chunk
                     unsigned int chunkLen = *reinterpret_cast<short *>(ROMData + startAddr + 4);
-                    startAddr += chunkLen;
+                    startAddr += chunkLen + 12;
                     freeSpaceStart = startAddr;
                 }
                 else
