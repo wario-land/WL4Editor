@@ -430,7 +430,7 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
 /// <param name="image">
 /// The QImage to replace background color.
 /// </param>
-QImage FileIOUtils::SetBGColor(QImage image, QWidget *parent)
+QImage FileIOUtils::RenderBGColor(QImage image, QWidget *parent)
 {
     QColor color = QColorDialog::getColor(Qt::black, parent, QString(QObject::tr("Choose a background color")));
     color.setAlpha(0xFF);

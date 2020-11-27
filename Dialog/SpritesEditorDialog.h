@@ -61,7 +61,7 @@ private:
     QGraphicsScene *SpriteTileMAPScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Sprite = nullptr;
     QGraphicsPixmapItem *SpriteTilemapping = nullptr;
-    QGraphicsScene *SpritesetTileMAPScene = nullptr; // no need selestionbox for spriteset graphicview
+    QGraphicsScene *SpritesetTileMAPScene = nullptr; // selectionbox no need for spriteset graphicview
     QGraphicsPixmapItem *SpritesetTilemapping = nullptr;
     QGraphicsScene *PaletteBarScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Color = nullptr;

@@ -30,7 +30,6 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
     ui->graphicsView_SpritesetTileMap->setScene(SpritesetTileMAPScene);
     ui->graphicsView_SpritesetTileMap->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     PaletteBarScene = new QGraphicsScene(0, 0, 16 * 8, 16 * 8);
-    // TODO: PaletteBarScene->setBackgroundBrush();
     ui->graphicsView_SpritePals->setScene(PaletteBarScene);
     ui->graphicsView_SpritePals->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     ui->graphicsView_SpritePals->scale(2, 2);
@@ -45,14 +44,14 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
     RenderSpritesetTileMapAndResetLoadTable();
 
     // Add ToolTip Text
-    ui->lineEdit_SpritesetLoadTable->setToolTip(tr("Non-universal Entities can only be loaded start from tile line 16 and palette line 8.\n"
-                                                   "Every entity use 2 bytes, the first byte is global entity id,\n"
-                                                   "the second one is the offset used to calculate the address to DMA the palettes and tiles data into the ram.\n"
-                                                   "According to the vanilla game engine, the previous loaded palettes and tiles can be overwritten by the others'\n"
-                                                   "So set the load table carefully.\n"
-                                                   "The editor use different palettes for every entity, but ingame, some of them share the same palettes and tiles\n"
-                                                   "you will find the editor act differently from the real game play.\n"
-                                                   "In this case, you need to modify all of the entities who sharing the same tiles and palettes."));
+    ui->lineEdit_SpritesetLoadTable->setToolTip(tr("Non-universal Entities can only be loaded starting from tile line 16 and palette line 8.\n"
+                                                   "Every entity uses 2 bytes - the first byte is the global entity id,\n"
+                                                   "and the second one is the offset used to calculate the address to copy the palettes and tiles data into the ram.\n"
+                                                   "In the vanilla game engine, the previously loaded palettes and tiles can be overwritten by new ones,\n"
+                                                   "so set the load table carefully.\n"
+                                                   "The editor uses different palettes for every entity. However, in-game, some of them share the same palettes and tiles.\n"
+                                                   "You may find that the editor acts differently from real game play.\n"
+                                                   "In this case, you need to modify all of the entities that share the same tiles and palettes."));
 }
 
 /// <summary>
@@ -65,7 +64,7 @@ SpritesEditorDialog::~SpritesEditorDialog()
 
 void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
 {
-    if (colorID > 15) colorID = 15;
+    colorID = qMin(colorID, 15);
     curEntityColorIdInPalette = colorID;
     SelectionBox_Color->setPos(colorID * 8, curEntityPalId * 8);
     SelectionBox_Color->setVisible(true);
@@ -73,7 +72,11 @@ void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
     ui->label_CurColorValue->setText(QString("RGB888: (") +
                                     QString::number(color.red(), 10) + QString(", ") +
                                     QString::number(color.green(), 10) + QString(", ") +
-                                    QString::number(color.blue(), 10) + QString(") RGB555: (") +
+                                    QString::number(color.blue(), 10) + QString(") RGBHEX: ") +
+                                    QString::number(color.red(), 16) +
+                                    QString::number(color.green(), 16) +
+                                    QString::number(color.blue(), 16) +
+                                    QString("  RGB555: (") +
                                     QString::number(color.red() >> 3, 10) + QString(", ") +
                                     QString::number(color.green() >> 3, 10) + QString(", ") +
                                     QString::number(color.blue() >> 3, 10) + QString(")"));
@@ -87,8 +90,7 @@ void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
 /// </param>
 void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 {
-    int palnum = GetCurEntityPtr()->GetPalNum();
-    if (paletteID >= palnum) paletteID = palnum - 1;
+    paletteID = qMin(paletteID, GetCurEntityPtr()->GetPalNum() - 1);
     curEntityPalId = paletteID;
     ui->label_PalID->setText(QString::number(paletteID));
     RenderSpritesTileMap();
@@ -106,8 +108,7 @@ void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 /// </param>
 void SpritesEditorDialog::SetColor(int paletteId, int colorId)
 {
-    int palnum = GetCurEntityPtr()->GetPalNum();
-    if (paletteId >= palnum) paletteId = palnum - 1;
+    paletteId = qMin(paletteId, GetCurEntityPtr()->GetPalNum() - 1);
     if (colorId > 15) colorId = 15;
     QColor color = QColorDialog::getColor(Qt::black, this);
     color.setAlpha(0xFF);
@@ -134,8 +135,7 @@ void SpritesEditorDialog::SetColor(int paletteId, int colorId)
 /// </param>
 void SpritesEditorDialog::SetSelectedSpriteTile(const int tileID)
 {
-    int tilenum = GetCurEntityPtr()->GetTilesNum();
-    if (tileID >= tilenum)
+    if (int tilenum = GetCurEntityPtr()->GetTilesNum(); tileID >= tilenum)
     {
         curEntityTileId = (((tilenum >> 5) - 1) << 5) + (tileID & 31);
     }
@@ -194,13 +194,13 @@ void SpritesEditorDialog::RenderSpritesTileMap()
     SelectionBox_Sprite = SpriteTileMAPScene->addPixmap(selectionPixmap);
     SelectionBox_Sprite->setVisible(false);
 
-    bool enability = true;
-    if (GetCurEntityPtr()->GetEntityGlobalID() < 0x11) enability = false;
-    ui->pushButton_SpriteTilesImport->setEnabled(enability);
-    ui->pushButton_AddPal->setEnabled(enability);
-    ui->pushButton_DeletePal->setEnabled(enability);
-    ui->pushButton_SpritePaletteImport->setEnabled(enability);
-    ui->pushButton_SwapPal->setEnabled(enability);
+    bool enabled = true;
+    if (GetCurEntityPtr()->GetEntityGlobalID() < 0x11) enabled = false;
+    ui->pushButton_SpriteTilesImport->setEnabled(enabled);
+    ui->pushButton_AddPal->setEnabled(enabled);
+    ui->pushButton_DeletePal->setEnabled(enabled);
+    ui->pushButton_SpritePaletteImport->setEnabled(enabled);
+    ui->pushButton_SwapPal->setEnabled(enabled);
 }
 
 /// <summary>
@@ -426,13 +426,13 @@ void SpritesEditorDialog::on_pushButton_SpriteTilesExport_clicked()
 {
     QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile8x8 map to a file"),
                                                      QString(""), tr("PNG file (*.png)"));
-    if (qFilePath.compare(""))
+    if (!qFilePath.isEmpty())
     {
         LevelComponents::Entity *curEntity = GetCurEntityPtr();
         int tileNum = curEntity->GetTilesNum();
         QPixmap SpriteTilesPixmap(8 * 32, (tileNum / 32) * 8);
         QPainter SpriteTilemapPixmapPainter(&SpriteTilesPixmap);
-        SpriteTilemapPixmapPainter.drawImage(0, 0, FileIOUtils::SetBGColor(curEntity->GetTileMap(curEntityPalId), this));
+        SpriteTilemapPixmapPainter.drawImage(0, 0, FileIOUtils::RenderBGColor(curEntity->GetTileMap(curEntityPalId), this));
         SpriteTilesPixmap.save(qFilePath, "PNG", 100);
     }
 }
