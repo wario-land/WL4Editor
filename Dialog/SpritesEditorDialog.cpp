@@ -72,10 +72,10 @@ void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
     ui->label_CurColorValue->setText(QString("RGB888: (") +
                                     QString::number(color.red(), 10) + QString(", ") +
                                     QString::number(color.green(), 10) + QString(", ") +
-                                    QString::number(color.blue(), 10) + QString(") RGBHEX: ") +
-                                    QString::number(color.red(), 16) +
-                                    QString::number(color.green(), 16) +
-                                    QString::number(color.blue(), 16) +
+                                    QString::number(color.blue(), 10) + QString(") RGBHEX: 0x") + QString("%1%2%3")
+                                    .arg((int)color.red(), (int)2, (int)16, QChar('0'))
+                                    .arg((int)color.green(), (int)2, (int)16, QChar('0'))
+                                    .arg((int)color.blue(), (int)2, (int)16, QChar('0')).toUpper() +
                                     QString("  RGB555: (") +
                                     QString::number(color.red() >> 3, 10) + QString(", ") +
                                     QString::number(color.green() >> 3, 10) + QString(", ") +
