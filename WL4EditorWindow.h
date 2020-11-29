@@ -1,4 +1,4 @@
-#ifndef WL4EDITORWINDOW_H
+﻿#ifndef WL4EDITORWINDOW_H
 #define WL4EDITORWINDOW_H
 
 #include <QButtonGroup>
@@ -12,6 +12,8 @@
 #include "Dialog/LevelConfigDialog.h"
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/TilesetEditDialog.h"
+#include "Dialog/CreditsEditDialog.h"
+#include "Dialog/SpritesEditorDialog.h"
 #include "DockWidget/CameraControlDockWidget.h"
 #include "DockWidget/EditModeDockWidget.h"
 #include "DockWidget/EntitySetDockWidget.h"
@@ -154,10 +156,9 @@ private slots:
     void on_actionDark_triggered();
     void on_actionZoom_in_triggered();
     void on_actionZoom_out_triggered();
+    void on_actionEdit_Entity_EntitySet_triggered();
     void on_actionOutput_window_triggered();
     void on_actionAbout_triggered();
-
-
 };
 
 #endif // WL4EDITORWINDOW_H

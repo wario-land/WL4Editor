@@ -3,7 +3,7 @@
 
 #define TilesDefaultNum 1024
 
-#include "Tile.h"
+#include "Entity.h"
 #include <QVector>
 #include <QPixmap>
 
@@ -24,7 +24,13 @@ namespace LevelComponents
         int GetEntitySetId() { return EntitySetID; }
         bool FindEntity(const int entityglobalId) const;
         QVector<EntitySetinfoTableElement> GetEntityTable() const;
+        void ClearEntityLoadTable() { EntityinfoTable.clear(); }
+        void EntityLoadTablePushBack(EntitySetinfoTableElement newelement) {if(EntityinfoTable.size() < 0x1F) EntityinfoTable.push_back(newelement); }
         QPixmap GetPixmap(const int palNum);
+        void SetExtraEntities(QVector<LevelComponents::Entity*> newEntities) { extraEntities = newEntities; }
+        void ClearExtraEntities() { extraEntities.clear(); }
+        void SetChanged(bool change) { Changed = change; }
+        bool IsNewEntitySet() { return Changed; }
 
     private:
         int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available
@@ -32,6 +38,9 @@ namespace LevelComponents
         QVector<QRgb> palettes[16];
         Tile8x8 **tile8x8array = nullptr;
         Tile8x8 *blankTile = nullptr;
+        bool Changed = false;
+
+        QVector<LevelComponents::Entity*> extraEntities; // only used in sprites editor
 
         void InitTile8x8array();
         void ResetPalettes();

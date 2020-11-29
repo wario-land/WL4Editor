@@ -28,6 +28,8 @@ namespace LevelComponents
             EntityinfoTable.push_back(Tmp_entitytableElement);
             k++;
         } while (1);
+        ResetPalettes();
+        InitTile8x8array();
     }
 
     /// <summary>
@@ -39,6 +41,8 @@ namespace LevelComponents
     EntitySet::EntitySet(const EntitySet &entitySet): EntitySetID(entitySet.EntitySetID)
     {
         this->EntityinfoTable = entitySet.GetEntityTable();
+        ResetPalettes();
+        InitTile8x8array();
     }
 
     /// <summary>
@@ -119,9 +123,8 @@ namespace LevelComponents
     /// </summary>
     void EntitySet::InitTile8x8array()
     {
-        tile8x8array = new Tile8x8* [TilesDefaultNum];
-        memset(tile8x8array, 0, TilesDefaultNum * sizeof(tile8x8array[0]));
         blankTile = Tile8x8::CreateBlankTile(palettes);
+        tile8x8array = new Tile8x8* [TilesDefaultNum];
         for (int i = 0; i < TilesDefaultNum; ++i)
         {
             tile8x8array[i] = blankTile;
@@ -152,24 +155,35 @@ namespace LevelComponents
         bool overwriteBoxtiles = false;
         do
         {
+            if (!EntityinfoTable.size()) break;
             int tmpEntityGlobalId = EntityinfoTable[localEntityId].Global_EntityID;
             int tmpEntityPalOffset = EntityinfoTable[localEntityId].paletteOffset;
             ++localEntityId;
 
-            int tmpEntityPalNum = ROMUtils::entities[tmpEntityGlobalId]->GetPalNum();
-            offset = tmpEntityPalNum + tmpEntityPalOffset;
-            if (offset > 14)
-                overwriteBoxtiles = true;
+            Entity *curEntity = ROMUtils::entities[tmpEntityGlobalId];
+            for (int i = 0; i < extraEntities.size(); ++i)
+            {
+                if (tmpEntityGlobalId == extraEntities[i]->GetEntityGlobalID())
+                {
+                    curEntity = extraEntities[i];
+                    break;
+                }
+            }
+            int tmpEntityPalNum = curEntity->GetPalNum();
+            offset = tmpEntityPalNum + tmpEntityPalOffset + 8;
             if (offset > 15)
+                overwriteBoxtiles = true;
+            if (offset > 16)
             {
                 // TODO: deal with exception
-                singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("load entityset error: loading palette's id out of bound."));
+                singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("load entityset error: loading palette's id out of bound.") + \
+                                                             QObject::tr("entityset id: ") + QString::number(EntitySetID));
                 continue;
             }
-            for (int i = tmpEntityPalOffset; i < offset; ++i) // load specified sprites' tiles
+            for (int i = tmpEntityPalOffset + 8; i < offset; ++i) // load specified sprites' tiles
             {
                 palettes[i].clear(); // sometimes palettes will overwrite each other
-                palettes[i] << ROMUtils::entities[tmpEntityGlobalId]->GetPalette(i - tmpEntityPalOffset);
+                palettes[i] << curEntity->GetPalette(i - tmpEntityPalOffset - 8);
             }
         } while(EntityinfoTable.size() > localEntityId);
         if(!overwriteBoxtiles)
@@ -191,15 +205,13 @@ namespace LevelComponents
     /// </summary>
     void EntitySet::ResetTile8x8Array()
     {
-        if (blankTile) // nulptr is convertible to bool
-            InitTile8x8array();
-
         // Clean up and re-initialize the 8x8 tiles and set all the tiles to blank tiles
         for (int i = (0x20 * 4); i < TilesDefaultNum; ++i)
         {
             if (tile8x8array[i] != blankTile)
             {
                 delete tile8x8array[i];
+                tile8x8array[i] = blankTile;
             }
         }
         // Load universal sprites
@@ -209,34 +221,45 @@ namespace LevelComponents
             tile8x8array[i] = tmptilesarray[i - 0x20 * 4];
             tile8x8array[i]->SetIndex(i);
         }
-        int offset = 8; // 2 rows count 1 in the offset, keep the loading progress the same as palette loading
+        int offset = 16; // 2 rows count 1 in the offset, keep the loading progress the same as palette loading
         int localEntityId = 0; // used to contain the current entity being loaded tiles
         bool overwriteBoxtiles = false;
         do
         {
+            if (!EntityinfoTable.size()) break;
             int tmpEntityGlobalId = EntityinfoTable[localEntityId].Global_EntityID;
             int tmpEntityPalOffset = EntityinfoTable[localEntityId].paletteOffset;
             ++localEntityId;
-            tmptilesarray.clear();
-            tmptilesarray = ROMUtils::entities[tmpEntityGlobalId]->GetSpriteTiles(palettes);
 
-            int tmpEntityPalNum = ROMUtils::entities[tmpEntityGlobalId]->GetPalNum();
-            offset = tmpEntityPalNum + tmpEntityPalOffset;
-            if (offset > 14)
+            Entity *curEntity = ROMUtils::entities[tmpEntityGlobalId];
+            for (int i = 0; i < extraEntities.size(); ++i)
+            {
+                if (tmpEntityGlobalId == extraEntities[i]->GetEntityGlobalID())
+                {
+                    curEntity = extraEntities[i];
+                    break;
+                }
+            }
+            tmptilesarray.clear();
+            tmptilesarray = curEntity->GetSpriteTiles(palettes);
+
+            int tmpEntityPalNum = curEntity->GetPalNum();
+            offset = 2 * (tmpEntityPalNum + tmpEntityPalOffset) + 16;
+            if (offset > 31)
                 overwriteBoxtiles = true;
-            if (offset > 15)
+            if (offset > 32)
             {
                 // TODO: deal with exception
                 continue;
             }
-            for (int i = (0x20 * tmpEntityPalOffset * 2); i < (0x20 * offset * 2); ++i) // load specified sprites' tiles
+            for (int i = (0x20 * (tmpEntityPalOffset * 2 + 16)); i < (0x20 * offset); ++i) // load specified sprites' tiles
             {
-                // sometimes palettes will overwrite each other
+                // sometimes sprites' tiles will overwrite each other
                 if (tile8x8array[i] != blankTile)
                 {
                     delete tile8x8array[i];
                 }
-                tile8x8array[i] = tmptilesarray[i - 0x20 * tmpEntityPalOffset * 2];
+                tile8x8array[i] = tmptilesarray[i - 0x20 * (tmpEntityPalOffset * 2 + 16)];
                 tile8x8array[i]->SetIndex(i);
             }
         } while(EntityinfoTable.size() > localEntityId);

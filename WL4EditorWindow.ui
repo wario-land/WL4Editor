@@ -126,7 +126,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -255,6 +255,7 @@
     <addaction name="actionLevel_Config"/>
     <addaction name="actionRoom_Config"/>
     <addaction name="actionEdit_Tileset"/>
+    <addaction name="actionEdit_Entity_EntitySet"/>
     <addaction name="actionEdit_Credits"/>
     <addaction name="menuAdd"/>
     <addaction name="menuDuplicate"/>
@@ -580,6 +581,14 @@
    </property>
    <property name="text">
     <string>Edit Credits</string>
+   </property>
+  </action>
+  <action name="actionEdit_Entity_EntitySet">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit Entities and EntitySets</string>
    </property>
   </action>
   <action name="action_duplicate_Normal">
