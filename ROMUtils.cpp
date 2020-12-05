@@ -847,7 +847,8 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                 }
 
                 // Check if there is space for the chunk in the offered area
-                if(addedChunks[chunkIndex].size > freeSpace.size + alignOffset)
+                // required_size > (freespace.size - alignment - 12 bytes (for header))
+                if(addedChunks[chunkIndex].size > freeSpace.size - alignOffset - 12)
                 {
                     // This will request a larger free area
                     return ChunkAllocationStatus::InsufficientSpace;
