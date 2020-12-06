@@ -83,6 +83,9 @@ namespace LevelComponents
             xOffset = qMin(xOffset, ot->Xoff);
             yOffset = qMin(yOffset, ot->Yoff);
         }
+
+        // Extra blank tile used as dummy tiles when adding tiles to the entity
+        blankTile = Tile8x8::CreateBlankTile(palettes);
     }
 
     /// <summary>
@@ -116,8 +119,9 @@ namespace LevelComponents
         }
         foreach (Tile8x8 *tile, tile8x8data)
         {
-            delete tile;
+            if (tile != blankTile) delete tile;
         }
+        delete blankTile;
     }
 
     /// <summary>
@@ -165,6 +169,7 @@ namespace LevelComponents
                 assert(palNum >= 0);
 #endif
 
+                if (tile8x8data[offsetID] == blankTile) continue; // skip dummy tiles if used
                 Tile8x8 *newTile = new Tile8x8(tile8x8data[offsetID]);
                 newTile->SetPaletteIndex(palNum);
                 entityTile->objTile = newTile;
@@ -220,6 +225,34 @@ namespace LevelComponents
             p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, ot->Render());
         }
         return pm.toImage();
+    }
+
+    /// <summary>
+    /// Get tilemap image used by this Entity.
+    /// </summary>
+    /// <param name="palNum">
+    /// Palette number used to render the current entityset.
+    /// </param>
+    /// <returns>
+    /// The rendered QImage object.
+    /// </returns>
+    QImage Entity::GetTileMap(const int palNum)
+    {
+        // Render and return pixmap
+        int rowNum = tile8x8data.size() >> 5; // tile8x8data.size() / 32
+        QPixmap pixmap(8 * 32, 8 * rowNum);
+        pixmap.fill(Qt::transparent);
+
+        // drawing
+        for (int i = 0; i < rowNum; ++i)
+        {
+            for (int j = 0; j < 32; ++j)
+            {
+                tile8x8data[i * 32 + j]->SetPaletteIndex(palNum);
+                tile8x8data[i * 32 + j]->DrawTile(&pixmap, j * 8, i * 8);
+            }
+        }
+        return pixmap.toImage();
     }
 
     /// <summary>
@@ -321,9 +354,72 @@ namespace LevelComponents
     /// </summary>
     void Entity::ExtractSpritesTiles()
     {
+        // Clear old oams if exist
+        for (OAMTile *oam: OAMTiles)
+        {
+            delete oam;
+        }
+        OAMTiles.clear();
+
+        // Reset oams
         for (int i = 0; i < EntitySampleOamNumArray[EntityGlobalID]; ++i)
         {
             OAMtoTiles(const_cast<unsigned short *>(EntitiesOamSampleSets[EntityGlobalID]) + i * 3);
+        }
+    }
+
+    /// <summary>
+    /// Add 2 rows of tiles8x8 and one row of palette.
+    /// </summary>
+    void Entity::AddTilesAndPaletteByOneRow()
+    {
+        if (EntityGlobalID < 0x11) return;
+        for (int i = 0; i < 64; ++i)
+        {
+            tile8x8data.push_back(blankTile);
+        }
+        EntityPaletteNum++;
+        palettes[EntityPaletteNum - 1].push_back(0);
+        for (int i = 1; i < 16; ++i)
+        {
+            palettes[EntityPaletteNum - 1].push_back(Qt::black);
+        }
+    }
+
+    /// <summary>
+    /// Delete 2 rows of tiles8x8 and one row of palette.
+    /// </summary>
+    void Entity::DeleteTilesAndPaletteByOneRow(int palID)
+    {
+        if (EntityGlobalID < 0x11) return;
+        if (EntityPaletteNum == 1) return;
+        for (int i = palID * 64; i < (palID + 1) * 64; ++i)
+        {
+            if (tile8x8data[i] != blankTile) delete tile8x8data[i];
+        }
+        tile8x8data.remove(palID * 64, 64);
+        SwapPalettes(palID, EntityPaletteNum - 1);
+        palettes[EntityPaletteNum - 1].clear();
+        EntityPaletteNum--;
+    }
+
+    /// <summary>
+    /// Swap 2 existing palettes.
+    /// </summary>
+    /// <param name="palID_1">
+    /// The first palette id.
+    /// </param>
+    /// <param name="palID_2">
+    /// The second palette id.
+    /// </param>
+    void Entity::SwapPalettes(int palID_1, int palID_2)
+    {
+        if (palID_1 >= EntityPaletteNum || palID_2 >= EntityPaletteNum) return;
+        for (int i = 1; i < 16; ++i)
+        {
+            QRgb colorData = palettes[palID_1][i];
+            palettes[palID_1][i] = palettes[palID_2][i];
+            palettes[palID_2][i] = colorData;
         }
     }
 } // namespace LevelComponents

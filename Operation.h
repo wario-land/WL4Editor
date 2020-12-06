@@ -1,9 +1,10 @@
-#ifndef OPERATION_H
+﻿#ifndef OPERATION_H
 #define OPERATION_H
 
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/TilesetEditDialog.h"
 #include "Dialog/CreditsEditDialog.h"
+#include "Dialog/SpritesEditorDialog.h"
 #include "LevelComponents/Tile.h"
 
 // Enumerate the type of operations that can be performed and undone
@@ -13,6 +14,7 @@ enum OperationType
     ChangeRoomConfigOperation,
     ObjectMoveOperation,
     ChangeTilesetOperation,
+    ChangeSpritesAndSpritesetsOperation,
 };
 
 // The parameters specific to a tile change operation
@@ -71,7 +73,7 @@ struct OperationParams;
 struct OperationParams
 {
     // Fields
-    enum OperationType type;
+    enum OperationType type; // TODO: this seems not needed or those following bools are not needed -- ssp
     std::vector<struct TileChangeParams *> tileChangeParams;
     ObjectMoveParams *objectMoveParams;
     DialogParams::RoomConfigParams *lastRoomConfigParams;
@@ -80,11 +82,14 @@ struct OperationParams
     DialogParams::TilesetEditParams *newTilesetEditParams;
     DialogParams::CreditsEditParams *lastCreditsEditParams;
     DialogParams::CreditsEditParams *newCreditsEditParams;
+    DialogParams::EntitiesAndEntitySetsEditParams *lastSpritesAndSetParam;
+    DialogParams::EntitiesAndEntitySetsEditParams *newSpritesAndSetParam;
     bool tileChange;
     bool roomConfigChange;
     bool objectPositionChange;
     bool TilesetChange;
     bool CreditChange;
+    bool SpritesSpritesetChange;
 
     OperationParams() :
             lastRoomConfigParams(nullptr),
@@ -93,7 +98,8 @@ struct OperationParams
             roomConfigChange(false),
             objectPositionChange(false),
             TilesetChange(false),
-            CreditChange(false)
+            CreditChange(false),
+            SpritesSpritesetChange(false)
     {}
 
     // Clean up the struct when it is deconstructed
@@ -122,6 +128,19 @@ struct OperationParams
             {
                 delete newTilesetEditParams->newTileset;
                 delete newTilesetEditParams;
+            }
+        }
+        if (SpritesSpritesetChange)
+        {
+            if (lastSpritesAndSetParam)
+                delete lastSpritesAndSetParam;
+            if (newSpritesAndSetParam)
+            {
+                for (LevelComponents::Entity *entityIter: lastSpritesAndSetParam->entities)
+                    delete entityIter;
+                for (LevelComponents::EntitySet *entitySetIter: lastSpritesAndSetParam->entitySets)
+                    delete entitySetIter;
+                delete newSpritesAndSetParam;
             }
         }
     }

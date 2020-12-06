@@ -409,26 +409,29 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         firstROMLoaded = true;
 
         // Enable UI that requires a ROM file to be loaded
-        ui->loadLevelButton->setEnabled(true);
-        ui->actionLevel_Config->setEnabled(true);
-        ui->actionRoom_Config->setEnabled(true);
         ui->actionSave_ROM->setEnabled(true);
         ui->actionSave_As->setEnabled(true);
         ui->actionSave_Room_s_graphic->setEnabled(true);
+        ui->actionUndo->setEnabled(true);
+        ui->actionRedo->setEnabled(true);
+        ui->actionUndo_global->setEnabled(true);
+        ui->actionRedo_global->setEnabled(true);
+        ui->actionLevel_Config->setEnabled(true);
+        ui->actionRoom_Config->setEnabled(true);
         ui->actionEdit_Tileset->setEnabled(true);
+        ui->actionEdit_Credits->setEnabled(true);
         ui->menuAdd->setEnabled(true);
+        ui->menuDuplicate->setEnabled(true);
+        ui->menuEntity_lists_2->setEnabled(true);
         ui->menuSwap->setEnabled(true);
         ui->menuClear->setEnabled(true);
         ui->menu_clear_Layer->setEnabled(true);
         ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionClear_all->setEnabled(true);
-        ui->actionRedo->setEnabled(true);
-        ui->actionRedo_global->setEnabled(true);
-        ui->actionUndo->setEnabled(true);
-        ui->actionUndo_global->setEnabled(true);
-        ui->actionRun_from_file->setEnabled(true);
         ui->actionManager->setEnabled(true);
-        ui->actionEdit_Credits->setEnabled(true);
+        ui->actionEdit_Entity_EntitySet->setEnabled(true);
+        ui->actionRun_from_file->setEnabled(true);
+        ui->loadLevelButton->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -1399,6 +1402,7 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
     else
     {
         delete _currentRoomTilesetEditParams->newTileset;
+        delete _currentRoomTilesetEditParams;
     }
 }
 
@@ -2016,4 +2020,111 @@ void WL4EditorWindow::on_actionEdit_Credits_triggered()
     // Show the dialog
     CreditsEditDialog dialog(this, creditsEditParams);
     dialog.exec();
+}
+
+/// <summary>
+/// Trigger to open a dialog to edit Entities and Entitysets.
+/// </summary>
+void WL4EditorWindow::on_actionEdit_Entity_EntitySet_triggered()
+{
+    // Set up parameters for the new entities and entitysets, for the purpose of initializing the dialog's selections
+    DialogParams::EntitiesAndEntitySetsEditParams *_currentEntitiesAndEntitysetsEditParams =
+        new DialogParams::EntitiesAndEntitySetsEditParams();
+
+    // Show the dialog
+    SpritesEditorDialog dialog(this, _currentEntitiesAndEntitysetsEditParams);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        // Generate operation history data
+        // Set changed bools in multiple places
+        DialogParams::EntitiesAndEntitySetsEditParams *_oldEntitiesAndEntitysetsEditParams =
+            new DialogParams::EntitiesAndEntitySetsEditParams();
+        for (LevelComponents::Entity *entityIter: _currentEntitiesAndEntitysetsEditParams->entities)
+        {
+            _oldEntitiesAndEntitysetsEditParams->entities.push_back(ROMUtils::entities[entityIter->GetEntityGlobalID()]);
+            entityIter->SetChanged(true);
+        }
+        for (LevelComponents::EntitySet *entitySetIter: _currentEntitiesAndEntitysetsEditParams->entitySets)
+        {
+            _oldEntitiesAndEntitysetsEditParams->entitySets.push_back(ROMUtils::entitiessets[entitySetIter->GetEntitySetId()]);
+            entitySetIter->SetChanged(true);
+        }
+
+        // Execute Operation
+        OperationParams *operation = new OperationParams;
+        operation->type = ChangeSpritesAndSpritesetsOperation;
+        operation->SpritesSpritesetChange = true;
+        operation->lastSpritesAndSetParam = _oldEntitiesAndEntitysetsEditParams;
+        operation->newSpritesAndSetParam = _currentEntitiesAndEntitysetsEditParams;
+        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
+    }
+    else
+    {
+        // We don't call the operation deconstructor, so we need to manually delete them if cancel the changes
+        for (LevelComponents::Entity *entityIter: _currentEntitiesAndEntitysetsEditParams->entities)
+            delete entityIter;
+        for (LevelComponents::EntitySet *entitySetIter: _currentEntitiesAndEntitysetsEditParams->entitySets)
+            delete entitySetIter;
+        delete _currentEntitiesAndEntitysetsEditParams;
+    }
+}
+
+/// <summary>
+/// Copy current difficulty Entity list into Normal Entity list
+/// </summary>
+void WL4EditorWindow::on_action_duplicate_Normal_triggered()
+{
+    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+
+    // copy  Hard Entity list into Super Hard Entity list
+    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 1);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Copy current difficulty Entity list into Hard Entity list
+/// </summary>
+void WL4EditorWindow::on_action_duplicate_Hard_triggered()
+{
+    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+
+    // copy  Hard Entity list into Super Hard Entity list
+    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 0);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
+    SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Copy current difficulty Entity list into Super Hard Entity list
+/// </summary>
+void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
+{
+    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+
+    // copy  Hard Entity list into Super Hard Entity list
+    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 2);
+
+    // TODO: add history record
+
+    // UI update
+    RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+    // Set Dirty and change flag
+    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
+    SetUnsavedChanges(true);
 }

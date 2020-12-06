@@ -32,12 +32,6 @@ namespace DialogParams
     };
 }
 
-namespace Ui
-{
-    class RoomConfigDialog;
-}
-
-
 namespace Ui {
 class TilesetEditDialog;
 }
