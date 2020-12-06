@@ -4,6 +4,10 @@
 #include <QTranslator>
 #include "WL4EditorWindow.h"
 
+#include <cassert>
+#include <iostream>
+#include <QTranslator>
+
 extern WL4EditorWindow *singleton;
 
 // Helper function to find the number of characters matched in ptr to a pattern
