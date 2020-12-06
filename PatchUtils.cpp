@@ -249,23 +249,10 @@ static QString CompileCFile(QString cfile)
     QStringList args;
     args << "-MMD" << "-MP" << "-MF" << "-g" << "-Wall" << "-mcpu=arm7tdmi" << "-mtune=arm7tdmi" <<
         "-fomit-frame-pointer" << "-ffast-math" << "-mthumb" << "-mthumb-interwork" << "-O2" <<
-        "-S" << cfile << "-o" << outfile;
+        "-mlong-calls" << "-S" << cfile << "-o" << outfile;
 
     // Run GCC
-    QString ret = RunProcess(executable, args);
-
-    // Replace memcpy symbol with the address of the memcpy function in the ROM
-    QByteArray fileData;
-    QFile sfile(outfile);
-    sfile.open(stderr, QIODevice::ReadWrite);
-    fileData = sfile.readAll();
-    QString text(fileData);
-    text.replace("memcpy", "0x80950D9");
-    sfile.seek(0);
-    sfile.write(text.toUtf8());
-    sfile.close();
-
-    return ret;
+    return RunProcess(executable, args);
 }
 
 /// <summary>
@@ -291,7 +278,7 @@ static QString AssembleSFile(QString sfile)
     REPLACE_EXT(outfile, ".s", ".o");
     QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_AS);
     QStringList args;
-    args << sfile << "-o" << outfile;
+    args << "-mthumb" << sfile << "-o" << outfile;
 
     // Run AS
     return RunProcess(executable, args);
@@ -313,15 +300,15 @@ static QString CreateLinkerScript(struct PatchEntryItem entry)
     QString ldfile(ofile);
     REPLACE_EXT(ofile, ".c", ".o"); // works for .s files too
     REPLACE_EXT(ldfile, ".c", ".ld");
-    QString memcpy_o(QCoreApplication::applicationDirPath() + "/memcpy.o");
 
     QString pa = QString::number(0x8000000 | entry.PatchAddress + 12, 16);
     QString scriptContents =
         QString("SECTIONS\n") +
         "{\n" +
-        "    .text   0x" + pa + " : { \"" + ofile + "\" (.text) }\n" +
-        "    .rodata : { \"" + ofile + "\" (.rodata) }\n" +
-        "}";
+        "    .text   0x" + pa + " : { " + ofile + " (.text) }\n" +
+        "    .rodata : { " + ofile + " (.rodata) }\n" +
+        "}\n" +
+        "memcpy = 0x80950D9;";
 
     QFile file(ldfile);
     file.open(QIODevice::WriteOnly);
