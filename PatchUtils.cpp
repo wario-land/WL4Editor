@@ -794,7 +794,7 @@ namespace PatchUtils
 
                     // Advance patch iterator to next non-hex-edit patch
                     patchAllocIter++;
-                    while(patchAllocIter != entries.end() && patchAllocIter->FileName.length())
+                    while(patchAllocIter != entries.end() && !patchAllocIter->FileName.length())
                     {
                         patchAllocIter++;
                     }
