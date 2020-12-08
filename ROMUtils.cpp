@@ -416,8 +416,9 @@ namespace ROMUtils
             if(chunk)
             {
                 chunks.append(chunk);
-                unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMData + startAddr + 4);
-                startAddr += chunkLen + 12;
+                unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMData + startAddr + 4);
+                unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMData + startAddr + 9) << 16;
+                startAddr += chunkLen + extLen + 12;
             }
             else break;
         }
@@ -464,8 +465,9 @@ namespace ROMUtils
                     }
 
                     // Continue search after this chunk
-                    unsigned int chunkLen = *reinterpret_cast<short *>(ROMData + startAddr + 4);
-                    startAddr += chunkLen + 12;
+                    unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMData + startAddr + 4);
+                    unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMData + startAddr + 9) << 16;
+                    startAddr += chunkLen + extLen + 12;
                     freeSpaceStart = startAddr;
                 }
                 else
@@ -518,6 +520,14 @@ namespace ROMUtils
         // Invalidate old chunk data
         for(unsigned int invalidationChunk : invalidationChunks)
         {
+            // Sanity check
+            if(invalidationChunk > CurrentFileSize)
+            {
+                singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk out of range of entire ROM. Address: %1"))
+                        .arg("0x" + QString::number(invalidationChunk - 12, 16).toUpper()));
+            }
+
+            // Chunks can only be invalidated within valid chunk area
             if (invalidationChunk > WL4Constants::AvailableSpaceBeginningInROM)
             {
                 unsigned char *RATSaddr = TempFile + invalidationChunk - 12;
@@ -527,8 +537,8 @@ namespace ROMUtils
                 }
                 else
                 {
-                    singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk references an invalid RATS identifier for existing chunk.")) +
-                        QT_TR_NOOP(". Address: 0x") + QString::number(invalidationChunk - 12, 16).toUpper() + QT_TR_NOOP(". Changes not saved."));
+                    singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk references an invalid RATS identifier for existing chunk. Address: %1. Changes not saved."))
+                        .arg("0x" + QString::number(invalidationChunk - 12, 16).toUpper()));
                     return false;
                 }
             }
@@ -632,20 +642,26 @@ spaceFound:
                 });
             }
 
-            // Mark the region for the chunk as used, with RATS format
-            // Always writing chunk headers after the alignment setting of the next chunk being decided
+            // Write the chunk metadata with RATS format
+            // Only write chunk headers after the alignment setting of the next chunk has been decided
             destPtr += alignmentOffset;
             strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
-            unsigned short chunkLen = (unsigned short) sd.size;
+            unsigned short chunkLen = (unsigned short) (sd.size & 0xFFFF);
+            unsigned char extLen = (unsigned char) ((sd.size >> 16) & 0xFF);
             *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
             *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
             *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
             destPtr[8] = sd.ChunkType;
+            destPtr[9] = extLen;
+
+            // We cannot write the chunk data here because invalidated chunk data may still be used as part of new chunk creation at this step
 
             indexToChunkPtr[sd.index] = alignedAddr;
             chunksToAdd.append(sd);
 
-        } while(1); allocationComplete:
+        } while(1);
+
+allocationComplete:
 
         // Generate chunkIDtoIndex map
         for(int k = 0; k < chunksToAdd.size(); k++)
@@ -677,32 +693,16 @@ spaceFound:
             *reinterpret_cast<unsigned int*>(ptrLoc) = static_cast<unsigned int>((indexToChunkPtr[chunk.index] + 12) | 0x8000000);
         }
 
-        // Write each chunk to TempFile
+        // Write chunk data to TempFile
         for(struct SaveData chunk : chunksToAdd)
         {
             if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk)
-                continue;
-
-            // Sanity check that chunks are not above the allowed size
-            if(chunk.size & 0xFFFF0000)
             {
-                // Chunk size must be a 16-bit value
-                QMessageBox::warning(singleton, QT_TR_NOOP("RATS chunk too large"),
-                     QString(QT_TR_NOOP("Unable to save changes because ")) + QString::number(chunk.size) +
-                         QT_TR_NOOP(" contiguous free bytes are necessary for some save chunk of type ") +
-                         QString::number(chunk.ChunkType) +
-                         QT_TR_NOOP(", but the editor currently only supports up to size ") +
-                         QString::number(0xFFFF) + ".",
-                     QMessageBox::Ok, QMessageBox::Ok);
-                goto error;
+                continue;
             }
 
-            // Write the chunk metadata
+            // Write the chunk data
             unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
-            *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
-            destPtr[8] = chunk.ChunkType;
-
-            // Write the data
             memcpy(destPtr + 12, chunk.data, (unsigned short) chunk.size);
         }
 
@@ -754,8 +754,11 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         for(struct SaveData chunk : chunksToAdd)
         {
             if (chunk.ChunkType != SaveDataChunkType::InvalidationChunk)
+            {
                 free(chunk.data);
+            }
         }
+
         return success;
     }
 
