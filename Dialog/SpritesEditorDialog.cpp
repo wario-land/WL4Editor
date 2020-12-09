@@ -10,6 +10,10 @@
 #include "ROMUtils.h"
 #include "FileIOUtils.h"
 
+// constexpr declarations for the initializers in the header
+constexpr const char *SpritesEditorDialog::OAMShapeTypeNameData[12];
+static QStringList OAMShapeTypeNameSet;
+
 /// <summary>
 /// Constructor of SpritesEditorDialog class.
 /// </summary>
@@ -34,6 +38,10 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
     ui->graphicsView_SpritePals->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     ui->graphicsView_SpritePals->scale(2, 2);
     ui->graphicsView_SpritePals->SetCurrentSpritesEditor(this);
+    OAMDesignerMAPScene = new QGraphicsScene(0, 0, 1024, 512);
+    ui->graphicsView_OamDesignView->setScene(OAMDesignerMAPScene);
+    ui->graphicsView_OamDesignView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_OamDesignView->scale(2, 2);
 
     // Seems the spinboxes won't trigger the valuechanged event when loading UI
     // We need to load graphics manually
@@ -52,6 +60,17 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
                                                    "The editor uses different palettes for every entity. However, in-game, some of them share the same palettes and tiles.\n"
                                                    "You may find that the editor acts differently from real game play.\n"
                                                    "In this case, you need to modify all of the entities that share the same tiles and palettes."));
+
+    // Init ComboBox
+    for (unsigned int i = 0; i < sizeof(OAMShapeTypeNameData) / sizeof(OAMShapeTypeNameData[0]); ++i)
+    {
+        OAMShapeTypeNameSet << OAMShapeTypeNameData[i];
+    }
+    ui->comboBox_OamShapeType->addItems(OAMShapeTypeNameSet);
+
+    // ListView Init
+    ListViewItemModel = new QStandardItemModel(this);
+    ui->listView_OamDataList->setModel(ListViewItemModel);
 }
 
 /// <summary>
@@ -342,6 +361,29 @@ LevelComponents::EntitySet *SpritesEditorDialog::GetCurEntitySetPtr(bool createN
 }
 
 /// <summary>
+/// Render OAM Set based on the ListView data
+/// </summary>
+void SpritesEditorDialog::RenderOamSet()
+{
+    int rowcount = ListViewItemModel->rowCount();
+    if (!rowcount) return;
+    unsigned short *nakedOAMData = new unsigned short[rowcount * 3];
+    for (int i = 0; i < rowcount; ++i)
+    {
+        QStringList CurloadtableStrData = ListViewItemModel->item(i)->text().split(QChar(' '), Qt::SkipEmptyParts);
+        nakedOAMData[3 * i] = CurloadtableStrData.at(0).toUInt(nullptr, 16);
+        nakedOAMData[3 * i + 1] = CurloadtableStrData.at(1).toUInt(nullptr, 16);
+        nakedOAMData[3 * i + 2] = CurloadtableStrData.at(2).toUInt(nullptr, 16);
+    }
+    QPixmap oampixmap(1024, 512);
+    QPainter oampainter(&oampixmap);
+    oampainter.drawImage(0, 0, GetCurEntityPtr()->TestRenderOams(rowcount, nakedOAMData));
+    OAMDesignerMAPScene->clear();
+    OAMmapping = OAMDesignerMAPScene->addPixmap(oampixmap);
+    delete[] nakedOAMData;
+}
+
+/// <summary>
 /// Reset spriteset graphicview and spriteset loadtable lineedit when spinBox_SpritesetID has a value change event
 /// </summary>
 /// <param name="arg1">
@@ -536,7 +578,7 @@ void SpritesEditorDialog::on_pushButton_SwapPal_clicked()
 {
     bool ok;
     int maxval = GetCurEntityPtr()->GetPalNum() - 1;
-    int result_1 = QInputDialog::getInt(nullptr, tr("InputBox"),
+    int result_1 = QInputDialog::getInt(this, tr("InputBox"),
                                          tr("Input the palette Id you want to delete.\nRelevant tiles will be deleted too."),
                                         0, 0, maxval, 1, &ok);
     if (ok && (result_1 < 0 || result_1 > maxval))
@@ -544,7 +586,7 @@ void SpritesEditorDialog::on_pushButton_SwapPal_clicked()
         QMessageBox::critical(this, tr("Error"), QString(tr("Illegal input!")));
         return;
     }
-    int result_2 = QInputDialog::getInt(nullptr, tr("InputBox"),
+    int result_2 = QInputDialog::getInt(this, tr("InputBox"),
                                          tr("Input the palette Id you want to delete.\nRelevant tiles will be deleted too."),
                                         0, 0, maxval, 1, &ok);
     if (ok && (result_2 < 0 || result_2 > maxval))
@@ -558,4 +600,45 @@ void SpritesEditorDialog::on_pushButton_SwapPal_clicked()
     RenderSpritesTileMap();
     SetSelectedSpriteTile(0);
     RenderSpritesetTileMapAndResetLoadTable();
+}
+
+/// <summary>
+/// Reset Oam designer with new OAM data string when clicking pushButton_ResetAllOamData
+/// </summary>
+void SpritesEditorDialog::on_pushButton_ResetAllOamData_clicked()
+{
+    QStringList List_strs = QInputDialog::getText(this, tr("InputBox"),
+                                                  tr("Input OAM Data Hex String without 0x prefix:")).split(QChar(' '), Qt::SkipEmptyParts);
+    if (!List_strs.size()) return;
+    if (List_strs.size() % 3)
+    {
+        QMessageBox::critical(this, tr("Error"), QString(tr("Data number should be multiple of 3 !")));
+        return;
+    }
+
+    if (ListViewItemModel)
+    {
+        ListViewItemModel->clear();
+        delete ListViewItemModel;
+        ListViewItemModel = nullptr;
+    }
+    ListViewItemModel = new QStandardItemModel(this);
+
+    for (int i = 0; i < (List_strs.size() / 3); i++)
+    {
+        QString string0 = static_cast<QString>(List_strs.at(3 * i));
+        QString string1 = static_cast<QString>(List_strs.at(3 * i + 1));
+        QString string2 = static_cast<QString>(List_strs.at(3 * i + 2));
+        string0 = QString::number(string0.toUInt(nullptr, 16), 16).toUpper();
+        string1 = QString::number(string1.toUInt(nullptr, 16), 16).toUpper();
+        string2 = QString::number(string2.toUInt(nullptr, 16), 16).toUpper();
+        QStandardItem *item = new QStandardItem(string0 + " " + string1 + " " + string2);
+        ListViewItemModel->appendRow(item);
+    }
+    ui->listView_OamDataList->setModel(ListViewItemModel);
+
+    // Render graphic based on list view
+    RenderOamSet();
+
+    // TODO: Set selecting row
 }

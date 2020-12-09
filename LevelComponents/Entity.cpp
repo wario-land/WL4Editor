@@ -113,11 +113,11 @@ namespace LevelComponents
     Entity::~Entity()
     {
         // Free the Tile8x8 objects pushed to the entity tiles vector
-        foreach (OAMTile *tile, OAMTiles)
+        for (OAMTile *tile: OAMTiles)
         {
             delete tile;
         }
-        foreach (Tile8x8 *tile, tile8x8data)
+        for (Tile8x8 *tile: tile8x8data)
         {
             if (tile != blankTile) delete tile;
         }
@@ -253,6 +253,93 @@ namespace LevelComponents
             }
         }
         return pixmap.toImage();
+    }
+
+    /// <summary>
+    /// Render oam array in test mode.
+    /// </summary>
+    /// <param name="oamNum">
+    /// the number of oam.
+    /// </param>
+    /// <param name="nakedOAMarray">
+    /// Naked OAM array without oam number as the first element
+    /// </param>
+    QImage Entity::TestRenderOams(int oamNum, unsigned short *nakedOAMarray)
+    {
+        if (!oamNum) return QImage();
+
+        QVector<OAMTile *> tmpOAMTiles;
+        for (int i = 0; i < oamNum; ++i)
+        {
+            // Obtain short values for the OAM tile
+            unsigned short attr0 = nakedOAMarray[3 * i];
+            unsigned short attr1 = nakedOAMarray[3 * i + 1];
+            unsigned short attr2 = nakedOAMarray[3 * i + 2];
+            // skip priority reset and Char Id (tiles ID) reset
+            // skip orientation change
+            // skip affine transformation (double size)
+            // skip alpha blend
+
+            // Obtain the tile parameters for the OAM tile
+            struct OAMTile *newOAM = new struct OAMTile();
+            newOAM->Xoff = (attr1 & 0xFF) - (attr1 & 0x100); // Offset of OAM tile from entity origin
+            newOAM->Yoff = (attr0 & 0x7F) - (attr0 & 0x80);
+            newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
+            newOAM->yFlip = (attr1 & (1 << 0xD)) != 0;
+            int SZ = (attr1 >> 0xE) & 3;                         // object size
+            int SH = (attr0 >> 0xE) & 3;                         // object shape
+            newOAM->OAMwidth = OAMDimensions[2 * (SZ * 3 + SH)]; // unit: 8x8 tiles
+            newOAM->OAMheight = OAMDimensions[2 * (SZ * 3 + SH) + 1];
+            int tileID = attr2 & 0x3FF;
+            int palNum = (attr2 >> 0xC) & 0xF;
+
+            // Create the tile8x8 objects
+            for (int y = 0; y < newOAM->OAMheight; ++y)
+            {
+                for (int x = 0; x < newOAM->OAMwidth; ++x)
+                {
+                    struct EntityTile *entityTile = new struct EntityTile();
+                    entityTile->deltaX = x * 8;
+                    entityTile->deltaY = y * 8;
+                    int offsetID = tileID + y * 0x20 + x;
+                    if (offsetID >= 0x200) offsetID = offsetID - 0x200; // the game engine use char Id with offset in the oam data
+                    if (offsetID >= tile8x8data.size()) continue; // this data have problems, just skip it
+                    if (tile8x8data[offsetID] == blankTile) continue; // skip dummy tiles if used
+                    Tile8x8 *newTile = new Tile8x8(tile8x8data[offsetID]);
+                    if (palNum > 7) palNum = palNum - 8; // the game engine use pal Id with offset in the oam data
+                    newTile->SetPaletteIndex(palNum);
+                    entityTile->objTile = newTile;
+                    newOAM->tile8x8.push_back(entityTile);
+                }
+            }
+            tmpOAMTiles.push_back(newOAM);
+        }
+
+        // In oam attributes, x and y params has a range from 0 below 511 and 255
+        // And we want to put the (x, y) = (0, 0) point on the central of the pixmap
+        // So we double the size again
+        int width = 512 * 2; // x
+        int height = 256 * 2; // y
+        QPixmap pm(width, height);
+        pm.fill(Qt::transparent);
+        QPainter p(&pm);
+
+        // OAM tiles must be rendered in reverse order as per the GBA graphical specifications
+        for (auto iter = tmpOAMTiles.rbegin(); iter != tmpOAMTiles.rend(); ++iter)
+        {
+            OAMTile *ot = *iter;
+            p.drawImage(ot->Xoff + 512, ot->Yoff + 256, ot->Render());
+            delete ot;
+        }
+        tmpOAMTiles.clear();
+
+        // Draw position referrence Box
+        QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0xFF)), 2);
+        EntityBoxPen.setJoinStyle(Qt::MiterJoin);
+        p.setPen(EntityBoxPen);
+        p.drawRect(512, 256, 16, 16);
+
+        return pm.toImage();
     }
 
     /// <summary>

@@ -7,6 +7,9 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QDialog>
+#include <QModelIndex>
+#include <QStandardItem>
+#include <QStandardItemModel>
 
 namespace DialogParams
 {
@@ -47,6 +50,7 @@ private slots:
     void on_pushButton_DeletePal_clicked();
     void on_pushButton_AddPal_clicked();
     void on_pushButton_SwapPal_clicked();
+    void on_pushButton_ResetAllOamData_clicked();
 
 private:
     Ui::SpritesEditorDialog *ui;
@@ -66,6 +70,11 @@ private:
     QGraphicsScene *PaletteBarScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Color = nullptr;
     QGraphicsPixmapItem *Palettemapping = nullptr;
+    QGraphicsScene *OAMDesignerMAPScene = nullptr;
+    QGraphicsPixmapItem *OAMmapping = nullptr;
+
+    // OAM Designer staff
+    QStandardItemModel *ListViewItemModel = nullptr;
 
     // Functions
     void RenderSpritesTileMap();
@@ -73,6 +82,26 @@ private:
     void RenderSpritesetTileMapAndResetLoadTable();
     LevelComponents::Entity *GetCurEntityPtr(bool createNewEntity = false);
     LevelComponents::EntitySet *GetCurEntitySetPtr(bool createNewEntitySet = false);
+    void RenderOamSet();
+
+    // clang-format off
+    // shape (using 2 bit) | size (using 2 bit)
+    static constexpr const char *OAMShapeTypeNameData[12] =
+    {
+        "8 x 8",
+        "16 x 16",
+        "32 x 32",
+        "64 x 64",
+        "16 x 8",
+        "32 x 8",
+        "32 x 16",
+        "64 x 32",
+        "8 x 16",
+        "8 x 32",
+        "16 x 32",
+        "32 x 64"
+    };
+    // clang-format on
 };
 
 #endif // SPRITESEDITORDIALOG_H
