@@ -51,6 +51,11 @@ private slots:
     void on_pushButton_AddPal_clicked();
     void on_pushButton_SwapPal_clicked();
     void on_pushButton_ResetAllOamData_clicked();
+    void on_listView_OamDataList_clicked(const QModelIndex &index);
+    void on_pushButton_AddOAM_clicked();
+    void on_pushButton_ResetCurOAM_clicked();
+    void on_pushButton_ExportOAMData_clicked();
+    void on_pushButton_DeleteCurOam_clicked();
 
 private:
     Ui::SpritesEditorDialog *ui;
@@ -70,11 +75,12 @@ private:
     QGraphicsScene *PaletteBarScene = nullptr;
     QGraphicsPixmapItem *SelectionBox_Color = nullptr;
     QGraphicsPixmapItem *Palettemapping = nullptr;
-    QGraphicsScene *OAMDesignerMAPScene = nullptr;
-    QGraphicsPixmapItem *OAMmapping = nullptr;
 
     // OAM Designer staff
+    QGraphicsScene *OAMDesignerMAPScene = nullptr;
+    QGraphicsPixmapItem *OAMmapping = nullptr;
     QStandardItemModel *ListViewItemModel = nullptr;
+    int SelectedRow_ListView = -1;
 
     // Functions
     void RenderSpritesTileMap();
@@ -83,6 +89,8 @@ private:
     LevelComponents::Entity *GetCurEntityPtr(bool createNewEntity = false);
     LevelComponents::EntitySet *GetCurEntitySetPtr(bool createNewEntitySet = false);
     void RenderOamSet();
+    QString GenerateOAMString();
+    QString GetOAMArray();
 
     // clang-format off
     // shape (using 2 bit) | size (using 2 bit)
