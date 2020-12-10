@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-#define entityReferBoxRGB 0xFFFF00
+#define EntityReferenceBoxRGB 0xFFFF00
 
 constexpr unsigned char LevelComponents::Entity::EntitySampleOamNumArray[129];
 constexpr int LevelComponents::Entity::EntityPositinalOffset[258];
@@ -345,7 +345,7 @@ namespace LevelComponents
         // Draw position referrence Box
         if (!noReferenceBox)
         {
-            QPen EntityBoxPen = QPen(QBrush(QColor(entityReferBoxRGB)), 2);
+            QPen EntityBoxPen = QPen(QBrush(QColor(EntityReferenceBoxRGB)), 2);
             EntityBoxPen.setJoinStyle(Qt::MiterJoin);
             p.setPen(EntityBoxPen);
             p.drawRect(512, 256, 16, 16);
