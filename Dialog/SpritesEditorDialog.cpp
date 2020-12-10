@@ -10,6 +10,10 @@
 #include "ROMUtils.h"
 #include "FileIOUtils.h"
 
+// constexpr declarations for the initializers in the header
+constexpr const char *SpritesEditorDialog::OAMShapeTypeNameData[12];
+static QStringList OAMShapeTypeNameSet;
+
 /// <summary>
 /// Constructor of SpritesEditorDialog class.
 /// </summary>
@@ -34,6 +38,10 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
     ui->graphicsView_SpritePals->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     ui->graphicsView_SpritePals->scale(2, 2);
     ui->graphicsView_SpritePals->SetCurrentSpritesEditor(this);
+    OAMDesignerMAPScene = new QGraphicsScene(0, 0, 1024, 512);
+    ui->graphicsView_OamDesignView->setScene(OAMDesignerMAPScene);
+    ui->graphicsView_OamDesignView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_OamDesignView->scale(2, 2);
 
     // Seems the spinboxes won't trigger the valuechanged event when loading UI
     // We need to load graphics manually
@@ -52,6 +60,17 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
                                                    "The editor uses different palettes for every entity. However, in-game, some of them share the same palettes and tiles.\n"
                                                    "You may find that the editor acts differently from real game play.\n"
                                                    "In this case, you need to modify all of the entities that share the same tiles and palettes."));
+
+    // Init ComboBox
+    for (unsigned int i = 0; i < sizeof(OAMShapeTypeNameData) / sizeof(OAMShapeTypeNameData[0]); ++i)
+    {
+        OAMShapeTypeNameSet << OAMShapeTypeNameData[i];
+    }
+    ui->comboBox_OamShapeType->addItems(OAMShapeTypeNameSet);
+
+    // ListView Init
+    ListViewItemModel = new QStandardItemModel(this);
+    ui->listView_OamDataList->setModel(ListViewItemModel);
 }
 
 /// <summary>
@@ -342,6 +361,108 @@ LevelComponents::EntitySet *SpritesEditorDialog::GetCurEntitySetPtr(bool createN
 }
 
 /// <summary>
+/// Render OAM Set based on the ListView data
+/// </summary>
+/// <param name="selectrow">
+/// select a row after re-render oam graphic, leave it blank to set default value 0
+/// </param>
+void SpritesEditorDialog::RenderOamSet(int selectrow)
+{
+    int rowcount = ListViewItemModel->rowCount();
+    if (!rowcount) return;
+    QVector<unsigned short> nakedOAMData;
+    for (int i = 0; i < rowcount; ++i)
+    {
+        QStringList CurloadtableStrData = ListViewItemModel->item(i)->text().split(QChar(' '), Qt::SkipEmptyParts);
+        for (int j = 0; j < 3; ++j)
+        {
+            nakedOAMData.push_back(CurloadtableStrData.at(j).toUInt(nullptr, 16));
+        }
+    }
+    QPixmap oampixmap(1024, 512);
+    QPainter oampainter(&oampixmap);
+    oampainter.drawImage(0, 0, GetCurEntityPtr()->RenderOAMPreview(rowcount, nakedOAMData, ui->checkBox_NoReferBox->isChecked()));
+    OAMDesignerMAPScene->clear();
+    OAMmapping = OAMDesignerMAPScene->addPixmap(oampixmap);
+
+    // try to select a row in the listview
+    QModelIndex index = ListViewItemModel->index(selectrow, 0);
+    if (index.isValid())
+        ui->listView_OamDataList->selectionModel()->select(index, QItemSelectionModel::Select);
+    SelectedRow_ListView = selectrow;
+    handleSelectionChanged();
+}
+
+/// <summary>
+/// Helper function used to generate OAM String based on the oam param widgets
+/// </summary>
+/// <return>
+/// single OAM data QString
+/// </return>
+QString SpritesEditorDialog::GenerateOAMString()
+{
+    unsigned short tmpOAMData[3] = {0, 0, 0};
+    int shapesizedata = ui->comboBox_OamShapeType->currentIndex();
+    int yvalue = (ui->spinBox_OamY->value() >= 0) ? ui->spinBox_OamY->value() : 0x100 + ui->spinBox_OamY->value();
+    tmpOAMData[0] = yvalue |
+            ((shapesizedata & 0xC) >> 2) << 14 |
+            (ui->checkBox_OAMSemiTransparency->isChecked() ? 1 : 0) << 0xA;
+    int xvalue = (ui->spinBox_OamX->value() >= 0) ? ui->spinBox_OamX->value() : 0x200 + ui->spinBox_OamX->value();
+    tmpOAMData[1] = xvalue |
+            (ui->checkBox_OAMXFlip->isChecked() ? 1 : 0) << 12 |
+            (ui->checkBox_OAMYFlip->isChecked() ? 1 : 0) << 13 |
+            ((shapesizedata & 3) << 14);
+    tmpOAMData[2] = ui->spinBox_OAMCharId->value() | ui->spinBox_OAMPriority->value() << 10 | ui->spinBox_OamPalID->value() << 12;
+    QString result = QString::number(tmpOAMData[0], 16).toUpper() + " " +
+                     QString::number(tmpOAMData[1], 16).toUpper() + " " +
+                     QString::number(tmpOAMData[2], 16).toUpper();
+    return result;
+}
+
+/// <summary>
+/// Helper function used to get the complete OAM array
+/// </summary>
+/// <return>
+/// OAM array QString
+/// </return>
+QString SpritesEditorDialog::GetOAMArray()
+{
+    int rowcount = ListViewItemModel->rowCount();
+    QString result;
+    if (!rowcount) return result;
+    for (int i = 0; i < rowcount; ++i)
+    {
+        result += ListViewItemModel->item(i)->text() + " ";
+    }
+    return result;
+}
+
+/// <summary>
+/// Helper function used to handle selection changed in ListView
+/// </summary>
+void SpritesEditorDialog::handleSelectionChanged()
+{
+    QVector<unsigned short> nakedOAMData;
+    QStringList CurloadtableStrData = ListViewItemModel->item(SelectedRow_ListView)->text().split(QChar(' '), Qt::SkipEmptyParts);
+    for (int i = 0; i < 3; ++i)
+    {
+        nakedOAMData.push_back(CurloadtableStrData.at(i).toUInt(nullptr, 16));
+    }
+
+    ui->spinBox_OamX->setValue((nakedOAMData[1] & 0xFF) - (nakedOAMData[1] & 0x100));
+    ui->spinBox_OamY->setValue((nakedOAMData[0] & 0x7F) - (nakedOAMData[0] & 0x80));
+    ui->checkBox_OAMXFlip->setChecked((nakedOAMData[1] & (1 << 0xC)) != 0);
+    ui->checkBox_OAMYFlip->setChecked((nakedOAMData[1] & (1 << 0xD)) != 0);
+    int SZ = (nakedOAMData[1] >> 0xE) & 3;                         // object size
+    int SH = (nakedOAMData[0] >> 0xE) & 3;                         // object shape
+    ui->comboBox_OamShapeType->setCurrentIndex(SH << 2 | SZ);
+    ui->spinBox_OAMCharId->setValue(nakedOAMData[2] & 0x3FF);
+    ui->spinBox_OamPalID->setValue((nakedOAMData[2] >> 0xC) & 0xF);
+    ui->spinBox_OAMPriority->setValue((nakedOAMData[2] >> 0xA) & 3);
+    ui->checkBox_OAMSemiTransparency->setChecked(((nakedOAMData[0] >> 0xA) & 3) == 1);
+}
+
+/// <summary>
 /// Reset spriteset graphicview and spriteset loadtable lineedit when spinBox_SpritesetID has a value change event
 /// </summary>
 /// <param name="arg1">
@@ -536,7 +657,7 @@ void SpritesEditorDialog::on_pushButton_SwapPal_clicked()
 {
     bool ok;
     int maxval = GetCurEntityPtr()->GetPalNum() - 1;
-    int result_1 = QInputDialog::getInt(nullptr, tr("InputBox"),
+    int result_1 = QInputDialog::getInt(this, tr("InputBox"),
                                          tr("Input the palette Id you want to delete.\nRelevant tiles will be deleted too."),
                                         0, 0, maxval, 1, &ok);
     if (ok && (result_1 < 0 || result_1 > maxval))
@@ -544,7 +665,7 @@ void SpritesEditorDialog::on_pushButton_SwapPal_clicked()
         QMessageBox::critical(this, tr("Error"), QString(tr("Illegal input!")));
         return;
     }
-    int result_2 = QInputDialog::getInt(nullptr, tr("InputBox"),
+    int result_2 = QInputDialog::getInt(this, tr("InputBox"),
                                          tr("Input the palette Id you want to delete.\nRelevant tiles will be deleted too."),
                                         0, 0, maxval, 1, &ok);
     if (ok && (result_2 < 0 || result_2 > maxval))
@@ -558,4 +679,116 @@ void SpritesEditorDialog::on_pushButton_SwapPal_clicked()
     RenderSpritesTileMap();
     SetSelectedSpriteTile(0);
     RenderSpritesetTileMapAndResetLoadTable();
+}
+
+/// <summary>
+/// Reset Oam designer with new OAM data string when clicking pushButton_ResetAllOamData
+/// </summary>
+void SpritesEditorDialog::on_pushButton_ResetAllOamData_clicked()
+{
+    QStringList listStrs = QInputDialog::getText(this, tr("InputBox"),
+                                                  tr("Input OAM Data Hex String without 0x prefix:"),
+                                                  QLineEdit::Normal,
+                                                  GetOAMArray()).split(QChar(' '), Qt::SkipEmptyParts);
+    if (!listStrs.size()) return;
+    if (listStrs.size() % 3)
+    {
+        QMessageBox::critical(this, tr("Error"), QString(tr("Data number should be multiple of 3 !")));
+        return;
+    }
+    if (ListViewItemModel)
+    {
+        ListViewItemModel->clear();
+        delete ListViewItemModel;
+    }
+
+    ListViewItemModel = new QStandardItemModel(this);
+
+    for (int i = 0; i < (listStrs.size() / 3); i++)
+    {
+        QString string0 = static_cast<QString>(listStrs.at(3 * i));
+        QString string1 = static_cast<QString>(listStrs.at(3 * i + 1));
+        QString string2 = static_cast<QString>(listStrs.at(3 * i + 2));
+        string0 = QString::number(string0.toUInt(nullptr, 16), 16).toUpper();
+        string1 = QString::number(string1.toUInt(nullptr, 16), 16).toUpper();
+        string2 = QString::number(string2.toUInt(nullptr, 16), 16).toUpper();
+        QStandardItem *item = new QStandardItem(string0 + " " + string1 + " " + string2);
+        ListViewItemModel->appendRow(item);
+    }
+    ui->listView_OamDataList->setModel(ListViewItemModel);
+
+    // Render graphic based on list view
+    RenderOamSet();
+}
+
+/// <summary>
+/// Be called the listview is clicked and an oam data is selected.
+/// </summary>
+/// <param name="index">
+/// Reference of the selected QModelIndex from the listview.
+/// </param>
+void SpritesEditorDialog::on_listView_OamDataList_clicked(const QModelIndex &index)
+{
+    SelectedRow_ListView = index.row();
+    handleSelectionChanged();
+}
+
+/// <summary>
+/// Add a new OAM data string when clicking pushButton_AddOAM
+/// </summary>
+void SpritesEditorDialog::on_pushButton_AddOAM_clicked()
+{
+    QStandardItem *item = new QStandardItem(GenerateOAMString());
+    ListViewItemModel->appendRow(item);
+
+    // Render graphic based on list view
+    RenderOamSet(ListViewItemModel->rowCount() - 1);
+}
+
+/// <summary>
+/// Reset new OAM data string to the selected row when clicking pushButton_ResetCurOAM
+/// </summary>
+void SpritesEditorDialog::on_pushButton_ResetCurOAM_clicked()
+{
+    ListViewItemModel->item(SelectedRow_ListView, 0)->setText(GenerateOAMString());
+
+    // Render graphic based on list view
+    RenderOamSet(SelectedRow_ListView);
+}
+
+/// <summary>
+/// Reset new OAM data string to the selected row when clicking pushButton_ResetCurOAM
+/// </summary>
+void SpritesEditorDialog::on_pushButton_ExportOAMData_clicked()
+{
+    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString selectedfilter;
+    QString txtFilter(QObject::tr("text file") + " (*.txt)");
+    QString qFilePath = QFileDialog::getSaveFileName(this,
+                                                     QObject::tr("Save OAM data to txt file"),
+                                                     romFileDir,
+                                                     txtFilter,
+                                                     &selectedfilter);
+    if(qFilePath.isEmpty()) return;
+
+    QFile palfile(qFilePath);
+    if(palfile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        // Stream text to the file
+        QTextStream out(&palfile);
+        out << GetOAMArray();
+        palfile.close();
+    }
+}
+
+/// <summary>
+/// Delete one row of OAM data from the ListView when clicking pushButton_DeleteCurOam
+/// </summary>
+void SpritesEditorDialog::on_pushButton_DeleteCurOam_clicked()
+{
+    if (!(ListViewItemModel->rowCount() - 1)) return; // we don't want to delete the last oam
+    ListViewItemModel->removeRows(SelectedRow_ListView, 1);
+
+    // Render graphic based on list view
+    RenderOamSet();
 }

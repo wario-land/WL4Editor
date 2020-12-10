@@ -53,6 +53,7 @@ namespace LevelComponents
         ~Entity();
         QImage Render();
         QImage GetTileMap(const int palNum);
+        QImage RenderOAMPreview(int oamNum, QVector<unsigned short> nakedOAMarray, bool noReferenceBox = false);
         static EntityPositionalOffset GetEntityPositionalOffset(int entityglobalId);
         int GetEntityGlobalID() { return EntityGlobalID; }
         int GetXOffset() { return xOffset; }

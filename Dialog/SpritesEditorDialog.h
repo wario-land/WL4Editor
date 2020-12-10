@@ -7,6 +7,9 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QDialog>
+#include <QModelIndex>
+#include <QStandardItem>
+#include <QStandardItemModel>
 
 namespace DialogParams
 {
@@ -47,6 +50,12 @@ private slots:
     void on_pushButton_DeletePal_clicked();
     void on_pushButton_AddPal_clicked();
     void on_pushButton_SwapPal_clicked();
+    void on_pushButton_ResetAllOamData_clicked();
+    void on_listView_OamDataList_clicked(const QModelIndex &index);
+    void on_pushButton_AddOAM_clicked();
+    void on_pushButton_ResetCurOAM_clicked();
+    void on_pushButton_ExportOAMData_clicked();
+    void on_pushButton_DeleteCurOam_clicked();
 
 private:
     Ui::SpritesEditorDialog *ui;
@@ -67,12 +76,41 @@ private:
     QGraphicsPixmapItem *SelectionBox_Color = nullptr;
     QGraphicsPixmapItem *Palettemapping = nullptr;
 
+    // OAM Designer staff
+    QGraphicsScene *OAMDesignerMAPScene = nullptr;
+    QGraphicsPixmapItem *OAMmapping = nullptr;
+    QStandardItemModel *ListViewItemModel = nullptr;
+    int SelectedRow_ListView = -1;
+
     // Functions
     void RenderSpritesTileMap();
     void RenderSpritesPalette();
     void RenderSpritesetTileMapAndResetLoadTable();
     LevelComponents::Entity *GetCurEntityPtr(bool createNewEntity = false);
     LevelComponents::EntitySet *GetCurEntitySetPtr(bool createNewEntitySet = false);
+    void RenderOamSet(int selectrow = 0);
+    QString GenerateOAMString();
+    QString GetOAMArray();
+    void handleSelectionChanged();
+
+    // clang-format off
+    // shape (using 2 bit) | size (using 2 bit)
+    static constexpr const char *OAMShapeTypeNameData[12] =
+    {
+        "8 x 8",
+        "16 x 16",
+        "32 x 32",
+        "64 x 64",
+        "16 x 8",
+        "32 x 8",
+        "32 x 16",
+        "64 x 32",
+        "8 x 16",
+        "8 x 32",
+        "16 x 32",
+        "32 x 64"
+    };
+    // clang-format on
 };
 
 #endif // SPRITESEDITORDIALOG_H
