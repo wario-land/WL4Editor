@@ -370,20 +370,20 @@ void SpritesEditorDialog::RenderOamSet(int selectrow)
 {
     int rowcount = ListViewItemModel->rowCount();
     if (!rowcount) return;
-    unsigned short *nakedOAMData = new unsigned short[rowcount * 3];
+    QVector<unsigned short> nakedOAMData;
     for (int i = 0; i < rowcount; ++i)
     {
         QStringList CurloadtableStrData = ListViewItemModel->item(i)->text().split(QChar(' '), Qt::SkipEmptyParts);
-        nakedOAMData[3 * i] = CurloadtableStrData.at(0).toUInt(nullptr, 16);
-        nakedOAMData[3 * i + 1] = CurloadtableStrData.at(1).toUInt(nullptr, 16);
-        nakedOAMData[3 * i + 2] = CurloadtableStrData.at(2).toUInt(nullptr, 16);
+        for (int j = 0; j < 3; ++j)
+        {
+            nakedOAMData.push_back(CurloadtableStrData.at(j).toUInt(nullptr, 16));
+        }
     }
     QPixmap oampixmap(1024, 512);
     QPainter oampainter(&oampixmap);
-    oampainter.drawImage(0, 0, GetCurEntityPtr()->TestRenderOams(rowcount, nakedOAMData, ui->checkBox_NoReferBox->isChecked()));
+    oampainter.drawImage(0, 0, GetCurEntityPtr()->RenderOAMPreview(rowcount, nakedOAMData, ui->checkBox_NoReferBox->isChecked()));
     OAMDesignerMAPScene->clear();
     OAMmapping = OAMDesignerMAPScene->addPixmap(oampixmap);
-    delete[] nakedOAMData;
 
     // try to select a row in the listview
     QModelIndex index = ListViewItemModel->index(selectrow, 0);
@@ -405,7 +405,7 @@ QString SpritesEditorDialog::GenerateOAMString()
     int shapesizedata = ui->comboBox_OamShapeType->currentIndex();
     int yvalue = (ui->spinBox_OamY->value() >= 0) ? ui->spinBox_OamY->value() : 0x100 + ui->spinBox_OamY->value();
     tmpOAMData[0] = yvalue |
-            (shapesizedata & 0xC) >> 2 << 14 |
+            ((shapesizedata & 0xC) >> 2) << 14 |
             (ui->checkBox_OAMSemiTransparency->isChecked() ? 1 : 0) << 0xA;
     int xvalue = (ui->spinBox_OamX->value() >= 0) ? ui->spinBox_OamX->value() : 0x200 + ui->spinBox_OamX->value();
     tmpOAMData[1] = xvalue |
@@ -442,11 +442,12 @@ QString SpritesEditorDialog::GetOAMArray()
 /// </summary>
 void SpritesEditorDialog::handleSelectionChanged()
 {
-    unsigned short nakedOAMData[3];
+    QVector<unsigned short> nakedOAMData;
     QStringList CurloadtableStrData = ListViewItemModel->item(SelectedRow_ListView)->text().split(QChar(' '), Qt::SkipEmptyParts);
-    nakedOAMData[0] = CurloadtableStrData.at(0).toUInt(nullptr, 16);
-    nakedOAMData[1] = CurloadtableStrData.at(1).toUInt(nullptr, 16);
-    nakedOAMData[2] = CurloadtableStrData.at(2).toUInt(nullptr, 16);
+    for (int i = 0; i < 3; ++i)
+    {
+        nakedOAMData.push_back(CurloadtableStrData.at(i).toUInt(nullptr, 16));
+    }
 
     ui->spinBox_OamX->setValue((nakedOAMData[1] & 0xFF) - (nakedOAMData[1] & 0x100));
     ui->spinBox_OamY->setValue((nakedOAMData[0] & 0x7F) - (nakedOAMData[0] & 0x80));
@@ -685,12 +686,12 @@ void SpritesEditorDialog::on_pushButton_SwapPal_clicked()
 /// </summary>
 void SpritesEditorDialog::on_pushButton_ResetAllOamData_clicked()
 {
-    QStringList List_strs = QInputDialog::getText(this, tr("InputBox"),
+    QStringList listStrs = QInputDialog::getText(this, tr("InputBox"),
                                                   tr("Input OAM Data Hex String without 0x prefix:"),
                                                   QLineEdit::Normal,
                                                   GetOAMArray()).split(QChar(' '), Qt::SkipEmptyParts);
-    if (!List_strs.size()) return;
-    if (List_strs.size() % 3)
+    if (!listStrs.size()) return;
+    if (listStrs.size() % 3)
     {
         QMessageBox::critical(this, tr("Error"), QString(tr("Data number should be multiple of 3 !")));
         return;
@@ -699,16 +700,15 @@ void SpritesEditorDialog::on_pushButton_ResetAllOamData_clicked()
     {
         ListViewItemModel->clear();
         delete ListViewItemModel;
-        ListViewItemModel = nullptr;
     }
 
     ListViewItemModel = new QStandardItemModel(this);
 
-    for (int i = 0; i < (List_strs.size() / 3); i++)
+    for (int i = 0; i < (listStrs.size() / 3); i++)
     {
-        QString string0 = static_cast<QString>(List_strs.at(3 * i));
-        QString string1 = static_cast<QString>(List_strs.at(3 * i + 1));
-        QString string2 = static_cast<QString>(List_strs.at(3 * i + 2));
+        QString string0 = static_cast<QString>(listStrs.at(3 * i));
+        QString string1 = static_cast<QString>(listStrs.at(3 * i + 1));
+        QString string2 = static_cast<QString>(listStrs.at(3 * i + 2));
         string0 = QString::number(string0.toUInt(nullptr, 16), 16).toUpper();
         string1 = QString::number(string1.toUInt(nullptr, 16), 16).toUpper();
         string2 = QString::number(string2.toUInt(nullptr, 16), 16).toUpper();

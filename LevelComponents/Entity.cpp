@@ -6,6 +6,8 @@
 
 #include <cassert>
 
+#define entityReferBoxRGB 0xFFFF00
+
 constexpr unsigned char LevelComponents::Entity::EntitySampleOamNumArray[129];
 constexpr int LevelComponents::Entity::EntityPositinalOffset[258];
 constexpr unsigned short LevelComponents::Entity::EntitiesOamSampleSets[129][0x2A * 3];
@@ -138,8 +140,8 @@ namespace LevelComponents
         struct OAMTile *newOAM = new struct OAMTile();
         newOAM->Xoff = (attr1 & 0xFF) - (attr1 & 0x100); // Offset of OAM tile from entity origin
         newOAM->Yoff = (attr0 & 0x7F) - (attr0 & 0x80);
-        newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
-        newOAM->yFlip = (attr1 & (1 << 0xD)) != 0;
+        newOAM->xFlip = (attr1 & (1 << 0xC));
+        newOAM->yFlip = (attr1 & (1 << 0xD));
         int SZ = (attr1 >> 0xE) & 3;                         // object size
         int SH = (attr0 >> 0xE) & 3;                         // object shape
         newOAM->OAMwidth = OAMDimensions[2 * (SZ * 3 + SH)]; // unit: 8x8 tiles
@@ -267,7 +269,10 @@ namespace LevelComponents
     /// <param name="noReferrneceBox">
     /// Don't draw the yellow referrence Box if set this to true
     /// </param>
-    QImage Entity::TestRenderOams(int oamNum, unsigned short *nakedOAMarray, bool noReferrneceBox)
+    /// <return>
+    /// QImage of the testing OAM data rendering
+    /// </return>
+    QImage Entity::RenderOAMPreview(int oamNum, QVector<unsigned short> nakedOAMarray, bool noReferenceBox)
     {
         if (!oamNum) return QImage();
 
@@ -287,8 +292,8 @@ namespace LevelComponents
             struct OAMTile *newOAM = new struct OAMTile();
             newOAM->Xoff = (attr1 & 0xFF) - (attr1 & 0x100); // Offset of OAM tile from entity origin
             newOAM->Yoff = (attr0 & 0x7F) - (attr0 & 0x80); // they are signed char
-            newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
-            newOAM->yFlip = (attr1 & (1 << 0xD)) != 0;
+            newOAM->xFlip = (attr1 & (1 << 0xC));
+            newOAM->yFlip = (attr1 & (1 << 0xD));
             int SZ = (attr1 >> 0xE) & 3;                         // object size
             int SH = (attr0 >> 0xE) & 3;                         // object shape
             newOAM->OAMwidth = OAMDimensions[2 * (SZ * 3 + SH)]; // unit: 8x8 tiles
@@ -338,9 +343,9 @@ namespace LevelComponents
         tmpOAMTiles.clear();
 
         // Draw position referrence Box
-        if (!noReferrneceBox)
+        if (!noReferenceBox)
         {
-            QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0xFF)), 2);
+            QPen EntityBoxPen = QPen(QBrush(QColor(entityReferBoxRGB)), 2);
             EntityBoxPen.setJoinStyle(Qt::MiterJoin);
             p.setPen(EntityBoxPen);
             p.drawRect(512, 256, 16, 16);
