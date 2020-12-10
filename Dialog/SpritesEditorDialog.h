@@ -91,6 +91,7 @@ private:
     void RenderOamSet();
     QString GenerateOAMString();
     QString GetOAMArray();
+    void handleSelectionChanged();
 
     // clang-format off
     // shape (using 2 bit) | size (using 2 bit)

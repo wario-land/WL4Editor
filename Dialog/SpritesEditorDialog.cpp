@@ -381,6 +381,13 @@ void SpritesEditorDialog::RenderOamSet()
     OAMDesignerMAPScene->clear();
     OAMmapping = OAMDesignerMAPScene->addPixmap(oampixmap);
     delete[] nakedOAMData;
+
+    // try to select a row in the listview
+    QModelIndex index = ListViewItemModel->index(0, 0);
+    if (index.isValid())
+        ui->listView_OamDataList->selectionModel()->select(index, QItemSelectionModel::Select);
+    SelectedRow_ListView = 0;
+    handleSelectionChanged();
 }
 
 /// <summary>
@@ -396,7 +403,7 @@ QString SpritesEditorDialog::GenerateOAMString()
     tmpOAMData[0] = yvalue |
             (ui->comboBox_OamShapeType->currentIndex() & 0xC) << 14 |
             (ui->checkBox_OAMSemiTransparency->isChecked() ? 1 : 0) << 0xA;
-    int xvalue = (ui->spinBox_OamX->value() >= 0) ? ui->spinBox_OamX->value() : 0x200 + ui->spinBox_OamY->value();
+    int xvalue = (ui->spinBox_OamX->value() >= 0) ? ui->spinBox_OamX->value() : 0x200 + ui->spinBox_OamX->value();
     tmpOAMData[1] = xvalue |
             (ui->checkBox_OAMXFlip->isChecked() ? 1 : 0) << 12 |
             (ui->checkBox_OAMYFlip->isChecked() ? 1 : 0) << 13 |
@@ -424,6 +431,30 @@ QString SpritesEditorDialog::GetOAMArray()
         result += ListViewItemModel->item(i)->text() + " ";
     }
     return result;
+}
+
+/// <summary>
+/// Helper function used to handle selection changed in ListView
+/// </summary>
+void SpritesEditorDialog::handleSelectionChanged()
+{
+    unsigned short nakedOAMData[3];
+    QStringList CurloadtableStrData = ListViewItemModel->item(SelectedRow_ListView)->text().split(QChar(' '), Qt::SkipEmptyParts);
+    nakedOAMData[0] = CurloadtableStrData.at(0).toUInt(nullptr, 16);
+    nakedOAMData[1] = CurloadtableStrData.at(1).toUInt(nullptr, 16);
+    nakedOAMData[2] = CurloadtableStrData.at(2).toUInt(nullptr, 16);
+
+    ui->spinBox_OamX->setValue((nakedOAMData[1] & 0xFF) - (nakedOAMData[1] & 0x100));
+    ui->spinBox_OamY->setValue((nakedOAMData[0] & 0x7F) - (nakedOAMData[0] & 0x80));
+    ui->checkBox_OAMXFlip->setChecked((nakedOAMData[1] & (1 << 0xC)) != 0);
+    ui->checkBox_OAMYFlip->setChecked((nakedOAMData[1] & (1 << 0xD)) != 0);
+    int SZ = (nakedOAMData[1] >> 0xE) & 3;                         // object size
+    int SH = (nakedOAMData[0] >> 0xE) & 3;                         // object shape
+    ui->comboBox_OamShapeType->setCurrentIndex(SH << 2 | SZ);
+    ui->spinBox_OAMCharId->setValue(nakedOAMData[2] & 0x3FF);
+    ui->spinBox_OamPalID->setValue((nakedOAMData[2] >> 0xC) & 0xF);
+    ui->spinBox_OAMPriority->setValue((nakedOAMData[2] >> 0xA) & 3);
+    ui->checkBox_OAMSemiTransparency->setChecked(((nakedOAMData[0] >> 0xA) & 3) == 1);
 }
 
 /// <summary>
@@ -654,6 +685,7 @@ void SpritesEditorDialog::on_pushButton_ResetAllOamData_clicked()
                                                   tr("Input OAM Data Hex String without 0x prefix:"),
                                                   QLineEdit::Normal,
                                                   GetOAMArray()).split(QChar(' '), Qt::SkipEmptyParts);
+    if (!List_strs.size()) return;
     if (List_strs.size() % 3)
     {
         QMessageBox::critical(this, tr("Error"), QString(tr("Data number should be multiple of 3 !")));
@@ -665,8 +697,6 @@ void SpritesEditorDialog::on_pushButton_ResetAllOamData_clicked()
         delete ListViewItemModel;
         ListViewItemModel = nullptr;
     }
-    SelectedRow_ListView = -1;
-    if (!List_strs.size()) return;
 
     ListViewItemModel = new QStandardItemModel(this);
 
@@ -696,23 +726,7 @@ void SpritesEditorDialog::on_pushButton_ResetAllOamData_clicked()
 void SpritesEditorDialog::on_listView_OamDataList_clicked(const QModelIndex &index)
 {
     SelectedRow_ListView = index.row();
-    unsigned short nakedOAMData[3];
-    QStringList CurloadtableStrData = ListViewItemModel->item(SelectedRow_ListView)->text().split(QChar(' '), Qt::SkipEmptyParts);
-    nakedOAMData[0] = CurloadtableStrData.at(0).toUInt(nullptr, 16);
-    nakedOAMData[1] = CurloadtableStrData.at(1).toUInt(nullptr, 16);
-    nakedOAMData[2] = CurloadtableStrData.at(2).toUInt(nullptr, 16);
-
-    ui->spinBox_OamX->setValue((nakedOAMData[1] & 0xFF) - (nakedOAMData[1] & 0x100));
-    ui->spinBox_OamY->setValue((nakedOAMData[0] & 0x7F) - (nakedOAMData[0] & 0x80));
-    ui->checkBox_OAMXFlip->setChecked((nakedOAMData[1] & (1 << 0xC)) != 0);
-    ui->checkBox_OAMYFlip->setChecked((nakedOAMData[1] & (1 << 0xD)) != 0);
-    int SZ = (nakedOAMData[1] >> 0xE) & 3;                         // object size
-    int SH = (nakedOAMData[0] >> 0xE) & 3;                         // object shape
-    ui->comboBox_OamShapeType->setCurrentIndex(SH << 2 | SZ);
-    ui->spinBox_OAMCharId->setValue(nakedOAMData[2] & 0x3FF);
-    ui->spinBox_OamPalID->setValue((nakedOAMData[2] >> 0xC) & 0xF);
-    ui->spinBox_OAMPriority->setValue((nakedOAMData[2] >> 0xA) & 3);
-    ui->checkBox_OAMSemiTransparency->setChecked(((nakedOAMData[0] >> 0xA) & 3) == 1);
+    handleSelectionChanged();
 }
 
 /// <summary>
@@ -768,9 +782,9 @@ void SpritesEditorDialog::on_pushButton_ExportOAMData_clicked()
 /// </summary>
 void SpritesEditorDialog::on_pushButton_DeleteCurOam_clicked()
 {
+    if (SelectedRow_ListView == 0) return; // we don't want to delete the last oam
     ListViewItemModel->removeRows(SelectedRow_ListView, 1);
 
     // Render graphic based on list view
     RenderOamSet();
-    SelectedRow_ListView = -1;
 }
