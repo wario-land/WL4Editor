@@ -392,13 +392,15 @@ void SpritesEditorDialog::RenderOamSet()
 QString SpritesEditorDialog::GenerateOAMString()
 {
     unsigned short tmpOAMData[3] = {0, 0, 0};
-    tmpOAMData[0] = ui->spinBox_OamY->value() |
-            (ui->comboBox_OamShapeType->currentIndex() & 0xC) |
+    int yvalue = (ui->spinBox_OamY->value() >= 0) ? ui->spinBox_OamY->value() : 0x100 + ui->spinBox_OamY->value();
+    tmpOAMData[0] = yvalue |
+            (ui->comboBox_OamShapeType->currentIndex() & 0xC) << 14 |
             (ui->checkBox_OAMSemiTransparency->isChecked() ? 1 : 0) << 0xA;
-    tmpOAMData[1] = ui->spinBox_OamX->value() |
+    int xvalue = (ui->spinBox_OamX->value() >= 0) ? ui->spinBox_OamX->value() : 0x200 + ui->spinBox_OamY->value();
+    tmpOAMData[1] = xvalue |
             (ui->checkBox_OAMXFlip->isChecked() ? 1 : 0) << 12 |
             (ui->checkBox_OAMYFlip->isChecked() ? 1 : 0) << 13 |
-            (ui->comboBox_OamShapeType->currentIndex() & 3);
+            ((ui->comboBox_OamShapeType->currentIndex() & 3) << 14);
     tmpOAMData[2] = ui->spinBox_OAMCharId->value() | ui->spinBox_OAMPriority->value() << 10 | ui->spinBox_OamPalID->value() << 12;
     QString result = QString::number(tmpOAMData[0], 16).toUpper() + " " +
                      QString::number(tmpOAMData[1], 16).toUpper() + " " +

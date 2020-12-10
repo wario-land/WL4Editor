@@ -283,7 +283,7 @@ namespace LevelComponents
             // Obtain the tile parameters for the OAM tile
             struct OAMTile *newOAM = new struct OAMTile();
             newOAM->Xoff = (attr1 & 0xFF) - (attr1 & 0x100); // Offset of OAM tile from entity origin
-            newOAM->Yoff = (attr0 & 0x7F) - (attr0 & 0x80);
+            newOAM->Yoff = (attr0 & 0x7F) - (attr0 & 0x80); // they are signed char
             newOAM->xFlip = (attr1 & (1 << 0xC)) != 0;
             newOAM->yFlip = (attr1 & (1 << 0xD)) != 0;
             int SZ = (attr1 >> 0xE) & 3;                         // object size
@@ -328,7 +328,8 @@ namespace LevelComponents
         for (auto iter = tmpOAMTiles.rbegin(); iter != tmpOAMTiles.rend(); ++iter)
         {
             OAMTile *ot = *iter;
-            p.drawImage(ot->Xoff + 512, ot->Yoff + 256, ot->Render());
+            // x + 8, y + 16, this works in the room rendering to match the box
+            p.drawImage(ot->Xoff + 512 + 8, ot->Yoff + 256 + 16, ot->Render());
             delete ot;
         }
         tmpOAMTiles.clear();
