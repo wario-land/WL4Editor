@@ -88,7 +88,7 @@ private:
     void RenderSpritesetTileMapAndResetLoadTable();
     LevelComponents::Entity *GetCurEntityPtr(bool createNewEntity = false);
     LevelComponents::EntitySet *GetCurEntitySetPtr(bool createNewEntitySet = false);
-    void RenderOamSet();
+    void RenderOamSet(int selectrow = 0);
     QString GenerateOAMString();
     QString GetOAMArray();
     void handleSelectionChanged();

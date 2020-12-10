@@ -363,7 +363,10 @@ LevelComponents::EntitySet *SpritesEditorDialog::GetCurEntitySetPtr(bool createN
 /// <summary>
 /// Render OAM Set based on the ListView data
 /// </summary>
-void SpritesEditorDialog::RenderOamSet()
+/// <param name="selectrow">
+/// select a row after re-render oam graphic, leave it blank to set default value 0
+/// </param>
+void SpritesEditorDialog::RenderOamSet(int selectrow)
 {
     int rowcount = ListViewItemModel->rowCount();
     if (!rowcount) return;
@@ -377,16 +380,16 @@ void SpritesEditorDialog::RenderOamSet()
     }
     QPixmap oampixmap(1024, 512);
     QPainter oampainter(&oampixmap);
-    oampainter.drawImage(0, 0, GetCurEntityPtr()->TestRenderOams(rowcount, nakedOAMData));
+    oampainter.drawImage(0, 0, GetCurEntityPtr()->TestRenderOams(rowcount, nakedOAMData, ui->checkBox_NoReferBox->isChecked()));
     OAMDesignerMAPScene->clear();
     OAMmapping = OAMDesignerMAPScene->addPixmap(oampixmap);
     delete[] nakedOAMData;
 
     // try to select a row in the listview
-    QModelIndex index = ListViewItemModel->index(0, 0);
+    QModelIndex index = ListViewItemModel->index(selectrow, 0);
     if (index.isValid())
         ui->listView_OamDataList->selectionModel()->select(index, QItemSelectionModel::Select);
-    SelectedRow_ListView = 0;
+    SelectedRow_ListView = selectrow;
     handleSelectionChanged();
 }
 
@@ -399,15 +402,16 @@ void SpritesEditorDialog::RenderOamSet()
 QString SpritesEditorDialog::GenerateOAMString()
 {
     unsigned short tmpOAMData[3] = {0, 0, 0};
+    int shapesizedata = ui->comboBox_OamShapeType->currentIndex();
     int yvalue = (ui->spinBox_OamY->value() >= 0) ? ui->spinBox_OamY->value() : 0x100 + ui->spinBox_OamY->value();
     tmpOAMData[0] = yvalue |
-            (ui->comboBox_OamShapeType->currentIndex() & 0xC) << 14 |
+            (shapesizedata & 0xC) >> 2 << 14 |
             (ui->checkBox_OAMSemiTransparency->isChecked() ? 1 : 0) << 0xA;
     int xvalue = (ui->spinBox_OamX->value() >= 0) ? ui->spinBox_OamX->value() : 0x200 + ui->spinBox_OamX->value();
     tmpOAMData[1] = xvalue |
             (ui->checkBox_OAMXFlip->isChecked() ? 1 : 0) << 12 |
             (ui->checkBox_OAMYFlip->isChecked() ? 1 : 0) << 13 |
-            ((ui->comboBox_OamShapeType->currentIndex() & 3) << 14);
+            ((shapesizedata & 3) << 14);
     tmpOAMData[2] = ui->spinBox_OAMCharId->value() | ui->spinBox_OAMPriority->value() << 10 | ui->spinBox_OamPalID->value() << 12;
     QString result = QString::number(tmpOAMData[0], 16).toUpper() + " " +
                      QString::number(tmpOAMData[1], 16).toUpper() + " " +
@@ -738,7 +742,7 @@ void SpritesEditorDialog::on_pushButton_AddOAM_clicked()
     ListViewItemModel->appendRow(item);
 
     // Render graphic based on list view
-    RenderOamSet();
+    RenderOamSet(ListViewItemModel->rowCount() - 1);
 }
 
 /// <summary>
@@ -749,7 +753,7 @@ void SpritesEditorDialog::on_pushButton_ResetCurOAM_clicked()
     ListViewItemModel->item(SelectedRow_ListView, 0)->setText(GenerateOAMString());
 
     // Render graphic based on list view
-    RenderOamSet();
+    RenderOamSet(SelectedRow_ListView);
 }
 
 /// <summary>
@@ -782,7 +786,7 @@ void SpritesEditorDialog::on_pushButton_ExportOAMData_clicked()
 /// </summary>
 void SpritesEditorDialog::on_pushButton_DeleteCurOam_clicked()
 {
-    if (SelectedRow_ListView == 0) return; // we don't want to delete the last oam
+    if (!(ListViewItemModel->rowCount() - 1)) return; // we don't want to delete the last oam
     ListViewItemModel->removeRows(SelectedRow_ListView, 1);
 
     // Render graphic based on list view

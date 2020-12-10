@@ -374,6 +374,13 @@
             </property>
            </widget>
           </item>
+          <item row="7" column="1">
+           <widget class="QCheckBox" name="checkBox_NoReferBox">
+            <property name="text">
+             <string>No referrence Box</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
        </layout>

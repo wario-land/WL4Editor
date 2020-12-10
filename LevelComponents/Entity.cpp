@@ -264,7 +264,10 @@ namespace LevelComponents
     /// <param name="nakedOAMarray">
     /// Naked OAM array without oam number as the first element
     /// </param>
-    QImage Entity::TestRenderOams(int oamNum, unsigned short *nakedOAMarray)
+    /// <param name="noReferrneceBox">
+    /// Don't draw the yellow referrence Box if set this to true
+    /// </param>
+    QImage Entity::TestRenderOams(int oamNum, unsigned short *nakedOAMarray, bool noReferrneceBox)
     {
         if (!oamNum) return QImage();
 
@@ -335,10 +338,13 @@ namespace LevelComponents
         tmpOAMTiles.clear();
 
         // Draw position referrence Box
-        QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0xFF)), 2);
-        EntityBoxPen.setJoinStyle(Qt::MiterJoin);
-        p.setPen(EntityBoxPen);
-        p.drawRect(512, 256, 16, 16);
+        if (!noReferrneceBox)
+        {
+            QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0xFF)), 2);
+            EntityBoxPen.setJoinStyle(Qt::MiterJoin);
+            p.setPen(EntityBoxPen);
+            p.drawRect(512, 256, 16, 16);
+        }
 
         return pm.toImage();
     }
