@@ -556,25 +556,52 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     if (nextroomconfig->Layer0Width != currentroomconfig->Layer0Width ||
             nextroomconfig->Layer0Height != currentroomconfig->Layer0Height)
     {
-        if ((currentroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
-        {
+        if ((currentroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16 && !nextroomconfig->LayerData[0] && !currentroomconfig->LayerData[0])
+        { // only run this part when creating new operation, so undo does not run this part of code
             // save previous Layer data
             size_t datasize1 = 0;
             datasize1 = 2 * currentroomconfig->Layer0Width * currentroomconfig->Layer0Height;
             unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
+            memset(tmpLayerdata1, 0, datasize1);
             memcpy(tmpLayerdata1, currentRoom->GetLayer(0)->GetLayerData(), datasize1);
             currentroomconfig->LayerData[0] = tmpLayerdata1;
 
-            // reset Layer size
-            size_t datasize2 = 0;
-            currentRoom->GetLayer(0)->ChangeDimensions(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
-            datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
+            if ((nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
+            {
+                // reset Layer size
+                size_t datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
+                currentRoom->GetLayer(0)->ChangeDimensions(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
 
-            // save result Layer data
-            unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
-            memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
-            nextroomconfig->LayerData[0] = tmpLayerdata2;
-        } else {
+                // save result Layer data
+                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                memset(tmpLayerdata2, 0, datasize2);
+                memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
+                nextroomconfig->LayerData[0] = tmpLayerdata2;
+            }
+        }
+        else if((currentroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerMap16 &&
+                (nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
+        {
+            currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
+
+            if(!nextroomconfig->LayerData[0]) // create new layer 0
+            {
+                // save Layer data to operation history
+                size_t datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
+                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                memset(tmpLayerdata2, 0, datasize2);
+                memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
+                nextroomconfig->LayerData[0] = tmpLayerdata2;
+            }
+            else // recover layer 0 data, don't need to set dirty
+            {
+                // replace layer data
+                delete[] currentRoom->GetLayer(0)->GetLayerData();
+                currentRoom->GetLayer(0)->SetLayerData(nextroomconfig->LayerData[0]);
+            }
+        }
+        else
+        {
             currentroomconfig->LayerData[0] = nullptr;
             nextroomconfig->LayerData[0] = nullptr;
         }
@@ -589,14 +616,9 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         currentLayer0 = new LevelComponents::Layer(nextroomconfig->Layer0DataPtr, LevelComponents::LayerTile8x8);
         currentRoom->SetLayer(0, currentLayer0);
     }
-    else if((currentroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerTile8x8 &&
-            (nextroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerTile8x8)
-    {
-        currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
-    }
 
     // Layer 0 is disabled (or customized) in the new settings
-    if ((currentroomconfig->Layer0MappingTypeParam > 0x10) && (nextroomconfig->Layer0MappingTypeParam < 0x10))
+    if ((currentroomconfig->Layer0MappingTypeParam >= 0x10) && (nextroomconfig->Layer0MappingTypeParam < 0x10))
     {
         currentRoom->GetLayer(0)->SetDisabled();
     }
