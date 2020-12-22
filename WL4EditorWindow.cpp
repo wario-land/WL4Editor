@@ -546,13 +546,33 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     if (nextroomconfig->Layer2Enable && !currentroomconfig->Layer2Enable)
     {
         currentRoom->GetLayer(2)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
+        if(nextroomconfig->LayerData[2]) // recover layer 2 data if needed, don't need to set dirty
+        {
+            // replace layer data
+            delete[] currentRoom->GetLayer(2)->GetLayerData();
+            size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
+            unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
+            memset(tmpLayerdata2, 0, datasize2);
+            memcpy(tmpLayerdata2, nextroomconfig->LayerData[2], datasize2);
+            currentRoom->GetLayer(2)->SetLayerData(tmpLayerdata2);
+        }
     }
     else if (currentroomconfig->Layer2Enable && !nextroomconfig->Layer2Enable)
     {
+        // save old layer 2 data if needed
+        if(!currentroomconfig->LayerData[2])
+        {
+            // save Layer data to operation history
+            size_t datasize2 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
+            unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
+            memset(tmpLayerdata2, 0, datasize2);
+            memcpy(tmpLayerdata2, currentRoom->GetLayer(2)->GetLayerData(), datasize2);
+            currentroomconfig->LayerData[2] = tmpLayerdata2;
+        }
         currentRoom->GetLayer(2)->SetDisabled();
     }
 
-    // Need to change layer 0 data when Layer 0 size changed
+    // Need to change layer 0 data when Layer 0 size changed, which contains the cases of mapping type changes of layer 0
     if (nextroomconfig->Layer0Width != currentroomconfig->Layer0Width ||
             nextroomconfig->Layer0Height != currentroomconfig->Layer0Height)
     {
@@ -561,7 +581,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             // save previous Layer data
             size_t datasize1 = 0;
             datasize1 = 2 * currentroomconfig->Layer0Width * currentroomconfig->Layer0Height;
-            unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
+            unsigned short *tmpLayerdata1 = new unsigned short[datasize1 >> 1];
             memset(tmpLayerdata1, 0, datasize1);
             memcpy(tmpLayerdata1, currentRoom->GetLayer(0)->GetLayerData(), datasize1);
             currentroomconfig->LayerData[0] = tmpLayerdata1;
@@ -573,7 +593,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                 currentRoom->GetLayer(0)->ChangeDimensions(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
 
                 // save result Layer data
-                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
                 memset(tmpLayerdata2, 0, datasize2);
                 memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
                 nextroomconfig->LayerData[0] = tmpLayerdata2;
@@ -588,7 +608,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             {
                 // save Layer data to operation history
                 size_t datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
-                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
+                unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
                 memset(tmpLayerdata2, 0, datasize2);
                 memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
                 nextroomconfig->LayerData[0] = tmpLayerdata2;
@@ -597,7 +617,11 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             {
                 // replace layer data
                 delete[] currentRoom->GetLayer(0)->GetLayerData();
-                currentRoom->GetLayer(0)->SetLayerData(nextroomconfig->LayerData[0]);
+                size_t datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
+                unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
+                memset(tmpLayerdata2, 0, datasize2);
+                memcpy(tmpLayerdata2, nextroomconfig->LayerData[0], datasize2);
+                currentRoom->GetLayer(0)->SetLayerData(tmpLayerdata2);
             }
         }
         else

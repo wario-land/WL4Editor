@@ -33,7 +33,7 @@ namespace DialogParams
         bool BackgroundLayerEnable;
         unsigned char BGLayerScrollFlag;
         int BackgroundLayerDataPtr;
-        unsigned short *LayerData[3]; //only use it when room & layer0 size change
+        unsigned short *LayerData[3]; //only use it when room & layer0 size change, and layer 0 and 2, enability changes or mapping type changes
         unsigned char RasterType;
         unsigned char Water;
         unsigned short BGMVolume;
