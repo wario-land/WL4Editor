@@ -552,7 +552,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             delete[] currentRoom->GetLayer(2)->GetLayerData();
             size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
             unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
-            memset(tmpLayerdata2, 0, datasize2);
             memcpy(tmpLayerdata2, nextroomconfig->LayerData[2], datasize2);
             currentRoom->GetLayer(2)->SetLayerData(tmpLayerdata2);
         }
@@ -565,7 +564,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             // save Layer data to operation history
             size_t datasize2 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
             unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
-            memset(tmpLayerdata2, 0, datasize2);
             memcpy(tmpLayerdata2, currentRoom->GetLayer(2)->GetLayerData(), datasize2);
             currentroomconfig->LayerData[2] = tmpLayerdata2;
         }
@@ -582,7 +580,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             size_t datasize1 = 0;
             datasize1 = 2 * currentroomconfig->Layer0Width * currentroomconfig->Layer0Height;
             unsigned short *tmpLayerdata1 = new unsigned short[datasize1 >> 1];
-            memset(tmpLayerdata1, 0, datasize1);
             memcpy(tmpLayerdata1, currentRoom->GetLayer(0)->GetLayerData(), datasize1);
             currentroomconfig->LayerData[0] = tmpLayerdata1;
 
@@ -594,7 +591,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
 
                 // save result Layer data
                 unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
-                memset(tmpLayerdata2, 0, datasize2);
                 memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
                 nextroomconfig->LayerData[0] = tmpLayerdata2;
             }
@@ -609,7 +605,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                 // save Layer data to operation history
                 size_t datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
                 unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
-                memset(tmpLayerdata2, 0, datasize2);
                 memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
                 nextroomconfig->LayerData[0] = tmpLayerdata2;
             }
@@ -619,7 +614,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                 delete[] currentRoom->GetLayer(0)->GetLayerData();
                 size_t datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
                 unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
-                memset(tmpLayerdata2, 0, datasize2);
                 memcpy(tmpLayerdata2, nextroomconfig->LayerData[0], datasize2);
                 currentRoom->GetLayer(0)->SetLayerData(tmpLayerdata2);
             }
