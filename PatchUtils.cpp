@@ -296,7 +296,7 @@ static QString AssembleSFile(QString sfile)
 static QString CreateLinkerScript(struct PatchEntryItem entry)
 {
     QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
-    QString ofile(romFileDir + "/" + entry.FileName);
+    QString ofile(romFileDir + QDir::separator() + entry.FileName);
     QString ldfile(ofile);
     REPLACE_EXT(ofile, ".c", ".o"); // works for .s files too
     REPLACE_EXT(ldfile, ".c", ".ld");
@@ -457,9 +457,8 @@ static QString CompilePatchEntry(struct PatchEntryItem entry)
 {
     if(!entry.FileName.length() || entry.PatchType == PatchType::Binary) return "";
 
-    QDir ROMdir(ROMUtils::ROMFilePath);
-    ROMdir.cdUp();
-    QString filename(ROMdir.absolutePath() + "/" + entry.FileName);
+    QDir ROMdir = QFileInfo(ROMUtils::ROMFilePath).dir();
+    QString filename(ROMdir.absolutePath() + QDir::separator() + entry.FileName);
 
     QString output;
     switch(entry.PatchType)
@@ -573,7 +572,7 @@ static struct ROMUtils::SaveData CreatePatchSaveChunk(struct PatchEntryItem &pat
 
     // Get data from bin file
     QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
-    QFile binFile(romFileDir + "/" + binName);
+    QFile binFile(romFileDir + QDir::separator() + binName);
     binFile.open(QIODevice::ReadOnly);
     QByteArray binContents = binFile.readAll();
     int fileSize = binFile.size();
@@ -782,8 +781,9 @@ namespace PatchUtils
                     }
 
                     // We must get the size of the compiled binary and check it against the space we were offered
+                    // To see if the data will fit, we must include the alignment offset and the size of the RATS header
                     struct ROMUtils::SaveData saveData = CreatePatchSaveChunk(*patchAllocIter);
-                    if(saveData.size + alignOffset > freeSpace.size)
+                    if(saveData.size + alignOffset + 12 > freeSpace.size)
                     {
                         delete saveData.data;
                         return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
@@ -808,7 +808,8 @@ namespace PatchUtils
                     {
                         // Create patch list chunk contents, make sure there is sufficient space
                         QString patchListChunkContents = CreatePatchListChunkData(entries);
-                        if((unsigned int)patchListChunkContents.length() + 1 > freeSpace.size)
+                        // To see if the data will fit, we must include the text contents, size of the RATS header, and one byte for versioning
+                        if((unsigned int)patchListChunkContents.length() + 13 > freeSpace.size)
                         {
                             return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
                         }

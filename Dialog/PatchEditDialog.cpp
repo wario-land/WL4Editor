@@ -143,7 +143,9 @@ PatchEditDialog::~PatchEditDialog()
 /// </param>
 void PatchEditDialog::InitializeComponents(struct PatchEntryItem patchEntry)
 {
-    ui->lineEdit_FilePath->setText(patchEntry.FileName);
+    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString displayPath = patchEntry.FileName.isEmpty() ? "" : romFileDir + QDir::separator() + patchEntry.FileName;
+    ui->lineEdit_FilePath->setText(displayPath);
     ui->comboBox_PatchType->setCurrentIndex(patchEntry.PatchType);
     QString hookAddressText = patchEntry.HookAddress ? QString::number(patchEntry.HookAddress, 16).toUpper() : "";
     ui->lineEdit_HookAddress->setText("0x" + hookAddressText);
