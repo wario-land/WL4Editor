@@ -186,7 +186,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
             // Stream text from the file
             QTextStream in(&palfile);
             QString header = in.readLine();
-            if(header == "CLRX 8 16")
+            if(header != "CLRX 8 16")
             {
                 QMessageBox::critical(parent, QString(QObject::tr("Error")), QString(QObject::tr("Wrong file format!")));
                 return false;
