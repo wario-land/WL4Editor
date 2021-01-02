@@ -305,8 +305,9 @@ static QString CreateLinkerScript(struct PatchEntryItem entry)
     QString scriptContents =
         QString("SECTIONS\n") +
         "{\n" +
-        "    .text   0x" + pa + " : { " + ofile + " (.text) }\n" +
-        "    .rodata : { " + ofile + " (.rodata) }\n" +
+        "    .text   0x" + pa + " : { \"" + ofile + "\" (.text) }\n" +
+        "    .data : { \"" + ofile + "\" (.data) }\n" +
+        "    .rodata : { \"" + ofile + "\" (.rodata) }\n" +
         "}\n" +
         "memcpy = 0x80950D9;";
 
