@@ -1,3 +1,24 @@
+beta-13:
+(major changes)
+- Added sprites editor/OAM designer
+- Added credits editor
+- Fix unable to save level after changing a room's camera type from limitators to something else (issue #284)
+- Add support for arrays and switch statements in patch code (issue #246)
+(minor changes)
+- Support for hiragana/katakana in level names
+- Support replacing background color when exporting tileset graphics
+- Display mouse coordinates of the selected layer (issue #282)
+- Can now restore layers 0 or 2 via undo after disabling in room config dialog
+- Populate full path to patch file in patch edit dialog
+- Removed warnings when creating new room
+- Fix that patch code optimized with stdlib calls would crash the ROM (issue #247)
+- Fix that layer 0 enable settings in room config dialog did not work (issue #315)
+- Fix adding a new room when already on a room with layer 0 type 0x20 would corrupt the ROM (issue #290)
+- Fix buggy graphics export in tileset editor (issue #288)
+- Fixed palette loading for entities
+- Fix status bar not visible on smaller displays (issue #212)
+- Fix instances in which tiles in the map16 tile selector were not selectable (issues #269, #283)
+
 beta-12:
 (major changes)
 - Fix save corruption in beta-11 when on a room with camera limitators, you add a new room from there, and then save the ROM (issue #263)
