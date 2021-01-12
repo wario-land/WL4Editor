@@ -538,13 +538,7 @@ void DoorConfigDialog::on_ComboBox_DoorType_currentIndexChanged(int index)
     if (!IsInitialized)
         return;
     LevelComponents::Door *currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
-    if ((index == 0) && (currentdoor0->GetDoorTypeNum() != 1))
-    {
-        QMessageBox::information(
-            this, QString("Info"),
-            QString(
-                "Unless you know what you are doing, don't put more than 1 Portal-type Door (vortex) in one level."));
-    }
+
     // TODOs: need more auto-reset to some of the Door attributes when select DoorType 4 or 5.
     currentdoor0->SetDoorType(static_cast<LevelComponents::DoorType>(index + 1));
 }

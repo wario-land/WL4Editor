@@ -3,7 +3,6 @@
 
 #include <QAbstractTableModel>
 #include <QDialog>
-#include <QMessageBox>
 #include <QStandardItemModel>
 #include <QString>
 #include <QScrollBar>
