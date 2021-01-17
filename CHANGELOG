@@ -1,3 +1,9 @@
+0.13.1:
+- Fix incorrect patch alignment logic which could corrupt ROMs when saving C patches
+- Fix layer priority setting doesn't work correctly in some edge cases (issue #325)
+- Remove info dialog when setting door type to type 1 (portal & door) in Door Config Dialog (Issue #322)
+- Change versioning scheme from beta-X to X.Y.Z, starting with 0.13.1 (since this is a smaller update to beta-13)
+
 beta-13:
 (major changes)
 - Added sprites editor/OAM designer
