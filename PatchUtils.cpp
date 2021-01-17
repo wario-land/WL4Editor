@@ -774,7 +774,7 @@ namespace PatchUtils
                     // If it is the first time processing this patch or we've been given a
                     // new free space region for this patch, compile and link at proposed
                     // address to find the required size
-                    int alignOffset = freeSpace.addr - ((freeSpace.addr + 3) & ~3);
+                    int alignOffset = ((freeSpace.addr + 3) & ~3) - freeSpace.addr;
                     patchAllocIter->PatchAddress = freeSpace.addr + alignOffset;
                     if((errorMsg = CompilePatchEntry(*patchAllocIter)) != "")
                     {
