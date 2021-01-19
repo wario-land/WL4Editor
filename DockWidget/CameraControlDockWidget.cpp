@@ -1,4 +1,4 @@
-#include "CameraControlDockWidget.h"
+﻿#include "CameraControlDockWidget.h"
 #include "ui_CameraControlDockWidget.h"
 
 #include "WL4EditorWindow.h"
@@ -255,6 +255,13 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
     int currentLimitatorTypeid =
         (currentLimitator->ChangeValueOffset == 0xFF ? -1 : currentLimitator->ChangeValueOffset);
     ui->CameraLimitatorTypePicker_comboBox->setCurrentIndex(currentLimitatorTypeid + 1);
+
+    // Clean up maximum settings so the following value reset won't be affected by previous maximum values
+    ui->spinBox_width->setMaximum(0xFF);
+    ui->spinBox_height->setMaximum(0xFF);
+    ui->spinBox_x1->setMaximum(0xFF);
+    ui->spinBox_y1->setMaximum(0xFF);
+
     ui->spinBox_x1->setValue(currentLimitator->x1);
     ui->spinBox_y1->setValue(currentLimitator->y1);
     ui->spinBox_width->setValue(currentLimitator->x2 - currentLimitator->x1 + 1);
