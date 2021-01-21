@@ -1,4 +1,4 @@
-#include "ScriptInterface.h"
+﻿#include "ScriptInterface.h"
 
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
@@ -266,86 +266,49 @@ void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
     log("Done!");
 }
 
-void ScriptInterface::_ExportEntityListData(QString filePath, int entitylistid)
+QString ScriptInterface::GetEntityListData(int entitylistid)
 {
-    log("Export Entity List Data from current Room.");
-    if(!filePath.compare(""))
-        filePath = QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), "", tr("bin files (*.bin)"));
-    if (filePath.compare(""))
-    {
-        if(entitylistid == -1)
-            entitylistid = prompt("Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)", "0").toInt();
+        if(entitylistid < 0 || entitylistid > 2)
+            entitylistid = prompt(tr("Illegal entitylist id, input it manually/n"
+                                     "Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)"),
+                                  "0").toInt();
         if(entitylistid < 0 || entitylistid > 2)
         {
             log("Illegal Entity list id!");
-            return;
+            return "";
         }
         LevelComponents::Room *room = singleton->GetCurrentRoom();
-        QFile file(filePath);
-        file.open(QIODevice::WriteOnly);
-        if (file.isOpen())
+        std::vector<struct LevelComponents::EntityRoomAttribute> tmpvec = room->GetEntityListData(entitylistid);
+        int size = tmpvec.size() * sizeof(struct LevelComponents::EntityRoomAttribute);
+        if(!size) return "";
+        QString result;
+        for(auto entity: tmpvec)
         {
-            std::vector<struct LevelComponents::EntityRoomAttribute> tmpvec = room->GetEntityListData(entitylistid);
-            int size = tmpvec.size() * sizeof(struct LevelComponents::EntityRoomAttribute);
-            if(!size)
-            {
-                log("No Entity in the list!");
-                file.close();
-                return;
-            }
-            QByteArray entitylistdata;
-            QDataStream stream(&entitylistdata, QIODevice::WriteOnly);
-            stream.setVersion(QDataStream::Qt_5_6);
-            for(auto entity: tmpvec)
-            {
-                stream << entity.YPos << entity.XPos << entity.EntityID;
-            }
-            file.write(entitylistdata.data(), size);
-        } else {
-            log("Cannot save data file!");
-            return;
+            result += QString::number(entity.YPos, 16).toUpper() + QChar(' ');
+            result += QString::number(entity.XPos, 16).toUpper() + QChar(' ');
+            result += QString::number(entity.EntityID, 16).toUpper() + QChar(' ');
         }
-        file.close();
-    } else {
-        log("Invalid file path!");
-        return;
-    }
-    log("Done!");
+        return result;
 }
 
-void ScriptInterface::_ImportEntityListData(QString fileName, int entitylistid)
+void ScriptInterface::SetEntityListData(QString entitylistdata, int entitylistid)
 {
-    log("Import Entity List Data from current Room.");
-    if(!fileName.compare(""))
-        fileName = QFileDialog::getOpenFileName(singleton,
-                                                    tr("Load Entity List Data bin file"), "",
-                                                    tr("bin files (*.bin)"));
-    if (!fileName.compare(""))
+    QStringList EntitylistStrData = entitylistdata.split(QChar(' '), Qt::SkipEmptyParts);
+    if(!EntitylistStrData.size())
     {
-        log("Invalid file path!");
+        log("No available data in the String!");
+        return;
+    }
+    if(EntitylistStrData.size() % 3)
+    {
+        log("Illegal string size! the size of the string must be a multiple of 3");
         return;
     }
 
-    // load data into QBytearray
-    QByteArray entitylistdata;
-    QFile entitylistdatabinfile(fileName);
-    int datasize = 0;
-    if(!entitylistdatabinfile.open(QIODevice::ReadOnly))
-    {
-        log("Cannot open file!");
-        return;
-    }
-    entitylistdata = entitylistdatabinfile.readAll();
-    datasize = entitylistdatabinfile.size();
-    entitylistdatabinfile.close();
-    if(!datasize || (datasize % 3))
-    {
-        log("No available data in the file!");
-        return;
-    }
-
-    if(entitylistid == -1)
-        entitylistid = prompt("Input the Entity list Id you want to replace data: 0(Hard) 1(Normal) 2(S Hard):", "0").toInt();
+    if(entitylistid < 0 || entitylistid > 2)
+        entitylistid = prompt(tr("Illegal entitylist id, input it manually/n"
+                                 "Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)"),
+                              "0").toInt();
     if(entitylistid < 0 || entitylistid > 2)
     {
         log("Illegal Entity list id!");
@@ -353,14 +316,16 @@ void ScriptInterface::_ImportEntityListData(QString fileName, int entitylistid)
     }
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     room->ClearEntitylist(entitylistid);
-    for(int i = 0; i < (datasize / 3); ++i)
+    for(int i = 0; i < (EntitylistStrData.size() / 3); ++i)
     {
-        room->AddEntity(entitylistdata.at(1 + 3 * i), entitylistdata.at(3 * i), entitylistdata.at(2 + 3 * i), entitylistid);
+        room->AddEntity(EntitylistStrData[3 * i + 1].toUInt(nullptr, 16),
+                        EntitylistStrData[3 * i].toUInt(nullptr, 16),
+                        EntitylistStrData[3 * i + 2].toUInt(nullptr, 16),
+                        entitylistid);
     }
     room->SetEntityListDirty(entitylistid, true);
     singleton->SetUnsavedChanges(true);
     singleton->RenderScreenFull();
-    log("Done!");
 }
 
 void ScriptInterface::SetCurrentRoomId(int roomid)
@@ -443,6 +408,13 @@ void ScriptInterface::UpdateRoomGFXFull()
 
 void ScriptInterface::WriteTxtFile(QString filepath, QString test)
 {
+    if(!filepath.compare(""))
+        filepath = QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), "", tr("bin files (*.bin)"));
+    if(!filepath.compare(""))
+    {
+        log("Invalid file path!");
+        return;
+    }
     QFile file(filepath);
     if(file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
