@@ -545,10 +545,14 @@ namespace ROMUtils
         }
 
         // Find free space in the ROM and attempt to offer the free regions to the chunk allocator
-resized:QVector<struct FreeSpaceRegion> freeSpaceRegions = FindAllFreeSpaceInROM(TempFile, TempLength);
+        QVector<struct FreeSpaceRegion> freeSpaceRegions;
         QVector<struct SaveData> chunksToAdd;
         std::map<int, int> indexToChunkPtr;
         bool success = false;
+
+resized:freeSpaceRegions.clear();
+        freeSpaceRegions = FindAllFreeSpaceInROM(TempFile, TempLength);
+
         do
         {
             // Order free space regions by increasing size
