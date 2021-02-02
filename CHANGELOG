@@ -1,3 +1,10 @@
+0.13.2:
+(major changes)
+- Fix a bug which could cause corruption while expanding the ROM
+(minor changes)
+- Fix incorrect reset of camera config dock widget UI when clicking listview (issue #323)
+- Change script API functions for import/export entity list data (to file) to import/export with variables instead
+
 0.13.1:
 - Fix incorrect patch alignment logic which could corrupt ROMs when saving C patches
 - Fix layer priority setting doesn't work correctly in some edge cases (issue #325)
