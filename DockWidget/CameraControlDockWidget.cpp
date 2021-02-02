@@ -261,6 +261,10 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
     ui->spinBox_height->setMaximum(0xFF);
     ui->spinBox_x1->setMaximum(0xFF);
     ui->spinBox_y1->setMaximum(0xFF);
+    ui->TriggerBlockPositionX_spinBox->setMaximum(0xFF);
+    ui->TriggerBlockPositionY_spinBox->setMaximum(0xFF);
+    ui->LimitatorSideOffset_spinBox->setMinimum(0);
+    ui->LimitatorSideOffset_spinBox->setMaximum(0xFF);
 
     ui->spinBox_x1->setValue(currentLimitator->x1);
     ui->spinBox_y1->setValue(currentLimitator->y1);
