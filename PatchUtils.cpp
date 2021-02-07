@@ -725,28 +725,29 @@ namespace PatchUtils
 
             // ChunkAllocator
 
-            [&neededSizeMap, &patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback, removePatches]
+            [&neededSizeMap, &patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback]
             (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd, bool resetchunkIndex)
             {
+                // This part of code will be triggered when rom size needs to be expanded
+                // So all the chunks will be reallocated
                 if(resetchunkIndex)
                 {
                     patchAllocIter = std::find_if(entries.begin(), entries.end(), []
                     (const struct PatchEntryItem p){return p.FileName.length();});
+
+                    // Each patchAllocIter->PatchAddress will be overwrite again so we don't need to clear the previous data setting
+                    plcAllocated = !entries.size();
+
+                    // TODO: what's the usage of neededSizeMap? reset it here if needed.
+                    // neededSizeMap.clear();
                 }
+
                 // On the first callback, we must recalculate the substituted bytes for the hook strings
                 // of the unmodified ROM. This must occur strictly before the new patch list chunk is created.
                 if(firstCallback)
                 {
-                    // Undo removal patches (if there are patches to remove)
-                    for(struct PatchEntryItem patch : removePatches)
-                    {
-                        // Get patch hex string from removal patch struct, write into TempFile
-                        unsigned char *originalBytes = HexStringToBinary(patch.SubstitutedBytes);
-                        memcpy(TempFile + patch.HookAddress, originalBytes, patch.SubstitutedBytes.length() / 2);
-                        delete[] originalBytes;
-                    }
-
                     // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
+                    // We don't need to redo this part if rom size expanding happens
                     for(struct PatchEntryItem &patch : entries)
                     {
                         int hookLength = patch.HookString.length() / 2; // hook string is hex string, 2 digits per byte
@@ -847,10 +848,21 @@ namespace PatchUtils
 
             // PostProcessingCallback
 
-            [removePatches, chunks, &entries]
+            [&removePatches, &entries]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
                 (void)indexToChunkPtr;
+
+                // Undo removal patches (if there are patches to remove)
+                // PostProcessingCallback will be called only once, so SubstitutedBytes recovery should be done here
+                // in case rom size expanding failure but TempFile data still got changed
+                for(struct PatchEntryItem patch : removePatches)
+                {
+                    // Get patch hex string from removal patch struct, write into TempFile
+                    unsigned char *originalBytes = HexStringToBinary(patch.SubstitutedBytes);
+                    memcpy(TempFile + patch.HookAddress, originalBytes, patch.SubstitutedBytes.length() / 2);
+                    delete[] originalBytes;
+                }
 
                 // Write hooks to ROM
                 for(struct PatchEntryItem patch : entries)

@@ -849,6 +849,8 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             {
                 (void) TempFile;
 
+                // This part of code will be triggered when rom size needs to be expanded
+                // So all the chunks will be reallocated
                 if(resetchunkIndex)
                 {
                     chunkIndex = 0;
