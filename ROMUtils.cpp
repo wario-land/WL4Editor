@@ -508,7 +508,7 @@ namespace ROMUtils
     /// True if the save was successful.
     /// </returns>
     bool SaveFile(QString filePath, QVector<unsigned int> invalidationChunks,
-        std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*)> ChunkAllocator,
+        std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*, bool)> ChunkAllocator,
         std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
@@ -549,8 +549,11 @@ namespace ROMUtils
         QVector<struct SaveData> chunksToAdd;
         std::map<int, int> indexToChunkPtr;
         bool success = false;
+        bool resizerom = false; // act as a trigger to reset index in ChunkAllocator
 
 resized:freeSpaceRegions.clear();
+        chunksToAdd.clear();
+        indexToChunkPtr.clear();
         freeSpaceRegions = FindAllFreeSpaceInROM(TempFile, TempLength);
 
         do
@@ -567,7 +570,8 @@ resized:freeSpaceRegions.clear();
             for(i = 0; i < freeSpaceRegions.size(); ++i)
             {
                 if(freeSpaceRegions[i].size <= lastSize) continue;
-                ChunkAllocationStatus status = ChunkAllocator(TempFile, freeSpaceRegions[i], &sd);
+                ChunkAllocationStatus status = ChunkAllocator(TempFile, freeSpaceRegions[i], &sd, resizerom);
+                resizerom = false;
                 switch(status)
                 {
                 case Success:
@@ -602,6 +606,7 @@ resized:freeSpaceRegions.clear();
                 TempFile = newTempFile;
                 memset(TempFile + TempLength, 0xFF, newSize - TempLength);
                 TempLength = newSize;
+                resizerom = true;
                 goto resized;
             }
             else
@@ -840,9 +845,14 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             // ChunkAllocator
 
             [&chunkIndex, addedChunks]
-            (unsigned char *TempFile, struct FreeSpaceRegion freeSpace, struct SaveData *sd)
+            (unsigned char *TempFile, struct FreeSpaceRegion freeSpace, struct SaveData *sd, bool resetchunkIndex)
             {
                 (void) TempFile;
+
+                if(resetchunkIndex)
+                {
+                    chunkIndex = 0;
+                }
 
                 if(chunkIndex >= addedChunks.size())
                 {

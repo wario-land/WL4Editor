@@ -726,8 +726,13 @@ namespace PatchUtils
             // ChunkAllocator
 
             [&neededSizeMap, &patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback, removePatches]
-            (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd)
+            (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd, bool resetchunkIndex)
             {
+                if(resetchunkIndex)
+                {
+                    patchAllocIter = std::find_if(entries.begin(), entries.end(), []
+                    (const struct PatchEntryItem p){return p.FileName.length();});
+                }
                 // On the first callback, we must recalculate the substituted bytes for the hook strings
                 // of the unmodified ROM. This must occur strictly before the new patch list chunk is created.
                 if(firstCallback)
