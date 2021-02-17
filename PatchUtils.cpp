@@ -737,9 +737,6 @@ namespace PatchUtils
 
                     // Each patchAllocIter->PatchAddress will be overwrite again so we don't need to clear the previous data setting
                     plcAllocated = !entries.size();
-
-                    // TODO: what's the usage of neededSizeMap? reset it here if needed.
-                    // neededSizeMap.clear();
                 }
 
                 // On the first callback, we must recalculate the substituted bytes for the hook strings
@@ -770,7 +767,8 @@ namespace PatchUtils
                         (std::pair<const unsigned int, const unsigned int> p){return p.first == patchAllocIter->HookAddress;});
                     if(neededSizePair != neededSizeMap.end())
                     {
-                        unsigned int neededSize = (*neededSizePair).second;
+                        int alignOffset = ((freeSpace.addr + 3) & ~3) - freeSpace.addr;
+                        unsigned int neededSize = (*neededSizePair).second + alignOffset;
                         if(freeSpace.size < neededSize)
                         {
                             return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
@@ -793,6 +791,7 @@ namespace PatchUtils
                     if(saveData.size + alignOffset + 12 > freeSpace.size)
                     {
                         delete saveData.data;
+                        neededSizeMap[patchAllocIter->HookAddress] = saveData.size + 12; // this prevents re-compiling while the callback iterates over all free space regions smaller than what was needed here
                         return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
                     }
 
