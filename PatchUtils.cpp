@@ -768,7 +768,7 @@ namespace PatchUtils
                     if(neededSizePair != neededSizeMap.end())
                     {
                         int alignOffset = ((freeSpace.addr + 3) & ~3) - freeSpace.addr;
-                        unsigned int neededSize = (*neededSizePair).second + alignOffset;
+                        unsigned int neededSize = (*neededSizePair).second + alignOffset; // we add alignment offset because the alignment offset is different for every free space region
                         if(freeSpace.size < neededSize)
                         {
                             return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
@@ -791,7 +791,9 @@ namespace PatchUtils
                     if(saveData.size + alignOffset + 12 > freeSpace.size)
                     {
                         delete saveData.data;
-                        neededSizeMap[patchAllocIter->HookAddress] = saveData.size + 12; // this prevents re-compiling while the callback iterates over all free space regions smaller than what was needed here
+                        // this prevents re-compiling while the callback iterates over all free space regions smaller than what was needed here
+                        // we do not include alignment offset because the alignment offset is different for every free space region
+                        neededSizeMap[patchAllocIter->HookAddress] = saveData.size + 12;
                         return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
                     }
 
