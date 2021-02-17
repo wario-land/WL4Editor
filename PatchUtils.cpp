@@ -887,8 +887,8 @@ namespace PatchUtils
                 }
 
                 return QString("");
-            }
-        );
+            },
+        true);
 
         return ret ? "" : errorMsg;
     }
