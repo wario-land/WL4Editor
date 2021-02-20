@@ -82,7 +82,7 @@ namespace ROMUtils
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
     bool SaveFile(QString filePath, QVector<unsigned int> invalidationChunks,
         std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*, bool)> ChunkAllocator,
-        std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback, bool IsSavingPatch);
+        std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback);
     bool SaveLevel(QString fileName);
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor = false);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);

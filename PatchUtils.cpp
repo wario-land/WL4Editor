@@ -719,13 +719,14 @@ namespace PatchUtils
         QString errorMsg;
         bool plcAllocated = !entries.size(); // patch list chunk status
         bool firstCallback = true;
+        QVector<unsigned char*> SaveDataList;
 
         // Allocate and save the chunks to the ROM
         bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, invalidationChunks,
 
             // ChunkAllocator
 
-            [&neededSizeMap, &patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback]
+            [&neededSizeMap, &patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback, &SaveDataList]
             (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd, bool resetchunkIndex)
             {
                 // This part of code will be triggered when rom size needs to be expanded
@@ -737,6 +738,13 @@ namespace PatchUtils
 
                     // Each patchAllocIter->PatchAddress will be overwrite again so we don't need to clear the previous data setting
                     plcAllocated = !entries.size();
+
+                    // Clean up old save data chunks
+                    for(auto data : SaveDataList)
+                    {
+                        delete[] data;
+                    }
+                    SaveDataList.clear();
                 }
 
                 // On the first callback, we must recalculate the substituted bytes for the hook strings
@@ -807,6 +815,7 @@ namespace PatchUtils
                         patchAllocIter++;
                     }
 
+                    SaveDataList.push_back(saveData.data);
                     return ROMUtils::ChunkAllocationStatus::Success;
                 }
                 else
@@ -816,7 +825,7 @@ namespace PatchUtils
                     {
                         // Create patch list chunk contents, make sure there is sufficient space
                         QString patchListChunkContents = CreatePatchListChunkData(entries);
-                        // To see if the data will fit, we must include the text contents, size of the RATS header, and one byte for versioning
+                        // To see if the data will fit, we must include the text contenets, size of the RATS header, and one byte for versioning
                         if((unsigned int)patchListChunkContents.length() + 13 > freeSpace.size)
                         {
                             return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
@@ -840,6 +849,7 @@ namespace PatchUtils
                         *sd = patchListChunk;
 
                         plcAllocated = true;
+                        SaveDataList.push_back(patchListChunk.data);
                         return ROMUtils::ChunkAllocationStatus::Success;
                     }
 
@@ -887,8 +897,8 @@ namespace PatchUtils
                 }
 
                 return QString("");
-            },
-        true);
+            }
+        );
 
         return ret ? "" : errorMsg;
     }

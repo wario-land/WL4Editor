@@ -509,7 +509,7 @@ namespace ROMUtils
     /// </returns>
     bool SaveFile(QString filePath, QVector<unsigned int> invalidationChunks,
         std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*, bool)> ChunkAllocator,
-        std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback, bool IsSavingPatch)
+        std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
         unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
@@ -551,14 +551,7 @@ namespace ROMUtils
         bool success = false;
         bool resizerom = false; // act as a trigger to reset index in ChunkAllocator
 
-resized:if(IsSavingPatch && chunksToAdd.size())
-        {
-            for(SaveData tmp_sd: chunksToAdd)
-            {
-                delete[] tmp_sd.data;
-            }
-        }
-        freeSpaceRegions.clear();
+resized:freeSpaceRegions.clear();
         chunksToAdd.clear();
         indexToChunkPtr.clear();
         freeSpaceRegions = FindAllFreeSpaceInROM(TempFile, TempLength);
@@ -935,8 +928,8 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                     }
                 }
                 return QString("");
-            },
-        false);
+            }
+        );
 
         if(!ret) return false;
 
