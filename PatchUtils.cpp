@@ -825,7 +825,7 @@ namespace PatchUtils
                     {
                         // Create patch list chunk contents, make sure there is sufficient space
                         QString patchListChunkContents = CreatePatchListChunkData(entries);
-                        // To see if the data will fit, we must include the text contenets, size of the RATS header, and one byte for versioning
+                        // To see if the data will fit, we must include the text contents, size of the RATS header, and one byte for versioning
                         if((unsigned int)patchListChunkContents.length() + 13 > freeSpace.size)
                         {
                             return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
