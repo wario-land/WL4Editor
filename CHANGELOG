@@ -1,3 +1,9 @@
+0.13.3:
+(major changes)
+- Fix another bug which could cause corruption while expanding the ROM
+(minor changes)
+- Add scroll area to room config dialog for accessiblity on smaller displays (issue #333)
+
 0.13.2:
 (major changes)
 - Fix a bug which could cause corruption while expanding the ROM
