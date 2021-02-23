@@ -760,7 +760,10 @@ namespace PatchUtils
                         {
                             hookLength += 4;
                         }
-                        patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
+                        if(patch.FileName.length()) // skip hook-only patches so it won't go wrong on the second patch save
+                        {
+                            patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
+                        }
                     }
 
                     firstCallback = false;
