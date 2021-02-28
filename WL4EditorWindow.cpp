@@ -1516,7 +1516,7 @@ bool WL4EditorWindow::SaveCurrentFileAs()
         if (ROMUtils::SaveLevel(qFilePath))
         {
             // If successful in saving the file, set the window title to reflect the new file
-            dialogInitialPath = qFilePath;
+            ROMUtils::ROMFilePath = dialogInitialPath = qFilePath;
             std::string filePath = qFilePath.toStdString();
             std::string fileName = filePath.substr(filePath.rfind('/') + 1);
             setWindowTitle(fileName.c_str());
