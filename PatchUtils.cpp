@@ -761,13 +761,12 @@ namespace PatchUtils
                             hookLength += 4;
                         }
 
-                        // patches with files need to set SubstitutedBytes
-                        // skip hook-only patches if they have existed in the rom
-                        bool HookOnlyPatchNotExistInFile = removePatches.end() == std::find_if(removePatches.begin(),
-                                                                                            removePatches.end(),
-                                                                                            [&patch](struct PatchEntryItem removepatch)
-                                                                                            { return removepatch.HookAddress == patch.HookAddress; });
-                        if((patch.FileName.isEmpty() && HookOnlyPatchNotExistInFile) || !patch.FileName.isEmpty())
+                        // skip patches if they have existed in the rom
+                        bool PatchNotExistInFile = removePatches.end() == std::find_if(removePatches.begin(),
+                                                                                       removePatches.end(),
+                                                                                       [&patch](struct PatchEntryItem removepatch)
+                                                                                       { return removepatch.HookAddress == patch.HookAddress; });
+                        if(PatchNotExistInFile)
                         {
                             patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
                         }
