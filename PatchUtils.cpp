@@ -761,7 +761,8 @@ namespace PatchUtils
                             hookLength += 4;
                         }
 
-                        // skip patches if they have existed in the rom
+                        // Skip patches if they already exist in the ROM.
+                        // This is because if we set the substrituted bytes to what's already there now, then it will overwrite them with the edited bytes.
                         bool PatchNotExistInFile = removePatches.end() == std::find_if(removePatches.begin(),
                                                                                        removePatches.end(),
                                                                                        [&patch](struct PatchEntryItem removepatch)
