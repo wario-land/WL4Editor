@@ -726,7 +726,7 @@ namespace PatchUtils
 
             // ChunkAllocator
 
-            [&neededSizeMap, &patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback, &SaveDataList]
+            [&neededSizeMap, &patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback, &SaveDataList, &removePatches]
             (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd, bool resetchunkIndex)
             {
                 // This part of code will be triggered when rom size needs to be expanded
@@ -760,7 +760,13 @@ namespace PatchUtils
                         {
                             hookLength += 4;
                         }
-                        if(patch.FileName.length()) // skip hook-only patches so it won't go wrong on the second patch save
+
+                        // skip hook-only patches if they exist in the rom
+                        if(patch.FileName.isEmpty() &&
+                                removePatches.end() == std::find_if(removePatches.begin(),
+                                                                    removePatches.end(),
+                                                                    [&patch](struct PatchEntryItem removepatch)
+                                                                    { return removepatch.HookAddress == patch.HookAddress; }))
                         {
                             patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
                         }
