@@ -170,7 +170,7 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
         hookAddressText.toUInt(Q_NULLPTR, 16),
         NormalizeHookText(ui->lineEdit_HookText->text()),
         GetPatchOffset(ui->lineEdit_HookText->text()),
-        WL4Constants::AvailableSpaceBeginningInROM, // dummy value for starting address of patch
+        ui->lineEdit_FilePath->text().isEmpty() ? 0 : WL4Constants::AvailableSpaceBeginningInROM, // dummy value for starting address of patch
         "",
         ui->textEdit_Description->toPlainText()
     };
