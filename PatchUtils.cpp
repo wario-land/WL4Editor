@@ -762,11 +762,12 @@ namespace PatchUtils
                         }
 
                         // skip hook-only patches if they exist in the rom
-                        if(patch.FileName.isEmpty() &&
+                        if((patch.FileName.isEmpty() &&
                                 removePatches.end() == std::find_if(removePatches.begin(),
                                                                     removePatches.end(),
                                                                     [&patch](struct PatchEntryItem removepatch)
-                                                                    { return removepatch.HookAddress == patch.HookAddress; }))
+                                                                    { return removepatch.HookAddress == patch.HookAddress; })) ||
+                           !patch.FileName.isEmpty())
                         {
                             patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
                         }
