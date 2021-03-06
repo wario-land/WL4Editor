@@ -1,3 +1,10 @@
+0.13.4:
+(major changes)
+- Fix re-saving patches will corrupt the saved substituted bytes, effectively making it so you cannot remove the patch or else it make the ROM crash (issue #337)
+(minor changes)
+- Fix wrong patch address displayed for hex edit patches
+- Fix "save-as" does not switch active ROM file (subsequent save, or using patch manager would modify the first ROM)
+
 0.13.3:
 (major changes)
 - Fix another bug which could cause corruption while expanding the ROM
