@@ -761,7 +761,7 @@ namespace PatchUtils
                             hookLength += 4;
                         }
 
-                        // Set substrituted bytes data
+                        // Set substituted bytes data
                         auto currentPatch_OldVersion = std::find_if(removePatches.begin(),
                                                                     removePatches.end(),
                                                                     [&patch](struct PatchEntryItem removepatch)
@@ -773,7 +773,7 @@ namespace PatchUtils
                         }
                         else // edit patches or unchanged patches
                         {
-                            // Temp undo patch's hookstring to generate new substrituted bytes
+                            // Temp undo patch's hookstring to generate new substituted bytes
                             int hookstringsize = currentPatch_OldVersion->SubstitutedBytes.length() / 2;
                             unsigned char *hookStringBytes_Old = new unsigned char[hookstringsize];
                             memcpy(hookStringBytes_Old, TempFile + currentPatch_OldVersion->HookAddress, hookstringsize);
