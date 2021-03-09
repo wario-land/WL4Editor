@@ -761,15 +761,32 @@ namespace PatchUtils
                             hookLength += 4;
                         }
 
-                        // Skip patches if they already exist in the ROM.
-                        // This is because if we set the substrituted bytes to what's already there now, then it will overwrite them with the edited bytes.
-                        bool PatchNotExistInFile = removePatches.end() == std::find_if(removePatches.begin(),
-                                                                                       removePatches.end(),
-                                                                                       [&patch](struct PatchEntryItem removepatch)
-                                                                                       { return removepatch.HookAddress == patch.HookAddress; });
-                        if(PatchNotExistInFile)
+                        // Set substrituted bytes data
+                        auto currentPatch_OldVersion = std::find_if(removePatches.begin(),
+                                                                    removePatches.end(),
+                                                                    [&patch](struct PatchEntryItem removepatch)
+                                                                    { return removepatch.HookAddress == patch.HookAddress; });
+                        bool PatchNotExistInFile = removePatches.end() == currentPatch_OldVersion;
+                        if(PatchNotExistInFile) // new patches
                         {
                             patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
+                        }
+                        else // edit patches or unchanged patches
+                        {
+                            // Temp undo patch's hookstring to generate new substrituted bytes
+                            int hookstringsize = currentPatch_OldVersion->SubstitutedBytes.length() / 2;
+                            unsigned char *hookStringBytes_Old = new unsigned char[hookstringsize];
+                            memcpy(hookStringBytes_Old, TempFile + currentPatch_OldVersion->HookAddress, hookstringsize);
+                            unsigned char *originalBytes = HexStringToBinary(currentPatch_OldVersion->SubstitutedBytes);
+                            memcpy(TempFile + currentPatch_OldVersion->HookAddress, originalBytes, hookstringsize);
+                            delete[] originalBytes;
+
+                            // generate new SubstitutedBytes
+                            patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
+
+                            // recover old patch's hookstring
+                            memcpy(TempFile + currentPatch_OldVersion->HookAddress, hookStringBytes_Old, hookstringsize);
+                            delete[] hookStringBytes_Old;
                         }
                     }
 

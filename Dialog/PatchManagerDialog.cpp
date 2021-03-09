@@ -202,7 +202,6 @@ void PatchManagerDialog::on_editPatchButton_clicked()
         int selectedIndex = -1;
         std::find_if(currentEntries.begin(), currentEntries.end(),
             [selectedEntry, &selectedIndex](struct PatchEntryItem e){ ++selectedIndex; return selectedEntry.HookAddress == e.HookAddress; });
-        currentEntries.remove(selectedIndex);
 
         // Execute the edit dialog
         PatchEditDialog editDialog(this, selectedEntry);
