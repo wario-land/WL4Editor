@@ -176,7 +176,7 @@ private:
         "2F  Hotel (outside)",
         "30  Unused in-game (Haunted House)",
         "31  Unused in-game (Haunted House)",
-        "32  Unused in-game (Cardboard)",
+        "32  Cardboard",
         "33  Cardboard",
         "34  Caves",
         "35  Jungle",
