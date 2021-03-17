@@ -27,6 +27,24 @@ void EntitySetDockWidget::ResetEntitySet(LevelComponents::Room *currentroom)
 }
 
 /// <summary>
+/// Reset Entity ID and update UI in the Dock Widget.
+/// </summary>
+/// <param name="entityindex">
+/// Provide a new entity id to set current entity in the entityset.
+/// </param>
+void EntitySetDockWidget::SetCurrentEntity(int entityindex)
+{
+    // Bad Input
+    if (entityindex > EntityMaxNum || entityindex < 0)
+        return;
+
+    ui->pushButton_PreviousEntity->setEnabled(entityindex > 0 ? true : false);
+    ui->pushButton_NextEntity->setEnabled(entityindex < EntityMaxNum ? true : false);
+    currentEntityId = entityindex;
+    RenderEntityAndResetInfo();
+}
+
+/// <summary>
 /// Redraw Entity on graphicsView_CurrentEntity and reset its info.
 /// </summary>
 void EntitySetDockWidget::RenderEntityAndResetInfo()

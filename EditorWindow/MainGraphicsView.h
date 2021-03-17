@@ -1,9 +1,6 @@
 #ifndef MAINGRAPHICSVIEW_H
 #define MAINGRAPHICSVIEW_H
 
-#include "Dialog/DoorConfigDialog.h"
-#include "LevelComponents/Level.h"
-#include "WL4EditorWindow.h"
 #include <QtGlobal>
 #include <QGraphicsView>
 
