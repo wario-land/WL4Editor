@@ -19,6 +19,7 @@ public:
     ~EntitySetDockWidget();
     void ResetEntitySet(LevelComponents::Room *currentroom);
     int GetCurrentEntityLocalId() { return currentEntityId; }
+    void SetCurrentEntity(int entityindex);
 
 private slots:
     void on_pushButton_PreviousEntity_clicked();
