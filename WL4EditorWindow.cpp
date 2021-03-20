@@ -2114,7 +2114,7 @@ void WL4EditorWindow::on_actionEdit_Entity_EntitySet_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_duplicate_Normal_triggered()
 {
-    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
     // copy  Hard Entity list into Super Hard Entity list
     CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 1);
@@ -2134,7 +2134,7 @@ void WL4EditorWindow::on_action_duplicate_Normal_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_duplicate_Hard_triggered()
 {
-    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
     // copy  Hard Entity list into Super Hard Entity list
     CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 0);
@@ -2154,7 +2154,7 @@ void WL4EditorWindow::on_action_duplicate_Hard_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
 {
-    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+    int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
     // copy  Hard Entity list into Super Hard Entity list
     CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 2);

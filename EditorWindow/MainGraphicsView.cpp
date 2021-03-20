@@ -180,7 +180,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         else if (editMode == Ui::EntityEditMode) // select or add an Entity
         {
             SelectedEntityID = room->FindEntity(tileX, tileY);
-            int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+            int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
             if (SelectedEntityID == -1)
             {
                 // Add the new entity
@@ -385,7 +385,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                     {
                         currentRoom->SetEntityPosition(tileX, tileY, SelectedEntityID);
                         singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, SelectedEntityID);
-                        int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                        int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
                         singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
                         singleton->SetUnsavedChanges(true);
                     }
@@ -631,7 +631,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             singleton->DeleteEntity(SelectedEntityID);
             SelectedEntityID = -1;
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
-            int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+            int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
             singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
             singleton->SetUnsavedChanges(true);
         }; break;

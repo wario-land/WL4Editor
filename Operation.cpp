@@ -118,7 +118,7 @@ void PerformOperation(struct OperationParams *operation)
                 {
                     currentRoom->SetEntityPosition(om->nextPositionX, om->nextPositionY, om->objectID);
                     singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
-                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
                     singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
                     singleton->SetUnsavedChanges(true);
                 }
@@ -274,7 +274,7 @@ void BackTrackOperation(struct OperationParams *operation)
                 {
                     currentRoom->SetEntityPosition(om->previousPositionX, om->previousPositionY, om->objectID);
                     singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
-                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().seleteddifficulty;
+                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
                     singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
                 }
             }
