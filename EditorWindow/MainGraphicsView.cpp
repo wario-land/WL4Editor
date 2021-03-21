@@ -196,7 +196,10 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 SelectedEntityID = room->FindEntity(tileX, tileY); // reset SelectedEntityID
             }
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, SelectedEntityID);
-            singleton->GetEntitySetDockWidgetPtr()->SetCurrentEntity(room->GetEntityListData(difficulty)[SelectedEntityID].EntityID);
+            if (event->button() == Qt::RightButton)
+            {
+                singleton->GetEntitySetDockWidgetPtr()->SetCurrentEntity(room->GetEntityListData(difficulty)[SelectedEntityID].EntityID);
+            }
             holdingEntityOrDoor = true;
             objectInitialX = tileX;
             objectInitialY = tileY;
