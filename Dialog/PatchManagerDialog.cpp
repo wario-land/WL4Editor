@@ -90,6 +90,12 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
             QString::number(newEntry.HookAddress, 16).toUpper(), QString::number(newEntry.HookAddress + newEntry.GetHookLength() - 1, 16).toUpper());
     }
 
+    // Patch on the first 4 bytes of the rom is not allowed
+    if(newEntry.HookAddress < 4)
+    {
+        return QString("Patch on the first 4 bytes of the rom is not allowed.");
+    }
+
     // File name may not contain a semicolon
     if(newEntry.FileName.contains(";"))
     {
@@ -142,13 +148,13 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
 
     // Patch's hook may not overlap with another patch's hook
     struct PatchEntryItem curr;
-    bool hookIsValid = !newEntry.HookAddress || !std::any_of(currentEntries.begin(), currentEntries.end(), [newEntry, &curr](struct PatchEntryItem e)
+    bool hasHookAddressConflict = std::any_of(currentEntries.begin(), currentEntries.end(), [newEntry, &curr](struct PatchEntryItem e)
     {
         curr = e;
         int s1 = newEntry.HookAddress, s2 = e.HookAddress, e1 = newEntry.GetHookLength() + s1 - 1, e2 = e.GetHookLength() + s2 - 1;
         return (e1 >= s2 && e1 <= e2) || (e2 >= s1 && e2 <= e1);
     });
-    if(!hookIsValid)
+    if(hasHookAddressConflict)
     {
         return QString("This patch's hook (0x%1 - 0x%2) overlaps with the hook of another patch (0x%3 - 0x%4)").arg(
             QString::number(newEntry.HookAddress, 16).toUpper(), QString::number(newEntry.HookAddress + newEntry.GetHookLength() - 1, 16).toUpper(),
