@@ -1,3 +1,11 @@
+0.13.5:
+(major changes)
+- Fix editing existing patches would corrupt substituted bytes so that patch could not be undone (issue #341)
+(minor changes)
+- Right clicking an entity in entity edit mode will now switch to that entity in the entity selection widget (issue #215)
+- Fixed an incorrect tileset name for Doodle Woods in room config dialog
+- Disallow patching the first 4 bytes of the ROM
+
 0.13.4:
 (major changes)
 - Fix re-saving patches will corrupt the saved substituted bytes, effectively making it so you cannot remove the patch or else it make the ROM crash (issue #337)
