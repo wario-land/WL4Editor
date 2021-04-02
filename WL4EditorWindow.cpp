@@ -15,7 +15,7 @@
 #include <QTextEdit>
 #include <QSizePolicy>
 
-bool LoadROMFile(QString); // Prototype for main.cpp function
+QString LoadROMFile(QString); // Prototype for main.cpp function
 
 // Variables used by WL4EditorWindow
 bool editModeWidgetInitialized = false;
@@ -221,9 +221,9 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
 {
     // Load the ROM file
     std::string filePath = qFilePath.toStdString();
-    if (!LoadROMFile(qFilePath))
+    if (QString errorMessage = LoadROMFile(qFilePath); !errorMessage.isEmpty())
     {
-        QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(tr("You may have loaded an invalid ROM!")));
+        QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(errorMessage));
         return;
     }
 
