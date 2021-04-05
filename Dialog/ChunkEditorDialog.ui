@@ -90,6 +90,27 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pushButton_SelectAll">
+         <property name="text">
+          <string>Select All</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_DeselectAll">
+         <property name="text">
+          <string>Deselect All</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="pushButton_AddChunk">
          <property name="text">
           <string>Add Chunk</string>
