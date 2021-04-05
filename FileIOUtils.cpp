@@ -449,3 +449,52 @@ QImage FileIOUtils::RenderBGColor(QImage image, QWidget *parent)
     }
     return image;
 }
+
+/// <summary>
+/// Load a ROM file into the data array in ROMUtils.cpp.
+/// </summary>
+/// <param name="filePath">
+/// The path to the file that will be read.
+/// </param>
+QString FileIOUtils::LoadROMFile(QString filePath)
+{
+    // Read ROM file into current file array
+    QFile file(filePath);
+    file.open(QIODevice::ReadOnly);
+
+    // To check OPEN file
+    int length;
+    if (!file.isOpen())
+    {
+        file.close();
+        return QObject::tr("Cannot open file!") + filePath;
+    }
+    if ((length = (int) file.size()) < 0x800000)
+    {
+        file.close();
+        return QObject::tr("The file size is smaller than 8 MB!");
+    }
+
+    // Read data
+    unsigned char *ROMAddr = new unsigned char[length];
+    file.read((char *) ROMAddr, length);
+    file.close();
+
+    // To check ROM correct
+    if (strncmp((const char *) (ROMAddr + 0xA0), "WARIOLAND", 9))
+    { // if loaded a wrong ROM
+        delete[] ROMAddr;
+        return QObject::tr("The rom header indicates that it is not a WL4 rom!");
+    }
+    if (strncmp((const char *) ROMAddr, "\x2E\x00\x00", 3))
+    { // if the first 4 bytes are different
+        delete[] ROMAddr;
+        return QObject::tr("The rom you load has a Nintendo intro which will cause problems in the editor! "
+                           "Please load a rom without intro instead.");
+    }
+
+    ROMUtils::CurrentFileSize = length;
+    ROMUtils::ROMFilePath = filePath;
+    ROMUtils::CurrentFile = (unsigned char *) ROMAddr;
+    return "";
+}
