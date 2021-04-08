@@ -112,7 +112,7 @@ namespace LevelComponents
         static void DeleteCachedImageData(QImageW *image);
 
     public:
-        Tile8x8(int dataPtr, QVector<QRgb> *_palettes);
+        Tile8x8(int dataPtr, QVector<QRgb> *_palettes, bool loadFromTmpROM = false);
         Tile8x8(unsigned char *data, QVector<QRgb> *_palettes);
         Tile8x8(Tile8x8 *other);
         Tile8x8(Tile8x8 *other, QVector<QRgb> *_palettes);

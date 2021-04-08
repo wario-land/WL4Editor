@@ -110,6 +110,7 @@ public:
     QGraphicsView *Getgraphicview();
     void SetChangeCurrentRoomEnabled(bool state);
     void SetCurrentRoomId(int roomid);
+    void EditCurrentTileset(DialogParams::TilesetEditParams *_newTilesetParam);
 
 private slots:
     // called slots
@@ -159,6 +160,7 @@ private slots:
     void on_actionEdit_Entity_EntitySet_triggered();
     void on_actionOutput_window_triggered();
     void on_actionAbout_triggered();
+    void on_actionImport_Tileset_from_ROM_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

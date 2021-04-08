@@ -30,10 +30,11 @@ namespace LevelComponents
         int paletteAddress, fgGFXptr, fgGFXlen, bgGFXptr, bgGFXlen, map16ptr;
 
     public:
-        Tileset(int tilesetPtr, int __TilesetID);
+        Tileset(int tilesetPtr, int __TilesetID, bool IsloadFromTmpROM = false);
         Tileset(Tileset *old_tileset, int __TilesetID);
         void SetAnimatedTile(int tile8x8groupId, int tile8x8group2Id, int SwitchId, int startTile8x8Id);
         int getTilesetPtr() { return tilesetPtr; }
+        void setTilesetPtr(int pointerValue) { tilesetPtr = pointerValue; }
         QVector<Tile8x8 *> GetTile8x8arrayPtr() { return tile8x8array; }
         QVector<TileMap16 *> GetMap16arrayPtr() { return map16array; }
         QVector<QRgb> *GetPalettes() { return palettes; }

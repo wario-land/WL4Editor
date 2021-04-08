@@ -456,7 +456,7 @@ QImage FileIOUtils::RenderBGColor(QImage image, QWidget *parent)
 /// <param name="filePath">
 /// The path to the file that will be read.
 /// </param>
-QString FileIOUtils::LoadROMFile(QString filePath)
+QString FileIOUtils::LoadROMFile(QString filePath, bool loadAsTempFile)
 {
     // Read ROM file into current file array
     QFile file(filePath);
@@ -493,8 +493,17 @@ QString FileIOUtils::LoadROMFile(QString filePath)
                            "Please load a rom without intro instead.");
     }
 
-    ROMUtils::CurrentFileSize = length;
-    ROMUtils::ROMFilePath = filePath;
-    ROMUtils::CurrentFile = (unsigned char *) ROMAddr;
+    if (loadAsTempFile)
+    {
+        ROMUtils::tmpCurrentFileSize = length;
+        ROMUtils::tmpROMFilePath = filePath;
+        ROMUtils::tmpCurrentFile = (unsigned char *) ROMAddr;
+    }
+    else
+    {
+        ROMUtils::CurrentFileSize = length;
+        ROMUtils::ROMFilePath = filePath;
+        ROMUtils::CurrentFile = (unsigned char *) ROMAddr;
+    }
     return "";
 }
