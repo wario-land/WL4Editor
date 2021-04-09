@@ -118,6 +118,13 @@ namespace LevelComponents
         TilesetPaletteData = new unsigned short[16 * 16];
         memcpy(TilesetPaletteData, (unsigned short *) (curFilePtr + ROMUtils::PointerFromData(tilesetPtr + 8, IsloadFromTmpROM)), 16 * 16 * sizeof(unsigned short));
 
+        // Reset pointer variables if the data comes from a temp ROM
+        if (IsloadFromTmpROM)
+        {
+            this->fgGFXptr = 0;
+            this->map16ptr = 0;
+            this->paletteAddress = 0;
+        }
         hasconstructed = true;
     }
 

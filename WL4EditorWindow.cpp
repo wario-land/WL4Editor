@@ -400,32 +400,32 @@ void WL4EditorWindow::SetCurrentRoomId(int roomid)
 /// <summary>
 /// Helper function to edit current Tileset by opening a Tileset Editor dialog
 /// </summary>
-void WL4EditorWindow::EditCurrentTileset(DialogParams::TilesetEditParams *_newTilesetParam)
+void WL4EditorWindow::EditCurrentTileset(DialogParams::TilesetEditParams *_newTilesetEditParams)
 {
     // Show the dialog
-    TilesetEditDialog dialog(this, _newTilesetParam);
+    TilesetEditDialog dialog(this, _newTilesetEditParams);
     if (dialog.exec() == QDialog::Accepted)
     {
-        int currentTilesetId = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
+        int currentTilesetId = _newTilesetEditParams->currentTilesetIndex;
+        int tilesetPtr = WL4Constants::TilesetDataTable + currentTilesetId * 36;
         DialogParams::TilesetEditParams *_oldRoomTilesetEditParams = new DialogParams::TilesetEditParams();
         _oldRoomTilesetEditParams->currentTilesetIndex = currentTilesetId;
-        _newTilesetParam->currentTilesetIndex = currentTilesetId;
         _oldRoomTilesetEditParams->newTileset = ROMUtils::singletonTilesets[currentTilesetId];
-        _newTilesetParam->newTileset->setTilesetPtr(_oldRoomTilesetEditParams->newTileset->getTilesetPtr());
-        _newTilesetParam->newTileset->SetChanged(true);
+        _newTilesetEditParams->newTileset->setTilesetPtr(tilesetPtr);
+        _newTilesetEditParams->newTileset->SetChanged(true);
 
         // Execute Operation and add changes into the operation history
         OperationParams *operation = new OperationParams;
         operation->type = ChangeTilesetOperation;
         operation->TilesetChange = true;
         operation->lastTilesetEditParams = _oldRoomTilesetEditParams;
-        operation->newTilesetEditParams = _newTilesetParam;
+        operation->newTilesetEditParams = _newTilesetEditParams;
         ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
     }
     else
     {
-        delete _newTilesetParam->newTileset;
-        delete _newTilesetParam;
+        delete _newTilesetEditParams->newTileset;
+        delete _newTilesetEditParams;
     }
 }
 
@@ -2201,9 +2201,9 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
         return;
     }
     QString text = QInputDialog::getText(nullptr, tr("InputBox"),
-                                         tr("Input a Tileset Id using hex number\n"
+                                         tr("Input a Tileset Id using HEX number\n"
                                             "The Editor will use this to load a Tileset from the temp-opened ROM\n"
-                                            "and replace the corresponding Tileset used in the current Room if accepted."),
+                                            "and replace the corresponding Tileset in the current ROM if accepted."),
                                          QLineEdit::Normal,
                                          "1");
     int tilesetId = text.toInt(nullptr, 16);
@@ -2220,8 +2220,8 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
     EditCurrentTileset(_newTilesetEditParams);
 
     // RAM cleanup
-    ROMUtils::CurrentFileSize = 0;
-    ROMUtils::ROMFilePath.clear();
-    delete[] ROMUtils::CurrentFile;
-    ROMUtils::CurrentFile = nullptr;
+    ROMUtils::tmpCurrentFileSize = 0;
+    ROMUtils::tmpROMFilePath.clear();
+    delete[] ROMUtils::tmpCurrentFile;
+    ROMUtils::tmpCurrentFile = nullptr;
 }

@@ -209,10 +209,7 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
     if (ComboBoxInitialized)
     {
         // Update the graphic view
-        LevelComponents::Tileset *oldTileset = currentTileset;
-        int _tilesetPtr = WL4Constants::TilesetDataTable + index * 36;
-        currentTileset = new LevelComponents::Tileset(_tilesetPtr, index);
-        delete oldTileset;
+        currentTileset = ROMUtils::singletonTilesets[index];
 
         // Update the available BG layers to choose from
         std::vector<int> BGlayers = BGLayerdataPtrs[index];

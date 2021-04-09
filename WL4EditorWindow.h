@@ -110,7 +110,7 @@ public:
     QGraphicsView *Getgraphicview();
     void SetChangeCurrentRoomEnabled(bool state);
     void SetCurrentRoomId(int roomid);
-    void EditCurrentTileset(DialogParams::TilesetEditParams *_newTilesetParam);
+    void EditCurrentTileset(DialogParams::TilesetEditParams *_newTilesetEditParams);
 
 private slots:
     // called slots
