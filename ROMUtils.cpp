@@ -834,6 +834,10 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             }
             else
             {
+                if(chunks[i].old_chunk_addr >= WL4Constants::AvailableSpaceBeginningInROM)
+                {
+                    invalidationChunks.append(chunks[i].old_chunk_addr);
+                }
                 addedChunks.append(chunks[i]);
             }
         }
@@ -1192,12 +1196,13 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         double freeSpaceP_nonFrag = (double) nonFragmentedSpace / totalFreeSpace;
         double usedSpaceP = (double) totalUsedSpace / saveAreaSize;
         QMap<enum SaveDataChunkType, double> usedSpaceP_ofType;
+        int divisor = totalUsedSpace ? totalUsedSpace : 1; // display 0.00% correctly
         for(int i = 0; i < CHUNK_TYPE_COUNT; ++i)
         {
             enum SaveDataChunkType t = static_cast<enum SaveDataChunkType>(i);
-            usedSpaceP_ofType.insert(t, (double) chunkTypeSpace[t] / totalUsedSpace);
+            usedSpaceP_ofType.insert(t, (double) chunkTypeSpace[t] / divisor);
         }
-        double usedSpaceP_ofTypeOther = (double) otherTypeSpace / totalUsedSpace;
+        double usedSpaceP_ofTypeOther = (double) otherTypeSpace / divisor;
 
         // Print statistics
         qDebug() << QString("Save data area: %1").arg(saveAreaSize);
