@@ -126,7 +126,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -144,6 +144,15 @@
      </property>
      <addaction name="actionSave_Room_s_graphic"/>
     </widget>
+    <widget class="QMenu" name="menuImport_from_ROM">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>Import from ROM</string>
+     </property>
+     <addaction name="actionImport_Tileset_from_ROM"/>
+    </widget>
     <addaction name="separator"/>
     <addaction name="actionOpen_ROM"/>
     <addaction name="menuRecent_ROM"/>
@@ -152,6 +161,7 @@
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
     <addaction name="menuExport"/>
+    <addaction name="menuImport_from_ROM"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -610,6 +620,14 @@
   <action name="action_duplicate_S_Hard">
    <property name="text">
     <string>=&gt; S-Hard</string>
+   </property>
+  </action>
+  <action name="actionImport_Tileset_from_ROM">
+   <property name="text">
+    <string>Import Tileset</string>
+   </property>
+   <property name="toolTip">
+    <string>Import Tileset from ROM</string>
    </property>
   </action>
  </widget>

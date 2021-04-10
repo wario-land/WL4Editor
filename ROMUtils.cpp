@@ -38,6 +38,9 @@ namespace ROMUtils
     unsigned char *CurrentFile;
     unsigned int CurrentFileSize;
     QString ROMFilePath;
+    unsigned char *tmpCurrentFile;
+    unsigned int tmpCurrentFileSize;
+    QString tmpROMFilePath;
     unsigned int SaveDataIndex;
     LevelComponents::Tileset *singletonTilesets[92];
     LevelComponents::EntitySet *entitiessets[90];
@@ -52,7 +55,13 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the integer from.
     /// </param>
-    unsigned int IntFromData(int address) { return *reinterpret_cast<unsigned int *>(CurrentFile + address); }
+    /// <param name="loadFromTmpROM">
+    /// Ture when load from a temp ROM.
+    /// </param>
+    unsigned int IntFromData(int address, bool loadFromTmpROM)
+    {
+        return *reinterpret_cast<unsigned int *>((loadFromTmpROM ? tmpCurrentFile: CurrentFile) + address);
+    }
 
     /// <summary>
     /// Get a pointer value from ROM data.
@@ -67,10 +76,13 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the pointer from.
     /// </param>
-    unsigned int PointerFromData(int address)
+    /// <param name="loadFromTmpROM">
+    /// Ture when load from a temp ROM.
+    /// </param>
+    unsigned int PointerFromData(int address, bool loadFromTmpROM)
     {
-        unsigned int ret = IntFromData(address) & 0x7FFFFFF;
-        if(ret >= CurrentFileSize)
+        unsigned int ret = IntFromData(address, loadFromTmpROM) & 0x7FFFFFF;
+        if(loadFromTmpROM ? ret >= tmpCurrentFileSize: ret >= CurrentFileSize)
         {
             singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size"));
         }

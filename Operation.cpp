@@ -139,8 +139,11 @@ void PerformOperation(struct OperationParams *operation)
             }
         }
 
-        singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
-        singleton->RenderScreenFull();
+        if (singleton->GetCurrentRoom()->GetTilesetID() == tilesetId)
+        {
+            singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
+            singleton->RenderScreenFull();
+        }
         singleton->SetUnsavedChanges(true);
     }
     if (operation->SpritesSpritesetChange)
