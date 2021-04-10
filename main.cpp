@@ -53,6 +53,7 @@ bool LoadROMFile(QString filePath)
         ROMUtils::CurrentFileSize = length;
         ROMUtils::ROMFilePath = filePath;
         ROMUtils::CurrentFile = (unsigned char *) ROMAddr;
+        ROMUtils::SaveDataAnalysis();
         return true;
     }
 }
