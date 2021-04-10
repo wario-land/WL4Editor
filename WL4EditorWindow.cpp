@@ -2208,7 +2208,11 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
                                          "1");
     int tilesetId = text.toInt(nullptr, 16);
     if (tilesetId < 0 || tilesetId > 91)
+    {
+        QMessageBox::critical(this, tr("Error"), tr("Illegal Tileset Id!\n"
+                                                    "The index should between 0 to 0x5B."));
         return;
+    }
 
     // Set up parameters for the dialog's selections
     DialogParams::TilesetEditParams *_newTilesetEditParams = new DialogParams::TilesetEditParams();
