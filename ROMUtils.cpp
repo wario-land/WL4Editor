@@ -357,6 +357,9 @@ namespace ROMUtils
     /// <param name="chunkType">
     /// The chunk type to search for in the ROM.
     /// </param>
+    /// <param name="anyChunk">
+    /// If true, then return any chunk instead of specific types specified by <paramref name="chunkType"/>.
+    /// </param>
     /// <returns>
     /// The next chunk of a specific type, or 0 if none exists.
     /// </returns>
@@ -403,6 +406,9 @@ namespace ROMUtils
     /// </param>
     /// <param name="chunkType">
     /// The chunk type to search for in the ROM.
+    /// </param>
+    /// <param name="anyChunk">
+    /// If true, then return any chunk instead of specific types specified by <paramref name="chunkType"/>.
     /// </param>
     /// <returns>
     /// A list of all chunks of a specific type.
@@ -1109,6 +1115,9 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         chunks.append(Tile8x8GraphicDataChunk);
     }
 
+    /// <summary>
+    /// Print debug info about chunks in ROM.
+    /// </summary>
     void SaveDataAnalysis()
     {
         struct ChunkData
