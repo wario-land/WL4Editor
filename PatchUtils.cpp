@@ -621,7 +621,8 @@ namespace PatchUtils
                 ROMUtils::CurrentFile,
                 ROMUtils::CurrentFileSize,
                 WL4Constants::AvailableSpaceBeginningInROM,
-                ROMUtils::SaveDataChunkType::PatchChunk
+                ROMUtils::SaveDataChunkType::PatchChunk,
+                false
             );
 
             // Get the patch list information

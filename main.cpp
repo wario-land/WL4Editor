@@ -1,4 +1,4 @@
-﻿#include "Dialog/DoorConfigDialog.h"
+#include "Dialog/DoorConfigDialog.h"
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/PatchEditDialog.h"
 #include "Dialog/CreditsEditDialog.h"
