@@ -91,8 +91,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
 
     // Initialize the graphic view layers
     ui->graphicsView->infoLabel = ui->graphicViewDetailsLabel;
-    int _tilesetPtr = WL4Constants::TilesetDataTable + CurrentRoomParams->CurrentTilesetIndex * 36;
-    currentTileset = new LevelComponents::Tileset(_tilesetPtr, CurrentRoomParams->CurrentTilesetIndex);
+    currentTileset = ROMUtils::singletonTilesets[CurrentRoomParams->CurrentTilesetIndex];
     int L0ptr = ((ui->spinBox_Layer0MappingType->value() & 0x30) == LevelComponents::LayerTile8x8) ? CurrentRoomParams->Layer0DataPtr : 0;
     ;
     ui->graphicsView->UpdateGraphicsItems(currentTileset, CurrentRoomParams->BackgroundLayerDataPtr, L0ptr);
@@ -210,10 +209,7 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
     if (ComboBoxInitialized)
     {
         // Update the graphic view
-        LevelComponents::Tileset *oldTileset = currentTileset;
-        int _tilesetPtr = WL4Constants::TilesetDataTable + index * 36;
-        currentTileset = new LevelComponents::Tileset(_tilesetPtr, index);
-        delete oldTileset;
+        currentTileset = ROMUtils::singletonTilesets[index];
 
         // Update the available BG layers to choose from
         std::vector<int> BGlayers = BGLayerdataPtrs[index];

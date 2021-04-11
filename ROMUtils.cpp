@@ -6,7 +6,7 @@
 
 #include <cassert>
 #include <iostream>
-#include <QTranslator>
+#include <QtDebug>
 
 extern WL4EditorWindow *singleton;
 
@@ -38,6 +38,9 @@ namespace ROMUtils
     unsigned char *CurrentFile;
     unsigned int CurrentFileSize;
     QString ROMFilePath;
+    unsigned char *tmpCurrentFile;
+    unsigned int tmpCurrentFileSize;
+    QString tmpROMFilePath;
     unsigned int SaveDataIndex;
     LevelComponents::Tileset *singletonTilesets[92];
     LevelComponents::EntitySet *entitiessets[90];
@@ -52,7 +55,13 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the integer from.
     /// </param>
-    unsigned int IntFromData(int address) { return *reinterpret_cast<unsigned int *>(CurrentFile + address); }
+    /// <param name="loadFromTmpROM">
+    /// Ture when load from a temp ROM.
+    /// </param>
+    unsigned int IntFromData(int address, bool loadFromTmpROM)
+    {
+        return *reinterpret_cast<unsigned int *>((loadFromTmpROM ? tmpCurrentFile: CurrentFile) + address);
+    }
 
     /// <summary>
     /// Get a pointer value from ROM data.
@@ -67,10 +76,13 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the pointer from.
     /// </param>
-    unsigned int PointerFromData(int address)
+    /// <param name="loadFromTmpROM">
+    /// Ture when load from a temp ROM.
+    /// </param>
+    unsigned int PointerFromData(int address, bool loadFromTmpROM)
     {
-        unsigned int ret = IntFromData(address) & 0x7FFFFFF;
-        if(ret >= CurrentFileSize)
+        unsigned int ret = IntFromData(address, loadFromTmpROM) & 0x7FFFFFF;
+        if(loadFromTmpROM ? ret >= tmpCurrentFileSize: ret >= CurrentFileSize)
         {
             singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size"));
         }
@@ -357,10 +369,13 @@ namespace ROMUtils
     /// <param name="chunkType">
     /// The chunk type to search for in the ROM.
     /// </param>
+    /// <param name="anyChunk">
+    /// If true, then return any chunk instead of specific types specified by <paramref name="chunkType"/>.
+    /// </param>
     /// <returns>
     /// The next chunk of a specific type, or 0 if none exists.
     /// </returns>
-    unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType)
+    unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk)
     {
         if(startAddr >= ROMLength) return 0; // fail if not enough room in ROM
         while(startAddr < ROMLength)
@@ -375,7 +390,7 @@ namespace ROMUtils
             else
             {
                 // STAR found at current address: validate the RATS checksum and chunk type
-                if(ValidRATS(ROMData + startAddr) && ROMData[startAddr + 8] == chunkType)
+                if(ValidRATS(ROMData + startAddr) && (anyChunk || ROMData[startAddr + 8] == chunkType))
                 {
                     return startAddr;
                 }
@@ -404,21 +419,24 @@ namespace ROMUtils
     /// <param name="chunkType">
     /// The chunk type to search for in the ROM.
     /// </param>
+    /// <param name="anyChunk">
+    /// If true, then return any chunk instead of specific types specified by <paramref name="chunkType"/>.
+    /// </param>
     /// <returns>
     /// A list of all chunks of a specific type.
     /// </returns>
-    QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType)
+    QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk)
     {
         QVector<unsigned int> chunks;
         while(startAddr < ROMLength)
         {
-            unsigned int chunk = FindChunkInROM(ROMData, ROMLength, startAddr, chunkType);
-            if(chunk)
+            unsigned int chunkAddr = FindChunkInROM(ROMData, ROMLength, startAddr, chunkType, anyChunk);
+            if(chunkAddr)
             {
-                chunks.append(chunk);
-                unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMData + startAddr + 4);
-                unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMData + startAddr + 9) << 16;
-                startAddr += chunkLen + extLen + 12;
+                chunks.append(chunkAddr);
+                unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMData + chunkAddr + 4);
+                unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMData + chunkAddr + 9) << 16;
+                startAddr = chunkAddr + chunkLen + extLen + 12;
             }
             else break;
         }
@@ -834,6 +852,10 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             }
             else
             {
+                if(chunks[i].old_chunk_addr >= WL4Constants::AvailableSpaceBeginningInROM)
+                {
+                    invalidationChunks.append(chunks[i].old_chunk_addr);
+                }
                 addedChunks.append(chunks[i]);
             }
         }
@@ -1103,6 +1125,118 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         memcpy(Tile8x8GraphicDataChunk.data, loadtabledata, tablesize);
         delete[] loadtabledata;
         chunks.append(Tile8x8GraphicDataChunk);
+    }
+
+    /// <summary>
+    /// Print debug info about chunks in ROM.
+    /// </summary>
+    void SaveDataAnalysis()
+    {
+        struct ChunkData
+        {
+            unsigned int addr;
+            unsigned int sizeWithHeader;
+            enum SaveDataChunkType chunkType;
+        };
+#define CHUNK_TYPE_COUNT 18
+        const char *typeInfo[CHUNK_TYPE_COUNT] = {
+            "InvalidationChunk",
+            "RoomHeaderChunkType",
+            "DoorChunkType",
+            "LayerChunkType",
+            "LevelNameChunkType",
+            "EntityListChunk",
+            "CameraPointerTableType",
+            "CameraBoundaryChunkType",
+            "PatchListChunk",
+            "PatchChunk",
+            "TilesetForegroundTile8x8DataChunkType",
+            "TilesetMap16EventTableChunkType",
+            "TilesetMap16TerrainChunkType",
+            "TilesetMap16DataChunkType",
+            "TilesetPaletteDataChunkType",
+            "EntityTile8x8DataChunkType",
+            "EntityPaletteDataChunkType",
+            "EntitySetLoadTableChunkType"
+        };
+
+        // Get information about the chunks and free space
+        QVector<unsigned int> chunks = FindAllChunksInROM(CurrentFile, CurrentFileSize, WL4Constants::AvailableSpaceBeginningInROM, SaveDataChunkType::InvalidationChunk, true);
+        QVector<struct FreeSpaceRegion> freeSpace = FindAllFreeSpaceInROM(CurrentFile, CurrentFileSize);
+        QVector<struct ChunkData> chunkData;
+        for(unsigned int chunkAddr : chunks)
+        {
+            unsigned int chunkLen = *reinterpret_cast<unsigned short*>(CurrentFile + chunkAddr + 4);
+            unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(CurrentFile + chunkAddr + 9) << 16;
+            struct ChunkData cd = {
+                chunkAddr,
+                chunkLen + extLen + 12,
+                static_cast<enum SaveDataChunkType>(CurrentFile[chunkAddr + 8])
+            };
+            chunkData.append(cd);
+        }
+        unsigned int saveAreaSize = CurrentFileSize - WL4Constants::AvailableSpaceBeginningInROM;
+
+        // Find total free space
+        int totalFreeSpace = 0;
+        for(auto fs : freeSpace)
+        {
+            totalFreeSpace += fs.size;
+        }
+
+        // Find total space used by chunks
+        int totalUsedSpace = 0;
+        int otherTypeCount = 0;
+        int otherTypeSpace = 0;
+        QMap<enum SaveDataChunkType, unsigned int> chunkTypeCount, chunkTypeSpace;
+        for(int i = 0; i < CHUNK_TYPE_COUNT; ++i)
+        {
+            chunkTypeCount.insert(static_cast<enum SaveDataChunkType>(i), 0);
+            chunkTypeSpace.insert(static_cast<enum SaveDataChunkType>(i), 0);
+        }
+        for(auto c : chunkData)
+        {
+            totalUsedSpace += c.sizeWithHeader;
+            if(c.chunkType < CHUNK_TYPE_COUNT)
+            {
+                chunkTypeCount[c.chunkType]++;
+                chunkTypeSpace[c.chunkType] += c.sizeWithHeader;
+            }
+            else
+            {
+                otherTypeCount++;
+                otherTypeSpace += c.sizeWithHeader;
+            }
+        }
+
+        // Calculate statistics
+        int nonFragmentedSpace = freeSpace[freeSpace.size() - 1].size;
+        int fragmentedSpace = totalFreeSpace - nonFragmentedSpace;
+        double freeSpaceP = (double) totalFreeSpace / saveAreaSize;
+        double freeSpaceP_frag = (double) fragmentedSpace / totalFreeSpace;
+        double freeSpaceP_nonFrag = (double) nonFragmentedSpace / totalFreeSpace;
+        double usedSpaceP = (double) totalUsedSpace / saveAreaSize;
+        QMap<enum SaveDataChunkType, double> usedSpaceP_ofType;
+        int divisor = totalUsedSpace ? totalUsedSpace : 1; // display 0.00% correctly
+        for(int i = 0; i < CHUNK_TYPE_COUNT; ++i)
+        {
+            enum SaveDataChunkType t = static_cast<enum SaveDataChunkType>(i);
+            usedSpaceP_ofType.insert(t, (double) chunkTypeSpace[t] / divisor);
+        }
+        double usedSpaceP_ofTypeOther = (double) otherTypeSpace / divisor;
+
+        // Print statistics
+        qDebug() << QString("Save data area: %1").arg(saveAreaSize);
+        qDebug() << QString("Free space: %1 (%2%)").arg(totalFreeSpace).arg(100 * freeSpaceP, 6, 'f', 2);
+        qDebug() << QString("  Fragmented: %1 (%2%)").arg(fragmentedSpace).arg(100 * freeSpaceP_frag, 6, 'f', 2);
+        qDebug() << QString("  Non-fragmented: %1 (%2%)").arg(nonFragmentedSpace).arg(100 * freeSpaceP_nonFrag, 6, 'f', 2);
+        qDebug() << QString("Used space: %1 (%2%)").arg(totalUsedSpace).arg(100 * usedSpaceP, 6, 'f', 2);
+        for(int i = 0; i < CHUNK_TYPE_COUNT; ++i)
+        {
+            enum SaveDataChunkType t = static_cast<enum SaveDataChunkType>(i);
+            qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg(typeInfo[i], -37).arg(chunkTypeSpace[t], 7).arg(100 * usedSpaceP_ofType[t], 6, 'f', 2).arg(chunkTypeCount[t]);
+        }
+        qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg("Other", -37).arg(otherTypeSpace, 7).arg(100 * usedSpaceP_ofTypeOther, 6, 'f', 2).arg(otherTypeCount);
     }
 
 } // namespace ROMUtils

@@ -19,7 +19,12 @@ namespace ROMUtils
     extern unsigned char *CurrentFile;
     extern unsigned int CurrentFileSize;
     extern QString ROMFilePath;
+    extern unsigned char *tmpCurrentFile;
+    extern unsigned int tmpCurrentFileSize;
+    extern QString tmpROMFilePath;
+
     extern unsigned int SaveDataIndex;
+
     extern LevelComponents::Tileset *singletonTilesets[92];
     extern LevelComponents::Entity *entities[129];
     extern LevelComponents::EntitySet *entitiessets[90];
@@ -74,12 +79,12 @@ namespace ROMUtils
     };
 
     // Global functions
-    unsigned int IntFromData(int address);
-    unsigned int PointerFromData(int address);
+    unsigned int IntFromData(int address, bool loadFromTmpROM = false);
+    unsigned int PointerFromData(int address, bool loadFromTmpROM = false);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
-    unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
-    QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType);
+    unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);
+    QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);
     bool SaveFile(QString filePath, QVector<unsigned int> invalidationChunks,
         std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*, bool)> ChunkAllocator,
         std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback);
@@ -89,6 +94,7 @@ namespace ROMUtils
     void GenerateEntitySaveChunks(int GlobalEntityId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);
     unsigned int EndianReverse(unsigned int n);
+    void SaveDataAnalysis();
 
 } // namespace ROMUtils
 
