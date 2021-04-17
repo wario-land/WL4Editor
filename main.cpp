@@ -34,6 +34,9 @@ int main(int argc, char *argv[])
     // High DPI support, perhaps won't work in all the OS but better than nothing
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
+    // Disable help button in every Dialog
+    QApplication::setAttribute(Qt::AA_DisableWindowContextHelpButton);
+
     QApplication application(argc, argv);
     SettingsUtils::InitProgramSetupPath(application);
     application.setWindowIcon(QIcon("./images/icon.ico"));
