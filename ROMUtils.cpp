@@ -46,6 +46,27 @@ namespace ROMUtils
     LevelComponents::EntitySet *entitiessets[90];
     LevelComponents::Entity *entities[129];
 
+    const char *ChunkTypeString[CHUNK_TYPE_COUNT] = {
+        "InvalidationChunk",
+        "RoomHeaderChunkType",
+        "DoorChunkType",
+        "LayerChunkType",
+        "LevelNameChunkType",
+        "EntityListChunk",
+        "CameraPointerTableType",
+        "CameraBoundaryChunkType",
+        "PatchListChunk",
+        "PatchChunk",
+        "TilesetForegroundTile8x8DataChunkType",
+        "TilesetMap16EventTableChunkType",
+        "TilesetMap16TerrainChunkType",
+        "TilesetMap16DataChunkType",
+        "TilesetPaletteDataChunkType",
+        "EntityTile8x8DataChunkType",
+        "EntityPaletteDataChunkType",
+        "EntitySetLoadTableChunkType"
+    };
+
     /// <summary>
     /// Get a 4-byte, little-endian integer from ROM data.
     /// </summary>
@@ -1138,27 +1159,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             unsigned int sizeWithHeader;
             enum SaveDataChunkType chunkType;
         };
-#define CHUNK_TYPE_COUNT 18
-        const char *typeInfo[CHUNK_TYPE_COUNT] = {
-            "InvalidationChunk",
-            "RoomHeaderChunkType",
-            "DoorChunkType",
-            "LayerChunkType",
-            "LevelNameChunkType",
-            "EntityListChunk",
-            "CameraPointerTableType",
-            "CameraBoundaryChunkType",
-            "PatchListChunk",
-            "PatchChunk",
-            "TilesetForegroundTile8x8DataChunkType",
-            "TilesetMap16EventTableChunkType",
-            "TilesetMap16TerrainChunkType",
-            "TilesetMap16DataChunkType",
-            "TilesetPaletteDataChunkType",
-            "EntityTile8x8DataChunkType",
-            "EntityPaletteDataChunkType",
-            "EntitySetLoadTableChunkType"
-        };
+
 
         // Get information about the chunks and free space
         QVector<unsigned int> chunks = FindAllChunksInROM(CurrentFile, CurrentFileSize, WL4Constants::AvailableSpaceBeginningInROM, SaveDataChunkType::InvalidationChunk, true);
@@ -1234,7 +1235,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         for(int i = 0; i < CHUNK_TYPE_COUNT; ++i)
         {
             enum SaveDataChunkType t = static_cast<enum SaveDataChunkType>(i);
-            qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg(typeInfo[i], -37).arg(chunkTypeSpace[t], 7).arg(100 * usedSpaceP_ofType[t], 6, 'f', 2).arg(chunkTypeCount[t]);
+            qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg(ChunkTypeString[i], -37).arg(chunkTypeSpace[t], 7).arg(100 * usedSpaceP_ofType[t], 6, 'f', 2).arg(chunkTypeCount[t]);
         }
         qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg("Other", -37).arg(otherTypeSpace, 7).arg(100 * usedSpaceP_ofTypeOther, 6, 'f', 2).arg(otherTypeCount);
     }

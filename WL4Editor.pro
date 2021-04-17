@@ -75,7 +75,8 @@ SOURCES += \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.cpp \
     Dialog/TilesetEditor_PaletteGraphicView.cpp \
     Dialog/CreditsEditDialog.cpp \
-    Dialog/CreditEditor_TableView.cpp
+    Dialog/CreditEditor_TableView.cpp \
+    Dialog/ChunkEditorTreeView.cpp
 
 HEADERS += \
     Dialog/ChunkEditorDialog.h \
@@ -124,7 +125,8 @@ HEADERS += \
     Dialog/TilesetEditor_PaletteGraphicView.h \
     Themes.h \
     Dialog/CreditsEditDialog.h \
-    Dialog/CreditEditor_TableView.h
+    Dialog/CreditEditor_TableView.h \
+    Dialog/ChunkEditorTreeView.h
 
 FORMS += \
     Dialog/ChunkEditorDialog.ui \

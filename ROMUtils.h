@@ -13,6 +13,8 @@
 #include "LevelComponents/EntitySet.h"
 #include "LevelComponents/Entity.h"
 
+#define CHUNK_TYPE_COUNT 18
+
 namespace ROMUtils
 {
     // Global variables
@@ -28,6 +30,8 @@ namespace ROMUtils
     extern LevelComponents::Tileset *singletonTilesets[92];
     extern LevelComponents::Entity *entities[129];
     extern LevelComponents::EntitySet *entitiessets[90];
+
+    extern const char *ChunkTypeString[CHUNK_TYPE_COUNT];
 
     enum SaveDataChunkType
     {

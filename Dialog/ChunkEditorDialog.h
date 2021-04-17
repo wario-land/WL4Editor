@@ -1,6 +1,8 @@
 #ifndef CHUNKEDITORDIALOG_H
 #define CHUNKEDITORDIALOG_H
 
+#include "ChunkEditorTreeView.h"
+
 #include <QDialog>
 
 namespace Ui {
@@ -16,6 +18,7 @@ public:
     ~ChunkEditorDialog();
 
 private:
+    ChunkEditorTreeView *TreeView;
     Ui::ChunkEditorDialog *ui;
 };
 
