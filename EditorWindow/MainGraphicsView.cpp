@@ -1,7 +1,6 @@
 ﻿#include "MainGraphicsView.h"
 #include "WL4EditorWindow.h"
 #include "Operation.h"
-#include "MainGraphicsView.h"
 
 #include <QMessageBox>
 #include <QMouseEvent>
