@@ -7,7 +7,7 @@ ChunkEditorDialog::ChunkEditorDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    setWindowTitle("Chunk Editor");
+    setWindowTitle("Chunk Manager");
     TreeView = ui->treeView_chunkData;
 }
 

@@ -14,7 +14,7 @@ class GenericTreeItem
 public:
     // Functions
     GenericTreeItem(GenericTreeItem *parentItem = nullptr) :
-        ParentItem(parentItem) { ParentItem->ChildItems.append(this); }
+        ParentItem(parentItem) { if(ParentItem) ParentItem->ChildItems.append(this); }
     ~GenericTreeItem() { qDeleteAll(ChildItems); }
     GenericTreeItem operator[](int i) { return ChildItems[i]; }
     int size() { return ChildItems.size(); }
@@ -25,6 +25,7 @@ public:
     QVector<QVariant> ItemData;
     QVector<GenericTreeItem*> ChildItems;
     GenericTreeItem *ParentItem;
+    bool Checked = false;
 
     // QAbstractItemModel implementation functions
     int row() const;

@@ -11,6 +11,10 @@ extern WL4EditorWindow *singleton;
 /// </param>
 ChunkEditorTreeView::ChunkEditorTreeView(QWidget *parent) : QTreeView(parent), Model(this)
 {
+    // Configure the tree view
+    setModel(&Model);
+    setSelectionMode(QAbstractItemView::NoSelection);
+
     // Populate model
     QVector<unsigned int> allChunks = FindAllChunksInROM(ROMUtils::CurrentFile, ROMUtils::CurrentFileSize, WL4Constants::AvailableSpaceBeginningInROM, ROMUtils::SaveDataChunkType::InvalidationChunk, true);
     for(unsigned int chunk : allChunks)
@@ -18,6 +22,10 @@ ChunkEditorTreeView::ChunkEditorTreeView(QWidget *parent) : QTreeView(parent), M
         Model.addChunk(chunk);
     }
     Model.refresh();
+    for(int i = 0; i < Model.columnCount(); ++i)
+    {
+        resizeColumnToContents(i);
+    }
 }
 
 ChunkEditorTreeView::~ChunkEditorTreeView()
@@ -38,7 +46,7 @@ ChunkEditorTreeView::~ChunkEditorTreeView()
 ChunkEditorTreeModel::ChunkEditorTreeModel(QObject *parent) : QAbstractItemModel(parent)
 {
     RootItem = new GenericTreeItem();
-    RootItem->ItemData = { tr("Chunk"), tr("Size") };
+    RootItem->ItemData = { tr("Sel"), tr("Chunk"), tr("Size") };
 }
 
 ChunkEditorTreeModel::~ChunkEditorTreeModel()
@@ -79,8 +87,8 @@ void ChunkTypeItem::refresh()
         totalSize += child->ItemData[1].toUInt();
     }
     QString heading = ROMUtils::ChunkTypeString[ChunkType];
-    QString info = QString("%1 (total)").arg(totalSize);
-    ItemData = { heading, info };
+    QString info = QString("%1 (%2 chunks)").arg(totalSize).arg(0);
+    ItemData = { QString("a"), heading, info };
 }
 
 void ChunkEntryItem::refresh()
@@ -89,12 +97,14 @@ void ChunkEntryItem::refresh()
     unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMUtils::CurrentFile + Address + 4);
     unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMUtils::CurrentFile + Address + 9) << 16;
     unsigned int size = chunkLen + extLen + 12;
-    ItemData = { heading, size };
+    ItemData = { QString("b"), heading, size };
 }
 
 //---------------------------------------------------------------------------------------------------------------------------
 // QAbstractItemModel implementation functions
 // https://doc.qt.io/qt-5/qtwidgets-itemviews-simpletreemodel-example.html
+// https://stackoverflow.com/questions/8175122/qtreeview-checkboxes
+// https://forum.qt.io/topic/66080/qtreeview-with-checkbox/5
 //---------------------------------------------------------------------------------------------------------------------------
 
 int GenericTreeItem::row() const
@@ -185,6 +195,9 @@ QVariant ChunkEditorTreeModel::data(const QModelIndex &index, int role) const
 
     GenericTreeItem *item = static_cast<GenericTreeItem*>(index.internalPointer());
 
+    if (role == Qt::CheckStateRole && index.column() == 0)
+        return static_cast<int>(item->Checked ? Qt::Checked : Qt::Unchecked);
+
     return item->data(index.column());
 }
 
@@ -193,7 +206,12 @@ Qt::ItemFlags ChunkEditorTreeModel::flags(const QModelIndex &index) const
     if (!index.isValid())
         return Qt::NoItemFlags;
 
-    return QAbstractItemModel::flags(index);
+    Qt::ItemFlags flags = Qt::ItemIsEnabled;
+
+    if (index.column() == 0)
+        flags |= Qt::ItemIsUserCheckable;
+
+    return flags;
 }
 
 QVariant ChunkEditorTreeModel::headerData(int section, Qt::Orientation orientation, int role) const

@@ -1,5 +1,6 @@
 ﻿#include "WL4EditorWindow.h"
 #include "Operation.h"
+#include "Dialog/ChunkEditorDialog.h"
 #include "Dialog/PatchManagerDialog.h"
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
@@ -2236,5 +2237,6 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionChunk_Manager_triggered()
 {
-    // TODO
+    ChunkEditorDialog dialog(this);
+    dialog.exec();
 }
