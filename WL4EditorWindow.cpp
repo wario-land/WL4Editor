@@ -1098,8 +1098,10 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     if (!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load level anyway?")))
         return;
 
-    // Deselect Door and Entity
+    // Deselect Door and Entity and deselect rect
     ui->graphicsView->DeselectDoorAndEntity(true);
+    ui->graphicsView->ResetRectPixmaps();
+    ui->graphicsView->ResetRect();
 
     // Load the selected level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
@@ -2185,7 +2187,6 @@ void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
     CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
     SetUnsavedChanges(true);
 }
-
 /// <summary>
 /// Import a Tileset to the current ROM from other ROM
 /// </summary>
