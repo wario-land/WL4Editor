@@ -201,12 +201,33 @@ QVariant ChunkEditorTreeModel::data(const QModelIndex &index, int role) const
     return item->data(index.column());
 }
 
+bool ChunkEditorTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    GenericTreeItem *item = static_cast<GenericTreeItem*>(index.internalPointer());
+
+        if (index.column() == 0) {
+            if (role == Qt::EditRole)
+            {
+                return false;
+            }
+            if (role == Qt::CheckStateRole)
+            {
+                item->Checked = value.toBool();
+                QVector<int> tmpvec;  tmpvec << role;
+                emit dataChanged(index, index, tmpvec);
+                return true;
+            }
+        }
+
+        return QAbstractItemModel::setData(index, value, role);
+}
+
 Qt::ItemFlags ChunkEditorTreeModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
         return Qt::NoItemFlags;
 
-    Qt::ItemFlags flags = Qt::ItemIsEnabled;
+    Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;;
 
     if (index.column() == 0)
         flags |= Qt::ItemIsUserCheckable;
