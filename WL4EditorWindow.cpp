@@ -2185,7 +2185,6 @@ void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
     CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
     SetUnsavedChanges(true);
 }
-
 /// <summary>
 /// Import a Tileset to the current ROM from other ROM
 /// </summary>
