@@ -151,7 +151,7 @@ private slots:
     void on_action_clear_S_Hard_triggered();
     void on_actionClear_all_triggered();
     void on_actionRect_Select_Mode_toggled(bool arg1);
-    void on_actionManager_triggered();
+    void on_actionPatch_Manager_triggered();
     void on_actionRun_from_file_triggered();
     void on_actionLight_triggered();
     void on_actionDark_triggered();
@@ -161,6 +161,7 @@ private slots:
     void on_actionOutput_window_triggered();
     void on_actionAbout_triggered();
     void on_actionImport_Tileset_from_ROM_triggered();
+    void on_actionChunk_Manager_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

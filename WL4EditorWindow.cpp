@@ -460,7 +460,8 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menu_clear_Layer->setEnabled(true);
         ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionClear_all->setEnabled(true);
-        ui->actionManager->setEnabled(true);
+        ui->actionPatch_Manager->setEnabled(true);
+        ui->actionChunk_Manager->setEnabled(true);
         ui->actionEdit_Entity_EntitySet->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->loadLevelButton->setEnabled(true);
@@ -1882,7 +1883,7 @@ void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
 /// <summary>
 /// Open the patch manager.
 /// </summary>
-void WL4EditorWindow::on_actionManager_triggered()
+void WL4EditorWindow::on_actionPatch_Manager_triggered()
 {
     PatchManagerDialog dialog(this);
     dialog.exec();
@@ -2228,4 +2229,12 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
     ROMUtils::tmpROMFilePath.clear();
     delete[] ROMUtils::tmpCurrentFile;
     ROMUtils::tmpCurrentFile = nullptr;
+}
+
+/// <summary>
+/// Open the chunk manager.
+/// </summary>
+void WL4EditorWindow::on_actionChunk_Manager_triggered()
+{
+    // TODO
 }
