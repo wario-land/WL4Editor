@@ -1,6 +1,7 @@
 ﻿#include "MainGraphicsView.h"
 #include "WL4EditorWindow.h"
 #include "Operation.h"
+#include "MainGraphicsView.h"
 
 #include <QMessageBox>
 #include <QMouseEvent>
@@ -65,7 +66,6 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 if (event->button() == Qt::LeftButton)
                 {
                     if(!singleton->Getgraphicview()->scene()) return;
-                    singleton->SetChangeCurrentRoomEnabled(false);
 
                     if(has_a_rect)
                     {
@@ -73,14 +73,8 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                         if(tileX < rectx || tileX > (rectx + rectwidth - 1) ||
                                 tileY < recty || tileY > (recty + rectheight - 1))
                         {
-                            if(rect != nullptr)
-                            {
-                                delete rect; rect = nullptr;
-                            }
-                            if(selectedrectgraphic != nullptr)
-                            {
-                                delete selectedrectgraphic; selectedrectgraphic = nullptr;
-                            }
+
+                            ResetRectPixmaps();
                             has_a_rect = false;
 
                             // Do Operation (and update layer data)
@@ -109,13 +103,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                             }
                             ExecuteOperation(params);
                             // Reset variables
-                            rectx = recty = -1;
-                            tmpLTcornerTileX = rectselectstartTileX = tmpLTcornerTileY = rectselectstartTileY = -1;
-                            rectwidth = rectheight = 0;
-                            has_a_rect = false;
-                            dragInitmouseX = dragInitmouseY = -1;
-                            rectdata.clear();
-                            singleton->SetChangeCurrentRoomEnabled(true);
+                            ResetRect();
                             return;
                         }
 
@@ -801,21 +789,8 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                         ExecuteOperation(params);
                     }
                     // Reset variables
-                    if(rect != nullptr)
-                    {
-                        delete rect; rect = nullptr;
-                    }
-                    if(selectedrectgraphic != nullptr)
-                    {
-                        delete selectedrectgraphic; selectedrectgraphic = nullptr;
-                    }
-                    rectx = recty = -1;
-                    tmpLTcornerTileX = tmpLTcornerTileY = rectselectstartTileX = rectselectstartTileY = -1;
-                    rectwidth = rectheight = 0;
-                    has_a_rect = false;
-                    dragInitmouseX = dragInitmouseY = -1;
-                    rectdata.clear();
-                    singleton->SetChangeCurrentRoomEnabled(true);
+                    ResetRectPixmaps();
+                    ResetRect();
                     return;
                 }
             }
@@ -841,6 +816,15 @@ void MainGraphicsView::SetRectSelectMode(bool state)
 {
     rectSelectMode = state;
     singleton->RefreshRectSelectHint(rectSelectMode);
+    ResetRectPixmaps();
+    ResetRect();
+}
+
+
+/// <summary>
+/// This function will reset rectangle selection pixmaps variables if needed
+/// </summary>
+void MainGraphicsView::ResetRectPixmaps() {
     if(rect != nullptr)
     {
         delete rect;
@@ -851,7 +835,13 @@ void MainGraphicsView::SetRectSelectMode(bool state)
         delete selectedrectgraphic;
         selectedrectgraphic = nullptr;
     }
-    // Reset variables
+}
+
+/// <summary>
+/// This function will reset rectangle selection variables (but it doesn't reset the rect graphics)
+/// </summary>
+void MainGraphicsView::ResetRect() {
+    Isdraggingrect=false;
     rectx = recty = -1;
     tmpLTcornerTileX = tmpLTcornerTileY = rectselectstartTileX = rectselectstartTileY = -1;
     rectwidth = rectheight = 0;

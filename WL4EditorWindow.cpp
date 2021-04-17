@@ -387,6 +387,8 @@ void WL4EditorWindow::SetCurrentRoomId(int roomid)
     // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity(true);
+    ui->graphicsView->ResetRectPixmaps();
+    ui->graphicsView->ResetRect();
 
     // Load the previous room
     selectedRoom = roomid;
@@ -1301,6 +1303,8 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity(true);
+    ui->graphicsView->ResetRectPixmaps();
+    ui->graphicsView->ResetRect();
 
     // Load the previous room
     --selectedRoom;
@@ -1327,6 +1331,8 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity(true);
+    ui->graphicsView->ResetRectPixmaps();
+    ui->graphicsView->ResetRect();
 
     // Load the next room
     ++selectedRoom;
