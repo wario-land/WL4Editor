@@ -20,7 +20,8 @@ public:
     void DeselectDoorAndEntity(bool updateRenderArea = false);
     void SetRectSelectMode(bool state);
     void ClearRectPointer() { rect = nullptr; }
-
+    void ResetRect();
+    void ResetRectPixmaps();
 private:
     int SelectedDoorID = -1;
     int SelectedEntityID = -1;
