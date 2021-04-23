@@ -377,7 +377,12 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
             // Get the index of the color in the current palette
             QRgb findColor = tmppalette[i];
             auto paletteFound = std::find_if(ref_palette.begin(), ref_palette.end(),
-                [findColor](const QRgb& c) {return c == findColor;});
+                [&findColor](const QRgb& c)
+            {
+                QColor ca(c);
+                QColor cb(findColor);
+                return (ca.red() >> 3 == cb.red() >> 3) && (ca.green() >> 3 == cb.green() >> 3) && (ca.blue() >> 3 == cb.blue() >> 3);
+            });
             colorIndex = std::distance(ref_palette.begin(), paletteFound);
 
             // Edge cases if color not found

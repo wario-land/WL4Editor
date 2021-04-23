@@ -225,6 +225,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(errorMessage));
         return;
     }
+    dialogInitialPath = QFileInfo(qFilePath).dir().path();
 
     // Clean-up
     if (CurrentLevel)
@@ -1535,7 +1536,8 @@ bool WL4EditorWindow::SaveCurrentFileAs()
         if (ROMUtils::SaveLevel(qFilePath))
         {
             // If successful in saving the file, set the window title to reflect the new file
-            ROMUtils::ROMFilePath = dialogInitialPath = qFilePath;
+            ROMUtils::ROMFilePath = qFilePath;
+            dialogInitialPath = QFileInfo(qFilePath).dir().path();
             std::string filePath = qFilePath.toStdString();
             std::string fileName = filePath.substr(filePath.rfind('/') + 1);
             setWindowTitle(fileName.c_str());
