@@ -35,27 +35,27 @@ namespace LevelComponents
         memset(EntityListDirty, 0, sizeof(EntityListDirty));
 
         // Copy the room header information
-        memcpy(&RoomHeader, ROMUtils::CurrentFile + roomDataPtr, sizeof(struct __RoomHeader));
+        memcpy(&RoomHeader, ROMUtils::ROMFileMetaData->ROMDataPtr + roomDataPtr, sizeof(struct __RoomHeader));
 
         // Set up tileset
         tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
 
         // Set up the layer data
         int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
-        Width = ROMUtils::CurrentFile[dimensionPointer];
-        Height = ROMUtils::CurrentFile[dimensionPointer + 1];
+        Width = ROMUtils::ROMFileMetaData->ROMDataPtr[dimensionPointer];
+        Height = ROMUtils::ROMFileMetaData->ROMDataPtr[dimensionPointer + 1];
         for (int i = 0; i < 4; ++i)
         {
             enum LayerMappingType mappingType =
-                static_cast<enum LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + i + 1] & 0x30);
+                static_cast<enum LayerMappingType>(ROMUtils::ROMFileMetaData->ROMDataPtr[roomDataPtr + i + 1] & 0x30);
             int layerPtr = ROMUtils::PointerFromData(roomDataPtr + i * 4 + 8);
             layers[i] = new Layer(layerPtr, mappingType);
         }
 
-        SetLayerPriorityAndAlphaAttributes(ROMUtils::CurrentFile[roomDataPtr + 26]);
+        SetLayerPriorityAndAlphaAttributes(ROMUtils::ROMFileMetaData->ROMDataPtr[roomDataPtr + 26]);
 
         // Set up camera control data
-        if ((CameraControlType = static_cast<enum __CameraControlType>(ROMUtils::CurrentFile[roomDataPtr + 24])) ==
+        if ((CameraControlType = static_cast<enum __CameraControlType>(ROMUtils::ROMFileMetaData->ROMDataPtr[roomDataPtr + 24])) ==
             __CameraControlType::HasControlAttrs)
         {
             int pLevelCameraControlPointerTable =
@@ -69,14 +69,14 @@ namespace LevelComponents
                 {
                     break;
                 }
-                if (ROMUtils::CurrentFile[CurrentPointer] == _RoomID)
+                if (ROMUtils::ROMFileMetaData->ROMDataPtr[CurrentPointer] == _RoomID)
                 {
-                    int RecordNum = ROMUtils::CurrentFile[CurrentPointer + 1];
+                    int RecordNum = ROMUtils::ROMFileMetaData->ROMDataPtr[CurrentPointer + 1];
                     while (RecordNum--)
                     {
                         recordPtr = new __CameraControlRecord;
                         memcpy(recordPtr,
-                               ROMUtils::CurrentFile + CurrentPointer + k++ * sizeof(struct __CameraControlRecord) + 2,
+                               ROMUtils::ROMFileMetaData->ROMDataPtr + CurrentPointer + k++ * sizeof(struct __CameraControlRecord) + 2,
                                sizeof(struct __CameraControlRecord));
                         CameraControlRecords.push_back(recordPtr);
                         recordPtr = nullptr;
@@ -91,10 +91,10 @@ namespace LevelComponents
         {
             unsigned int Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
             unsigned int k = 0;
-            while (ROMUtils::CurrentFile[Listaddress + 3 * k] != 0xFF) // maximum entity count is 46
+            while (ROMUtils::ROMFileMetaData->ROMDataPtr[Listaddress + 3 * k] != 0xFF) // maximum entity count is 46
             {
                 struct EntityRoomAttribute tmpEntityroomattribute;
-                memcpy(&tmpEntityroomattribute, ROMUtils::CurrentFile + Listaddress + 3 * k++,
+                memcpy(&tmpEntityroomattribute, ROMUtils::ROMFileMetaData->ROMDataPtr + Listaddress + 3 * k++,
                        sizeof(struct EntityRoomAttribute));
                 if(tmpEntityroomattribute.EntityID < 0x11) tmpEntityroomattribute.EntityID--;
                 EntityList[i].push_back(tmpEntityroomattribute);

@@ -30,8 +30,8 @@ namespace LevelComponents
         // Get the layer dimensions
         if (mappingType == LayerMap16)
         {
-            Width = ROMUtils::CurrentFile[layerDataPtr];
-            Height = ROMUtils::CurrentFile[layerDataPtr + 1];
+            Width = ROMUtils::ROMFileMetaData->ROMDataPtr[layerDataPtr];
+            Height = ROMUtils::ROMFileMetaData->ROMDataPtr[layerDataPtr + 1];
 
             // Get the layer data
             LayerData =
@@ -40,8 +40,8 @@ namespace LevelComponents
         else if (mappingType == LayerTile8x8)
         {
             // Set
-            Width = (1 + (ROMUtils::CurrentFile[layerDataPtr] & 1)) << 5;
-            Height = (1 + ((ROMUtils::CurrentFile[layerDataPtr] >> 1) & 1)) << 5;
+            Width = (1 + (ROMUtils::ROMFileMetaData->ROMDataPtr[layerDataPtr] & 1)) << 5;
+            Height = (1 + ((ROMUtils::ROMFileMetaData->ROMDataPtr[layerDataPtr] >> 1) & 1)) << 5;
 
             // Get the layer data
             LayerData =
@@ -51,7 +51,7 @@ namespace LevelComponents
             //   1 2 3 4 5 6      1 2 3 A B C
             //   7 8 9 A B C  =>  4 5 6 D E F
             //   D E F G H I      7 8 9 G H I
-            if (ROMUtils::CurrentFile[layerDataPtr] == 1)
+            if (ROMUtils::ROMFileMetaData->ROMDataPtr[layerDataPtr] == 1)
             {
                 unsigned short *rearranged = new unsigned short[Width * Height * 2];
                 for (int j = 0; j < 32; ++j)

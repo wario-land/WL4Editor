@@ -143,7 +143,7 @@ PatchEditDialog::~PatchEditDialog()
 /// </param>
 void PatchEditDialog::InitializeComponents(struct PatchEntryItem patchEntry)
 {
-    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetaData->FilePath).dir().path();
     QString displayPath = patchEntry.FileName.isEmpty() ? "" : romFileDir + QDir::separator() + patchEntry.FileName;
     ui->lineEdit_FilePath->setText(displayPath);
     ui->comboBox_PatchType->setCurrentIndex(patchEntry.PatchType);
@@ -182,7 +182,7 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
 void PatchEditDialog::on_pushButton_Browse_clicked()
 {
     // Prompt the user for the patch file
-    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetaData->FilePath).dir().path();
     QString qFilePath = QFileDialog::getOpenFileName(
         this,
         tr("Open patch file"),

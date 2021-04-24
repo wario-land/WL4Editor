@@ -19,12 +19,12 @@ namespace LevelComponents
         int k = 0;
         do
         {
-            tmpEntityId = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k];
+            tmpEntityId = (int) ROMUtils::ROMFileMetaData->ROMDataPtr[entitysetptr + 2 * k];
             if (tmpEntityId == 0)
                 break;
             EntitySetinfoTableElement Tmp_entitytableElement;
             Tmp_entitytableElement.Global_EntityID = tmpEntityId;
-            Tmp_entitytableElement.paletteOffset = (int) ROMUtils::CurrentFile[entitysetptr + 2 * k + 1];
+            Tmp_entitytableElement.paletteOffset = (int) ROMUtils::ROMFileMetaData->ROMDataPtr[entitysetptr + 2 * k + 1];
             EntityinfoTable.push_back(Tmp_entitytableElement);
             k++;
         } while (1);

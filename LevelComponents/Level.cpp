@@ -97,7 +97,7 @@ namespace LevelComponents
         QString avalialbechars = GetAvailableLevelNameChars();
         for (int i = 0; i < 26; i++)
         {
-            unsigned char chr = ROMUtils::CurrentFile[address + i];
+            unsigned char chr = ROMUtils::ROMFileMetaData->ROMDataPtr[address + i];
             if (chr < avalialbechars.size())
             {
                 ret += avalialbechars.at(chr);
@@ -196,14 +196,14 @@ namespace LevelComponents
 
         // Load the level information
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-        LevelID = ROMUtils::CurrentFile[levelHeaderPointer]; // 0x3000023
+        LevelID = ROMUtils::ROMFileMetaData->ROMDataPtr[levelHeaderPointer]; // 0x3000023
 
-        memcpy(&LevelHeader, ROMUtils::CurrentFile + levelHeaderPointer, sizeof(struct __LevelHeader));
+        memcpy(&LevelHeader, ROMUtils::ROMFileMetaData->ROMDataPtr + levelHeaderPointer, sizeof(struct __LevelHeader));
 
         // Load the door data
         std::vector<int> destinations;
         int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + LevelID * 4);
-        struct __DoorEntry *doorPtr = (struct __DoorEntry *) (ROMUtils::CurrentFile + doorStartAddress);
+        struct __DoorEntry *doorPtr = (struct __DoorEntry *) (ROMUtils::ROMFileMetaData->ROMDataPtr + doorStartAddress);
         unsigned char *firstByte;
         int currentDoornum = 0;
         while (*(firstByte = (unsigned char *) doorPtr))
@@ -227,7 +227,7 @@ namespace LevelComponents
 
         // Load the room data
         int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + LevelID * 4);
-        int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
+        int roomCount = ROMUtils::ROMFileMetaData->ROMDataPtr[levelHeaderPointer + 1];
         for (int i = 0; i < roomCount; i++)
         {
             rooms.push_back(new Room(roomTableAddress + i * 0x2C, i, LevelID));
@@ -406,7 +406,7 @@ namespace LevelComponents
         int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
         int levelHeaderIndex = ROMUtils::IntFromData(offset);
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-        int levelIndex = ROMUtils::CurrentFile[levelHeaderPointer];
+        int levelIndex = ROMUtils::ROMFileMetaData->ROMDataPtr[levelHeaderPointer];
         unsigned int roomTablePtr = WL4Constants::RoomDataTable + levelIndex * 4;
         unsigned int roomHeaderChunkSize = rooms.size() * sizeof(struct __RoomHeader);
         unsigned int doorTablePtr = WL4Constants::DoorTable + levelIndex * 4;
@@ -445,7 +445,7 @@ namespace LevelComponents
 
             // Camera boundary chunks
             unsigned int iterations = 0;
-            while(*(int*)(ROMUtils::CurrentFile + cameraBoundaryEntryAddress) != GBAptrSentinel)
+            while(*(int*)(ROMUtils::ROMFileMetaData->ROMDataPtr + cameraBoundaryEntryAddress) != GBAptrSentinel)
             {
                 if(++iterations > CameraControlDockWidget::MAX_CAMERA_LIMITATORS)
                 {
@@ -584,12 +584,12 @@ namespace LevelComponents
         int offset = WL4Constants::LevelHeaderIndexTable + passage * 24 + stage * 4;
         int levelHeaderIndex = ROMUtils::IntFromData(offset);
         int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-        struct __LevelHeader *levelHeader = (struct __LevelHeader*)(ROMUtils::CurrentFile + levelHeaderPointer);
+        struct __LevelHeader *levelHeader = (struct __LevelHeader*)(ROMUtils::ROMFileMetaData->ROMDataPtr + levelHeaderPointer);
         int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + levelHeader->HeaderPointerIndex * 4);
         for(int i = 0; i < levelHeader->NumOfMap; ++i)
         {
             int roomDataPtr = roomTableAddress + i * 0x2C;
-            struct __RoomHeader *roomHeader = (struct __RoomHeader*)(ROMUtils::CurrentFile + roomDataPtr);
+            struct __RoomHeader *roomHeader = (struct __RoomHeader*)(ROMUtils::ROMFileMetaData->ROMDataPtr + roomDataPtr);
             if(roomHeader->CameraControlType == __CameraControlType::HasControlAttrs)
             {
                 return true;

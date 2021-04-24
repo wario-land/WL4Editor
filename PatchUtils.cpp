@@ -136,7 +136,7 @@ static struct PatchEntryItem DeserializePatchMetadata(QStringList patchTuples)
     unsigned int patchAddressOffset = patchTuples[5].toUInt(Q_NULLPTR, 16);
     bool hasPointer = patchAddressOffset != (unsigned int) -1;
     unsigned int hookLength = patchTuples[4].length() / 2;
-    QString hookString = BinaryToHexString(ROMUtils::CurrentFile + hookAddress, hookLength); // obtain hook string directly from the patched rom data
+    QString hookString = BinaryToHexString(ROMUtils::ROMFileMetaData->ROMDataPtr + hookAddress, hookLength); // obtain hook string directly from the patched rom data
     if(hasPointer)
     {
         // Splice patch address out of the save chunk binary
@@ -189,14 +189,14 @@ static QString SerializePatchMetadata(struct PatchEntryItem patchMetadata)
 /// </returns>
 static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
 {
-    unsigned short contentSize = *reinterpret_cast<unsigned short*>(ROMUtils::CurrentFile + chunkDataAddr + 4) - 1;
-    int chunkVersion = ROMUtils::CurrentFile[chunkDataAddr + 12];
+    unsigned short contentSize = *reinterpret_cast<unsigned short*>(ROMUtils::ROMFileMetaData->ROMDataPtr + chunkDataAddr + 4) - 1;
+    int chunkVersion = ROMUtils::ROMFileMetaData->ROMDataPtr[chunkDataAddr + 12];
     if(chunkVersion > PATCH_CHUNK_VERSION)
     {
         singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Patch list chunk either corrupt or this verison of WL4Editor is old and doesn't support the saved format. Version found: ")) + QString::number(chunkVersion));
         return "";
     }
-    QString contents = QString::fromLocal8Bit(reinterpret_cast<const char*>(ROMUtils::CurrentFile + chunkDataAddr + 13), contentSize);
+    QString contents = QString::fromLocal8Bit(reinterpret_cast<const char*>(ROMUtils::ROMFileMetaData->ROMDataPtr + chunkDataAddr + 13), contentSize);
     while(chunkVersion < PATCH_CHUNK_VERSION)
     {
         contents = UpgradePatchListContents(contents, chunkVersion++);
@@ -295,7 +295,7 @@ static QString AssembleSFile(QString sfile)
 /// </returns>
 static QString CreateLinkerScript(struct PatchEntryItem entry)
 {
-    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetaData->FilePath).dir().path();
     QString ofile(romFileDir + QDir::separator() + entry.FileName);
     QString ldfile(ofile);
     REPLACE_EXT(ofile, ".c", ".o"); // works for .s files too
@@ -409,14 +409,14 @@ static bool BinaryMatchWithROM(QString file, unsigned int startAddr, unsigned in
         return false;
     }
 
-    if(startAddr + length > ROMUtils::CurrentFileSize) return false;
+    if(startAddr + length > ROMUtils::ROMFileMetaData->Length) return false;
     QFile binFile(file);
     binFile.open(QIODevice::ReadOnly);
     bool ret = false;
     if(binFile.size() == length)
     {
         QByteArray binContents = binFile.readAll();
-        ret = !memcmp(binContents.constData(), ROMUtils::CurrentFile + startAddr, length);
+        ret = !memcmp(binContents.constData(), ROMUtils::ROMFileMetaData->ROMDataPtr + startAddr, length);
     }
     binFile.close();
     return ret;
@@ -458,7 +458,7 @@ static QString CompilePatchEntry(struct PatchEntryItem entry)
 {
     if(!entry.FileName.length() || entry.PatchType == PatchType::Binary) return "";
 
-    QDir ROMdir = QFileInfo(ROMUtils::ROMFilePath).dir();
+    QDir ROMdir = QFileInfo(ROMUtils::ROMFileMetaData->FilePath).dir();
     QString filename(ROMdir.absolutePath() + QDir::separator() + entry.FileName);
 
     QString output;
@@ -544,7 +544,7 @@ static QVector<struct PatchEntryItem> DetermineRemovalPatches(QVector<struct Pat
         if(!(mustRemoveChunk = !saveChunkInDialog))
         {
             // If the save chunk is in the dialog, we must check to see if content matches bin contents
-            unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMUtils::CurrentFile + existingPatch.PatchAddress + 4);
+            unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMUtils::ROMFileMetaData->ROMDataPtr + existingPatch.PatchAddress + 4);
             mustRemoveChunk = !BinaryMatchWithROM(dialogPatch->FileName, existingPatch.PatchAddress + 12, chunkLen);
         }
 
@@ -572,7 +572,7 @@ static struct ROMUtils::SaveData CreatePatchSaveChunk(struct PatchEntryItem &pat
     binName += "bin";
 
     // Get data from bin file
-    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetaData->FilePath).dir().path();
     QFile binFile(romFileDir + QDir::separator() + binName);
     binFile.open(QIODevice::ReadOnly);
     QByteArray binContents = binFile.readAll();
@@ -609,8 +609,8 @@ namespace PatchUtils
         // Obtain the patch list chunk, if it exists
         QVector<struct PatchEntryItem> patchEntries;
         unsigned int patchListAddr = ROMUtils::FindChunkInROM(
-            ROMUtils::CurrentFile,
-            ROMUtils::CurrentFileSize,
+            ROMUtils::ROMFileMetaData->ROMDataPtr,
+            ROMUtils::ROMFileMetaData->Length,
             WL4Constants::AvailableSpaceBeginningInROM,
             ROMUtils::SaveDataChunkType::PatchListChunk
         );
@@ -618,8 +618,8 @@ namespace PatchUtils
         {
             // Obtain the patch chunks
             QVector<unsigned int> patchChunks = ROMUtils::FindAllChunksInROM(
-                ROMUtils::CurrentFile,
-                ROMUtils::CurrentFileSize,
+                ROMUtils::ROMFileMetaData->ROMDataPtr,
+                ROMUtils::ROMFileMetaData->Length,
                 WL4Constants::AvailableSpaceBeginningInROM,
                 ROMUtils::SaveDataChunkType::PatchChunk,
                 false
@@ -703,8 +703,8 @@ namespace PatchUtils
 
         // We must invalidate the old patch list chunk (if it exists)
         unsigned int patchListChunkAddr = ROMUtils::FindChunkInROM(
-            ROMUtils::CurrentFile,
-            ROMUtils::CurrentFileSize,
+            ROMUtils::ROMFileMetaData->ROMDataPtr,
+            ROMUtils::ROMFileMetaData->Length,
             WL4Constants::AvailableSpaceBeginningInROM,
             ROMUtils::SaveDataChunkType::PatchListChunk
         );
@@ -723,7 +723,7 @@ namespace PatchUtils
         QVector<unsigned char*> SaveDataList;
 
         // Allocate and save the chunks to the ROM
-        bool ret = ROMUtils::SaveFile(ROMUtils::ROMFilePath, invalidationChunks,
+        bool ret = ROMUtils::SaveFile(ROMUtils::ROMFileMetaData->FilePath, invalidationChunks,
 
             // ChunkAllocator
 
