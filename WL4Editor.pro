@@ -31,7 +31,8 @@ CONFIG += c++17 strict_c++
 QMAKE_CXXFLAGS = -fpermissive
 
 SOURCES += \
-    Dialog/ChunkEditorDialog.cpp \
+    Dialog/ChunkManagerDialog.cpp \
+    Dialog/ChunkManagerTreeView.cpp \
     Dialog/SelectColorDialog.cpp \
     Dialog/SelectColorDialog_PaletteBar.cpp \
     Dialog/SpritesEditorDialog.cpp \
@@ -75,11 +76,11 @@ SOURCES += \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.cpp \
     Dialog/TilesetEditor_PaletteGraphicView.cpp \
     Dialog/CreditsEditDialog.cpp \
-    Dialog/CreditEditor_TableView.cpp \
-    Dialog/ChunkEditorTreeView.cpp
+    Dialog/CreditEditor_TableView.cpp
 
 HEADERS += \
-    Dialog/ChunkEditorDialog.h \
+    Dialog/ChunkManagerDialog.h \
+    Dialog/ChunkManagerTreeView.h \
     Dialog/SelectColorDialog.h \
     Dialog/SelectColorDialog_PaletteBar.h \
     Dialog/SpritesEditorDialog.h \
@@ -125,11 +126,10 @@ HEADERS += \
     Dialog/TilesetEditor_PaletteGraphicView.h \
     Themes.h \
     Dialog/CreditsEditDialog.h \
-    Dialog/CreditEditor_TableView.h \
-    Dialog/ChunkEditorTreeView.h
+    Dialog/CreditEditor_TableView.h
 
 FORMS += \
-    Dialog/ChunkEditorDialog.ui \
+    Dialog/ChunkManagerDialog.ui \
     Dialog/SelectColorDialog.ui \
     Dialog/SpritesEditorDialog.ui \
     DockWidget/OutputDockWidget.ui \

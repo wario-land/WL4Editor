@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ChunkEditorDialog</class>
- <widget class="QDialog" name="ChunkEditorDialog">
+ <class>ChunkManagerDialog</class>
+ <widget class="QDialog" name="ChunkManagerDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -26,7 +26,7 @@
         </widget>
        </item>
        <item>
-        <widget class="ChunkEditorTreeView" name="treeView_chunkData"/>
+        <widget class="ChunkManagerTreeView" name="treeView_chunkData"/>
        </item>
       </layout>
      </item>
@@ -176,9 +176,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ChunkEditorTreeView</class>
+   <class>ChunkManagerTreeView</class>
    <extends>QTreeView</extends>
-   <header>Dialog/ChunkEditorTreeView.h</header>
+   <header>Dialog/ChunkManagerTreeView.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
@@ -186,7 +186,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>ChunkEditorDialog</receiver>
+   <receiver>ChunkManagerDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -202,7 +202,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>ChunkEditorDialog</receiver>
+   <receiver>ChunkManagerDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
