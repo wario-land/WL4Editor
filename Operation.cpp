@@ -11,6 +11,9 @@ static unsigned int operationIndex[16]; // For room-specific changes
 static std::deque<struct OperationParams *> operationHistoryGlobal;
 static unsigned int operationIndexGlobal; // For level-wide changes
 
+static unsigned int CurrentTilesetOperationId = 0;
+static unsigned int CurrentSpritestuffOperationId = 0;
+
 /// <summary>
 /// Perform an operation based on its parameters.
 /// </summary>
@@ -299,6 +302,7 @@ void BackTrackOperation(struct OperationParams *operation)
 
         singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
         singleton->RenderScreenFull();
+        CurrentTilesetOperationId = operationIndexGlobal;
     }
     if (operation->SpritesSpritesetChange)
     {
@@ -323,6 +327,7 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->GetEntitySetDockWidgetPtr()->ResetEntitySet(singleton->GetCurrentRoom());
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
+        CurrentSpritestuffOperationId = operationIndexGlobal;
     }
 }
 
@@ -530,30 +535,46 @@ void DeleteUndoHistoryGlobal()
 {
     // It is different from deleting OperationParams, so cannot use the deconstructor
     // Deconstruct the global history
-    for (unsigned int j = 0; j < operationHistoryGlobal.size(); ++j)
+    for (unsigned int j = 0; j < operationHistoryGlobal.size(); ++j) // from old to new
     {
         if (operationHistoryGlobal[j]->TilesetChange)
         {
-            if (operationHistoryGlobal[j]->newTilesetEditParams)
-                delete operationHistoryGlobal[j]->newTilesetEditParams;
-            if (operationHistoryGlobal[j]->lastTilesetEditParams)
+            if (CurrentTilesetOperationId > 0)
             {
-                delete operationHistoryGlobal[j]->lastTilesetEditParams->newTileset;
-                operationHistoryGlobal[j]->lastTilesetEditParams->newTileset = nullptr;
-                delete operationHistoryGlobal[j]->lastTilesetEditParams;
+                delete operationHistoryGlobal[j]; // call default deconstructor
+                CurrentTilesetOperationId--;
+            }
+            else
+            {
+                if (operationHistoryGlobal[j]->newTilesetEditParams)
+                    delete operationHistoryGlobal[j]->newTilesetEditParams;
+                if (operationHistoryGlobal[j]->lastTilesetEditParams)
+                {
+                    delete operationHistoryGlobal[j]->lastTilesetEditParams->newTileset;
+                    operationHistoryGlobal[j]->lastTilesetEditParams->newTileset = nullptr;
+                    delete operationHistoryGlobal[j]->lastTilesetEditParams;
+                }
             }
         }
-        if (operationHistoryGlobal[j]->SpritesSpritesetChange)
+        else if (operationHistoryGlobal[j]->SpritesSpritesetChange)
         {
-            if (operationHistoryGlobal[j]->newSpritesAndSetParam)
-                delete operationHistoryGlobal[j]->newSpritesAndSetParam;
-            if (operationHistoryGlobal[j]->lastSpritesAndSetParam)
+            if (CurrentSpritestuffOperationId > 0)
             {
-                for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entities)
-                { delete entityIter; entityIter = nullptr; }
-                for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entitySets)
-                { delete entitySetIter; entitySetIter = nullptr; }
-                delete operationHistoryGlobal[j]->lastSpritesAndSetParam;
+                delete operationHistoryGlobal[j]; // call default deconstructor
+                CurrentSpritestuffOperationId--;
+            }
+            else
+            {
+                if (operationHistoryGlobal[j]->newSpritesAndSetParam)
+                    delete operationHistoryGlobal[j]->newSpritesAndSetParam;
+                if (operationHistoryGlobal[j]->lastSpritesAndSetParam)
+                {
+                    for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entities)
+                    { delete entityIter; entityIter = nullptr; }
+                    for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entitySets)
+                    { delete entitySetIter; entitySetIter = nullptr; }
+                    delete operationHistoryGlobal[j]->lastSpritesAndSetParam;
+                }
             }
         }
     }
