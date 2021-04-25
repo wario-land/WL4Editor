@@ -82,6 +82,14 @@ namespace ROMUtils
         unsigned int size;
     };
 
+    struct ChunkReference
+    {
+        unsigned int ChunkAddress;
+        unsigned int Passage;
+        unsigned int Stage;
+        unsigned int Room;
+    };
+
     // Global functions
     unsigned int IntFromData(int address, bool loadFromTmpROM = false);
     unsigned int PointerFromData(int address, bool loadFromTmpROM = false);
@@ -99,6 +107,7 @@ namespace ROMUtils
     void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);
     unsigned int EndianReverse(unsigned int n);
     void SaveDataAnalysis();
+    QVector<struct ChunkReference> GetAllChunkReferences();
 
 } // namespace ROMUtils
 

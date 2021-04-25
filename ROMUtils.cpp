@@ -1240,4 +1240,41 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg("Other", -37).arg(otherTypeSpace, 7).arg(100 * usedSpaceP_ofTypeOther, 6, 'f', 2).arg(otherTypeCount);
     }
 
+    QVector<struct ChunkReference> GetAllChunkReferences()
+    {
+        QVector<struct ChunkReference> references;
+
+        // Get global info
+        // TODO
+
+        // Get level info
+        for(unsigned int passageNum = 0; passageNum < 6; ++passageNum)
+        {
+            for(unsigned int stageNum = 0; stageNum < 6; ++stageNum)
+            {
+                // Get room header chunk reference
+                unsigned int offset = WL4Constants::LevelHeaderIndexTable + passageNum * 24 + stageNum * 4;
+                unsigned int levelHeaderIndex = ROMUtils::IntFromData(offset);
+                unsigned int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
+                if(levelHeaderPointer > WL4Constants::AvailableSpaceBeginningInROM)
+                {
+                    references.append({levelHeaderPointer, passageNum, stageNum, 0});
+                }
+
+                // Get camera boundary pointer table chunk reference
+                unsigned int LevelID = ROMUtils::CurrentFile[levelHeaderPointer];
+                unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
+                unsigned int cameraBoundaryEntryAddress = ROMUtils::PointerFromData(cameraPointerTablePtr);
+                if(cameraBoundaryEntryAddress > WL4Constants::AvailableSpaceBeginningInROM)
+                {
+                    references.append({cameraBoundaryEntryAddress, passageNum, stageNum, 0});
+                }
+
+                // TODO
+            }
+        }
+
+        return references;
+    }
+
 } // namespace ROMUtils
