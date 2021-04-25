@@ -119,15 +119,20 @@ WL4EditorWindow::~WL4EditorWindow()
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
     {
         delete ROMUtils::singletonTilesets[i];
+        ROMUtils::singletonTilesets[i] = nullptr;
     }
     for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0])); i++)
     {
         delete ROMUtils::entitiessets[i];
+        ROMUtils::entitiessets[i] = nullptr;
     }
     for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entities[0])); i++)
     {
         delete ROMUtils::entities[i];
+        ROMUtils::entities[i] = nullptr;
     }
+    ResetUndoHistory();
+    DeleteUndoHistoryGlobal();
 
     if (CurrentLevel)
     {

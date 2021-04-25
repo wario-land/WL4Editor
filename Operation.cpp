@@ -516,14 +516,47 @@ void ResetUndoHistory()
         operationHistory[i].clear();
     }
 
+    // Re-initialize all the operation indexes to zero
+    memset(operationIndex, 0, sizeof(operationIndex));
+}
+
+/// <summary>
+/// Clean up the global undo deque.
+/// </summary>
+/// <remarks>
+/// Only call this when deconstruct the editor, don't use it elsewhere.
+/// </remarks>
+void DeleteUndoHistoryGlobal()
+{
+    // It is different from deleting OperationParams, so cannot use the deconstructor
     // Deconstruct the global history
     for (unsigned int j = 0; j < operationHistoryGlobal.size(); ++j)
     {
-        delete operationHistoryGlobal[j];
+        if (operationHistoryGlobal[j]->TilesetChange)
+        {
+            if (operationHistoryGlobal[j]->newTilesetEditParams)
+                delete operationHistoryGlobal[j]->newTilesetEditParams;
+            if (operationHistoryGlobal[j]->lastTilesetEditParams)
+            {
+                delete operationHistoryGlobal[j]->lastTilesetEditParams->newTileset;
+                operationHistoryGlobal[j]->lastTilesetEditParams->newTileset = nullptr;
+                delete operationHistoryGlobal[j]->lastTilesetEditParams;
+            }
+        }
+        if (operationHistoryGlobal[j]->SpritesSpritesetChange)
+        {
+            if (operationHistoryGlobal[j]->newSpritesAndSetParam)
+                delete operationHistoryGlobal[j]->newSpritesAndSetParam;
+            if (operationHistoryGlobal[j]->lastSpritesAndSetParam)
+            {
+                for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entities)
+                { delete entityIter; entityIter = nullptr; }
+                for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entitySets)
+                { delete entitySetIter; entitySetIter = nullptr; }
+                delete operationHistoryGlobal[j]->lastSpritesAndSetParam;
+            }
+        }
     }
     operationHistoryGlobal.clear();
-
-    // Re-initialize all the operation indexes to zero
-    memset(operationIndex, 0, sizeof(operationIndex));
     operationIndexGlobal = 0;
 }
