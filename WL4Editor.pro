@@ -31,6 +31,7 @@ CONFIG += c++17 strict_c++
 QMAKE_CXXFLAGS = -fpermissive
 
 SOURCES += \
+    Dialog/ChunkManagerInfoGroupBox.cpp \
     Dialog/ChunkManagerDialog.cpp \
     Dialog/ChunkManagerTreeView.cpp \
     Dialog/SelectColorDialog.cpp \
@@ -79,6 +80,7 @@ SOURCES += \
     Dialog/CreditEditor_TableView.cpp
 
 HEADERS += \
+    Dialog/ChunkManagerInfoGroupBox.h \
     Dialog/ChunkManagerDialog.h \
     Dialog/ChunkManagerTreeView.h \
     Dialog/SelectColorDialog.h \

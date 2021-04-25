@@ -13,7 +13,7 @@ ChunkManagerTreeView::ChunkManagerTreeView(QWidget *parent) : QTreeView(parent),
 {
     // Configure the tree view
     setModel(&Model);
-    setSelectionMode(QAbstractItemView::NoSelection);
+    setSelectionMode(QAbstractItemView::SingleSelection);
     setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Populate the model
@@ -97,6 +97,7 @@ void ChunkManagerModel::RemoveChunk(unsigned int chunk)
             if(chunk == chunkAddress)
             {
                 categoryRow->removeRow(j);
+                return;
             }
         }
     }

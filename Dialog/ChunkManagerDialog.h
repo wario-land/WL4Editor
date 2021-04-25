@@ -2,6 +2,7 @@
 #define CHUNKEDITORDIALOG_H
 
 #include "ChunkManagerTreeView.h"
+#include "ChunkManagerInfoGroupBox.h"
 
 #include <QDialog>
 
@@ -19,6 +20,7 @@ public:
 
 private:
     ChunkManagerTreeView *TreeView;
+    ChunkManagerInfoGroupBox *Info;
     Ui::ChunkManagerDialog *ui;
 };
 
