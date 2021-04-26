@@ -500,7 +500,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         for(uint i = 0; i < recentROMnum; i++)
         {
             QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + 1));
-            if(filepath == ROMUtils::ROMFileMetaData->FilePath)
+            if(filepath == ROMUtils::ROMFileMetadata->FilePath)
             {
                 findedInRecentFile = i;
                 break;
@@ -525,8 +525,8 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
                 RecentROMs[i]->setText(filepath);
             }
         }
-        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFileMetaData->FilePath);
-        RecentROMs[0]->setText(ROMUtils::ROMFileMetaData->FilePath);
+        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFileMetadata->FilePath);
+        RecentROMs[0]->setText(ROMUtils::ROMFileMetadata->FilePath);
         recentROMnum++;
     }
     else
@@ -539,8 +539,8 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
                 SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), filepath);
                 RecentROMs[i]->setText(filepath);
             }
-            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFileMetaData->FilePath);
-            RecentROMs[0]->setText(ROMUtils::ROMFileMetaData->FilePath);
+            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFileMetadata->FilePath);
+            RecentROMs[0]->setText(ROMUtils::ROMFileMetadata->FilePath);
         }
     }
 
@@ -1548,7 +1548,7 @@ bool WL4EditorWindow::SaveCurrentFileAs()
         if (ROMUtils::SaveLevel(qFilePath))
         {
             // If successful in saving the file, set the window title to reflect the new file
-            ROMUtils::ROMFileMetaData->FilePath = qFilePath;
+            ROMUtils::ROMFileMetadata->FilePath = qFilePath;
             dialogInitialPath = QFileInfo(qFilePath).dir().path();
             std::string filePath = qFilePath.toStdString();
             std::string fileName = filePath.substr(filePath.rfind('/') + 1);
@@ -2018,7 +2018,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     int offset = WL4Constants::LevelHeaderIndexTable + selectedLevel._PassageIndex * 24 + selectedLevel._LevelIndex * 4;
     int levelHeaderIndex = ROMUtils::IntFromData(offset);
     int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-    int roomCount = ROMUtils::ROMFileMetaData->ROMDataPtr[levelHeaderPointer + 1];
+    int roomCount = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderPointer + 1];
     if (roomCount <= static_cast<int>(selectedRoom))
     {
         OutputWidget->PrintString(tr("Cannot create room, current Room has not been saved to the ROM yet!"));
@@ -2218,7 +2218,7 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
     }
 
     // switch ROM MetaData
-    ROMUtils::ROMFileMetaData = &ROMUtils::TemROMMetaData;
+    ROMUtils::ROMFileMetadata = &ROMUtils::TempROMMetadata;
 
     if (QString errorMessage = FileIOUtils::LoadROMFile(qFilePath); !errorMessage.isEmpty())
     {
@@ -2236,7 +2236,7 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
     if (!okay)
     {
         ROMUtils::CleanUpTmpCurrentFileMetaData();
-        ROMUtils::ROMFileMetaData = &ROMUtils::CurrentROMMetaData;
+        ROMUtils::ROMFileMetadata = &ROMUtils::CurrentROMMetadata;
         return;
     }
 
@@ -2261,5 +2261,5 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
     ROMUtils::CleanUpTmpCurrentFileMetaData();
 
     // switch back ROM MetaData
-    ROMUtils::ROMFileMetaData = &ROMUtils::CurrentROMMetaData;
+    ROMUtils::ROMFileMetadata = &ROMUtils::CurrentROMMetadata;
 }

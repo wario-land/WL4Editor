@@ -25,7 +25,7 @@ extern WL4EditorWindow *singleton;
 /// </returns>
 bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
 {
-    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetaData->FilePath).dir().path();
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
     QString selectedfilter;
     QString usentiFilter(QObject::tr("usenti pal file") + " (*.pal)"),
             yychrFilter(QObject::tr("YY-CHR pal file") + " (*.pal)"),
@@ -159,7 +159,7 @@ ExportPalette_error:
 /// </returns>
 bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, QRgb)> SetColorFunction, int selectedPalId)
 {
-    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetaData->FilePath).dir().path();
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
     QString selectedfilter;
     QString qFilePath = QFileDialog::getOpenFileName(
                 parent,
@@ -498,8 +498,8 @@ QString FileIOUtils::LoadROMFile(QString filePath)
                            "Please load a rom without intro instead.");
     }
 
-    ROMUtils::ROMFileMetaData->Length = length;
-    ROMUtils::ROMFileMetaData->FilePath = filePath;
-    ROMUtils::ROMFileMetaData->ROMDataPtr = (unsigned char *) ROMAddr;
+    ROMUtils::ROMFileMetadata->Length = length;
+    ROMUtils::ROMFileMetadata->FilePath = filePath;
+    ROMUtils::ROMFileMetadata->ROMDataPtr = (unsigned char *) ROMAddr;
     return "";
 }

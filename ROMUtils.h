@@ -15,7 +15,7 @@
 
 namespace ROMUtils
 {
-    struct ROMFileMetaData
+    struct ROMFileMetadata
     {
         unsigned int Length;
         QString FilePath;
@@ -29,9 +29,9 @@ namespace ROMUtils
     extern unsigned char *tmpCurrentFile;
     extern unsigned int tmpCurrentFileSize;
     extern QString tmpROMFilePath;
-    extern struct ROMFileMetaData CurrentROMMetaData;
-    extern struct ROMFileMetaData TemROMMetaData;
-    extern struct ROMFileMetaData *ROMFileMetaData;
+    extern struct ROMFileMetadata CurrentROMMetadata;
+    extern struct ROMFileMetadata TempROMMetadata;
+    extern struct ROMFileMetadata *ROMFileMetadata;
 
     extern unsigned int SaveDataIndex;
 

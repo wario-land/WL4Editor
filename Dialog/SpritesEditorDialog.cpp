@@ -761,7 +761,7 @@ void SpritesEditorDialog::on_pushButton_ResetCurOAM_clicked()
 /// </summary>
 void SpritesEditorDialog::on_pushButton_ExportOAMData_clicked()
 {
-    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetaData->FilePath).dir().path();
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
     QString selectedfilter;
     QString txtFilter(QObject::tr("text file") + " (*.txt)");
     QString qFilePath = QFileDialog::getSaveFileName(this,

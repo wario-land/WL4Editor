@@ -30,7 +30,7 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
     {
         model[k]=new QStandardItemModel();
 
-        memcpy(dataToSave[k],&ROMUtils::ROMFileMetaData->ROMDataPtr[WL4Constants::CreditsTiles+k*1280],1280); //1280 = 0x500 size of one credit screen
+        memcpy(dataToSave[k],&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles+k*1280],1280); //1280 = 0x500 size of one credit screen
 
         for (int i=0;i<20;i++) {
             for (int j=0;j<32;j++) {
@@ -193,6 +193,6 @@ void CreditsEditDialog::on_buttonBox_accepted()
     }
     for (int k=0;k<NUMBEROFCREDITSSCREEN;k++)
     {
-        memcpy(&ROMUtils::ROMFileMetaData->ROMDataPtr[WL4Constants::CreditsTiles+k*1280],dataToSave[k],1280);
+        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles+k*1280],dataToSave[k],1280);
     }
 }

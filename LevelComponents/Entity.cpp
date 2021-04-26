@@ -427,7 +427,7 @@ namespace LevelComponents
             if (palettes[i + startPaletteId].size())
                 palettes[i + startPaletteId].clear();
             // First color is transparent
-            ROMUtils::LoadPalette(&palettes[i + startPaletteId], (unsigned short *) (ROMUtils::ROMFileMetaData->ROMDataPtr + paletteSetPtr + i * 32));
+            ROMUtils::LoadPalette(&palettes[i + startPaletteId], (unsigned short *) (ROMUtils::ROMFileMetadata->ROMDataPtr + paletteSetPtr + i * 32));
         }
     }
 

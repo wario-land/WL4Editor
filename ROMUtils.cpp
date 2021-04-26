@@ -41,9 +41,9 @@ namespace ROMUtils
     unsigned char *tmpCurrentFile;
     unsigned int tmpCurrentFileSize;
     QString tmpROMFilePath;
-    struct ROMFileMetaData CurrentROMMetaData;
-    struct ROMFileMetaData TemROMMetaData;
-    struct ROMFileMetaData *ROMFileMetaData;
+    struct ROMFileMetadata CurrentROMMetadata;
+    struct ROMFileMetadata TempROMMetadata;
+    struct ROMFileMetadata *ROMFileMetadata;
 
     unsigned int SaveDataIndex;
     LevelComponents::Tileset *singletonTilesets[92];
@@ -61,7 +61,7 @@ namespace ROMUtils
     /// </param>
     unsigned int IntFromData(int address)
     {
-        return *reinterpret_cast<unsigned int *>(ROMFileMetaData->ROMDataPtr + address);
+        return *reinterpret_cast<unsigned int *>(ROMFileMetadata->ROMDataPtr + address);
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ namespace ROMUtils
     unsigned int PointerFromData(int address)
     {
         unsigned int ret = IntFromData(address) & 0x7FFFFFF;
-        if(ret >= ROMFileMetaData->Length)
+        if(ret >= ROMFileMetadata->Length)
         {
             singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size"));
         }
@@ -123,11 +123,11 @@ namespace ROMUtils
         for (int i = 0; i < 2; i++)
         {
             unsigned char *dst = OutputLayerData + i;
-            if (ROMFileMetaData->ROMDataPtr[address++] == 1)
+            if (ROMFileMetadata->ROMDataPtr[address++] == 1)
             {
                 while (1)
                 {
-                    int ctrl = ROMFileMetaData->ROMDataPtr[address++];
+                    int ctrl = ROMFileMetadata->ROMDataPtr[address++];
                     if (!ctrl)
                     {
                         break;
@@ -145,7 +145,7 @@ namespace ROMUtils
                         runData = ctrl & 0x7F;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = ROMFileMetaData->ROMDataPtr[address];
+                            dst[2 * j] = ROMFileMetadata->ROMDataPtr[address];
                         }
                         address++;
                     }
@@ -154,7 +154,7 @@ namespace ROMUtils
                         runData = ctrl;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = ROMFileMetaData->ROMDataPtr[address + j];
+                            dst[2 * j] = ROMFileMetadata->ROMDataPtr[address + j];
                         }
                         address += runData;
                     }
@@ -166,7 +166,7 @@ namespace ROMUtils
             {
                 while (1)
                 {
-                    int ctrl = (static_cast<int>(ROMFileMetaData->ROMDataPtr[address]) << 8) | ROMFileMetaData->ROMDataPtr[address + 1];
+                    int ctrl = (static_cast<int>(ROMFileMetadata->ROMDataPtr[address]) << 8) | ROMFileMetadata->ROMDataPtr[address + 1];
                     address += 2; // offset + 2
                     if (!ctrl)
                     {
@@ -185,7 +185,7 @@ namespace ROMUtils
                         runData = ctrl & 0x7FFF;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = ROMFileMetaData->ROMDataPtr[address];
+                            dst[2 * j] = ROMFileMetadata->ROMDataPtr[address];
                         }
                         address++;
                     }
@@ -194,7 +194,7 @@ namespace ROMUtils
                         runData = ctrl;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = ROMFileMetaData->ROMDataPtr[address + j];
+                            dst[2 * j] = ROMFileMetadata->ROMDataPtr[address + j];
                         }
                         address += runData;
                     }
@@ -528,16 +528,16 @@ namespace ROMUtils
         std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
-        unsigned char *TempFile = (unsigned char *) malloc(ROMFileMetaData->Length);
-        unsigned int TempLength = ROMFileMetaData->Length;
-        memcpy(TempFile, ROMFileMetaData->ROMDataPtr, ROMFileMetaData->Length);
+        unsigned char *TempFile = (unsigned char *) malloc(ROMFileMetadata->Length);
+        unsigned int TempLength = ROMFileMetadata->Length;
+        memcpy(TempFile, ROMFileMetadata->ROMDataPtr, ROMFileMetadata->Length);
         std::map<int, int> chunkIDtoIndex;
 
         // Invalidate old chunk data
         for(unsigned int invalidationChunk : invalidationChunks)
         {
             // Sanity check
-            if(invalidationChunk > ROMFileMetaData->Length)
+            if(invalidationChunk > ROMFileMetadata->Length)
             {
                 singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk out of range of entire ROM. Address: %1"))
                         .arg("0x" + QString::number(invalidationChunk - 12, 16).toUpper()));
@@ -761,10 +761,10 @@ allocationComplete:
             file.close();
 
             // Set the CurrentFile to the copied CurrentFile data
-            auto temp = ROMFileMetaData->ROMDataPtr;
-            ROMFileMetaData->ROMDataPtr = TempFile;
+            auto temp = ROMFileMetadata->ROMDataPtr;
+            ROMFileMetadata->ROMDataPtr = TempFile;
             delete[] temp;
-            ROMFileMetaData->Length = TempLength;
+            ROMFileMetadata->Length = TempLength;
         }
 
         // Set that there are no changes to the ROM now (so no save prompt is given)
@@ -962,7 +962,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         for(unsigned int i = 0; i < rooms.size(); ++i)
         {
             struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
-                (ROMFileMetaData->ROMDataPtr + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
+                (ROMFileMetadata->ROMDataPtr + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
             unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
             LevelComponents::Room *room = rooms[i];
             for(unsigned int j = 0; j < 4; ++j)
@@ -1159,25 +1159,25 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         };
 
         // Get information about the chunks and free space
-        QVector<unsigned int> chunks = FindAllChunksInROM(ROMFileMetaData->ROMDataPtr,
-                                                          ROMFileMetaData->Length,
+        QVector<unsigned int> chunks = FindAllChunksInROM(ROMFileMetadata->ROMDataPtr,
+                                                          ROMFileMetadata->Length,
                                                           WL4Constants::AvailableSpaceBeginningInROM,
                                                           SaveDataChunkType::InvalidationChunk,
                                                           true);
-        QVector<struct FreeSpaceRegion> freeSpace = FindAllFreeSpaceInROM(ROMFileMetaData->ROMDataPtr, ROMFileMetaData->Length);
+        QVector<struct FreeSpaceRegion> freeSpace = FindAllFreeSpaceInROM(ROMFileMetadata->ROMDataPtr, ROMFileMetadata->Length);
         QVector<struct ChunkData> chunkData;
         for(unsigned int chunkAddr : chunks)
         {
-            unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMFileMetaData->ROMDataPtr + chunkAddr + 4);
-            unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMFileMetaData->ROMDataPtr + chunkAddr + 9) << 16;
+            unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMFileMetadata->ROMDataPtr + chunkAddr + 4);
+            unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMFileMetadata->ROMDataPtr + chunkAddr + 9) << 16;
             struct ChunkData cd = {
                 chunkAddr,
                 chunkLen + extLen + 12,
-                static_cast<enum SaveDataChunkType>(ROMFileMetaData->ROMDataPtr[chunkAddr + 8])
+                static_cast<enum SaveDataChunkType>(ROMFileMetadata->ROMDataPtr[chunkAddr + 8])
             };
             chunkData.append(cd);
         }
-        unsigned int saveAreaSize = ROMFileMetaData->Length - WL4Constants::AvailableSpaceBeginningInROM;
+        unsigned int saveAreaSize = ROMFileMetadata->Length - WL4Constants::AvailableSpaceBeginningInROM;
 
         // Find total free space
         int totalFreeSpace = 0;

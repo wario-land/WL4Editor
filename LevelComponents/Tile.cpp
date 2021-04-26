@@ -74,7 +74,7 @@ namespace LevelComponents
     Tile8x8::Tile8x8(int dataPtr, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
     {
         // Initialize the QImage data from ROM
-        unsigned char *FileDataPtr = ROMUtils::ROMFileMetaData->ROMDataPtr;
+        unsigned char *FileDataPtr = ROMUtils::ROMFileMetadata->ROMDataPtr;
         for (int i = 0; i < 8; ++i)
         {
             for (int j = 0; j < 4; ++j)

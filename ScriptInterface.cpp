@@ -65,10 +65,10 @@ void ScriptInterface::_DecompressData(int mappingtype, int address)
     int tmpw = 0, tmph = 0;
     unsigned short *LayerData = nullptr;
     if((mappingtype & 0x20) == 0x20) {
-        tmpw = (1 + (ROMUtils::ROMFileMetaData->ROMDataPtr[address] & 1)) << 5;
-        tmph = (1 + ((ROMUtils::ROMFileMetaData->ROMDataPtr[address] >> 1) & 1)) << 5;
+        tmpw = (1 + (ROMUtils::ROMFileMetadata->ROMDataPtr[address] & 1)) << 5;
+        tmph = (1 + ((ROMUtils::ROMFileMetadata->ROMDataPtr[address] >> 1) & 1)) << 5;
         LayerData = reinterpret_cast<unsigned short *>(ROMUtils::LayerRLEDecompress(address + 1, tmpw * tmph * 2));
-        if (ROMUtils::ROMFileMetaData->ROMDataPtr[address] == 1)
+        if (ROMUtils::ROMFileMetadata->ROMDataPtr[address] == 1)
         {
             unsigned short *rearranged = new unsigned short[tmpw * tmph * 2];
             for (int j = 0; j < 32; ++j)
@@ -85,8 +85,8 @@ void ScriptInterface::_DecompressData(int mappingtype, int address)
         }
 
     } else if((mappingtype & 0x10) == 0x10) {
-        tmpw = ROMUtils::ROMFileMetaData->ROMDataPtr[address];
-        tmph = ROMUtils::ROMFileMetaData->ROMDataPtr[address + 1];
+        tmpw = ROMUtils::ROMFileMetadata->ROMDataPtr[address];
+        tmph = ROMUtils::ROMFileMetadata->ROMDataPtr[address + 1];
         LayerData = reinterpret_cast<unsigned short *>(ROMUtils::LayerRLEDecompress(address + 2, tmpw * tmph * 2));
     } else {
         singleton->GetOutputWidgetPtr()->PrintString("Corruption error: Invalid layer mapping type: 0x" + QString::number(mappingtype, 16).toUpper());

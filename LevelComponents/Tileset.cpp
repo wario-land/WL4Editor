@@ -25,7 +25,7 @@ namespace LevelComponents
     {
         //Save the ROM pointer into the tileset object
         this->tilesetPtr = tilesetPtr;
-        unsigned char *curFilePtr = ROMUtils::ROMFileMetaData->ROMDataPtr;
+        unsigned char *curFilePtr = ROMUtils::ROMFileMetadata->ROMDataPtr;
 
         // Create all 16 color palettes
         paletteAddress = ROMUtils::PointerFromData(tilesetPtr + 8);
@@ -235,9 +235,9 @@ namespace LevelComponents
         AnimatedTileSwitchTable[startTile8x8Id >> 2] = SwitchId;
         int tmpAnimatedTilesHeaderPtr = 0x3F7828 + 8 * tile8x8groupId;
         int tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
-        int tmpoffset = (int) ROMUtils::ROMFileMetaData->ROMDataPtr[tmpAnimatedTilesHeaderPtr + 2];
-        if ((ROMUtils::ROMFileMetaData->ROMDataPtr[tmpAnimatedTilesHeaderPtr] == '\x03') ||
-            (ROMUtils::ROMFileMetaData->ROMDataPtr[tmpAnimatedTilesHeaderPtr] == '\x06'))
+        int tmpoffset = (int) ROMUtils::ROMFileMetadata->ROMDataPtr[tmpAnimatedTilesHeaderPtr + 2];
+        if ((ROMUtils::ROMFileMetadata->ROMDataPtr[tmpAnimatedTilesHeaderPtr] == '\x03') ||
+            (ROMUtils::ROMFileMetadata->ROMDataPtr[tmpAnimatedTilesHeaderPtr] == '\x06'))
         {
             tmpoffset -= 1;
         }

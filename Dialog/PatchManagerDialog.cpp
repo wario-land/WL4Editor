@@ -57,7 +57,7 @@ void PatchManagerDialog::on_patchManagerTableView_clicked(const QModelIndex &ind
 /// </param>
 static QString GetPathRelativeToROM(const QString &filePath)
 {
-    QDir ROMdir(ROMUtils::ROMFileMetaData->FilePath);
+    QDir ROMdir(ROMUtils::ROMFileMetadata->FilePath);
     ROMdir.cdUp();
     if(filePath.startsWith(ROMdir.absolutePath()))
     {
@@ -121,7 +121,7 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
         QString relativeFN = GetPathRelativeToROM(newEntry.FileName);
         if(relativeFN.isEmpty())
         {
-            return QString("File must be within directory subtree of ROM file: ") + QFileInfo(ROMUtils::ROMFileMetaData->FilePath).dir().path();
+            return QString("File must be within directory subtree of ROM file: ") + QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
         }
 
         // Two entries may not use the same file name. Two entries with blank file names are allowed.
