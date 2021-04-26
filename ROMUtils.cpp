@@ -73,6 +73,14 @@ namespace ROMUtils
         "EntitySetLoadTableChunkType"
     };
 
+    void StaticInitialization()
+    {
+        CurrentFile = tmpCurrentFile = nullptr;
+        CurrentROMMetadata = {CurrentFileSize, ROMFilePath, CurrentFile};
+        TempROMMetadata = {tmpCurrentFileSize, tmpROMFilePath, tmpCurrentFile};
+        ROMFileMetadata = &CurrentROMMetadata;
+    }
+
     /// <summary>
     /// Get a 4-byte, little-endian integer from ROM data.
     /// </summary>
@@ -1252,8 +1260,8 @@ error:      free(TempFile); // free up temporary file if there was a processing 
 
         // Get global patch references
         unsigned int patchListAddr = ROMUtils::FindChunkInROM(
-            ROMUtils::CurrentFile,
-            ROMUtils::CurrentFileSize,
+            ROMUtils::ROMFileMetadata->ROMDataPtr,
+            ROMUtils::ROMFileMetadata->Length,
             WL4Constants::AvailableSpaceBeginningInROM,
             ROMUtils::SaveDataChunkType::PatchListChunk
         );
@@ -1286,7 +1294,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                 references.append({LevelNameJPtr - 12, passageNum, stageNum});
 
                 // Door table chunk
-                unsigned int LevelID = ROMUtils::CurrentFile[levelHeaderPointer];
+                unsigned int LevelID = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderPointer];
                 unsigned int doorTablePtr = WL4Constants::DoorTable + LevelID * 4;
                 references.append({doorTablePtr - 12, passageNum, stageNum});
 
@@ -1294,17 +1302,17 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                 unsigned int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + LevelID * 4);
                 references.append({roomTableAddress - 12, passageNum, stageNum});
                 int cameraLimitatorRooms = 0;
-                unsigned int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
+                unsigned int roomCount = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderPointer + 1];
                 for(unsigned int roomNum = 0; roomNum < roomCount; ++roomNum)
                 {
                     unsigned int roomDataPtr = roomTableAddress + roomNum * 0x2C;
-                    cameraLimitatorRooms += ROMUtils::CurrentFile[roomDataPtr + 24] == 3;
+                    cameraLimitatorRooms += ROMUtils::ROMFileMetadata->ROMDataPtr[roomDataPtr + 24] == 3;
 
                     // Process layers
                     for(unsigned int layerNum = 0; layerNum < 4; ++layerNum)
                     {
                         enum LevelComponents::LayerMappingType mappingType =
-                            static_cast<enum LevelComponents::LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + layerNum + 1] & 0x30);
+                            static_cast<enum LevelComponents::LayerMappingType>(ROMUtils::ROMFileMetadata->ROMDataPtr[roomDataPtr + layerNum + 1] & 0x30);
                         unsigned int layerPtr = ROMUtils::PointerFromData(roomDataPtr + layerNum * 4 + 8);
                         references.append({layerPtr - 12, passageNum, stageNum, roomNum, layerNum, 0, mappingType, roomTableAddress - 12});
                     }

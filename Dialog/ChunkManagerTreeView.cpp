@@ -17,7 +17,7 @@ ChunkManagerTreeView::ChunkManagerTreeView(QWidget *parent) : QTreeView(parent),
     setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Populate the model
-    QVector<unsigned int> allChunks = FindAllChunksInROM(ROMUtils::CurrentFile, ROMUtils::CurrentFileSize, WL4Constants::AvailableSpaceBeginningInROM, ROMUtils::SaveDataChunkType::InvalidationChunk, true);
+    QVector<unsigned int> allChunks = FindAllChunksInROM(ROMUtils::ROMFileMetadata->ROMDataPtr, ROMUtils::ROMFileMetadata->Length, WL4Constants::AvailableSpaceBeginningInROM, ROMUtils::SaveDataChunkType::InvalidationChunk, true);
     for(unsigned int chunk : allChunks)
     {
         Model.AddChunk(chunk);
@@ -102,9 +102,9 @@ ChunkManagerModel::~ChunkManagerModel()
 void ChunkManagerModel::AddChunk(unsigned int chunk)
 {
     // Get info to add to the model
-    unsigned int chunkType = ROMUtils::CurrentFile[chunk + 8];
-    unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMUtils::CurrentFile + chunk + 4);
-    unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMUtils::CurrentFile + chunk + 9) << 16;
+    unsigned int chunkType = ROMUtils::ROMFileMetadata->ROMDataPtr[chunk + 8];
+    unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMUtils::ROMFileMetadata->ROMDataPtr + chunk + 4);
+    unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMUtils::ROMFileMetadata->ROMDataPtr + chunk + 9) << 16;
     unsigned int chunkSize = chunkLen + extLen + 12;
 
     // Add the row to the model under the appropriate chunk type row

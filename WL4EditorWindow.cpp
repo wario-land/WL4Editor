@@ -140,9 +140,9 @@ WL4EditorWindow::~WL4EditorWindow()
         delete CurrentLevel;
     }
 
-    if (ROMUtils::CurrentFile)
+    if (ROMUtils::ROMFileMetadata->ROMDataPtr)
     {
-        delete[] ROMUtils::CurrentFile;
+        delete[] ROMUtils::ROMFileMetadata->ROMDataPtr;
     }
 }
 

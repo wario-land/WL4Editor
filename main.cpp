@@ -3,19 +3,16 @@
 #include "Dialog/PatchEditDialog.h"
 #include "Dialog/CreditsEditDialog.h"
 #include "DockWidget/CameraControlDockWidget.h"
-#include "WL4Application.h" // #include <QApplication>
 #include "WL4EditorWindow.h"
+
+#include <QApplication>
 
 /// <summary>
 /// Perform all static class initializations.
 /// </summary>
 static void StaticInitialization_BeforeROMLoading()
 {
-    ROMUtils::CurrentFile = ROMUtils::tmpCurrentFile = nullptr;
-    ROMUtils::CurrentROMMetadata = {ROMUtils::CurrentFileSize, ROMUtils::ROMFilePath, ROMUtils::CurrentFile};
-    ROMUtils::TempROMMetadata = {ROMUtils::tmpCurrentFileSize, ROMUtils::tmpROMFilePath, ROMUtils::tmpCurrentFile};
-    ROMUtils::ROMFileMetadata = &ROMUtils::CurrentROMMetadata;
-
+    ROMUtils::StaticInitialization();
     RoomConfigDialog::StaticComboBoxesInitialization();
     DoorConfigDialog::StaticInitialization();
     CameraControlDockWidget::StaticInitialization();

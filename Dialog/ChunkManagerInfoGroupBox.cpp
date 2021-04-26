@@ -46,7 +46,7 @@ QVector<QWidget*> ChunkManagerInfoGroupBox::GetInfoFromChunk(unsigned int chunk)
 {
     // Gather info from the chunk header
     QVector<QWidget*> widgets;
-    unsigned char *chunkHeader = ROMUtils::CurrentFile + chunk;
+    unsigned char *chunkHeader = ROMUtils::ROMFileMetadata->ROMDataPtr + chunk;
     unsigned char *chunkData = chunkHeader + 12;
     unsigned int chunkLen = *reinterpret_cast<unsigned short*>(chunkHeader + 4);
     unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(chunkHeader + 9) << 16;

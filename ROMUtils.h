@@ -26,12 +26,6 @@ namespace ROMUtils
     };
 
     // Global variables
-    extern unsigned char *CurrentFile;
-    extern unsigned int CurrentFileSize;
-    extern QString ROMFilePath;
-    extern unsigned char *tmpCurrentFile;
-    extern unsigned int tmpCurrentFileSize;
-    extern QString tmpROMFilePath;
     extern struct ROMFileMetadata CurrentROMMetadata;
     extern struct ROMFileMetadata TempROMMetadata;
     extern struct ROMFileMetadata *ROMFileMetadata;
@@ -124,6 +118,7 @@ namespace ROMUtils
     unsigned int EndianReverse(unsigned int n);
     void SaveDataAnalysis();
     QVector<struct ChunkReference> GetAllChunkReferences();
+    void StaticInitialization();
     
 } // namespace ROMUtils
 
