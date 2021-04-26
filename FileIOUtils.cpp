@@ -25,7 +25,7 @@ extern WL4EditorWindow *singleton;
 /// </returns>
 bool FileIOUtils::ExportPalette(QWidget *parent, QVector<QRgb> palette)
 {
-    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
     QString selectedfilter;
     QString usentiFilter(QObject::tr("usenti pal file") + " (*.pal)"),
             yychrFilter(QObject::tr("YY-CHR pal file") + " (*.pal)"),
@@ -159,7 +159,7 @@ ExportPalette_error:
 /// </returns>
 bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, QRgb)> SetColorFunction, int selectedPalId)
 {
-    QString romFileDir = QFileInfo(ROMUtils::ROMFilePath).dir().path();
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
     QString selectedfilter;
     QString qFilePath = QFileDialog::getOpenFileName(
                 parent,
@@ -461,7 +461,7 @@ QImage FileIOUtils::RenderBGColor(QImage image, QWidget *parent)
 /// <param name="filePath">
 /// The path to the file that will be read.
 /// </param>
-QString FileIOUtils::LoadROMFile(QString filePath, bool loadAsTempFile)
+QString FileIOUtils::LoadROMFile(QString filePath)
 {
     // Read ROM file into current file array
     QFile file(filePath);
@@ -498,17 +498,8 @@ QString FileIOUtils::LoadROMFile(QString filePath, bool loadAsTempFile)
                            "Please load a rom without intro instead.");
     }
 
-    if (loadAsTempFile)
-    {
-        ROMUtils::tmpCurrentFileSize = length;
-        ROMUtils::tmpROMFilePath = filePath;
-        ROMUtils::tmpCurrentFile = (unsigned char *) ROMAddr;
-    }
-    else
-    {
-        ROMUtils::CurrentFileSize = length;
-        ROMUtils::ROMFilePath = filePath;
-        ROMUtils::CurrentFile = (unsigned char *) ROMAddr;
-    }
+    ROMUtils::ROMFileMetadata->Length = length;
+    ROMUtils::ROMFileMetadata->FilePath = filePath;
+    ROMUtils::ROMFileMetadata->ROMDataPtr = (unsigned char *) ROMAddr;
     return "";
 }

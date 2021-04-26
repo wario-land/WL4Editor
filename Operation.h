@@ -127,6 +127,7 @@ struct OperationParams
             if (newTilesetEditParams)
             {
                 delete newTilesetEditParams->newTileset;
+                newTilesetEditParams->newTileset = nullptr;
                 delete newTilesetEditParams;
             }
         }
@@ -136,10 +137,10 @@ struct OperationParams
                 delete lastSpritesAndSetParam;
             if (newSpritesAndSetParam)
             {
-                for (LevelComponents::Entity *entityIter: lastSpritesAndSetParam->entities)
-                    delete entityIter;
-                for (LevelComponents::EntitySet *entitySetIter: lastSpritesAndSetParam->entitySets)
-                    delete entitySetIter;
+                for (LevelComponents::Entity *entityIter: newSpritesAndSetParam->entities)
+                { delete entityIter; entityIter = nullptr; }
+                for (LevelComponents::EntitySet *entitySetIter: newSpritesAndSetParam->entitySets)
+                { delete entitySetIter; entitySetIter = nullptr; }
                 delete newSpritesAndSetParam;
             }
         }
@@ -156,6 +157,7 @@ void UndoOperationGlobal();
 void RedoOperation();
 void RedoOperationGlobal();
 void ResetUndoHistory();
+void DeleteUndoHistoryGlobal();
 
 
 #endif // OPERATION_H

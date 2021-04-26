@@ -15,6 +15,13 @@
 
 namespace ROMUtils
 {
+    struct ROMFileMetadata
+    {
+        unsigned int Length;
+        QString FilePath;
+        unsigned char *ROMDataPtr;
+    };
+
     // Global variables
     extern unsigned char *CurrentFile;
     extern unsigned int CurrentFileSize;
@@ -22,6 +29,9 @@ namespace ROMUtils
     extern unsigned char *tmpCurrentFile;
     extern unsigned int tmpCurrentFileSize;
     extern QString tmpROMFilePath;
+    extern struct ROMFileMetadata CurrentROMMetadata;
+    extern struct ROMFileMetadata TempROMMetadata;
+    extern struct ROMFileMetadata *ROMFileMetadata;
 
     extern unsigned int SaveDataIndex;
 
@@ -79,8 +89,9 @@ namespace ROMUtils
     };
 
     // Global functions
-    unsigned int IntFromData(int address, bool loadFromTmpROM = false);
-    unsigned int PointerFromData(int address, bool loadFromTmpROM = false);
+    void CleanUpTmpCurrentFileMetaData();
+    unsigned int IntFromData(int address);
+    unsigned int PointerFromData(int address);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);

@@ -25,10 +25,10 @@ namespace LevelComponents
     {
         //Save the ROM pointer into the tileset object
         this->tilesetPtr = tilesetPtr;
-        unsigned char *curFilePtr = IsloadFromTmpROM ? ROMUtils::tmpCurrentFile: ROMUtils::CurrentFile;
+        unsigned char *curFilePtr = ROMUtils::ROMFileMetadata->ROMDataPtr;
 
         // Create all 16 color palettes
-        paletteAddress = ROMUtils::PointerFromData(tilesetPtr + 8, IsloadFromTmpROM);
+        paletteAddress = ROMUtils::PointerFromData(tilesetPtr + 8);
         for (int i = 0; i < 16; ++i)
         {
             int subPalettePtr = paletteAddress + i * 32;
@@ -66,27 +66,27 @@ namespace LevelComponents
         }
 
         // Load the 8x8 tile graphics
-        fgGFXptr = ROMUtils::PointerFromData(tilesetPtr, IsloadFromTmpROM);
-        fgGFXlen = ROMUtils::IntFromData(tilesetPtr + 4, IsloadFromTmpROM);
-        bgGFXptr = ROMUtils::PointerFromData(tilesetPtr + 12, IsloadFromTmpROM);
-        bgGFXlen = ROMUtils::IntFromData(tilesetPtr + 16, IsloadFromTmpROM);
+        fgGFXptr = ROMUtils::PointerFromData(tilesetPtr);
+        fgGFXlen = ROMUtils::IntFromData(tilesetPtr + 4);
+        bgGFXptr = ROMUtils::PointerFromData(tilesetPtr + 12);
+        bgGFXlen = ROMUtils::IntFromData(tilesetPtr + 16);
 
         // Foreground
         int fgGFXcount = fgGFXlen / 32;
         for (int i = 0; i < fgGFXcount; ++i)
         {
-            tile8x8array[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes, IsloadFromTmpROM);
+            tile8x8array[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes);
         }
 
         // Background
         int bgGFXcount = bgGFXlen / 32;
         for (int i = 0; i < bgGFXcount; ++i)
         {
-            tile8x8array[Tile8x8DefaultNum - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes, IsloadFromTmpROM);
+            tile8x8array[Tile8x8DefaultNum - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes);
         }
 
         // Load the map16 data
-        map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14, IsloadFromTmpROM);
+        map16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
         for (int i = 0; i < Tile16DefaultNum; ++i)
         {
             unsigned short *map16tilePtr = (unsigned short *) (curFilePtr + map16ptr + i * 8);
@@ -108,15 +108,15 @@ namespace LevelComponents
 
         // Get pointer to the map16 event table
         Map16EventTable = new unsigned short[Tile16DefaultNum];
-        memcpy(Map16EventTable, (unsigned short *) (curFilePtr + ROMUtils::PointerFromData(tilesetPtr + 28, IsloadFromTmpROM)), Tile16DefaultNum * sizeof(unsigned short));
+        memcpy(Map16EventTable, (unsigned short *) (curFilePtr + ROMUtils::PointerFromData(tilesetPtr + 28)), Tile16DefaultNum * sizeof(unsigned short));
 
         // Get pointer to the Map16 Wario Animation Slot ID Table
         Map16TerrainTypeIDTable = new unsigned char[Tile16DefaultNum];
-        memcpy(Map16TerrainTypeIDTable, (unsigned char *) (curFilePtr + ROMUtils::PointerFromData(tilesetPtr + 24, IsloadFromTmpROM)), Tile16DefaultNum * sizeof(unsigned char));
+        memcpy(Map16TerrainTypeIDTable, (unsigned char *) (curFilePtr + ROMUtils::PointerFromData(tilesetPtr + 24)), Tile16DefaultNum * sizeof(unsigned char));
 
         // Get pointer of Universal Sprites tiles Palette
         TilesetPaletteData = new unsigned short[16 * 16];
-        memcpy(TilesetPaletteData, (unsigned short *) (curFilePtr + ROMUtils::PointerFromData(tilesetPtr + 8, IsloadFromTmpROM)), 16 * 16 * sizeof(unsigned short));
+        memcpy(TilesetPaletteData, (unsigned short *) (curFilePtr + ROMUtils::PointerFromData(tilesetPtr + 8)), 16 * 16 * sizeof(unsigned short));
 
         // Reset pointer variables if the data comes from a temp ROM
         if (IsloadFromTmpROM)
@@ -235,9 +235,9 @@ namespace LevelComponents
         AnimatedTileSwitchTable[startTile8x8Id >> 2] = SwitchId;
         int tmpAnimatedTilesHeaderPtr = 0x3F7828 + 8 * tile8x8groupId;
         int tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
-        int tmpoffset = (int) ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr + 2];
-        if ((ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x03') ||
-            (ROMUtils::CurrentFile[tmpAnimatedTilesHeaderPtr] == '\x06'))
+        int tmpoffset = (int) ROMUtils::ROMFileMetadata->ROMDataPtr[tmpAnimatedTilesHeaderPtr + 2];
+        if ((ROMUtils::ROMFileMetadata->ROMDataPtr[tmpAnimatedTilesHeaderPtr] == '\x03') ||
+            (ROMUtils::ROMFileMetadata->ROMDataPtr[tmpAnimatedTilesHeaderPtr] == '\x06'))
         {
             tmpoffset -= 1;
         }

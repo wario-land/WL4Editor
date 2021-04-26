@@ -11,6 +11,11 @@
 /// </summary>
 static void StaticInitialization_BeforeROMLoading()
 {
+    ROMUtils::CurrentFile = ROMUtils::tmpCurrentFile = nullptr;
+    ROMUtils::CurrentROMMetadata = {ROMUtils::CurrentFileSize, ROMUtils::ROMFilePath, ROMUtils::CurrentFile};
+    ROMUtils::TempROMMetadata = {ROMUtils::tmpCurrentFileSize, ROMUtils::tmpROMFilePath, ROMUtils::tmpCurrentFile};
+    ROMUtils::ROMFileMetadata = &ROMUtils::CurrentROMMetadata;
+
     RoomConfigDialog::StaticComboBoxesInitialization();
     DoorConfigDialog::StaticInitialization();
     CameraControlDockWidget::StaticInitialization();
