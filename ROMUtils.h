@@ -12,6 +12,7 @@
 #include "LevelComponents/Tileset.h"
 #include "LevelComponents/EntitySet.h"
 #include "LevelComponents/Entity.h"
+#include "LevelComponents/Layer.h"
 
 #define CHUNK_TYPE_COUNT 18
 
@@ -85,9 +86,13 @@ namespace ROMUtils
     struct ChunkReference
     {
         unsigned int ChunkAddress;
-        unsigned int Passage;
-        unsigned int Stage;
-        unsigned int Room;
+        unsigned int Passage = 0;
+        unsigned int Stage = 0;
+        unsigned int Room = 0;
+        unsigned int Layer = 0;
+        unsigned int EntityList = 0;
+        enum LevelComponents::LayerMappingType LayerType = LevelComponents::LayerMappingType::LayerDisabled;
+        unsigned int ParentChunk = 0;
     };
 
     // Global functions

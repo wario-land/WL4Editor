@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QTranslator>
 #include "WL4EditorWindow.h"
+#include "PatchUtils.h"
 
 #include <cassert>
 #include <iostream>
@@ -1160,7 +1161,6 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             enum SaveDataChunkType chunkType;
         };
 
-
         // Get information about the chunks and free space
         QVector<unsigned int> chunks = FindAllChunksInROM(CurrentFile, CurrentFileSize, WL4Constants::AvailableSpaceBeginningInROM, SaveDataChunkType::InvalidationChunk, true);
         QVector<struct FreeSpaceRegion> freeSpace = FindAllFreeSpaceInROM(CurrentFile, CurrentFileSize);
@@ -1244,36 +1244,95 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     {
         QVector<struct ChunkReference> references;
 
-        // Get global info
-        // TODO
+        // Get global patch references
+        unsigned int patchListAddr = ROMUtils::FindChunkInROM(
+            ROMUtils::CurrentFile,
+            ROMUtils::CurrentFileSize,
+            WL4Constants::AvailableSpaceBeginningInROM,
+            ROMUtils::SaveDataChunkType::PatchListChunk
+        );
+        references.append({patchListAddr});
+        QVector<struct PatchEntryItem> patches = PatchUtils::GetPatchesFromROM();
+        for(struct PatchEntryItem patch : patches)
+        {
+            references.append({patch.PatchAddress});
+        }
 
-        // Get level info
+        // Get global xxxxxxxxxx references TODO
+
+
+        // Process all passages
         for(unsigned int passageNum = 0; passageNum < 6; ++passageNum)
         {
+            // Process all stages within a passage
             for(unsigned int stageNum = 0; stageNum < 6; ++stageNum)
             {
-                // Get room header chunk reference
+                // Get level header chunk reference
                 unsigned int offset = WL4Constants::LevelHeaderIndexTable + passageNum * 24 + stageNum * 4;
                 unsigned int levelHeaderIndex = ROMUtils::IntFromData(offset);
                 unsigned int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-                if(levelHeaderPointer > WL4Constants::AvailableSpaceBeginningInROM)
-                {
-                    references.append({levelHeaderPointer, passageNum, stageNum, 0});
-                }
+                references.append({levelHeaderPointer - 12, passageNum, stageNum});
 
-                // Get camera boundary pointer table chunk reference
+                // Get level name chunks
+                unsigned int LevelNamePtr = WL4Constants::LevelNamePointerTable + passageNum * 24 + stageNum * 4;
+                unsigned int LevelNameJPtr = WL4Constants::LevelNameJPointerTable + passageNum * 24 + stageNum * 4;
+                references.append({LevelNamePtr - 12, passageNum, stageNum});
+                references.append({LevelNameJPtr - 12, passageNum, stageNum});
+
+                // Door table chunk
                 unsigned int LevelID = ROMUtils::CurrentFile[levelHeaderPointer];
-                unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
-                unsigned int cameraBoundaryEntryAddress = ROMUtils::PointerFromData(cameraPointerTablePtr);
-                if(cameraBoundaryEntryAddress > WL4Constants::AvailableSpaceBeginningInROM)
+                unsigned int doorTablePtr = WL4Constants::DoorTable + LevelID * 4;
+                references.append({doorTablePtr - 12, passageNum, stageNum});
+
+                // Process rooms
+                unsigned int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + LevelID * 4);
+                references.append({roomTableAddress - 12, passageNum, stageNum});
+                int cameraLimitatorRooms = 0;
+                unsigned int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
+                for(unsigned int roomNum = 0; roomNum < roomCount; ++roomNum)
                 {
-                    references.append({cameraBoundaryEntryAddress, passageNum, stageNum, 0});
+                    unsigned int roomDataPtr = roomTableAddress + roomNum * 0x2C;
+                    cameraLimitatorRooms += ROMUtils::CurrentFile[roomDataPtr + 24] == 3;
+
+                    // Process layers
+                    for(unsigned int layerNum = 0; layerNum < 4; ++layerNum)
+                    {
+                        enum LevelComponents::LayerMappingType mappingType =
+                            static_cast<enum LevelComponents::LayerMappingType>(ROMUtils::CurrentFile[roomDataPtr + layerNum + 1] & 0x30);
+                        unsigned int layerPtr = ROMUtils::PointerFromData(roomDataPtr + layerNum * 4 + 8);
+                        references.append({layerPtr - 12, passageNum, stageNum, roomNum, layerNum, 0, mappingType, roomTableAddress - 12});
+                    }
+
+                    // Add entity list chunks
+                    for(unsigned int entityListNum = 0; entityListNum < 3; ++entityListNum)
+                    {
+                        // TODO
+                    }
                 }
 
-                // TODO
+                // Add camera chunks (if applicable)
+                if(cameraLimitatorRooms)
+                {
+                    unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
+                    unsigned int cameraBoundaryEntryAddress = ROMUtils::PointerFromData(cameraPointerTablePtr);
+                    references.append({cameraBoundaryEntryAddress - 12, passageNum, stageNum});
+                    for(int cameraEntry = 0; cameraEntry < cameraLimitatorRooms; ++cameraEntry)
+                    {
+                        unsigned int cameraEntryAddress = ROMUtils::PointerFromData(cameraBoundaryEntryAddress + cameraEntry * 4);
+                        references.append({cameraEntryAddress - 12, passageNum, stageNum, 0, 0, 0, LevelComponents::LayerDisabled, cameraBoundaryEntryAddress - 12});
+                    }
+                }
             }
         }
 
+        // Touch up info before returning it
+        for(int i = references.size() - 1; i >= 0; --i)
+        {
+            if(references[i].ChunkAddress < WL4Constants::AvailableSpaceBeginningInROM)
+            {
+                references.remove(i);
+            }
+        }
         return references;
     }
 

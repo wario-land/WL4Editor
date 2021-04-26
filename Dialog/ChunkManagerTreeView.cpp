@@ -13,7 +13,7 @@ ChunkManagerTreeView::ChunkManagerTreeView(QWidget *parent) : QTreeView(parent),
 {
     // Configure the tree view
     setModel(&Model);
-    setSelectionMode(QAbstractItemView::SingleSelection);
+    setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
     setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Populate the model
@@ -37,6 +37,45 @@ ChunkManagerTreeView::~ChunkManagerTreeView()
 
 }
 
+void ChunkManagerTreeView::SelectChunks(QVector<unsigned int> chunks)
+{
+    // Deselect all chunks. Tri-state signal should automatically deselect the children
+    for(int i = 0; i < Model.rowCount(); ++i)
+    {
+        QStandardItem *categoryRow = Model.item(i);
+        categoryRow->setCheckState(Qt::CheckState::Unchecked);
+    }
+
+    // Select the requested chunks
+    for(unsigned int chunk : chunks)
+    {
+        if(QStandardItem *item = Model.FindChunk(chunk))
+        {
+            item->setCheckState(Qt::CheckState::Checked);
+
+            // Expand the parent category
+            QStandardItem *parent = item->parent();
+            expand(parent->index());
+        }
+    }
+}
+
+void ChunkManagerTreeView::HighlightChunk(unsigned int chunk)
+{
+    if(QStandardItem *item = Model.FindChunk(chunk))
+    {
+        // Expand the parent category
+        QStandardItem *parent = item->parent();
+        expand(parent->index());
+
+        // Set selection
+        selectionModel()->select(item->index(), QItemSelectionModel::Rows);
+
+        // Scroll the view to the selected item
+        scrollTo(item->index());
+    }
+}
+
 //---------------------------------------------------------------------------------------------------------------------------
 // ChunkManagerModel functions
 //---------------------------------------------------------------------------------------------------------------------------
@@ -50,7 +89,7 @@ ChunkManagerModel::ChunkManagerModel(QWidget *parent) : QStandardItemModel(paren
         const char *chunkType = ROMUtils::ChunkTypeString[i];
         QStandardItem *checkableItem = new QStandardItem();
         checkableItem->setCheckable(true);
-        insertRow(i, QList<QStandardItem*>({checkableItem, new QStandardItem(chunkType), new QStandardItem(0)}));
+        insertRow(i, QList<QStandardItem*>({checkableItem, new QStandardItem(chunkType), new QStandardItem("0")}));
     }
     QObject::connect(this, &ChunkManagerModel::itemChanged, this, &ChunkManagerModel::UpdateTristate);
 }
@@ -96,11 +135,22 @@ void ChunkManagerModel::RemoveChunk(unsigned int chunk)
             unsigned int chunkAddress = chunkRow->text().mid(2).toUInt(nullptr, 16);
             if(chunk == chunkAddress)
             {
+                // Update total for category
+                int newSize = categoryRow->child(j, 2)->text().toInt();
+                QStandardItem *totalSizeItem = new QStandardItem(QString::number(newSize));
+                totalSizeItem->setCheckable(false);
+                CanUpdateTristate = false;
+                setItem(j, 2, totalSizeItem);
+                CanUpdateTristate = true;
+
+                // Remove the row
                 categoryRow->removeRow(j);
                 return;
             }
         }
     }
+    singleton->GetOutputWidgetPtr()->PrintString(QString(tr("ChunkManagerModel::RemoveChunk() could not find chunk: 0x%1"))
+        .arg(QString::number(chunk, 16).toUpper()));
 }
 
 QVector<unsigned int> ChunkManagerModel::GetCheckedChunks()
@@ -112,7 +162,7 @@ QVector<unsigned int> ChunkManagerModel::GetCheckedChunks()
         for(int j = 0; j < categoryRow->rowCount(); ++j)
         {
             QStandardItem *chunkRow = categoryRow->child(j, 0);
-            if(chunkRow->checkState() == Qt::Checked)
+            if(chunkRow->checkState() == Qt::CheckState::Checked)
             {
                 unsigned int chunkAddress = chunkRow->text().mid(2).toUInt(nullptr, 16);
                 checkedChunks.append(chunkAddress);
@@ -120,6 +170,26 @@ QVector<unsigned int> ChunkManagerModel::GetCheckedChunks()
         }
     }
     return checkedChunks;
+}
+
+QStandardItem *ChunkManagerModel::FindChunk(unsigned int chunk)
+{
+    for(int i = 0; i < rowCount(); ++i)
+    {
+        QStandardItem *categoryRow = item(i);
+        for(int j = 0; j < categoryRow->rowCount(); ++j)
+        {
+            QStandardItem *chunkRow = categoryRow->child(j, 0);
+            unsigned int chunkAddress = chunkRow->text().mid(2).toUInt(nullptr, 16);
+            if(chunk == chunkAddress)
+            {
+                return chunkRow;
+            }
+        }
+    }
+    singleton->GetOutputWidgetPtr()->PrintString(QString(tr("ChunkManagerModel::FindChunk() could not find chunk: 0x%1"))
+        .arg(QString::number(chunk, 16).toUpper()));
+    return nullptr;
 }
 
 void ChunkManagerModel::UpdateTristate(QStandardItem *item)
@@ -136,15 +206,15 @@ void ChunkManagerModel::UpdateTristate(QStandardItem *item)
         for(int i = 0; i < childCount; ++i)
         {
             QStandardItem *child = parent->child(i);
-            if(child->checkState() == Qt::Checked)
+            if(child->checkState() == Qt::CheckState::Checked)
             {
                 ++checkedChildren;
             }
         }
         Qt::CheckState state =
-            (checkedChildren == 0) ?          Qt::Unchecked :
-            (checkedChildren == childCount) ? Qt::Checked :
-                                              Qt::PartiallyChecked;
+            (checkedChildren == 0) ?          Qt::CheckState::Unchecked :
+            (checkedChildren == childCount) ? Qt::CheckState::Checked :
+                                              Qt::CheckState::PartiallyChecked;
         parent->setCheckState(state);
     }
     else
@@ -162,7 +232,7 @@ void ChunkManagerModel::UpdateTristate(QStandardItem *item)
         }
         else
         {
-            item->setCheckState(Qt::Unchecked);
+            item->setCheckState(Qt::CheckState::Unchecked);
         }
     }
 
