@@ -135,8 +135,10 @@ void ChunkManagerModel::RemoveChunk(unsigned int chunk)
             unsigned int chunkAddress = chunkRow->text().mid(2).toUInt(nullptr, 16);
             if(chunk == chunkAddress)
             {
-                // Update total for category
-                int newSize = categoryRow->child(j, 2)->text().toInt();
+                // Update total size for category
+                int chunkSize = categoryRow->child(j, 2)->text().toInt();
+                QStandardItem *oldSizeItem = item(i, 2);
+                int newSize = oldSizeItem->text().toInt() - chunkSize;
                 QStandardItem *totalSizeItem = new QStandardItem(QString::number(newSize));
                 totalSizeItem->setCheckable(false);
                 CanUpdateTristate = false;
