@@ -506,11 +506,11 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
     case 0x22: ui->label_CurLayer0MappingType->setText("Tile8x8 & autoscroll"); break;
     }
 
+    int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
+    int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
     if (arg1 >= LevelComponents::LayerMap16) // Enable L0
     {
         ui->CheckBox_Layer0Alpha->setEnabled(true);
-        int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
-        int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
         if(arg1 >= LevelComponents::LayerMap16 && arg1 < LevelComponents::LayerTile8x8) // Map16
         {
             ui->spinBox_Layer0Width->setEnabled(true);
@@ -524,11 +524,14 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
             ui->spinBox_Layer0Height->setEnabled(false);
             ui->ComboBox_Layer0Picker->setEnabled(true);
             ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
-            ui->ComboBox_LayerPriority->setCurrentIndex(0);
         }
     }
     else // Disable L0
     {
+        ui->spinBox_Layer0Width->setEnabled(false);
+        ui->spinBox_Layer0Height->setEnabled(false);
+        ui->ComboBox_Layer0Picker->setEnabled(false);
+        ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, 0);
         ui->CheckBox_Layer0Alpha->setChecked(false);
         ui->CheckBox_Layer0Alpha->setEnabled(false);
     }

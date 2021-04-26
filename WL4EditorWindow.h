@@ -53,7 +53,7 @@ private:
     bool firstROMLoaded = false;
     void closeEvent(QCloseEvent *event);
     bool notify(QObject *receiver, QEvent *event);
-    static bool SaveCurrentFile() { return ROMUtils::SaveLevel(ROMUtils::ROMFilePath); }
+    static bool SaveCurrentFile() { return ROMUtils::SaveLevel(ROMUtils::ROMFileMetadata->FilePath); }
     bool SaveCurrentFileAs();
     bool UnsavedChangesPrompt(QString str);
     void ClearEverythingInRoom(bool no_warning = false);

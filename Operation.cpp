@@ -11,6 +11,9 @@ static unsigned int operationIndex[16]; // For room-specific changes
 static std::deque<struct OperationParams *> operationHistoryGlobal;
 static unsigned int operationIndexGlobal; // For level-wide changes
 
+static unsigned int CurrentTilesetOperationId = 0;
+static unsigned int CurrentSpritestuffOperationId = 0;
+
 /// <summary>
 /// Perform an operation based on its parameters.
 /// </summary>
@@ -299,6 +302,7 @@ void BackTrackOperation(struct OperationParams *operation)
 
         singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
         singleton->RenderScreenFull();
+        CurrentTilesetOperationId = operationIndexGlobal;
     }
     if (operation->SpritesSpritesetChange)
     {
@@ -323,6 +327,7 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->GetEntitySetDockWidgetPtr()->ResetEntitySet(singleton->GetCurrentRoom());
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
+        CurrentSpritestuffOperationId = operationIndexGlobal;
     }
 }
 
@@ -516,14 +521,63 @@ void ResetUndoHistory()
         operationHistory[i].clear();
     }
 
-    // Deconstruct the global history
-    for (unsigned int j = 0; j < operationHistoryGlobal.size(); ++j)
-    {
-        delete operationHistoryGlobal[j];
-    }
-    operationHistoryGlobal.clear();
-
     // Re-initialize all the operation indexes to zero
     memset(operationIndex, 0, sizeof(operationIndex));
+}
+
+/// <summary>
+/// Clean up the global undo deque.
+/// </summary>
+/// <remarks>
+/// Only call this when deconstruct the editor, don't use it elsewhere.
+/// </remarks>
+void DeleteUndoHistoryGlobal()
+{
+    // It is different from deleting OperationParams, so cannot use the deconstructor
+    // Deconstruct the global history
+    for (unsigned int j = 0; j < operationHistoryGlobal.size(); ++j) // from old to new
+    {
+        if (operationHistoryGlobal[j]->TilesetChange)
+        {
+            if (CurrentTilesetOperationId > 0)
+            {
+                delete operationHistoryGlobal[j]; // call default deconstructor
+                CurrentTilesetOperationId--;
+            }
+            else
+            {
+                if (operationHistoryGlobal[j]->newTilesetEditParams)
+                    delete operationHistoryGlobal[j]->newTilesetEditParams;
+                if (operationHistoryGlobal[j]->lastTilesetEditParams)
+                {
+                    delete operationHistoryGlobal[j]->lastTilesetEditParams->newTileset;
+                    operationHistoryGlobal[j]->lastTilesetEditParams->newTileset = nullptr;
+                    delete operationHistoryGlobal[j]->lastTilesetEditParams;
+                }
+            }
+        }
+        else if (operationHistoryGlobal[j]->SpritesSpritesetChange)
+        {
+            if (CurrentSpritestuffOperationId > 0)
+            {
+                delete operationHistoryGlobal[j]; // call default deconstructor
+                CurrentSpritestuffOperationId--;
+            }
+            else
+            {
+                if (operationHistoryGlobal[j]->newSpritesAndSetParam)
+                    delete operationHistoryGlobal[j]->newSpritesAndSetParam;
+                if (operationHistoryGlobal[j]->lastSpritesAndSetParam)
+                {
+                    for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entities)
+                    { delete entityIter; entityIter = nullptr; }
+                    for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entitySets)
+                    { delete entitySetIter; entitySetIter = nullptr; }
+                    delete operationHistoryGlobal[j]->lastSpritesAndSetParam;
+                }
+            }
+        }
+    }
+    operationHistoryGlobal.clear();
     operationIndexGlobal = 0;
 }

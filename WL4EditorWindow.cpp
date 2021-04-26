@@ -120,19 +120,29 @@ WL4EditorWindow::~WL4EditorWindow()
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
     {
         delete ROMUtils::singletonTilesets[i];
+        ROMUtils::singletonTilesets[i] = nullptr;
     }
     for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0])); i++)
     {
         delete ROMUtils::entitiessets[i];
+        ROMUtils::entitiessets[i] = nullptr;
     }
     for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entities[0])); i++)
     {
         delete ROMUtils::entities[i];
+        ROMUtils::entities[i] = nullptr;
     }
+    ResetUndoHistory();
+    DeleteUndoHistoryGlobal();
 
     if (CurrentLevel)
     {
         delete CurrentLevel;
+    }
+
+    if (ROMUtils::CurrentFile)
+    {
+        delete[] ROMUtils::CurrentFile;
     }
 }
 
@@ -226,6 +236,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(errorMessage));
         return;
     }
+    dialogInitialPath = QFileInfo(qFilePath).dir().path();
 
     // Clean-up
     if (CurrentLevel)
@@ -395,6 +406,8 @@ void WL4EditorWindow::SetCurrentRoomId(int roomid)
     // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity(true);
+    ui->graphicsView->ResetRectPixmaps();
+    ui->graphicsView->ResetRect();
 
     // Load the previous room
     selectedRoom = roomid;
@@ -496,7 +509,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         for(uint i = 0; i < recentROMnum; i++)
         {
             QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + 1));
-            if(filepath == ROMUtils::ROMFilePath)
+            if(filepath == ROMUtils::ROMFileMetadata->FilePath)
             {
                 findedInRecentFile = i;
                 break;
@@ -521,8 +534,8 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
                 RecentROMs[i]->setText(filepath);
             }
         }
-        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFilePath);
-        RecentROMs[0]->setText(ROMUtils::ROMFilePath);
+        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFileMetadata->FilePath);
+        RecentROMs[0]->setText(ROMUtils::ROMFileMetadata->FilePath);
         recentROMnum++;
     }
     else
@@ -535,8 +548,8 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
                 SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), filepath);
                 RecentROMs[i]->setText(filepath);
             }
-            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFilePath);
-            RecentROMs[0]->setText(ROMUtils::ROMFilePath);
+            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFileMetadata->FilePath);
+            RecentROMs[0]->setText(ROMUtils::ROMFileMetadata->FilePath);
         }
     }
 
@@ -1105,8 +1118,10 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
     if (!UnsavedChangesPrompt(tr("There are unsaved changes. Discard changes and load level anyway?")))
         return;
 
-    // Deselect Door and Entity
+    // Deselect Door and Entity and deselect rect
     ui->graphicsView->DeselectDoorAndEntity(true);
+    ui->graphicsView->ResetRectPixmaps();
+    ui->graphicsView->ResetRect();
 
     // Load the selected level and render the screen
     ChooseLevelDialog tmpdialog(selectedLevel);
@@ -1159,8 +1174,10 @@ bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
             // Do not load level if there was an issue saving the file
             if (!SaveCurrentFile())
             {
+                OutputWidget->PrintString(tr("Save failure!"));
                 return false;
             }
+            OutputWidget->PrintString(tr("Saved successfully!"));
         }
         else if (savePrompt.clickedButton() == discardButton)
         {
@@ -1310,6 +1327,8 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
     // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity(true);
+    ui->graphicsView->ResetRectPixmaps();
+    ui->graphicsView->ResetRect();
 
     // Load the previous room
     --selectedRoom;
@@ -1336,6 +1355,8 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
     // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
     ui->graphicsView->DeselectDoorAndEntity(true);
+    ui->graphicsView->ResetRectPixmaps();
+    ui->graphicsView->ResetRect();
 
     // Load the next room
     ++selectedRoom;
@@ -1536,7 +1557,8 @@ bool WL4EditorWindow::SaveCurrentFileAs()
         if (ROMUtils::SaveLevel(qFilePath))
         {
             // If successful in saving the file, set the window title to reflect the new file
-            ROMUtils::ROMFilePath = dialogInitialPath = qFilePath;
+            ROMUtils::ROMFileMetadata->FilePath = qFilePath;
+            dialogInitialPath = QFileInfo(qFilePath).dir().path();
             std::string filePath = qFilePath.toStdString();
             std::string fileName = filePath.substr(filePath.rfind('/') + 1);
             setWindowTitle(fileName.c_str());
@@ -2005,7 +2027,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     int offset = WL4Constants::LevelHeaderIndexTable + selectedLevel._PassageIndex * 24 + selectedLevel._LevelIndex * 4;
     int levelHeaderIndex = ROMUtils::IntFromData(offset);
     int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-    int roomCount = ROMUtils::CurrentFile[levelHeaderPointer + 1];
+    int roomCount = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderPointer + 1];
     if (roomCount <= static_cast<int>(selectedRoom))
     {
         OutputWidget->PrintString(tr("Cannot create room, current Room has not been saved to the ROM yet!"));
@@ -2204,17 +2226,31 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
     {
         return;
     }
-    if (QString errorMessage = FileIOUtils::LoadROMFile(qFilePath, true); !errorMessage.isEmpty())
+
+    // switch ROM MetaData
+    ROMUtils::ROMFileMetadata = &ROMUtils::TempROMMetadata;
+
+    if (QString errorMessage = FileIOUtils::LoadROMFile(qFilePath); !errorMessage.isEmpty())
     {
         QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(errorMessage));
         return;
     }
+
+    bool okay = false;
     QString text = QInputDialog::getText(nullptr, tr("InputBox"),
                                          tr("Input a Tileset Id using HEX number\n"
                                             "The Editor will use this to load a Tileset from the temp-opened ROM\n"
                                             "and replace the corresponding Tileset in the current ROM if accepted."),
                                          QLineEdit::Normal,
-                                         "1");
+                                         "1", &okay);
+    // gcc does not allow any new variable to appear after using goto in a function, so have to do this -- ssp
+    if (!okay)
+    {
+        ROMUtils::CleanUpTmpCurrentFileMetaData();
+        ROMUtils::ROMFileMetadata = &ROMUtils::CurrentROMMetadata;
+        return;
+    }
+
     int tilesetId = text.toInt(nullptr, 16);
     if (tilesetId < 0 || tilesetId > 91)
     {
@@ -2233,10 +2269,10 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
     EditCurrentTileset(_newTilesetEditParams);
 
     // RAM cleanup
-    ROMUtils::tmpCurrentFileSize = 0;
-    ROMUtils::tmpROMFilePath.clear();
-    delete[] ROMUtils::tmpCurrentFile;
-    ROMUtils::tmpCurrentFile = nullptr;
+    ROMUtils::CleanUpTmpCurrentFileMetaData();
+
+    // switch back ROM MetaData
+    ROMUtils::ROMFileMetadata = &ROMUtils::CurrentROMMetadata;
 }
 
 /// <summary>

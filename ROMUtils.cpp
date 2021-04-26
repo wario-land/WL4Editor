@@ -42,6 +42,11 @@ namespace ROMUtils
     unsigned char *tmpCurrentFile;
     unsigned int tmpCurrentFileSize;
     QString tmpROMFilePath;
+
+    struct ROMFileMetadata CurrentROMMetadata;
+    struct ROMFileMetadata TempROMMetadata;
+    struct ROMFileMetadata *ROMFileMetadata;
+
     unsigned int SaveDataIndex;
     LevelComponents::Tileset *singletonTilesets[92];
     LevelComponents::EntitySet *entitiessets[90];
@@ -77,12 +82,9 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the integer from.
     /// </param>
-    /// <param name="loadFromTmpROM">
-    /// Ture when load from a temp ROM.
-    /// </param>
-    unsigned int IntFromData(int address, bool loadFromTmpROM)
+    unsigned int IntFromData(int address)
     {
-        return *reinterpret_cast<unsigned int *>((loadFromTmpROM ? tmpCurrentFile: CurrentFile) + address);
+        return *reinterpret_cast<unsigned int *>(ROMFileMetadata->ROMDataPtr + address);
     }
 
     /// <summary>
@@ -101,10 +103,10 @@ namespace ROMUtils
     /// <param name="loadFromTmpROM">
     /// Ture when load from a temp ROM.
     /// </param>
-    unsigned int PointerFromData(int address, bool loadFromTmpROM)
+    unsigned int PointerFromData(int address)
     {
-        unsigned int ret = IntFromData(address, loadFromTmpROM) & 0x7FFFFFF;
-        if(loadFromTmpROM ? ret >= tmpCurrentFileSize: ret >= CurrentFileSize)
+        unsigned int ret = IntFromData(address) & 0x7FFFFFF;
+        if(ret >= ROMFileMetadata->Length)
         {
             singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size"));
         }
@@ -147,11 +149,11 @@ namespace ROMUtils
         for (int i = 0; i < 2; i++)
         {
             unsigned char *dst = OutputLayerData + i;
-            if (ROMUtils::CurrentFile[address++] == 1)
+            if (ROMFileMetadata->ROMDataPtr[address++] == 1)
             {
                 while (1)
                 {
-                    int ctrl = CurrentFile[address++];
+                    int ctrl = ROMFileMetadata->ROMDataPtr[address++];
                     if (!ctrl)
                     {
                         break;
@@ -169,7 +171,7 @@ namespace ROMUtils
                         runData = ctrl & 0x7F;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = CurrentFile[address];
+                            dst[2 * j] = ROMFileMetadata->ROMDataPtr[address];
                         }
                         address++;
                     }
@@ -178,7 +180,7 @@ namespace ROMUtils
                         runData = ctrl;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = CurrentFile[address + j];
+                            dst[2 * j] = ROMFileMetadata->ROMDataPtr[address + j];
                         }
                         address += runData;
                     }
@@ -190,7 +192,7 @@ namespace ROMUtils
             {
                 while (1)
                 {
-                    int ctrl = (static_cast<int>(CurrentFile[address]) << 8) | CurrentFile[address + 1];
+                    int ctrl = (static_cast<int>(ROMFileMetadata->ROMDataPtr[address]) << 8) | ROMFileMetadata->ROMDataPtr[address + 1];
                     address += 2; // offset + 2
                     if (!ctrl)
                     {
@@ -209,7 +211,7 @@ namespace ROMUtils
                         runData = ctrl & 0x7FFF;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = CurrentFile[address];
+                            dst[2 * j] = ROMFileMetadata->ROMDataPtr[address];
                         }
                         address++;
                     }
@@ -218,7 +220,7 @@ namespace ROMUtils
                         runData = ctrl;
                         for (int j = 0; j < runData; j++)
                         {
-                            dst[2 * j] = CurrentFile[address + j];
+                            dst[2 * j] = ROMFileMetadata->ROMDataPtr[address + j];
                         }
                         address += runData;
                     }
@@ -552,16 +554,16 @@ namespace ROMUtils
         std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
-        unsigned char *TempFile = (unsigned char *) malloc(CurrentFileSize);
-        unsigned int TempLength = CurrentFileSize;
-        memcpy(TempFile, CurrentFile, CurrentFileSize);
+        unsigned char *TempFile = (unsigned char *) malloc(ROMFileMetadata->Length);
+        unsigned int TempLength = ROMFileMetadata->Length;
+        memcpy(TempFile, ROMFileMetadata->ROMDataPtr, ROMFileMetadata->Length);
         std::map<int, int> chunkIDtoIndex;
 
         // Invalidate old chunk data
         for(unsigned int invalidationChunk : invalidationChunks)
         {
             // Sanity check
-            if(invalidationChunk > CurrentFileSize)
+            if(invalidationChunk > ROMFileMetadata->Length)
             {
                 singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk out of range of entire ROM. Address: %1"))
                         .arg("0x" + QString::number(invalidationChunk - 12, 16).toUpper()));
@@ -785,10 +787,10 @@ allocationComplete:
             file.close();
 
             // Set the CurrentFile to the copied CurrentFile data
-            auto temp = CurrentFile;
-            CurrentFile = TempFile;
+            auto temp = ROMFileMetadata->ROMDataPtr;
+            ROMFileMetadata->ROMDataPtr = TempFile;
             delete[] temp;
-            CurrentFileSize = TempLength;
+            ROMFileMetadata->Length = TempLength;
         }
 
         // Set that there are no changes to the ROM now (so no save prompt is given)
@@ -986,7 +988,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         for(unsigned int i = 0; i < rooms.size(); ++i)
         {
             struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
-                (CurrentFile + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
+                (ROMFileMetadata->ROMDataPtr + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
             unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
             LevelComponents::Room *room = rooms[i];
             for(unsigned int j = 0; j < 4; ++j)
@@ -1162,21 +1164,25 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         };
 
         // Get information about the chunks and free space
-        QVector<unsigned int> chunks = FindAllChunksInROM(CurrentFile, CurrentFileSize, WL4Constants::AvailableSpaceBeginningInROM, SaveDataChunkType::InvalidationChunk, true);
-        QVector<struct FreeSpaceRegion> freeSpace = FindAllFreeSpaceInROM(CurrentFile, CurrentFileSize);
+        QVector<unsigned int> chunks = FindAllChunksInROM(ROMFileMetadata->ROMDataPtr,
+                                                          ROMFileMetadata->Length,
+                                                          WL4Constants::AvailableSpaceBeginningInROM,
+                                                          SaveDataChunkType::InvalidationChunk,
+                                                          true);
+        QVector<struct FreeSpaceRegion> freeSpace = FindAllFreeSpaceInROM(ROMFileMetadata->ROMDataPtr, ROMFileMetadata->Length);
         QVector<struct ChunkData> chunkData;
         for(unsigned int chunkAddr : chunks)
         {
-            unsigned int chunkLen = *reinterpret_cast<unsigned short*>(CurrentFile + chunkAddr + 4);
-            unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(CurrentFile + chunkAddr + 9) << 16;
+            unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMFileMetadata->ROMDataPtr + chunkAddr + 4);
+            unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMFileMetadata->ROMDataPtr + chunkAddr + 9) << 16;
             struct ChunkData cd = {
                 chunkAddr,
                 chunkLen + extLen + 12,
-                static_cast<enum SaveDataChunkType>(CurrentFile[chunkAddr + 8])
+                static_cast<enum SaveDataChunkType>(ROMFileMetadata->ROMDataPtr[chunkAddr + 8])
             };
             chunkData.append(cd);
         }
-        unsigned int saveAreaSize = CurrentFileSize - WL4Constants::AvailableSpaceBeginningInROM;
+        unsigned int saveAreaSize = ROMFileMetadata->Length - WL4Constants::AvailableSpaceBeginningInROM;
 
         // Find total free space
         int totalFreeSpace = 0;
@@ -1251,11 +1257,11 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             WL4Constants::AvailableSpaceBeginningInROM,
             ROMUtils::SaveDataChunkType::PatchListChunk
         );
-        references.append({patchListAddr});
+        references.append({patchListAddr, 0, 0});
         QVector<struct PatchEntryItem> patches = PatchUtils::GetPatchesFromROM();
         for(struct PatchEntryItem patch : patches)
         {
-            references.append({patch.PatchAddress});
+            references.append({patch.PatchAddress, 0, 0});
         }
 
         // Get global xxxxxxxxxx references TODO
@@ -1334,6 +1340,21 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             }
         }
         return references;
+    }
+
+    /// <summary>
+    /// Clean up TmpCurrentFile meta data.
+    /// </summary>
+    void CleanUpTmpCurrentFileMetaData()
+    {
+        if (ROMUtils::tmpCurrentFile)
+        {
+            // RAM cleanup
+            ROMUtils::tmpCurrentFileSize = 0;
+            ROMUtils::tmpROMFilePath.clear();
+            delete[] ROMUtils::tmpCurrentFile;
+            ROMUtils::tmpCurrentFile = nullptr;
+        }
     }
 
 } // namespace ROMUtils
