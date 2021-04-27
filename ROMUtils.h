@@ -89,14 +89,9 @@ namespace ROMUtils
 
     struct ChunkReference
     {
-        unsigned int ChunkAddress;
-        unsigned int Passage = 0;
-        unsigned int Stage = 0;
-        unsigned int Room = 0;
-        unsigned int Layer = 0;
-        unsigned int EntityList = 0;
-        enum LevelComponents::LayerMappingType LayerType = LevelComponents::LayerMappingType::LayerDisabled;
-        unsigned int ParentChunk = 0;
+        enum SaveDataChunkType ChunkType = InvalidationChunk;
+        unsigned int ParentChunkAddress = 0;
+        QVector<unsigned int> ChildrenChunkLocalOffset;
     };
 
     // Global functions
@@ -117,7 +112,7 @@ namespace ROMUtils
     void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);
     unsigned int EndianReverse(unsigned int n);
     void SaveDataAnalysis();
-    QVector<struct ChunkReference> GetAllChunkReferences();
+    QMap<unsigned int, struct ChunkReference> GetAllChunkReferences();
     void StaticInitialization();
     
 } // namespace ROMUtils

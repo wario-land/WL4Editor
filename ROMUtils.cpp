@@ -1254,22 +1254,31 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg("Other", -37).arg(otherTypeSpace, 7).arg(100 * usedSpaceP_ofTypeOther, 6, 'f', 2).arg(otherTypeCount);
     }
 
-    QVector<struct ChunkReference> GetAllChunkReferences()
+    /// <summary>
+    /// Get and map chunk reference data for all the non-orphaned chunks
+    /// </summary>
+    /// <returns>
+    /// QMap<unsigned int, struct ChunkReference>
+    /// the first template param "unsigned int" is ChunkAddress
+    /// the second template param "struct ChunkReference" obtains the chunk reference metadata of the current chunk on ChunkAddress
+    /// </returns>
+    QMap<unsigned int, struct ChunkReference> GetAllChunkReferences()
     {
-        QVector<struct ChunkReference> references;
+        QMap<unsigned int, struct ChunkReference> references;
 
         // Get global patch references
+        // TODO: move this elsewhere, or at least re-design the logic here
         unsigned int patchListAddr = ROMUtils::FindChunkInROM(
             ROMUtils::ROMFileMetadata->ROMDataPtr,
             ROMUtils::ROMFileMetadata->Length,
             WL4Constants::AvailableSpaceBeginningInROM,
             ROMUtils::SaveDataChunkType::PatchListChunk
         );
-        references.append({patchListAddr, 0, 0});
+        // references.append({patchListAddr, 0, 0});
         QVector<struct PatchEntryItem> patches = PatchUtils::GetPatchesFromROM();
         for(struct PatchEntryItem patch : patches)
         {
-            references.append({patch.PatchAddress, 0, 0});
+            // references.append({patch.PatchAddress, 0, 0});
         }
 
         // Get global xxxxxxxxxx references TODO
@@ -1284,69 +1293,102 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                 // Get level header chunk reference
                 unsigned int offset = WL4Constants::LevelHeaderIndexTable + passageNum * 24 + stageNum * 4;
                 unsigned int levelHeaderIndex = ROMUtils::IntFromData(offset);
-                unsigned int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-                references.append({levelHeaderPointer - 12, passageNum, stageNum});
+                unsigned int levelHeaderAddr = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
+                struct ChunkReference tmpChunkRef;
+                tmpChunkRef.ChunkType = RoomHeaderChunkType;
+                tmpChunkRef.ParentChunkAddress = 0; // init ParentChunkAddress, no parent and keep ChildrenChunkLocalOffset empty
+                if (levelHeaderAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+                    references.insert(levelHeaderAddr - 12, tmpChunkRef);
 
                 // Get level name chunks
-                unsigned int LevelNamePtr = WL4Constants::LevelNamePointerTable + passageNum * 24 + stageNum * 4;
-                unsigned int LevelNameJPtr = WL4Constants::LevelNameJPointerTable + passageNum * 24 + stageNum * 4;
-                references.append({LevelNamePtr - 12, passageNum, stageNum});
-                references.append({LevelNameJPtr - 12, passageNum, stageNum});
+                unsigned int LevelNameAddr = ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passageNum * 24 + stageNum * 4);
+                unsigned int LevelNameJAddr = ROMUtils::PointerFromData(WL4Constants::LevelNameJPointerTable + passageNum * 24 + stageNum * 4);
+                tmpChunkRef.ChunkType = LevelNameChunkType; // no parent and keep ChildrenChunkLocalOffset empty
+                if (LevelNameAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+                    references.insert(LevelNameAddr - 12, tmpChunkRef);
+                if (LevelNameJAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+                    references.insert(LevelNameJAddr - 12, tmpChunkRef);
 
                 // Door table chunk
-                unsigned int LevelID = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderPointer];
-                unsigned int doorTablePtr = WL4Constants::DoorTable + LevelID * 4;
-                references.append({doorTablePtr - 12, passageNum, stageNum});
+                unsigned int LevelID = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderAddr];
+                unsigned int doorTableAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + LevelID * 4);
+                if (doorTableAddress >= WL4Constants::AvailableSpaceBeginningInROM)
+                {
+                    tmpChunkRef.ChunkType = DoorChunkType; // no parent and keep ChildrenChunkLocalOffset empty
+                    references.insert(doorTableAddress - 12, tmpChunkRef);
+                }
 
                 // Process rooms
                 unsigned int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + LevelID * 4);
-                references.append({roomTableAddress - 12, passageNum, stageNum});
-                int cameraLimitatorRooms = 0;
-                unsigned int roomCount = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderPointer + 1];
-                for(unsigned int roomNum = 0; roomNum < roomCount; ++roomNum)
+                if (roomTableAddress >= WL4Constants::AvailableSpaceBeginningInROM)
                 {
-                    unsigned int roomDataPtr = roomTableAddress + roomNum * 0x2C;
-                    cameraLimitatorRooms += ROMUtils::ROMFileMetadata->ROMDataPtr[roomDataPtr + 24] == 3;
-
-                    // Process layers
-                    for(unsigned int layerNum = 0; layerNum < 4; ++layerNum)
+                    tmpChunkRef.ChunkType = RoomHeaderChunkType; // no parent
+                    unsigned int roomCount = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderAddr + 1];
+                    int cameraLimitatorRooms = 0;
+                    for(unsigned int roomId = 0; roomId < roomCount; ++roomId)
                     {
-                        enum LevelComponents::LayerMappingType mappingType =
-                            static_cast<enum LevelComponents::LayerMappingType>(ROMUtils::ROMFileMetadata->ROMDataPtr[roomDataPtr + layerNum + 1] & 0x30);
-                        unsigned int layerPtr = ROMUtils::PointerFromData(roomDataPtr + layerNum * 4 + 8);
-                        references.append({layerPtr - 12, passageNum, stageNum, roomNum, layerNum, 0, mappingType, roomTableAddress - 12});
+                        tmpChunkRef.ChildrenChunkLocalOffset << (8 + sizeof(LevelComponents::__RoomHeader) * roomId)
+                                                             << (0xC + sizeof(LevelComponents::__RoomHeader) * roomId)
+                                                             << (0x10 + sizeof(LevelComponents::__RoomHeader) * roomId)
+                                                             << (0x14 + sizeof(LevelComponents::__RoomHeader) * roomId)
+                                                             << (0x1C + sizeof(LevelComponents::__RoomHeader) * roomId)
+                                                             << (0x20 + sizeof(LevelComponents::__RoomHeader) * roomId)
+                                                             << (0x24 + sizeof(LevelComponents::__RoomHeader) * roomId);
+
+                        unsigned int roomDataPtr = roomTableAddress + roomId * 0x2C;
+                        cameraLimitatorRooms += ROMUtils::ROMFileMetadata->ROMDataPtr[roomDataPtr + 24] == LevelComponents::HasControlAttrs;
+
+                        // Process layers
+                        for(unsigned int layerNum = 0; layerNum < 4; ++layerNum)
+                        {
+                            struct ChunkReference layerChunkRef;
+                            layerChunkRef.ChunkType = LayerChunkType;
+                            layerChunkRef.ParentChunkAddress = roomTableAddress - 12;
+                            unsigned int layerPtr = ROMUtils::PointerFromData(roomDataPtr + layerNum * 4 + 8);
+                            if (layerPtr >= WL4Constants::AvailableSpaceBeginningInROM)
+                                references.insert(layerPtr - 12, layerChunkRef);
+                        }
+
+                        // Add entity list chunks
+                        for(unsigned int entityListNum = 0; entityListNum < 3; ++entityListNum)
+                        {
+                            struct ChunkReference entityListChunkRef;
+                            entityListChunkRef.ChunkType = EntityListChunk;
+                            entityListChunkRef.ParentChunkAddress = roomTableAddress - 12;
+                            unsigned int listAddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * entityListNum);
+                            if (listAddress >= WL4Constants::AvailableSpaceBeginningInROM)
+                                references.insert(listAddress - 12, entityListChunkRef);
+                        }
                     }
+                    references.insert(roomTableAddress - 12, tmpChunkRef);
 
-                    // Add entity list chunks
-                    for(unsigned int entityListNum = 0; entityListNum < 3; ++entityListNum)
+                    // Add camera chunks (if applicable)
+                    if(cameraLimitatorRooms)
                     {
-                        // TODO
-                    }
-                }
-
-                // Add camera chunks (if applicable)
-                if(cameraLimitatorRooms)
-                {
-                    unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
-                    unsigned int cameraBoundaryEntryAddress = ROMUtils::PointerFromData(cameraPointerTablePtr);
-                    references.append({cameraBoundaryEntryAddress - 12, passageNum, stageNum});
-                    for(int cameraEntry = 0; cameraEntry < cameraLimitatorRooms; ++cameraEntry)
-                    {
-                        unsigned int cameraEntryAddress = ROMUtils::PointerFromData(cameraBoundaryEntryAddress + cameraEntry * 4);
-                        references.append({cameraEntryAddress - 12, passageNum, stageNum, 0, 0, 0, LevelComponents::LayerDisabled, cameraBoundaryEntryAddress - 12});
+                        unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
+                        struct ChunkReference cameraPointerTableChunkRef;
+                        cameraPointerTableChunkRef.ChunkType = CameraPointerTableType;
+                        cameraPointerTableChunkRef.ParentChunkAddress = 0; // no parent
+                        unsigned int cameraPointerTableAddr = ROMUtils::PointerFromData(cameraPointerTablePtr);
+                        if (cameraPointerTableAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+                        {
+                            for(int cameraEntry = 0; cameraEntry < cameraLimitatorRooms; ++cameraEntry)
+                            {
+                                cameraPointerTableChunkRef.ChildrenChunkLocalOffset << 4 * cameraEntry;
+                                unsigned int cameraEntryAddress = ROMUtils::PointerFromData(cameraPointerTableAddr + cameraEntry * 4);
+                                struct ChunkReference cameraBoundaryChunkRef;
+                                cameraBoundaryChunkRef.ChunkType = CameraBoundaryChunkType;
+                                cameraBoundaryChunkRef.ParentChunkAddress = cameraPointerTableAddr - 12;
+                                if (cameraEntryAddress >= WL4Constants::AvailableSpaceBeginningInROM)
+                                    references.insert(cameraEntryAddress - 12, cameraBoundaryChunkRef);
+                            }
+                            references.insert(cameraPointerTableAddr - 12, cameraPointerTableChunkRef);
+                        }
                     }
                 }
             }
         }
 
-        // Touch up info before returning it
-        for(int i = references.size() - 1; i >= 0; --i)
-        {
-            if(references[i].ChunkAddress < WL4Constants::AvailableSpaceBeginningInROM)
-            {
-                references.remove(i);
-            }
-        }
         return references;
     }
 
