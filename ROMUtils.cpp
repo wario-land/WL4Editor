@@ -1281,8 +1281,68 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             // references.append({patch.PatchAddress, 0, 0});
         }
 
-        // Get global xxxxxxxxxx references TODO
+        // Process global references
+        // Process all Tilesets
+        for(unsigned int tilesetid = 0; tilesetid < 92; ++tilesetid)
+        {
+            int tilesetPtr = WL4Constants::TilesetDataTable + tilesetid * 36;
+            struct ChunkReference tilesetChunkRef;
 
+            tilesetChunkRef.ChunkType = TilesetForegroundTile8x8DataChunkType;
+            tilesetChunkRef.ParentChunkAddress = 0; // no parent atm and keep ChildrenChunkLocalOffset empty
+            unsigned int tilesetFGGFXptr = ROMUtils::PointerFromData(tilesetPtr);
+            if (tilesetFGGFXptr >= WL4Constants::AvailableSpaceBeginningInROM)
+                references.insert(tilesetFGGFXptr - 12, tilesetChunkRef);
+
+            // TODO: add bgGFXptr when needed
+
+            tilesetChunkRef.ChunkType = TilesetMap16DataChunkType;
+            unsigned int tilesetMap16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
+            if (tilesetMap16ptr >= WL4Constants::AvailableSpaceBeginningInROM)
+                references.insert(tilesetMap16ptr - 12, tilesetChunkRef);
+
+            tilesetChunkRef.ChunkType = TilesetMap16EventTableChunkType;
+            unsigned int tilesetMap16EventTableAddr = ROMUtils::PointerFromData(tilesetPtr + 28);
+            if (tilesetMap16EventTableAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+                references.insert(tilesetMap16EventTableAddr - 12, tilesetChunkRef);
+
+            tilesetChunkRef.ChunkType = TilesetMap16TerrainChunkType;
+            unsigned int tilesetMap16TerrainTypeIDTableAddr = ROMUtils::PointerFromData(tilesetPtr + 24);
+            if (tilesetMap16TerrainTypeIDTableAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+                references.insert(tilesetMap16TerrainTypeIDTableAddr - 12, tilesetChunkRef);
+
+            tilesetChunkRef.ChunkType = TilesetPaletteDataChunkType;
+            unsigned int tilesetPaletteData = ROMUtils::PointerFromData(tilesetPtr + 8);
+            if (tilesetPaletteData >= WL4Constants::AvailableSpaceBeginningInROM)
+                references.insert(tilesetPaletteData - 12, tilesetChunkRef);
+        }
+
+        // Process most Entity atm since the editor only supports editing them
+        for(unsigned int entityid = 0x11; entityid < 129; ++entityid)
+        {
+            struct ChunkReference entityChunkRef;
+            entityChunkRef.ChunkType = EntityPaletteDataChunkType;
+            entityChunkRef.ParentChunkAddress = 0; // no parent atm and keep ChildrenChunkLocalOffset empty
+            unsigned int entityPaletteAddr = ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable + 4 * (entityid - 0x10));
+            if (entityPaletteAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+                references.insert(entityPaletteAddr - 12, entityChunkRef);
+
+            entityChunkRef.ChunkType = EntityTile8x8DataChunkType;
+            unsigned int entityTileDataAddr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable + 4 * (entityid - 0x10));
+            if (entityTileDataAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+                references.insert(entityTileDataAddr - 12, entityChunkRef);
+        }
+
+        // Process all Entityset
+        for(unsigned int entitysetid = 0x11; entitysetid < 129; ++entitysetid)
+        {
+            struct ChunkReference entitysetChunkRef;
+            entitysetChunkRef.ChunkType = EntitySetLoadTableChunkType;
+            entitysetChunkRef.ParentChunkAddress = 0; // no parent atm and keep ChildrenChunkLocalOffset empty
+            unsigned int entitysetLoadTableptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + entitysetid * 4);
+            if (entitysetLoadTableptr >= WL4Constants::AvailableSpaceBeginningInROM)
+                references.insert(entitysetLoadTableptr - 12, entitysetChunkRef);
+        }
 
         // Process all passages
         for(unsigned int passageNum = 0; passageNum < 6; ++passageNum)

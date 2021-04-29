@@ -54,6 +54,7 @@ namespace ROMUtils
         TilesetMap16EventTableChunkType       = '\x0B',
         TilesetMap16TerrainChunkType          = '\x0C',
         TilesetMap16DataChunkType             = '\x0D',
+        // the next one is not necessary, but i added it by accident -- ssp
         TilesetPaletteDataChunkType           = '\x0E',
         EntityTile8x8DataChunkType            = '\x0F',
         EntityPaletteDataChunkType            = '\x10',
