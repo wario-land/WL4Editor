@@ -69,7 +69,7 @@ void ChunkManagerTreeView::HighlightChunk(unsigned int chunk)
         expand(parent->index());
 
         // Set selection
-        selectionModel()->select(item->index(), QItemSelectionModel::Rows);
+        selectionModel()->select(item->index(), QItemSelectionModel::ClearAndSelect);
 
         // Scroll the view to the selected item
         scrollTo(item->index());
