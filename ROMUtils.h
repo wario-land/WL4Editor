@@ -92,7 +92,7 @@ namespace ROMUtils
     {
         enum SaveDataChunkType ChunkType = InvalidationChunk;
         unsigned int ParentChunkAddress = 0;
-        QVector<unsigned int> ChildrenChunkLocalOffset;
+        QVector<unsigned int> ChildrenChunkLocalOffset = QVector<unsigned int>();
     };
 
     // Global functions

@@ -126,33 +126,26 @@ void ChunkManagerModel::AddChunk(unsigned int chunk)
 
 void ChunkManagerModel::RemoveChunk(unsigned int chunk)
 {
-    for(int i = 0; i < rowCount(); ++i)
+    if(QStandardItem *chunkRow = FindChunk(chunk))
     {
-        QStandardItem *categoryRow = item(i);
-        for(int j = 0; j < categoryRow->rowCount(); ++j)
-        {
-            QStandardItem *chunkRow = categoryRow->child(j, 0);
-            unsigned int chunkAddress = chunkRow->text().mid(2).toUInt(nullptr, 16);
-            if(chunk == chunkAddress)
-            {
-                // Update total size for category
-                int chunkSize = categoryRow->child(j, 2)->text().toInt();
-                QStandardItem *oldSizeItem = item(i, 2);
-                int newSize = oldSizeItem->text().toInt() - chunkSize;
-                QStandardItem *totalSizeItem = new QStandardItem(QString::number(newSize));
-                totalSizeItem->setCheckable(false);
-                CanUpdateTristate = false;
-                setItem(j, 2, totalSizeItem);
-                CanUpdateTristate = true;
+        QStandardItem *categoryRow = chunkRow->parent();
+        int parentIndex = categoryRow->index().row();
+        int childIndex = chunkRow->index().row();
 
-                // Remove the row
-                categoryRow->removeRow(j);
-                return;
-            }
-        }
+        // Update total size for category
+        int chunkSize = categoryRow->child(childIndex, 2)->text().toInt();
+        QStandardItem *oldTotalSizeItem = item(parentIndex, 2);
+        int newSize = oldTotalSizeItem->text().toInt() - chunkSize;
+        QStandardItem *newTotalSizeItem = new QStandardItem(QString::number(newSize));
+        newTotalSizeItem->setCheckable(false);
+        CanUpdateTristate = false;
+        setItem(parentIndex, 2, newTotalSizeItem);
+        CanUpdateTristate = true;
+
+        // Remove the row
+        categoryRow->removeRow(childIndex);
+        return;
     }
-    singleton->GetOutputWidgetPtr()->PrintString(QString(tr("ChunkManagerModel::RemoveChunk() could not find chunk: 0x%1"))
-        .arg(QString::number(chunk, 16).toUpper()));
 }
 
 QVector<unsigned int> ChunkManagerModel::GetCheckedChunks()

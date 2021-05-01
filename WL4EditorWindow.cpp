@@ -293,6 +293,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     // IF you see this in PR, tell GSB
     // IF you see this in PR, tell GSB
     on_actionChunk_Manager_triggered();
+    ROMUtils::GetAllChunkReferences();
 }
 
 /// <summary>
