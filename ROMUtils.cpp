@@ -1449,6 +1449,15 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                         children.remove(i);
                     }
                 }
+
+                // Sort child offset references by pointer value
+                std::sort(children.begin(), children.end(),
+                    [key](const unsigned int &a, const unsigned int &b)
+                    {
+                        unsigned int ptrA = PointerFromData(key + 12 + a);
+                        unsigned int ptrB = PointerFromData(key + 12 + b);
+                        return ptrA < ptrB;
+                    });
             }
         }
 

@@ -15,11 +15,12 @@ ChunkManagerInfoGroupBox::ChunkManagerInfoGroupBox(QWidget *parent) : QGroupBox(
 {
     // Configure the group box
     setLayout(&Layout);
+
 }
 
 ChunkManagerInfoGroupBox::~ChunkManagerInfoGroupBox()
 {
-
+    qDeleteAll(Actions);
 }
 
 void ChunkManagerInfoGroupBox::UpdateContents(const QModelIndex &current, const QModelIndex &previous)
@@ -44,6 +45,8 @@ void ChunkManagerInfoGroupBox::UpdateContents(const QModelIndex &current, const 
 
 QVector<QWidget*> ChunkManagerInfoGroupBox::GetInfoFromChunk(unsigned int chunk)
 {
+    auto referenceInfo = GetChunkReference(chunk);
+
     // Gather info from the chunk header
     QVector<QWidget*> widgets;
     unsigned char *chunkHeader = ROMUtils::ROMFileMetadata->ROMDataPtr + chunk;
@@ -147,6 +150,43 @@ QVector<QWidget*> ChunkManagerInfoGroupBox::GetInfoFromChunk(unsigned int chunk)
         default:
             break;
         }
+    }
+
+    if(referenceInfo.ChunkType != ROMUtils::InvalidationChunk)
+    {
+        if(referenceInfo.ParentChunkAddress)
+        {
+            // Add a button to navigate to the parent
+            QPushButton *parentButton = new QPushButton(QString(tr("Parent: 0x%1"))
+                .arg(QString::number(referenceInfo.ParentChunkAddress, 16).toUpper()));
+            ChunkEntryHighlightAction *action = new ChunkEntryHighlightAction(TreeView, referenceInfo.ParentChunkAddress);
+            Actions.append(action);
+            connect(parentButton, &QPushButton::clicked, action, &ChunkEntryHighlightAction::HighlightChunkConnector);
+            widgets.append(parentButton);
+        }
+        for(auto childOffset : referenceInfo.ChildrenChunkLocalOffset)
+        {
+            // Add a button to navigate to the child
+            unsigned int childChunk = ROMUtils::PointerFromData(chunk + 12 + childOffset) - 12;
+            QPushButton *childButton = new QPushButton(QString(tr("Child: 0x%1"))
+                .arg(QString::number(childChunk, 16).toUpper()));
+            ChunkEntryHighlightAction *action = new ChunkEntryHighlightAction(TreeView, childChunk);
+            Actions.append(action);
+            connect(childButton, &QPushButton::clicked, action, &ChunkEntryHighlightAction::HighlightChunkConnector);
+            widgets.append(childButton);
+        }
+    }
+    else
+    {
+        auto orphanLabel = new QLabel(QString(tr("This chunk is an orphan!")));
+        QFont font;
+        font.setBold(true);
+        orphanLabel->setFont(font);
+        QPalette palette;
+        palette.setColor(QPalette::WindowText, Qt::red);
+        orphanLabel->setFont(font);
+        orphanLabel->setPalette(palette);
+        widgets.append(orphanLabel);
     }
 
     // Format labels

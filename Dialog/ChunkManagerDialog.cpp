@@ -10,6 +10,7 @@ ChunkManagerDialog::ChunkManagerDialog(QWidget *parent) :
     setWindowTitle("Chunk Manager");
     TreeView = ui->treeView_chunkData;
     Info = ui->groupBox_Information;
+    Info->SetTreeView(TreeView);
 
     QObject::connect(TreeView->selectionModel(), &QItemSelectionModel::currentRowChanged, Info, &ChunkManagerInfoGroupBox::UpdateContents);
 }

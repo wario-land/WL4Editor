@@ -174,7 +174,8 @@ QStandardItem *ChunkManagerModel::FindChunk(unsigned int chunk)
         QStandardItem *categoryRow = item(i);
         for(int j = 0; j < categoryRow->rowCount(); ++j)
         {
-            QStandardItem *chunkRow = categoryRow->child(j, 0);
+            QStandardItem *chunkRow = categoryRow->child(j, 1);
+            auto text__ = chunkRow->text();
             unsigned int chunkAddress = chunkRow->text().mid(2).toUInt(nullptr, 16);
             if(chunk == chunkAddress)
             {
