@@ -581,3 +581,44 @@ void DeleteUndoHistoryGlobal()
     operationHistoryGlobal.clear();
     operationIndexGlobal = 0;
 }
+
+/// <summary>
+/// Reset all the changes bools can be found through the whole history
+/// </summary>
+/// <remarks>
+/// Sometimes the history saved the vanilla elements' data and we make some changes to it and save changes
+/// now the current changed bool of the element is false and the first corresponding element in the history is false too
+/// all the others corresponding elements' changed bools are true
+/// usual undo and redo won't cause problems, but on the second or the third save
+/// when the current element are marked unchanged, the save process cannot detect it.
+/// So we have to always make it that only the current element changed bool to be false, and all the others be true.
+/// call this function every time when finishing saving level
+/// </remarks>
+void ResetChangedBoolsThroughHistory()
+{
+    for (unsigned int j = 0; j < operationHistoryGlobal.size(); ++j) // from old to new
+    {
+        // no need to exclude the current elements, they will be set changed bool to false in the SaveLevel function
+        // so call this function before that part
+        if (operationHistoryGlobal[j]->TilesetChange)
+        {
+            operationHistoryGlobal[j]->newTilesetEditParams->newTileset->SetChanged(true);
+            operationHistoryGlobal[j]->lastTilesetEditParams->newTileset->SetChanged(true);
+        }
+        else if (operationHistoryGlobal[j]->SpritesSpritesetChange)
+        {
+            if (operationHistoryGlobal[j]->newSpritesAndSetParam)
+                for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->newSpritesAndSetParam->entities)
+                    entityIter->SetChanged(true);
+                for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->newSpritesAndSetParam->entitySets)
+                    entitySetIter->SetChanged(true);
+            if (operationHistoryGlobal[j]->lastSpritesAndSetParam)
+            {
+                for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entities)
+                    entityIter->SetChanged(true);
+                for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entitySets)
+                    entitySetIter->SetChanged(true);
+            }
+        }
+    }
+}

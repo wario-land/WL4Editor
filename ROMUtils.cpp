@@ -1,5 +1,6 @@
 ﻿#include "ROMUtils.h"
 #include "Compress.h"
+#include "Operation.h"
 #include <QFile>
 #include <QTranslator>
 #include "WL4EditorWindow.h"
@@ -1014,6 +1015,9 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             room->ResetRoomHeader(newroomheader);
         }
 
+        // global history changed bool reset
+        ResetChangedBoolsThroughHistory();
+
         // Tilesets instances internal pointers reset
         for(int i = 0; i < 92; ++i)
         {
@@ -1336,14 +1340,33 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         for(unsigned int passageNum = 0; passageNum < 6; ++passageNum)
         {
             // Process all stages within a passage
-            for(unsigned int stageNum = 0; stageNum < 6; ++stageNum)
+            for(unsigned int stageNum = 0; stageNum < 5; ++stageNum)
             {
+                // skip stages which don't exist
+                if (passageNum == 5)
+                {
+                    switch (stageNum)
+                    {
+                    case 1:
+                    case 2:
+                    case 3:
+                    {continue;}
+                    }
+                }
+                else if (!passageNum)
+                {
+                    switch (stageNum)
+                    {
+                    case 1:
+                    case 3:
+                    {continue;}
+                    }
+                }
+
                 // Get level header chunk reference
                 unsigned int offset = WL4Constants::LevelHeaderIndexTable + passageNum * 24 + stageNum * 4;
                 unsigned int levelHeaderIndex = ROMUtils::IntFromData(offset);
                 unsigned int levelHeaderAddr = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-                chunkRef = {RoomHeaderChunkType};
-                references[levelHeaderAddr - 12] = chunkRef;
 
                 // Get level name chunks
                 unsigned int LevelNameAddr = ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passageNum * 24 + stageNum * 4);

@@ -158,6 +158,7 @@ void RedoOperation();
 void RedoOperationGlobal();
 void ResetUndoHistory();
 void DeleteUndoHistoryGlobal();
+void ResetChangedBoolsThroughHistory();
 
 
 #endif // OPERATION_H
