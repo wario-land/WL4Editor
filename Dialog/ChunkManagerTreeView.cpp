@@ -52,10 +52,18 @@ void ChunkManagerTreeView::SelectChunks(QVector<unsigned int> chunks)
         if(QStandardItem *item = Model.FindChunk(chunk))
         {
             item->setCheckState(Qt::CheckState::Checked);
+        }
+    }
 
-            // Expand the parent category
-            QStandardItem *parent = item->parent();
-            expand(parent->index());
+    // Expand and collapse parents
+    collapseAll();
+    for(int i = 0; i < Model.rowCount(); ++i)
+    {
+        QStandardItem *categoryRow = Model.item(i);
+        Qt::CheckState checkstate = categoryRow->checkState();
+        if (checkstate != Qt::CheckState::Unchecked)
+        {
+            expand(categoryRow->index());
         }
     }
 }
