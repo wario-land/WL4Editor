@@ -1176,11 +1176,13 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         };
 
         // Get information about the chunks and free space
-        QVector<unsigned int> chunks = FindAllChunksInROM(ROMFileMetadata->ROMDataPtr,
-                                                          ROMFileMetadata->Length,
-                                                          WL4Constants::AvailableSpaceBeginningInROM,
-                                                          SaveDataChunkType::InvalidationChunk,
-                                                          true);
+        QVector<unsigned int> chunks = FindAllChunksInROM(
+            ROMFileMetadata->ROMDataPtr,
+            ROMFileMetadata->Length,
+            WL4Constants::AvailableSpaceBeginningInROM,
+            SaveDataChunkType::InvalidationChunk,
+            true
+        );
         QVector<struct FreeSpaceRegion> freeSpace = FindAllFreeSpaceInROM(ROMFileMetadata->ROMDataPtr, ROMFileMetadata->Length);
         QVector<struct ChunkData> chunkData;
         for(unsigned int chunkAddr : chunks)

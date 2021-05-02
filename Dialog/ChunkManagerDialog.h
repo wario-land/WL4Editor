@@ -18,6 +18,10 @@ public:
     explicit ChunkManagerDialog(QWidget *parent = nullptr);
     ~ChunkManagerDialog();
 
+private slots:
+    void on_pushButton_SelectAllOrphanChunks_clicked();
+    void on_pushButton_DeselectAll_clicked();
+
 private:
     ChunkManagerTreeView *TreeView;
     ChunkManagerInfoGroupBox *Info;

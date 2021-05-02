@@ -65,7 +65,7 @@ void ChunkManagerTreeView::HighlightChunk(unsigned int chunk)
     if(QStandardItem *item = Model.FindChunk(chunk))
     {
         // Set selection
-        selectionModel()->select(item->index(), QItemSelectionModel::ClearAndSelect);
+        selectionModel()->select(item->index(), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
         emit selectionModel()->currentRowChanged(item->index(), QModelIndex());
 
         // Scroll the view to the selected item
@@ -176,7 +176,7 @@ QStandardItem *ChunkManagerModel::FindChunk(unsigned int chunk)
             unsigned int chunkAddress = chunkRow->text().mid(2).toUInt(nullptr, 16);
             if(chunk == chunkAddress)
             {
-                return chunkRow;
+                return categoryRow->child(chunkRow->index().row(), 0);
             }
         }
     }

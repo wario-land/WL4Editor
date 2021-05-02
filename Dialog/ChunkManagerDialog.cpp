@@ -19,3 +19,24 @@ ChunkManagerDialog::~ChunkManagerDialog()
 {
     delete ui;
 }
+
+void ChunkManagerDialog::on_pushButton_SelectAllOrphanChunks_clicked()
+{
+    auto chunkRefs = ROMUtils::GetAllChunkReferences();
+    auto allChunks = ROMUtils::FindAllChunksInROM(
+        ROMUtils::ROMFileMetadata->ROMDataPtr,
+        ROMUtils::ROMFileMetadata->Length,
+        WL4Constants::AvailableSpaceBeginningInROM,
+        ROMUtils::SaveDataChunkType::InvalidationChunk,
+        true
+    );
+    std::remove_if(allChunks.begin(), allChunks.end(), [chunkRefs](unsigned int chunk){
+        return chunkRefs.contains(chunk);
+    });
+    TreeView->SelectChunks(allChunks);
+}
+
+void ChunkManagerDialog::on_pushButton_DeselectAll_clicked()
+{
+    TreeView->SelectChunks(QVector<unsigned int>());
+}
