@@ -547,7 +547,9 @@ void DeleteUndoHistoryGlobal()
             else
             {
                 if (operationHistoryGlobal[j]->newTilesetEditParams)
+                {
                     delete operationHistoryGlobal[j]->newTilesetEditParams;
+                }
                 if (operationHistoryGlobal[j]->lastTilesetEditParams)
                 {
                     delete operationHistoryGlobal[j]->lastTilesetEditParams->newTileset;
@@ -566,13 +568,13 @@ void DeleteUndoHistoryGlobal()
             else
             {
                 if (operationHistoryGlobal[j]->newSpritesAndSetParam)
+                {
                     delete operationHistoryGlobal[j]->newSpritesAndSetParam;
+                }
                 if (operationHistoryGlobal[j]->lastSpritesAndSetParam)
                 {
-                    for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entities)
-                    { delete entityIter; entityIter = nullptr; }
-                    for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entitySets)
-                    { delete entitySetIter; entitySetIter = nullptr; }
+                    qDeleteAll(operationHistoryGlobal[j]->lastSpritesAndSetParam->entities);
+                    qDeleteAll(operationHistoryGlobal[j]->lastSpritesAndSetParam->entitySets);
                     delete operationHistoryGlobal[j]->lastSpritesAndSetParam;
                 }
             }
@@ -608,16 +610,26 @@ void ResetChangedBoolsThroughHistory()
         else if (operationHistoryGlobal[j]->SpritesSpritesetChange)
         {
             if (operationHistoryGlobal[j]->newSpritesAndSetParam)
+            {
                 for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->newSpritesAndSetParam->entities)
+                {
                     entityIter->SetChanged(true);
+                }
                 for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->newSpritesAndSetParam->entitySets)
+                {
                     entitySetIter->SetChanged(true);
+                }
+            }
             if (operationHistoryGlobal[j]->lastSpritesAndSetParam)
             {
                 for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entities)
+                {
                     entityIter->SetChanged(true);
+                }
                 for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entitySets)
+                {
                     entitySetIter->SetChanged(true);
+                }
             }
         }
     }

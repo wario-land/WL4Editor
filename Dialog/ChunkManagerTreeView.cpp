@@ -64,15 +64,12 @@ void ChunkManagerTreeView::HighlightChunk(unsigned int chunk)
 {
     if(QStandardItem *item = Model.FindChunk(chunk))
     {
-        // Expand the parent category
-        QStandardItem *parent = item->parent();
-        expand(parent->index());
-
         // Set selection
         selectionModel()->select(item->index(), QItemSelectionModel::ClearAndSelect);
+        emit selectionModel()->currentRowChanged(item->index(), QModelIndex());
 
         // Scroll the view to the selected item
-        scrollTo(item->index());
+        scrollTo(item->index(), QAbstractItemView::PositionAtCenter);
     }
 }
 
