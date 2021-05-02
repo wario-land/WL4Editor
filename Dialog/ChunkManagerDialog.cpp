@@ -30,9 +30,13 @@ void ChunkManagerDialog::on_pushButton_SelectAllOrphanChunks_clicked()
         ROMUtils::SaveDataChunkType::InvalidationChunk,
         true
     );
-    std::remove_if(allChunks.begin(), allChunks.end(), [chunkRefs](unsigned int chunk){
-        return chunkRefs.contains(chunk);
-    });
+    allChunks.erase(std::remove_if(allChunks.begin(),
+                                   allChunks.end(),
+                                   [&chunkRefs](unsigned int chunk)
+                                    {
+                                        return chunkRefs.contains(chunk);
+                                    }),
+                                    allChunks.end());
     TreeView->SelectChunks(allChunks);
 }
 

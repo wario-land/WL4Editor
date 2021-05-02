@@ -168,15 +168,21 @@ QStandardItem *ChunkManagerModel::FindChunk(unsigned int chunk)
 {
     for(int i = 0; i < rowCount(); ++i)
     {
+        // Use binary search, assume the array is sorted well
         QStandardItem *categoryRow = item(i);
-        for(int j = 0; j < categoryRow->rowCount(); ++j)
+        unsigned int childNum = categoryRow->rowCount();
+        unsigned low = 0, high = childNum, middle = 0;
+        while (low < high)
         {
-            QStandardItem *chunkRow = categoryRow->child(j, 1);
-            auto text__ = chunkRow->text();
+            middle = (low + high) / 2;
+            QStandardItem *chunkRow = categoryRow->child(middle, 1);
             unsigned int chunkAddress = chunkRow->text().mid(2).toUInt(nullptr, 16);
-            if(chunk == chunkAddress)
-            {
+            if(chunk == chunkAddress) {
                 return categoryRow->child(chunkRow->index().row(), 0);
+            } else if(chunk < chunkAddress) {
+                high = middle;
+            } else if(chunk > chunkAddress) {
+                low = middle + 1;
             }
         }
     }
