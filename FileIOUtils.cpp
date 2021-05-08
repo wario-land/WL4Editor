@@ -364,9 +364,6 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
         return false;
     }
 
-    // transparent-substitute color replacement and load palette
-    tmppalette[transparentcolorId] = 0;
-
     // nybble exchange not needed
     // reset bytearray according to the palette bin file
     for(int i = 0; i < 16; ++i)
@@ -376,7 +373,8 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palett
         {
             // Get the index of the color in the current palette
             QRgb findColor = tmppalette[i];
-            auto paletteFound = std::find_if(ref_palette.begin(), ref_palette.end(),
+            // since ref pal comes from the rom, its first color is transparent, so we skip it
+            auto paletteFound = std::find_if(std::next(ref_palette.begin()), ref_palette.end(),
                 [&findColor](const QRgb& c)
             {
                 QColor ca(c);
