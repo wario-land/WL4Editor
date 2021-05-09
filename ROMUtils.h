@@ -115,6 +115,7 @@ namespace ROMUtils
     void SaveDataAnalysis();
     QMap<unsigned int, struct ChunkReference> GetAllChunkReferences();
     void StaticInitialization();
+    bool WriteChunkSanityCheck(const struct SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks);
     
 } // namespace ROMUtils
 

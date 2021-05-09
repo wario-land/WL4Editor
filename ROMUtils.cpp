@@ -739,7 +739,7 @@ allocationComplete:
             *reinterpret_cast<unsigned int*>(ptrLoc) = static_cast<unsigned int>((indexToChunkPtr[chunk.index] + 12) | 0x8000000);
         }
 
-        // Write chunks to TempFile
+        // Write chunks to TempFile with Sanity check
         for(struct SaveData &chunk : chunksToAdd)
         {
             if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk)
@@ -747,17 +747,34 @@ allocationComplete:
                 continue;
             }
 
+            // update existChunks every time since it changes every time
+            QVector<unsigned int> existChunks = FindAllChunksInROM(
+                        TempFile,
+                        TempLength,
+                        WL4Constants::AvailableSpaceBeginningInROM,
+                        SaveDataChunkType::InvalidationChunk,
+                        true
+                        );
+
             // Write the chunk metadata with RATS format and the chunk data
-            unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
-            strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
-            unsigned short chunkLen = (unsigned short) (chunk.size & 0xFFFF);
-            unsigned char extLen = (unsigned char) ((chunk.size >> 16) & 0xFF);
-            *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
-            *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
-            *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
-            destPtr[8] = chunk.ChunkType;
-            destPtr[9] = extLen;
-            memcpy(destPtr + 12, chunk.data, (unsigned short) chunk.size);
+            if (WriteChunkSanityCheck(chunk, indexToChunkPtr[chunk.index], existChunks))
+            {
+                unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
+                strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
+                unsigned short chunkLen = (unsigned short) (chunk.size & 0xFFFF);
+                unsigned char extLen = (unsigned char) ((chunk.size >> 16) & 0xFF);
+                *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
+                *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
+                *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
+                destPtr[8] = chunk.ChunkType;
+                destPtr[9] = extLen;
+                memcpy(destPtr + 12, chunk.data, (unsigned short) chunk.size);
+            }
+            else
+            {
+                singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal error: Write chunk into an occupied chunk"));
+                goto error;
+            }
         }
 
         // Perform post-processing before saving the file
@@ -805,7 +822,7 @@ allocationComplete:
         {
 error:      free(TempFile); // free up temporary file if there was a processing error
         }
-        for(struct SaveData chunk : chunksToAdd)
+        for(struct SaveData &chunk : chunksToAdd)
         {
             if (chunk.ChunkType != SaveDataChunkType::InvalidationChunk)
             {
@@ -1044,6 +1061,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         return true;
     }
 
+    /// <summary>
     /// Load a palette, 16 colors, from a pointer.
     /// </summary>
     /// <param name="palette">
@@ -1496,6 +1514,58 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             delete[] ROMUtils::tmpCurrentFile;
             ROMUtils::tmpCurrentFile = nullptr;
         }
+    }
+
+    /// <summary>
+    /// Check if the space to write the current chunk is legal
+    /// The chunks used to compare are generated instantly
+    /// </summary>
+    /// <param name="chunk">
+    /// Contains the writing chunk's data
+    /// </param>
+    /// <param name="chunk_addr">
+    /// Contains the address of the chunk being written
+    /// </param>
+    /// <param name="existChunks">
+    /// Contains all the exist chunks data
+    /// make this as a parameter so we can modify the chunks list then push it into this function
+    /// Also generate the data outside of the function can make the code execute potentially faster
+    /// </param>
+    /// <returns>
+    /// True if the writing is legal.
+    /// </returns>
+    bool WriteChunkSanityCheck(const SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks)
+    {
+        if ((chunk_addr > WL4Constants::AvailableSpaceBeginningInROM) || (chunk.ChunkType == SaveDataChunkType::InvalidationChunk))
+        {
+            return true;
+        }
+
+        unsigned int chunk_size = chunk.size;
+        unsigned int chunkNum = existChunks.size();
+        unsigned low = 0, high = chunkNum, middle = 0;
+        while (low < high)
+        {
+            middle = (low + high) / 2;
+            unsigned int existChunkAddr_Middle = existChunks[middle];
+            unsigned int existChunkSize_Middle = (*((unsigned short *)(ROMFileMetadata->ROMDataPtr + 4)) & 0xFFFF) |
+                    ((*(ROMFileMetadata->ROMDataPtr + 9) << 16) & 0xFF0000);
+
+            // exist chunk range: [existChunkAddr_Middle, existChunkAddr_Middle + 12 + existChunkSize_Middle)
+            // new chunk range: [chunk_addr, chunk_addr + 12 + chunk_size)
+            unsigned int existChunkRangeL_middle = existChunkAddr_Middle;
+            unsigned int existChunkRangeR_middle = existChunkAddr_Middle + 12 + existChunkSize_Middle;
+            unsigned int newChunkRangeL = chunk_addr;
+            unsigned int newChunkRangeR = chunk_addr + 12 + chunk_size;
+            if((newChunkRangeL < existChunkRangeR_middle) || (newChunkRangeR > existChunkRangeL_middle)) {
+                return false;
+            } else if(newChunkRangeR <= existChunkRangeL_middle) {
+                high = middle;
+            } else if(newChunkRangeL >= existChunkRangeR_middle) {
+                low = middle + 1;
+            }
+        }
+        return true;
     }
 
 } // namespace ROMUtils
