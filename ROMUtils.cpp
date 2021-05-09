@@ -701,7 +701,7 @@ spaceFound:
                 });
             }
 
-            // Restore temp indexes info about saving chunks
+            // Restore temp indices info about saving chunks
             indexToChunkPtr[sd.index] = alignedAddr;
             chunksToAdd.append(sd);
 
