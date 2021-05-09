@@ -676,7 +676,6 @@ resized:freeSpaceRegions.clear();
 spaceFound:
             // Split the free space region
             struct FreeSpaceRegion freeSpace = freeSpaceRegions[i];
-            unsigned char *destPtr = TempFile + freeSpace.addr;
             freeSpaceRegions.remove(i);
 
             // Determine where the chunk starts if alignment would modify it
@@ -702,20 +701,7 @@ spaceFound:
                 });
             }
 
-            // Write the chunk metadata with RATS format
-            // Only write chunk headers after the alignment setting of the next chunk has been decided
-            destPtr += alignmentOffset;
-            strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
-            unsigned short chunkLen = (unsigned short) (sd.size & 0xFFFF);
-            unsigned char extLen = (unsigned char) ((sd.size >> 16) & 0xFF);
-            *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
-            *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
-            *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
-            destPtr[8] = sd.ChunkType;
-            destPtr[9] = extLen;
-
-            // We cannot write the chunk data here because invalidated chunk data may still be used as part of new chunk creation at this step
-
+            // Restore temp indexes info about saving chunks
             indexToChunkPtr[sd.index] = alignedAddr;
             chunksToAdd.append(sd);
 
@@ -730,7 +716,7 @@ allocationComplete:
         }
 
         // Apply source pointer modifications to applicable chunk types
-        for(struct SaveData chunk : chunksToAdd)
+        for(struct SaveData &chunk : chunksToAdd)
         {
             switch(chunk.ChunkType)
             {
@@ -753,16 +739,24 @@ allocationComplete:
             *reinterpret_cast<unsigned int*>(ptrLoc) = static_cast<unsigned int>((indexToChunkPtr[chunk.index] + 12) | 0x8000000);
         }
 
-        // Write chunk data to TempFile
-        for(struct SaveData chunk : chunksToAdd)
+        // Write chunks to TempFile
+        for(struct SaveData &chunk : chunksToAdd)
         {
             if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk)
             {
                 continue;
             }
 
-            // Write the chunk data
+            // Write the chunk metadata with RATS format and the chunk data
             unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
+            strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
+            unsigned short chunkLen = (unsigned short) (chunk.size & 0xFFFF);
+            unsigned char extLen = (unsigned char) ((chunk.size >> 16) & 0xFF);
+            *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
+            *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
+            *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
+            destPtr[8] = chunk.ChunkType;
+            destPtr[9] = extLen;
             memcpy(destPtr + 12, chunk.data, (unsigned short) chunk.size);
         }
 
@@ -1283,7 +1277,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         chunkRef = {PatchListChunk};
         references[patchListAddr] = chunkRef;
         QVector<struct PatchEntryItem> patches = PatchUtils::GetPatchesFromROM();
-        for(struct PatchEntryItem patch : patches)
+        for(const struct PatchEntryItem &patch : patches)
         {
             chunkRef = {PatchChunk};
             references[patch.PatchAddress] = chunkRef;
