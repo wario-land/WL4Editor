@@ -12,6 +12,7 @@ TARGET = WL4Editor
 TEMPLATE = app
 
 include(./ThirdParty/phantomstyle/src/phantom/phantom.pri)
+include(./ThirdParty/QHexView/QHexView.pri)
 
 RC_ICONS = images/icon.ico
 

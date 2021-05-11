@@ -6,6 +6,8 @@
 #include "ui_WL4EditorWindow.h"
 #include "Themes.h"
 #include "FileIOUtils.h"
+#include "document/buffer/qmemorybuffer.h"
+#include "qhexview.h"
 
 #include <cstdio>
 #include <deque>
@@ -476,6 +478,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionClear_all->setEnabled(true);
         ui->actionPatch_Manager->setEnabled(true);
         ui->actionChunk_Manager->setEnabled(true);
+        ui->actionHex_Editor->setEnabled(true);
         ui->actionEdit_Entity_EntitySet->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->loadLevelButton->setEnabled(true);
@@ -2275,4 +2278,21 @@ void WL4EditorWindow::on_actionChunk_Manager_triggered()
 {
     ChunkManagerDialog dialog(this);
     dialog.exec();
+}
+
+/// <summary>
+/// Open the hex editor.
+/// </summary>
+void WL4EditorWindow::on_actionHex_Editor_triggered()
+{
+    if (firstROMLoaded)
+    {
+        // Test Loading Code
+        QHexDocument* document = QHexDocument::fromFile<QMemoryBuffer>(ROMUtils::ROMFileMetadata->FilePath);
+        QHexView* hexview = new QHexView();
+        hexview->setDocument(document);
+        hexview->show();
+
+        // TODO: encapsulate the hexview, make it global singleton instance, add more code for it
+    }
 }

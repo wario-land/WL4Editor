@@ -285,6 +285,7 @@
     </property>
     <addaction name="actionPatch_Manager"/>
     <addaction name="actionChunk_Manager"/>
+    <addaction name="actionHex_Editor"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -637,6 +638,14 @@
    </property>
    <property name="text">
     <string>Chunk Manager</string>
+   </property>
+  </action>
+  <action name="actionHex_Editor">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Hex Editor</string>
    </property>
   </action>
  </widget>
