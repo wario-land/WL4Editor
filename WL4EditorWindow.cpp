@@ -2292,6 +2292,7 @@ void WL4EditorWindow::on_actionHex_Editor_triggered()
         QHexView* hexview = new QHexView();
         hexview->setDocument(document);
         hexview->show();
+        hexview->setFont(QFont("Timers", 8, QFont::Bold));
 
         // TODO: encapsulate the hexview, make it global singleton instance, add more code for it
     }
