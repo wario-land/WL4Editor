@@ -106,7 +106,15 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
 /// </summary>
 WL4EditorWindow::~WL4EditorWindow()
 {
+    // Close other window(s)
+    if (!HexViewWindow->isHidden())
+    {
+        HexViewWindow->hide();
+    }
+    HexViewWindow->close();
+
     // Clean up heap instance objects
+    delete HexViewWindow;
     delete ui;
     delete Tile16SelecterWidget;
     delete EditModeWidget;
@@ -2287,13 +2295,11 @@ void WL4EditorWindow::on_actionHex_Editor_triggered()
 {
     if (firstROMLoaded)
     {
-        // Test Loading Code
-        QHexDocument* document = QHexDocument::fromFile<QMemoryBuffer>(ROMUtils::ROMFileMetadata->FilePath);
-        QHexView* hexview = new QHexView();
-        hexview->setDocument(document);
-        hexview->show();
-        hexview->setFont(QFont("Timers", 8, QFont::Bold));
-
-        // TODO: encapsulate the hexview, make it global singleton instance, add more code for it
+        if (!HexViewWindow)
+        {
+            HexViewWindow = new HexEditorWindow(this);
+            HexViewWindow->ReLoadFile();
+        }
+        HexViewWindow->show();
     }
 }

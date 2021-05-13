@@ -42,6 +42,7 @@ SOURCES += \
     Dialog/SpritesEditorDialog_SpriteTileMapGraphicView.cpp \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \
     DockWidget/OutputDockWidget.cpp \
+    EditorWindow/HexEditorWindow.cpp \
     FileIOUtils.cpp \
     ScriptInterface.cpp \
     main.cpp \
@@ -91,6 +92,7 @@ HEADERS += \
     Dialog/SpritesEditorDialog_SpriteTileMapGraphicView.h \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.h \
     DockWidget/OutputDockWidget.h \
+    EditorWindow/HexEditorWindow.h \
     FileIOUtils.h \
     ScriptInterface.h \
     WL4EditorWindow.h \
@@ -136,6 +138,7 @@ FORMS += \
     Dialog/SelectColorDialog.ui \
     Dialog/SpritesEditorDialog.ui \
     DockWidget/OutputDockWidget.ui \
+    EditorWindow/HexEditorWindow.ui \
     WL4EditorWindow.ui \
     Dialog/ChooseLevelDialog.ui \
     DockWidget/Tile16DockWidget.ui \

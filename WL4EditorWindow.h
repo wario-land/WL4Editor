@@ -19,6 +19,7 @@
 #include "DockWidget/EntitySetDockWidget.h"
 #include "DockWidget/Tile16DockWidget.h"
 #include "DockWidget/OutputDockWidget.h"
+#include "EditorWindow/HexEditorWindow.h"
 #include "LevelComponents/Level.h"
 #include "LevelComponents/Room.h"
 
@@ -42,6 +43,7 @@ private:
     EntitySetDockWidget *EntitySetWidget;
     CameraControlDockWidget *CameraControlWidget;
     OutputDockWidget *OutputWidget = nullptr;
+    HexEditorWindow *HexViewWindow = nullptr;
     LevelComponents::Level *CurrentLevel = nullptr;
     QAction *RecentROMs[5];
     uint recentROMnum = 0;
