@@ -6,8 +6,6 @@
 #include "ui_WL4EditorWindow.h"
 #include "Themes.h"
 #include "FileIOUtils.h"
-#include "document/buffer/qmemorybuffer.h"
-#include "qhexview.h"
 
 #include <cstdio>
 #include <deque>

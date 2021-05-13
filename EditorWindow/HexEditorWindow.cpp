@@ -1,6 +1,7 @@
 #include "HexEditorWindow.h"
 #include "ui_HexEditorWindow.h"
 #include "ROMUtils.h"
+#include "document/qhexcursor.h"
 
 /// <summary>
 /// Construct the instance of the HexEditorWindow.
@@ -42,6 +43,51 @@ void HexEditorWindow::ReLoadFile(QString filePath)
     }
     currentDocument = QHexDocument::fromFile<QMemoryBuffer>(filePath);
     ui->hexview->setDocument(currentDocument);
+}
+
+/// <summary>
+/// Goto an offset and refresh the hexview and reset the cursor
+/// </summary>
+/// <param name="offset">
+/// Offset data is needed for the hexview update
+/// </param>
+void HexEditorWindow::gotoOffset(unsigned int offset)
+{
+    QHexCursor *hexCursor = currentDocument->cursor();
+    hexCursor->moveTo(offset >> 5, static_cast<int>(offset & 0xF), 1);
+}
+
+/// <summary>
+/// highlight data in hexview, background mode
+/// </summary>
+/// <param name="offset">
+/// Offset data is needed for the data highlight
+/// </param>
+/// <param name="length">
+/// Length of data will be highlighted
+/// </param>
+/// <param name="color">
+/// Pick a color to highlight data
+/// </param>
+void HexEditorWindow::hightlightData_bg(unsigned int offset, unsigned length, QColor color)
+{
+    currentDocument->metadata()->background(offset >> 5, static_cast<int>(offset & 0xF), length, color);
+}
+
+/// <summary>
+/// highlight data in hexview, foreground mode
+/// </summary>
+void HexEditorWindow::hightlightData_fg(unsigned int offset, unsigned length, QColor color)
+{
+    currentDocument->metadata()->foreground(offset >> 5, static_cast<int>(offset & 0xF), length, color);
+}
+
+/// <summary>
+/// Clear all styling in hexview
+/// </summary>
+void HexEditorWindow::highlightClear()
+{
+    currentDocument->metadata()->clear();
 }
 
 /// <summary>
