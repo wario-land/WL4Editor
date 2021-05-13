@@ -106,13 +106,6 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
 /// </summary>
 WL4EditorWindow::~WL4EditorWindow()
 {
-    // Close other window(s)
-    if (!HexViewWindow->isHidden())
-    {
-        HexViewWindow->hide();
-    }
-    HexViewWindow->close();
-
     // Clean up heap instance objects
     delete HexViewWindow;
     delete ui;
@@ -1589,7 +1582,10 @@ void WL4EditorWindow::on_actionAbout_triggered()
                                "    xiazhanjian\n\n"
                                "Special Thanks:\n"
                                "    becored\n"
-                               "    randrew\n"
+                               "    Blanchon\n"
+                               "    Dax89 (QHexView)\n"
+                               "    interdpth\n"
+                               "    randrew (phantomstyle)\n"
                                "    Spleeeeen\n"
                                "    xTibor\n\n"
                                "Version: ") +
