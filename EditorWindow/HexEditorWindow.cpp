@@ -54,7 +54,7 @@ void HexEditorWindow::ReLoadFile(QString filePath)
 void HexEditorWindow::gotoOffset(unsigned int offset)
 {
     QHexCursor *hexCursor = currentDocument->cursor();
-    hexCursor->moveTo(offset >> 5, static_cast<int>(offset & 0xF), 1);
+    hexCursor->moveTo(offset >> 4, static_cast<int>(offset & 0xF), 1);
 }
 
 /// <summary>
@@ -71,7 +71,7 @@ void HexEditorWindow::gotoOffset(unsigned int offset)
 /// </param>
 void HexEditorWindow::hightlightData_bg(unsigned int offset, unsigned length, QColor color)
 {
-    currentDocument->metadata()->background(offset >> 5, static_cast<int>(offset & 0xF), length, color);
+    currentDocument->metadata()->background(offset >> 4, static_cast<int>(offset & 0xF), length, color);
 }
 
 /// <summary>
@@ -79,7 +79,7 @@ void HexEditorWindow::hightlightData_bg(unsigned int offset, unsigned length, QC
 /// </summary>
 void HexEditorWindow::hightlightData_fg(unsigned int offset, unsigned length, QColor color)
 {
-    currentDocument->metadata()->foreground(offset >> 5, static_cast<int>(offset & 0xF), length, color);
+    currentDocument->metadata()->foreground(offset >> 4, static_cast<int>(offset & 0xF), length, color);
 }
 
 /// <summary>

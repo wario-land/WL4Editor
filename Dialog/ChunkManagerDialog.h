@@ -21,6 +21,8 @@ public:
 private slots:
     void on_pushButton_SelectAllOrphanChunks_clicked();
     void on_pushButton_DeselectAll_clicked();
+    void on_pushButton_SelectAllBrokenChunks_clicked();
+    void on_pushButton_ShowInHexView_clicked();
 
 private:
     ChunkManagerTreeView *TreeView;

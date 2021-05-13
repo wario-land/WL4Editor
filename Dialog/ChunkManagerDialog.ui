@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Chunk Editor</string>
+   <string>Chunk Manager</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -88,9 +88,23 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pushButton_ReLoadAllChunks">
+         <property name="text">
+          <string>Reload all chunks</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="pushButton_SelectAllOrphanChunks">
          <property name="text">
-          <string>Select All Orphaned Chunks</string>
+          <string>Select All orphaned chunks</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_SelectAllBrokenChunks">
+         <property name="text">
+          <string>Select All broken chunks</string>
          </property>
         </widget>
        </item>
@@ -103,6 +117,52 @@
        </item>
        <item>
         <widget class="Line" name="line">
+         <property name="lineWidth">
+          <number>0</number>
+         </property>
+         <property name="midLineWidth">
+          <number>10</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_ShowInHexView">
+         <property name="text">
+          <string>Edit current chunk</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_LastSelectedChunk">
+         <property name="text">
+          <string>last selected chunk</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_NextSelectedChunk">
+         <property name="text">
+          <string>next selected chunk</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line1">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="lineWidth">
+          <number>0</number>
+         </property>
+         <property name="midLineWidth">
+          <number>10</number>
+         </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>

@@ -1,6 +1,5 @@
 ﻿#include "WL4EditorWindow.h"
 #include "Operation.h"
-#include "Dialog/ChunkManagerDialog.h"
 #include "Dialog/PatchManagerDialog.h"
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
@@ -864,6 +863,22 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     // Mark the layers as dirty
     for (unsigned int i = 0; i < 4; ++i)
         currentRoom->GetLayer(i)->SetDirty(true);
+}
+
+/// <summary>
+/// Show Hex Editor when get called.
+/// </summary>
+void WL4EditorWindow::ShowHexEditorWindow()
+{
+    if (firstROMLoaded)
+    {
+        if (!HexViewWindow)
+        {
+            HexViewWindow = new HexEditorWindow(this);
+            HexViewWindow->ReLoadFile();
+        }
+        HexViewWindow->show();
+    }
 }
 
 /// <summary>
@@ -2278,8 +2293,9 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionChunk_Manager_triggered()
 {
-    ChunkManagerDialog dialog(this);
-    dialog.exec();
+    // use modeless mode so the focus can switch between the Chunk Manager and the Hex Editor
+    chunkManagerDlg = new ChunkManagerDialog(this);
+    chunkManagerDlg->show();
 }
 
 /// <summary>
@@ -2287,13 +2303,5 @@ void WL4EditorWindow::on_actionChunk_Manager_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionHex_Editor_triggered()
 {
-    if (firstROMLoaded)
-    {
-        if (!HexViewWindow)
-        {
-            HexViewWindow = new HexEditorWindow(this);
-            HexViewWindow->ReLoadFile();
-        }
-        HexViewWindow->show();
-    }
+    ShowHexEditorWindow();
 }

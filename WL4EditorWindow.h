@@ -19,6 +19,7 @@
 #include "DockWidget/EntitySetDockWidget.h"
 #include "DockWidget/Tile16DockWidget.h"
 #include "DockWidget/OutputDockWidget.h"
+#include "Dialog/ChunkManagerDialog.h"
 #include "EditorWindow/HexEditorWindow.h"
 #include "LevelComponents/Level.h"
 #include "LevelComponents/Room.h"
@@ -44,6 +45,7 @@ private:
     CameraControlDockWidget *CameraControlWidget;
     OutputDockWidget *OutputWidget = nullptr;
     HexEditorWindow *HexViewWindow = nullptr;
+    ChunkManagerDialog *chunkManagerDlg = nullptr;
     LevelComponents::Level *CurrentLevel = nullptr;
     QAction *RecentROMs[5];
     uint recentROMnum = 0;
@@ -76,6 +78,7 @@ public:
     EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
     EntitySetDockWidget *GetEntitySetDockWidgetPtr() { return EntitySetWidget; }
     OutputDockWidget *GetOutputWidgetPtr() { return OutputWidget; }
+    HexEditorWindow *GetHexEditorWindowPtr() { return HexViewWindow; }
     void InvalidOutputWidgetPtr() { OutputWidget = nullptr; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
     int GetCurrentRoomId() { return selectedRoom; }
@@ -92,6 +95,7 @@ public:
     void ShowEntitySetDockWidget() { EntitySetWidget->setVisible(true); }
     void ShowTile16DockWidget() { Tile16SelecterWidget->setVisible(true); }
     void ShowCameraControlDockWidget() { CameraControlWidget->setVisible(true); }
+    void ShowHexEditorWindow();
     void HideCameraControlDockWidget() { CameraControlWidget->setVisible(false); }
     void HideEntitySetDockWidget() { EntitySetWidget->setVisible(false); }
     void HideTile16DockWidget() { Tile16SelecterWidget->setVisible(false); }

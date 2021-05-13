@@ -164,7 +164,7 @@ QVector<QWidget*> ChunkManagerInfoGroupBox::GetInfoFromChunk(unsigned int chunk)
             connect(parentButton, &QPushButton::clicked, action, &ChunkEntryHighlightAction::HighlightChunkConnector);
             widgets.append(parentButton);
         }
-        for(auto childOffset : referenceInfo.ChildrenChunkLocalOffset)
+        for(auto &childOffset : referenceInfo.ChildrenChunkLocalOffset)
         {
             // Add a button to navigate to the child
             unsigned int childChunk = ROMUtils::PointerFromData(chunk + 12 + childOffset) - 12;
