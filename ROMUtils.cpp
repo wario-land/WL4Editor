@@ -1548,8 +1548,9 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         {
             middle = (low + high) / 2;
             unsigned int existChunkAddr_Middle = existChunks[middle];
-            unsigned int existChunkSize_Middle = (*((unsigned short *)(ROMFileMetadata->ROMDataPtr + 4)) & 0xFFFF) |
-                    ((*(ROMFileMetadata->ROMDataPtr + 9) << 16) & 0xFF0000);
+            unsigned int existChunkSize_Middle =
+                    (*((unsigned short *)(ROMFileMetadata->ROMDataPtr + existChunkAddr_Middle + 4)) & 0xFFFF) |
+                    ((*(ROMFileMetadata->ROMDataPtr + existChunkAddr_Middle + 9) << 16) & 0xFF0000);
 
             // exist chunk range: [existChunkAddr_Middle, existChunkAddr_Middle + 12 + existChunkSize_Middle)
             // new chunk range: [chunk_addr, chunk_addr + 12 + chunk_size)
@@ -1557,7 +1558,8 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             unsigned int existChunkRangeR_middle = existChunkAddr_Middle + 12 + existChunkSize_Middle;
             unsigned int newChunkRangeL = chunk_addr;
             unsigned int newChunkRangeR = chunk_addr + 12 + chunk_size;
-            if((newChunkRangeL < existChunkRangeR_middle) || (newChunkRangeR > existChunkRangeL_middle)) {
+            if((newChunkRangeL < existChunkRangeR_middle && newChunkRangeL >= existChunkRangeL_middle) ||
+                    (newChunkRangeR > existChunkRangeL_middle && newChunkRangeR <= existChunkRangeR_middle)) {
                 return false;
             } else if(newChunkRangeR <= existChunkRangeL_middle) {
                 high = middle;
