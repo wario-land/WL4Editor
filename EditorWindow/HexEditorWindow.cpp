@@ -14,7 +14,7 @@ HexEditorWindow::HexEditorWindow(QWidget *parent) :
     ui(new Ui::HexEditorWindow)
 {
     ui->setupUi(this);
-    ui->hexview->setFont(QFont("Timers", 12, QFont::Bold));
+    ui->hexview->setFont(QFont(ui->hexview->font().family(), 12, QFont::Bold));
 }
 
 /// <summary>
