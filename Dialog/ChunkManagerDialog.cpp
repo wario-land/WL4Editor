@@ -70,3 +70,13 @@ void ChunkManagerDialog::on_pushButton_ShowInHexView_clicked()
     hexEditorPtr->hightlightData_bg(chunkAddress + 12, chunkLength, Qt::red);
     hexEditorPtr->gotoOffset(chunkAddress);
 }
+
+void ChunkManagerDialog::on_buttonBox_accepted()
+{
+    if(ui->checkBox_DefragNormalChunks->checkState() == Qt::Checked)
+    {
+        auto chunks = TreeView->GetCheckedChunks();
+        singleton->GetOutputWidgetPtr()->PrintString(QString("Defragmenting %1 chunks...").arg(chunks.size()));
+        ROMUtils::DefragmentChunks(chunks);
+    }
+}

@@ -23,6 +23,7 @@ private slots:
     void on_pushButton_DeselectAll_clicked();
     void on_pushButton_SelectAllBrokenChunks_clicked();
     void on_pushButton_ShowInHexView_clicked();
+    void on_buttonBox_accepted();
 
 private:
     ChunkManagerTreeView *TreeView;

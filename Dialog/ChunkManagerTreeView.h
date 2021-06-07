@@ -32,6 +32,7 @@ public:
     ~ChunkManagerTreeView();
     void SelectChunks(QVector<unsigned int> chunks);
     void HighlightChunk(unsigned int chunk);
+    QVector<unsigned int> GetCheckedChunks() {return Model.GetCheckedChunks();}
 private:
     ChunkManagerModel Model;
 };

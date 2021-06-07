@@ -116,7 +116,8 @@ namespace ROMUtils
     QMap<unsigned int, struct ChunkReference> GetAllChunkReferences();
     void StaticInitialization();
     bool WriteChunkSanityCheck(const struct SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks);
-    
+    bool DefragmentChunks(QVector<unsigned int> chunks);
+
 } // namespace ROMUtils
 
 #endif // ROMUTILS_H

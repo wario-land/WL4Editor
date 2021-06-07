@@ -538,6 +538,38 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Defragment a list of chunks.
+    /// Any save data which is not selected by these chunks is worked around and unmodified.
+    /// </summary>
+    /// <param name="chunks">
+    /// The chunks to defragment.
+    /// </param>
+    bool DefragmentChunks(QVector<unsigned int> chunks)
+    {
+        auto chunkRefs = GetAllChunkReferences();
+
+        // Cannot defragment chunks which have no reference
+        for(int i = chunks.size() - 1; i >= 0; --i)
+        {
+            auto chunk = chunks[i];
+            if(chunkRefs.end() == std::find_if(chunkRefs.begin(), chunkRefs.end(),
+            [chunk](QMap<unsigned int, ChunkReference>::iterator entry)
+            { return entry.key() == chunk; }))
+            {
+                singleton->GetOutputWidgetPtr()->PrintString(QString("Unable to defragment chunk 0x%1: No reference found")
+                    .arg(QString::number(chunk, 16).toUpper()));
+                chunks.remove(i);
+            }
+        }
+
+        // TODO defragment
+        for(auto chunk : chunks)
+        {
+            // TODO
+        }
+    }
+
+    /// <summary>
     /// Save a list of chunks to the ROM file.
     /// </summary>
     /// <param name="filePath">
