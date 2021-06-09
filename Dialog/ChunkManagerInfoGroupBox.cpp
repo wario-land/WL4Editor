@@ -29,18 +29,22 @@ void ChunkManagerInfoGroupBox::UpdateContents(const QModelIndex &current, const 
     const QStandardItemModel *model = dynamic_cast<const QStandardItemModel*>(current.model());
     QStandardItem *item = model->itemFromIndex(current);
     QStandardItem *parent = item->parent();
+    ClearLayout(&Layout);
     if(parent)
     {
         item = parent->child(current.row(), 1);
         unsigned int chunkAddress = item->text().mid(2).toUInt(nullptr, 16);
         QVector<QWidget*> details = GetInfoFromChunk(chunkAddress);
-        ClearLayout(&Layout);
         for(QWidget *widget : details)
         {
             Layout.addWidget(widget);
         }
-        Layout.addStretch();
     }
+    else
+    {
+        Layout.addWidget(GetOverallChunkInfo());
+    }
+    Layout.addStretch();
 }
 
 QVector<QWidget*> ChunkManagerInfoGroupBox::GetInfoFromChunk(unsigned int chunk)
@@ -199,6 +203,13 @@ QVector<QWidget*> ChunkManagerInfoGroupBox::GetInfoFromChunk(unsigned int chunk)
             label->setTextInteractionFlags(Qt::TextSelectableByMouse);
         }
     }
+
+    return widgets;
+}
+
+QWidget *ChunkManagerInfoGroupBox::GetOverallChunkInfo()
+{
+    QWidget *widgets = new QLabel(ROMUtils::SaveDataAnalysis());
 
     return widgets;
 }

@@ -31,6 +31,7 @@ public:
     void SetTreeView(ChunkManagerTreeView *t) {TreeView = t;}
 private:
     QVector<QWidget*> GetInfoFromChunk(unsigned int chunk);
+    QWidget *GetOverallChunkInfo();
     void ClearLayout(QLayout *layout);
     QBoxLayout Layout;
     QMap<unsigned int, struct ROMUtils::ChunkReference> ChunkReferences = ROMUtils::GetAllChunkReferences();

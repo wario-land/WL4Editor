@@ -113,7 +113,7 @@ namespace ROMUtils
     void GenerateEntitySaveChunks(int GlobalEntityId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);
     unsigned int EndianReverse(unsigned int n);
-    void SaveDataAnalysis();
+    QString SaveDataAnalysis();
     QMap<unsigned int, struct ChunkReference> GetAllChunkReferences();
     void StaticInitialization();
     bool WriteChunkSanityCheck(const struct SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks);

@@ -1213,7 +1213,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     /// <summary>
     /// Print debug info about chunks in ROM.
     /// </summary>
-    void SaveDataAnalysis()
+    QString SaveDataAnalysis()
     {
         struct ChunkData
         {
@@ -1294,17 +1294,27 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         double usedSpaceP_ofTypeOther = (double) otherTypeSpace / divisor;
 
         // Print statistics
-        qDebug() << QString("Save data area: %1").arg(saveAreaSize);
-        qDebug() << QString("Free space: %1 (%2%)").arg(totalFreeSpace).arg(100 * freeSpaceP, 6, 'f', 2);
-        qDebug() << QString("  Fragmented: %1 (%2%)").arg(fragmentedSpace).arg(100 * freeSpaceP_frag, 6, 'f', 2);
-        qDebug() << QString("  Non-fragmented: %1 (%2%)").arg(nonFragmentedSpace).arg(100 * freeSpaceP_nonFrag, 6, 'f', 2);
-        qDebug() << QString("Used space: %1 (%2%)").arg(totalUsedSpace).arg(100 * usedSpaceP, 6, 'f', 2);
+        QString result;
+        result = QString("Save data area: %1\n").arg(saveAreaSize) ;
+        result += QString("Free space: %1 (%2%)\n").arg(totalFreeSpace).arg(100 * freeSpaceP, 6, 'f', 2);
+        result += QString("  Fragmented: %1 (%2%)\n").arg(fragmentedSpace).arg(100 * freeSpaceP_frag, 6, 'f', 2);
+        result += QString("  Non-fragmented: %1 (%2%)\n").arg(nonFragmentedSpace).arg(100 * freeSpaceP_nonFrag, 6, 'f', 2);
+        result += QString("Used space: %1 (%2%)\n").arg(totalUsedSpace).arg(100 * usedSpaceP, 6, 'f', 2);
         for(int i = 0; i < CHUNK_TYPE_COUNT; ++i)
         {
             enum SaveDataChunkType t = static_cast<enum SaveDataChunkType>(i);
-            qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg(ChunkTypeString[i], -37).arg(chunkTypeSpace[t], 7).arg(100 * usedSpaceP_ofType[t], 6, 'f', 2).arg(chunkTypeCount[t]);
+            result += QString("  %1:\n%2 (%3%, %4 chunks)\n")
+                        .arg(ChunkTypeString[i]/*, -37*/)
+                        .arg(chunkTypeSpace[t], 7)
+                        .arg(100 * usedSpaceP_ofType[t], 6, 'f', 2)
+                        .arg(chunkTypeCount[t]);
         }
-        qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg("Other", -37).arg(otherTypeSpace, 7).arg(100 * usedSpaceP_ofTypeOther, 6, 'f', 2).arg(otherTypeCount);
+        result += QString("  %1:\n%2 (%3%, %4 chunks)\n")
+                    .arg("Other"/*, -37*/)
+                    .arg(otherTypeSpace, 7)
+                    .arg(100 * usedSpaceP_ofTypeOther, 6, 'f', 2)
+                    .arg(otherTypeCount);
+        return result;
     }
 
     /// <summary>
