@@ -75,8 +75,9 @@ void ChunkManagerDialog::on_buttonBox_accepted()
 {
     if(ui->checkBox_DefragNormalChunks->checkState() == Qt::Checked)
     {
-        auto chunks = TreeView->GetCheckedChunks();
+        auto chunks = TreeView->GetRemainingChunks();
         singleton->GetOutputWidgetPtr()->PrintString(QString("Defragmenting %1 chunks...").arg(chunks.size()));
         ROMUtils::DefragmentChunks(chunks);
     }
+    // TODO: other cases
 }

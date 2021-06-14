@@ -153,7 +153,7 @@ void ChunkManagerModel::RemoveChunk(unsigned int chunk)
     }
 }
 
-QVector<unsigned int> ChunkManagerModel::GetCheckedChunks()
+QVector<unsigned int> ChunkManagerModel::GetRemainingChunks()
 {
     QVector<unsigned int> checkedChunks;
     for(int i = 0; i < rowCount(); ++i)
@@ -162,11 +162,8 @@ QVector<unsigned int> ChunkManagerModel::GetCheckedChunks()
         for(int j = 0; j < categoryRow->rowCount(); ++j)
         {
             QStandardItem *chunkRow = categoryRow->child(j, 0);
-            if(chunkRow->checkState() == Qt::CheckState::Checked)
-            {
-                unsigned int chunkAddress = chunkRow->text().mid(2).toUInt(nullptr, 16);
-                checkedChunks.append(chunkAddress);
-            }
+            unsigned int chunkAddress = chunkRow->text().mid(2).toUInt(nullptr, 16);
+            checkedChunks.append(chunkAddress);
         }
     }
     return checkedChunks;

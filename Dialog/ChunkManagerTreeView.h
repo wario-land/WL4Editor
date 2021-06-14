@@ -16,7 +16,7 @@ public:
     ~ChunkManagerModel();
     void AddChunk(unsigned int chunk);
     void RemoveChunk(unsigned int chunk);
-    QVector<unsigned int> GetCheckedChunks();
+    QVector<unsigned int> GetRemainingChunks();
 private:
     bool CanUpdateTristate = false;
     QStandardItem *FindChunk(unsigned int chunk);
@@ -32,7 +32,7 @@ public:
     ~ChunkManagerTreeView();
     void SelectChunks(QVector<unsigned int> chunks);
     void HighlightChunk(unsigned int chunk);
-    QVector<unsigned int> GetCheckedChunks() {return Model.GetCheckedChunks();}
+    QVector<unsigned int> GetRemainingChunks() {return Model.GetRemainingChunks();}
 private:
     ChunkManagerModel Model;
 };

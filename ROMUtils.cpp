@@ -645,7 +645,7 @@ namespace ROMUtils
                 setLevel(chunkRefs[chunk].ParentChunkAddress, level);
             }
         };
-        for(auto chunk : chunks)
+        for(auto &chunk : chunks)
         {
             unsigned int level = 0;
             setLevel(chunk, &level);
@@ -661,7 +661,7 @@ namespace ROMUtils
         QMap<unsigned int, unsigned int> chunkAddrToIndex;
 
         // Create save data structs
-        for(auto chunk : chunks)
+        for(auto &chunk : chunks)
         {
             invalidationChunks.append(chunk);
 
@@ -672,7 +672,7 @@ namespace ROMUtils
             if(parentAddr)
             {
                 auto parent = chunkRefs[parentAddr];
-                for(auto offset : parent.ChildrenChunkLocalOffset)
+                for(auto &offset : parent.ChildrenChunkLocalOffset)
                 {
                     auto childPtr = PointerFromData(parentAddr + offset);
                     if(childPtr == chunk)
