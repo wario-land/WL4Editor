@@ -74,6 +74,27 @@ namespace ROMUtils
         "EntitySetLoadTableChunkType"
     };
 
+    bool ChunkTypeAlignment[CHUNK_TYPE_COUNT] = {
+        false, // InvalidationChunk
+        true,  // RoomHeaderChunkType
+        true,  // DoorChunkType
+        false, // LayerChunkType
+        false, // LevelNameChunkType
+        false, // EntityListChunk
+        true,  // CameraPointerTableType
+        true,  // CameraBoundaryChunkType
+        false, // PatchListChunk
+        true,  // PatchChunk
+        true,  // TilesetForegroundTile8x8DataChunkType
+        true,  // TilesetMap16EventTableChunkType
+        true,  // TilesetMap16TerrainChunkType
+        true,  // TilesetMap16DataChunkType
+        true,  // TilesetPaletteDataChunkType
+        true,  // EntityTile8x8DataChunkType
+        true,  // EntityPaletteDataChunkType
+        true,  // EntitySetLoadTableChunkType
+    };
+
     void StaticInitialization()
     {
         CurrentFile = tmpCurrentFile = nullptr;
@@ -538,6 +559,56 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Callback used for allocating chunks from a list.
+    /// Must call init before using this function as a callback.
+    /// </summary>
+    static int CHUNK_INDEX;
+    static QVector<struct SaveData> CHUNK_ALLOC;
+    static ChunkAllocationStatus AllocateChunksFromList(unsigned char *TempFile, struct FreeSpaceRegion freeSpace, struct SaveData *sd, bool resetchunkIndex)
+    {
+        (void) TempFile;
+
+        // This part of code will be triggered when rom size needs to be expanded
+        // So all the chunks will be reallocated
+        if(resetchunkIndex)
+        {
+            CHUNK_INDEX = 0;
+        }
+
+        if(CHUNK_INDEX >= CHUNK_ALLOC.size())
+        {
+            return ChunkAllocationStatus::NoMoreChunks;
+        }
+
+        // Get the size of the space that would be needed at this address depending on alignment
+        unsigned int alignOffset = 0;
+        if(CHUNK_ALLOC[CHUNK_INDEX].alignment)
+        {
+            unsigned int startAddr = (freeSpace.addr + 3) & ~3;
+            alignOffset = startAddr - freeSpace.addr;
+        }
+
+        // Check if there is space for the chunk in the offered area
+        // required_size > (freespace.size - alignment - 12 bytes (for header))
+        if(CHUNK_ALLOC[CHUNK_INDEX].size > freeSpace.size - alignOffset - 12)
+        {
+            // This will request a larger free area
+            return ChunkAllocationStatus::InsufficientSpace;
+        }
+        else
+        {
+            // Accept the offered free area for this save chunk
+            *sd = CHUNK_ALLOC[CHUNK_INDEX++];
+            return ChunkAllocationStatus::Success;
+        }
+    }
+    static ChunkAllocationStatus AllocateChunksFromListInit(QVector<struct SaveData> chunksToAllocate)
+    {
+        CHUNK_INDEX = 0;
+        CHUNK_ALLOC = chunksToAllocate;
+    }
+
+    /// <summary>
     /// Defragment a list of chunks.
     /// Any save data which is not selected by these chunks is worked around and unmodified.
     /// </summary>
@@ -562,14 +633,93 @@ namespace ROMUtils
             }
         }
 
-        // TODO defragment
+        // Order the chunks so that they are processed in tree order
+        QMap<unsigned int, unsigned int> treeLevel;
+        std::function<void(unsigned int, unsigned int*)> setLevel =
+        [&chunkRefs, &setLevel](unsigned int chunk, unsigned int *level) -> void
+        {
+            if(chunkRefs[chunk].ParentChunkAddress)
+            {
+                (*level)++;
+                setLevel(chunkRefs[chunk].ParentChunkAddress, level);
+            }
+        };
         for(auto chunk : chunks)
         {
-            // TODO
+            unsigned int level = 0;
+            setLevel(chunk, &level);
+            treeLevel[chunk] = level;
+        }
+        std::sort(chunks.begin(), chunks.end(),
+            [&treeLevel](const unsigned int &a, const unsigned int &b)
+            {return treeLevel[a] < treeLevel[b];});
+
+        QVector<struct ROMUtils::SaveData> saveData;
+        QVector<unsigned int> invalidationChunks;
+        SaveDataIndex = 0;
+        QMap<unsigned int, unsigned int> chunkAddrToIndex;
+
+        // Create save data structs
+        for(auto chunk : chunks)
+        {
+            invalidationChunks.append(chunk);
+
+            // Get the offset from within the parent chunk, if applicable
+            unsigned int ptrOffset = 0;
+            unsigned int parentAddr = chunkRefs[chunk].ParentChunkAddress;
+            unsigned int parentIndex = 0;
+            if(parentAddr)
+            {
+                auto parent = chunkRefs[parentAddr];
+                for(auto offset : parent.ChildrenChunkLocalOffset)
+                {
+                    auto childPtr = PointerFromData(parentAddr + offset);
+                    if(childPtr == chunk)
+                    {
+                        ptrOffset = offset;
+                        parentIndex = chunkAddrToIndex[parentAddr];
+                        goto out1;
+                    }
+                }
+                singleton->GetOutputWidgetPtr()->PrintString(QString("Unable to establish chunk parent-child relationship in DefragmentChunks(). Parent: 0x%1 Child: 0x%2")
+                    .arg(QString::number(parentAddr, 16).toUpper())
+                    .arg(QString::number(chunk, 16).toUpper()));
+            }
+
+            // Get the chunk size
+out1:       unsigned int lowerLen = *reinterpret_cast<unsigned short*>(CurrentROMMetadata.ROMDataPtr + chunk + 4);
+            unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(CurrentROMMetadata.ROMDataPtr + chunk + 9) << 16;
+            unsigned int chunkSize = lowerLen + extLen + 12;
+
+            // Get the chunk data
+            void *chunkData = malloc(chunkSize + 12);
+            memcpy(chunkData, CurrentROMMetadata.ROMDataPtr + chunk, chunkSize);
+
+            unsigned char chunkType = CurrentROMMetadata.ROMDataPtr[chunk + 8];
+            if(chunkType >= CHUNK_TYPE_COUNT)
+            {
+                singleton->GetOutputWidgetPtr()->PrintString(QString("Invalid chunk type encountered in ROM data in DefragmentChunks(). Chunk: 0x%1 Type: %2")
+                    .arg(QString::number(chunk, 16).toUpper())
+                    .arg(chunkType));
+                chunkType = 1;
+            }
+            struct SaveData saveDataStruct = {
+                ptrOffset,
+                chunkSize,
+                (unsigned char*) chunkData,
+                SaveDataIndex,
+                ChunkTypeAlignment[chunkType],
+                parentIndex,
+                0,
+                static_cast<SaveDataChunkType>(chunkType)
+            };
+            saveData.append(saveDataStruct);
+            chunkAddrToIndex[chunk] = SaveDataIndex++;
         }
 
-        // temp return to pass the build
-        return false;
+        // Re-save the chunks
+        AllocateChunksFromListInit(saveData);
+        return SaveFile(ROMUtils::ROMFileMetadata->FilePath, invalidationChunks, AllocateChunksFromList, nullptr);
     }
 
     /// <summary>
@@ -940,50 +1090,12 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         }
 
         // Save the level
-        int chunkIndex = 0;
+        AllocateChunksFromListInit(addedChunks);
         bool ret = SaveFile(filePath, invalidationChunks,
 
             // ChunkAllocator
 
-            [&chunkIndex, addedChunks]
-            (unsigned char *TempFile, struct FreeSpaceRegion freeSpace, struct SaveData *sd, bool resetchunkIndex)
-            {
-                (void) TempFile;
-
-                // This part of code will be triggered when rom size needs to be expanded
-                // So all the chunks will be reallocated
-                if(resetchunkIndex)
-                {
-                    chunkIndex = 0;
-                }
-
-                if(chunkIndex >= addedChunks.size())
-                {
-                    return ChunkAllocationStatus::NoMoreChunks;
-                }
-
-                // Get the size of the space that would be needed at this address depending on alignment
-                unsigned int alignOffset = 0;
-                if(addedChunks[chunkIndex].alignment)
-                {
-                    unsigned int startAddr = (freeSpace.addr + 3) & ~3;
-                    alignOffset = startAddr - freeSpace.addr;
-                }
-
-                // Check if there is space for the chunk in the offered area
-                // required_size > (freespace.size - alignment - 12 bytes (for header))
-                if(addedChunks[chunkIndex].size > freeSpace.size - alignOffset - 12)
-                {
-                    // This will request a larger free area
-                    return ChunkAllocationStatus::InsufficientSpace;
-                }
-                else
-                {
-                    // Accept the offered free area for this save chunk
-                    *sd = addedChunks[chunkIndex++];
-                    return ChunkAllocationStatus::Success;
-                }
-            },
+            AllocateChunksFromList,
 
             // PostProcessingCallback
 

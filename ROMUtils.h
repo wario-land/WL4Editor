@@ -37,6 +37,7 @@ namespace ROMUtils
     extern LevelComponents::EntitySet *entitiessets[90];
 
     extern const char *ChunkTypeString[CHUNK_TYPE_COUNT];
+    extern bool ChunkTypeAlignment[CHUNK_TYPE_COUNT];
 
     enum SaveDataChunkType
     {
