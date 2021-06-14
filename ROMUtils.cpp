@@ -606,6 +606,7 @@ namespace ROMUtils
     {
         CHUNK_INDEX = 0;
         CHUNK_ALLOC = chunksToAllocate;
+        return ChunkAllocationStatus::Success;
     }
 
     /// <summary>
@@ -1500,7 +1501,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         }
 
         // Process all Entityset
-        for(unsigned int entitysetid = 0x11; entitysetid < 129; ++entitysetid)
+        for(unsigned int entitysetid = 0; entitysetid < 90; ++entitysetid)
         {
             unsigned int entitysetLoadTableptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + entitysetid * 4);
             chunkRef = {EntitySetLoadTableChunkType, 0, entitysetLoadTableptr - 12};
@@ -1542,10 +1543,16 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                 // Get level name chunks
                 unsigned int LevelNameAddr = ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passageNum * 24 + stageNum * 4);
                 unsigned int LevelNameJAddr = ROMUtils::PointerFromData(WL4Constants::LevelNameJPointerTable + passageNum * 24 + stageNum * 4);
-                chunkRef = {LevelNameChunkType, 0, LevelNameAddr - 12};
-                references[LevelNameAddr - 12] = chunkRef;
-                chunkRef = {LevelNameChunkType, 0, LevelNameJAddr - 12};
-                references[LevelNameJAddr - 12] = chunkRef;
+                if (LevelNameAddr) // there's an edge case that the debug level's levelname pointers in the rom are 0 by default
+                {
+                    chunkRef = {LevelNameChunkType, 0, LevelNameAddr - 12};
+                    references[LevelNameAddr - 12] = chunkRef;
+                }
+                if (LevelNameJAddr)
+                {
+                    chunkRef = {LevelNameChunkType, 0, LevelNameJAddr - 12};
+                    references[LevelNameJAddr - 12] = chunkRef;
+                }
 
                 // Door table chunk
                 unsigned int LevelID = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderAddr];
