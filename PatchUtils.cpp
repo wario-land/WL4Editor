@@ -673,7 +673,7 @@ namespace PatchUtils
         std::map<int, struct PatchEntryItem*> saveChunkIndexToMetadata, saveChunkIndexToRemoval;
 
         // Populate the chunk list with patches to add to the ROM
-        for(struct PatchEntryItem patch : entries)
+        for(struct PatchEntryItem &patch : entries)
         {
             if(!patch.FileName.length()) continue; // no save chunk to create for hook-only patches
 
@@ -692,12 +692,12 @@ namespace PatchUtils
         
         // Populate the chunk list with invalidation chunks for patches to be removed from the ROM
         QVector<unsigned int> invalidationChunks;
-        for(struct PatchEntryItem patch : removePatches)
+        for(struct PatchEntryItem &patch : removePatches)
         {
             if(!patch.FileName.length()) continue; // no save chunks to invalidate for hook-only patches
 
             saveChunkIndexToRemoval[ROMUtils::SaveDataIndex] = std::find_if(removePatches.begin(), removePatches.end(),
-                [patch](struct PatchEntryItem removePatch){return patch.HookAddress == removePatch.HookAddress;});
+                [&patch](struct PatchEntryItem removePatch){return patch.HookAddress == removePatch.HookAddress;});
             invalidationChunks.append(patch.PatchAddress + 12);
         }
 
@@ -860,7 +860,7 @@ namespace PatchUtils
                         }
 
                         // Create the save chunk data
-                        unsigned char *data = new unsigned char[patchListChunkContents.length() + 1];
+                        unsigned char *data = (unsigned char *) malloc(patchListChunkContents.length() + 1);
                         memcpy(data + 1, patchListChunkContents.toLocal8Bit().constData(), patchListChunkContents.length());
                         data[0] = PATCH_CHUNK_VERSION;
                         struct ROMUtils::SaveData patchListChunk =

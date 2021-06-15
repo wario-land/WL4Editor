@@ -634,6 +634,22 @@ namespace ROMUtils
             }
         }
 
+        /*** Chunks' internal pointers reset strategy
+         * 1. we go through all the non-orphaned chunks and mark all of them like this:
+         * use tree structure to manage chunks connections, we need plural number of trees for all the connections
+         * roots == 0x00, leaf nodes whose depth are 1 == 0x01, leaf nodes whose depth are 2 == 0x02. etc.
+         * the biggest depth number amongst all the trees should be saved somewhere as N (so the levels count from 0 to N)
+         * 2. and we save all the chunks into the ROM
+         * 3. then we start from level (N-1) since there is no pointer in chunks of level N,
+         * then reset the pointers recursively from level (N-1) to roots
+         * ----------------------------------------------------
+         * since the ROMUtils::SaveFile(...) can deal with the recursive pointers' reset inside
+         * so we sort the chunks by their depth level
+         * things like room header chunks should be in the front, then later it should have layer chunks
+         * we needs to create the parent chunks first, so that they will have an ID
+         * then, it sets the ID of the parent chunk when it creates the child chunk
+         * ROMUtils::SaveFile(...) can help us to complete other steps automatically
+         */
         // Order the chunks so that they are processed in tree order
         QMap<unsigned int, unsigned int> treeLevel;
         std::function<void(unsigned int, unsigned int*)> setLevel =
