@@ -94,9 +94,13 @@ namespace ROMUtils
         enum SaveDataChunkType ChunkType = InvalidationChunk;
         unsigned int ParentChunkAddress = 0;
         unsigned int ChunkAddress = 0;
+        bool HeaderHasBroken = false;
         QVector<unsigned int> ChildrenChunkLocalOffset = QVector<unsigned int>();
         QVector<unsigned int> BrokenChildrenChunkLocalOffset = QVector<unsigned int>();
-        QVector<unsigned int> ConflictChildrenChunkLocalOffset = QVector<unsigned int>();
+        // Save where all the possible conflicts from, the conflicts' details should be generated in the UI logic
+        // won't be really useful since I have add sanity check to prevent chunk overwrite in SaveFile function
+        // and it is headache to implement the logic to do the check, so for now, let me just comment this out -- ssp
+//        QVector<unsigned int> ChildrenChunkConflictWith = QVector<unsigned int>();
 
         // some practice about writing different constructors, and the result is: just don't do it (doge) -- ssp
         // default constructor is needed once we have other types of constructor of this struct
@@ -117,12 +121,13 @@ namespace ROMUtils
             this->ChunkType = chunkreference.ChunkType;
             this->ParentChunkAddress = chunkreference.ParentChunkAddress;
             this->ChunkAddress = chunkreference.ChunkAddress;
+            this->HeaderHasBroken = chunkreference.HeaderHasBroken;
             this->ChildrenChunkLocalOffset.clear();
             this->BrokenChildrenChunkLocalOffset.clear();
-            this->ConflictChildrenChunkLocalOffset.clear();
+//            this->ChildrenChunkConflictWith.clear();
             this->ChildrenChunkLocalOffset.append(chunkreference.ChildrenChunkLocalOffset);
             this->BrokenChildrenChunkLocalOffset.append(chunkreference.BrokenChildrenChunkLocalOffset);
-            this->ConflictChildrenChunkLocalOffset.append(chunkreference.ConflictChildrenChunkLocalOffset);
+//            this->ChildrenChunkConflictWith.append(chunkreference.ChildrenChunkConflictWith);
             return *this;
         }
 

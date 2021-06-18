@@ -171,12 +171,21 @@ QVector<QWidget*> ChunkManagerInfoGroupBox::GetInfoFromChunk(unsigned int chunk)
         for(auto &childOffset : referenceInfo.ChildrenChunkLocalOffset)
         {
             // Add a button to navigate to the child
+            bool broken_child_chunk = referenceInfo.BrokenChildrenChunkLocalOffset.contains(childOffset);
             unsigned int childChunk = ROMUtils::PointerFromData(chunk + 12 + childOffset) - 12;
-            QPushButton *childButton = new QPushButton(QString(tr("Child: 0x%1"))
-                .arg(QString::number(childChunk, 16).toUpper()));
+            QString button_text = QString(tr("Child: 0x%1")).arg(QString::number(childChunk, 16).toUpper());
+            if (broken_child_chunk)
+            {
+                button_text += QString(tr(" (broken chunk)"));
+            }
+            QPushButton *childButton = new QPushButton(button_text);
             ChunkEntryHighlightAction *action = new ChunkEntryHighlightAction(TreeView, childChunk);
             Actions.append(action);
             connect(childButton, &QPushButton::clicked, action, &ChunkEntryHighlightAction::HighlightChunkConnector);
+            if (broken_child_chunk)
+            {
+                childButton->setEnabled(false);
+            }
             widgets.append(childButton);
         }
     }

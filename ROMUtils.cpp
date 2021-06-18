@@ -1675,6 +1675,26 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                         unsigned int ptrB = PointerFromData(key + 12 + b);
                         return ptrA < ptrB;
                     });
+
+                // Sanity check
+                // Check the RATS tag, checksum and the chunk type
+                if (!ValidRATS(ROMUtils::ROMFileMetadata->ROMDataPtr + references[key].ChunkAddress) ||
+                        (*(ROMUtils::ROMFileMetadata->ROMDataPtr + references[key].ChunkAddress + 8) != references[key].ChunkType))
+                {
+                    references[key].HeaderHasBroken = true;
+                }
+
+                // Check the children's RATS tags and checksum
+                for (int child_id = 0; child_id < references[key].ChildrenChunkLocalOffset.size(); child_id++)
+                {
+                    unsigned int child_offset = references[key].ChildrenChunkLocalOffset[child_id];
+                    unsigned int abs_offset = key + 12 + child_offset;
+                    unsigned int tmp_ptr = ROMUtils::PointerFromData(abs_offset);
+                    if (!ValidRATS(ROMUtils::ROMFileMetadata->ROMDataPtr + tmp_ptr - 12))
+                    {
+                        references[key].BrokenChildrenChunkLocalOffset << child_offset;
+                    }
+                }
             }
         }
 
