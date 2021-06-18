@@ -95,6 +95,44 @@ namespace ROMUtils
         unsigned int ParentChunkAddress = 0;
         unsigned int ChunkAddress = 0;
         QVector<unsigned int> ChildrenChunkLocalOffset = QVector<unsigned int>();
+        QVector<unsigned int> BrokenChildrenChunkLocalOffset = QVector<unsigned int>();
+        QVector<unsigned int> ConflictChildrenChunkLocalOffset = QVector<unsigned int>();
+
+        // some practice about writing different constructors, and the result is: just don't do it (doge) -- ssp
+        // default constructor is needed once we have other types of constructor of this struct
+//        ChunkReference() : ChunkType(InvalidationChunk), ParentChunkAddress(0), ChunkAddress(0) {}
+
+        // copy constructor, which's equivalent to move constructor by default
+//        ChunkReference(const ChunkReference &chunkreference) { }
+
+        // initializer_list for some weird syntax: ChunkReference cr{data, data2, ...}; // but the elements should be of the same type
+        // cannot use it here
+//        ChunkReference(std::initializer_list<typeof_some_elements_with_the_same_type> chunkreference_initlist)
+//        {
+//            ChunkType = std::static_cast<typeof_some_elements_with_the_same_type>(*chunkreference_initlist.begin());
+//        }
+
+        ChunkReference &operator = (const ChunkReference &chunkreference)
+        {
+            this->ChunkType = chunkreference.ChunkType;
+            this->ParentChunkAddress = chunkreference.ParentChunkAddress;
+            this->ChunkAddress = chunkreference.ChunkAddress;
+            this->ChildrenChunkLocalOffset.clear();
+            this->BrokenChildrenChunkLocalOffset.clear();
+            this->ConflictChildrenChunkLocalOffset.clear();
+            this->ChildrenChunkLocalOffset.append(chunkreference.ChildrenChunkLocalOffset);
+            this->BrokenChildrenChunkLocalOffset.append(chunkreference.BrokenChildrenChunkLocalOffset);
+            this->ConflictChildrenChunkLocalOffset.append(chunkreference.ConflictChildrenChunkLocalOffset);
+            return *this;
+        }
+
+        // will be useful when sort
+//        bool operator < (const ChunkReference &chunkreference) const
+//        {
+//            if (this->ChunkAddress < chunkreference.ChunkAddress)
+//                return true;
+//            return false;
+//        }
     };
 
     // Global functions
