@@ -144,6 +144,7 @@ namespace ROMUtils
     void CleanUpTmpCurrentFileMetaData();
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
+    unsigned short *UnPackScreen(uint32_t address);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);

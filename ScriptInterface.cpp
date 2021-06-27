@@ -60,6 +60,19 @@ int ScriptInterface::GetCurRoomId()
     return singleton->GetCurrentRoomId();
 }
 
+void ScriptInterface::_UnpackScreen(int address)
+{
+    unsigned short *LayerData = ROMUtils::UnPackScreen(address);
+    QString tmpstr;
+    for(int j = 0; j < 32; ++j) {
+        for(int i = 0; i < 32; ++i) {
+            tmpstr += " " + QString::number(LayerData[i + j * 32], 16).rightJustified(4, '0');
+        }
+        tmpstr += '\n';
+    }
+    singleton->GetOutputWidgetPtr()->PrintString(tmpstr);
+}
+
 void ScriptInterface::_DecompressData(int mappingtype, int address)
 {
     int tmpw = 0, tmph = 0;
