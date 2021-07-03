@@ -144,6 +144,7 @@ namespace ROMUtils
     void CleanUpTmpCurrentFileMetaData();
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
+    unsigned int PackScreen(unsigned short *screenCharData, unsigned short *&outputCompressedData, bool skipzeros = true);
     unsigned short *UnPackScreen(uint32_t address);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);

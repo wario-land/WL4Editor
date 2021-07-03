@@ -158,6 +158,94 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Compress a whole screen of character data.
+    /// </summary>
+    /// <param name="screenCharData">
+    /// A pointer to a whole screen of character data.
+    /// </param>
+    /// <param name="outputCompressedData">
+    /// A pointer to the output compressed character data.
+    /// </param>
+    /// <return>The length of output data (number of unsigned short).</return>
+    unsigned int PackScreen(unsigned short *screenCharData, unsigned short *&outputCompressedData, bool skipzeros)
+    {
+        /*** compressed data format:
+         * Compressed data format:
+         * 1st ushort: t | o o o o o o o o o o | n n n n n
+         * 2nd ushort: the unsigned short value of the current character
+         ************************************************
+         * number(n): the loop counter
+         * offset(o): the offset of the current character in the non-compressed char data array
+         * type(t): there are 2 cases:
+         * if t = 0, then the decompressed data will be:
+         * o, o + 1, o + 2, ... , o + n - 1. (n continuous numbers in total)
+         * if t = 1, then the decompressed data will be:
+         * o, o, o, o, ... , o. (duplicate o by n times)
+         ************************************************
+         * The compressed data array should end with an additional 0x0000,
+         * the decompression function ingame need it to stop decompression
+         */
+        int offset = 0; // should be in range of [0, 0x3FF]
+        QVector<unsigned short> output;
+        while (offset < 0x3FF)
+        {
+            unsigned short curChar = screenCharData[offset];
+            int num_dup = 0;
+            int num_AddByOne = 0;
+            for (int i = 1; i < 32; ++i) // type = 1
+            {
+                if (curChar != screenCharData[offset + i])
+                {
+                    break;
+                }
+                num_dup++;
+            }
+            for (int i = 1; i < 32; ++i) // type = 0
+            {
+                if ((curChar + i) != screenCharData[offset + i])
+                {
+                    break;
+                }
+                num_AddByOne++;
+            }
+
+            if (num_dup >= num_AddByOne)
+            {
+                if (skipzeros && !curChar)
+                {
+                    goto skip_append_output_1;
+                }
+                output << ((0x8000 | ((offset & 0x3FF) << 5) | num_dup) & 0xFFFF);
+                output << curChar;
+skip_append_output_1:
+                offset += num_dup + 1;
+            }
+            else // num_dup < num_AddByOne, type = 1
+            {
+                if (skipzeros && !curChar)
+                {
+                    goto skip_append_output_2;
+                }
+                output << ((((offset & 0x3FF) << 5) | num_AddByOne) & 0x7FFF);
+                output << curChar;
+skip_append_output_2:
+                offset += num_AddByOne + 1;
+            }
+        }
+        output << 0x0000;
+        int output_size = output.size();
+        outputCompressedData = new unsigned short[output_size];
+        unsigned short *operationPtr = outputCompressedData;
+        memset((unsigned char *)operationPtr, 0, sizeof(unsigned short) * output_size);
+        for (int i = 0; i < output_size; ++i)
+        {
+            *operationPtr = output[i];
+            operationPtr++;
+        }
+        return output_size;
+    }
+
+    /// <summary>
     /// Decompress a whole screen of character data.
     /// </summary>
     /// <param name="address">

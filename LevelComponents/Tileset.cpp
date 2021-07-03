@@ -75,14 +75,14 @@ namespace LevelComponents
         int fgGFXcount = fgGFXlen / 32;
         for (int i = 0; i < fgGFXcount; ++i)
         {
-            tile8x8array[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes, IsloadFromTmpROM);
+            tile8x8array[i + 0x41] = new Tile8x8(fgGFXptr + i * 32, palettes);
         }
 
         // Background
         int bgGFXcount = bgGFXlen / 32;
         for (int i = 0; i < bgGFXcount; ++i)
         {
-            tile8x8array[Tile8x8DefaultNum - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes, IsloadFromTmpROM);
+            tile8x8array[Tile8x8DefaultNum - 1 - bgGFXcount + i] = new Tile8x8(bgGFXptr + i * 32, palettes);
         }
 
         // Load the map16 data
