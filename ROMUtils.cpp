@@ -6,6 +6,9 @@
 #include "WL4EditorWindow.h"
 #include "PatchUtils.h"
 
+#include <QDateTime>
+#include <QDir>
+#include <QFileInfo>
 #include <cassert>
 #include <iostream>
 #include <QtDebug>
@@ -1149,21 +1152,67 @@ allocationComplete:
 
         { // Prevent goto from crossing initialization of variables here
             // Save the rom file from the CurrentFile copy
-            QFile file(filePath);
-            file.open(QIODevice::WriteOnly);
-            if (file.isOpen())
+            // Save another copy of the current rom file if Rolling Save feature is toggled on
+            QFileInfo curfileinfo(filePath);
+            for (int i = 0; i < 2; i++)
             {
-                file.write(reinterpret_cast<const char*>(TempFile), TempLength);
+                QString tmpFilePath = filePath;
+                if (i == 1)
+                {
+                    if (int maxTmpFileNum = SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSave).toInt())
+                    {
+                        // Delete old files
+                        if (maxTmpFileNum > 0)
+                        {
+                            QDir dir = QFileInfo(tmpFilePath).dir();
+                            dir.setFilter(QDir::Files | QDir::NoSymLinks); // dir.setSorting(QDir::Name); sort by name by default
+                            QFileInfoList fileInfoList = dir.entryInfoList();
+                            int count = 0, id = 0;
+                            QVector<int> matchedfileId;
+                            for (auto &fileinfo : fileInfoList)
+                            {
+                                QString tmpfileName = fileinfo.completeBaseName();
+                                if (tmpfileName.contains(curfileinfo.completeBaseName() + "_"))
+                                {
+                                    matchedfileId << id;
+                                    count++;
+                                    if (count >= maxTmpFileNum)
+                                    {
+                                        QFile::remove(fileInfoList[matchedfileId[count - maxTmpFileNum]].filePath());
+                                    }
+                                }
+                                id++;
+                            }
+                        }
+                        // TODO: customize temp file save folder
+                        tmpFilePath = curfileinfo.dir().path() +
+                                QDir::separator() +
+                                curfileinfo.completeBaseName() +
+                                "_" +
+                                QDateTime::currentDateTime().toString("yyyyMMddhhmmsszzz") +
+                                ".gba";
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                QFile file(tmpFilePath);
+                file.open(QIODevice::WriteOnly);
+                if (file.isOpen())
+                {
+                    file.write(reinterpret_cast<const char*>(TempFile), TempLength);
+                }
+                else
+                {
+                    // Couldn't open the file to save the ROM
+                    QMessageBox::warning(singleton, QT_TR_NOOP("Could not save file"),
+                                         QT_TR_NOOP("Unable to write to or create the ROM file for saving."), QMessageBox::Ok,
+                                         QMessageBox::Ok);
+                    goto error;
+                }
+                file.close();
             }
-            else
-            {
-                // Couldn't open the file to save the ROM
-                QMessageBox::warning(singleton, QT_TR_NOOP("Could not save file"),
-                     QT_TR_NOOP("Unable to write to or create the ROM file for saving."), QMessageBox::Ok,
-                     QMessageBox::Ok);
-                goto error;
-            }
-            file.close();
 
             // Set the CurrentFile to the copied CurrentFile data
             auto temp = ROMFileMetadata->ROMDataPtr;

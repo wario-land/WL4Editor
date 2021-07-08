@@ -25,16 +25,19 @@ namespace SettingsUtils
      *
      * [settings]
      * EditorThemeId = string (convert to int after being read)
+     * RollingSave = string (convert to int as the number of temp files the editor will keep)
+     *                      (set 0 to disable this feature, set -1 to save infinite temp files)
      */
     enum IniKeys
     {
-        eabi_binfile_path = 0,
-        RecentROMPath_0   = 1,
-        RecentROMPath_1   = 2,
-        RecentROMPath_2   = 3,
-        RecentROMPath_3   = 4,
-        RecentROMPath_4   = 5,
-        EditorThemeId     = 6,
+        eabi_binfile_path          = 0,
+        RecentROMPath_0            = 1,
+        RecentROMPath_1            = 2,
+        RecentROMPath_2            = 3,
+        RecentROMPath_3            = 4,
+        RecentROMPath_4            = 5,
+        EditorThemeId              = 6,
+        RollingSave                = 7,
     };
 
     // Static Key QString set
@@ -48,6 +51,7 @@ namespace SettingsUtils
         "history/RecentROMPath_3",
         "history/RecentROMPath_4",
         "settings/EditorThemeId",
+        "settings/RollingSave",
     };
     // clang-format on
 

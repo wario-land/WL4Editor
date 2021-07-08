@@ -36,7 +36,7 @@ QString dialogInitialPath = QString("");
 WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::WL4EditorWindow)
 {
     // Render Themes
-    int themeId = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(6)).toInt();
+    int themeId = SettingsUtils::GetKey(SettingsUtils::IniKeys::EditorThemeId).toInt();
     QApplication::setStyle(new PhantomStyle);
     QApplication::setPalette(namedColorSchemePalette(static_cast<ThemeColorType>(themeId)));
 
@@ -63,6 +63,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     case 1:
     { ui->actionDark->setChecked(true); break; }
     }
+    ui->actionRolling_Save->setChecked(SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSave).toInt());
 
     // Create DockWidgets
     EditModeWidget = new EditModeDockWidget();
@@ -455,7 +456,10 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
 
         // Enable UI that requires a ROM file to be loaded
         ui->actionSave_ROM->setEnabled(true);
-        ui->actionSave_As->setEnabled(true);
+        if (!SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSave).toInt())
+        {
+            ui->actionSave_As->setEnabled(true);
+        }
         ui->actionSave_Room_s_graphic->setEnabled(true);
         ui->menuImport_from_ROM->setEnabled(true);
         ui->actionUndo->setEnabled(true);
@@ -1938,7 +1942,7 @@ void WL4EditorWindow::on_actionPatch_Manager_triggered()
 void WL4EditorWindow::on_actionLight_triggered()
 {
     QApplication::setPalette(namedColorSchemePalette(Light));
-    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString("0"));
+    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString::number(ThemeColorType::Light));
     ui->actionDark->setChecked(false);
 }
 
@@ -1948,7 +1952,7 @@ void WL4EditorWindow::on_actionLight_triggered()
 void WL4EditorWindow::on_actionDark_triggered()
 {
     QApplication::setPalette(namedColorSchemePalette(Dark));
-    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString("1"));
+    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString::number(ThemeColorType::Dark));
     ui->actionLight->setChecked(false);
 }
 
@@ -2304,4 +2308,33 @@ void WL4EditorWindow::on_actionChunk_Manager_triggered()
 void WL4EditorWindow::on_actionHex_Editor_triggered()
 {
     ShowHexEditorWindow();
+}
+
+/// <summary>
+/// UI Logic of Rolling Save
+/// </summary>
+void WL4EditorWindow::on_actionRolling_Save_triggered()
+{
+    OutputWidget->PrintString("Warning: Don't use Rolling Save feature for 2 projects under the same folder!");
+    bool okay = false;
+    int value = QInputDialog::getInt(this, QApplication::applicationName(),
+                                     tr("input a number to configure rolling save:\n"
+                                     "-1 to save infinite temp rom file,\n"
+                                     "0 to disable this feature,\n"
+                                     "positive int number to set the number of file the editor will keep."),
+                                     SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSave).toInt(),
+                                     -1, 0x7FFF'FFFF /*2147483647*/, 1, &okay);
+    if (okay)
+    {
+        SettingsUtils::SetKey(SettingsUtils::IniKeys::RollingSave, QString::number(value));
+        if (!value) // value == 0
+        {
+            ui->actionSave_As->setEnabled(true);
+        }
+        else
+        {
+            ui->actionSave_As->setEnabled(false);
+        }
+        ui->actionRolling_Save->setChecked(value);
+    }
 }

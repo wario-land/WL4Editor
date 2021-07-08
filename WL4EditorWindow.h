@@ -169,6 +169,7 @@ private slots:
     void on_actionImport_Tileset_from_ROM_triggered();
     void on_actionChunk_Manager_triggered();
     void on_actionHex_Editor_triggered();
+    void on_actionRolling_Save_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

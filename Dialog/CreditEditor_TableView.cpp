@@ -270,7 +270,7 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event)
 void CreditEditor_TableView::deleteFunction(QModelIndex indexToDelete)
 {
     int light = 0;
-    if(light != SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(6)).toInt())
+    if(light != SettingsUtils::GetKey(SettingsUtils::IniKeys::EditorThemeId).toInt())
     {
         this->model()->setData(indexToDelete, QColor(DARKBACKGROUNDCOLOR), Qt::BackgroundRole); // perhaps inconsistant, idk, but looks not bad
     } else

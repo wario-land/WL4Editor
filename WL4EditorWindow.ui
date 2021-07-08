@@ -306,6 +306,7 @@
     </widget>
     <addaction name="menuThemes"/>
     <addaction name="menuZoom"/>
+    <addaction name="actionRolling_Save"/>
    </widget>
    <widget class="QMenu" name="menuScript">
     <property name="title">
@@ -646,6 +647,14 @@
    </property>
    <property name="text">
     <string>Hex Editor</string>
+   </property>
+  </action>
+  <action name="actionRolling_Save">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Rolling Save</string>
    </property>
   </action>
  </widget>
