@@ -1159,12 +1159,25 @@ allocationComplete:
                 QString tmpFilePath = filePath;
                 if (i == 1)
                 {
+                    QString dirstr = QFileInfo(filePath).dir().path() + "/auto_backups/";
+                    FormatPathSeperators(dirstr);
                     if (int maxTmpFileNum = SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSave).toInt())
                     {
+                        QDir dir;
+                        if (!dir.exists(dirstr))
+                        {
+                            singleton->GetOutputWidgetPtr()->PrintString("auto_backups folder does not exist, try to mkdir.");
+                            dir.setPath(QFileInfo(filePath).dir().path());
+                            if (dir.mkdir("auto_backups"))
+                            {
+                                singleton->GetOutputWidgetPtr()->PrintString("mkdir success!");
+                            }
+                        }
+
                         // Delete old files
                         if (maxTmpFileNum > 0)
                         {
-                            QDir dir = QFileInfo(tmpFilePath).dir();
+                            dir.setPath(dirstr);
                             dir.setFilter(QDir::Files | QDir::NoSymLinks); // dir.setSorting(QDir::Name); sort by name by default
                             QFileInfoList fileInfoList = dir.entryInfoList();
                             int count = 0, id = 0;
@@ -1178,19 +1191,29 @@ allocationComplete:
                                     count++;
                                     if (count >= maxTmpFileNum)
                                     {
-                                        QFile::remove(fileInfoList[matchedfileId[count - maxTmpFileNum]].filePath());
+                                        QString delete_file_path = fileInfoList[matchedfileId[count - maxTmpFileNum]].filePath();
+                                        singleton->GetOutputWidgetPtr()->PrintString("Remove file: " + delete_file_path);
+                                        QFile::remove(delete_file_path);
                                     }
                                 }
                                 id++;
                             }
                         }
-                        // TODO: customize temp file save folder
-                        tmpFilePath = curfileinfo.dir().path() +
-                                QDir::separator() +
+                        /***From the documentation of fuction QDir::separator():
+                         * You do not need to use this function to build file paths.
+                         * If you always use "/",
+                         * Qt will translate your paths to conform to the underlying operating system.
+                         * -------------------------------------
+                         * the seperator will always cause problem in different system,
+                         * especially used with some "/" or "\" add by ourselves.
+                         * just follow the documentations and use the void ROMUtils::FormatPathSeperators(). --- ssp*/
+                        tmpFilePath = dirstr +
                                 curfileinfo.completeBaseName() +
                                 "_" +
                                 QDateTime::currentDateTime().toString("yyyyMMddhhmmsszzz") +
                                 ".gba";
+                        FormatPathSeperators(tmpFilePath);
+                        singleton->GetOutputWidgetPtr()->PrintString("Create backup file: " + tmpFilePath);
                     }
                     else
                     {
@@ -1974,6 +1997,28 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             }
         }
         return true;
+    }
+
+    /// <summary>
+    /// Replace all the things like '/', '\', '\\', '\/', '/\' and '//' with '/'
+    /// then the path string can be used by Qt file things
+    /// </summary>
+    /// <param name="path">
+    /// QString of path with some shit seperators in it.
+    /// </param>
+    /// <returns>
+    /// QString of path without shit seperator.
+    /// </returns>
+    void FormatPathSeperators(QString &path)
+    {
+        while (path.contains('\\'))
+        {
+            path.replace('\\', '/');
+        }
+        while (path.contains("//"))
+        {
+            path.replace("//", "/");
+        }
     }
 
 } // namespace ROMUtils

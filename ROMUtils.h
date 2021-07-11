@@ -140,6 +140,9 @@ namespace ROMUtils
 //        }
     };
 
+    // Exposed helper functions
+    void FormatPathSeperators(QString &path);
+
     // Global functions
     void CleanUpTmpCurrentFileMetaData();
     unsigned int IntFromData(int address);
