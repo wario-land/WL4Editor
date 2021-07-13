@@ -137,9 +137,9 @@ struct OperationParams
                 delete lastSpritesAndSetParam;
             if (newSpritesAndSetParam)
             {
-                for (LevelComponents::Entity *entityIter: newSpritesAndSetParam->entities)
+                for (LevelComponents::Entity *&entityIter: newSpritesAndSetParam->entities)
                 { delete entityIter; entityIter = nullptr; }
-                for (LevelComponents::EntitySet *entitySetIter: newSpritesAndSetParam->entitySets)
+                for (LevelComponents::EntitySet *&entitySetIter: newSpritesAndSetParam->entitySets)
                 { delete entitySetIter; entitySetIter = nullptr; }
                 delete newSpritesAndSetParam;
             }

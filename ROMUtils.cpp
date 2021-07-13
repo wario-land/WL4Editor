@@ -197,7 +197,7 @@ namespace ROMUtils
             int num_AddByOne = 0;
             for (int i = 1; i < 32; ++i) // type = 1
             {
-                if (curChar != screenCharData[offset + i])
+                if ((curChar != screenCharData[offset + i]) || ((offset + i) == 0x3FF))
                 {
                     break;
                 }
@@ -205,7 +205,7 @@ namespace ROMUtils
             }
             for (int i = 1; i < 32; ++i) // type = 0
             {
-                if ((curChar + i) != screenCharData[offset + i])
+                if (((curChar + i) != screenCharData[offset + i]) || ((offset + i) == 0x3FF))
                 {
                     break;
                 }
