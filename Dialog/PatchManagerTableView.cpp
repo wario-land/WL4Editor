@@ -83,8 +83,14 @@ void PatchManagerTableView::UpdateTableView()
         items.append(new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
         items.append(new QStandardItem("0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
         items.append(new QStandardItem(!patchEntry.PatchAddress ?
-            "N/A" : "0x" + QString::number(patchEntry.PatchAddress, 16).toUpper()));
-        items.append(new QStandardItem(patchEntry.HookString));
+            "N/A" : "0x" + QString::number(patchEntry.PatchAddress + 12, 16).toUpper()));
+        QString finalHookStringText = patchEntry.HookString;
+        if (patchEntry.PatchOffsetInHookString != (unsigned int) -1)
+        {
+            finalHookStringText.insert(patchEntry.PatchOffsetInHookString * 2,
+                    QString("%1").arg(ROMUtils::EndianReverse((patchEntry.PatchAddress + 13) | 0x800'0000), 8, 16, QChar('0')).toUpper());
+        }
+        items.append(new QStandardItem(finalHookStringText));
         items.append(new QStandardItem(QString::number(patchEntry.GetHookLength(), 10).toUpper()));
         items.append(new QStandardItem(patchEntry.PatchOffsetInHookString == (unsigned int) -1 ?
             "no patch addr" : QString::number(patchEntry.PatchOffsetInHookString, 10).toUpper()));
