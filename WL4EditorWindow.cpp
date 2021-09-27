@@ -753,8 +753,8 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                                 qMin(nxtRoomHeight - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY2()));
                         break;
                     }
-                    DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID());
-                    --doorcount;
+                    if (DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID()))
+                    {--doorcount;}
                     // Seems don't need to set Door dirty at least for now
                 }
                 else
@@ -891,22 +891,25 @@ void WL4EditorWindow::ShowHexEditorWindow()
 /// <param name="globalDoorIndex">
 /// The global Door id given by current Level.
 /// </param>
-void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
+bool WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 {
     // You cannot delete the vortex, it is always the first Door.
     if (globalDoorIndex == 0)
     {
         OutputWidget->PrintString(tr("Deleting portal Door not permitted!"));
-        return;
-    }
-    if (CurrentLevel->GetDoors().size() == 1)
-    {
-        OutputWidget->PrintString(tr("Deleting the last Door in the Room not permitted! Spriteset is based on Doors."));
-        return;
+        return false;
     }
 
-    // Delete the Door from the Room Door list
-    CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()]->DeleteDoor(globalDoorIndex);
+    // You cannot delete the last Door in a Room
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
+    if (currentRoom->GetDoors().size() == 1)
+    {
+        OutputWidget->PrintString(tr("Deleting the last Door in the Room not permitted! Spriteset is based on Doors."));
+        return false;
+    }
+
+    // Delete the Door from the Room's Door list
+    currentRoom->DeleteDoor(globalDoorIndex);
 
     // Disable the destination for all the existing Doors whose DestinationDoor is the Door which is being deleting
     for (unsigned int i = 0; i < CurrentLevel->GetDoors().size(); ++i)
@@ -938,6 +941,8 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
                 CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID());
         }
     }
+
+    return true;
 }
 
 /// <summary>

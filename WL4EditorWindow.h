@@ -105,7 +105,7 @@ public:
         CameraControlWidget->PopulateCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
     }
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
-    void DeleteDoor(int globalDoorIndex);
+    bool DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
     void LoadROMDataFromFile(QString qFilePath);
     void PrintMousePos(int x, int y);
