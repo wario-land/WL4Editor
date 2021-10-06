@@ -901,15 +901,16 @@ bool WL4EditorWindow::DeleteDoor(int globalDoorIndex)
     }
 
     // You cannot delete the last Door in a Room
-    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
-    if (currentRoom->GetDoors().size() == 1)
+    // use the globalDoorIndex to find the Room
+    LevelComponents::Room *tmpRoom = CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()];
+    if (tmpRoom->GetDoors().size() == 1)
     {
         OutputWidget->PrintString(tr("Deleting the last Door in the Room not permitted! Spriteset is based on Doors."));
         return false;
     }
 
     // Delete the Door from the Room's Door list
-    currentRoom->DeleteDoor(globalDoorIndex);
+    tmpRoom->DeleteDoor(globalDoorIndex);
 
     // Disable the destination for all the existing Doors whose DestinationDoor is the Door which is being deleting
     for (unsigned int i = 0; i < CurrentLevel->GetDoors().size(); ++i)
