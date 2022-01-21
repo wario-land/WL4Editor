@@ -284,7 +284,6 @@
      <string>Managers</string>
     </property>
     <addaction name="actionPatch_Manager"/>
-    <addaction name="actionChunk_Manager"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -319,7 +318,6 @@
      <string>Window</string>
     </property>
     <addaction name="actionOutput_window"/>
-    <addaction name="actionHex_Editor"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>

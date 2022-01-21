@@ -12,7 +12,6 @@ TARGET = WL4Editor
 TEMPLATE = app
 
 include(./ThirdParty/phantomstyle/src/phantom/phantom.pri)
-include(./ThirdParty/QHexView/QHexView.pri)
 
 RC_ICONS = images/icon.ico
 
@@ -32,9 +31,6 @@ CONFIG += c++17 strict_c++
 QMAKE_CXXFLAGS = -fpermissive
 
 SOURCES += \
-    Dialog/ChunkManagerInfoGroupBox.cpp \
-    Dialog/ChunkManagerDialog.cpp \
-    Dialog/ChunkManagerTreeView.cpp \
     Dialog/SelectColorDialog.cpp \
     Dialog/SelectColorDialog_PaletteBar.cpp \
     Dialog/SpritesEditorDialog.cpp \
@@ -42,7 +38,6 @@ SOURCES += \
     Dialog/SpritesEditorDialog_SpriteTileMapGraphicView.cpp \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \
     DockWidget/OutputDockWidget.cpp \
-    EditorWindow/HexEditorWindow.cpp \
     FileIOUtils.cpp \
     ScriptInterface.cpp \
     main.cpp \
@@ -82,9 +77,6 @@ SOURCES += \
     Dialog/CreditEditor_TableView.cpp
 
 HEADERS += \
-    Dialog/ChunkManagerInfoGroupBox.h \
-    Dialog/ChunkManagerDialog.h \
-    Dialog/ChunkManagerTreeView.h \
     Dialog/SelectColorDialog.h \
     Dialog/SelectColorDialog_PaletteBar.h \
     Dialog/SpritesEditorDialog.h \
@@ -92,7 +84,6 @@ HEADERS += \
     Dialog/SpritesEditorDialog_SpriteTileMapGraphicView.h \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.h \
     DockWidget/OutputDockWidget.h \
-    EditorWindow/HexEditorWindow.h \
     FileIOUtils.h \
     ScriptInterface.h \
     WL4EditorWindow.h \
@@ -134,11 +125,9 @@ HEADERS += \
     Dialog/CreditEditor_TableView.h
 
 FORMS += \
-    Dialog/ChunkManagerDialog.ui \
     Dialog/SelectColorDialog.ui \
     Dialog/SpritesEditorDialog.ui \
     DockWidget/OutputDockWidget.ui \
-    EditorWindow/HexEditorWindow.ui \
     WL4EditorWindow.ui \
     Dialog/ChooseLevelDialog.ui \
     DockWidget/Tile16DockWidget.ui \
