@@ -770,6 +770,136 @@ skip_append_output_2:
     }
 
     /// <summary>
+    /// Defragment a list of chunks.
+    /// Any save data which is not selected by these chunks is worked around and unmodified.
+    /// </summary>
+    /// <param name="chunks">
+    /// The chunks to defragment.
+    /// </param>
+    bool DefragmentChunks(QVector<unsigned int> chunks)
+    {
+        auto chunkRefs = GetAllChunkReferences();
+
+        // Cannot defragment chunks which have no reference
+        for(int i = chunks.size() - 1; i >= 0; --i)
+        {
+            auto chunk = chunks[i];
+            if(chunkRefs.end() == std::find_if(chunkRefs.begin(), chunkRefs.end(),
+            [chunk](auto entry) // for some reason, entry's type is ROMUtils::ChunkReference
+            { return entry.ChunkAddress == chunk; }))
+            {
+                singleton->GetOutputWidgetPtr()->PrintString(QString("Unable to defragment chunk 0x%1: No reference found")
+                    .arg(QString::number(chunk, 16).toUpper()));
+                chunks.remove(i);
+            }
+        }
+
+        /*** Chunks' internal pointers reset strategy
+         * 1. we go through all the non-orphaned chunks and mark all of them like this:
+         * use tree structure to manage chunks connections, we need plural number of trees for all the connections
+         * roots == 0x00, leaf nodes whose depth are 1 == 0x01, leaf nodes whose depth are 2 == 0x02. etc.
+         * the biggest depth number amongst all the trees should be saved somewhere as N (so the levels count from 0 to N)
+         * 2. and we save all the chunks into the ROM
+         * 3. then we start from level (N-1) since there is no pointer in chunks of level N,
+         * then reset the pointers recursively from level (N-1) to roots
+         * ----------------------------------------------------
+         * since the ROMUtils::SaveFile(...) can deal with the recursive pointers' reset inside
+         * so we sort the chunks by their depth level
+         * things like room header chunks should be in the front, then later it should have layer chunks
+         * we needs to create the parent chunks first, so that they will have an ID
+         * then, it sets the ID of the parent chunk when it creates the child chunk
+         * ROMUtils::SaveFile(...) can help us to complete other steps automatically
+         */
+        // Order the chunks so that they are processed in tree order
+        QMap<unsigned int, unsigned int> treeLevel;
+        std::function<void(unsigned int, unsigned int*)> setLevel =
+        [&chunkRefs, &setLevel](unsigned int chunk, unsigned int *level) -> void
+        {
+            if(chunkRefs[chunk].ParentChunkAddress)
+            {
+                (*level)++;
+                setLevel(chunkRefs[chunk].ParentChunkAddress, level);
+            }
+        };
+        for(auto &chunk : chunks)
+        {
+            unsigned int level = 0;
+            setLevel(chunk, &level);
+            treeLevel[chunk] = level;
+        }
+        std::sort(chunks.begin(), chunks.end(),
+            [&treeLevel](const unsigned int &a, const unsigned int &b)
+            {return treeLevel[a] < treeLevel[b];});
+
+        QVector<struct ROMUtils::SaveData> saveData;
+        QVector<unsigned int> invalidationChunks;
+        SaveDataIndex = 0;
+        QMap<unsigned int, unsigned int> chunkAddrToIndex;
+
+        // Create save data structs
+        for(auto &chunk : chunks)
+        {
+            invalidationChunks.append(chunk);
+
+            // Get the offset from within the parent chunk, if applicable
+            unsigned int ptrOffset = 0;
+            unsigned int parentAddr = chunkRefs[chunk].ParentChunkAddress;
+            unsigned int parentIndex = 0;
+            if(parentAddr)
+            {
+                auto parent = chunkRefs[parentAddr];
+                for(auto &offset : parent.ChildrenChunkLocalOffset)
+                {
+                    auto childPtr = PointerFromData(parentAddr + offset);
+                    if(childPtr == chunk)
+                    {
+                        ptrOffset = offset;
+                        parentIndex = chunkAddrToIndex[parentAddr];
+                        goto out1;
+                    }
+                }
+                singleton->GetOutputWidgetPtr()->PrintString(QString("Unable to establish chunk parent-child relationship in DefragmentChunks(). Parent: 0x%1 Child: 0x%2")
+                    .arg(QString::number(parentAddr, 16).toUpper())
+                    .arg(QString::number(chunk, 16).toUpper()));
+            }
+
+            // Get the chunk size
+out1:       unsigned int lowerLen = *reinterpret_cast<unsigned short*>(CurrentROMMetadata.ROMDataPtr + chunk + 4);
+            unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(CurrentROMMetadata.ROMDataPtr + chunk + 9) << 16;
+            unsigned int chunkSize = lowerLen + extLen + 12;
+
+            // Get the chunk data
+            void *chunkData = malloc(chunkSize + 12);
+            memcpy(chunkData, CurrentROMMetadata.ROMDataPtr + chunk, chunkSize);
+
+            unsigned char chunkType = CurrentROMMetadata.ROMDataPtr[chunk + 8];
+            if(chunkType >= CHUNK_TYPE_COUNT)
+            {
+                singleton->GetOutputWidgetPtr()->PrintString(QString("Invalid chunk type encountered in ROM data in DefragmentChunks(). Chunk: 0x%1 Type: %2")
+                    .arg(QString::number(chunk, 16).toUpper())
+                    .arg(chunkType));
+                chunkType = 1;
+            }
+            struct SaveData saveDataStruct = {
+                ptrOffset,
+                chunkSize,
+                (unsigned char*) chunkData,
+                SaveDataIndex,
+                ChunkTypeAlignment[chunkType],
+                parentIndex,
+                0,
+                static_cast<SaveDataChunkType>(chunkType)
+            };
+            saveData.append(saveDataStruct);
+            chunkAddrToIndex[chunk] = SaveDataIndex++;
+        }
+
+        // Re-save the chunks
+        AllocateChunksFromListInit(saveData);
+        return SaveFile(ROMUtils::ROMFileMetadata->FilePath, invalidationChunks, AllocateChunksFromList, nullptr);
+    }
+
+    /// <summary>
     /// Save a list of chunks to the ROM file.
     /// </summary>
     /// <param name="filePath">
@@ -1543,6 +1673,261 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                     .arg(100 * usedSpaceP_ofTypeOther, 6, 'f', 2)
                     .arg(otherTypeCount);
         return result;
+    }
+
+    /// <summary>
+    /// Get and map chunk reference data for all the non-orphaned chunks
+    /// </summary>
+    /// <returns>
+    /// QMap<unsigned int, struct ChunkReference>
+    /// the first template param "unsigned int" is ChunkAddress
+    /// the second template param "struct ChunkReference" obtains the chunk reference metadata of the current chunk on ChunkAddress
+    /// </returns>
+    QMap<unsigned int, struct ChunkReference> GetAllChunkReferences()
+    {
+        QMap<unsigned int, struct ChunkReference> references;
+        struct ChunkReference chunkRef;
+
+        // Get global patch references
+        unsigned int patchListAddr = ROMUtils::FindChunkInROM(
+            ROMUtils::ROMFileMetadata->ROMDataPtr,
+            ROMUtils::ROMFileMetadata->Length,
+            WL4Constants::AvailableSpaceBeginningInROM,
+            ROMUtils::SaveDataChunkType::PatchListChunk
+        );
+        chunkRef = {PatchListChunk, 0, patchListAddr};
+        references[patchListAddr] = chunkRef;
+        QVector<struct PatchEntryItem> patches = PatchUtils::GetPatchesFromROM();
+        for(const struct PatchEntryItem &patch : patches)
+        {
+            chunkRef = {PatchChunk, 0, patch.PatchAddress};
+            references[patch.PatchAddress] = chunkRef;
+        }
+
+        // Process global references
+        // Process all Tilesets
+        for(unsigned int tilesetid = 0; tilesetid < 92; ++tilesetid)
+        {
+            int tilesetPtr = WL4Constants::TilesetDataTable + tilesetid * 36;
+
+            unsigned int tilesetFGGFXptr = ROMUtils::PointerFromData(tilesetPtr);
+            chunkRef = {TilesetForegroundTile8x8DataChunkType, 0, tilesetFGGFXptr - 12};
+            references[tilesetFGGFXptr - 12] = chunkRef;
+
+            // TODO: add bgGFXptr when needed
+
+            unsigned int tilesetMap16ptr = ROMUtils::PointerFromData(tilesetPtr + 0x14);
+            chunkRef = {TilesetMap16DataChunkType, 0, tilesetMap16ptr - 12};
+            references[tilesetMap16ptr - 12] = chunkRef;
+
+            unsigned int tilesetMap16EventTableAddr = ROMUtils::PointerFromData(tilesetPtr + 28);
+            chunkRef = {TilesetMap16EventTableChunkType, 0, tilesetMap16EventTableAddr - 12};
+            references[tilesetMap16EventTableAddr - 12] = chunkRef;
+
+            unsigned int tilesetMap16TerrainTypeIDTableAddr = ROMUtils::PointerFromData(tilesetPtr + 24);
+            chunkRef = {TilesetMap16TerrainChunkType, 0, tilesetMap16TerrainTypeIDTableAddr - 12};
+            references[tilesetMap16TerrainTypeIDTableAddr - 12] = chunkRef;
+
+            unsigned int tilesetPaletteData = ROMUtils::PointerFromData(tilesetPtr + 8);
+            chunkRef = {TilesetPaletteDataChunkType, 0, tilesetPaletteData - 12};
+            references[tilesetPaletteData - 12] = chunkRef;
+        }
+
+        // Process most Entity atm since the editor only supports editing them
+        for(unsigned int entityid = 0x11; entityid < 129; ++entityid)
+        {
+            unsigned int entityPaletteAddr = ROMUtils::PointerFromData(WL4Constants::EntityPalettePointerTable + 4 * (entityid - 0x10));
+            chunkRef = {EntityPaletteDataChunkType, 0, entityPaletteAddr - 12};
+            references[entityPaletteAddr - 12] = chunkRef;
+
+            unsigned int entityTileDataAddr = ROMUtils::PointerFromData(WL4Constants::EntityTilesetPointerTable + 4 * (entityid - 0x10));
+            chunkRef = {EntityTile8x8DataChunkType, 0, entityTileDataAddr - 12};
+            references[entityTileDataAddr - 12] = chunkRef;
+        }
+
+        // Process all Entityset
+        for(unsigned int entitysetid = 0; entitysetid < 90; ++entitysetid)
+        {
+            unsigned int entitysetLoadTableptr = ROMUtils::PointerFromData(WL4Constants::EntitySetInfoPointerTable + entitysetid * 4);
+            chunkRef = {EntitySetLoadTableChunkType, 0, entitysetLoadTableptr - 12};
+            references[entitysetLoadTableptr - 12] = chunkRef;
+        }
+
+        // Process all passages
+        for(unsigned int passageNum = 0; passageNum < 6; ++passageNum)
+        {
+            // Process all stages within a passage
+            for(unsigned int stageNum = 0; stageNum < 5; ++stageNum)
+            {
+                // skip stages which don't exist
+                if (passageNum == 5)
+                {
+                    switch (stageNum)
+                    {
+                    case 1:
+                    case 2:
+                    case 3:
+                    {continue;}
+                    }
+                }
+                else if (!passageNum)
+                {
+                    switch (stageNum)
+                    {
+                    case 1:
+                    case 3:
+                    {continue;}
+                    }
+                }
+
+                // Get level header chunk reference
+                unsigned int offset = WL4Constants::LevelHeaderIndexTable + passageNum * 24 + stageNum * 4;
+                unsigned int levelHeaderIndex = ROMUtils::IntFromData(offset);
+                unsigned int levelHeaderAddr = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
+
+                // Get level name chunks
+                unsigned int LevelNameAddr = ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passageNum * 24 + stageNum * 4);
+                unsigned int LevelNameJAddr = ROMUtils::PointerFromData(WL4Constants::LevelNameJPointerTable + passageNum * 24 + stageNum * 4);
+                if (LevelNameAddr) // there's an edge case that the debug level's levelname pointers in the rom are 0 by default
+                {
+                    chunkRef = {LevelNameChunkType, 0, LevelNameAddr - 12};
+                    references[LevelNameAddr - 12] = chunkRef;
+                }
+                if (LevelNameJAddr)
+                {
+                    chunkRef = {LevelNameChunkType, 0, LevelNameJAddr - 12};
+                    references[LevelNameJAddr - 12] = chunkRef;
+                }
+
+                // Door table chunk
+                unsigned int LevelID = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderAddr];
+                unsigned int doorTableAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + LevelID * 4);
+                chunkRef = {DoorChunkType, 0, doorTableAddress - 12};
+                references[doorTableAddress - 12] = chunkRef;
+
+                // Process rooms
+                unsigned int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + LevelID * 4);
+                chunkRef = {RoomHeaderChunkType, 0, roomTableAddress - 12}; // chunk ref for room header
+                unsigned int roomCount = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderAddr + 1];
+                int cameraLimitatorRooms = 0;
+                for(unsigned int roomId = 0; roomId < roomCount; ++roomId)
+                {
+                    // Add offsets to child chunks of the room header
+                    unsigned int roomHeaderOffset = roomId * sizeof(LevelComponents::__RoomHeader);
+                    chunkRef.ChildrenChunkLocalOffset
+                            << (roomHeaderOffset + 0x08)
+                            << (roomHeaderOffset + 0x0C)
+                            << (roomHeaderOffset + 0x10)
+                            << (roomHeaderOffset + 0x14)
+                            << (roomHeaderOffset + 0x1C)
+                            << (roomHeaderOffset + 0x20)
+                            << (roomHeaderOffset + 0x24);
+
+                    // Determine if this specific room uses camera limitators
+                    unsigned int roomDataPtr = roomHeaderOffset + roomTableAddress;
+                    cameraLimitatorRooms += ROMUtils::ROMFileMetadata->ROMDataPtr[roomDataPtr + 24] == LevelComponents::HasControlAttrs;
+
+                    // Process layers
+                    struct ChunkReference subChunkRef;
+                    for(unsigned int layerNum = 0; layerNum < 4; ++layerNum)
+                    {
+                        unsigned int layerPtr = ROMUtils::PointerFromData(roomDataPtr + layerNum * 4 + 8);
+                        subChunkRef = {LayerChunkType, roomTableAddress - 12, layerPtr - 12};
+                        references[layerPtr - 12] = subChunkRef;
+                    }
+
+                    // Add entity list chunks
+                    for(unsigned int entityListNum = 0; entityListNum < 3; ++entityListNum)
+                    {
+                        unsigned int listAddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * entityListNum);
+                        subChunkRef = {EntityListChunk, roomTableAddress - 12, listAddress - 12};
+                        references[listAddress - 12] = subChunkRef;
+                    }
+                }
+                references[roomTableAddress - 12] = chunkRef;
+
+                // Add camera chunks (if applicable)
+                if(cameraLimitatorRooms)
+                {
+                    unsigned int cameraPointerTablePtr = WL4Constants::CameraControlPointerTable + LevelID * 4;
+                    unsigned int cameraPointerTableAddr = ROMUtils::PointerFromData(cameraPointerTablePtr);
+                    chunkRef = {CameraPointerTableType, 0, cameraPointerTableAddr - 12}; // chunk ref for camera pointer table
+
+                    // Add chunk refs for camera boundary entries
+                    struct ChunkReference subChunkRef;
+                    for(int cameraEntry = 0; cameraEntry < cameraLimitatorRooms; ++cameraEntry)
+                    {
+                        chunkRef.ChildrenChunkLocalOffset << 4 * cameraEntry;
+                        unsigned int cameraEntryAddress = ROMUtils::PointerFromData(cameraPointerTableAddr + cameraEntry * 4);
+
+                        subChunkRef = {CameraBoundaryChunkType, cameraPointerTableAddr - 12, cameraEntryAddress - 12};
+                        references[cameraEntryAddress - 12] = subChunkRef;
+                    }
+                    references[cameraPointerTableAddr - 12] = chunkRef;
+                }
+            }
+        }
+
+        // Touch up info before returning it
+        for(auto key : references.keys())
+        {
+            // If the data would be in vanilla ROM, remove the chunk reference
+            if(key < WL4Constants::AvailableSpaceBeginningInROM)
+            {
+                references.remove(key);
+            }
+            else
+            {
+                // If the parent reference is in vanilla ROM, remove reference
+                auto &reference = references[key];
+                if(reference.ParentChunkAddress < WL4Constants::AvailableSpaceBeginningInROM)
+                {
+                    reference.ParentChunkAddress = 0;
+                }
+
+                // If any children references are in vanilla ROM, remove them
+                auto &children = references[key].ChildrenChunkLocalOffset;
+                for(int i = children.size() - 1; i >= 0; --i)
+                {
+                    unsigned int childPtr = ROMUtils::PointerFromData(key + 12 + children[i]);
+                    if(childPtr < WL4Constants::AvailableSpaceBeginningInROM)
+                    {
+                        children.remove(i);
+                    }
+                }
+
+                // Sort child offset references by pointer value
+                std::sort(children.begin(), children.end(),
+                    [key](const unsigned int &a, const unsigned int &b)
+                    {
+                        unsigned int ptrA = PointerFromData(key + 12 + a);
+                        unsigned int ptrB = PointerFromData(key + 12 + b);
+                        return ptrA < ptrB;
+                    });
+
+                // Sanity check
+                // Check the RATS tag, checksum and the chunk type
+                if (!ValidRATS(ROMUtils::ROMFileMetadata->ROMDataPtr + references[key].ChunkAddress) ||
+                        (*(ROMUtils::ROMFileMetadata->ROMDataPtr + references[key].ChunkAddress + 8) != references[key].ChunkType))
+                {
+                    references[key].HeaderHasBroken = true;
+                }
+
+                // Check the children's RATS tags and checksum
+                for (int child_id = 0; child_id < references[key].ChildrenChunkLocalOffset.size(); child_id++)
+                {
+                    unsigned int child_offset = references[key].ChildrenChunkLocalOffset[child_id];
+                    unsigned int abs_offset = key + 12 + child_offset;
+                    unsigned int tmp_ptr = ROMUtils::PointerFromData(abs_offset);
+                    if (!ValidRATS(ROMUtils::ROMFileMetadata->ROMDataPtr + tmp_ptr - 12))
+                    {
+                        references[key].BrokenChildrenChunkLocalOffset << child_offset;
+                    }
+                }
+            }
+        }
+
+        return references;
     }
 
     /// <summary>

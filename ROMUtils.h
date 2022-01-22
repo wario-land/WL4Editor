@@ -89,6 +89,57 @@ namespace ROMUtils
         unsigned int size;
     };
 
+    struct ChunkReference
+    {
+        enum SaveDataChunkType ChunkType = InvalidationChunk;
+        unsigned int ParentChunkAddress = 0;
+        unsigned int ChunkAddress = 0;
+        bool HeaderHasBroken = false;
+        QVector<unsigned int> ChildrenChunkLocalOffset = QVector<unsigned int>();
+        QVector<unsigned int> BrokenChildrenChunkLocalOffset = QVector<unsigned int>();
+        // Save where all the possible conflicts from, the conflicts' details should be generated in the UI logic
+        // won't be really useful since I have add sanity check to prevent chunk overwrite in SaveFile function
+        // and it is headache to implement the logic to do the check, so for now, let me just comment this out -- ssp
+//        QVector<unsigned int> ChildrenChunkConflictWith = QVector<unsigned int>();
+
+        // some practice about writing different constructors, and the result is: just don't do it (doge) -- ssp
+        // default constructor is needed once we have other types of constructor of this struct
+//        ChunkReference() : ChunkType(InvalidationChunk), ParentChunkAddress(0), ChunkAddress(0) {}
+
+        // copy constructor, which's equivalent to move constructor by default
+//        ChunkReference(const ChunkReference &chunkreference) { }
+
+        // initializer_list for some weird syntax: ChunkReference cr{data, data2, ...}; // but the elements should be of the same type
+        // cannot use it here
+//        ChunkReference(std::initializer_list<typeof_some_elements_with_the_same_type> chunkreference_initlist)
+//        {
+//            ChunkType = std::static_cast<typeof_some_elements_with_the_same_type>(*chunkreference_initlist.begin());
+//        }
+
+        ChunkReference &operator = (const ChunkReference &chunkreference)
+        {
+            this->ChunkType = chunkreference.ChunkType;
+            this->ParentChunkAddress = chunkreference.ParentChunkAddress;
+            this->ChunkAddress = chunkreference.ChunkAddress;
+            this->HeaderHasBroken = chunkreference.HeaderHasBroken;
+            this->ChildrenChunkLocalOffset.clear();
+            this->BrokenChildrenChunkLocalOffset.clear();
+//            this->ChildrenChunkConflictWith.clear();
+            this->ChildrenChunkLocalOffset.append(chunkreference.ChildrenChunkLocalOffset);
+            this->BrokenChildrenChunkLocalOffset.append(chunkreference.BrokenChildrenChunkLocalOffset);
+//            this->ChildrenChunkConflictWith.append(chunkreference.ChildrenChunkConflictWith);
+            return *this;
+        }
+
+        // will be useful when sort
+//        bool operator < (const ChunkReference &chunkreference) const
+//        {
+//            if (this->ChunkAddress < chunkreference.ChunkAddress)
+//                return true;
+//            return false;
+//        }
+    };
+
     // Exposed helper functions
     void FormatPathSeperators(QString &path);
 
@@ -112,8 +163,10 @@ namespace ROMUtils
     void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);
     unsigned int EndianReverse(unsigned int n);
     QString SaveDataAnalysis();
+    QMap<unsigned int, struct ChunkReference> GetAllChunkReferences();
     void StaticInitialization();
     bool WriteChunkSanityCheck(const struct SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks);
+    bool DefragmentChunks(QVector<unsigned int> chunks);
 
 } // namespace ROMUtils
 

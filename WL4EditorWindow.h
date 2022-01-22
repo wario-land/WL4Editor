@@ -19,6 +19,8 @@
 #include "DockWidget/EntitySetDockWidget.h"
 #include "DockWidget/Tile16DockWidget.h"
 #include "DockWidget/OutputDockWidget.h"
+#include "Dialog/ChunkManagerDialog.h"
+#include "EditorWindow/HexEditorWindow.h"
 #include "LevelComponents/Level.h"
 #include "LevelComponents/Room.h"
 
@@ -42,6 +44,8 @@ private:
     EntitySetDockWidget *EntitySetWidget;
     CameraControlDockWidget *CameraControlWidget;
     OutputDockWidget *OutputWidget = nullptr;
+    HexEditorWindow *HexViewWindow = nullptr;
+    ChunkManagerDialog *chunkManagerDlg = nullptr;
     LevelComponents::Level *CurrentLevel = nullptr;
     QAction *RecentROMs[5];
     uint recentROMnum = 0;
@@ -74,6 +78,7 @@ public:
     EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
     EntitySetDockWidget *GetEntitySetDockWidgetPtr() { return EntitySetWidget; }
     OutputDockWidget *GetOutputWidgetPtr() { return OutputWidget; }
+    HexEditorWindow *GetHexEditorWindowPtr() { return HexViewWindow; }
     void InvalidOutputWidgetPtr() { OutputWidget = nullptr; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
     int GetCurrentRoomId() { return selectedRoom; }
@@ -90,6 +95,7 @@ public:
     void ShowEntitySetDockWidget() { EntitySetWidget->setVisible(true); }
     void ShowTile16DockWidget() { Tile16SelecterWidget->setVisible(true); }
     void ShowCameraControlDockWidget() { CameraControlWidget->setVisible(true); }
+    void ShowHexEditorWindow();
     void HideCameraControlDockWidget() { CameraControlWidget->setVisible(false); }
     void HideEntitySetDockWidget() { EntitySetWidget->setVisible(false); }
     void HideTile16DockWidget() { Tile16SelecterWidget->setVisible(false); }
@@ -161,6 +167,8 @@ private slots:
     void on_actionOutput_window_triggered();
     void on_actionAbout_triggered();
     void on_actionImport_Tileset_from_ROM_triggered();
+    void on_actionChunk_Manager_triggered();
+    void on_actionHex_Editor_triggered();
     void on_actionRolling_Save_triggered();
 };
 
