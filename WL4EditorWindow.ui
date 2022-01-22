@@ -279,11 +279,11 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
-   <widget class="QMenu" name="menuPatches">
+   <widget class="QMenu" name="menuManagers">
     <property name="title">
-     <string>Patches</string>
+     <string>Managers</string>
     </property>
-    <addaction name="actionManager"/>
+    <addaction name="actionPatch_Manager"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -305,6 +305,7 @@
     </widget>
     <addaction name="menuThemes"/>
     <addaction name="menuZoom"/>
+    <addaction name="actionRolling_Save"/>
    </widget>
    <widget class="QMenu" name="menuScript">
     <property name="title">
@@ -320,7 +321,7 @@
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
-   <addaction name="menuPatches"/>
+   <addaction name="menuManagers"/>
    <addaction name="menuScript"/>
    <addaction name="menuSettings"/>
    <addaction name="menuWindow"/>
@@ -462,12 +463,12 @@
     <string>S-Hard</string>
    </property>
   </action>
-  <action name="actionManager">
+  <action name="actionPatch_Manager">
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Manager</string>
+    <string>Patch Manager</string>
    </property>
   </action>
   <action name="actionClear">
@@ -628,6 +629,14 @@
    </property>
    <property name="toolTip">
     <string>Import Tileset from ROM</string>
+   </property>
+  </action>
+  <action name="actionRolling_Save">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Rolling Save</string>
    </property>
   </action>
  </widget>

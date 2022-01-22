@@ -3,6 +3,45 @@
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
 
+// ---------------------------Helper functions--------------------------------------
+unsigned short *QStringToU16(QString input)
+{
+    int string_size = input.size();
+    unsigned short *output = new unsigned short[string_size]; // larger than how much it needs, but won't be a big problem
+    unsigned short *operation_ptr = output;
+    memset((unsigned char *)output, 0, sizeof(unsigned short) * string_size);
+
+    // deal with those \t, \r, \n and ',' and replace all of them by " " then split the QString
+    // if the size of the result is still 0, then we read by characters, 4 letters for each unsigned short
+    // assume the data is a string of hex numbers
+    input.replace(QChar('\t'), QChar(' '), Qt::CaseSensitive);
+    input.replace(QChar('\r'), QChar(' '), Qt::CaseSensitive);
+    input.replace(QChar('\n'), QChar(' '), Qt::CaseSensitive);
+    input.replace(QChar(','), QChar(' '), Qt::CaseSensitive);
+    QStringList strList = input.split(QChar(' '), Qt::SkipEmptyParts);
+    if (strList.size() > 1)
+    {
+        for (QString &data : strList)
+        {
+            *operation_ptr = data.toUInt(nullptr, 16) & 0xFFFF;
+            operation_ptr++;
+        }
+    }
+    else
+    {
+        int index = 0;
+        while (index < input.size())
+        {
+            *operation_ptr = input.midRef(index, 4).toUInt(nullptr, 16) & 0xFFFF;
+            operation_ptr++;
+            index += 4;
+        }
+    }
+    return output;
+}
+
+// ------------------------------Public APIs----------------------------------------
+
 ScriptInterface::ScriptInterface(QObject *parent) : QObject(parent)
 {
     // installation
@@ -58,6 +97,38 @@ int ScriptInterface::GetRoomNum()
 int ScriptInterface::GetCurRoomId()
 {
     return singleton->GetCurrentRoomId();
+}
+
+void ScriptInterface::_UnpackScreen(int address)
+{
+    unsigned short *LayerData = ROMUtils::UnPackScreen(address);
+    QString tmpstr;
+    for(int j = 0; j < 32; ++j) {
+        for(int i = 0; i < 32; ++i) {
+            tmpstr += " " + QString::number(LayerData[i + j * 32], 16).rightJustified(4, '0');
+        }
+        tmpstr += '\n';
+    }
+    log(tmpstr);
+    delete[] LayerData;
+    log("Done!");
+}
+
+void ScriptInterface::_PackScreen(QString inputData, bool skipzeros)
+{
+    unsigned short *data = QStringToU16(inputData);
+    unsigned short *output = nullptr;
+    int length = ROMUtils::PackScreen(data, output, skipzeros);
+    log("Legnth of decompressed data (Hex): " + QString::number(length, 16));
+    log("Decompressed data:");
+    QString tmpstr;
+    for (int i = 0; i < length; ++i)
+    {
+        tmpstr += " " + QString::number(output[i], 16).rightJustified(4, '0');
+    }
+    log(tmpstr);
+    delete[] output;
+    log("Done!");
 }
 
 void ScriptInterface::_DecompressData(int mappingtype, int address)

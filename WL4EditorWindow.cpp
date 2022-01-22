@@ -36,7 +36,7 @@ QString dialogInitialPath = QString("");
 WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::WL4EditorWindow)
 {
     // Render Themes
-    int themeId = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(6)).toInt();
+    int themeId = SettingsUtils::GetKey(SettingsUtils::IniKeys::EditorThemeId).toInt();
     QApplication::setStyle(new PhantomStyle);
     QApplication::setPalette(namedColorSchemePalette(static_cast<ThemeColorType>(themeId)));
 
@@ -63,6 +63,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     case 1:
     { ui->actionDark->setChecked(true); break; }
     }
+    ui->actionRolling_Save->setChecked(SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSaveLimit).toInt());
 
     // Create DockWidgets
     EditModeWidget = new EditModeDockWidget();
@@ -139,9 +140,9 @@ WL4EditorWindow::~WL4EditorWindow()
         delete CurrentLevel;
     }
 
-    if (ROMUtils::CurrentFile)
+    if (ROMUtils::ROMFileMetadata->ROMDataPtr)
     {
-        delete[] ROMUtils::CurrentFile;
+        delete[] ROMUtils::ROMFileMetadata->ROMDataPtr;
     }
 }
 
@@ -454,7 +455,10 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
 
         // Enable UI that requires a ROM file to be loaded
         ui->actionSave_ROM->setEnabled(true);
-        ui->actionSave_As->setEnabled(true);
+        if (!SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSaveLimit).toInt())
+        {
+            ui->actionSave_As->setEnabled(true);
+        }
         ui->actionSave_Room_s_graphic->setEnabled(true);
         ui->menuImport_from_ROM->setEnabled(true);
         ui->actionUndo->setEnabled(true);
@@ -473,7 +477,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menu_clear_Layer->setEnabled(true);
         ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionClear_all->setEnabled(true);
-        ui->actionManager->setEnabled(true);
+        ui->actionPatch_Manager->setEnabled(true);
         ui->actionEdit_Entity_EntitySet->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->loadLevelButton->setEnabled(true);
@@ -746,8 +750,8 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                                 qMin(nxtRoomHeight - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY2()));
                         break;
                     }
-                    DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID());
-                    --doorcount;
+                    if (DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID()))
+                    {--doorcount;}
                     // Seems don't need to set Door dirty at least for now
                 }
                 else
@@ -868,22 +872,26 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
 /// <param name="globalDoorIndex">
 /// The global Door id given by current Level.
 /// </param>
-void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
+bool WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 {
     // You cannot delete the vortex, it is always the first Door.
     if (globalDoorIndex == 0)
     {
         OutputWidget->PrintString(tr("Deleting portal Door not permitted!"));
-        return;
-    }
-    if (CurrentLevel->GetDoors().size() == 1)
-    {
-        OutputWidget->PrintString(tr("Deleting the last Door in the Room not permitted! Spriteset is based on Doors."));
-        return;
+        return false;
     }
 
-    // Delete the Door from the Room Door list
-    CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()]->DeleteDoor(globalDoorIndex);
+    // You cannot delete the last Door in a Room
+    // use the globalDoorIndex to find the Room
+    LevelComponents::Room *tmpRoom = CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()];
+    if (tmpRoom->GetDoors().size() == 1)
+    {
+        OutputWidget->PrintString(tr("Deleting the last Door in the Room not permitted! Spriteset is based on Doors."));
+        return false;
+    }
+
+    // Delete the Door from the Room's Door list
+    tmpRoom->DeleteDoor(globalDoorIndex);
 
     // Disable the destination for all the existing Doors whose DestinationDoor is the Door which is being deleting
     for (unsigned int i = 0; i < CurrentLevel->GetDoors().size(); ++i)
@@ -915,6 +923,8 @@ void WL4EditorWindow::DeleteDoor(int globalDoorIndex)
                 CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID());
         }
     }
+
+    return true;
 }
 
 /// <summary>
@@ -1576,7 +1586,10 @@ void WL4EditorWindow::on_actionAbout_triggered()
                                "    xiazhanjian\n\n"
                                "Special Thanks:\n"
                                "    becored\n"
-                               "    randrew\n"
+                               "    Blanchon\n"
+                               "    Dax89 (QHexView)\n"
+                               "    interdpth\n"
+                               "    randrew (phantomstyle)\n"
                                "    Spleeeeen\n"
                                "    xTibor\n\n"
                                "Version: ") +
@@ -1904,7 +1917,7 @@ void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
 /// <summary>
 /// Open the patch manager.
 /// </summary>
-void WL4EditorWindow::on_actionManager_triggered()
+void WL4EditorWindow::on_actionPatch_Manager_triggered()
 {
     PatchManagerDialog dialog(this);
     dialog.exec();
@@ -1916,7 +1929,7 @@ void WL4EditorWindow::on_actionManager_triggered()
 void WL4EditorWindow::on_actionLight_triggered()
 {
     QApplication::setPalette(namedColorSchemePalette(Light));
-    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString("0"));
+    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString::number(ThemeColorType::Light));
     ui->actionDark->setChecked(false);
 }
 
@@ -1926,7 +1939,7 @@ void WL4EditorWindow::on_actionLight_triggered()
 void WL4EditorWindow::on_actionDark_triggered()
 {
     QApplication::setPalette(namedColorSchemePalette(Dark));
-    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString("1"));
+    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(6), QString::number(ThemeColorType::Dark));
     ui->actionLight->setChecked(false);
 }
 
@@ -2201,6 +2214,7 @@ void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
     CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
     SetUnsavedChanges(true);
 }
+
 /// <summary>
 /// Import a Tileset to the current ROM from other ROM
 /// </summary>
@@ -2225,6 +2239,7 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
         QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(errorMessage));
         return;
     }
+
     bool okay = false;
     QString text = QInputDialog::getText(nullptr, tr("InputBox"),
                                          tr("Input a Tileset Id using HEX number\n"
@@ -2232,7 +2247,7 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
                                             "and replace the corresponding Tileset in the current ROM if accepted."),
                                          QLineEdit::Normal,
                                          "1", &okay);
-    // gcc does not allowed any new variable appears after using goto in a function, so have to do this -- ssp
+    // gcc does not allow any new variable to appear after using goto in a function, so have to do this -- ssp
     if (!okay)
     {
         ROMUtils::CleanUpTmpCurrentFileMetaData();
@@ -2262,4 +2277,33 @@ void WL4EditorWindow::on_actionImport_Tileset_from_ROM_triggered()
 
     // switch back ROM MetaData
     ROMUtils::ROMFileMetadata = &ROMUtils::CurrentROMMetadata;
+}
+
+/// <summary>
+/// UI Logic of Rolling Save
+/// </summary>
+void WL4EditorWindow::on_actionRolling_Save_triggered()
+{
+    OutputWidget->PrintString("Warning: Don't use Rolling Save feature for 2 projects under the same folder!");
+    bool okay = false;
+    int value = QInputDialog::getInt(this, QApplication::applicationName(),
+                                     tr("input a number to configure rolling save:\n"
+                                     "-1 to save infinite temp rom file,\n"
+                                     "0 to disable this feature,\n"
+                                     "positive int number to set the number of file the editor will keep."),
+                                     SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSaveLimit).toInt(),
+                                     -1, 0x7FFF'FFFF /*2147483647*/, 1, &okay);
+    if (okay)
+    {
+        SettingsUtils::SetKey(SettingsUtils::IniKeys::RollingSaveLimit, QString::number(value));
+        if (!value) // value == 0
+        {
+            ui->actionSave_As->setEnabled(true);
+        }
+        else
+        {
+            ui->actionSave_As->setEnabled(false);
+        }
+        ui->actionRolling_Save->setChecked(value);
+    }
 }

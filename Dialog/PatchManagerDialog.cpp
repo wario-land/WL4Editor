@@ -86,26 +86,26 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
     // The hook may not fall outside the area of the vanilla rom
     if(newEntry.HookAddress + newEntry.GetHookLength() > WL4Constants::AvailableSpaceBeginningInROM)
     {
-        return QString("Hook overlaps with save chunk area in ROM: 0x%1 - 0x%2").arg(
+        return QString(QT_TR_NOOP("Hook overlaps with save chunk area in ROM: 0x%1 - 0x%2")).arg(
             QString::number(newEntry.HookAddress, 16).toUpper(), QString::number(newEntry.HookAddress + newEntry.GetHookLength() - 1, 16).toUpper());
     }
 
     // Patch on the first 4 bytes of the rom is not allowed
     if(newEntry.HookAddress < 4)
     {
-        return QString("Patch on the first 4 bytes of the rom is not allowed.");
+        return QT_TR_NOOP("Patch on the first 4 bytes of the rom is not allowed.");
     }
 
     // File name may not contain a semicolon
     if(newEntry.FileName.contains(";"))
     {
-        return QString("File path contains a semicolon, which is not allowed: ") + newEntry.FileName;
+        return QString(QT_TR_NOOP("File path contains a semicolon, which is not allowed: %1")).arg(newEntry.FileName);
     }
 
     // Description may not contain a semicolon
     if(newEntry.Description.contains(";"))
     {
-        return QString("Description contains a semicolon, which is not allowed: ") + newEntry.Description;
+        return QString(QT_TR_NOOP("Description contains a semicolon, which is not allowed: %1")).arg(newEntry.Description);
     }
 
     if(newEntry.FileName.length())
@@ -114,14 +114,14 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
         QFile file(newEntry.FileName);
         if(!file.exists())
         {
-            return QString("File does not exist: ") + newEntry.FileName;
+            return QString(QT_TR_NOOP("File does not exist: %1")).arg(newEntry.FileName);
         }
 
         // The file must be in a subdirectory relative to the ROM file.
         QString relativeFN = GetPathRelativeToROM(newEntry.FileName);
         if(relativeFN.isEmpty())
         {
-            return QString("File must be within directory subtree of ROM file: ") + QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
+            return QString(QT_TR_NOOP("File must be within directory subtree of ROM file: %1")).arg(QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path());
         }
 
         // Two entries may not use the same file name. Two entries with blank file names are allowed.
@@ -130,20 +130,20 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
             [newEntry](struct PatchEntryItem e){ return e.FileName == newEntry.FileName; });
         if(!fileNameIsValid)
         {
-            return QString("Another entry already exists with the filename: ") + newEntry.FileName;
+            return QString(QT_TR_NOOP("Another entry already exists with the filename: %1")).arg(newEntry.FileName);
         }
 
         // It does not make sense to add a save chunk with no link to it in the hook
         if(newEntry.PatchOffsetInHookString == (unsigned int) -1)
         {
-            return "A file is sepcified, so a save chunk will be created. But, the hook does not specify the P identifier for the patch code address. The save chunk would be useless, so this is not allowed (please use P in the hook).";
+            return QT_TR_NOOP("A file is sepcified, so a save chunk will be created. But, the hook does not specify the P identifier for the patch code address. The save chunk would be useless, so this is not allowed (please use P in the hook).");
         }
     }
 
     // If a file is not specified, then it will not create a save chunk. Therefore, the hook may not contain a save chunk address.
     else if(newEntry.PatchOffsetInHookString != (unsigned int) -1)
     {
-        return "Patch does not specify a file so no save chunk will be created. But, the hook text specifies that there should be a pointer to a save chunk. This contradiction is not allowed";
+        return QT_TR_NOOP("Patch does not specify a file so no save chunk will be created. But, the hook text specifies that there should be a pointer to a save chunk. This contradiction is not allowed");
     }
 
     // Patch's hook may not overlap with another patch's hook
@@ -156,7 +156,7 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
     });
     if(hasHookAddressConflict)
     {
-        return QString("This patch's hook (0x%1 - 0x%2) overlaps with the hook of another patch (0x%3 - 0x%4)").arg(
+        return QString(QT_TR_NOOP("This patch's hook (0x%1 - 0x%2) overlaps with the hook of another patch (0x%3 - 0x%4)")).arg(
             QString::number(newEntry.HookAddress, 16).toUpper(), QString::number(newEntry.HookAddress + newEntry.GetHookLength() - 1, 16).toUpper(),
             QString::number(curr.HookAddress, 16).toUpper(), QString::number(curr.HookAddress + curr.GetHookLength() - 1, 16).toUpper());
     }
@@ -183,7 +183,7 @@ retry:
         QString result = ValidateNewEntry(currentEntries, entry);
         if(result != "")
         {
-            QMessageBox::information(this, "About", result);
+            QMessageBox::information(this, tr("About"), result);
             goto retry;
         }
         PatchTable->AddEntry(entry);
@@ -220,7 +220,7 @@ retry:
             QString result = ValidateNewEntry(currentEntries, entry);
             if(result != "")
             {
-                QMessageBox::information(this, "About", result);
+                QMessageBox::information(this, tr("About"), result);
                 goto retry;
             }
             PatchTable->UpdateEntry(selectedIndex, entry);
@@ -229,11 +229,11 @@ retry:
     }
     else if(!selectedRows.size())
     {
-        QMessageBox::information(this, "About", "You must select a row to edit.");
+        QMessageBox::information(this, tr("About"), tr("You must select a row to edit."));
     }
     else
     {
-        QMessageBox::information(this, "About", "You may only select 1 row at a time to edit.");
+        QMessageBox::information(this, tr("About"), tr("You may only select 1 row at a time to edit."));
     }
 }
 
@@ -269,11 +269,11 @@ void PatchManagerDialog::on_savePatchButton_clicked()
     {
         // Prompt the user to download EABI
         QString msg = !invalidDir.length() ? QString("") :
-            QString("Invalid EABI folder selected: " + invalidDir + " (required binaries not found)<br>");
+            QString(tr("Invalid EABI folder selected: %1 (required binaries not found)<br>")).arg(invalidDir);
         QString URL = "https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads";
-        QMessageBox::information(this, "Select EABI installation",
-            msg + "You must select the \"bin\" folder of a valid EABI installation.<br>" +
-            "Download: <a href=\"" + URL + "\">" + URL + "</a>");
+        QMessageBox::information(this, tr("Select EABI installation"),
+            msg + tr("You must select the \"bin\" folder of a valid EABI installation.<br>Download:") +
+            " <a href=\"" + URL + "\">" + URL + "</a>");
 
         // Choose folder for EABI bin directory
         QString selectedDir = QFileDialog::getExistingDirectory(
@@ -299,11 +299,11 @@ void PatchManagerDialog::on_savePatchButton_clicked()
     QString errorStr = PatchUtils::SavePatchesToROM(PatchTable->GetAllEntries());
     if(errorStr.isEmpty())
     {
-        singleton->GetOutputWidgetPtr()->PrintString("Finished saving patch data to ROM. (patches: " + QString::number(PatchTable->GetAllEntries().size()) + ")");
+        singleton->GetOutputWidgetPtr()->PrintString(tr("Finished saving patch data to ROM. (patches: %1)").arg(QString::number(PatchTable->GetAllEntries().size())));
         this->close();
     }
     else
     {
-        QMessageBox::information(this, "Error saving patches", errorStr);
+        QMessageBox::information(this, tr("Error saving patches"), errorStr);
     }
 }

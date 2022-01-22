@@ -71,6 +71,9 @@ namespace LevelComponents
     /// <param name="_palettes">
     /// Entire palette for the tileset this tile is a part of.
     /// </param>
+    /// <param name="loadFromTmpROM">
+    /// Ture when load from a temp ROM.
+    /// </param>
     Tile8x8::Tile8x8(int dataPtr, QVector<QRgb> *_palettes) : Tile8x8(_palettes)
     {
         // Initialize the QImage data from ROM

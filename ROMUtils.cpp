@@ -1,9 +1,14 @@
 ﻿#include "ROMUtils.h"
 #include "Compress.h"
+#include "Operation.h"
 #include <QFile>
 #include <QTranslator>
 #include "WL4EditorWindow.h"
+#include "PatchUtils.h"
 
+#include <QDateTime>
+#include <QDir>
+#include <QFileInfo>
 #include <cassert>
 #include <iostream>
 #include <QtDebug>
@@ -41,6 +46,7 @@ namespace ROMUtils
     unsigned char *tmpCurrentFile;
     unsigned int tmpCurrentFileSize;
     QString tmpROMFilePath;
+
     struct ROMFileMetadata CurrentROMMetadata;
     struct ROMFileMetadata TempROMMetadata;
     struct ROMFileMetadata *ROMFileMetadata;
@@ -49,6 +55,56 @@ namespace ROMUtils
     LevelComponents::Tileset *singletonTilesets[92];
     LevelComponents::EntitySet *entitiessets[90];
     LevelComponents::Entity *entities[129];
+
+    const char *ChunkTypeString[CHUNK_TYPE_COUNT] = {
+        "InvalidationChunk",
+        "RoomHeaderChunkType",
+        "DoorChunkType",
+        "LayerChunkType",
+        "LevelNameChunkType",
+        "EntityListChunk",
+        "CameraPointerTableType",
+        "CameraBoundaryChunkType",
+        "PatchListChunk",
+        "PatchChunk",
+        "TilesetForegroundTile8x8DataChunkType",
+        "TilesetMap16EventTableChunkType",
+        "TilesetMap16TerrainChunkType",
+        "TilesetMap16DataChunkType",
+        "TilesetPaletteDataChunkType",
+        "EntityTile8x8DataChunkType",
+        "EntityPaletteDataChunkType",
+        "EntitySetLoadTableChunkType"
+    };
+
+    bool ChunkTypeAlignment[CHUNK_TYPE_COUNT] = {
+        false, // InvalidationChunk
+        true,  // RoomHeaderChunkType
+        true,  // DoorChunkType
+        false, // LayerChunkType
+        false, // LevelNameChunkType
+        false, // EntityListChunk
+        true,  // CameraPointerTableType
+        true,  // CameraBoundaryChunkType
+        false, // PatchListChunk
+        true,  // PatchChunk
+        true,  // TilesetForegroundTile8x8DataChunkType
+        true,  // TilesetMap16EventTableChunkType
+        true,  // TilesetMap16TerrainChunkType
+        true,  // TilesetMap16DataChunkType
+        true,  // TilesetPaletteDataChunkType
+        true,  // EntityTile8x8DataChunkType
+        true,  // EntityPaletteDataChunkType
+        true,  // EntitySetLoadTableChunkType
+    };
+
+    void StaticInitialization()
+    {
+        CurrentFile = tmpCurrentFile = nullptr;
+        CurrentROMMetadata = {CurrentFileSize, ROMFilePath, CurrentFile};
+        TempROMMetadata = {tmpCurrentFileSize, tmpROMFilePath, tmpCurrentFile};
+        ROMFileMetadata = &CurrentROMMetadata;
+    }
 
     /// <summary>
     /// Get a 4-byte, little-endian integer from ROM data.
@@ -77,6 +133,9 @@ namespace ROMUtils
     /// <param name="address">
     /// The address to get the pointer from.
     /// </param>
+    /// <param name="loadFromTmpROM">
+    /// Ture when load from a temp ROM.
+    /// </param>
     unsigned int PointerFromData(int address)
     {
         unsigned int ret = IntFromData(address) & 0x7FFFFFF;
@@ -102,13 +161,170 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Compress a whole screen of character data.
+    /// </summary>
+    /// <param name="screenCharData">
+    /// A pointer to a whole screen of character data.
+    /// </param>
+    /// <param name="outputCompressedData">
+    /// A pointer to the output compressed character data.
+    /// </param>
+    /// <return>The length of output data (number of unsigned short).</return>
+    unsigned int PackScreen(unsigned short *screenCharData, unsigned short *&outputCompressedData, bool skipzeros)
+    {
+        /*** compressed data format:
+         * Compressed data format:
+         * 1st ushort: t | o o o o o o o o o o | n n n n n
+         * 2nd ushort: the unsigned short value of the current character
+         ************************************************
+         * number(n): the loop counter
+         * offset(o): the offset of the current character in the non-compressed char data array
+         * type(t): there are 2 cases:
+         * if t = 0, then the decompressed data will be:
+         * o, o + 1, o + 2, ... , o + n - 1. (n continuous numbers in total)
+         * if t = 1, then the decompressed data will be:
+         * o, o, o, o, ... , o. (duplicate o by n times)
+         ************************************************
+         * The compressed data array should end with an additional 0x0000,
+         * the decompression function ingame need it to stop decompression
+         */
+        int offset = 0; // should be in range of [0, 0x3FF]
+        QVector<unsigned short> output;
+        while (offset < 0x3FF)
+        {
+            unsigned short curChar = screenCharData[offset];
+            int num_dup = 0;
+            int num_AddByOne = 0;
+            for (int i = 1; i < 32; ++i) // type = 1
+            {
+                if ((curChar != screenCharData[offset + i]) || ((offset + i) == 0x3FF))
+                {
+                    break;
+                }
+                num_dup++;
+            }
+            for (int i = 1; i < 32; ++i) // type = 0
+            {
+                if (((curChar + i) != screenCharData[offset + i]) || ((offset + i) == 0x3FF))
+                {
+                    break;
+                }
+                num_AddByOne++;
+            }
+
+            if (num_dup >= num_AddByOne)
+            {
+                if (skipzeros && !curChar)
+                {
+                    goto skip_append_output_1;
+                }
+                output << ((0x8000 | ((offset & 0x3FF) << 5) | num_dup) & 0xFFFF);
+                output << curChar;
+skip_append_output_1:
+                offset += num_dup + 1;
+            }
+            else // num_dup < num_AddByOne, type = 1
+            {
+                if (skipzeros && !curChar)
+                {
+                    goto skip_append_output_2;
+                }
+                output << ((((offset & 0x3FF) << 5) | num_AddByOne) & 0x7FFF);
+                output << curChar;
+skip_append_output_2:
+                offset += num_AddByOne + 1;
+            }
+        }
+        output << 0x0000;
+        int output_size = output.size();
+        outputCompressedData = new unsigned short[output_size];
+        unsigned short *operationPtr = outputCompressedData;
+        memset((unsigned char *)operationPtr, 0, sizeof(unsigned short) * output_size);
+        for (int i = 0; i < output_size; ++i)
+        {
+            *operationPtr = output[i];
+            operationPtr++;
+        }
+        return output_size;
+    }
+
+    /// <summary>
+    /// Decompress a whole screen of character data.
+    /// </summary>
+    /// <param name="address">
+    /// A pointer into the ROM data to start reading from.
+    /// </param>
+    /// <return>A pointer to decompressed data.</return>
+    unsigned short *UnPackScreen(uint32_t address)
+    {
+        // directly modified from disassembled rom's code, C code generated by IDA pro
+        unsigned short *v2, *src;
+        unsigned short i;
+        unsigned short *dst = new unsigned short[32 * 32];
+        unsigned short *v5;
+        unsigned short *v6;
+        unsigned short v7;
+        unsigned short j;
+        unsigned short v9;
+        unsigned short k;
+        unsigned short v11;
+
+        memset(dst, 0, 32 * 32 * sizeof(unsigned short));
+
+        // check if address is an odd number
+        if (address & 1)
+        {
+            singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Error in ROMUtils::UnPackScreen(int address): input parameter 'address' should be an odd number."));
+            return dst;
+        }
+        v2 = src = (unsigned short *)(ROMFileMetadata->ROMDataPtr + address);
+        for (i = *src; *v2; i = *v2)
+        {
+            v5 = (dst + ((i >> 5) & 0x3FF));
+            v6 = v2 + 1;
+            if ((i & 0x8000) != 0)
+            {
+                v7 = *v6;
+                v2 = v6 + 1;
+                for (j = i & 0x1F; j != 0xFFFF; --j)
+                {
+                    // don't write memory if memory leak
+                    if (v5 > (dst + 32 * 32 - 1))
+                    {
+                        v5++;
+                        continue;
+                    }
+                    *v5++ = v7;
+                }
+            }
+            else
+            {
+                v9 = *v6;
+                v2 = v6 + 1;
+                for (k = i & 0x1F; k != 0xFFFF; --k)
+                {
+                    v11 = v9++;
+                    // don't write memory if memory leak
+                    if (v5 > (dst + 32 * 32 - 1))
+                    {
+                        v5++;
+                        continue;
+                    }
+                    *v5++ = v11;
+                }
+            }
+        }
+        return dst;
+    }
+
+    /// <summary>
     /// Decompress ROM data that was compressed with run-length encoding.
     /// </summary>
     /// <remarks>
     /// The <paramref name="outputSize"/> parameter specifies the predicted output size in bytes.
     /// The return unsigned char * is on the heap, delete it after using.
     /// </remarks>
-    /// <param name="data">
+    /// <param name="address">
     /// A pointer into the ROM data to start reading from.
     /// </param>
     /// <param name="outputSize">
@@ -503,6 +719,57 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Callback used for allocating chunks from a list.
+    /// Must call init before using this function as a callback.
+    /// </summary>
+    static int CHUNK_INDEX;
+    static QVector<struct SaveData> CHUNK_ALLOC;
+    static ChunkAllocationStatus AllocateChunksFromList(unsigned char *TempFile, struct FreeSpaceRegion freeSpace, struct SaveData *sd, bool resetchunkIndex)
+    {
+        (void) TempFile;
+
+        // This part of code will be triggered when rom size needs to be expanded
+        // So all the chunks will be reallocated
+        if(resetchunkIndex)
+        {
+            CHUNK_INDEX = 0;
+        }
+
+        if(CHUNK_INDEX >= CHUNK_ALLOC.size())
+        {
+            return ChunkAllocationStatus::NoMoreChunks;
+        }
+
+        // Get the size of the space that would be needed at this address depending on alignment
+        unsigned int alignOffset = 0;
+        if(CHUNK_ALLOC[CHUNK_INDEX].alignment)
+        {
+            unsigned int startAddr = (freeSpace.addr + 3) & ~3;
+            alignOffset = startAddr - freeSpace.addr;
+        }
+
+        // Check if there is space for the chunk in the offered area
+        // required_size > (freespace.size - alignment - 12 bytes (for header))
+        if(CHUNK_ALLOC[CHUNK_INDEX].size > freeSpace.size - alignOffset - 12)
+        {
+            // This will request a larger free area
+            return ChunkAllocationStatus::InsufficientSpace;
+        }
+        else
+        {
+            // Accept the offered free area for this save chunk
+            *sd = CHUNK_ALLOC[CHUNK_INDEX++];
+            return ChunkAllocationStatus::Success;
+        }
+    }
+    static ChunkAllocationStatus AllocateChunksFromListInit(QVector<struct SaveData> chunksToAllocate)
+    {
+        CHUNK_INDEX = 0;
+        CHUNK_ALLOC = chunksToAllocate;
+        return ChunkAllocationStatus::Success;
+    }
+
+    /// <summary>
     /// Save a list of chunks to the ROM file.
     /// </summary>
     /// <param name="filePath">
@@ -641,7 +908,6 @@ resized:freeSpaceRegions.clear();
 spaceFound:
             // Split the free space region
             struct FreeSpaceRegion freeSpace = freeSpaceRegions[i];
-            unsigned char *destPtr = TempFile + freeSpace.addr;
             freeSpaceRegions.remove(i);
 
             // Determine where the chunk starts if alignment would modify it
@@ -667,20 +933,7 @@ spaceFound:
                 });
             }
 
-            // Write the chunk metadata with RATS format
-            // Only write chunk headers after the alignment setting of the next chunk has been decided
-            destPtr += alignmentOffset;
-            strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
-            unsigned short chunkLen = (unsigned short) (sd.size & 0xFFFF);
-            unsigned char extLen = (unsigned char) ((sd.size >> 16) & 0xFF);
-            *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
-            *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
-            *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
-            destPtr[8] = sd.ChunkType;
-            destPtr[9] = extLen;
-
-            // We cannot write the chunk data here because invalidated chunk data may still be used as part of new chunk creation at this step
-
+            // Restore temp indices info about saving chunks
             indexToChunkPtr[sd.index] = alignedAddr;
             chunksToAdd.append(sd);
 
@@ -695,7 +948,7 @@ allocationComplete:
         }
 
         // Apply source pointer modifications to applicable chunk types
-        for(struct SaveData chunk : chunksToAdd)
+        for(struct SaveData &chunk : chunksToAdd)
         {
             switch(chunk.ChunkType)
             {
@@ -718,17 +971,42 @@ allocationComplete:
             *reinterpret_cast<unsigned int*>(ptrLoc) = static_cast<unsigned int>((indexToChunkPtr[chunk.index] + 12) | 0x8000000);
         }
 
-        // Write chunk data to TempFile
-        for(struct SaveData chunk : chunksToAdd)
+        // Write chunks to TempFile with Sanity check
+        for(struct SaveData &chunk : chunksToAdd)
         {
             if (chunk.ChunkType == SaveDataChunkType::InvalidationChunk)
             {
                 continue;
             }
 
-            // Write the chunk data
-            unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
-            memcpy(destPtr + 12, chunk.data, (unsigned short) chunk.size);
+            // update existChunks every time since it changes every time
+            QVector<unsigned int> existChunks = FindAllChunksInROM(
+                        TempFile,
+                        TempLength,
+                        WL4Constants::AvailableSpaceBeginningInROM,
+                        SaveDataChunkType::InvalidationChunk,
+                        true
+                        );
+
+            // Write the chunk metadata with RATS format and the chunk data
+            if (WriteChunkSanityCheck(chunk, indexToChunkPtr[chunk.index], existChunks))
+            {
+                unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
+                strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
+                unsigned short chunkLen = (unsigned short) (chunk.size & 0xFFFF);
+                unsigned char extLen = (unsigned char) ((chunk.size >> 16) & 0xFF);
+                *reinterpret_cast<unsigned short*>(destPtr + 4) = chunkLen;
+                *reinterpret_cast<unsigned short*>(destPtr + 6) = ~chunkLen;
+                *reinterpret_cast<unsigned int*>(destPtr + 8) = 0;
+                destPtr[8] = chunk.ChunkType;
+                destPtr[9] = extLen;
+                memcpy(destPtr + 12, chunk.data, (unsigned short) chunk.size);
+            }
+            else
+            {
+                singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal error: Write chunk into an occupied chunk"));
+                goto error;
+            }
         }
 
         // Perform post-processing before saving the file
@@ -744,21 +1022,90 @@ allocationComplete:
 
         { // Prevent goto from crossing initialization of variables here
             // Save the rom file from the CurrentFile copy
-            QFile file(filePath);
-            file.open(QIODevice::WriteOnly);
-            if (file.isOpen())
+            // Save another copy of the current rom file if Rolling Save feature is toggled on
+            QFileInfo curfileinfo(filePath);
+            for (int i = 0; i < 2; i++)
             {
-                file.write(reinterpret_cast<const char*>(TempFile), TempLength);
+                QString tmpFilePath = filePath;
+                if (i == 1)
+                {
+                    QString dirstr = QFileInfo(filePath).dir().path() + "/auto_backups/";
+                    FormatPathSeperators(dirstr);
+                    if (int maxTmpFileNum = SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSaveLimit).toInt())
+                    {
+                        QDir dir;
+                        if (!dir.exists(dirstr))
+                        {
+                            singleton->GetOutputWidgetPtr()->PrintString("auto_backups folder does not exist, try to mkdir.");
+                            dir.setPath(QFileInfo(filePath).dir().path());
+                            if (dir.mkdir("auto_backups"))
+                            {
+                                singleton->GetOutputWidgetPtr()->PrintString("mkdir success!");
+                            }
+                        }
+
+                        // Delete old files
+                        if (maxTmpFileNum > 0)
+                        {
+                            dir.setPath(dirstr);
+                            dir.setFilter(QDir::Files | QDir::NoSymLinks); // dir.setSorting(QDir::Name); sort by name by default
+                            QFileInfoList fileInfoList = dir.entryInfoList();
+                            int count = 0, id = 0;
+                            QVector<int> matchedfileId;
+                            for (auto &fileinfo : fileInfoList)
+                            {
+                                QString tmpfileName = fileinfo.completeBaseName();
+                                if (tmpfileName.contains(curfileinfo.completeBaseName() + "_"))
+                                {
+                                    matchedfileId << id;
+                                    count++;
+                                    if (count >= maxTmpFileNum)
+                                    {
+                                        QString delete_file_path = fileInfoList[matchedfileId[count - maxTmpFileNum]].filePath();
+                                        singleton->GetOutputWidgetPtr()->PrintString("Remove file: " + delete_file_path);
+                                        QFile::remove(delete_file_path);
+                                    }
+                                }
+                                id++;
+                            }
+                        }
+                        /***From the documentation of fuction QDir::separator():
+                         * You do not need to use this function to build file paths.
+                         * If you always use "/",
+                         * Qt will translate your paths to conform to the underlying operating system.
+                         * -------------------------------------
+                         * the seperator will always cause problem in different system,
+                         * especially used with some "/" or "\" add by ourselves.
+                         * just follow the documentations and use the void ROMUtils::FormatPathSeperators(). --- ssp*/
+                        tmpFilePath = dirstr +
+                                curfileinfo.completeBaseName() +
+                                "_" +
+                                QDateTime::currentDateTime().toString("yyyyMMddhhmmsszzz") +
+                                ".gba";
+                        FormatPathSeperators(tmpFilePath);
+                        singleton->GetOutputWidgetPtr()->PrintString("Create backup file: " + tmpFilePath);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                QFile file(tmpFilePath);
+                file.open(QIODevice::WriteOnly);
+                if (file.isOpen())
+                {
+                    file.write(reinterpret_cast<const char*>(TempFile), TempLength);
+                }
+                else
+                {
+                    // Couldn't open the file to save the ROM
+                    QMessageBox::warning(singleton, QT_TR_NOOP("Could not save file"),
+                                         QT_TR_NOOP("Unable to write to or create the ROM file for saving."), QMessageBox::Ok,
+                                         QMessageBox::Ok);
+                    goto error;
+                }
+                file.close();
             }
-            else
-            {
-                // Couldn't open the file to save the ROM
-                QMessageBox::warning(singleton, QT_TR_NOOP("Could not save file"),
-                     QT_TR_NOOP("Unable to write to or create the ROM file for saving."), QMessageBox::Ok,
-                     QMessageBox::Ok);
-                goto error;
-            }
-            file.close();
 
             // Set the CurrentFile to the copied CurrentFile data
             auto temp = ROMFileMetadata->ROMDataPtr;
@@ -776,7 +1123,7 @@ allocationComplete:
         {
 error:      free(TempFile); // free up temporary file if there was a processing error
         }
-        for(struct SaveData chunk : chunksToAdd)
+        for(struct SaveData &chunk : chunksToAdd)
         {
             if (chunk.ChunkType != SaveDataChunkType::InvalidationChunk)
             {
@@ -859,50 +1206,12 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         }
 
         // Save the level
-        int chunkIndex = 0;
+        AllocateChunksFromListInit(addedChunks);
         bool ret = SaveFile(filePath, invalidationChunks,
 
             // ChunkAllocator
 
-            [&chunkIndex, addedChunks]
-            (unsigned char *TempFile, struct FreeSpaceRegion freeSpace, struct SaveData *sd, bool resetchunkIndex)
-            {
-                (void) TempFile;
-
-                // This part of code will be triggered when rom size needs to be expanded
-                // So all the chunks will be reallocated
-                if(resetchunkIndex)
-                {
-                    chunkIndex = 0;
-                }
-
-                if(chunkIndex >= addedChunks.size())
-                {
-                    return ChunkAllocationStatus::NoMoreChunks;
-                }
-
-                // Get the size of the space that would be needed at this address depending on alignment
-                unsigned int alignOffset = 0;
-                if(addedChunks[chunkIndex].alignment)
-                {
-                    unsigned int startAddr = (freeSpace.addr + 3) & ~3;
-                    alignOffset = startAddr - freeSpace.addr;
-                }
-
-                // Check if there is space for the chunk in the offered area
-                // required_size > (freespace.size - alignment - 12 bytes (for header))
-                if(addedChunks[chunkIndex].size > freeSpace.size - alignOffset - 12)
-                {
-                    // This will request a larger free area
-                    return ChunkAllocationStatus::InsufficientSpace;
-                }
-                else
-                {
-                    // Accept the offered free area for this save chunk
-                    *sd = addedChunks[chunkIndex++];
-                    return ChunkAllocationStatus::Success;
-                }
-            },
+            AllocateChunksFromList,
 
             // PostProcessingCallback
 
@@ -980,6 +1289,9 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             room->ResetRoomHeader(newroomheader);
         }
 
+        // global history changed bool reset
+        ResetChangedBoolsThroughHistory();
+
         // Tilesets instances internal pointers reset
         for(int i = 0; i < 92; ++i)
         {
@@ -1012,6 +1324,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         return true;
     }
 
+    /// <summary>
     /// Load a palette, 16 colors, from a pointer.
     /// </summary>
     /// <param name="palette">
@@ -1128,7 +1441,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     /// <summary>
     /// Print debug info about chunks in ROM.
     /// </summary>
-    void SaveDataAnalysis()
+    QString SaveDataAnalysis()
     {
         struct ChunkData
         {
@@ -1136,34 +1449,15 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             unsigned int sizeWithHeader;
             enum SaveDataChunkType chunkType;
         };
-#define CHUNK_TYPE_COUNT 18
-        const char *typeInfo[CHUNK_TYPE_COUNT] = {
-            "InvalidationChunk",
-            "RoomHeaderChunkType",
-            "DoorChunkType",
-            "LayerChunkType",
-            "LevelNameChunkType",
-            "EntityListChunk",
-            "CameraPointerTableType",
-            "CameraBoundaryChunkType",
-            "PatchListChunk",
-            "PatchChunk",
-            "TilesetForegroundTile8x8DataChunkType",
-            "TilesetMap16EventTableChunkType",
-            "TilesetMap16TerrainChunkType",
-            "TilesetMap16DataChunkType",
-            "TilesetPaletteDataChunkType",
-            "EntityTile8x8DataChunkType",
-            "EntityPaletteDataChunkType",
-            "EntitySetLoadTableChunkType"
-        };
 
         // Get information about the chunks and free space
-        QVector<unsigned int> chunks = FindAllChunksInROM(ROMFileMetadata->ROMDataPtr,
-                                                          ROMFileMetadata->Length,
-                                                          WL4Constants::AvailableSpaceBeginningInROM,
-                                                          SaveDataChunkType::InvalidationChunk,
-                                                          true);
+        QVector<unsigned int> chunks = FindAllChunksInROM(
+            ROMFileMetadata->ROMDataPtr,
+            ROMFileMetadata->Length,
+            WL4Constants::AvailableSpaceBeginningInROM,
+            SaveDataChunkType::InvalidationChunk,
+            true
+        );
         QVector<struct FreeSpaceRegion> freeSpace = FindAllFreeSpaceInROM(ROMFileMetadata->ROMDataPtr, ROMFileMetadata->Length);
         QVector<struct ChunkData> chunkData;
         for(unsigned int chunkAddr : chunks)
@@ -1228,17 +1522,27 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         double usedSpaceP_ofTypeOther = (double) otherTypeSpace / divisor;
 
         // Print statistics
-        qDebug() << QString("Save data area: %1").arg(saveAreaSize);
-        qDebug() << QString("Free space: %1 (%2%)").arg(totalFreeSpace).arg(100 * freeSpaceP, 6, 'f', 2);
-        qDebug() << QString("  Fragmented: %1 (%2%)").arg(fragmentedSpace).arg(100 * freeSpaceP_frag, 6, 'f', 2);
-        qDebug() << QString("  Non-fragmented: %1 (%2%)").arg(nonFragmentedSpace).arg(100 * freeSpaceP_nonFrag, 6, 'f', 2);
-        qDebug() << QString("Used space: %1 (%2%)").arg(totalUsedSpace).arg(100 * usedSpaceP, 6, 'f', 2);
+        QString result;
+        result = QString("Save data area: %1\n").arg(saveAreaSize) ;
+        result += QString("Free space: %1 (%2%)\n").arg(totalFreeSpace).arg(100 * freeSpaceP, 6, 'f', 2);
+        result += QString("  Fragmented: %1 (%2%)\n").arg(fragmentedSpace).arg(100 * freeSpaceP_frag, 6, 'f', 2);
+        result += QString("  Non-fragmented: %1 (%2%)\n").arg(nonFragmentedSpace).arg(100 * freeSpaceP_nonFrag, 6, 'f', 2);
+        result += QString("Used space: %1 (%2%)\n").arg(totalUsedSpace).arg(100 * usedSpaceP, 6, 'f', 2);
         for(int i = 0; i < CHUNK_TYPE_COUNT; ++i)
         {
             enum SaveDataChunkType t = static_cast<enum SaveDataChunkType>(i);
-            qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg(typeInfo[i], -37).arg(chunkTypeSpace[t], 7).arg(100 * usedSpaceP_ofType[t], 6, 'f', 2).arg(chunkTypeCount[t]);
+            result += QString("  %1:\n%2 (%3%, %4 chunks)\n")
+                        .arg(ChunkTypeString[i]/*, -37*/)
+                        .arg(chunkTypeSpace[t], 7)
+                        .arg(100 * usedSpaceP_ofType[t], 6, 'f', 2)
+                        .arg(chunkTypeCount[t]);
         }
-        qDebug() << QString("  %1: %2 (%3%, %4 chunks)").arg("Other", -37).arg(otherTypeSpace, 7).arg(100 * usedSpaceP_ofTypeOther, 6, 'f', 2).arg(otherTypeCount);
+        result += QString("  %1:\n%2 (%3%, %4 chunks)\n")
+                    .arg("Other"/*, -37*/)
+                    .arg(otherTypeSpace, 7)
+                    .arg(100 * usedSpaceP_ofTypeOther, 6, 'f', 2)
+                    .arg(otherTypeCount);
+        return result;
     }
 
     /// <summary>
@@ -1253,6 +1557,82 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             ROMUtils::tmpROMFilePath.clear();
             delete[] ROMUtils::tmpCurrentFile;
             ROMUtils::tmpCurrentFile = nullptr;
+        }
+    }
+
+    /// <summary>
+    /// Check if the space to write the current chunk is legal
+    /// The chunks used to compare are generated instantly
+    /// </summary>
+    /// <param name="chunk">
+    /// Contains the writing chunk's data
+    /// </param>
+    /// <param name="chunk_addr">
+    /// Contains the address of the chunk being written
+    /// </param>
+    /// <param name="existChunks">
+    /// Contains all the exist chunks data
+    /// make this as a parameter so we can modify the chunks list then push it into this function
+    /// Also generate the data outside of the function can make the code execute potentially faster
+    /// </param>
+    /// <returns>
+    /// True if the writing is legal.
+    /// </returns>
+    bool WriteChunkSanityCheck(const SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks)
+    {
+        if ((chunk_addr > WL4Constants::AvailableSpaceBeginningInROM) || (chunk.ChunkType == SaveDataChunkType::InvalidationChunk))
+        {
+            return true;
+        }
+
+        unsigned int chunk_size = chunk.size;
+        unsigned int chunkNum = existChunks.size();
+        unsigned low = 0, high = chunkNum, middle = 0;
+        while (low < high)
+        {
+            middle = (low + high) / 2;
+            unsigned int existChunkAddr_Middle = existChunks[middle];
+            unsigned int existChunkSize_Middle =
+                    (*((unsigned short *)(ROMFileMetadata->ROMDataPtr + existChunkAddr_Middle + 4)) & 0xFFFF) |
+                    ((*(ROMFileMetadata->ROMDataPtr + existChunkAddr_Middle + 9) << 16) & 0xFF0000);
+
+            // exist chunk range: [existChunkAddr_Middle, existChunkAddr_Middle + 12 + existChunkSize_Middle)
+            // new chunk range: [chunk_addr, chunk_addr + 12 + chunk_size)
+            unsigned int existChunkRangeL_middle = existChunkAddr_Middle;
+            unsigned int existChunkRangeR_middle = existChunkAddr_Middle + 12 + existChunkSize_Middle;
+            unsigned int newChunkRangeL = chunk_addr;
+            unsigned int newChunkRangeR = chunk_addr + 12 + chunk_size;
+            if((newChunkRangeL < existChunkRangeR_middle && newChunkRangeL >= existChunkRangeL_middle) ||
+                    (newChunkRangeR > existChunkRangeL_middle && newChunkRangeR <= existChunkRangeR_middle)) {
+                return false;
+            } else if(newChunkRangeR <= existChunkRangeL_middle) {
+                high = middle;
+            } else if(newChunkRangeL >= existChunkRangeR_middle) {
+                low = middle + 1;
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Replace all the things like '/', '\', '\\', '\/', '/\' and '//' with '/'
+    /// then the path string can be used by Qt file things
+    /// </summary>
+    /// <param name="path">
+    /// QString of path with some shit seperators in it.
+    /// </param>
+    /// <returns>
+    /// QString of path without shit seperator.
+    /// </returns>
+    void FormatPathSeperators(QString &path)
+    {
+        while (path.contains('\\'))
+        {
+            path.replace('\\', '/');
+        }
+        while (path.contains("//"))
+        {
+            path.replace("//", "/");
         }
     }
 

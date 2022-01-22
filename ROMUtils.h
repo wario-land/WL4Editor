@@ -12,6 +12,9 @@
 #include "LevelComponents/Tileset.h"
 #include "LevelComponents/EntitySet.h"
 #include "LevelComponents/Entity.h"
+#include "LevelComponents/Layer.h"
+
+#define CHUNK_TYPE_COUNT 18
 
 namespace ROMUtils
 {
@@ -23,12 +26,6 @@ namespace ROMUtils
     };
 
     // Global variables
-    extern unsigned char *CurrentFile;
-    extern unsigned int CurrentFileSize;
-    extern QString ROMFilePath;
-    extern unsigned char *tmpCurrentFile;
-    extern unsigned int tmpCurrentFileSize;
-    extern QString tmpROMFilePath;
     extern struct ROMFileMetadata CurrentROMMetadata;
     extern struct ROMFileMetadata TempROMMetadata;
     extern struct ROMFileMetadata *ROMFileMetadata;
@@ -38,6 +35,9 @@ namespace ROMUtils
     extern LevelComponents::Tileset *singletonTilesets[92];
     extern LevelComponents::Entity *entities[129];
     extern LevelComponents::EntitySet *entitiessets[90];
+
+    extern const char *ChunkTypeString[CHUNK_TYPE_COUNT];
+    extern bool ChunkTypeAlignment[CHUNK_TYPE_COUNT];
 
     enum SaveDataChunkType
     {
@@ -55,6 +55,7 @@ namespace ROMUtils
         TilesetMap16EventTableChunkType       = '\x0B',
         TilesetMap16TerrainChunkType          = '\x0C',
         TilesetMap16DataChunkType             = '\x0D',
+        // the next one is not necessary, but i added it by accident -- ssp
         TilesetPaletteDataChunkType           = '\x0E',
         EntityTile8x8DataChunkType            = '\x0F',
         EntityPaletteDataChunkType            = '\x10',
@@ -88,10 +89,15 @@ namespace ROMUtils
         unsigned int size;
     };
 
+    // Exposed helper functions
+    void FormatPathSeperators(QString &path);
+
     // Global functions
     void CleanUpTmpCurrentFileMetaData();
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
+    unsigned int PackScreen(unsigned short *screenCharData, unsigned short *&outputCompressedData, bool skipzeros = true);
+    unsigned short *UnPackScreen(uint32_t address);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);
@@ -105,7 +111,9 @@ namespace ROMUtils
     void GenerateEntitySaveChunks(int GlobalEntityId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);
     unsigned int EndianReverse(unsigned int n);
-    void SaveDataAnalysis();
+    QString SaveDataAnalysis();
+    void StaticInitialization();
+    bool WriteChunkSanityCheck(const struct SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks);
 
 } // namespace ROMUtils
 

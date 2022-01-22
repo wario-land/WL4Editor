@@ -426,11 +426,15 @@ void RoomConfigDialog::on_spinBox_BGLayerScrollingFlag_valueChanged(int arg1)
 {
     switch(arg1)
     {
-    // TODO: Add more info for other cases, 1-7 are all meaningful cases
-    case 1: ui->label_CurBGLayerScrollingType->setText("No scrolling"); break;
-    case 3: ui->label_CurBGLayerScrollingType->setText("Hide BG Layer"); break;
-    case 7: ui->label_CurBGLayerScrollingType->setText("full BG Layer autoscroll"); break;
-    default: ui->label_CurBGLayerScrollingType->setText("Unknown");
+        case 0: ui->label_CurBGLayerScrollingType->setText("No scrolling"); break;
+        case 1: ui->label_CurBGLayerScrollingType->setText("H speed: 1/2 of BG1"); break;
+        case 2: ui->label_CurBGLayerScrollingType->setText("V speed: 1/2 of BG1"); break;
+        case 3: ui->label_CurBGLayerScrollingType->setText("H and V speed: 1/2 of BG1"); break;
+        case 4: ui->label_CurBGLayerScrollingType->setText("H speed sync wih BG1, V speed: 1/2 of BG1"); break;
+        case 5: ui->label_CurBGLayerScrollingType->setText("V speed sync wih BG1, H speed: 1/2 of BG1"); break;
+        case 6: ui->label_CurBGLayerScrollingType->setText("H and V speed sync wih BG1"); break;
+        case 7: ui->label_CurBGLayerScrollingType->setText("H autoscroll (to left, top half only): 1/8 of BG1"); break;
+        default: ui->label_CurBGLayerScrollingType->setText("Unknown");
     }
 }
 

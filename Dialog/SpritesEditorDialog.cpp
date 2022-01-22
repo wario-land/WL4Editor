@@ -83,6 +83,16 @@ SpritesEditorDialog::~SpritesEditorDialog()
 
 void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
 {
+    LevelComponents::Entity *curEntity = GetCurEntityPtr(); // init
+    int palnum = curEntity->GetPalNum();
+    if (palnum < 1)
+    {
+        curEntityColorIdInPalette = 0;
+        SelectionBox_Color->setPos(curEntityColorIdInPalette * 8, curEntityPalId * 8);
+        SelectionBox_Color->setVisible(true);
+        ui->label_CurColorValue->setText(tr("Palette does not exist !"));
+        return;
+    }
     colorID = qMin(colorID, 15);
     curEntityColorIdInPalette = colorID;
     SelectionBox_Color->setPos(colorID * 8, curEntityPalId * 8);
@@ -109,7 +119,15 @@ void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
 /// </param>
 void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 {
-    paletteID = qMin(paletteID, GetCurEntityPtr()->GetPalNum() - 1);
+    int palnum = GetCurEntityPtr()->GetPalNum();
+    if (palnum > 0)
+    {
+        paletteID = qMin(paletteID, palnum - 1);
+    }
+    else
+    {
+        paletteID = 0;
+    }
     curEntityPalId = paletteID;
     ui->label_PalID->setText(QString::number(paletteID));
     RenderSpritesTileMap();
@@ -127,8 +145,17 @@ void SpritesEditorDialog::SetSelectedEntityPaletteId(int paletteID)
 /// </param>
 void SpritesEditorDialog::SetColor(int paletteId, int colorId)
 {
-    paletteId = qMin(paletteId, GetCurEntityPtr()->GetPalNum() - 1);
     if (colorId > 15) colorId = 15;
+    int palnum = GetCurEntityPtr()->GetPalNum();
+    if (palnum > 0)
+    {
+        paletteId = qMin(paletteId, palnum - 1);
+    }
+    else
+    {
+        paletteId = 0;
+        colorId = 0;
+    }
     QColor color = QColorDialog::getColor(Qt::black, this);
     color.setAlpha(0xFF);
     if(color.isValid())
@@ -154,7 +181,8 @@ void SpritesEditorDialog::SetColor(int paletteId, int colorId)
 /// </param>
 void SpritesEditorDialog::SetSelectedSpriteTile(const int tileID)
 {
-    if (int tilenum = GetCurEntityPtr()->GetTilesNum(); tileID >= tilenum)
+    int tilenum = GetCurEntityPtr()->GetTilesNum();
+    if (tileID >= tilenum)
     {
         curEntityTileId = (((tilenum >> 5) - 1) << 5) + (tileID & 31);
     }
@@ -162,9 +190,17 @@ void SpritesEditorDialog::SetSelectedSpriteTile(const int tileID)
     {
         curEntityTileId = tileID;
     }
+    if (tilenum > 0)
+    {
+        ui->label_spriteTileID->setText(QString::number(curEntityTileId, 16));
+    }
+    else
+    {
+        curEntityTileId = 0;
+        ui->label_spriteTileID->setText(tr("Sprite's tile does not exist !"));
+    }
     SelectionBox_Sprite->setPos((curEntityTileId & 31) << 3, curEntityTileId >> 5 << 3);
     SelectionBox_Sprite->setVisible(true);
-    ui->label_spriteTileID->setText(QString::number(curEntityTileId, 16));
 }
 
 /// <summary>
@@ -189,22 +225,32 @@ void SpritesEditorDialog::RenderSpritesTileMap()
 {
     // Find if new entity data exist
     LevelComponents::Entity *curEntity = GetCurEntityPtr(); // init
+    int palnum = curEntity->GetPalNum();
+    if (palnum > 0)
+    {
+        // Calculate size
+        int tilenum = curEntity->GetTilesNum();
+        int rownum = tilenum >> 5; // tilenum / 32
 
-    // Calculate size
-    int tilenum = curEntity->GetTilesNum();
-    int rownum = tilenum >> 5; // tilenum / 32
+        // draw pixmaps
+        QPixmap SpriteTilePixmap(8 * 32, rownum * 8);
+        SpriteTilePixmap.fill(Qt::transparent);
+        QPainter SpriteTilePixmapPainter(&SpriteTilePixmap);
+        SpriteTilePixmapPainter.drawImage(0, 0, curEntity->GetTileMap(curEntityPalId));
 
-    // draw pixmaps
-    QPixmap SpriteTilePixmap(8 * 32, rownum * 8);
-    SpriteTilePixmap.fill(Qt::transparent);
-    QPainter SpriteTilePixmapPainter(&SpriteTilePixmap);
-    SpriteTilePixmapPainter.drawImage(0, 0, curEntity->GetTileMap(curEntityPalId));
-
-    // Set up scenes
-    SpriteTileMAPScene->clear();
-    SpriteTilemapping = SpriteTileMAPScene->addPixmap(SpriteTilePixmap);
-    ui->graphicsView_SpriteTileMap->verticalScrollBar()->setValue(0);
-    ui->graphicsView_SpriteTileMap->horizontalScrollBar()->setValue(0);
+        // Set up scenes
+        SpriteTileMAPScene->clear();
+        SpriteTilemapping = SpriteTileMAPScene->addPixmap(SpriteTilePixmap);
+        ui->graphicsView_SpriteTileMap->verticalScrollBar()->setValue(0);
+        ui->graphicsView_SpriteTileMap->horizontalScrollBar()->setValue(0);
+    }
+    else
+    {
+        // Set up scenes
+        SpriteTileMAPScene->clear();
+        ui->graphicsView_SpriteTileMap->verticalScrollBar()->setValue(0);
+        ui->graphicsView_SpriteTileMap->horizontalScrollBar()->setValue(0);
+    }
 
     // Add the highlighted tile rectangle
     QPixmap selectionPixmap(8, 8);
@@ -220,6 +266,8 @@ void SpritesEditorDialog::RenderSpritesTileMap()
     ui->pushButton_DeletePal->setEnabled(enabled);
     ui->pushButton_SpritePaletteImport->setEnabled(enabled);
     ui->pushButton_SwapPal->setEnabled(enabled);
+    ui->pushButton_SpritePaletteExport->setEnabled(palnum);
+    ui->pushButton_SpriteTilesExport->setEnabled(palnum);
 }
 
 /// <summary>
@@ -236,20 +284,27 @@ void SpritesEditorDialog::RenderSpritesPalette()
 
     // Render palettes
     int palnum = curEntity->GetPalNum();
-    QPixmap PaletteBarpixmap(8 * 16, palnum * 8);
-    PaletteBarpixmap.fill(Qt::transparent);
-    QPainter PaletteBarPainter(&PaletteBarpixmap);
-    for (int j = 0; j < palnum; ++j)
+    if (palnum > 0)
     {
-        QVector<QRgb> palettetable = curEntity->GetPalette(j);
-        for (int i = 1; i < 16; ++i) // Ignore the first color
+        QPixmap PaletteBarpixmap(8 * 16, palnum * 8);
+        PaletteBarpixmap.fill(Qt::transparent);
+        QPainter PaletteBarPainter(&PaletteBarpixmap);
+        for (int j = 0; j < palnum; ++j)
         {
-            PaletteBarPainter.fillRect(8 * i, 8 * j, 8, 8, palettetable[i]);
+            QVector<QRgb> palettetable = curEntity->GetPalette(j);
+            for (int i = 1; i < 16; ++i) // Ignore the first color
+            {
+                PaletteBarPainter.fillRect(8 * i, 8 * j, 8, 8, palettetable[i]);
+            }
         }
+        PaletteBarScene->clear();
+        Palettemapping = PaletteBarScene->addPixmap(PaletteBarpixmap);
+        ui->graphicsView_SpritePals->verticalScrollBar()->setValue(0);
     }
-    PaletteBarScene->clear();
-    Palettemapping = PaletteBarScene->addPixmap(PaletteBarpixmap);
-    ui->graphicsView_SpritePals->verticalScrollBar()->setValue(0);
+    else
+    {
+        PaletteBarScene->clear();
+    }
 
     // Add Color selection box
     QPixmap selectionPixmap3(8, 8);

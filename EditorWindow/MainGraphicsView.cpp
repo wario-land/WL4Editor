@@ -682,11 +682,13 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Backspace:
         case Qt::Key_Delete:
         {
-            singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID());
-            SelectedDoorID = -1;
-            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
-            singleton->ResetEntitySetDockWidget();
-            singleton->SetUnsavedChanges(true);
+            if (singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID()))
+            {
+                SelectedDoorID = -1;
+                singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+                singleton->ResetEntitySetDockWidget();
+                singleton->SetUnsavedChanges(true);
+            }
         }; break;
         // Move selected door when a direction key is pressed
         case Qt::Key_Right:

@@ -24,6 +24,8 @@ public:
     Q_INVOKABLE QString GetEntityListData(int entitylistid = -1);
 
     // Test
+    Q_INVOKABLE void _UnpackScreen(int address);
+    Q_INVOKABLE void _PackScreen(QString inputData, bool skipzeros = true);
     Q_INVOKABLE void _DecompressData(int mappingtype, int address);
     Q_INVOKABLE unsigned int _GetLayerDecomdataPointer(int layerId);
     Q_INVOKABLE void _PrintRoomHeader();
