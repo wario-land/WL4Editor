@@ -1,3 +1,29 @@
+0.13.6:
+(major changes)
+- Fix FindAllChunksInROM does not find all chunks of a specified type; would theoretically affect patching routine though there's been no reports of problems from users so far (issue #349)
+- Fix that old chunks which are a part of saving levels are not invalidated, causing save data area to fill up with orphaned data (issue #350)
+- Add optional scroll save
+(minor changes)
+- Support Nintendo intro check, Now rom with an Nintendo intro cannot be loaded into the WL4Editor
+- Fix unsaved Tileset changes cannot be found in Room Config Dialog (Issue #352)
+- Support importing Tileset from another rom
+- Disable help button in every Dialog
+- Fix Rectangle select mode can disable switching rooms (issue #359)
+- palette loading now has looser condition checks when importing tile8x8 graphic data (issue #355)
+- Set open script default path be the ROM's folder and now dialogInitialPath can be initialized correctly when opening a ROM (issue #356) 
+- Fix the Room Config Dialog does not disable Layer 0 Width and Height spinboxes when setting Layer 0 mapping type to 0 and no more layer priority reset when change layer 0 mapping type (issue #357)
+- Fix incorrect OperationParam deleting when loading a new Level, also a bunches of other fixes and changes relative to OperationParam (issue #364)
+- Fix an edge case bug in the undo & redo logic which will possibly cause problems when save global elements' changes (issue #366)
+- Add sanity check to prevent data overwriting to existing chunks when save new data 
+- Fix expanding rom while saving will make orphaned chunks appears in the rom (issue #367)
+- Add some new interface APIs _UnpackScreen(...) and _PackScreen()
+- Fix camera box auto-reset flexible boundary incorrectly when clicking listview in Camera Config Dock Widget (Issue #368)
+- Fix the blade fish enemies' name things in the door config dialog
+- Fix the patch address in the Patch manager's table view shows the RATS tag address, but not the function start address (issue #371)
+- Add PatchAddress info into the HookString in the Patch manager's table view, so the P value will be shown in the HookString now
+- Fix a bug in the UI logic which permits deleting the last Door in a Room (issue #373)
+- Add the missing RoomHeader's BG layer scrolling flag hints into the editor which is found in the leak
+
 0.13.5:
 (major changes)
 - Fix editing existing patches would corrupt substituted bytes so that patch could not be undone (issue #341)
