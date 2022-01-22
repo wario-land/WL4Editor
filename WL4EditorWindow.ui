@@ -631,22 +631,6 @@
     <string>Import Tileset from ROM</string>
    </property>
   </action>
-  <action name="actionChunk_Manager">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Chunk Manager</string>
-   </property>
-  </action>
-  <action name="actionHex_Editor">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Hex Editor</string>
-   </property>
-  </action>
   <action name="actionRolling_Save">
    <property name="checkable">
     <bool>true</bool>

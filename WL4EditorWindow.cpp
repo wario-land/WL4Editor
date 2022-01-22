@@ -63,7 +63,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     case 1:
     { ui->actionDark->setChecked(true); break; }
     }
-    ui->actionRolling_Save->setChecked(SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSave).toInt());
+    ui->actionRolling_Save->setChecked(SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSaveLimit).toInt());
 
     // Create DockWidgets
     EditModeWidget = new EditModeDockWidget();
@@ -455,7 +455,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
 
         // Enable UI that requires a ROM file to be loaded
         ui->actionSave_ROM->setEnabled(true);
-        if (!SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSave).toInt())
+        if (!SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSaveLimit).toInt())
         {
             ui->actionSave_As->setEnabled(true);
         }
@@ -478,8 +478,6 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionClear_all->setEnabled(true);
         ui->actionPatch_Manager->setEnabled(true);
-        ui->actionChunk_Manager->setEnabled(true);
-        ui->actionHex_Editor->setEnabled(true);
         ui->actionEdit_Entity_EntitySet->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->loadLevelButton->setEnabled(true);
@@ -2293,11 +2291,11 @@ void WL4EditorWindow::on_actionRolling_Save_triggered()
                                      "-1 to save infinite temp rom file,\n"
                                      "0 to disable this feature,\n"
                                      "positive int number to set the number of file the editor will keep."),
-                                     SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSave).toInt(),
+                                     SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSaveLimit).toInt(),
                                      -1, 0x7FFF'FFFF /*2147483647*/, 1, &okay);
     if (okay)
     {
-        SettingsUtils::SetKey(SettingsUtils::IniKeys::RollingSave, QString::number(value));
+        SettingsUtils::SetKey(SettingsUtils::IniKeys::RollingSaveLimit, QString::number(value));
         if (!value) // value == 0
         {
             ui->actionSave_As->setEnabled(true);

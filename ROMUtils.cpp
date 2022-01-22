@@ -1031,7 +1031,7 @@ allocationComplete:
                 {
                     QString dirstr = QFileInfo(filePath).dir().path() + "/auto_backups/";
                     FormatPathSeperators(dirstr);
-                    if (int maxTmpFileNum = SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSave).toInt())
+                    if (int maxTmpFileNum = SettingsUtils::GetKey(SettingsUtils::IniKeys::RollingSaveLimit).toInt())
                     {
                         QDir dir;
                         if (!dir.exists(dirstr))
