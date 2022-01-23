@@ -166,7 +166,7 @@ static struct PatchEntryItem DeserializePatchMetadata(QStringList patchTuples)
 /// <returns>
 /// The metadata string.
 /// </returns>
-static QString SerializePatchMetadata(struct PatchEntryItem patchMetadata)
+static QString SerializePatchMetadata(const struct PatchEntryItem &patchMetadata)
 {
     QString ret = patchMetadata.FileName + ";";
     ret += QString::number(patchMetadata.PatchType) + ";";
@@ -293,7 +293,7 @@ static QString AssembleSFile(QString sfile)
 /// <returns>
 /// An empty string if successful, or an error string if failure.
 /// </returns>
-static QString CreateLinkerScript(struct PatchEntryItem entry)
+static QString CreateLinkerScript(const struct PatchEntryItem &entry)
 {
     QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
     QString ofile(romFileDir + QDir::separator() + entry.FileName);
@@ -387,42 +387,6 @@ static QString ExtractELFFile(QString elfFile)
 }
 
 /// <summary>
-/// Determine if a binary file's contents match a region in the currently loaded ROM.
-/// </summary>
-/// <param name="file">
-/// The binary file to compare (relative path).
-/// </param>
-/// <param name="startAddr">
-/// The starting address in the ROM data.
-/// </param>
-/// <param name="length">
-/// The length of the data in the ROM.
-/// </param>
-/// <returns>
-/// True if the contents of the binary file match the region in the currently loaded ROM.
-/// </returns>
-static bool BinaryMatchWithROM(QString file, unsigned int startAddr, unsigned int length)
-{
-    if(length > 0xFFFF)
-    {
-        singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Invalid comparison length in BinaryMatchWithROM: 0x")) + QString::number(length, 16).toUpper());
-        return false;
-    }
-
-    if(startAddr + length > ROMUtils::ROMFileMetadata->Length) return false;
-    QFile binFile(file);
-    binFile.open(QIODevice::ReadOnly);
-    bool ret = false;
-    if(binFile.size() == length)
-    {
-        QByteArray binContents = binFile.readAll();
-        ret = !memcmp(binContents.constData(), ROMUtils::ROMFileMetadata->ROMDataPtr + startAddr, length);
-    }
-    binFile.close();
-    return ret;
-}
-
-/// <summary>
 /// Create the data for a patch list chunk.
 /// </summary>
 /// <param name="entries">
@@ -431,11 +395,11 @@ static bool BinaryMatchWithROM(QString file, unsigned int startAddr, unsigned in
 /// <returns>
 /// The data as an allocated char array.
 /// </returns>
-static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
+static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> &entries)
 {
     QString contents;
     bool first = true;
-    for(struct PatchEntryItem entry : entries)
+    for(const struct PatchEntryItem &entry : entries)
     {
         // Delimit entries with semicolon
         if(first) first = false; else contents += ";";
@@ -454,7 +418,7 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> entries)
 /// <returns>
 /// The error string if compilation failed, or empty if successful.
 /// </returns>
-static QString CompilePatchEntry(struct PatchEntryItem entry)
+static QString CompilePatchEntry(const struct PatchEntryItem &entry)
 {
     if(!entry.FileName.length() || entry.PatchType == PatchType::Binary) return "";
 
@@ -504,10 +468,10 @@ static QString CompilePatchEntry(struct PatchEntryItem entry)
 /// <returns>
 /// The error string if compilation failed, or empty if successful.
 /// </returns>
-static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
+static QString CompilePatchEntries(QVector<struct PatchEntryItem> &entries)
 {
     QString output;
-    for(struct PatchEntryItem entry : entries)
+    for(const struct PatchEntryItem &entry : entries)
     {
         if((output = CompilePatchEntry(entry)) != "")
         {
@@ -526,7 +490,7 @@ static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
 /// <returns>
 /// The save chunk.
 /// </returns>
-static struct ROMUtils::SaveData CreatePatchSaveChunk(struct PatchEntryItem &patch)
+static struct ROMUtils::SaveData CreatePatchSaveChunk(const struct PatchEntryItem &patch)
 {
     QString binName(patch.FileName);
     binName.chop(binName.length() - binName.lastIndexOf('.') - 1);
@@ -856,7 +820,7 @@ namespace PatchUtils
                 // Undo removal patches (if there are patches to remove)
                 // PostProcessingCallback will be called only once, so SubstitutedBytes recovery should be done here
                 // in case rom size expanding failure but TempFile data still got changed
-                for(struct PatchEntryItem patch : removePatches)
+                for(const struct PatchEntryItem &patch : removePatches)
                 {
                     // Get patch hex string from removal patch struct, write into TempFile
                     unsigned char *originalBytes = HexStringToBinary(patch.SubstitutedBytes);
@@ -865,7 +829,7 @@ namespace PatchUtils
                 }
 
                 // Write hooks to ROM
-                for(struct PatchEntryItem patch : entries)
+                for(const struct PatchEntryItem &patch : entries)
                 {
                     QString hookString = patch.HookString;
 
