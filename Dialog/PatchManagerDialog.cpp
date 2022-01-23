@@ -240,6 +240,7 @@ retry:
             PatchTable->UpdateEntry(selectedIndex, entry);
             ui->savePatchButton->setEnabled(true);
 
+            currentEntries = PatchTable->GetAllEntries();
             ui->textEdit_PatchDescription->setText(tr("Description:\n") + currentEntries[selectedIndex].Description);
         }
     }

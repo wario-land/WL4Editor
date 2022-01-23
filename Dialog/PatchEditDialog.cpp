@@ -176,6 +176,52 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
     };
 }
 
+void PatchEditDialog::ParsePatchFile(QString patchfilepath)
+{
+    if(!patchfilepath.isEmpty())
+    {
+        ui->lineEdit_FilePath->setText(patchfilepath);
+
+        // Infer the type based on the extension
+        enum PatchType fileType;
+        if(patchfilepath.endsWith(".c", Qt::CaseInsensitive))
+        {
+            fileType = PatchType::C;
+        }
+        else if(patchfilepath.endsWith(".s", Qt::CaseInsensitive))
+        {
+            fileType = PatchType::Assembly;
+        }
+        else
+        {
+            fileType = PatchType::Binary;
+        }
+        ui->comboBox_PatchType->setCurrentIndex(fileType);
+
+        // Infer fields from file comments
+        if(fileType != PatchType::Binary)
+        {
+            QString hookAddress = InferFromIdentifier(patchfilepath, HOOK_ADDR_IDENTIFIER, hookAddressRegex);
+            if(hookAddress != "")
+            {
+                ui->lineEdit_HookAddress->setText(hookAddress);
+            }
+
+            QString hookString = InferFromIdentifier(patchfilepath, HOOK_STRING_IDENTIFIER, hookStringRegex);
+            if(hookString != "")
+            {
+                ui->lineEdit_HookText->setText(hookString);
+            }
+
+            QString descString = InferFromIdentifier(patchfilepath, DESCRIPTION_IDENTIFIER, descriptionRegex);
+            if(descString != "")
+            {
+                ui->textEdit_Description->setText(descString);
+            }
+        }
+    }
+}
+
 /// <summary>
 /// This slot function will be triggered when clicking the "Browse" button.
 /// </summary>
@@ -189,46 +235,14 @@ void PatchEditDialog::on_pushButton_Browse_clicked()
         romFileDir,
         tr("C source files (*.c);;ARM assembly files (*.s);;Binary files (*.bin)")
     );
-    if(!qFilePath.isEmpty())
-    {
-        ui->lineEdit_FilePath->setText(qFilePath);
-
-        // Infer the type based on the extension
-        enum PatchType fileType;
-        if(qFilePath.endsWith(".c", Qt::CaseInsensitive))
-        {
-            fileType = PatchType::C;
-        }
-        else if(qFilePath.endsWith(".s", Qt::CaseInsensitive))
-        {
-            fileType = PatchType::Assembly;
-        }
-        else
-        {
-            fileType = PatchType::Binary;
-        }
-        ui->comboBox_PatchType->setCurrentIndex(fileType);
-
-        // Infer fields from file comments
-        if(fileType != PatchType::Binary)
-        {
-            QString hookAddress = InferFromIdentifier(qFilePath, HOOK_ADDR_IDENTIFIER, hookAddressRegex);
-            if(hookAddress != "")
-            {
-                ui->lineEdit_HookAddress->setText(hookAddress);
-            }
-
-            QString hookString = InferFromIdentifier(qFilePath, HOOK_STRING_IDENTIFIER, hookStringRegex);
-            if(hookString != "")
-            {
-                ui->lineEdit_HookText->setText(hookString);
-            }
-
-            QString descString = InferFromIdentifier(qFilePath, DESCRIPTION_IDENTIFIER, descriptionRegex);
-            if(descString != "")
-            {
-                ui->textEdit_Description->setText(descString);
-            }
-        }
-    }
+    ParsePatchFile(qFilePath);
 }
+
+/// <summary>
+/// This function will reload patch infos from file.
+/// </summary>
+void PatchEditDialog::on_pushButton_Reload_clicked()
+{
+    ParsePatchFile(ui->lineEdit_FilePath->text());
+}
+

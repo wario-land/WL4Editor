@@ -22,11 +22,13 @@ public:
 
 private slots:
     void on_pushButton_Browse_clicked();
+    void on_pushButton_Reload_clicked();
 
 private:
     Ui::PatchEditDialog *ui;
     void InitializeComponents(struct PatchEntryItem patchEntry);
     QRegExpValidator *addressvalidator;
+    void ParsePatchFile(QString patchfilepath);
 };
 
 #endif // PATCHEDITDIALOG_H
