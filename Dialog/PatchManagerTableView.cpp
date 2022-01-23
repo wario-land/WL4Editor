@@ -21,7 +21,7 @@ PatchManagerTableView::PatchManagerTableView(QWidget *param) : QTableView(param)
 
     // Populate the table
     QVector<struct PatchEntryItem> patches = PatchUtils::GetPatchesFromROM();
-    for(struct PatchEntryItem patch : patches)
+    for(const struct PatchEntryItem &patch : patches)
     {
         EntryTableModel.AddEntry(patch);
     }
@@ -63,7 +63,7 @@ void PatchManagerTableView::UpdateTableView()
     int row = 0;
 
     // Populate the table items
-    for(const struct PatchEntryItem patchEntry : EntryTableModel.entries)
+    for(const struct PatchEntryItem &patchEntry : EntryTableModel.entries)
     {
         const char *typeStrings[3] =
         {
@@ -103,7 +103,6 @@ void PatchManagerTableView::UpdateTableView()
         // Add tooltips to them and add the cells to the table
         for(int i = 0; i < qMin(headerLabels.size(), items.size()); ++i)
         {
-            items[i]->setToolTip(patchEntry.Description);
             EntryTableModel.setItem(row, i, items[i]);
         }
 
