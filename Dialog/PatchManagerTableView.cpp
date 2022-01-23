@@ -58,7 +58,7 @@ void PatchManagerTableView::UpdateTableView()
     EntryTableModel.clear();
     QStringList headerLabels;
     headerLabels << "File" << "Type" << "Hook address" << "Patch address" <<
-        "Hook string" << "Hook length" << "Address offset";
+        "Hook string" << "Hook length" << "Location of P";
     EntryTableModel.setHorizontalHeaderLabels(headerLabels);
     int row = 0;
 
@@ -82,8 +82,12 @@ void PatchManagerTableView::UpdateTableView()
         items.append(new QStandardItem(patchEntry.FileName.length() ? patchEntry.FileName : "(no file)"));
         items.append(new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
         items.append(new QStandardItem("0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
-        items.append(new QStandardItem(!patchEntry.PatchAddress ?
-            "N/A" : "0x" + QString::number(patchEntry.PatchAddress + 12, 16).toUpper()));
+        QString PatchAddressString = !patchEntry.PatchAddress ?
+                    "N/A" : "0x" + QString::number(patchEntry.PatchAddress + 12, 16).toUpper();
+        PatchAddressString = (patchEntry.PatchAddress == WL4Constants::AvailableSpaceBeginningInROM) ?
+                    "TBD" :
+                    PatchAddressString;
+        items.append(new QStandardItem(PatchAddressString));
         QString finalHookStringText = patchEntry.HookString;
         if (patchEntry.PatchOffsetInHookString != (unsigned int) -1)
         {

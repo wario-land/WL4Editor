@@ -518,45 +518,6 @@ static QString CompilePatchEntries(QVector<struct PatchEntryItem> entries)
 }
 
 /// <summary>
-/// Compile a list of patches which must be removed from the ROM.
-/// A patch must be removed if it exists in the ROM and has either been modified, or is not in the chunk list from the dialog.
-/// </summary>
-/// <param name="dialogPatches">
-/// The patch entries coming from the dialog.
-/// </param>
-/// <param name="existingPatches">
-/// The existing patch entries in the ROM.
-/// </param>
-/// <returns>
-/// The list of patches which must be removed from the ROM.
-/// </returns>
-static QVector<struct PatchEntryItem> DetermineRemovalPatches(QVector<struct PatchEntryItem> dialogPatches, QVector<struct PatchEntryItem> existingPatches)
-{
-    QVector<struct PatchEntryItem> removalPatches;
-    for(struct PatchEntryItem existingPatch : existingPatches)
-    {
-        // Check if save chunk exists in the ROM (by file name)
-        struct PatchEntryItem *dialogPatch = std::find_if(dialogPatches.begin(), dialogPatches.end(),
-            [existingPatch](struct PatchEntryItem e){ return e.HookAddress == existingPatch.HookAddress; });
-        bool mustRemoveChunk, saveChunkInDialog = dialogPatch != dialogPatches.end();
-
-        // If the save chunk is not in the dialog, we must remove it
-        if(!(mustRemoveChunk = !saveChunkInDialog))
-        {
-            // If the save chunk is in the dialog, we must check to see if content matches bin contents
-            unsigned short chunkLen = *reinterpret_cast<unsigned short*>(ROMUtils::ROMFileMetadata->ROMDataPtr + existingPatch.PatchAddress + 4);
-            mustRemoveChunk = !BinaryMatchWithROM(dialogPatch->FileName, existingPatch.PatchAddress + 12, chunkLen);
-        }
-
-        if(mustRemoveChunk)
-        {
-            removalPatches.append(existingPatch);
-        }
-    }
-    return removalPatches;
-}
-
-/// <summary>
 /// Create a save chunk for a patch list entry
 /// </summary>
 /// <param name="patch">
@@ -668,8 +629,8 @@ namespace PatchUtils
 
         ROMUtils::SaveDataIndex = 1;
         QVector<struct ROMUtils::SaveData> chunks;
-        QVector<struct PatchEntryItem> existingPatches = GetPatchesFromROM();
-        QVector<struct PatchEntryItem> removePatches = DetermineRemovalPatches(entries, existingPatches);
+        // logic to find changed patches is so complicated, so we just remove all them.
+        QVector<struct PatchEntryItem> removePatches = GetPatchesFromROM();
         std::map<int, struct PatchEntryItem*> saveChunkIndexToMetadata, saveChunkIndexToRemoval;
 
         // Populate the chunk list with patches to add to the ROM

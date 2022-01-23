@@ -239,6 +239,8 @@ retry:
             }
             PatchTable->UpdateEntry(selectedIndex, entry);
             ui->savePatchButton->setEnabled(true);
+
+            ui->textEdit_PatchDescription->setText(tr("Description:\n") + currentEntries[selectedIndex].Description);
         }
     }
     else if(!selectedRows.size())
