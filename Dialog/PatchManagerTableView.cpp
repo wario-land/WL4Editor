@@ -84,7 +84,7 @@ void PatchManagerTableView::UpdateTableView()
         items.append(new QStandardItem("0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
         QString PatchAddressString = !patchEntry.PatchAddress ?
                     "N/A" : "0x" + QString::number(patchEntry.PatchAddress + 12, 16).toUpper();
-        PatchAddressString = (patchEntry.PatchAddress == WL4Constants::AvailableSpaceBeginningInROM) ?
+        PatchAddressString = (patchEntry.PatchAddress == DummyPatchAddressValue) ?
                     "TBD" :
                     PatchAddressString;
         items.append(new QStandardItem(PatchAddressString));

@@ -30,6 +30,8 @@ private:
     ~PatchManagerTableView();
 
 public:
+    static const unsigned int DummyPatchAddressValue = 0xFFFFFFFF;
+
     PatchManagerTableView(QWidget *param);
     void UpdateTableView();
     void RemoveSelected();
