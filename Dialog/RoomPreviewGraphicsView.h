@@ -6,11 +6,6 @@
 #include <QGraphicsView>
 #include <QLabel>
 
-namespace Ui
-{
-    class RoomPreviewGraphicsView;
-}
-
 class RoomPreviewGraphicsView : public QGraphicsView
 {
     Q_OBJECT

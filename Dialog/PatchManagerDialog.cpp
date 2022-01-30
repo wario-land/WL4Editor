@@ -47,6 +47,20 @@ void PatchManagerDialog::on_patchManagerTableView_clicked(const QModelIndex &ind
     int num_of_select_rows = selectedRows.size();
     ui->removePatchButton->setEnabled(num_of_select_rows);
     ui->editPatchButton->setEnabled(num_of_select_rows == 1);
+    if (num_of_select_rows == 1)
+    {
+        QVector<struct PatchEntryItem> currentEntries = PatchTable->GetAllEntries();
+        struct PatchEntryItem selectedEntry = PatchTable->GetSelectedEntry();
+        int selectedIndex = -1;
+        std::find_if(currentEntries.begin(), currentEntries.end(),
+            [&selectedEntry, &selectedIndex](struct PatchEntryItem e)
+            { ++selectedIndex; return selectedEntry.HookAddress == e.HookAddress; });
+        ui->textEdit_PatchDescription->setText(tr("Description:\n") + currentEntries[selectedIndex].Description);
+    }
+    else
+    {
+        ui->textEdit_PatchDescription->setText("");
+    }
 }
 
 /// <summary>
@@ -225,6 +239,9 @@ retry:
             }
             PatchTable->UpdateEntry(selectedIndex, entry);
             ui->savePatchButton->setEnabled(true);
+
+            currentEntries = PatchTable->GetAllEntries();
+            ui->textEdit_PatchDescription->setText(tr("Description:\n") + currentEntries[selectedIndex].Description);
         }
     }
     else if(!selectedRows.size())
