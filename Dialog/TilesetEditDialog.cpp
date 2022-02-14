@@ -21,7 +21,7 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
 {
     ui->setupUi(this);
     this->tilesetEditParams = tilesetEditParam;
-    ui->label_TilesetID->setText("Tileset ID: " + QString::number(tilesetEditParam->currentTilesetIndex, 10));
+    ui->label_TilesetID->setText("Tileset ID: " + QString::number(tilesetEditParam->currentTilesetIndex, 16));
     ui->graphicsView_TilesetAllTile16->SetCurrentTilesetEditor(this);
     ui->graphicsView_TilesetAllTile8x8->SetCurrentTilesetEditor(this);
     ui->graphicsView_paletteBar->SetCurrentTilesetEditor(this);
@@ -610,15 +610,15 @@ void TilesetEditDialog::SetSelectedTile8x8(unsigned short tileId, bool resetscro
     int bgtilenum = tilesetEditParams->newTileset->GetbgGFXlen() / 32;
     if((SelectedTile8x8 > (0x40 + fgtilenum)) && (SelectedTile8x8 < (0x5FF - bgtilenum)))
     {
-        ui->label_Tile8x8_ID->setText("Selected Tile8x8 Id: " + QString::number(tileId) + " (undefined)");
+        ui->label_Tile8x8_ID->setText("Selected Tile8x8 Id: " + QString::number(tileId, 16) + " (undefined)");
     }
     else if(SelectedTile8x8 <= (0x40 + fgtilenum))
     {
-        ui->label_Tile8x8_ID->setText("Selected Foreground Tile8x8 Id: " + QString::number(tileId));
+        ui->label_Tile8x8_ID->setText("Selected Foreground Tile8x8 Id: " + QString::number(tileId, 16));
     }
     else
     {
-        ui->label_Tile8x8_ID->setText("Selected Background Tile8x8 Id: " + QString::number(tileId));
+        ui->label_Tile8x8_ID->setText("Selected Background Tile8x8 Id: " + QString::number(tileId, 16));
     }
 
     // Tile8x8 Editor graphicview update

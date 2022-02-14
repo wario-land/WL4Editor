@@ -66,8 +66,8 @@ int ScriptInterface::GetCurRoomTile16(int layerID, int x, int y)
     int height = static_cast<int>(layer->GetLayerHeight());
     if(x >= width || y >= height) {
         log("ScriptInterface::GetCurRoomTile16(): Tile position (" +
-            QString::number(x) + ", " + QString::number(y) +
-            ") out of bounds on layer L (dimensions: " + QString::number(width) + ", " + QString::number(height) + ")");
+            QString::number(x, 16) + ", " + QString::number(y, 16) +
+            ") out of bounds on layer L (dimensions: " + QString::number(width, 16) + ", " + QString::number(height, 16) + ")");
         return -1;
     }
     return layer->GetTileData(x, y);
@@ -82,8 +82,8 @@ int ScriptInterface::GetCurRoomTile8(int layerID, int x, int y)
     int height = static_cast<int>(layer->GetLayerHeight());
     if(x >= width || y >= height) {
         log("ScriptInterface::GetCurRoomTile8(): Tile position (" +
-            QString::number(x) + ", " + QString::number(y) +
-            ") out of bounds on layer L (dimensions: " + QString::number(width) + ", " + QString::number(height) + ")");
+            QString::number(x, 16) + ", " + QString::number(y, 16) +
+            ") out of bounds on layer L (dimensions: " + QString::number(width, 16) + ", " + QString::number(height, 16) + ")");
         return -1;
     }
     return layer->GetTileData(x, y) & 0x3FF;
@@ -327,7 +327,7 @@ void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
     }
     if(datasize != 2 * witdh * height)
     {
-        log("File size not match (expected width:" + QString::number(witdh) + ", height:" + QString::number(height) + ")!");
+        log("File size not match (expected width:" + QString::number(witdh, 16) + ", height:" + QString::number(height, 16) + ")!");
         return;
     }
     memcpy(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.data(), 2 * witdh * height);

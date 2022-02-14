@@ -186,9 +186,9 @@ void CameraControlDockWidget::SetCurrentLimitator()
 /// </param>
 void CameraControlDockWidget::SetListviewItemText(int row)
 {
-    QString string = "(" + QString::number(ui->spinBox_x1->value()) + ", " + QString::number(ui->spinBox_y1->value()) +
-                     ") - (" + QString::number(ui->spinBox_x1->value() + ui->spinBox_width->value() - 1) + ", " +
-                     QString::number(ui->spinBox_y1->value() + ui->spinBox_height->value() - 1) + ")";
+    QString string = "(" + QString::number(ui->spinBox_x1->value(), 16) + ", " + QString::number(ui->spinBox_y1->value(), 16) +
+                     ") - (" + QString::number(ui->spinBox_x1->value() + ui->spinBox_width->value() - 1, 16) + ", " +
+                     QString::number(ui->spinBox_y1->value() + ui->spinBox_height->value() - 1, 16) + ")";
     ListViewItemModel->item(row, 0)->setText(string);
 }
 
@@ -206,10 +206,10 @@ void CameraControlDockWidget::PaintListView()
     {
         for (int i = 0; i < (int) currentCameraLimitators.size(); ++i)
         {
-            QString string = "(" + QString::number((int) currentCameraLimitators[i]->x1) + ", " +
-                             QString::number((int) currentCameraLimitators[i]->y1) + ") - (" +
-                             QString::number((int) currentCameraLimitators[i]->x2) + ", " +
-                             QString::number((int) currentCameraLimitators[i]->y2) + ")";
+            QString string = "(" + QString::number((int) currentCameraLimitators[i]->x1, 16) + ", " +
+                             QString::number((int) currentCameraLimitators[i]->y1, 16) + ") - (" +
+                             QString::number((int) currentCameraLimitators[i]->x2, 16) + ", " +
+                             QString::number((int) currentCameraLimitators[i]->y2, 16) + ")";
             List_strs << string;
         }
         int nCount = List_strs.size();

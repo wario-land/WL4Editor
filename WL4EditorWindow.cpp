@@ -311,10 +311,18 @@ void WL4EditorWindow::PrintMousePos(int x, int y)
     tileSize = is8x8 ? 8 : 16;
     int xBound = (x /= tileSize) < layer->GetLayerWidth();
     int yBound = (y /= tileSize) < layer->GetLayerHeight();
+    QString offset_text = "";
+    if(!is8x8)
+    {
+        offset_text.sprintf(" Positional offset (y * width + x): 0x%04X", layer->GetLayerWidth() * y + x);
+    }
     if(xBound && yBound)
     {
-        statusBarLabel_MousePosition->setText(QString("Mouse position: Layer %0 (%1, %2, %3)").arg(
-            QString::number(selectedLayer), QString(is8x8 ? "Tile8x8" : "Map16"), QString::number(x), QString::number(y)));
+        statusBarLabel_MousePosition->setText(QString("Mouse position (Hex): Layer %0 (%1, %2, %3)").arg(
+            QString::number(selectedLayer),
+            QString(is8x8 ? "Tile8x8" : "Map16"),
+            QString::number(x, 16),
+            QString::number(y, 16)) + offset_text);
     }
     else
     {
@@ -2087,7 +2095,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 
     // UI updates
     SetCurrentRoomId(newRoomId);
-    OutputWidget->PrintString(QString(tr("Created a new blank room")) + " (# " + QString::number(newRoomId) + ") " + tr("using the current room's data saved in the ROM."));
+    OutputWidget->PrintString(QString(tr("Created a new blank room")) + " (# " + QString::number(newRoomId, 16) + ") " + tr("using the current room's data saved in the ROM."));
 
     // Clear everything in the new room
     ClearEverythingInRoom(true);

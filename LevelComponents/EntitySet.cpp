@@ -177,7 +177,7 @@ namespace LevelComponents
             {
                 // TODO: deal with exception
                 singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("load entityset error: loading palette's id out of bound.") + \
-                                                             QObject::tr("entityset id: ") + QString::number(EntitySetID));
+                                                             QObject::tr("entityset id: ") + QString::number(EntitySetID, 16));
                 continue;
             }
             for (int i = tmpEntityPalOffset + 8; i < offset; ++i) // load specified sprites' tiles

@@ -18,7 +18,7 @@ EntitySetDockWidget::~EntitySetDockWidget() { delete ui; }
 void EntitySetDockWidget::ResetEntitySet(LevelComponents::Room *currentroom)
 {
     currentRoom = currentroom;
-    ui->label_EntitySetID->setText("EntitySet ID: " + QString::number(currentroom->GetCurrentEntitySetID(), 10));
+    ui->label_EntitySetID->setText("EntitySet ID: " + QString::number(currentroom->GetCurrentEntitySetID(), 16));
     EntityMaxNum = currentroom->GetCurrentEntityListSource().size() - 1;
     currentEntityId = 0;
     RenderEntityAndResetInfo();
@@ -83,8 +83,8 @@ void EntitySetDockWidget::RenderEntityAndResetInfo()
 
     // Reset Info
     ui->textEdit_EntityInfo->clear();
-    ui->textEdit_EntityInfo->append("Entity local Id: " + QString::number(currentEntityId));
-    ui->textEdit_EntityInfo->append("Entity global Id: " + QString::number(currentEntityPtr->GetEntityGlobalID()));
+    ui->textEdit_EntityInfo->append("Entity local Id (Hex): " + QString::number(currentEntityId, 16));
+    ui->textEdit_EntityInfo->append("Entity global Id (Hex): " + QString::number(currentEntityPtr->GetEntityGlobalID(), 16));
 }
 
 /// <summary>
