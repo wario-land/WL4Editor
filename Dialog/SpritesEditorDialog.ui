@@ -270,7 +270,7 @@
           <item row="4" column="0">
            <widget class="QLabel" name="label_OAMCharID">
             <property name="text">
-             <string>Character ID:</string>
+             <string>Character ID (Hex):</string>
             </property>
            </widget>
           </item>
@@ -281,6 +281,9 @@
             </property>
             <property name="maximum">
              <number>127</number>
+            </property>
+            <property name="displayIntegerBase">
+             <number>16</number>
             </property>
            </widget>
           </item>
@@ -294,14 +297,14 @@
           <item row="0" column="0">
            <widget class="QLabel" name="label_OamX">
             <property name="text">
-             <string>X:</string>
+             <string>X (Hex)</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
            <widget class="QLabel" name="label_OamY">
             <property name="text">
-             <string>Y</string>
+             <string>Y (Hex)</string>
             </property>
            </widget>
           </item>
@@ -323,6 +326,9 @@
            <widget class="QSpinBox" name="spinBox_OAMCharId">
             <property name="maximum">
              <number>1023</number>
+            </property>
+            <property name="displayIntegerBase">
+             <number>16</number>
             </property>
            </widget>
           </item>
@@ -365,6 +371,9 @@
             <property name="maximum">
              <number>255</number>
             </property>
+            <property name="displayIntegerBase">
+             <number>16</number>
+            </property>
            </widget>
           </item>
           <item row="7" column="0">
@@ -400,7 +409,7 @@
           <item>
            <widget class="QLabel" name="label_SpritesetID">
             <property name="text">
-             <string>Spriteset ID:</string>
+             <string>Spriteset ID (Hex):</string>
             </property>
            </widget>
           </item>
@@ -422,6 +431,9 @@
            <widget class="QSpinBox" name="spinBox_SpritesetID">
             <property name="maximum">
              <number>89</number>
+            </property>
+            <property name="displayIntegerBase">
+             <number>16</number>
             </property>
            </widget>
           </item>

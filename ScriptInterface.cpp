@@ -65,9 +65,9 @@ int ScriptInterface::GetCurRoomTile16(int layerID, int x, int y)
     int width = static_cast<int>(layer->GetLayerWidth());
     int height = static_cast<int>(layer->GetLayerHeight());
     if(x >= width || y >= height) {
-        log("ScriptInterface::GetCurRoomTile16(): Tile position (" +
-            QString::number(x, 16) + ", " + QString::number(y, 16) +
-            ") out of bounds on layer L (dimensions: " + QString::number(width, 16) + ", " + QString::number(height, 16) + ")");
+        log("ScriptInterface::GetCurRoomTile16(): Tile position (0x" +
+            QString::number(x, 16) + ", 0x" + QString::number(y, 16) +
+            ") out of bounds on layer L (dimensions: 0x" + QString::number(width, 16) + ", 0x" + QString::number(height, 16) + ")");
         return -1;
     }
     return layer->GetTileData(x, y);
@@ -81,9 +81,9 @@ int ScriptInterface::GetCurRoomTile8(int layerID, int x, int y)
     int width = static_cast<int>(layer->GetLayerWidth());
     int height = static_cast<int>(layer->GetLayerHeight());
     if(x >= width || y >= height) {
-        log("ScriptInterface::GetCurRoomTile8(): Tile position (" +
-            QString::number(x, 16) + ", " + QString::number(y, 16) +
-            ") out of bounds on layer L (dimensions: " + QString::number(width, 16) + ", " + QString::number(height, 16) + ")");
+        log("ScriptInterface::GetCurRoomTile8(): Tile position (0x" +
+            QString::number(x, 16) + ", 0x" + QString::number(y, 16) +
+            ") out of bounds on layer L (dimensions: 0x" + QString::number(width, 16) + ", 0x" + QString::number(height, 16) + ")");
         return -1;
     }
     return layer->GetTileData(x, y) & 0x3FF;
@@ -119,7 +119,7 @@ void ScriptInterface::_PackScreen(QString inputData, bool skipzeros)
     unsigned short *data = QStringToU16(inputData);
     unsigned short *output = nullptr;
     int length = ROMUtils::PackScreen(data, output, skipzeros);
-    log("Legnth of decompressed data (Hex): " + QString::number(length, 16));
+    log("Legnth of decompressed data: 0x" + QString::number(length, 16));
     log("Decompressed data:");
     QString tmpstr;
     for (int i = 0; i < length; ++i)
@@ -327,7 +327,7 @@ void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
     }
     if(datasize != 2 * witdh * height)
     {
-        log("File size not match (expected width:" + QString::number(witdh, 16) + ", height:" + QString::number(height, 16) + ")!");
+        log("File size not match (expected width: 0x" + QString::number(witdh, 16) + ", height: 0x" + QString::number(height, 16) + ")!");
         return;
     }
     memcpy(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.data(), 2 * witdh * height);
