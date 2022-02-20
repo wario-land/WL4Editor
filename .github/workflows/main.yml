@@ -17,7 +17,7 @@ jobs:
         os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
       - name: Download Submodules
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
         with:
           submodules: true
           
@@ -32,10 +32,13 @@ jobs:
         with:
           version: 5.14.1
 
+      - name: Setup MSVC environment
+        if: startsWith(matrix.os, 'windows')
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Build WL4Editor on Windows
         if: startsWith(matrix.os, 'windows')
         run: |
-          call "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           dir %Qt5_Dir%/lib/cmake
           qmake WL4Editor.pro
           nmake debug
