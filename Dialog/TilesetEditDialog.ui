@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1282</width>
-    <height>706</height>
+    <height>739</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -272,7 +272,7 @@
          <item>
           <widget class="QPushButton" name="pushButton_ImportTile8x8Graphic">
            <property name="text">
-            <string>Import and overwrite</string>
+            <string>Import and Overwrite</string>
            </property>
           </widget>
          </item>
@@ -301,23 +301,9 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="label_Tile16Combination">
+          <widget class="QPushButton" name="pushButton_ImportTile16Graphic">
            <property name="text">
-            <string>combination data:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_ExportTile16sCombinationData">
-           <property name="text">
-            <string>Export</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_ImportTile16sCombinationData">
-           <property name="text">
-            <string>Import</string>
+            <string>Import and Insert</string>
            </property>
           </widget>
          </item>

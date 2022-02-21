@@ -83,10 +83,9 @@ private slots:
     void on_pushButton_ExportTile8x8Map_clicked();
     void on_pushButton_ExportTile16Map_clicked();
     void on_pushButton_ImportTile8x8Graphic_clicked();
-    void on_pushButton_ExportTile16sCombinationData_clicked();
-    void on_pushButton_ImportTile16sCombinationData_clicked();
     void on_pushButton_ExportPalette_clicked();
     void on_pushButton_ImportPalette_clicked();
+    void on_pushButton_ImportTile16Graphic_clicked();
 
 private:
     Ui::TilesetEditDialog *ui;
