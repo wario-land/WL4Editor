@@ -903,6 +903,69 @@ void TilesetEditDialog::on_pushButton_ImportPalette_clicked()
 
 void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
 {
-    // TODO
+    /** rule(s):
+     *  don't overwrite the first Tile16
+     *  don't let imported Tile16 id goes out of bound (should be smaller than 0x2FF)
+     *  TODO: support flexible Tile16 set length in the future, and we can read each of its length from the RATS struct
+    **/
+    LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
+    TilesetEditDialog *currenteditor = this;
+    int selTile16 = SelectedTile16;
+    FileIOUtils::ImportTile8x8GfxData(this,
+        tmp_newTilesetPtr->GetPalettes()[SelectedPaletteId],
+        [selTile16, tmp_newTilesetPtr, currenteditor] (QByteArray finaldata, QWidget *parentPtr)
+        {
+            // Assume the file is fully filled with tiles
+            int newtile8x8num = finaldata.size() / 32;
+            int newtile16num = newtile8x8num / 4;
+            if (newtile8x8num != newtile16num * 4)
+            {
+                QMessageBox::critical(parentPtr, tr("Load Error"), tr("Illegal Tile8x8 number!"));
+                return;
+            }
+
+            // Assume we insert Tile16s after the selected Tile16
+            if ((newtile16num + selTile16 + 1) > Tile16DefaultNum)
+            {
+                QMessageBox::critical(parentPtr, tr("Load Error"), tr("Too many Tile16, new Tile16s indexed out of bound!"));
+                return;
+            }
+
+            // not include animated tiles
+            int existingTile8x8Num = tmp_newTilesetPtr->GetfgGFXlen() / 32;
+
+            unsigned char newtmpdata[32];
+            unsigned char newtmpXFlipdata[32];
+            unsigned char newtmpYFlipdata[32];
+            unsigned char newtmpXYFlipdata[32];
+
+            // Generate tile8x8 data for all the existing foreground Tile8x8s
+            // TODO
+
+            // Compare through all the existing foreground Tile8x8s
+            // if exist, generate Tile16 data
+            // if not exist, show dialog and return
+            for(int i = 0; i < newtile8x8num; ++i)
+            {
+                // Generate 4 possible existing Tile8x8 graphic data for comparison
+                memcpy(newtmpdata, finaldata.data() + 32 * i, 32);
+                ROMUtils::Tile8x8DataXFlip(newtmpdata, newtmpXFlipdata);
+                ROMUtils::Tile8x8DataYFlip(newtmpdata, newtmpYFlipdata);
+                ROMUtils::Tile8x8DataYFlip(newtmpXFlipdata, newtmpXYFlipdata);
+
+                // loop from the first blank tile, excluding those animated tiles
+                for (int j = 0x40; j < 0x41 + existingTile8x8Num; j++) // TODO: the range needs to be reset
+                {
+                    // TODO
+                }
+
+                // ask user how many Tile16 per row, then update Tile16s' data to the Tile16 set
+                // TODO
+            }
+        });
+
+    // update graphicview
+    SetSelectedTile16(SelectedTile16, false);
+    ReRenderTile16Map();
 }
 
