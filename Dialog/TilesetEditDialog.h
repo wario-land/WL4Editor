@@ -10,6 +10,7 @@
 #include <QColorDialog>
 #include <QTextStream>
 #include <QMessageBox>
+#include <QInputDialog>
 #include "LevelComponents/Room.h"
 #include "RoomPreviewGraphicsView.h"
 

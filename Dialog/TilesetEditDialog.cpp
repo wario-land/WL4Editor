@@ -951,8 +951,10 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
             }
 
             // ask user how many Tile16 per row, then update Tile16s' data to the Tile16 set
-            // TODO: intput TIle16_per_row
-            int Tile16_per_row = 1;
+            int Tile16_per_row = QInputDialog::getInt(parentPtr,
+                                                      tr("WL4Editor"),
+                                                      tr("Input the Tile16 number per row in your source file"),
+                                                      1, 1, 8);
             int Tile16_per_col = newtile16num / Tile16_per_row;
             if (Tile16_per_row * Tile16_per_col != newtile16num)
             {
