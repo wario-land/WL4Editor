@@ -911,9 +911,10 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
     LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
     TilesetEditDialog *currenteditor = this;
     int selTile16 = SelectedTile16;
+    int selPalId = SelectedPaletteId;
     FileIOUtils::ImportTile8x8GfxData(this,
         tmp_newTilesetPtr->GetPalettes()[SelectedPaletteId],
-        [selTile16, tmp_newTilesetPtr, currenteditor] (QByteArray finaldata, QWidget *parentPtr)
+        [selTile16, tmp_newTilesetPtr, selPalId, currenteditor] (QByteArray finaldata, QWidget *parentPtr)
         {
             // Assume the file is fully filled with tiles
             int newtile8x8num = finaldata.size() / 32;
@@ -940,7 +941,25 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
             unsigned char newtmpXYFlipdata[32];
 
             // Generate tile8x8 data for all the existing foreground Tile8x8s
-            // TODO
+            int data_size = (existingTile8x8Num + 1) * 32;
+            unsigned char *tmp_current_tile8x8_data = new unsigned char[data_size];
+            memset(tmp_current_tile8x8_data, 0, data_size);
+            auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
+            for (int j = 0x40; j < (0x41 + existingTile8x8Num); j++)
+            {
+                memcpy(&tmp_current_tile8x8_data[(j - 0x40) * 32], tile8x8array[j]->CreateGraphicsData().data(), 32);
+            }
+
+            // ask user how many Tile16 per row, then update Tile16s' data to the Tile16 set
+            // TODO: intput TIle16_per_row
+            int Tile16_per_row = 1;
+            int Tile16_per_col = newtile16num / Tile16_per_row;
+            if (Tile16_per_row * Tile16_per_col != newtile16num)
+            {
+                QMessageBox::critical(parentPtr, tr("Error"), tr("incorrect Tile16 number per row!"));
+                delete[] tmp_current_tile8x8_data;
+                return;
+            }
 
             // Compare through all the existing foreground Tile8x8s
             // if exist, generate Tile16 data
@@ -954,13 +973,42 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
                 ROMUtils::Tile8x8DataYFlip(newtmpXFlipdata, newtmpXYFlipdata);
 
                 // loop from the first blank tile, excluding those animated tiles
-                for (int j = 0x40; j < 0x41 + existingTile8x8Num; j++) // TODO: the range needs to be reset
+                for (int j = 0; j < (existingTile8x8Num + 1); j++)
                 {
-                    // TODO
-                }
+                    int result0 = memcmp(newtmpdata, &tmp_current_tile8x8_data[j * 32], 32);
+                    int result1 = memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+                    int result2 = memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+                    int result3 = memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+                    int cur_row = j / Tile16_per_row;
+                    int cur_col = j % Tile16_per_row;
+                    int position = (cur_row & 1) << 1 | (cur_col & 1);
 
-                // ask user how many Tile16 per row, then update Tile16s' data to the Tile16 set
-                // TODO
+                    LevelComponents::TileMap16* tile16Data = tmp_newTilesetPtr->GetMap16arrayPtr()[selTile16 + newtile8x8num];
+                    LevelComponents::Tile8x8* tile8x8_ptr = tmp_newTilesetPtr->GetTile8x8arrayPtr()[j + 0x40];
+                    if (!result0)
+                    {
+                        tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, false, false);
+                    }
+                    else if (!result1)
+                    {
+                        tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, true, false);
+                    }
+                    else if (!result2)
+                    {
+                        tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, false, true);
+                    }
+                    else if (!result3)
+                    {
+                        tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, true, true);
+                    }
+                    else // not find any existing tile8x8 eqaul to the current tile8x8
+                    {
+                        QMessageBox::critical(parentPtr, tr("Load Error"),
+                                              tr("Detect a Tile8x8 cannot be found in the current Tile8x8 set!"));
+                        delete[] tmp_current_tile8x8_data;
+                        return;
+                    }
+                }
             }
         });
 
