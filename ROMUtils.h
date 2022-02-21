@@ -96,6 +96,8 @@ namespace ROMUtils
     void CleanUpTmpCurrentFileMetaData();
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
+    void Tile8x8DataXFlip(unsigned char *source, unsigned char *destination);
+    void Tile8x8DataYFlip(unsigned char *source, unsigned char *destination);
     unsigned int PackScreen(unsigned short *screenCharData, unsigned short *&outputCompressedData, bool skipzeros = true);
     unsigned short *UnPackScreen(uint32_t address);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);

@@ -147,6 +147,45 @@ namespace ROMUtils
     }
 
     /// <summary>
+    /// Get an 32 bytes uchar array of Tile8x8 graphic data, then X flip the data of its graphic.
+    /// </summary>
+    /// <param name="source">
+    /// The pointer to read uchar array Tile8x8 data.
+    /// </param>
+    /// <param name="destination">
+    /// The pointer to save changed Tile8x8 data to.
+    /// </param>
+    void Tile8x8DataXFlip(unsigned char *source, unsigned char *destination)
+    {
+        for (int col = 0; col < 8; col++)
+        {
+            for (int row = 0; row < 4; row++)
+            {
+                unsigned char curByte = source[col * 4 + row];
+                curByte = ((curByte & 0xF) << 4) | ((curByte & 0xF0) >> 4);
+                destination[col * 4 + (3 - row)] = curByte;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Get an 32 bytes uchar array of Tile8x8 graphic data, then Y flip the data of its graphic.
+    /// </summary>
+    /// <param name="source">
+    /// The pointer to read uchar array Tile8x8 data.
+    /// </param>
+    /// <param name="destination">
+    /// The pointer to save changed Tile8x8 data to.
+    /// </param>
+    void Tile8x8DataYFlip(unsigned char *source, unsigned char *destination)
+    {
+        for (int col = 0; col < 8; col++)
+        {
+            memcpy(&destination[col * 4], &source[(7 - col) * 4], 4 * sizeof(unsigned char));
+        }
+    }
+
+    /// <summary>
     /// Reverse the endianness of an integer.
     /// </summary>
     /// <param name="n">
