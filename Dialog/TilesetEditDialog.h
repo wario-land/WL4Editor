@@ -89,6 +89,7 @@ private slots:
     void on_pushButton_ExportPalette_clicked();
     void on_pushButton_ImportPalette_clicked();
     void on_pushButton_ImportTile16Graphic_clicked();
+    void on_pushButton_CleanUpDuplicatedTile8x8_clicked();
 
 private:
     Ui::TilesetEditDialog *ui;

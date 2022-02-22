@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1282</width>
-    <height>739</height>
+    <height>741</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -610,6 +610,13 @@
        </item>
        <item>
         <widget class="QTextEdit" name="textEdit_Infos"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_CleanUpDuplicatedTile8x8">
+         <property name="text">
+          <string>Clean up duplicated Tile8x8</string>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer_2">

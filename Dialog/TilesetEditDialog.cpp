@@ -1097,3 +1097,107 @@ QVector<int> TilesetEditDialog::FindUnusedPalettes()
     return result;
 }
 
+/// <summary>
+/// Clean up duplicated Tile8x8 from both Tile8x8 set and Tile16 set.
+/// </summary>
+void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
+{
+    LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
+    int existingTile8x8Num = tmp_newTilesetPtr->GetfgGFXlen() / 32;
+    unsigned char newtmpdata[32];
+    unsigned char newtmpXFlipdata[32];
+    unsigned char newtmpYFlipdata[32];
+    unsigned char newtmpXYFlipdata[32];
+
+    // Generate tile8x8 data for all the existing foreground Tile8x8s
+    int data_size = (existingTile8x8Num + 1) * 32;
+    unsigned char *tmp_current_tile8x8_data = new unsigned char[data_size];
+    memset(&tmp_current_tile8x8_data[0], 0, data_size);
+    auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
+    for (int j = 0x40; j < (0x41 + existingTile8x8Num); j++)
+    {
+        memcpy(&tmp_current_tile8x8_data[(j - 0x40) * 32], tile8x8array[j]->CreateGraphicsData().data(), 32);
+    }
+
+    // Compare through all the existing foreground Tile8x8s
+    for(int i = existingTile8x8Num; i > 0; i--)
+    {
+        // Generate 4 possible existing Tile8x8 graphic data for comparison
+        memcpy(newtmpdata, &tmp_current_tile8x8_data[32 * i], 32);
+        ROMUtils::Tile8x8DataXFlip(newtmpdata, newtmpXFlipdata);
+        ROMUtils::Tile8x8DataYFlip(newtmpdata, newtmpYFlipdata);
+        ROMUtils::Tile8x8DataYFlip(newtmpXFlipdata, newtmpXYFlipdata);
+
+        // loop from the first blank tile to the tile right before the current tile being checked, excluding those animated tiles
+        for (int j = 0; j < i; j++)
+        {
+            int result0 = memcmp(newtmpdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result1 = memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result2 = memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result3 = memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            bool find_eqaul = false;
+            bool xflip = false;
+            bool yflip = false;
+            auto tile16array = tmp_newTilesetPtr->GetMap16arrayPtr();
+            auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
+
+            if (!result0)
+            {
+                find_eqaul = true;
+            }
+            else if (!result1)
+            {
+                find_eqaul = true;
+                xflip = true;
+            }
+            else if (!result2)
+            {
+                find_eqaul = true;
+                yflip = true;
+            }
+            else if (!result3)
+            {
+                find_eqaul = true;
+                xflip = true;
+                yflip = true;
+            }
+
+            if (find_eqaul)
+            {
+                for (int k = 0; k < Tile16DefaultNum; k++)
+                {
+                    for (int pos = 0; pos < 4; pos++)
+                    {
+                        bool tmp_xflip = xflip;
+                        bool tmp_yflip = yflip;
+                        auto tile8 = tile16array[k]->GetTile8X8(pos);
+                        if (tile8->GetIndex() == (i + 0x40))
+                        {
+                            if (tile8->GetFlipX())
+                            {
+                                tmp_xflip = !xflip;
+                            }
+                            if (tile8->GetFlipY())
+                            {
+                                tmp_yflip = !yflip;
+                            }
+                            tile16array[k]->ResetTile8x8(tile8x8array[j + 0x40], pos, j + 0x40,
+                                                         tile8->GetPaletteIndex(), tmp_xflip, tmp_yflip);
+                        }
+                    }
+                }
+
+                // delete the Tile8x8 from the Tile8x8 set
+                tilesetEditParams->newTileset->DelTile8x8(i + 0x40);
+                break;
+            }
+        }
+    }
+
+    // update graphicview
+    ReRenderTile16Map();
+    ReRenderTile8x8Map(SelectedPaletteId);
+    SetSelectedTile16(0, true);
+    SetSelectedTile8x8(0, true);
+}
+
