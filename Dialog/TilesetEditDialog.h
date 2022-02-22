@@ -52,9 +52,11 @@ public:
     void DeleteFGTile8x8(int tile8x8id);
     int PaletteBrushValue() {return paletteBrushVal; }
     void SetTile16PaletteId(int tile16ID);
+    void ClearTile16Data(int tile16ID);
 
     int GetSelectedTile8x8() { return SelectedTile8x8; }
     int GetFGTile8x8Num() { return tilesetEditParams->newTileset->GetfgGFXlen() / 32; }
+    int GetSelectedTile16() { return SelectedTile16; }
 
     ~TilesetEditDialog();
 

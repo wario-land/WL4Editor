@@ -34,3 +34,18 @@ void TilesetEditor_Tile16MapGraphicView::mouseReleaseEvent(QMouseEvent *event)
     }
     Inmouseslotfunction = false;
 }
+
+void TilesetEditor_Tile16MapGraphicView::keyPressEvent(QKeyEvent *event)
+{
+    switch (event->key())
+    {
+    // Clear the selected Tile16 if BSP or DEL is pressed
+    case Qt::Key_Backspace:
+    case Qt::Key_Delete:
+    {
+        int Tile16Id = TilesetEditor->GetSelectedTile16();
+        TilesetEditor->ClearTile16Data(Tile16Id);
+        TilesetEditor->SetSelectedTile16(Tile16Id - 1, false);
+    }
+    }
+}

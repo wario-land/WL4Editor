@@ -151,30 +151,30 @@ void TilesetEditDialog::DeleteFGTile8x8(int tile8x8id)
 /// </param>
 void TilesetEditDialog::SetTile16PaletteId(int tile16ID)
 {
-    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(0)->GetIndex(),
-                                                 0,
-                                                 ui->spinBox_paletteBrushValue->value(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(0)->GetFlipX(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(0)->GetFlipY());
-    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(1)->GetIndex(),
-                                                 1,
-                                                 ui->spinBox_paletteBrushValue->value(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(1)->GetFlipX(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(1)->GetFlipY());
-    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(2)->GetIndex(),
-                                                 2,
-                                                 ui->spinBox_paletteBrushValue->value(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(2)->GetFlipX(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(2)->GetFlipY());
-    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(3)->GetIndex(),
-                                                 3,
-                                                 ui->spinBox_paletteBrushValue->value(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(3)->GetFlipX(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(3)->GetFlipY());
+    auto tile16 = tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID];
+    for (int i = 0; i < 4; i++)
+    {
+        UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
+                                                     tile16->GetTile8X8(i)->GetIndex(),
+                                                     i,
+                                                     ui->spinBox_paletteBrushValue->value(),
+                                                     tile16->GetTile8X8(i)->GetFlipX(),
+                                                     tile16->GetTile8X8(i)->GetFlipY());
+    }
+}
+
+/// <summary>
+/// Clear the current Tile16 data, reset it to blank tile16
+/// </summary>
+/// <param name="tile16ID">
+/// Tile16's Id which are going to be set.
+/// </param>
+void TilesetEditDialog::ClearTile16Data(int tile16ID)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID, 0x40, i, 0, false, false);
+    }
 }
 
 void TilesetEditDialog::on_spinBox_valueChanged(int arg1)
