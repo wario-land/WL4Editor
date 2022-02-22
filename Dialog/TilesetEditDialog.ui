@@ -52,11 +52,25 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_palette">
-         <property name="text">
-          <string>Palette:</string>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <property name="topMargin">
+          <number>0</number>
          </property>
-        </widget>
+         <item>
+          <widget class="QLabel" name="label_palette">
+           <property name="text">
+            <string>Palette:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_Tile8x8SetPaletteId">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QSlider" name="horizontalSlider">
@@ -303,7 +317,7 @@
          <item>
           <widget class="QPushButton" name="pushButton_ImportTile16Graphic">
            <property name="text">
-            <string>Import and Insert</string>
+            <string>Import and Overwrite</string>
            </property>
           </widget>
          </item>
@@ -593,6 +607,9 @@
           </widget>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="textEdit_Infos"/>
        </item>
        <item>
         <spacer name="verticalSpacer_2">

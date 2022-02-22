@@ -26,6 +26,7 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
     ui->graphicsView_TilesetAllTile8x8->SetCurrentTilesetEditor(this);
     ui->graphicsView_paletteBar->SetCurrentTilesetEditor(this);
     ui->graphicsView_Tile8x8Editor->SetCurrentTilesetEditor(this);
+    ui->label_Tile8x8SetPaletteId->setText("0x0");
 
     // render
     RenderInitialization();
@@ -34,6 +35,9 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
     SetSelectedTile8x8(0, true);
     SetSelectedTile16(0, true);
     SetSelectedColorId(0);
+
+    // update Info Textbox
+    UpdateInfoTextBox();
 
     HasInitialized = true;
 }
@@ -429,6 +433,9 @@ void TilesetEditDialog::ReRenderTile16Map()
     SelectionBox_Tile16->setVisible(false);
 
     SetSelectedTile16(0, true);
+
+    // update Info Textbox
+    UpdateInfoTextBox();
 }
 
 void TilesetEditDialog::ReRenderTile8x8Map(int paletteId)
@@ -543,6 +550,9 @@ void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int tile16I
     QPixmap pm(Tile16mapping->pixmap());
     tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16Id]->DrawTile(&pm, (tile16Id & 7) << 4, (tile16Id >> 3) << 4);
     Tile16mapping->setPixmap(pm);
+
+    // update Info Textbox
+    UpdateInfoTextBox();
 }
 
 /// <summary>
@@ -579,6 +589,28 @@ void TilesetEditDialog::OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(int posI
             }
         }
     }
+}
+
+/// <summary>
+/// Update Info Textbox
+/// </summary>
+void TilesetEditDialog::UpdateInfoTextBox()
+{
+    // clean up textbox
+    ui->textEdit_Infos->setText("");
+
+    // Generate new Infos
+    QString output;
+    output += tr("Unused Palette(s): (don't forget to clean up those trash Tile16 manually)\n");
+    QVector<int> unused_palettes = FindUnusedPalettes();
+    for (auto palette_id: unused_palettes)
+    {
+        output += "0x" + QString::number(palette_id, 16) + ", ";
+    }
+    output += "\n";
+
+    // set textbox
+    ui->textEdit_Infos->setText(output);
 }
 
 /// <summary>
@@ -711,6 +743,7 @@ void TilesetEditDialog::on_horizontalSlider_valueChanged(int value)
     SetSelectedTile8x8(0, true);
     SetSelectedColorId(0);
     ReRenderTile16Map();
+    ui->label_Tile8x8SetPaletteId->setText("0x" + QString::number(value, 16));
 }
 
 void TilesetEditDialog::TLTile8x8Reset()
@@ -810,7 +843,7 @@ void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
 }
 
 /// <summary>
-/// Inport Tile8x8 graphic data from bin file.
+/// Inport Tile8x8 graphic data from bin files.
 /// </summary>
 void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 {
@@ -900,7 +933,9 @@ void TilesetEditDialog::on_pushButton_ImportPalette_clicked()
     ReRenderTile16Map();
 }
 
-
+/// <summary>
+/// Inport Tile16 graphic data from bin files.
+/// </summary>
 void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
 {
     /** rule(s):
@@ -909,12 +944,11 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
      *  TODO: support flexible Tile16 set length in the future, and we can read each of its length from the RATS struct
     **/
     LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
-    TilesetEditDialog *currenteditor = this;
     int selTile16 = SelectedTile16;
     int selPalId = SelectedPaletteId;
     FileIOUtils::ImportTile8x8GfxData(this,
         tmp_newTilesetPtr->GetPalettes()[SelectedPaletteId],
-        [selTile16, tmp_newTilesetPtr, selPalId, currenteditor] (QByteArray finaldata, QWidget *parentPtr)
+        [selTile16, tmp_newTilesetPtr, selPalId] (QByteArray finaldata, QWidget *parentPtr)
         {
             // Assume the file is fully filled with tiles
             int newtile8x8num = finaldata.size() / 32;
@@ -943,7 +977,7 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
             // Generate tile8x8 data for all the existing foreground Tile8x8s
             int data_size = (existingTile8x8Num + 1) * 32;
             unsigned char *tmp_current_tile8x8_data = new unsigned char[data_size];
-            memset(tmp_current_tile8x8_data, 0, data_size);
+            memset(&tmp_current_tile8x8_data[0], 0, data_size);
             auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
             for (int j = 0x40; j < (0x41 + existingTile8x8Num); j++)
             {
@@ -974,6 +1008,7 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
                 ROMUtils::Tile8x8DataYFlip(newtmpdata, newtmpYFlipdata);
                 ROMUtils::Tile8x8DataYFlip(newtmpXFlipdata, newtmpXYFlipdata);
 
+                bool find_eqaul = false;
                 // loop from the first blank tile, excluding those animated tiles
                 for (int j = 0; j < (existingTile8x8Num + 1); j++)
                 {
@@ -981,35 +1016,45 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
                     int result1 = memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
                     int result2 = memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
                     int result3 = memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
-                    int cur_row = j / Tile16_per_row;
-                    int cur_col = j % Tile16_per_row;
+                    int cur_row = i / Tile16_per_row / 2;
+                    int cur_col = i % (Tile16_per_row * 2);
                     int position = (cur_row & 1) << 1 | (cur_col & 1);
+                    int row_tile16 = i / Tile16_per_row / 4;
+                    int col_tile16 = i / 2 - Tile16_per_row * (cur_row);
 
-                    LevelComponents::TileMap16* tile16Data = tmp_newTilesetPtr->GetMap16arrayPtr()[selTile16 + newtile8x8num];
+                    LevelComponents::TileMap16* tile16Data = tmp_newTilesetPtr->GetMap16arrayPtr()[selTile16 + row_tile16 * 8 + col_tile16];
                     LevelComponents::Tile8x8* tile8x8_ptr = tmp_newTilesetPtr->GetTile8x8arrayPtr()[j + 0x40];
                     if (!result0)
                     {
                         tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, false, false);
+                        find_eqaul = true;
+                        break;
                     }
                     else if (!result1)
                     {
                         tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, true, false);
+                        find_eqaul = true;
+                        break;
                     }
                     else if (!result2)
                     {
                         tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, false, true);
+                        find_eqaul = true;
+                        break;
                     }
                     else if (!result3)
                     {
                         tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, true, true);
+                        find_eqaul = true;
+                        break;
                     }
-                    else // not find any existing tile8x8 eqaul to the current tile8x8
-                    {
-                        QMessageBox::critical(parentPtr, tr("Load Error"),
-                                              tr("Detect a Tile8x8 cannot be found in the current Tile8x8 set!"));
-                        delete[] tmp_current_tile8x8_data;
-                        return;
-                    }
+                }
+                if (!find_eqaul)
+                {// not find any existing tile8x8 eqaul to the current tile8x8
+                    QMessageBox::critical(parentPtr, tr("Load Error"),
+                                          tr("Detect a Tile8x8 cannot be found in the current Tile8x8 set!"));
+                    delete[] tmp_current_tile8x8_data;
+                    return;
                 }
             }
         });
@@ -1017,5 +1062,38 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
     // update graphicview
     SetSelectedTile16(SelectedTile16, false);
     ReRenderTile16Map();
+}
+
+/// <summary>
+/// A helper fucntion to find palettes which is never used in Tile16 set.
+/// </summary>
+/// <return>
+/// An array of palette id which is never used in Tile16 set.
+/// </return>
+QVector<int> TilesetEditDialog::FindUnusedPalettes()
+{
+    QVector<int> tmp = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    QVector<LevelComponents::TileMap16*> tile16array = tilesetEditParams->newTileset->GetMap16arrayPtr();
+    for (int i = 0; i < Tile16DefaultNum; i++)
+    {
+        LevelComponents::TileMap16* tile16 = tile16array[i];
+        for(int j = 0; j < 4; ++j)
+        {
+            int pal = tile16->GetTile8X8(j)->GetPaletteIndex();
+            if (tmp[pal] == pal)
+            {
+                tmp[pal] = -1; // we clean the used one from the tmp array
+            }
+        }
+    }
+    QVector<int> result;
+    for (int i = 0; i < 16; i++)
+    {
+        if (tmp[i] == i)
+        {
+            result.push_back(i);
+        }
+    }
+    return result;
 }
 

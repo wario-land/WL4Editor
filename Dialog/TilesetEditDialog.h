@@ -113,6 +113,9 @@ private:
     int SelectedPaletteId = 0;
     int paletteBrushVal = -1;
 
+    // helper functions
+    QVector<int> FindUnusedPalettes();
+
     // Setters for Selected Tile16
     void TLTile8x8Reset();
     void TRTile8x8Reset();
@@ -126,6 +129,7 @@ private:
     void ReRenderTile8x8Map(int paletteId);
     void UpdateATile8x8ForSelectedTile16InTilesetData(int tile16Id, int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip);
     void OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(int posId, unsigned char *tiledata);
+    void UpdateInfoTextBox();
 };
 
 #endif // TILESETEDITDIALOG_H
