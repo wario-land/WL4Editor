@@ -201,7 +201,7 @@
         </sizepolicy>
        </property>
        <property name="title">
-        <string>Reset BGM ID:</string>
+        <string>Reset BGM ID (Decimal):</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -247,7 +247,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>EntitySet ID:</string>
+           <string>EntitySet ID (Hex):</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -369,7 +369,7 @@
            </sizepolicy>
           </property>
           <property name="title">
-           <string>The place of Wario's appearance</string>
+           <string>The positional change of Wario's appearance</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
