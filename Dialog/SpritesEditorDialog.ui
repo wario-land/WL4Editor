@@ -256,7 +256,7 @@
           <item row="3" column="0">
            <widget class="QLabel" name="label_OamPal">
             <property name="text">
-             <string>Palette ID:</string>
+             <string>Palette ID (Hex):</string>
             </property>
            </widget>
           </item>
@@ -347,6 +347,9 @@
             <property name="maximum">
              <number>15</number>
             </property>
+            <property name="displayIntegerBase">
+             <number>16</number>
+            </property>
            </widget>
           </item>
           <item row="2" column="0">
@@ -416,7 +419,7 @@
           <item>
            <widget class="QLabel" name="label_PaletteId">
             <property name="text">
-             <string>Palette ID:</string>
+             <string>Palette ID (Hex):</string>
             </property>
            </widget>
           </item>
@@ -442,6 +445,9 @@
             <property name="maximum">
              <number>15</number>
             </property>
+            <property name="displayIntegerBase">
+             <number>16</number>
+            </property>
            </widget>
           </item>
          </layout>
@@ -459,7 +465,7 @@
         <item>
          <widget class="QLabel" name="label_SpritesetLoadTable">
           <property name="text">
-           <string>Spriteset Load Table:</string>
+           <string>Spriteset Load Table (Hex array):</string>
           </property>
          </widget>
         </item>

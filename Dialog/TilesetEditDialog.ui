@@ -132,7 +132,7 @@
             <item row="0" column="1">
              <widget class="QLabel" name="label_AnimatedTileGroupId">
               <property name="text">
-               <string>Group ID</string>
+               <string>Group ID (Hex)</string>
               </property>
              </widget>
             </item>
@@ -149,14 +149,14 @@
             <item row="2" column="1">
              <widget class="QLabel" name="label_AnimatedTileSwitchId">
               <property name="text">
-               <string>Switch ID:</string>
+               <string>Switch ID (Hex)</string>
               </property>
              </widget>
             </item>
             <item row="0" column="0">
              <widget class="QLabel" name="label_AnimatedTIleGroupSlot">
               <property name="text">
-               <string>Slot</string>
+               <string>Slot (Hex)</string>
               </property>
              </widget>
             </item>
@@ -173,7 +173,7 @@
             <item row="2" column="0">
              <widget class="QLabel" name="label_AnimatedTileGroup2Id">
               <property name="text">
-               <string>Group 2 ID:</string>
+               <string>Group 2 ID (Hex)</string>
               </property>
              </widget>
             </item>
@@ -613,7 +613,7 @@
          <item>
           <widget class="QCheckBox" name="checkBox_paletteBrush">
            <property name="text">
-            <string>Palette Brush</string>
+            <string>Palette Brush (Hex)</string>
            </property>
           </widget>
          </item>

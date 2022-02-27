@@ -347,11 +347,11 @@ void DoorConfigDialog::UpdateComboBoxEntitySet()
 {
     QComboBox *model = ui->ComboBox_EntitySetID;
     model->clear();
-    for (const auto item : comboboxEntitySet)
+    for (const auto &item : comboboxEntitySet)
     {
         if (!item.visible)
             continue;
-        model->addItem(QString::number(item.id));
+        model->addItem("0x" + QString::number(item.id, 16));
     }
 }
 
