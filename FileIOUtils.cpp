@@ -258,7 +258,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
          if (palbinfile.size() != 32)
          {
              QMessageBox::critical(parent, QString(QObject::tr("Error")),
-                                   QString(QObject::tr("Internal error: File size isn't 32 bytes, current size: ")) +
+                                   QString(QObject::tr("Internal error: File size isn't 32 bytes, current size (Dec): ")) +
                                    QString::number(palbinfile.size()));
              palbinfile.close();
              return false;

@@ -146,7 +146,7 @@
             <item row="0" column="1">
              <widget class="QLabel" name="label_AnimatedTileGroupId">
               <property name="text">
-               <string>Group ID</string>
+               <string>Group ID (Hex)</string>
               </property>
              </widget>
             </item>
@@ -155,19 +155,22 @@
               <property name="maximum">
                <number>15</number>
               </property>
+              <property name="displayIntegerBase">
+               <number>16</number>
+              </property>
              </widget>
             </item>
             <item row="2" column="1">
              <widget class="QLabel" name="label_AnimatedTileSwitchId">
               <property name="text">
-               <string>Switch ID:</string>
+               <string>Switch ID (Hex)</string>
               </property>
              </widget>
             </item>
             <item row="0" column="0">
              <widget class="QLabel" name="label_AnimatedTIleGroupSlot">
               <property name="text">
-               <string>Slot</string>
+               <string>Slot (Hex)</string>
               </property>
              </widget>
             </item>
@@ -184,7 +187,7 @@
             <item row="2" column="0">
              <widget class="QLabel" name="label_AnimatedTileGroup2Id">
               <property name="text">
-               <string>Group 2 ID:</string>
+               <string>Group 2 ID (Hex)</string>
               </property>
              </widget>
             </item>
@@ -333,7 +336,7 @@
        <item>
         <widget class="QLabel" name="label_SelectedTile16Id">
          <property name="text">
-          <string>Selected Tile16 ID:</string>
+          <string>Selected Tile16 ID (Hex):</string>
          </property>
         </widget>
        </item>
@@ -341,6 +344,9 @@
         <widget class="QSpinBox" name="spinBox">
          <property name="maximum">
           <number>767</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
          </property>
         </widget>
        </item>
@@ -350,7 +356,7 @@
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Event ID&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The game engine will run a function when wario knock into the Tile16, there should be a table of them, the ID is used to find the function&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
-          <string>Event ID (In Hex):</string>
+          <string>Event ID (Hex):</string>
          </property>
         </widget>
        </item>
@@ -370,7 +376,7 @@
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Terrain ID&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;stands for different terrain type, no special function for each of them, they can be used everywhere when needed&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
-          <string>Terrain ID (In Hex):</string>
+          <string>Terrain ID (Hex):</string>
          </property>
         </widget>
        </item>
@@ -426,7 +432,7 @@
                <number>1023</number>
               </property>
               <property name="displayIntegerBase">
-               <number>10</number>
+               <number>16</number>
               </property>
              </widget>
             </item>
@@ -459,6 +465,9 @@
               <property name="maximum">
                <number>15</number>
               </property>
+              <property name="displayIntegerBase">
+               <number>16</number>
+              </property>
              </widget>
             </item>
             <item row="1" column="3">
@@ -473,6 +482,9 @@
               <property name="maximum">
                <number>15</number>
               </property>
+              <property name="displayIntegerBase">
+               <number>16</number>
+              </property>
              </widget>
             </item>
             <item row="2" column="1">
@@ -481,7 +493,7 @@
                <number>1023</number>
               </property>
               <property name="displayIntegerBase">
-               <number>10</number>
+               <number>16</number>
               </property>
              </widget>
             </item>
@@ -491,7 +503,7 @@
                <number>1023</number>
               </property>
               <property name="displayIntegerBase">
-               <number>10</number>
+               <number>16</number>
               </property>
              </widget>
             </item>
@@ -499,6 +511,9 @@
              <widget class="QSpinBox" name="spinBox_BottomLeftpaletteId">
               <property name="maximum">
                <number>15</number>
+              </property>
+              <property name="displayIntegerBase">
+               <number>16</number>
               </property>
              </widget>
             </item>
@@ -557,7 +572,7 @@
                <number>1023</number>
               </property>
               <property name="displayIntegerBase">
-               <number>10</number>
+               <number>16</number>
               </property>
              </widget>
             </item>
@@ -565,6 +580,9 @@
              <widget class="QSpinBox" name="spinBox_BottomRightpaletteId">
               <property name="maximum">
                <number>15</number>
+              </property>
+              <property name="displayIntegerBase">
+               <number>16</number>
               </property>
              </widget>
             </item>
@@ -595,7 +613,7 @@
          <item>
           <widget class="QCheckBox" name="checkBox_paletteBrush">
            <property name="text">
-            <string>Palette Brush</string>
+            <string>Palette Brush (Hex)</string>
            </property>
           </widget>
          </item>
@@ -603,6 +621,9 @@
           <widget class="QSpinBox" name="spinBox_paletteBrushValue">
            <property name="maximum">
             <number>15</number>
+           </property>
+           <property name="displayIntegerBase">
+            <number>16</number>
            </property>
           </widget>
          </item>
