@@ -270,6 +270,7 @@ void PatchManagerDialog::on_removePatchButton_clicked()
     {
         ui->savePatchButton->setEnabled(initialEntries);
     }
+    ui->textEdit_PatchDescription->setText(tr(""));
 }
 
 /// <summary>
