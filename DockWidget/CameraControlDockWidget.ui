@@ -27,9 +27,9 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
-         <width>283</width>
-         <height>525</height>
+         <y>-4</y>
+         <width>269</width>
+         <height>532</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -142,7 +142,7 @@
                 <item>
                  <widget class="QLabel" name="label_Position_Size">
                   <property name="text">
-                   <string>Position &amp; Size</string>
+                   <string>Position &amp; Size (Hex)</string>
                   </property>
                  </widget>
                 </item>
@@ -158,6 +158,9 @@
                     </property>
                     <property name="maximum">
                      <number>255</number>
+                    </property>
+                    <property name="displayIntegerBase">
+                     <number>16</number>
                     </property>
                    </widget>
                   </item>
@@ -183,6 +186,9 @@
                     <property name="maximum">
                      <number>255</number>
                     </property>
+                    <property name="displayIntegerBase">
+                     <number>16</number>
+                    </property>
                    </widget>
                   </item>
                   <item row="1" column="0">
@@ -199,6 +205,9 @@
                     </property>
                     <property name="maximum">
                      <number>251</number>
+                    </property>
+                    <property name="displayIntegerBase">
+                     <number>16</number>
                     </property>
                    </widget>
                   </item>
@@ -217,6 +226,9 @@
                     <property name="maximum">
                      <number>251</number>
                     </property>
+                    <property name="displayIntegerBase">
+                     <number>16</number>
+                    </property>
                    </widget>
                   </item>
                  </layout>
@@ -224,7 +236,7 @@
                 <item>
                  <widget class="QLabel" name="label_sideoffset">
                   <property name="text">
-                   <string>Side offset of limitator</string>
+                   <string>Side offset of limitator (Hex)</string>
                   </property>
                  </widget>
                 </item>
@@ -236,12 +248,15 @@
                   <property name="maximum">
                    <number>255</number>
                   </property>
+                  <property name="displayIntegerBase">
+                   <number>16</number>
+                  </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QLabel" name="label_PositionofTriggerBlock">
                   <property name="text">
-                   <string>Position of the trigger block</string>
+                   <string>Position of the trigger block (Hex)</string>
                   </property>
                  </widget>
                 </item>
@@ -251,6 +266,9 @@
                    <widget class="QSpinBox" name="TriggerBlockPositionX_spinBox">
                     <property name="maximum">
                      <number>255</number>
+                    </property>
+                    <property name="displayIntegerBase">
+                     <number>16</number>
                     </property>
                    </widget>
                   </item>
@@ -272,6 +290,9 @@
                    <widget class="QSpinBox" name="TriggerBlockPositionY_spinBox">
                     <property name="maximum">
                      <number>255</number>
+                    </property>
+                    <property name="displayIntegerBase">
+                     <number>16</number>
                     </property>
                    </widget>
                   </item>

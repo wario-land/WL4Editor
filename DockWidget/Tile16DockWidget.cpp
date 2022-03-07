@@ -130,7 +130,7 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
 
     // Print information about the tile to the user
     QString infoText;
-    infoText.sprintf("Tile ID: %d\nEvent ID: 0x%04X\nTerrain type ID: 0x%02X", tile, eventIndex, tmpTerrainTypeID);
+    infoText.sprintf("Tile ID: 0x%03X\nEvent ID: 0x%04X\nTerrain type ID: 0x%02X", tile, eventIndex, tmpTerrainTypeID);
     SetTileInfoText(infoText);
 
     // Set vertical scrollbar of braphicview

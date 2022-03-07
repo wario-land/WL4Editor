@@ -333,7 +333,7 @@ int DoorConfigDialog::GetSelectedComboBoxEntitySetID()
 {
     QString str = ui->ComboBox_EntitySetID->currentText();
     bool ok = false;
-    int ret = str.toInt(&ok);
+    int ret = str.toInt(&ok, 16);
     if (!ok)
         ret = -1;
 
@@ -347,11 +347,11 @@ void DoorConfigDialog::UpdateComboBoxEntitySet()
 {
     QComboBox *model = ui->ComboBox_EntitySetID;
     model->clear();
-    for (const auto item : comboboxEntitySet)
+    for (const auto &item : comboboxEntitySet)
     {
         if (!item.visible)
             continue;
-        model->addItem(QString::number(item.id));
+        model->addItem("0x" + QString::number(item.id, 16));
     }
 }
 
@@ -599,7 +599,7 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
         return;
     int currentEntitySetId = tmpCurrentRoom->GetDoor(DoorID)->GetEntitySetID();
     if (IsInitialized == true)
-        currentEntitySetId = ui->ComboBox_EntitySetID->currentText().toInt();
+        currentEntitySetId = ui->ComboBox_EntitySetID->currentText().toInt(nullptr, 16);
     ui->TextEdit_AllTheEntities->clear();
     QVector<LevelComponents::EntitySetinfoTableElement> currentEntityTable =
         ROMUtils::entitiessets[currentEntitySetId]->GetEntityTable();
