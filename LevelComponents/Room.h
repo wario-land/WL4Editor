@@ -116,6 +116,9 @@ namespace LevelComponents
             int index;
         } * drawLayers[4];
 
+        // static
+        static const unsigned int EntityNumberPerRoomPerDifficulty = 64;
+
         // Locals
         int EntityLayerZValue[4];
         enum __CameraControlType CameraControlType;
@@ -203,7 +206,7 @@ namespace LevelComponents
 
         // Setters
         void AddDoor(Door *newdoor);
-        bool AddEntity(int XPos, int YPos, int localEntityId, int difficulty = -1);
+        bool AddEntity(int XPos, int YPos, int localEntityTypeId, int difficulty = -1);
         void DeleteCameraLimitator(int index);
         void DeleteDoor(int globalDoorIndex);
         void DeleteEntity(int index);
