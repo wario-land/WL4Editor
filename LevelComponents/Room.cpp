@@ -91,7 +91,7 @@ namespace LevelComponents
         {
             unsigned int Listaddress = ROMUtils::PointerFromData(roomDataPtr + 28 + 4 * i);
             unsigned int k = 0;
-            while (ROMUtils::ROMFileMetadata->ROMDataPtr[Listaddress + 3 * k] != 0xFF) // maximum entity count is 46
+            while (ROMUtils::ROMFileMetadata->ROMDataPtr[Listaddress + 3 * k] != 0xFF) // maximum entity count is 64
             {
                 struct EntityRoomAttribute tmpEntityroomattribute;
                 memcpy(&tmpEntityroomattribute, ROMUtils::ROMFileMetadata->ROMDataPtr + Listaddress + 3 * k++,
@@ -1253,8 +1253,8 @@ namespace LevelComponents
     /// <param name="YPos">
     /// The Y position of the place.
     /// </param>
-    /// <param name="localEntityId">
-    /// The local Id of the Entity in the current EntitySet.
+    /// <param name="localEntityTypeId">
+    /// The local type Id of the Entity in the current EntitySet.
     /// </param>
     /// <param name="difficulty">
     /// The difficulty id of the entity list to add entity.
@@ -1262,7 +1262,7 @@ namespace LevelComponents
     /// <returns>
     /// Always true (?)
     /// </returns>
-    bool Room::AddEntity(int XPos, int YPos, int localEntityId, int difficulty)
+    bool Room::AddEntity(int XPos, int YPos, int localEntityTypeId, int difficulty)
     {
         if (difficulty == -1)
         {
@@ -1270,12 +1270,12 @@ namespace LevelComponents
         } else if (difficulty < -1 || difficulty > 2) {
             return false;
         }
-        if (EntityList[difficulty].size() == 47)
+        if (EntityList[difficulty].size() >= EntityNumberPerRoomPerDifficulty)
             return false;
         EntityRoomAttribute newEntityattrs;
         newEntityattrs.XPos = XPos;
         newEntityattrs.YPos = YPos;
-        newEntityattrs.EntityID = localEntityId;
+        newEntityattrs.EntityID = localEntityTypeId;
         EntityList[difficulty].push_back(newEntityattrs);
         return true;
     }
@@ -1296,8 +1296,6 @@ namespace LevelComponents
     /// </returns>
     void Room::SetEntityPosition(int XPos, int YPos, int index)
     {
-        if (EntityList[currentDifficulty].size() == 47)
-            return;
         EntityList[currentDifficulty].at(index).XPos = XPos;
         EntityList[currentDifficulty].at(index).YPos = YPos;
         return;
@@ -1318,8 +1316,6 @@ namespace LevelComponents
     /// </returns>
     int Room::GetEntityX(int index)
     {
-        if (EntityList[currentDifficulty].size() == 47)
-            return false;
         return EntityList[currentDifficulty].at(index).XPos;
     }
 
@@ -1333,8 +1329,6 @@ namespace LevelComponents
     /// </returns>
     int Room::GetEntityY(int index)
     {
-        if (EntityList[currentDifficulty].size() == 47)
-            return false;
         return EntityList[currentDifficulty].at(index).YPos;
     }
 
