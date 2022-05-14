@@ -82,6 +82,7 @@ void PerformOperation(struct OperationParams *operation)
         singleton->SetEditModeDockWidgetLayerEditability();
         singleton->SetEditModeWidgetDifficultyRadioBox(1);
         singleton->ResetEntitySetDockWidget();
+        singleton->ResetCameraControlDockWidget();
         singleton->SetUnsavedChanges(true);
     }
     if (operation->objectPositionChange)
