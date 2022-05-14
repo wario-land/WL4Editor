@@ -601,7 +601,7 @@ void TilesetEditDialog::UpdateInfoTextBox()
 
     // Generate new Infos
     QString output;
-    output += tr("Unused Palette(s): (don't forget to clean up those trash Tile16 manually)\n");
+    output += tr("Unused Palette(s): (don't forget to clean up those unused Tile16 to free up the room for new palettes.)\n");
     QVector<int> unused_palettes = FindUnusedPalettes();
     for (auto palette_id: unused_palettes)
     {
