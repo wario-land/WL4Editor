@@ -15,6 +15,7 @@ public:
     TilesetEditor_Tile16MapGraphicView(QWidget *param) : QGraphicsView(param) {}
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
+    void keyPressEvent(QKeyEvent *event);
     void SetCurrentTilesetEditor(TilesetEditDialog *currentEditor) { TilesetEditor = currentEditor; }
 
 private:

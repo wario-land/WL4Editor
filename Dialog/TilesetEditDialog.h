@@ -10,6 +10,7 @@
 #include <QColorDialog>
 #include <QTextStream>
 #include <QMessageBox>
+#include <QInputDialog>
 #include "LevelComponents/Room.h"
 #include "RoomPreviewGraphicsView.h"
 
@@ -51,9 +52,11 @@ public:
     void DeleteFGTile8x8(int tile8x8id);
     int PaletteBrushValue() {return paletteBrushVal; }
     void SetTile16PaletteId(int tile16ID);
+    void ClearTile16Data(int tile16ID);
 
     int GetSelectedTile8x8() { return SelectedTile8x8; }
     int GetFGTile8x8Num() { return tilesetEditParams->newTileset->GetfgGFXlen() / 32; }
+    int GetSelectedTile16() { return SelectedTile16; }
 
     ~TilesetEditDialog();
 
@@ -83,10 +86,10 @@ private slots:
     void on_pushButton_ExportTile8x8Map_clicked();
     void on_pushButton_ExportTile16Map_clicked();
     void on_pushButton_ImportTile8x8Graphic_clicked();
-    void on_pushButton_ExportTile16sCombinationData_clicked();
-    void on_pushButton_ImportTile16sCombinationData_clicked();
     void on_pushButton_ExportPalette_clicked();
     void on_pushButton_ImportPalette_clicked();
+    void on_pushButton_ImportTile16Graphic_clicked();
+    void on_pushButton_CleanUpDuplicatedTile8x8_clicked();
 
 private:
     Ui::TilesetEditDialog *ui;
@@ -113,6 +116,9 @@ private:
     int SelectedPaletteId = 0;
     int paletteBrushVal = -1;
 
+    // helper functions
+    QVector<int> FindUnusedPalettes();
+
     // Setters for Selected Tile16
     void TLTile8x8Reset();
     void TRTile8x8Reset();
@@ -126,6 +132,7 @@ private:
     void ReRenderTile8x8Map(int paletteId);
     void UpdateATile8x8ForSelectedTile16InTilesetData(int tile16Id, int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip);
     void OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(int posId, unsigned char *tiledata);
+    void UpdateInfoTextBox();
 };
 
 #endif // TILESETEDITDIALOG_H

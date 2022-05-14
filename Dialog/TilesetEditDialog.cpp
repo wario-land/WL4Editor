@@ -26,6 +26,7 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
     ui->graphicsView_TilesetAllTile8x8->SetCurrentTilesetEditor(this);
     ui->graphicsView_paletteBar->SetCurrentTilesetEditor(this);
     ui->graphicsView_Tile8x8Editor->SetCurrentTilesetEditor(this);
+    ui->label_Tile8x8SetPaletteId->setText("0x0");
 
     // render
     RenderInitialization();
@@ -34,6 +35,9 @@ TilesetEditDialog::TilesetEditDialog(QWidget *parent, DialogParams::TilesetEditP
     SetSelectedTile8x8(0, true);
     SetSelectedTile16(0, true);
     SetSelectedColorId(0);
+
+    // update Info Textbox
+    UpdateInfoTextBox();
 
     HasInitialized = true;
 }
@@ -147,30 +151,30 @@ void TilesetEditDialog::DeleteFGTile8x8(int tile8x8id)
 /// </param>
 void TilesetEditDialog::SetTile16PaletteId(int tile16ID)
 {
-    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(0)->GetIndex(),
-                                                 0,
-                                                 ui->spinBox_paletteBrushValue->value(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(0)->GetFlipX(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(0)->GetFlipY());
-    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(1)->GetIndex(),
-                                                 1,
-                                                 ui->spinBox_paletteBrushValue->value(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(1)->GetFlipX(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(1)->GetFlipY());
-    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(2)->GetIndex(),
-                                                 2,
-                                                 ui->spinBox_paletteBrushValue->value(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(2)->GetFlipX(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(2)->GetFlipY());
-    UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(3)->GetIndex(),
-                                                 3,
-                                                 ui->spinBox_paletteBrushValue->value(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(3)->GetFlipX(),
-                                                 tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID]->GetTile8X8(3)->GetFlipY());
+    auto tile16 = tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16ID];
+    for (int i = 0; i < 4; i++)
+    {
+        UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID,
+                                                     tile16->GetTile8X8(i)->GetIndex(),
+                                                     i,
+                                                     ui->spinBox_paletteBrushValue->value(),
+                                                     tile16->GetTile8X8(i)->GetFlipX(),
+                                                     tile16->GetTile8X8(i)->GetFlipY());
+    }
+}
+
+/// <summary>
+/// Clear the current Tile16 data, reset it to blank tile16
+/// </summary>
+/// <param name="tile16ID">
+/// Tile16's Id which are going to be set.
+/// </param>
+void TilesetEditDialog::ClearTile16Data(int tile16ID)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID, 0x40, i, 0, false, false);
+    }
 }
 
 void TilesetEditDialog::on_spinBox_valueChanged(int arg1)
@@ -429,6 +433,9 @@ void TilesetEditDialog::ReRenderTile16Map()
     SelectionBox_Tile16->setVisible(false);
 
     SetSelectedTile16(0, true);
+
+    // update Info Textbox
+    UpdateInfoTextBox();
 }
 
 void TilesetEditDialog::ReRenderTile8x8Map(int paletteId)
@@ -543,6 +550,9 @@ void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int tile16I
     QPixmap pm(Tile16mapping->pixmap());
     tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16Id]->DrawTile(&pm, (tile16Id & 7) << 4, (tile16Id >> 3) << 4);
     Tile16mapping->setPixmap(pm);
+
+    // update Info Textbox
+    UpdateInfoTextBox();
 }
 
 /// <summary>
@@ -579,6 +589,28 @@ void TilesetEditDialog::OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(int posI
             }
         }
     }
+}
+
+/// <summary>
+/// Update Info Textbox
+/// </summary>
+void TilesetEditDialog::UpdateInfoTextBox()
+{
+    // clean up textbox
+    ui->textEdit_Infos->setText("");
+
+    // Generate new Infos
+    QString output;
+    output += tr("Unused Palette(s): (don't forget to clean up those unused Tile16 to free up the room for new palettes.)\n");
+    QVector<int> unused_palettes = FindUnusedPalettes();
+    for (auto palette_id: unused_palettes)
+    {
+        output += "0x" + QString::number(palette_id, 16) + ", ";
+    }
+    output += "\n";
+
+    // set textbox
+    ui->textEdit_Infos->setText(output);
 }
 
 /// <summary>
@@ -711,6 +743,7 @@ void TilesetEditDialog::on_horizontalSlider_valueChanged(int value)
     SetSelectedTile8x8(0, true);
     SetSelectedColorId(0);
     ReRenderTile16Map();
+    ui->label_Tile8x8SetPaletteId->setText("0x" + QString::number(value, 16));
 }
 
 void TilesetEditDialog::TLTile8x8Reset()
@@ -810,7 +843,7 @@ void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
 }
 
 /// <summary>
-/// Inport Tile8x8 graphic data from bin file.
+/// Inport Tile8x8 graphic data from bin files.
 /// </summary>
 void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 {
@@ -875,100 +908,6 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
 }
 
 /// <summary>
-/// Save Tile16 conbination data into file.
-/// </summary>
-void TilesetEditDialog::on_pushButton_ExportTile16sCombinationData_clicked()
-{
-    QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile16 map combination data to a file"),
-                                                     QString(""), tr("bin file (*.bin)"));
-    if (qFilePath.compare(""))
-    {
-        /* The first part (0x300 * 2 * 4 bytes) is used for Tile16 combination data
-        ** the second part (0x300 * 2 bytes) is used for Tile16 event table data
-        ** the third part (0x300 bytes) is used for Tile16 terrain type table data */
-        // Generate Tile16 combination data
-        const int filesize = 0x300 * 2 * 4 + 0x300 * 2 + 0x300;
-        unsigned short map16tilePtr[filesize / 2];
-        memset(&map16tilePtr, 0, filesize);
-
-        auto map16data = tilesetEditParams->newTileset->GetMap16arrayPtr();
-        for (int j = 0; j < 0x300; ++j)
-        {
-            map16tilePtr[j * 4] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPLEFT)->GetValue();
-            map16tilePtr[j * 4 + 1] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_TOPRIGHT)->GetValue();
-            map16tilePtr[j * 4 + 2] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMLEFT)->GetValue();
-            map16tilePtr[j * 4 + 3] = map16data[j]->GetTile8X8(LevelComponents::TileMap16::TILE8_BOTTOMRIGHT)->GetValue();
-        }
-        // Generate part 2 and 3 data
-        memcpy(reinterpret_cast<unsigned char*>(&map16tilePtr[0x300 * 4]),
-                reinterpret_cast<unsigned char*>(tilesetEditParams->newTileset->GetEventTablePtr()), 0x300 * 2);
-        memcpy(reinterpret_cast<unsigned char*>(&map16tilePtr[0x300 * 4 + 0x300]),
-                tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr(), 0x300);
-
-        QFile file(qFilePath);
-        file.open(QIODevice::WriteOnly);
-        if (file.isOpen())
-        {
-            file.write(reinterpret_cast<const char*>(map16tilePtr), filesize);
-            file.close();
-        } else {
-            QMessageBox::critical(this, QString("Error"), QString("Cannot save file!"));
-        }
-    }
-}
-
-/// <summary>
-/// Import Tile16 conbination data from file.
-/// </summary>
-void TilesetEditDialog::on_pushButton_ImportTile16sCombinationData_clicked()
-{
-    // load data into QBytearray
-    QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Load Tileset Tile16 map combination data bin file"), QString(""),
-                                                    tr("bin file (*.bin)"));
-    QByteArray tmptile8x8data;
-    QFile binfile(fileName);
-    if(!binfile.open(QIODevice::ReadOnly))
-    {
-        QMessageBox::critical(this, QString("Error"), QString("Cannot open file!"));
-        return;
-    }
-    tmptile8x8data = binfile.readAll();
-    binfile.close();
-
-    // Check size
-    int filesize = 0x300 * 2 * 4 + 0x300 * 2 + 0x300;
-    if(tmptile8x8data.size() != filesize)
-    {
-        QMessageBox::critical(this, QString("Error"), QString("Illegal file size!"));
-        return;
-    }
-    for (int tile16Id = 0; tile16Id < 0x300; ++tile16Id)
-    {
-        LevelComponents::TileMap16* tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16Id];
-        for (int tile8x8Id = 0; tile8x8Id < 4; ++tile8x8Id)
-        {
-            unsigned short value = static_cast<unsigned char>(tmptile8x8data.data()[tile16Id * 8 + tile8x8Id * 2]) |
-                                      static_cast<unsigned char>(tmptile8x8data.data()[tile16Id * 8 + tile8x8Id * 2 + 1]) << 8;
-            int newTile8x8_Id = value & 0x3FF;
-            int new_paletteIndex = (value >> 12) & 0xF;
-            bool xflip = (value >> 10) & 1;
-            bool yflip = (value >> 11) & 1;
-            tile16Data->ResetTile8x8(tilesetEditParams->newTileset->GetTile8x8arrayPtr()[newTile8x8_Id], tile8x8Id, newTile8x8_Id, new_paletteIndex, xflip, yflip);
-        }
-    }
-    // Generate part 2 and 3 data
-    memcpy(reinterpret_cast<unsigned char*>(tilesetEditParams->newTileset->GetEventTablePtr()),
-           reinterpret_cast<unsigned char*>(&tmptile8x8data.data()[0x300 * 8]), 0x300 * 2);
-    memcpy(tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr(),
-           reinterpret_cast<unsigned char*>(&tmptile8x8data.data()[(0x300 * 4 + 0x300) * 2]), 0x300);
-    // Update Graphic
-    ReRenderTile16Map();
-    // Update UI and select the first Tile16
-    SetSelectedTile16(0, true);
-}
-
-/// <summary>
 /// Export current palette data to a file.
 /// </summary>
 void TilesetEditDialog::on_pushButton_ExportPalette_clicked()
@@ -993,3 +932,272 @@ void TilesetEditDialog::on_pushButton_ImportPalette_clicked()
     ReRenderTile8x8Map(SelectedPaletteId);
     ReRenderTile16Map();
 }
+
+/// <summary>
+/// Inport Tile16 graphic data from bin files.
+/// </summary>
+void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
+{
+    /** rule(s):
+     *  don't overwrite the first Tile16
+     *  don't let imported Tile16 id goes out of bound (should be smaller than 0x2FF)
+     *  TODO: support flexible Tile16 set length in the future, and we can read each of its length from the RATS struct
+    **/
+    LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
+    int selTile16 = SelectedTile16;
+    int selPalId = SelectedPaletteId;
+    FileIOUtils::ImportTile8x8GfxData(this,
+        tmp_newTilesetPtr->GetPalettes()[SelectedPaletteId],
+        [selTile16, tmp_newTilesetPtr, selPalId] (QByteArray finaldata, QWidget *parentPtr)
+        {
+            // Assume the file is fully filled with tiles
+            int newtile8x8num = finaldata.size() / 32;
+            int newtile16num = newtile8x8num / 4;
+            if (newtile8x8num != newtile16num * 4)
+            {
+                QMessageBox::critical(parentPtr, tr("Load Error"), tr("Illegal Tile8x8 number!"));
+                return;
+            }
+
+            // Assume we insert Tile16s after the selected Tile16
+            if ((newtile16num + selTile16 + 1) > Tile16DefaultNum)
+            {
+                QMessageBox::critical(parentPtr, tr("Load Error"), tr("Too many Tile16, new Tile16s indexed out of bound!"));
+                return;
+            }
+
+            // not include animated tiles
+            int existingTile8x8Num = tmp_newTilesetPtr->GetfgGFXlen() / 32;
+
+            unsigned char newtmpdata[32];
+            unsigned char newtmpXFlipdata[32];
+            unsigned char newtmpYFlipdata[32];
+            unsigned char newtmpXYFlipdata[32];
+
+            // Generate tile8x8 data for all the existing foreground Tile8x8s
+            int data_size = (existingTile8x8Num + 1) * 32;
+            unsigned char *tmp_current_tile8x8_data = new unsigned char[data_size];
+            memset(&tmp_current_tile8x8_data[0], 0, data_size);
+            auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
+            for (int j = 0x40; j < (0x41 + existingTile8x8Num); j++)
+            {
+                memcpy(&tmp_current_tile8x8_data[(j - 0x40) * 32], tile8x8array[j]->CreateGraphicsData().data(), 32);
+            }
+
+            // ask user how many Tile16 per row, then update Tile16s' data to the Tile16 set
+            int Tile16_per_row = QInputDialog::getInt(parentPtr,
+                                                      tr("WL4Editor"),
+                                                      tr("Input the Tile16 number per row in your source file"),
+                                                      1, 1, 8);
+            int Tile16_per_col = newtile16num / Tile16_per_row;
+            if (Tile16_per_row * Tile16_per_col != newtile16num)
+            {
+                QMessageBox::critical(parentPtr, tr("Error"), tr("incorrect Tile16 number per row!"));
+                delete[] tmp_current_tile8x8_data;
+                return;
+            }
+
+            // Compare through all the existing foreground Tile8x8s
+            // if exist, generate Tile16 data
+            // if not exist, show dialog and return
+            for(int i = 0; i < newtile8x8num; ++i)
+            {
+                // Generate 4 possible existing Tile8x8 graphic data for comparison
+                memcpy(newtmpdata, finaldata.data() + 32 * i, 32);
+                ROMUtils::Tile8x8DataXFlip(newtmpdata, newtmpXFlipdata);
+                ROMUtils::Tile8x8DataYFlip(newtmpdata, newtmpYFlipdata);
+                ROMUtils::Tile8x8DataYFlip(newtmpXFlipdata, newtmpXYFlipdata);
+
+                bool find_eqaul = false;
+                // loop from the first blank tile, excluding those animated tiles
+                for (int j = 0; j < (existingTile8x8Num + 1); j++)
+                {
+                    int result0 = memcmp(newtmpdata, &tmp_current_tile8x8_data[j * 32], 32);
+                    int result1 = memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+                    int result2 = memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+                    int result3 = memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+                    int cur_row = i / Tile16_per_row / 2;
+                    int cur_col = i % (Tile16_per_row * 2);
+                    int position = (cur_row & 1) << 1 | (cur_col & 1);
+                    int row_tile16 = i / Tile16_per_row / 4;
+                    int col_tile16 = i / 2 - Tile16_per_row * (cur_row);
+
+                    LevelComponents::TileMap16* tile16Data = tmp_newTilesetPtr->GetMap16arrayPtr()[selTile16 + row_tile16 * 8 + col_tile16];
+                    LevelComponents::Tile8x8* tile8x8_ptr = tmp_newTilesetPtr->GetTile8x8arrayPtr()[j + 0x40];
+                    if (!result0)
+                    {
+                        tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, false, false);
+                        find_eqaul = true;
+                        break;
+                    }
+                    else if (!result1)
+                    {
+                        tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, true, false);
+                        find_eqaul = true;
+                        break;
+                    }
+                    else if (!result2)
+                    {
+                        tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, false, true);
+                        find_eqaul = true;
+                        break;
+                    }
+                    else if (!result3)
+                    {
+                        tile16Data->ResetTile8x8(tile8x8_ptr, position & 3, j + 0x40, selPalId, true, true);
+                        find_eqaul = true;
+                        break;
+                    }
+                }
+                if (!find_eqaul)
+                {// not find any existing tile8x8 eqaul to the current tile8x8
+                    QMessageBox::critical(parentPtr, tr("Load Error"),
+                                          tr("Detect a Tile8x8 cannot be found in the current Tile8x8 set!"));
+                    delete[] tmp_current_tile8x8_data;
+                    return;
+                }
+            }
+        });
+
+    // update graphicview
+    SetSelectedTile16(SelectedTile16, false);
+    ReRenderTile16Map();
+}
+
+/// <summary>
+/// A helper fucntion to find palettes which is never used in Tile16 set.
+/// </summary>
+/// <return>
+/// An array of palette id which is never used in Tile16 set.
+/// </return>
+QVector<int> TilesetEditDialog::FindUnusedPalettes()
+{
+    QVector<int> tmp = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    QVector<LevelComponents::TileMap16*> tile16array = tilesetEditParams->newTileset->GetMap16arrayPtr();
+    for (int i = 0; i < Tile16DefaultNum; i++)
+    {
+        LevelComponents::TileMap16* tile16 = tile16array[i];
+        for(int j = 0; j < 4; ++j)
+        {
+            int pal = tile16->GetTile8X8(j)->GetPaletteIndex();
+            if (tmp[pal] == pal)
+            {
+                tmp[pal] = -1; // we clean the used one from the tmp array
+            }
+        }
+    }
+    QVector<int> result;
+    for (int i = 0; i < 16; i++)
+    {
+        if (tmp[i] == i)
+        {
+            result.push_back(i);
+        }
+    }
+    return result;
+}
+
+/// <summary>
+/// Clean up duplicated Tile8x8 from both Tile8x8 set and Tile16 set.
+/// </summary>
+void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
+{
+    LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
+    int existingTile8x8Num = tmp_newTilesetPtr->GetfgGFXlen() / 32;
+    unsigned char newtmpdata[32];
+    unsigned char newtmpXFlipdata[32];
+    unsigned char newtmpYFlipdata[32];
+    unsigned char newtmpXYFlipdata[32];
+
+    // Generate tile8x8 data for all the existing foreground Tile8x8s
+    int data_size = (existingTile8x8Num + 1) * 32;
+    unsigned char *tmp_current_tile8x8_data = new unsigned char[data_size];
+    memset(&tmp_current_tile8x8_data[0], 0, data_size);
+    auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
+    for (int j = 0x40; j < (0x41 + existingTile8x8Num); j++)
+    {
+        memcpy(&tmp_current_tile8x8_data[(j - 0x40) * 32], tile8x8array[j]->CreateGraphicsData().data(), 32);
+    }
+
+    // Compare through all the existing foreground Tile8x8s
+    for(int i = existingTile8x8Num; i > 0; i--)
+    {
+        // Generate 4 possible existing Tile8x8 graphic data for comparison
+        memcpy(newtmpdata, &tmp_current_tile8x8_data[32 * i], 32);
+        ROMUtils::Tile8x8DataXFlip(newtmpdata, newtmpXFlipdata);
+        ROMUtils::Tile8x8DataYFlip(newtmpdata, newtmpYFlipdata);
+        ROMUtils::Tile8x8DataYFlip(newtmpXFlipdata, newtmpXYFlipdata);
+
+        // loop from the first blank tile to the tile right before the current tile being checked, excluding those animated tiles
+        for (int j = 0; j < i; j++)
+        {
+            int result0 = memcmp(newtmpdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result1 = memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result2 = memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result3 = memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            bool find_eqaul = false;
+            bool xflip = false;
+            bool yflip = false;
+            auto tile16array = tmp_newTilesetPtr->GetMap16arrayPtr();
+            auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
+
+            if (!result0)
+            {
+                find_eqaul = true;
+            }
+            else if (!result1)
+            {
+                find_eqaul = true;
+                xflip = true;
+            }
+            else if (!result2)
+            {
+                find_eqaul = true;
+                yflip = true;
+            }
+            else if (!result3)
+            {
+                find_eqaul = true;
+                xflip = true;
+                yflip = true;
+            }
+
+            if (find_eqaul)
+            {
+                for (int k = 0; k < Tile16DefaultNum; k++)
+                {
+                    for (int pos = 0; pos < 4; pos++)
+                    {
+                        bool tmp_xflip = xflip;
+                        bool tmp_yflip = yflip;
+                        auto tile8 = tile16array[k]->GetTile8X8(pos);
+                        if (tile8->GetIndex() == (i + 0x40))
+                        {
+                            if (tile8->GetFlipX())
+                            {
+                                tmp_xflip = !xflip;
+                            }
+                            if (tile8->GetFlipY())
+                            {
+                                tmp_yflip = !yflip;
+                            }
+                            tile16array[k]->ResetTile8x8(tile8x8array[j + 0x40], pos, j + 0x40,
+                                                         tile8->GetPaletteIndex(), tmp_xflip, tmp_yflip);
+                        }
+                    }
+                }
+
+                // delete the Tile8x8 from the Tile8x8 set
+                tilesetEditParams->newTileset->DelTile8x8(i + 0x40);
+                break;
+            }
+        }
+    }
+
+    // update graphicview
+    ReRenderTile16Map();
+    ReRenderTile8x8Map(SelectedPaletteId);
+    SetSelectedTile16(0, true);
+    SetSelectedTile8x8(0, true);
+}
+

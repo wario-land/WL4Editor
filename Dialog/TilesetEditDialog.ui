@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1282</width>
-    <height>739</height>
+    <height>741</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -52,11 +52,25 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_palette">
-         <property name="text">
-          <string>Palette:</string>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <property name="topMargin">
+          <number>0</number>
          </property>
-        </widget>
+         <item>
+          <widget class="QLabel" name="label_palette">
+           <property name="text">
+            <string>Palette:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_Tile8x8SetPaletteId">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QSlider" name="horizontalSlider">
@@ -275,7 +289,7 @@
          <item>
           <widget class="QPushButton" name="pushButton_ImportTile8x8Graphic">
            <property name="text">
-            <string>Import and overwrite</string>
+            <string>Import and Overwrite</string>
            </property>
           </widget>
          </item>
@@ -304,23 +318,9 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="label_Tile16Combination">
+          <widget class="QPushButton" name="pushButton_ImportTile16Graphic">
            <property name="text">
-            <string>combination data:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_ExportTile16sCombinationData">
-           <property name="text">
-            <string>Export</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_ImportTile16sCombinationData">
-           <property name="text">
-            <string>Import</string>
+            <string>Import and Overwrite</string>
            </property>
           </widget>
          </item>
@@ -628,6 +628,16 @@
           </widget>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="textEdit_Infos"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_CleanUpDuplicatedTile8x8">
+         <property name="text">
+          <string>Clean up duplicated Tile8x8</string>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer_2">

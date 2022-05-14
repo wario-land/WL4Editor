@@ -293,7 +293,9 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
 /// <returns>
 /// True if the save was successful.
 /// </returns>
-bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent, QVector<QRgb> ref_palette, std::function<void (QByteArray&, QWidget *)> TilesReplaceCallback)
+bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent,
+                                       QVector<QRgb> ref_palette,
+                                       std::function<void (QByteArray&, QWidget *)> TilesReplaceCallback)
 {
     if (ref_palette.size() != 16)
     {
