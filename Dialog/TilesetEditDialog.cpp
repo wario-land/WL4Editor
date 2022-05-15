@@ -870,6 +870,7 @@ void TilesetEditDialog::on_pushButton_ImportTile8x8Graphic_clicked()
     int selTile8x8 = SelectedTile8x8;
     FileIOUtils::ImportTile8x8GfxData(this,
         tmp_newTilesetPtr->GetPalettes()[SelectedPaletteId],
+        tr("Choose a color to covert to transparent:"),
         [selTile8x8, tmp_newTilesetPtr, currenteditor] (QByteArray finaldata, QWidget *parentPtr)
         {
             // Assume the file is fully filled with tiles
@@ -948,6 +949,7 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
     int selPalId = SelectedPaletteId;
     FileIOUtils::ImportTile8x8GfxData(this,
         tmp_newTilesetPtr->GetPalettes()[SelectedPaletteId],
+        tr("Choose a color to covert to transparent:"),
         [selTile16, tmp_newTilesetPtr, selPalId] (QByteArray finaldata, QWidget *parentPtr)
         {
             // Assume the file is fully filled with tiles
