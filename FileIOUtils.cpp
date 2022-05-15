@@ -295,6 +295,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
 /// </returns>
 bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent,
                                        QVector<QRgb> ref_palette,
+                                       QString dialogTitle,
                                        std::function<void (QByteArray&, QWidget *)> TilesReplaceCallback)
 {
     if (ref_palette.size() != 16)
@@ -357,6 +358,7 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent,
     SelectColorDialog scdialog;
     scdialog.SetPalette(tmppalette);
     scdialog.SetColor(0);
+    scdialog.SetTitle(dialogTitle);
     if(scdialog.exec() == QDialog::Accepted)
     {
         transparentcolorId = scdialog.GetSelectedColorId();

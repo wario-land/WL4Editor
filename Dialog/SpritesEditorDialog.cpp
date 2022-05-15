@@ -622,6 +622,7 @@ void SpritesEditorDialog::on_pushButton_SpriteTilesImport_clicked()
     LevelComponents::Tile8x8 *blanktileref = curEntity->GetBlankTile();
     FileIOUtils::ImportTile8x8GfxData(this,
         curEntity->GetPalette(curEntityPalId),
+        tr("Choose a color to covert to transparent:"),
         [curEntity, blanktileref] (QByteArray finaldata, QWidget *parentPtr)
         {
             // Assume the file is fully filled with tiles

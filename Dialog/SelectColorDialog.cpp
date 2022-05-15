@@ -1,6 +1,9 @@
 #include "SelectColorDialog.h"
 #include "ui_SelectColorDialog.h"
 
+/// <summary>
+/// Constructor of SelectColorDialog class.
+/// </summary>
 SelectColorDialog::SelectColorDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SelectColorDialog)
@@ -11,12 +14,21 @@ SelectColorDialog::SelectColorDialog(QWidget *parent) :
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
+/// <summary>
+/// Deconstructor of SelectColorDialog class.
+/// </summary>
 SelectColorDialog::~SelectColorDialog()
 {
     delete pb;
     delete ui;
 }
 
+/// <summary>
+/// Reset the palette bar
+/// </summary>
+/// <param name="palette">
+/// A QVector of 16 colors used to reset palette bar.
+/// </param>
 void SelectColorDialog::SetPalette(QVector<QRgb> palette)
 {
     // draw palette Bar
@@ -46,6 +58,12 @@ void SelectColorDialog::SetPalette(QVector<QRgb> palette)
     temppal = palette;
 }
 
+/// <summary>
+/// Reset the selected color, operate both ui and variables
+/// </summary>
+/// <param name="colorId">
+/// The id of the color being selected.
+/// </param>
 void SelectColorDialog::SetColor(int colorId)
 {
     SelectionBox_Color->setPos(20 * colorId, 0);
@@ -59,6 +77,23 @@ void SelectColorDialog::SetColor(int colorId)
                                  QString::number(color.blue() >> 3, 10) + QString(")")); //temppal
 }
 
+/// <summary>
+/// Reset the dialog's title
+/// </summary>
+/// <param name="title">
+/// The QString ref of the new title.
+/// </param>
+void SelectColorDialog::SetTitle(QString title)
+{
+    if(title.length())
+    {
+        this->setWindowTitle(title);
+    }
+}
+
+/// <summary>
+/// Get the id of the selected color
+/// </summary>
 int SelectColorDialog::GetSelectedColorId()
 {
     return ui->graphicsView->GetSelectedColorId();
