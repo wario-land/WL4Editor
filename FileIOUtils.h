@@ -15,7 +15,7 @@ namespace FileIOUtils
     bool ImportPalette(QWidget *parent, std::function<void(int, int, QRgb)> SetColorFunction, int selectedPalId);
     bool ImportTile8x8GfxData(QWidget *parent,
                               QVector<QRgb> ref_palette,
-                              QString &dialogTitle,
+                              QString dialogTitle,
                               std::function<void (QByteArray&, QWidget *)> TilesReplaceCallback);
     QImage RenderBGColor(QImage image, QWidget *parent);
 } // namespace FileIOUtils

@@ -83,7 +83,7 @@ void SelectColorDialog::SetColor(int colorId)
 /// <param name="title">
 /// The QString ref of the new title.
 /// </param>
-void SelectColorDialog::SetTitle(QString &title)
+void SelectColorDialog::SetTitle(QString title)
 {
     if(title.length())
     {

@@ -18,7 +18,7 @@ public:
     ~SelectColorDialog();
     void SetPalette(QVector<QRgb> palette);
     void SetColor(int colorId);
-    void SetTitle(QString &title);
+    void SetTitle(QString title);
     int GetSelectedColorId();
 
 private:

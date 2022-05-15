@@ -295,7 +295,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
 /// </returns>
 bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent,
                                        QVector<QRgb> ref_palette,
-                                       QString &dialogTitle,
+                                       QString dialogTitle,
                                        std::function<void (QByteArray&, QWidget *)> TilesReplaceCallback)
 {
     if (ref_palette.size() != 16)
