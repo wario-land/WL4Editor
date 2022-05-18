@@ -74,7 +74,11 @@ namespace ROMUtils
         "TilesetPaletteDataChunkType",
         "EntityTile8x8DataChunkType",
         "EntityPaletteDataChunkType",
-        "EntitySetLoadTableChunkType"
+        "EntitySetLoadTableChunkType",
+        "ScatteredGraphicListChunkType",
+        "ScatteredGraphicTile8x8DataChunkType",
+        "ScatteredGraphicmappingChunkType",
+        "ScatteredGraphicPaletteChunkType"
     };
 
     bool ChunkTypeAlignment[CHUNK_TYPE_COUNT] = {
@@ -96,6 +100,10 @@ namespace ROMUtils
         true,  // EntityTile8x8DataChunkType
         true,  // EntityPaletteDataChunkType
         true,  // EntitySetLoadTableChunkType
+        false, // ScatteredGraphicListChunkType         = '\x12',
+        true,  // ScatteredGraphicTile8x8DataChunkType  = '\x13',
+        false, // ScatteredGraphicmappingChunkType      = '\x14',
+        true,  // ScatteredGraphicPaletteChunkType      = '\x15'
     };
 
     void StaticInitialization()

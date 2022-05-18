@@ -14,7 +14,7 @@
 #include "LevelComponents/Entity.h"
 #include "LevelComponents/Layer.h"
 
-#define CHUNK_TYPE_COUNT 18
+#define CHUNK_TYPE_COUNT 0x16
 
 namespace ROMUtils
 {
@@ -59,7 +59,11 @@ namespace ROMUtils
         TilesetPaletteDataChunkType           = '\x0E',
         EntityTile8x8DataChunkType            = '\x0F',
         EntityPaletteDataChunkType            = '\x10',
-        EntitySetLoadTableChunkType           = '\x11'
+        EntitySetLoadTableChunkType           = '\x11',
+        ScatteredGraphicListChunkType         = '\x12',
+        ScatteredGraphicTile8x8DataChunkType  = '\x13',
+        ScatteredGraphicmappingChunkType      = '\x14',
+        ScatteredGraphicPaletteChunkType      = '\x15'
     };
 
     enum ChunkAllocationStatus
