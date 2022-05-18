@@ -100,6 +100,7 @@ namespace ROMUtils
     void CleanUpTmpCurrentFileMetaData();
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
+    unsigned int GetChunkDataLength(unsigned int chunkheaderAddr);
     void Tile8x8DataXFlip(unsigned char *source, unsigned char *destination);
     void Tile8x8DataYFlip(unsigned char *source, unsigned char *destination);
     unsigned int PackScreen(unsigned short *screenCharData, unsigned short *&outputCompressedData, bool skipzeros = true);

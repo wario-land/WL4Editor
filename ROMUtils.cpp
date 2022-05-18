@@ -1509,11 +1509,9 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         QVector<struct ChunkData> chunkData;
         for(unsigned int chunkAddr : chunks)
         {
-            unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMFileMetadata->ROMDataPtr + chunkAddr + 4);
-            unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMFileMetadata->ROMDataPtr + chunkAddr + 9) << 16;
             struct ChunkData cd = {
                 chunkAddr,
-                chunkLen + extLen + 12,
+                ROMUtils::GetChunkDataLength(chunkAddr) + 12,
                 static_cast<enum SaveDataChunkType>(ROMFileMetadata->ROMDataPtr[chunkAddr + 8])
             };
             chunkData.append(cd);
@@ -1639,9 +1637,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         {
             middle = (low + high) / 2;
             unsigned int existChunkAddr_Middle = existChunks[middle];
-            unsigned int existChunkSize_Middle =
-                    (*((unsigned short *)(ROMFileMetadata->ROMDataPtr + existChunkAddr_Middle + 4)) & 0xFFFF) |
-                    ((*(ROMFileMetadata->ROMDataPtr + existChunkAddr_Middle + 9) << 16) & 0xFF0000);
+            unsigned int existChunkSize_Middle =ROMUtils::GetChunkDataLength(existChunkAddr_Middle + 4);
 
             // exist chunk range: [existChunkAddr_Middle, existChunkAddr_Middle + 12 + existChunkSize_Middle)
             // new chunk range: [chunk_addr, chunk_addr + 12 + chunk_size)
@@ -1681,6 +1677,22 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         {
             path.replace("//", "/");
         }
+    }
+
+    /// <summary>
+    /// Get the length of data in an existing chunk
+    /// </summary>
+    /// <param name="chunkheaderAddr">
+    /// The address of an existing chunk.
+    /// </param>
+    /// <returns>
+    /// the length of the data in the chunk.
+    /// </returns>
+    unsigned int GetChunkDataLength(unsigned int chunkheaderAddr)
+    {
+        unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMFileMetadata->ROMDataPtr + chunkheaderAddr + 4);
+        unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMFileMetadata->ROMDataPtr + chunkheaderAddr + 9) << 16;
+        return chunkLen + extLen;
     }
 
 } // namespace ROMUtils

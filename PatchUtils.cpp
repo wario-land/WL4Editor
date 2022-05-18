@@ -189,7 +189,7 @@ static QString SerializePatchMetadata(const struct PatchEntryItem &patchMetadata
 /// </returns>
 static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
 {
-    unsigned short contentSize = *reinterpret_cast<unsigned short*>(ROMUtils::ROMFileMetadata->ROMDataPtr + chunkDataAddr + 4) - 1;
+    unsigned short contentSize = ROMUtils::GetChunkDataLength(chunkDataAddr) - 1;
     int chunkVersion = ROMUtils::ROMFileMetadata->ROMDataPtr[chunkDataAddr + 12];
     if(chunkVersion > PATCH_CHUNK_VERSION)
     {

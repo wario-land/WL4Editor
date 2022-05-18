@@ -40,6 +40,7 @@ namespace ScatteredGraphicUtils
     };
 
     // functions
+    QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> GetScatteredGraphicsFromROM();
 };
 
 #endif // SCATTEREDGRAPHICUTILS_H
