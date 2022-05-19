@@ -65,7 +65,7 @@ static struct ScatteredGraphicUtils::ScatteredGraphicEntryItem DeserializeScatte
         scatteredgraphicTuples[0].toUInt(Q_NULLPTR, 16), // TileDataAddress
         scatteredgraphicTuples[1].toUInt(Q_NULLPTR, 16), // TileDataSize_Byte
         scatteredgraphicTuples[2].toUInt(Q_NULLPTR, 16), // TileDataRAMOffsetNum
-        static_cast<enum ScatteredGraphicUtils::ScatteredGraphicTileDataCompressionType>(scatteredgraphicTuples[3].toUInt(Q_NULLPTR, 16)), // TileDataCompressType
+        static_cast<enum ScatteredGraphicUtils::ScatteredGraphicTileDataType>(scatteredgraphicTuples[3].toUInt(Q_NULLPTR, 16)), // TileDataCompressType
         scatteredgraphicTuples[4], // TileDataName
         scatteredgraphicTuples[5].toUInt(Q_NULLPTR, 16), // MappingDataAddress
         scatteredgraphicTuples[6].toUInt(Q_NULLPTR, 16), // MappingDataSize_Byte
@@ -101,7 +101,7 @@ static QString SerializeScatteredGraphicMetadata(const struct ScatteredGraphicUt
     ret += QString::number(scatteredGraphicMetadata.MappingDataSize_Byte, 16) + ";";
     ret += QString::number(scatteredGraphicMetadata.MappingDataCompressType, 16) + ";";
     ret += scatteredGraphicMetadata.MappingDataName + ";";
-    ret += QString::number(scatteredGraphicMetadata.optionalPaletteAddress, 16) + ";";
+    ret += QString::number(scatteredGraphicMetadata.PaletteAddress, 16) + ";";
     ret += QString::number(scatteredGraphicMetadata.PaletteNum, 16) + ";";
     ret += QString::number(scatteredGraphicMetadata.PaletteRAMOffsetNum, 16) + ";";
     ret += QString::number(scatteredGraphicMetadata.optionalGraphicWidth, 16) + ";";

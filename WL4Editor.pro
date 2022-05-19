@@ -31,6 +31,7 @@ CONFIG += c++17 strict_c++
 QMAKE_CXXFLAGS = -fpermissive
 
 SOURCES += \
+    Dialog/GraphicManagerDialog.cpp \
     Dialog/SelectColorDialog.cpp \
     Dialog/SelectColorDialog_PaletteBar.cpp \
     Dialog/SpritesEditorDialog.cpp \
@@ -78,6 +79,7 @@ SOURCES += \
     Dialog/CreditEditor_TableView.cpp
 
 HEADERS += \
+    Dialog/GraphicManagerDialog.h \
     Dialog/SelectColorDialog.h \
     Dialog/SelectColorDialog_PaletteBar.h \
     Dialog/SpritesEditorDialog.h \
@@ -127,6 +129,7 @@ HEADERS += \
     Dialog/CreditEditor_TableView.h
 
 FORMS += \
+    Dialog/GraphicManagerDialog.ui \
     Dialog/SelectColorDialog.ui \
     Dialog/SpritesEditorDialog.ui \
     DockWidget/OutputDockWidget.ui \

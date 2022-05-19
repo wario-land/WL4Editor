@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GraphicManagerDialog</class>
+ <widget class="QDialog" name="GraphicManagerDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1078</width>
+    <height>686</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Graphic Manager</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_scatteredGraphicEntires">
+         <property name="text">
+          <string>graphic entries:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListView" name="listView_RecordGraphicsList">
+         <property name="selectionMode">
+          <enum>QAbstractItemView::MultiSelection</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="pushButton_AddGraphicEntry">
+           <property name="text">
+            <string>Add</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_RemoveGraphicEntries">
+           <property name="text">
+            <string>Remove</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>344</width>
+            <height>632</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <layout class="QGridLayout" name="gridLayout">
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_Tile8x8s">
+               <property name="text">
+                <string>Tile8x8s:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="14" column="1">
+              <widget class="QPushButton" name="pushButton_ImportPaletteData">
+               <property name="text">
+                <string>Import from file</string>
+               </property>
+              </widget>
+             </item>
+             <item row="14" column="2">
+              <widget class="QPushButton" name="pushButton_validateAndSetPalette">
+               <property name="text">
+                <string>validate and Set</string>
+               </property>
+              </widget>
+             </item>
+             <item row="12" column="2">
+              <widget class="QLineEdit" name="lineEdit_paletteNum"/>
+             </item>
+             <item row="10" column="1" colspan="2">
+              <widget class="QGraphicsView" name="graphicsView_palettes"/>
+             </item>
+             <item row="13" column="1">
+              <widget class="QLabel" name="label_paletteRAMOffset">
+               <property name="text">
+                <string>pal RAM offset (Hex, unit: palette)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="1">
+              <widget class="QPushButton" name="pushButton_ImportTile8x8Data">
+               <property name="text">
+                <string>Import from file</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLineEdit" name="lineEdit_tileDataAddress"/>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLineEdit" name="lineEdit_tileDataSize_Byte"/>
+             </item>
+             <item row="5" column="2">
+              <widget class="QComboBox" name="comboBox_tileDataType"/>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="label_tileDataAddress">
+               <property name="toolTip">
+                <string>Assign an address here if you want to use vanilla tiles data from the ROM. or just leave it blank.</string>
+               </property>
+               <property name="text">
+                <string>Tile8x8 data address (Hex):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="1">
+              <widget class="QLabel" name="label_tileDataName">
+               <property name="text">
+                <string>Tile8x8 data name:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="12" column="1">
+              <widget class="QLabel" name="label_paletteNum">
+               <property name="text">
+                <string>palette number (Hex):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="2">
+              <widget class="QLineEdit" name="lineEdit_tileDataRAMoffset"/>
+             </item>
+             <item row="1" column="1" colspan="2">
+              <widget class="QGraphicsView" name="graphicsView_tile8x8setData"/>
+             </item>
+             <item row="11" column="2">
+              <widget class="QLineEdit" name="lineEdit_paletteAddress"/>
+             </item>
+             <item row="11" column="1">
+              <widget class="QLabel" name="label_paletteAddress">
+               <property name="toolTip">
+                <string>Assign an address here if you want to use vanilla palette data from the ROM. or just leave it blank.</string>
+               </property>
+               <property name="text">
+                <string>palette address (Hex):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="label_tileDataSize_Byte">
+               <property name="text">
+                <string>Tile8x8 data size (Hex, unit: Byte):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QLabel" name="label_tile8x8DataRAMOffset">
+               <property name="text">
+                <string>Tile8x8 data RAM offset (Hex):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="2">
+              <widget class="QLineEdit" name="lineEdit_tileDataName"/>
+             </item>
+             <item row="7" column="2">
+              <widget class="QPushButton" name="pushButton_validateAndSetTile8x8Data">
+               <property name="text">
+                <string>Validate and Set</string>
+               </property>
+              </widget>
+             </item>
+             <item row="9" column="1">
+              <widget class="QLabel" name="label_palette">
+               <property name="text">
+                <string>Palette:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="13" column="2">
+              <widget class="QLineEdit" name="lineEdit_paletteRAMOffset"/>
+             </item>
+             <item row="9" column="2">
+              <widget class="QPushButton" name="pushButton_ClearPaletteData">
+               <property name="text">
+                <string>Clear</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="pushButton_ClearTile8x8Data">
+               <property name="text">
+                <string>Clear</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QLabel" name="label_tileDataType">
+               <property name="text">
+                <string>Tile8x8 data type:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="1" colspan="2">
+              <widget class="Line" name="line">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QScrollArea" name="scrollArea_2">
+       <property name="widgetResizable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="scrollAreaWidgetContents_2">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>347</width>
+          <height>634</height>
+         </rect>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <item row="15" column="0">
+            <widget class="QLabel" name="label_optionalGraphicHeight">
+             <property name="text">
+              <string>optional graphic height (Hex):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="13" column="1">
+            <widget class="QLineEdit" name="lineEdit_mappingDataName"/>
+           </item>
+           <item row="14" column="1">
+            <widget class="QLineEdit" name="lineEdit_optionalGraphicWidth"/>
+           </item>
+           <item row="14" column="0">
+            <widget class="QLabel" name="label_optionalGraphicWidth">
+             <property name="text">
+              <string>optional graphic width (Hex):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="0">
+            <widget class="QLabel" name="label_mappingDataAddress">
+             <property name="toolTip">
+              <string>Assign an address here if you want to use vanilla mapping data from the ROM. or just leave it blank.</string>
+             </property>
+             <property name="text">
+              <string>mapping data address (Hex):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="label_mapping">
+             <property name="text">
+              <string>tile mapping of pic:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="12" column="0">
+            <widget class="QLabel" name="label_mappingDataType">
+             <property name="text">
+              <string>mapping data type:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="12" column="1">
+            <widget class="QComboBox" name="comboBox_mappingDataType"/>
+           </item>
+           <item row="16" column="0">
+            <widget class="QPushButton" name="pushButton_ImportGraphic">
+             <property name="text">
+              <string>Import pic from file</string>
+             </property>
+            </widget>
+           </item>
+           <item row="15" column="1">
+            <widget class="QLineEdit" name="lineEdit_optionalGraphicHeight"/>
+           </item>
+           <item row="16" column="1">
+            <widget class="QPushButton" name="pushButton_validateAndSetMappingData">
+             <property name="text">
+              <string>Validate and Set</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0" colspan="2">
+            <widget class="QGraphicsView" name="graphicsView_mappingGraphic"/>
+           </item>
+           <item row="6" column="1">
+            <widget class="QPushButton" name="pushButton_ClearMappingData">
+             <property name="text">
+              <string>Clear</string>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="1">
+            <widget class="QLineEdit" name="lineEdit_mappingDataAddress"/>
+           </item>
+           <item row="13" column="0">
+            <widget class="QLabel" name="label_mappingDataName">
+             <property name="text">
+              <string>mapping data name:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="1">
+            <widget class="QLineEdit" name="lineEdit_mappingDataSize_Byte"/>
+           </item>
+           <item row="11" column="0">
+            <widget class="QLabel" name="label_mappingDataSize_Byte">
+             <property name="text">
+              <string>mapping data size (Hex, unit: Byte):</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>GraphicManagerDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>GraphicManagerDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

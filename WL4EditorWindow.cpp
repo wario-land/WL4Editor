@@ -1,6 +1,7 @@
 ﻿#include "WL4EditorWindow.h"
 #include "Operation.h"
 #include "Dialog/PatchManagerDialog.h"
+#include "Dialog/GraphicManagerDialog.h"
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
 #include "Themes.h"
@@ -486,6 +487,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionClear_all->setEnabled(true);
         ui->actionPatch_Manager->setEnabled(true);
+        ui->actionGraphic_Manager->setEnabled(true);
         ui->actionEdit_Entity_EntitySet->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->loadLevelButton->setEnabled(true);
@@ -2315,3 +2317,13 @@ void WL4EditorWindow::on_actionRolling_Save_triggered()
         ui->actionRolling_Save->setChecked(value);
     }
 }
+
+/// <summary>
+/// Open the Graphic manager.
+/// </summary>
+void WL4EditorWindow::on_actionGraphic_Manager_triggered()
+{
+    GraphicManagerDialog dialog(this);
+    dialog.exec();
+}
+
