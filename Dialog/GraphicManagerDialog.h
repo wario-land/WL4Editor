@@ -19,6 +19,7 @@ class GraphicManagerDialog : public QDialog
 public:
     explicit GraphicManagerDialog(QWidget *parent = nullptr);
     ~GraphicManagerDialog();
+    static void StaticInitialization();
 
 private slots:
     void on_listView_RecordGraphicsList_clicked(const QModelIndex &index);
@@ -31,9 +32,28 @@ private:
 
     // functions
     bool UpdateEntryList();
-    void ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    QPixmap GetPixmap(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
     QString GenerateEntryTextFromStruct(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    void ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    QPixmap RenderAllPalette(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    QPixmap RenderAllTiles(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    QPixmap RenderGraphic(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    void UpdatePaletteGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    void UpdateTilesGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    void UpdateMappingGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+
+public:
+    // clang-format off
+    static constexpr const char *ScatteredGraphicTileDataTypeNameData[1] =
+    {
+        "0: Tileset_text_bg_4bpp_no_comp"
+    };
+
+    static constexpr const char *ScatteredGraphicMappingDataCompressionTypeNameData[2] =
+    {
+        "0: No_mapping_data_comp",
+        "1: RLE16_with_sizeheader"
+    };
+    // clang-format on
 };
 
 #endif // GRAPHICMANAGERDIALOG_H

@@ -4,6 +4,14 @@
 
 extern WL4EditorWindow *singleton;
 
+// constexpr declarations for the initializers in the header
+constexpr const char *GraphicManagerDialog::ScatteredGraphicTileDataTypeNameData[1];
+constexpr const char *GraphicManagerDialog::ScatteredGraphicMappingDataCompressionTypeNameData[2];
+
+// static variables used by CameraControlDockWidget
+static QStringList GraphicTileDataTypeName;
+static QStringList GraphicMappingDataCompressionTypeName;
+
 /// <summary>
 /// Construct an instance of the GraphicManagerDialog.
 /// </summary>
@@ -14,7 +22,10 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GraphicManagerDialog)
 {
+    // Setup GUI
     ui->setupUi(this);
+    ui->comboBox_tileDataType->addItems(GraphicTileDataTypeName);
+    ui->comboBox_mappingDataType->addItems(GraphicMappingDataCompressionTypeName);
 
     if (graphicEntries.size())
     {
@@ -27,7 +38,7 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
     testentry.TileDataAddress = 0x4E851C;
     testentry.TileDataSize_Byte = 9376; // unit: Byte
     testentry.TileDataRAMOffsetNum = 0x4DA - 0x200; // unit: per Tile8x8
-    testentry.TileDataCompressType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tileset_text_bg_4bpp_no_comp;
+    testentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tileset_text_bg_4bpp_no_comp;
     testentry.TileDataName = "Tileset 0x11 bg tiles";
     testentry.MappingDataAddress = 0x5FA6D0;
     testentry.MappingDataSize_Byte = 0xC10; // unit: Byte
@@ -50,6 +61,24 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
 GraphicManagerDialog::~GraphicManagerDialog()
 {
     delete ui;
+}
+
+/// <summary>
+/// Perform static initialization of constant data structures for the dialog.
+/// </summary>
+void GraphicManagerDialog::StaticInitialization()
+{
+    // Initialize the selections for the ComboBoxes
+    for (unsigned int i = 0;
+         i < sizeof(ScatteredGraphicTileDataTypeNameData) / sizeof(ScatteredGraphicTileDataTypeNameData[0]); ++i)
+    {
+        GraphicTileDataTypeName << ScatteredGraphicTileDataTypeNameData[i];
+    }
+    for (unsigned int i = 0;
+         i < sizeof(ScatteredGraphicMappingDataCompressionTypeNameData) / sizeof(ScatteredGraphicMappingDataCompressionTypeNameData[0]); ++i)
+    {
+        GraphicMappingDataCompressionTypeName << ScatteredGraphicMappingDataCompressionTypeNameData[i];
+    }
 }
 
 /// <summary>
@@ -92,7 +121,7 @@ bool GraphicManagerDialog::UpdateEntryList()
 /// </param>
 void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
 {
-    // Load palette first
+    // Cleanup then Load palette first
     int paletteAddress = entry.PaletteAddress;
     unsigned char *curFilePtr = ROMUtils::ROMFileMetadata->ROMDataPtr;
     for (int i = 0; i < 16; ++i)
@@ -114,8 +143,21 @@ void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGra
         }
     }
 
-    // Load Tiles
-    switch (static_cast<int>(entry.TileDataCompressType))
+    // Cleanup then Load Tiles
+    if (entry.blankTile != nullptr)
+    {
+        for(int i = 0; i < entry.tile8x8array.size(); i++)
+        {
+            if (entry.tile8x8array[i] != entry.blankTile)
+            {
+                delete entry.tile8x8array[i];
+            }
+        }
+        entry.tile8x8array.clear();
+        delete entry.blankTile;
+        entry.blankTile = nullptr;
+    }
+    switch (static_cast<int>(entry.TileDataType))
     {
         case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tileset_text_bg_4bpp_no_comp:
         {
@@ -124,7 +166,6 @@ void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGra
             {
                 entry.tile8x8array.push_back(entry.blankTile);
             }
-            break;
             int GFXcount = entry.TileDataSize_Byte / 32;
             for (int i = 0; i < GFXcount; ++i)
             {
@@ -136,13 +177,12 @@ void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGra
     }
 
     // Load mapping data
-    int graphicheight = entry.optionalGraphicHeight;
-    int graphicwidth = entry.optionalGraphicWidth;
+    entry.mappingData.clear();
     switch (static_cast<int>(entry.MappingDataCompressType))
     {
         case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::No_mapping_data_comp:
         { // this case never work atm
-            for (int i = 0; i < graphicwidth * graphicheight; ++i)
+            for (int i = 0; i < entry.optionalGraphicWidth * entry.optionalGraphicHeight; ++i)
             {
                 unsigned short *data = (unsigned short *)(ROMUtils::ROMFileMetadata->ROMDataPtr + entry.MappingDataAddress);
                 entry.mappingData.push_back(data[i]);
@@ -152,10 +192,10 @@ void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGra
         case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE16_with_sizeheader:
         {
             LevelComponents::Layer BGlayer(entry.MappingDataAddress, LevelComponents::LayerTile8x8);
-            graphicheight = BGlayer.GetLayerHeight();
-            graphicwidth = BGlayer.GetLayerWidth();
+            entry.optionalGraphicHeight = BGlayer.GetLayerHeight();
+            entry.optionalGraphicWidth = BGlayer.GetLayerWidth();
             unsigned short *layerdata = BGlayer.GetLayerData();
-            for (int i = 0; i < graphicwidth * graphicheight; ++i)
+            for (int i = 0; i < entry.optionalGraphicWidth * entry.optionalGraphicHeight; ++i)
             {
                 entry.mappingData.push_back(layerdata[i]);
             }
@@ -163,6 +203,120 @@ void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGra
         }
     }
 
+    // UI Reset
+    ui->lineEdit_tileDataAddress->setText(QString::number(entry.TileDataAddress, 16));
+    ui->lineEdit_tileDataSize_Byte->setText(QString::number(entry.TileDataSize_Byte, 16));
+    ui->lineEdit_tileDataRAMoffset->setText(QString::number(entry.TileDataRAMOffsetNum, 16));
+    ui->comboBox_tileDataType->setCurrentIndex(entry.TileDataType);
+    ui->lineEdit_tileDataName->setText(entry.TileDataName);
+    ui->lineEdit_mappingDataAddress->setText(QString::number(entry.MappingDataAddress, 16));
+    ui->lineEdit_mappingDataSize_Byte->setText(QString::number(entry.MappingDataSize_Byte, 16));
+    ui->comboBox_mappingDataType->setCurrentIndex(entry.MappingDataCompressType);
+    ui->lineEdit_mappingDataName->setText(entry.MappingDataName);
+    ui->lineEdit_optionalGraphicHeight->setText(QString::number(entry.optionalGraphicHeight, 16));
+    ui->lineEdit_optionalGraphicWidth->setText(QString::number(entry.optionalGraphicWidth, 16));
+    ui->lineEdit_paletteAddress->setText(QString::number(entry.PaletteAddress, 16));
+    ui->lineEdit_paletteNum->setText(QString::number(entry.PaletteNum, 16));
+    ui->lineEdit_paletteRAMOffset->setText(QString::number(entry.PaletteRAMOffsetNum, 16));
+
+    // graphicviews reset
+    UpdatePaletteGraphicView(entry);
+    UpdateTilesGraphicView(entry);
+    UpdateMappingGraphicView(entry);
+}
+
+/// <summary>
+/// Get all the palettes' pixmap of an entry.
+/// </summary>
+/// <param name="entry">
+/// The struct data saves the info of a graphic.
+/// </param>
+/// <returns>
+/// The pixmap of the palettes recorded in the entry.
+/// </returns>
+QPixmap GraphicManagerDialog::RenderAllPalette(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+{
+    // draw palette pixmap
+    QPixmap PaletteBarpixmap(8 * 16, 8 * 16);
+    PaletteBarpixmap.fill(Qt::transparent);
+    QPainter PaletteBarPainter(&PaletteBarpixmap);
+    for (int j = 0; j < 16; ++j)
+    {
+        QVector<QRgb> palettetable = entry.palettes[j];
+        for (int i = 1; i < 16; ++i) // Ignore the first color
+        {
+            PaletteBarPainter.fillRect(8 * i, 8 * j, 8, 8, palettetable[i]);
+        }
+    }
+    return PaletteBarpixmap;
+}
+
+/// <summary>
+/// Get all the tiles' pixmap of an entry.
+/// </summary>
+/// <param name="entry">
+/// The struct data saves the info of a graphic.
+/// </param>
+/// <returns>
+/// The pixmap of the tiles recorded in the entry.
+/// </returns>
+QPixmap GraphicManagerDialog::RenderAllTiles(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+{
+    switch (static_cast<int>(entry.TileDataType))
+    {
+        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tileset_text_bg_4bpp_no_comp:
+        {
+            int lineNum = entry.tile8x8array.size() / 16;
+            if ((lineNum * 16) < entry.tile8x8array.size())
+            {
+                lineNum += 1;
+            }
+            QPixmap pixmap(8 * 16, 8 * lineNum);
+            pixmap.fill(Qt::transparent);
+
+            // find a palette has non-black color(s) in it
+            int paletteId = -1;
+            for (int i = 0; i < entry.palettes->size(); i++)
+            {
+                for(int j = 1; j < entry.palettes[i].size(); j++) // skip the first color
+                {
+                    if (entry.palettes[i][j] != QColor(0, 0, 0, 0xFF).rgba())
+                    {
+                        paletteId = i;
+                        break;
+                    }
+                }
+                if (paletteId != -1)
+                {
+                    break;
+                }
+            }
+            if (paletteId == -1)
+            {
+                // there is no valid palette exist
+                break;
+            }
+
+            // drawing
+            for (int i = 0; i < lineNum; ++i)
+            {
+                for (int j = 0; j < 16; ++j)
+                {
+                    if (entry.tile8x8array.size() <= (i * 16 + j))
+                    {
+                        entry.blankTile->DrawTile(&pixmap, j * 8, i * 8);
+                        continue;
+                    }
+                    if (entry.tile8x8array[i * 16 + j] == entry.blankTile) continue;
+                    entry.tile8x8array[i * 16 + j]->SetPaletteIndex(paletteId);
+                    entry.tile8x8array[i * 16 + j]->DrawTile(&pixmap, j * 8, i * 8);
+                }
+            }
+            return pixmap;
+        }
+    }
+
+    return QPixmap();
 }
 
 /// <summary>
@@ -174,7 +328,7 @@ void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGra
 /// <returns>
 /// The pixmap of the graphic recorded in the entry.
 /// </returns>
-QPixmap GraphicManagerDialog::GetPixmap(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+QPixmap GraphicManagerDialog::RenderGraphic(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
 {
     int graphicheight = entry.optionalGraphicHeight;
     int graphicwidth = entry.optionalGraphicWidth;
@@ -214,6 +368,63 @@ QPixmap GraphicManagerDialog::GetPixmap(ScatteredGraphicUtils::ScatteredGraphicE
     }
 
     return QPixmap();
+}
+
+/// <summary>
+/// Update Palette graphicview.
+/// </summary>
+void GraphicManagerDialog::UpdatePaletteGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+{
+    if (ui->graphicsView_palettes->scene())
+    {
+        delete ui->graphicsView_palettes->scene();
+    }
+    QGraphicsScene *scene = new QGraphicsScene(0, 0, 16 * 8, 16 * 8);
+    ui->graphicsView_palettes->setScene(scene);
+    ui->graphicsView_palettes->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_palettes->scale(2, 2);
+    scene->addPixmap(RenderAllPalette(entry));
+    ui->graphicsView_palettes->verticalScrollBar()->setValue(0);
+}
+
+/// <summary>
+/// Update Tiles graphicview.
+/// </summary>
+void GraphicManagerDialog::UpdateTilesGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+{
+    int linenum = entry.tile8x8array.size() / 16;
+    if ((linenum * 16) < entry.tile8x8array.size())
+    {
+        linenum += 1;
+    }
+    if (ui->graphicsView_tile8x8setData->scene())
+    {
+        delete ui->graphicsView_tile8x8setData->scene();
+    }
+    QGraphicsScene *scene = new QGraphicsScene(0, 0, 16 * 8, linenum * 8);
+    ui->graphicsView_tile8x8setData->setScene(scene);
+    ui->graphicsView_tile8x8setData->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_tile8x8setData->scale(2, 2);
+    scene->addPixmap(RenderAllTiles(entry));
+    ui->graphicsView_tile8x8setData->verticalScrollBar()->setValue(0);
+}
+
+/// <summary>
+/// Update Tiles graphicview.
+/// </summary>
+void GraphicManagerDialog::UpdateMappingGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+{
+    if (ui->graphicsView_mappingGraphic->scene())
+    {
+        delete ui->graphicsView_mappingGraphic->scene();
+    }
+    QPixmap pixmap = RenderGraphic(entry);
+    QGraphicsScene *scene = new QGraphicsScene(0, 0, pixmap.width(), pixmap.height());
+    ui->graphicsView_mappingGraphic->setScene(scene);
+    ui->graphicsView_mappingGraphic->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    ui->graphicsView_mappingGraphic->scale(1, 1);
+    scene->addPixmap(pixmap);
+    ui->graphicsView_mappingGraphic->verticalScrollBar()->setValue(0);
 }
 
 /// <summary>

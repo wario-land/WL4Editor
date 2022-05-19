@@ -30,7 +30,7 @@ namespace ScatteredGraphicUtils
         unsigned int TileDataAddress;
         unsigned int TileDataSize_Byte; // unit: Byte
         unsigned int TileDataRAMOffsetNum = 0; // unit: per Tile8x8
-        enum ScatteredGraphicTileDataType TileDataCompressType;
+        enum ScatteredGraphicTileDataType TileDataType;
         QString TileDataName;
         unsigned int MappingDataAddress;
         unsigned int MappingDataSize_Byte; // unit: Byte

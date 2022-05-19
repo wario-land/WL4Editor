@@ -95,7 +95,7 @@ static QString SerializeScatteredGraphicMetadata(const struct ScatteredGraphicUt
     QString ret = QString::number(scatteredGraphicMetadata.TileDataAddress, 16) + ";";
     ret += QString::number(scatteredGraphicMetadata.TileDataSize_Byte, 16) + ";";
     ret += QString::number(scatteredGraphicMetadata.TileDataRAMOffsetNum, 16) + ";";
-    ret += QString::number(scatteredGraphicMetadata.TileDataCompressType, 16) + ";";
+    ret += QString::number(scatteredGraphicMetadata.TileDataType, 16) + ";";
     ret += scatteredGraphicMetadata.TileDataName + ";";
     ret += QString::number(scatteredGraphicMetadata.MappingDataAddress, 16) + ";";
     ret += QString::number(scatteredGraphicMetadata.MappingDataSize_Byte, 16) + ";";
