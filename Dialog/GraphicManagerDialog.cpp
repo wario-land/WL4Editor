@@ -26,6 +26,9 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
     ui->setupUi(this);
     ui->comboBox_tileDataType->addItems(GraphicTileDataTypeName);
     ui->comboBox_mappingDataType->addItems(GraphicMappingDataCompressionTypeName);
+    ui->graphicsView_tile8x8setData->scale(2, 2);
+    ui->graphicsView_palettes->scale(2, 2);
+    ui->graphicsView_mappingGraphic->scale(1, 1);
 
     if (graphicEntries.size())
     {
@@ -53,6 +56,15 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
     // -------------test code end-------------
 
     UpdateEntryList();
+
+    // init status of some buttons
+    ui->pushButton_RemoveGraphicEntries->setEnabled(false);
+    ui->pushButton_validateAndSetMappingData->setEnabled(false);
+    ui->pushButton_validateAndSetTile8x8Data->setEnabled(false);
+    ui->pushButton_validateAndSetPalette->setEnabled(false);
+    ui->pushButton_ImportPaletteData->setEnabled(false);
+    ui->pushButton_ImportTile8x8Data->setEnabled(false);
+    ui->pushButton_ImportGraphic->setEnabled(false);
 }
 
 /// <summary>
@@ -382,7 +394,6 @@ void GraphicManagerDialog::UpdatePaletteGraphicView(ScatteredGraphicUtils::Scatt
     QGraphicsScene *scene = new QGraphicsScene(0, 0, 16 * 8, 16 * 8);
     ui->graphicsView_palettes->setScene(scene);
     ui->graphicsView_palettes->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    ui->graphicsView_palettes->scale(2, 2);
     scene->addPixmap(RenderAllPalette(entry));
     ui->graphicsView_palettes->verticalScrollBar()->setValue(0);
 }
@@ -404,7 +415,6 @@ void GraphicManagerDialog::UpdateTilesGraphicView(ScatteredGraphicUtils::Scatter
     QGraphicsScene *scene = new QGraphicsScene(0, 0, 16 * 8, linenum * 8);
     ui->graphicsView_tile8x8setData->setScene(scene);
     ui->graphicsView_tile8x8setData->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    ui->graphicsView_tile8x8setData->scale(2, 2);
     scene->addPixmap(RenderAllTiles(entry));
     ui->graphicsView_tile8x8setData->verticalScrollBar()->setValue(0);
 }
@@ -422,9 +432,61 @@ void GraphicManagerDialog::UpdateMappingGraphicView(ScatteredGraphicUtils::Scatt
     QGraphicsScene *scene = new QGraphicsScene(0, 0, pixmap.width(), pixmap.height());
     ui->graphicsView_mappingGraphic->setScene(scene);
     ui->graphicsView_mappingGraphic->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    ui->graphicsView_mappingGraphic->scale(1, 1);
     scene->addPixmap(pixmap);
     ui->graphicsView_mappingGraphic->verticalScrollBar()->setValue(0);
+}
+
+/// <summary>
+/// Clear all the GUi things in the palette panel
+/// </summary>
+void GraphicManagerDialog::ClearPalettePanel()
+{
+    if (ui->graphicsView_palettes->scene())
+    {
+        delete ui->graphicsView_palettes->scene();
+    }
+    ui->graphicsView_palettes->setScene(nullptr);
+
+    ui->lineEdit_paletteAddress->setText("");
+    ui->lineEdit_paletteNum->setText("");
+    ui->lineEdit_paletteRAMOffset->setText("");
+}
+
+/// <summary>
+/// Clear all the GUi things in the Tile stuff panel
+/// </summary>
+void GraphicManagerDialog::ClearTilesPanel()
+{
+    if (ui->graphicsView_tile8x8setData->scene())
+    {
+        delete ui->graphicsView_tile8x8setData->scene();
+    }
+    ui->graphicsView_tile8x8setData->setScene(nullptr);
+
+    ui->lineEdit_tileDataAddress->setText("");
+    ui->lineEdit_tileDataSize_Byte->setText("");
+    ui->lineEdit_tileDataRAMoffset->setText("");
+    ui->comboBox_tileDataType->setCurrentIndex(0);
+    ui->lineEdit_tileDataName->setText("");
+}
+
+/// <summary>
+/// Clear all the GUi things in the mapping stuff panel
+/// </summary>
+void GraphicManagerDialog::ClearMappingPanel()
+{
+    if (ui->graphicsView_mappingGraphic->scene())
+    {
+        delete ui->graphicsView_mappingGraphic->scene();
+    }
+    ui->graphicsView_mappingGraphic->setScene(nullptr);
+
+    ui->lineEdit_mappingDataAddress->setText("");
+    ui->lineEdit_mappingDataSize_Byte->setText("");
+    ui->comboBox_mappingDataType->setCurrentIndex(0);
+    ui->lineEdit_mappingDataName->setText("");
+    ui->lineEdit_optionalGraphicHeight->setText("");
+    ui->lineEdit_optionalGraphicWidth->setText("");
 }
 
 /// <summary>
@@ -451,9 +513,67 @@ QString GraphicManagerDialog::GenerateEntryTextFromStruct(ScatteredGraphicUtils:
 void GraphicManagerDialog::on_listView_RecordGraphicsList_clicked(const QModelIndex &index)
 {
     ui->listView_RecordGraphicsList->setEnabled(false);
-    int linenum = index.row();
-    ExtractEntryToGUI(graphicEntries[linenum]);
+    QItemSelectionModel *select = ui->listView_RecordGraphicsList->selectionModel();
+    QModelIndexList selectedRows = select->selectedRows();
+    int num_of_select_rows = selectedRows.size();
+    ui->pushButton_RemoveGraphicEntries->setEnabled(num_of_select_rows);
+    if (num_of_select_rows == 1)
+    {
+        ClearMappingPanel();
+        ClearPalettePanel();
+        ClearTilesPanel();
+        int linenum = index.row();
+        SelectedEntryID = linenum;
+        ExtractEntryToGUI(graphicEntries[linenum]);
+
+        // enable current entry editing
+        ui->pushButton_ImportGraphic->setEnabled(true);
+        ui->pushButton_ImportPaletteData->setEnabled(true);
+        ui->pushButton_ImportTile8x8Data->setEnabled(true);
+        ui->pushButton_validateAndSetMappingData->setEnabled(true);
+        ui->pushButton_validateAndSetTile8x8Data->setEnabled(true);
+        ui->pushButton_validateAndSetPalette->setEnabled(true);
+    }
+    else
+    {
+        SelectedEntryID = -1;
+        ClearMappingPanel();
+        ClearPalettePanel();
+        ClearTilesPanel();
+
+        // disable current entry editing
+        ui->pushButton_ImportGraphic->setEnabled(false);
+        ui->pushButton_ImportPaletteData->setEnabled(false);
+        ui->pushButton_ImportTile8x8Data->setEnabled(false);
+        ui->pushButton_validateAndSetMappingData->setEnabled(false);
+        ui->pushButton_validateAndSetTile8x8Data->setEnabled(false);
+        ui->pushButton_validateAndSetPalette->setEnabled(false);
+    }
 
     ui->listView_RecordGraphicsList->setEnabled(true);
+}
+
+/// <summary>
+/// Click the button to clear Tile panel UI stuff
+/// </summary>
+void GraphicManagerDialog::on_pushButton_ClearTile8x8Data_clicked()
+{
+    ClearTilesPanel();
+}
+
+/// <summary>
+/// Click the button to clear palette panel UI stuff
+/// </summary>
+void GraphicManagerDialog::on_pushButton_ClearPaletteData_clicked()
+{
+    ClearPalettePanel();
+}
+
+/// <summary>
+/// Click the button to clear mapping panel UI stuff
+/// </summary>
+void GraphicManagerDialog::on_pushButton_ClearMappingData_clicked()
+{
+    ClearMappingPanel();
 }
 

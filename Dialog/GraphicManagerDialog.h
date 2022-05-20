@@ -23,6 +23,9 @@ public:
 
 private slots:
     void on_listView_RecordGraphicsList_clicked(const QModelIndex &index);
+    void on_pushButton_ClearTile8x8Data_clicked();
+    void on_pushButton_ClearPaletteData_clicked();
+    void on_pushButton_ClearMappingData_clicked();
 
 private:
     Ui::GraphicManagerDialog *ui;
@@ -40,6 +43,9 @@ private:
     void UpdatePaletteGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
     void UpdateTilesGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
     void UpdateMappingGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    void ClearPalettePanel();
+    void ClearTilesPanel();
+    void ClearMappingPanel();
 
 public:
     // clang-format off
