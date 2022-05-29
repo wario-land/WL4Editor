@@ -147,7 +147,7 @@ void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGra
             int GFXcount = entry.TileDataSize_Byte / 32;
             for (int i = 0; i < GFXcount; ++i)
             {
-                tmpTile8x8array.push_back(new LevelComponents::Tile8x8(entry.TileDataAddress + i * 32, entry.palettes));
+                tmpTile8x8array.push_back(new LevelComponents::Tile8x8((unsigned char *)(entry.tileData.data() + i * 32), entry.palettes));
             }
             tmpTile8x8array.push_back(tmpblankTile);
             break;
