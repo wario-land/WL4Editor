@@ -32,6 +32,9 @@ private:
     QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> graphicEntries;
     QStandardItemModel *ListViewItemModel = nullptr;
     int SelectedEntryID = -1;
+    struct ScatteredGraphicUtils::ScatteredGraphicEntryItem tmpEntry;
+    QVector<LevelComponents::Tile8x8 *> tmpTile8x8array;
+    LevelComponents::Tile8x8 *tmpblankTile = nullptr;
 
     // functions
     bool UpdateEntryList();
@@ -47,11 +50,14 @@ private:
     void ClearTilesPanel();
     void ClearMappingPanel();
 
+    void CleanTilesInstances();
+    void CleanMappingDataInEntry(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry) { entry.mappingData.clear(); }
+
 public:
     // clang-format off
     static constexpr const char *ScatteredGraphicTileDataTypeNameData[1] =
     {
-        "0: Tileset_text_bg_4bpp_no_comp"
+        "0: Tile8x8_4bpp_no_comp_Tileset_text_bg"
     };
 
     static constexpr const char *ScatteredGraphicMappingDataCompressionTypeNameData[2] =

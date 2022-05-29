@@ -36,6 +36,9 @@
        </item>
        <item>
         <widget class="QListView" name="listView_RecordGraphicsList">
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
+         </property>
          <property name="selectionMode">
           <enum>QAbstractItemView::MultiSelection</enum>
          </property>
@@ -96,20 +99,6 @@
                </property>
               </widget>
              </item>
-             <item row="14" column="1">
-              <widget class="QPushButton" name="pushButton_ImportPaletteData">
-               <property name="text">
-                <string>Import from file</string>
-               </property>
-              </widget>
-             </item>
-             <item row="14" column="2">
-              <widget class="QPushButton" name="pushButton_validateAndSetPalette">
-               <property name="text">
-                <string>validate and Set</string>
-               </property>
-              </widget>
-             </item>
              <item row="12" column="2">
               <widget class="QLineEdit" name="lineEdit_paletteNum"/>
              </item>
@@ -120,13 +109,6 @@
               <widget class="QLabel" name="label_paletteRAMOffset">
                <property name="text">
                 <string>pal RAM offset (Hex, Palette)</string>
-               </property>
-              </widget>
-             </item>
-             <item row="7" column="1">
-              <widget class="QPushButton" name="pushButton_ImportTile8x8Data">
-               <property name="text">
-                <string>Import from file</string>
                </property>
               </widget>
              </item>
@@ -199,13 +181,6 @@
              <item row="6" column="2">
               <widget class="QLineEdit" name="lineEdit_tileDataName"/>
              </item>
-             <item row="7" column="2">
-              <widget class="QPushButton" name="pushButton_validateAndSetTile8x8Data">
-               <property name="text">
-                <string>Validate and Set</string>
-               </property>
-              </widget>
-             </item>
              <item row="9" column="1">
               <widget class="QLabel" name="label_palette">
                <property name="text">
@@ -241,6 +216,26 @@
               <widget class="Line" name="line">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="1" colspan="2">
+              <widget class="QPushButton" name="pushButton_ImportTile8x8Data">
+               <property name="toolTip">
+                <string>Import from ROM or files</string>
+               </property>
+               <property name="text">
+                <string>Import</string>
+               </property>
+              </widget>
+             </item>
+             <item row="14" column="1" colspan="2">
+              <widget class="QPushButton" name="pushButton_ImportPaletteData">
+               <property name="toolTip">
+                <string>Import from ROM or files</string>
+               </property>
+               <property name="text">
+                <string>Import</string>
                </property>
               </widget>
              </item>
@@ -321,8 +316,11 @@
            </item>
            <item row="16" column="0">
             <widget class="QPushButton" name="pushButton_ImportGraphic">
+             <property name="toolTip">
+              <string>Import from ROM or files</string>
+             </property>
              <property name="text">
-              <string>Import pic from file</string>
+              <string>Import</string>
              </property>
             </widget>
            </item>

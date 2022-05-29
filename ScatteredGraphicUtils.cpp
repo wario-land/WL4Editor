@@ -174,8 +174,69 @@ QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> ScatteredGraphi
                     DeserializeScatteredGraphicMetadata(scatteredGraphicTuples.mid(i, ScatteredGraphic_FIELD_COUNT));
             // TODO: add validation check logic for each sub chunk
 
+            // Extract Data from Infos
+            ExtractDataFromEntryInfo_v1(entry);
+
             scatteredGraphicEntries.append(entry);
         }
     }
     return scatteredGraphicEntries;
+}
+
+/// <summary>
+/// Extract tiles, palette and mapping data from entry's info.
+/// </summary>
+/// <param name="entry">
+/// The struct data saves the info of a graphic.
+/// </param>
+void ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(ScatteredGraphicEntryItem &entry)
+{
+    // palettes
+    for (int i = entry.PaletteRAMOffsetNum; i < qMin((entry.PaletteRAMOffsetNum + entry.PaletteNum), (unsigned int)16); ++i)
+    {
+        int subPalettePtr = entry.PaletteAddress + i * 32;
+        unsigned short *tmpptr = (unsigned short*) (ROMUtils::ROMFileMetadata->ROMDataPtr + subPalettePtr);
+        ROMUtils::LoadPalette(&(entry.palettes[i]), tmpptr);
+    }
+    for (int i = 0; i < 16; ++i)
+    {
+        if (!(entry.palettes[i].size()))
+        {
+            for (int j = 0; j < 16; ++j)
+                entry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+        }
+    }
+
+    // tiles data
+    entry.tileData.resize(entry.TileDataSize_Byte);
+    for (int j = 0; j < entry.TileDataSize_Byte; ++j)
+    {
+        entry.tileData[j] = *(ROMUtils::ROMFileMetadata->ROMDataPtr + entry.TileDataAddress + j);
+    }
+
+    // mapping data
+    switch (static_cast<int>(entry.MappingDataCompressType))
+    {
+        case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::No_mapping_data_comp:
+        { // this case never work atm
+            for (int i = 0; i < entry.optionalGraphicWidth * entry.optionalGraphicHeight; ++i)
+            {
+                unsigned short *data = (unsigned short *)(ROMUtils::ROMFileMetadata->ROMDataPtr + entry.MappingDataAddress);
+                entry.mappingData.push_back(data[i]);
+            }
+            break;
+        }
+        case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE16_with_sizeheader:
+        {
+            LevelComponents::Layer BGlayer(entry.MappingDataAddress, LevelComponents::LayerTile8x8);
+            entry.optionalGraphicHeight = BGlayer.GetLayerHeight();
+            entry.optionalGraphicWidth = BGlayer.GetLayerWidth();
+            unsigned short *layerdata = BGlayer.GetLayerData();
+            for (int i = 0; i < entry.optionalGraphicWidth * entry.optionalGraphicHeight; ++i)
+            {
+                entry.mappingData.push_back(layerdata[i]);
+            }
+            break;
+        }
+    }
 }

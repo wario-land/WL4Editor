@@ -41,7 +41,7 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
     testentry.TileDataAddress = 0x4E851C;
     testentry.TileDataSize_Byte = 9376; // unit: Byte
     testentry.TileDataRAMOffsetNum = 0x4DA - 0x200; // unit: per Tile8x8
-    testentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tileset_text_bg_4bpp_no_comp;
+    testentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
     testentry.TileDataName = "Tileset 0x11 bg tiles";
     testentry.MappingDataAddress = 0x5FA6D0;
     testentry.MappingDataSize_Byte = 0xC10; // unit: Byte
@@ -52,6 +52,8 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
     testentry.PaletteRAMOffsetNum = 0; // unit: per palette, 16 color
     testentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
     testentry.optionalGraphicHeight = 0;
+
+    ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(testentry);
     graphicEntries.append(testentry);
     // -------------test code end-------------
 
@@ -60,8 +62,6 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
     // init status of some buttons
     ui->pushButton_RemoveGraphicEntries->setEnabled(false);
     ui->pushButton_validateAndSetMappingData->setEnabled(false);
-    ui->pushButton_validateAndSetTile8x8Data->setEnabled(false);
-    ui->pushButton_validateAndSetPalette->setEnabled(false);
     ui->pushButton_ImportPaletteData->setEnabled(false);
     ui->pushButton_ImportTile8x8Data->setEnabled(false);
     ui->pushButton_ImportGraphic->setEnabled(false);
@@ -133,84 +133,23 @@ bool GraphicManagerDialog::UpdateEntryList()
 /// </param>
 void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
 {
-    // Cleanup then Load palette first
-    int paletteAddress = entry.PaletteAddress;
-    unsigned char *curFilePtr = ROMUtils::ROMFileMetadata->ROMDataPtr;
-    for (int i = 0; i < 16; ++i)
-    {
-        entry.palettes[i].clear();
-    }
-    for (int i = entry.PaletteRAMOffsetNum; i < qMin((entry.PaletteRAMOffsetNum + entry.PaletteNum), (unsigned int)16); ++i)
-    {
-        int subPalettePtr = paletteAddress + i * 32;
-        unsigned short *tmpptr = (unsigned short*) (curFilePtr + subPalettePtr);
-        ROMUtils::LoadPalette(&(entry.palettes[i]), tmpptr);
-    }
-    for (int i = 0; i < 16; ++i)
-    {
-        if (!(entry.palettes[i].size()))
-        {
-            for (int j = 0; j < 16; ++j)
-                entry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
-        }
-    }
-
     // Cleanup then Load Tiles
-    if (entry.blankTile != nullptr)
-    {
-        for(int i = 0; i < entry.tile8x8array.size(); i++)
-        {
-            if (entry.tile8x8array[i] != entry.blankTile)
-            {
-                delete entry.tile8x8array[i];
-            }
-        }
-        entry.tile8x8array.clear();
-        delete entry.blankTile;
-        entry.blankTile = nullptr;
-    }
+    CleanTilesInstances();
     switch (static_cast<int>(entry.TileDataType))
     {
-        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tileset_text_bg_4bpp_no_comp:
+        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
         {
-            entry.blankTile = LevelComponents::Tile8x8::CreateBlankTile(entry.palettes);
+            tmpblankTile = LevelComponents::Tile8x8::CreateBlankTile(entry.palettes);
             for (int i = 0; i < entry.TileDataRAMOffsetNum; ++i)
             {
-                entry.tile8x8array.push_back(entry.blankTile);
+                tmpTile8x8array.push_back(tmpblankTile);
             }
             int GFXcount = entry.TileDataSize_Byte / 32;
             for (int i = 0; i < GFXcount; ++i)
             {
-                entry.tile8x8array.push_back(new LevelComponents::Tile8x8(entry.TileDataAddress + i * 32, entry.palettes));
+                tmpTile8x8array.push_back(new LevelComponents::Tile8x8(entry.TileDataAddress + i * 32, entry.palettes));
             }
-            entry.tile8x8array.push_back(entry.blankTile);
-            break;
-        }
-    }
-
-    // Load mapping data
-    entry.mappingData.clear();
-    switch (static_cast<int>(entry.MappingDataCompressType))
-    {
-        case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::No_mapping_data_comp:
-        { // this case never work atm
-            for (int i = 0; i < entry.optionalGraphicWidth * entry.optionalGraphicHeight; ++i)
-            {
-                unsigned short *data = (unsigned short *)(ROMUtils::ROMFileMetadata->ROMDataPtr + entry.MappingDataAddress);
-                entry.mappingData.push_back(data[i]);
-            }
-            break;
-        }
-        case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE16_with_sizeheader:
-        {
-            LevelComponents::Layer BGlayer(entry.MappingDataAddress, LevelComponents::LayerTile8x8);
-            entry.optionalGraphicHeight = BGlayer.GetLayerHeight();
-            entry.optionalGraphicWidth = BGlayer.GetLayerWidth();
-            unsigned short *layerdata = BGlayer.GetLayerData();
-            for (int i = 0; i < entry.optionalGraphicWidth * entry.optionalGraphicHeight; ++i)
-            {
-                entry.mappingData.push_back(layerdata[i]);
-            }
+            tmpTile8x8array.push_back(tmpblankTile);
             break;
         }
     }
@@ -276,10 +215,10 @@ QPixmap GraphicManagerDialog::RenderAllTiles(ScatteredGraphicUtils::ScatteredGra
 {
     switch (static_cast<int>(entry.TileDataType))
     {
-        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tileset_text_bg_4bpp_no_comp:
+        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
         {
-            int lineNum = entry.tile8x8array.size() / 16;
-            if ((lineNum * 16) < entry.tile8x8array.size())
+            int lineNum = tmpTile8x8array.size() / 16;
+            if ((lineNum * 16) < tmpTile8x8array.size())
             {
                 lineNum += 1;
             }
@@ -314,14 +253,14 @@ QPixmap GraphicManagerDialog::RenderAllTiles(ScatteredGraphicUtils::ScatteredGra
             {
                 for (int j = 0; j < 16; ++j)
                 {
-                    if (entry.tile8x8array.size() <= (i * 16 + j))
+                    if (tmpTile8x8array.size() <= (i * 16 + j))
                     {
-                        entry.blankTile->DrawTile(&pixmap, j * 8, i * 8);
+                        tmpblankTile->DrawTile(&pixmap, j * 8, i * 8);
                         continue;
                     }
-                    if (entry.tile8x8array[i * 16 + j] == entry.blankTile) continue;
-                    entry.tile8x8array[i * 16 + j]->SetPaletteIndex(paletteId);
-                    entry.tile8x8array[i * 16 + j]->DrawTile(&pixmap, j * 8, i * 8);
+                    if (tmpTile8x8array[i * 16 + j] == tmpblankTile) continue;
+                    tmpTile8x8array[i * 16 + j]->SetPaletteIndex(paletteId);
+                    tmpTile8x8array[i * 16 + j]->DrawTile(&pixmap, j * 8, i * 8);
                 }
             }
             return pixmap;
@@ -358,7 +297,7 @@ QPixmap GraphicManagerDialog::RenderGraphic(ScatteredGraphicUtils::ScatteredGrap
             for (int i = 0; i < graphicwidth * graphicheight; ++i)
             {
                 unsigned short tileData = entry.mappingData[i];
-                LevelComponents::Tile8x8 *newTile = new LevelComponents::Tile8x8(entry.tile8x8array[(tileData & 0x3FF)]);
+                LevelComponents::Tile8x8 *newTile = new LevelComponents::Tile8x8(tmpTile8x8array[(tileData & 0x3FF)]);
                 newTile->SetFlipX((tileData & (1 << 10)) != 0);
                 newTile->SetFlipY((tileData & (1 << 11)) != 0);
                 newTile->SetPaletteIndex((tileData >> 12) & 0xF);
@@ -403,8 +342,8 @@ void GraphicManagerDialog::UpdatePaletteGraphicView(ScatteredGraphicUtils::Scatt
 /// </summary>
 void GraphicManagerDialog::UpdateTilesGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
 {
-    int linenum = entry.tile8x8array.size() / 16;
-    if ((linenum * 16) < entry.tile8x8array.size())
+    int linenum = tmpTile8x8array.size() / 16;
+    if ((linenum * 16) < tmpTile8x8array.size())
     {
         linenum += 1;
     }
@@ -490,6 +429,29 @@ void GraphicManagerDialog::ClearMappingPanel()
 }
 
 /// <summary>
+/// Clean the Tile instances in the entry.
+/// </summary>
+/// <param name="entry">
+/// The struct data of the entry.
+/// </param>
+void GraphicManagerDialog::CleanTilesInstances()
+{
+    if (tmpblankTile != nullptr)
+    {
+        for(int i = 0; i < tmpTile8x8array.size(); i++)
+        {
+            if (tmpTile8x8array[i] != tmpblankTile)
+            {
+                delete tmpTile8x8array[i];
+            }
+        }
+        tmpTile8x8array.clear();
+        delete tmpblankTile;
+        tmpblankTile = nullptr;
+    }
+}
+
+/// <summary>
 /// Generate the text of one entry according to a provided struct, to show in the listview.
 /// </summary>
 /// <param name="entry">
@@ -524,15 +486,19 @@ void GraphicManagerDialog::on_listView_RecordGraphicsList_clicked(const QModelIn
         ClearTilesPanel();
         int linenum = index.row();
         SelectedEntryID = linenum;
-        ExtractEntryToGUI(graphicEntries[linenum]);
+
+        // clean up instances if the tmpEntry was used
+        CleanTilesInstances();
+        CleanMappingDataInEntry(tmpEntry);
+
+        tmpEntry = graphicEntries[linenum]; // always use tmpentry before validation
+        ExtractEntryToGUI(tmpEntry);
 
         // enable current entry editing
         ui->pushButton_ImportGraphic->setEnabled(true);
         ui->pushButton_ImportPaletteData->setEnabled(true);
         ui->pushButton_ImportTile8x8Data->setEnabled(true);
         ui->pushButton_validateAndSetMappingData->setEnabled(true);
-        ui->pushButton_validateAndSetTile8x8Data->setEnabled(true);
-        ui->pushButton_validateAndSetPalette->setEnabled(true);
     }
     else
     {
@@ -546,8 +512,6 @@ void GraphicManagerDialog::on_listView_RecordGraphicsList_clicked(const QModelIn
         ui->pushButton_ImportPaletteData->setEnabled(false);
         ui->pushButton_ImportTile8x8Data->setEnabled(false);
         ui->pushButton_validateAndSetMappingData->setEnabled(false);
-        ui->pushButton_validateAndSetTile8x8Data->setEnabled(false);
-        ui->pushButton_validateAndSetPalette->setEnabled(false);
     }
 
     ui->listView_RecordGraphicsList->setEnabled(true);
@@ -559,6 +523,7 @@ void GraphicManagerDialog::on_listView_RecordGraphicsList_clicked(const QModelIn
 void GraphicManagerDialog::on_pushButton_ClearTile8x8Data_clicked()
 {
     ClearTilesPanel();
+    CleanTilesInstances();
 }
 
 /// <summary>

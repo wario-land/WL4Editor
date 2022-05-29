@@ -4,19 +4,20 @@
 #include <QString>
 #include <QColor>
 #include <QVector>
-#include "LevelComponents\Tile.h"
+#include <QByteArray>
 
 namespace ScatteredGraphicUtils
 {
     // structs
     enum ScatteredGraphicTileDataType
     {
-        Tileset_text_bg_4bpp_no_comp = 0
+        Tile8x8_4bpp_no_comp_Tileset_text_bg = 0,
+        Tile8x8_4bpp_no_comp                 = 1   // user-made graphic for their own use, should not work atm
     };
 
     enum ScatteredGraphicMappingDataCompressionType
     {
-        No_mapping_data_comp = 0,      // reserved for some shit things, and perhaps non-text bg mode
+        No_mapping_data_comp = 0,      // reserved for some shit things, and perhaps non-text bg mode, should not work atm
         RLE16_with_sizeheader = 1      // RLE for u16, for mapping Tile8x8 directly
     };
 
@@ -43,15 +44,39 @@ namespace ScatteredGraphicUtils
         unsigned int optionalGraphicHeight = 0;
 
         // things not saved in the ScatteredGraphicListChunk
-        bool changed = false;
-        QVector<LevelComponents::Tile8x8 *> tile8x8array;
-        LevelComponents::Tile8x8 *blankTile = nullptr;
+        QByteArray tileData;
         QVector<QRgb> palettes[16];
         QVector<unsigned short> mappingData;
+
+        ScatteredGraphicEntryItem &operator = (const ScatteredGraphicEntryItem &entry)
+        {
+            this->TileDataAddress = entry.TileDataAddress;
+            this->TileDataSize_Byte = entry.TileDataSize_Byte;
+            this->TileDataRAMOffsetNum = entry.TileDataRAMOffsetNum;
+            this->TileDataType = entry.TileDataType;
+            this->TileDataName = entry.TileDataName;
+            this->MappingDataAddress = entry.MappingDataAddress;
+            this->MappingDataSize_Byte = entry.MappingDataSize_Byte;
+            this->MappingDataCompressType = entry.MappingDataCompressType;
+            this->MappingDataName = entry.MappingDataName;
+            this->PaletteAddress = entry.PaletteAddress;
+            this->PaletteNum = entry.PaletteNum;
+            this->PaletteRAMOffsetNum = entry.PaletteRAMOffsetNum;
+            this->optionalGraphicWidth = entry.optionalGraphicWidth;
+            this->optionalGraphicHeight = entry.optionalGraphicHeight;
+            this->tileData = entry.tileData;
+            for(int i = 0; i < 16; i++)
+            {
+                this->palettes[i] = entry.palettes[i];
+            }
+            this->mappingData = entry.mappingData;
+            return *this;
+        }
     };
 
     // functions
     QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> GetScatteredGraphicsFromROM();
+    void ExtractDataFromEntryInfo_v1(struct ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
 };
 
 #endif // SCATTEREDGRAPHICUTILS_H
