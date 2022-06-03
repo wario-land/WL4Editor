@@ -1,6 +1,11 @@
 #include "GraphicManagerDialog.h"
 #include "ui_GraphicManagerDialog.h"
+
+#include <QMessageBox>
+
 #include "WL4EditorWindow.h"
+#include "WL4Constants.h"
+#include "FileIOUtils.h"
 
 extern WL4EditorWindow *singleton;
 
@@ -139,17 +144,7 @@ void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGra
     {
         case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
         {
-            tmpblankTile = LevelComponents::Tile8x8::CreateBlankTile(entry.palettes);
-            for (int i = 0; i < entry.TileDataRAMOffsetNum; ++i)
-            {
-                tmpTile8x8array.push_back(tmpblankTile);
-            }
-            int GFXcount = entry.TileDataSize_Byte / 32;
-            for (int i = 0; i < GFXcount; ++i)
-            {
-                tmpTile8x8array.push_back(new LevelComponents::Tile8x8((unsigned char *)(entry.tileData.data() + i * 32), entry.palettes));
-            }
-            tmpTile8x8array.push_back(tmpblankTile);
+            GenerateBGTile8x8Instances(entry);
             break;
         }
     }
@@ -225,27 +220,35 @@ QPixmap GraphicManagerDialog::RenderAllTiles(ScatteredGraphicUtils::ScatteredGra
             QPixmap pixmap(8 * 16, 8 * lineNum);
             pixmap.fill(Qt::transparent);
 
-            // find a palette has non-black color(s) in it
+            // find a palette can be used to draw Tiles
             int paletteId = -1;
-            for (int i = 0; i < entry.palettes->size(); i++)
+            if (tmpEntry.PaletteNum)
             {
-                for(int j = 1; j < entry.palettes[i].size(); j++) // skip the first color
+                paletteId = tmpEntry.PaletteRAMOffsetNum;
+            }
+            else
+            {
+                // find a palette has non-black color(s) in it
+                for (int i = 0; i < entry.palettes->size(); i++)
                 {
-                    if (entry.palettes[i][j] != QColor(0, 0, 0, 0xFF).rgba())
+                    for(int j = 1; j < entry.palettes[i].size(); j++) // skip the first color
                     {
-                        paletteId = i;
+                        if (entry.palettes[i][j] != QColor(0, 0, 0, 0xFF).rgba())
+                        {
+                            paletteId = i;
+                            break;
+                        }
+                    }
+                    if (paletteId != -1)
+                    {
                         break;
                     }
                 }
-                if (paletteId != -1)
+                if (paletteId == -1)
                 {
+                    // there is no valid palette exist
                     break;
                 }
-            }
-            if (paletteId == -1)
-            {
-                // there is no valid palette exist
-                break;
             }
 
             // drawing
@@ -431,9 +434,6 @@ void GraphicManagerDialog::ClearMappingPanel()
 /// <summary>
 /// Clean the Tile instances in the entry.
 /// </summary>
-/// <param name="entry">
-/// The struct data of the entry.
-/// </param>
 void GraphicManagerDialog::CleanTilesInstances()
 {
     if (tmpblankTile != nullptr)
@@ -448,6 +448,43 @@ void GraphicManagerDialog::CleanTilesInstances()
         tmpTile8x8array.clear();
         delete tmpblankTile;
         tmpblankTile = nullptr;
+    }
+}
+
+/// <summary>
+/// Generate the Tile instances according to the entry's tile data.
+/// </summary>
+/// <param name="entry">
+/// The struct data of the entry.
+/// </param>
+void GraphicManagerDialog::GenerateBGTile8x8Instances(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+{
+    tmpblankTile = LevelComponents::Tile8x8::CreateBlankTile(entry.palettes);
+    for (int i = 0; i < entry.TileDataRAMOffsetNum; ++i)
+    {
+        tmpTile8x8array.push_back(tmpblankTile);
+    }
+    int GFXcount = entry.TileDataSize_Byte / 32;
+    for (int i = 0; i < GFXcount; ++i)
+    {
+        tmpTile8x8array.push_back(new LevelComponents::Tile8x8((unsigned char *)(entry.tileData.data() + i * 32), entry.palettes));
+    }
+    tmpTile8x8array.push_back(tmpblankTile);
+}
+
+/// <summary>
+/// Clear and reset palettes in tmpEntry
+/// </summary>
+void GraphicManagerDialog::ClearAndResettmpEntryPalettes()
+{
+    for (int i = 0; i < 16; ++i)
+    {
+        if (tmpEntry.palettes[i].size())
+        {
+            tmpEntry.palettes[i].clear();
+        }
+        for (int j = 0; j < 16; ++j)
+            tmpEntry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
     }
 }
 
@@ -540,5 +577,140 @@ void GraphicManagerDialog::on_pushButton_ClearPaletteData_clicked()
 void GraphicManagerDialog::on_pushButton_ClearMappingData_clicked()
 {
     ClearMappingPanel();
+}
+
+/// <summary>
+/// Click the button to load palette from the ROM or from pal file
+/// </summary>
+void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
+{
+    if (SelectedEntryID != -1)
+    {
+        ClearAndResettmpEntryPalettes();
+
+        // try to use the settings from the UI to import palette
+        int palAddress = ui->lineEdit_paletteAddress->text().toUInt(nullptr, 16);
+        int palnum = ui->lineEdit_paletteNum->text().toUInt(nullptr, 16);
+        int paloffset = ui->lineEdit_paletteRAMOffset->text().toUInt(nullptr, 16);
+
+        // palAddress is not a vanilla rom address, so we need to import palette from file
+        if (!palAddress || palAddress >= WL4Constants::AvailableSpaceBeginningInROM)
+        {
+            if (palnum == 1) // we only import one 16-color palette
+            {
+                FileIOUtils::ImportPalette(this,
+                    [this] (int selectedPalId, int colorId, QRgb newColor)
+                    {
+                        this->tmpEntry.SetColor(selectedPalId, colorId, newColor);
+                    },
+                    paloffset);
+
+                // set tmpEntry if everything looks correct
+                tmpEntry.PaletteAddress = palAddress;
+                tmpEntry.PaletteNum = palnum;
+                tmpEntry.PaletteRAMOffsetNum = paloffset;
+            }
+            else
+            {
+                // TDOO
+                QMessageBox::critical(this, tr("Error"), tr("Import multiple palettes from one file cannot work yet!"));
+                return;
+            }
+        }
+        else // we need to import palette from the current ROM directly
+        {
+            // TODO
+            QMessageBox::critical(this, tr("Error"), tr("Import palettes from current ROM cannot work yet!"));
+            return;
+        }
+
+        // UI reset
+        UpdatePaletteGraphicView(tmpEntry);
+    }
+}
+
+/// <summary>
+/// Click the button to load tile data from the ROM or from bin file
+/// </summary>
+void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
+{
+    if (SelectedEntryID != -1)
+    {
+        // try to use the settings from the UI to import palette
+        int tiledataAddress = ui->lineEdit_tileDataAddress->text().toUInt(nullptr, 16);
+        int tiledatatype = ui->comboBox_tileDataType->currentIndex();
+
+        // tiledataAddress is not a vanilla rom address, so we need to import tile data from file
+        if (!tiledataAddress || tiledataAddress >= WL4Constants::AvailableSpaceBeginningInROM)
+        {
+            switch (tiledatatype)
+            {
+                case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+                {
+                    // Ignore the settings from the UI, import tile data directly and see if the data is legal
+                    FileIOUtils::ImportTile8x8GfxData(this,
+                        tmpEntry.palettes[15], // use the last palette for palette comparison
+                        tr("Choose a color to covert to transparent:"),
+                        [this] (QByteArray finaldata, QWidget *parentPtr)
+                        {
+                            // Assume the file is fully filled with tiles
+                            int newtilenum = finaldata.size() / 32;
+                            if(newtilenum > 0x3FE)
+                            {
+                                QMessageBox::critical(parentPtr, tr("Load Error"), tr("You can only use 0x3FF background tiles at most!"));
+                                return;
+                            }
+                            else
+                            {
+                                this->tmpEntry.tileData.resize(finaldata.size());
+                                for(int i = 0; i < finaldata.size(); ++i)
+                                {
+                                    this->tmpEntry.tileData[i] = finaldata[i];
+                                }
+
+                                // set tmpEntry if everything looks correct
+                                int startid = 0x3FF - newtilenum;
+                                this->tmpEntry.TileDataRAMOffsetNum = startid;
+                                this->tmpEntry.TileDataSize_Byte = finaldata.size();
+                                this->tmpEntry.TileDataAddress = 0;
+                                this->tmpEntry.TileDataType = ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+                            }
+                        });
+                    tmpEntry.TileDataName = ui->lineEdit_tileDataName->text();
+                }
+                break;
+            }
+
+        }
+        else // we need to import tile data from the current ROM directly
+        {
+            switch (tiledatatype)
+            {
+                case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+                {
+                    // TODO
+//                    int tiledataSize_byte = ui->lineEdit_tileDataSize_Byte->text().toUInt(nullptr, 16);
+//                    int tileVRAMoffsetNum = ui->lineEdit_tileDataRAMoffset->text().toUInt(nullptr, 16);
+//                    int tile8x8Num = tiledataSize_byte / 32;
+//                    if ((tile8x8Num << 5) != tiledataSize_byte)
+//                    {
+//                        QMessageBox::critical(this, tr("Error"), tr("Illegal tile data size, size has to be multiple of 0x20!"));
+//                    }
+//                    if ((tile8x8Num + tileVRAMoffsetNum) > 0x3FF)
+//                    {
+//                        QMessageBox::critical(this, tr("Error"), tr("Tile8x8 index(es) out of bound!\n"
+//                                                                    "The last tile8x8 has to be indexed 0x3FE"));
+//                    }
+                }
+                break;
+            }
+            QMessageBox::critical(this, tr("Error"), tr("Import tiles from current ROM cannot work yet!"));
+        }
+
+        // UI reset
+        CleanTilesInstances();
+        GenerateBGTile8x8Instances(tmpEntry);
+        UpdateTilesGraphicView(tmpEntry);
+    }
 }
 

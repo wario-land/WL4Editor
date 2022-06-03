@@ -72,6 +72,9 @@ namespace ScatteredGraphicUtils
             this->mappingData = entry.mappingData;
             return *this;
         }
+
+        // used in palette import lambda functions
+        void SetColor(int paletteId, int colorId, QRgb newcolor) { palettes[paletteId][colorId] = newcolor; }
     };
 
     // functions

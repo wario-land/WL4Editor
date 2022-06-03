@@ -200,11 +200,12 @@ void ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(ScatteredGraphicEntryIte
     }
     for (int i = 0; i < 16; ++i)
     {
-        if (!(entry.palettes[i].size()))
+        if (entry.palettes[i].size())
         {
-            for (int j = 0; j < 16; ++j)
-                entry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+            entry.palettes[i].clear();
         }
+        for (int j = 0; j < 16; ++j)
+            entry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
     }
 
     // tiles data

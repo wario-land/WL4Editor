@@ -26,6 +26,8 @@ private slots:
     void on_pushButton_ClearTile8x8Data_clicked();
     void on_pushButton_ClearPaletteData_clicked();
     void on_pushButton_ClearMappingData_clicked();
+    void on_pushButton_ImportPaletteData_clicked();
+    void on_pushButton_ImportTile8x8Data_clicked();
 
 private:
     Ui::GraphicManagerDialog *ui;
@@ -51,7 +53,9 @@ private:
     void ClearMappingPanel();
 
     void CleanTilesInstances();
+    void GenerateBGTile8x8Instances(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
     void CleanMappingDataInEntry(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry) { entry.mappingData.clear(); }
+    void ClearAndResettmpEntryPalettes();
 
 public:
     // clang-format off
