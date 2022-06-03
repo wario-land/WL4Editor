@@ -192,20 +192,24 @@ QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> ScatteredGraphi
 void ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(ScatteredGraphicEntryItem &entry)
 {
     // palettes
-    for (int i = entry.PaletteRAMOffsetNum; i < qMin((entry.PaletteRAMOffsetNum + entry.PaletteNum), (unsigned int)16); ++i)
-    {
-        int subPalettePtr = entry.PaletteAddress + i * 32;
-        unsigned short *tmpptr = (unsigned short*) (ROMUtils::ROMFileMetadata->ROMDataPtr + subPalettePtr);
-        ROMUtils::LoadPalette(&(entry.palettes[i]), tmpptr);
-    }
     for (int i = 0; i < 16; ++i)
     {
+        if (entry.palettes[i].size()) // clean up if need
+        {
+            entry.palettes[i].clear();
+        }
+        for (int j = 0; j < 16; ++j) // (re-)initialization
+            entry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+    }
+    for (int i = entry.PaletteRAMOffsetNum; i < qMin((entry.PaletteRAMOffsetNum + entry.PaletteNum), (unsigned int)16); ++i)
+    { // set palette(s) by palette data
         if (entry.palettes[i].size())
         {
             entry.palettes[i].clear();
         }
-        for (int j = 0; j < 16; ++j)
-            entry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+        int subPalettePtr = entry.PaletteAddress + i * 32;
+        unsigned short *tmpptr = (unsigned short*) (ROMUtils::ROMFileMetadata->ROMDataPtr + subPalettePtr);
+        ROMUtils::LoadPalette(&(entry.palettes[i]), tmpptr);
     }
 
     // tiles data

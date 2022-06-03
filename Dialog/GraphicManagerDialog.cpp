@@ -224,7 +224,8 @@ QPixmap GraphicManagerDialog::RenderAllTiles(ScatteredGraphicUtils::ScatteredGra
             int paletteId = -1;
             if (tmpEntry.PaletteNum)
             {
-                paletteId = tmpEntry.PaletteRAMOffsetNum;
+//                paletteId = tmpEntry.PaletteRAMOffsetNum;
+                paletteId = 0xF;
             }
             else
             {
@@ -677,6 +678,11 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                             }
                         });
                     tmpEntry.TileDataName = ui->lineEdit_tileDataName->text();
+
+                    // UI reset
+                    CleanTilesInstances();
+                    GenerateBGTile8x8Instances(tmpEntry);
+                    UpdateTilesGraphicView(tmpEntry);
                 }
                 break;
             }
@@ -706,11 +712,6 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
             }
             QMessageBox::critical(this, tr("Error"), tr("Import tiles from current ROM cannot work yet!"));
         }
-
-        // UI reset
-        CleanTilesInstances();
-        GenerateBGTile8x8Instances(tmpEntry);
-        UpdateTilesGraphicView(tmpEntry);
     }
 }
 
