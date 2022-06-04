@@ -231,7 +231,7 @@ void ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(ScatteredGraphicEntryIte
             }
             break;
         }
-        case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE16_with_sizeheader:
+        case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
         {
             LevelComponents::Layer BGlayer(entry.MappingDataAddress, LevelComponents::LayerTile8x8);
             entry.optionalGraphicHeight = BGlayer.GetLayerHeight();

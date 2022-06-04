@@ -1059,6 +1059,7 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
                     return;
                 }
             }
+            delete[] tmp_current_tile8x8_data;
         });
 
     // update graphicview

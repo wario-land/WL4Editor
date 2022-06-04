@@ -18,7 +18,7 @@ namespace ScatteredGraphicUtils
     enum ScatteredGraphicMappingDataCompressionType
     {
         No_mapping_data_comp = 0,      // reserved for some shit things, and perhaps non-text bg mode, should not work atm
-        RLE16_with_sizeheader = 1      // RLE for u16, for mapping Tile8x8 directly
+        RLE_mappingtype_0x20 = 1      // RLE for mapping Tile8x8 directly
     };
 
     /***

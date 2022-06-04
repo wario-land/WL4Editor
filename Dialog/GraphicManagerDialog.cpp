@@ -50,7 +50,7 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
     testentry.TileDataName = "Tileset 0x11 bg tiles";
     testentry.MappingDataAddress = 0x5FA6D0;
     testentry.MappingDataSize_Byte = 0xC10; // unit: Byte
-    testentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE16_with_sizeheader;
+    testentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
     testentry.MappingDataName = "Tileset 0x11 bg";
     testentry.PaletteAddress = 0x583C7C;
     testentry.PaletteNum = 16; // when (optionalPaletteAddress + PaletteNum) > 16, we just discard the latter palettes
@@ -150,20 +150,9 @@ void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGra
     }
 
     // UI Reset
-    ui->lineEdit_tileDataAddress->setText(QString::number(entry.TileDataAddress, 16));
-    ui->lineEdit_tileDataSize_Byte->setText(QString::number(entry.TileDataSize_Byte, 16));
-    ui->lineEdit_tileDataRAMoffset->setText(QString::number(entry.TileDataRAMOffsetNum, 16));
-    ui->comboBox_tileDataType->setCurrentIndex(entry.TileDataType);
-    ui->lineEdit_tileDataName->setText(entry.TileDataName);
-    ui->lineEdit_mappingDataAddress->setText(QString::number(entry.MappingDataAddress, 16));
-    ui->lineEdit_mappingDataSize_Byte->setText(QString::number(entry.MappingDataSize_Byte, 16));
-    ui->comboBox_mappingDataType->setCurrentIndex(entry.MappingDataCompressType);
-    ui->lineEdit_mappingDataName->setText(entry.MappingDataName);
-    ui->lineEdit_optionalGraphicHeight->setText(QString::number(entry.optionalGraphicHeight, 16));
-    ui->lineEdit_optionalGraphicWidth->setText(QString::number(entry.optionalGraphicWidth, 16));
-    ui->lineEdit_paletteAddress->setText(QString::number(entry.PaletteAddress, 16));
-    ui->lineEdit_paletteNum->setText(QString::number(entry.PaletteNum, 16));
-    ui->lineEdit_paletteRAMOffset->setText(QString::number(entry.PaletteRAMOffsetNum, 16));
+    SetTilesPanelInfoGUI(entry);
+    SetMappingGraphicInfoGUI(entry);
+    SetPaletteInfoGUI(entry);
 
     // graphicviews reset
     UpdatePaletteGraphicView(entry);
@@ -289,7 +278,7 @@ QPixmap GraphicManagerDialog::RenderGraphic(ScatteredGraphicUtils::ScatteredGrap
     int graphicwidth = entry.optionalGraphicWidth;
     switch (static_cast<int>(entry.MappingDataCompressType))
     {
-        case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE16_with_sizeheader:
+        case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
         {
             // Initialize the QPixmap with transparency
             int unit = 8;
@@ -430,6 +419,50 @@ void GraphicManagerDialog::ClearMappingPanel()
     ui->lineEdit_mappingDataName->setText("");
     ui->lineEdit_optionalGraphicHeight->setText("");
     ui->lineEdit_optionalGraphicWidth->setText("");
+}
+
+/// <summary>
+/// set palette panel info according to the provided entry.
+/// </summary>
+/// <param name="entry">
+/// The struct data of the entry.
+/// </param>
+void GraphicManagerDialog::SetPaletteInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+{
+    ui->lineEdit_paletteAddress->setText(QString::number(entry.PaletteAddress, 16));
+    ui->lineEdit_paletteNum->setText(QString::number(entry.PaletteNum, 16));
+    ui->lineEdit_paletteRAMOffset->setText(QString::number(entry.PaletteRAMOffsetNum, 16));
+}
+
+/// <summary>
+/// set Tiles panel info according to the provided entry.
+/// </summary>
+/// <param name="entry">
+/// The struct data of the entry.
+/// </param>
+void GraphicManagerDialog::SetTilesPanelInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+{
+    ui->lineEdit_tileDataAddress->setText(QString::number(entry.TileDataAddress, 16));
+    ui->lineEdit_tileDataSize_Byte->setText(QString::number(entry.TileDataSize_Byte, 16));
+    ui->lineEdit_tileDataRAMoffset->setText(QString::number(entry.TileDataRAMOffsetNum, 16));
+    ui->comboBox_tileDataType->setCurrentIndex(entry.TileDataType);
+    ui->lineEdit_tileDataName->setText(entry.TileDataName);
+}
+
+/// <summary>
+/// set mapping graphic panel info according to the provided entry.
+/// </summary>
+/// <param name="entry">
+/// The struct data of the entry.
+/// </param>
+void GraphicManagerDialog::SetMappingGraphicInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+{
+    ui->lineEdit_mappingDataAddress->setText(QString::number(entry.MappingDataAddress, 16));
+    ui->lineEdit_mappingDataSize_Byte->setText(QString::number(entry.MappingDataSize_Byte, 16));
+    ui->comboBox_mappingDataType->setCurrentIndex(entry.MappingDataCompressType);
+    ui->lineEdit_mappingDataName->setText(entry.MappingDataName);
+    ui->lineEdit_optionalGraphicHeight->setText(QString::number(entry.optionalGraphicHeight, 16));
+    ui->lineEdit_optionalGraphicWidth->setText(QString::number(entry.optionalGraphicWidth, 16));
 }
 
 /// <summary>
@@ -607,7 +640,7 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
                     paloffset);
 
                 // set tmpEntry if everything looks correct
-                tmpEntry.PaletteAddress = palAddress;
+                tmpEntry.PaletteAddress = 0;
                 tmpEntry.PaletteNum = palnum;
                 tmpEntry.PaletteRAMOffsetNum = paloffset;
             }
@@ -627,6 +660,7 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
 
         // UI reset
         UpdatePaletteGraphicView(tmpEntry);
+        SetPaletteInfoGUI(tmpEntry);
     }
 }
 
@@ -683,6 +717,7 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                     CleanTilesInstances();
                     GenerateBGTile8x8Instances(tmpEntry);
                     UpdateTilesGraphicView(tmpEntry);
+                    SetTilesPanelInfoGUI(tmpEntry);
                 }
                 break;
             }

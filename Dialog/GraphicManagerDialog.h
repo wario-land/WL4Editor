@@ -51,6 +51,9 @@ private:
     void ClearPalettePanel();
     void ClearTilesPanel();
     void ClearMappingPanel();
+    void SetPaletteInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    void SetTilesPanelInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    void SetMappingGraphicInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
 
     void CleanTilesInstances();
     void GenerateBGTile8x8Instances(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
@@ -67,7 +70,7 @@ public:
     static constexpr const char *ScatteredGraphicMappingDataCompressionTypeNameData[2] =
     {
         "0: No_mapping_data_comp",
-        "1: RLE16_with_sizeheader"
+        "1: RLE_mappingtype_0x20"
     };
     // clang-format on
 };
