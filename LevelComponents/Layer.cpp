@@ -53,7 +53,7 @@ namespace LevelComponents
             //   D E F G H I      7 8 9 G H I
             if (ROMUtils::ROMFileMetadata->ROMDataPtr[layerDataPtr] == 1)
             {
-                unsigned short *rearranged = new unsigned short[Width * Height * 2];
+                unsigned short *rearranged = new unsigned short[Width * Height];
                 for (int j = 0; j < 32; ++j)
                 {
                     for (int k = 0; k < 32; ++k)
@@ -355,7 +355,29 @@ namespace LevelComponents
     unsigned char *Layer::GetCompressedLayerData(unsigned int *dataSize)
     {
         unsigned char *dataBuffer;
-        unsigned int compressedSize = ROMUtils::LayerRLECompress(Width * Height, LayerData, &dataBuffer);
+
+        // Rearrange tile data for LayerTile8x8, width == 64, height == 32
+        // the logic is inverted from the one in the Layer's constructor
+        //   1 2 3 A B C      1 2 3 4 5 6
+        //   4 5 6 D E F  =>  7 8 9 A B C
+        //   7 8 9 G H I      D E F G H I
+        unsigned short *tmpLayerData = LayerData;
+        unsigned short *rearranged = nullptr;
+        if (MappingType == LayerTile8x8 && Width == 64 && Height == 32)
+        {
+            rearranged = new unsigned short[Width * Height];
+            for (int j = 0; j < 32; ++j)
+            {
+                for (int k = 0; k < 32; ++k)
+                {
+                    rearranged[(j << 5) + k] = LayerData[(j << 6) + k];
+                    rearranged[(j << 5) + k + 1024] = LayerData[(j << 6) + k + 32];
+                }
+            }
+            tmpLayerData = rearranged;
+        }
+        unsigned int compressedSize = ROMUtils::LayerRLECompress(Width * Height, tmpLayerData, &dataBuffer);
+        delete[] rearranged;
         unsigned int sizeInfoLen = MappingType == LayerMap16 ? 2 : 1;
         unsigned char *dataChunk = new unsigned char[sizeInfoLen + compressedSize];
         memcpy(dataChunk + sizeInfoLen, dataBuffer, compressedSize);
