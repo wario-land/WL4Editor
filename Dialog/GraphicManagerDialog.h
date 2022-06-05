@@ -32,6 +32,8 @@ private slots:
     void on_pushButton_AddGraphicEntry_clicked();
     void on_pushButton_RemoveGraphicEntries_clicked();
     void on_pushButton_validateAndSetMappingData_clicked();
+    void on_pushButton_saveAllGraphicEntries_clicked();
+    void on_pushButton_cancelEditing_clicked();
 
 private:
     Ui::GraphicManagerDialog *ui;

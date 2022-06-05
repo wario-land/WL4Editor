@@ -1035,3 +1035,23 @@ void GraphicManagerDialog::on_pushButton_validateAndSetMappingData_clicked()
         QMessageBox::critical(this, tr("Error"), tr("You can only save tmpEntry into entrieslist right after import mapping data!"));
     }
 }
+
+/// <summary>
+/// Save all the entries into the ROM the close the dialog.
+/// </summary>
+void GraphicManagerDialog::on_pushButton_saveAllGraphicEntries_clicked()
+{
+    // TODO
+    this->close();
+}
+
+/// <summary>
+/// Close the dialog.
+/// </summary>
+void GraphicManagerDialog::on_pushButton_cancelEditing_clicked()
+{
+    // TODO
+    CleanTilesInstances();
+    this->close();
+}
+
