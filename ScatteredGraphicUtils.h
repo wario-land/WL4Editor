@@ -34,7 +34,7 @@ namespace ScatteredGraphicUtils
         enum ScatteredGraphicTileDataType TileDataType;
         QString TileDataName;
         unsigned int MappingDataAddress;
-        unsigned int MappingDataSize_Byte; // unit: Byte
+        unsigned int MappingDataSizeAfterCompression_Byte; // unit: Byte
         enum ScatteredGraphicMappingDataCompressionType MappingDataCompressType;
         QString MappingDataName;
         unsigned int PaletteAddress = 0;
@@ -56,7 +56,7 @@ namespace ScatteredGraphicUtils
             this->TileDataType = entry.TileDataType;
             this->TileDataName = entry.TileDataName;
             this->MappingDataAddress = entry.MappingDataAddress;
-            this->MappingDataSize_Byte = entry.MappingDataSize_Byte;
+            this->MappingDataSizeAfterCompression_Byte = entry.MappingDataSizeAfterCompression_Byte;
             this->MappingDataCompressType = entry.MappingDataCompressType;
             this->MappingDataName = entry.MappingDataName;
             this->PaletteAddress = entry.PaletteAddress;

@@ -40,7 +40,7 @@
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>
          <property name="selectionMode">
-          <enum>QAbstractItemView::MultiSelection</enum>
+          <enum>QAbstractItemView::SingleSelection</enum>
          </property>
         </widget>
        </item>
@@ -360,7 +360,7 @@
            <item row="11" column="0">
             <widget class="QLabel" name="label_mappingDataSize_Byte">
              <property name="text">
-              <string>mapping data size (Hex, Byte):</string>
+              <string>size after compression (Hex, Byte):</string>
              </property>
             </widget>
            </item>

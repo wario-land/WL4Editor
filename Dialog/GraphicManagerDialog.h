@@ -30,6 +30,8 @@ private slots:
     void on_pushButton_ImportTile8x8Data_clicked();
     void on_pushButton_ImportGraphic_clicked();
     void on_pushButton_AddGraphicEntry_clicked();
+    void on_pushButton_RemoveGraphicEntries_clicked();
+    void on_pushButton_validateAndSetMappingData_clicked();
 
 private:
     Ui::GraphicManagerDialog *ui;
@@ -39,6 +41,9 @@ private:
     struct ScatteredGraphicUtils::ScatteredGraphicEntryItem tmpEntry;
     QVector<LevelComponents::Tile8x8 *> tmpTile8x8array;
     LevelComponents::Tile8x8 *tmpblankTile = nullptr;
+
+    // editing states
+    bool CanSetChangedEntry = false;
 
     // functions
     void CreateAndAddDefaultEntry();

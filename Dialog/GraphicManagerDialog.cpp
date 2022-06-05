@@ -2,6 +2,7 @@
 #include "ui_GraphicManagerDialog.h"
 
 #include <QMessageBox>
+#include <QModelIndex>
 
 #include "WL4EditorWindow.h"
 #include "WL4Constants.h"
@@ -88,7 +89,7 @@ void GraphicManagerDialog::CreateAndAddDefaultEntry()
     testentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
     testentry.TileDataName = "Tileset 0x11 bg tiles";
     testentry.MappingDataAddress = 0x5FA6D0;
-    testentry.MappingDataSize_Byte = 0xC10; // unit: Byte
+    testentry.MappingDataSizeAfterCompression_Byte = 0xC10; // unit: Byte
     testentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
     testentry.MappingDataName = "Tileset 0x11 bg";
     testentry.PaletteAddress = 0x583C7C;
@@ -109,28 +110,32 @@ void GraphicManagerDialog::CreateAndAddDefaultEntry()
 /// </returns>
 bool GraphicManagerDialog::UpdateEntryList()
 {
+    // cleanup old listview ui
+    bool result = false;
+    if (ListViewItemModel)
+    {
+        ListViewItemModel->clear();
+        delete ListViewItemModel;
+        ListViewItemModel = nullptr;
+    }
+    ListViewItemModel = new QStandardItemModel(this);
+
     if (graphicEntries.size())
     {
-        // cleanup old listview ui
-        if (ListViewItemModel)
-        {
-            ListViewItemModel->clear();
-            delete ListViewItemModel;
-            ListViewItemModel = nullptr;
-        }
-
         // create new listview ui data
-        ListViewItemModel = new QStandardItemModel(this);
         for(auto &entry: graphicEntries)
         {
             QString text = GenerateEntryTextFromStruct(entry);
             QStandardItem *item = new QStandardItem(text);
             ListViewItemModel->appendRow(item);
         }
-        ui->listView_RecordGraphicsList->setModel(ListViewItemModel);
-        return true;
+        result = true;
     }
-    return false;
+
+    CanSetChangedEntry = false;
+
+    ui->listView_RecordGraphicsList->setModel(ListViewItemModel);
+    return result;
 }
 
 /// <summary>
@@ -461,7 +466,7 @@ void GraphicManagerDialog::SetTilesPanelInfoGUI(ScatteredGraphicUtils::Scattered
 void GraphicManagerDialog::SetMappingGraphicInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
 {
     ui->lineEdit_mappingDataAddress->setText(QString::number(entry.MappingDataAddress, 16));
-    ui->lineEdit_mappingDataSize_Byte->setText(QString::number(entry.MappingDataSize_Byte, 16));
+    ui->lineEdit_mappingDataSize_Byte->setText(QString::number(entry.MappingDataSizeAfterCompression_Byte, 16));
     ui->comboBox_mappingDataType->setCurrentIndex(entry.MappingDataCompressType);
     ui->lineEdit_mappingDataName->setText(entry.MappingDataName);
     ui->lineEdit_optionalGraphicHeight->setText(QString::number(entry.optionalGraphicHeight, 16));
@@ -646,6 +651,9 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
                 tmpEntry.PaletteAddress = 0;
                 tmpEntry.PaletteNum = palnum;
                 tmpEntry.PaletteRAMOffsetNum = paloffset;
+
+                // disable entry save
+                CanSetChangedEntry = false;
             }
             else
             {
@@ -712,6 +720,9 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                                 this->tmpEntry.TileDataSize_Byte = finaldata.size();
                                 this->tmpEntry.TileDataAddress = 0;
                                 this->tmpEntry.TileDataType = ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+
+                                // disable entry save
+                                CanSetChangedEntry = false;
                             }
                         });
                     tmpEntry.TileDataName = ui->lineEdit_tileDataName->text();
@@ -906,11 +917,14 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                                 // set tmpEntry if everything looks correct
                                 this->tmpEntry.MappingDataAddress = 0;
                                 this->tmpEntry.MappingDataCompressType = ScatteredGraphicUtils::RLE_mappingtype_0x20;
-                                this->tmpEntry.MappingDataSize_Byte = finaldata.size();
+                                this->tmpEntry.MappingDataSizeAfterCompression_Byte = 0; // the save logic should set this
                                 this->tmpEntry.mappingData = tmpMappingData;
                                 this->tmpEntry.optionalGraphicWidth = optionalgraphicWidth;
                                 this->tmpEntry.optionalGraphicHeight = optionalgraphicHeight;
                                 delete[] tmp_current_tile8x8_data;
+
+                                // enable entry save
+                                CanSetChangedEntry = true;
                             }
                         });
                     tmpEntry.MappingDataName = ui->lineEdit_mappingDataName->text();
@@ -939,10 +953,85 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
 }
 
 /// <summary>
-/// Add a new default Entry into the Listview
+/// Add a new default Entry into the Listview.
 /// </summary>
 void GraphicManagerDialog::on_pushButton_AddGraphicEntry_clicked()
 {
     CreateAndAddDefaultEntry();
     UpdateEntryList();
+
+    // clean up instances if the tmpEntry was used
+    CleanTilesInstances();
+    CleanMappingDataInEntry(tmpEntry);
+    SelectedEntryID = -1;
+
+    // UI update
+    ClearMappingPanel();
+    ClearPalettePanel();
+    ClearTilesPanel();
+    UpdateEntryList();
+
+    // disable current entry editing
+    ui->pushButton_ImportGraphic->setEnabled(false);
+    ui->pushButton_ImportPaletteData->setEnabled(false);
+    ui->pushButton_ImportTile8x8Data->setEnabled(false);
+    ui->pushButton_validateAndSetMappingData->setEnabled(false);
+    ui->pushButton_RemoveGraphicEntries->setEnabled(false); // should always be false since on selected row any more
+}
+
+/// <summary>
+/// Delete the selected Entries from the Listview.
+/// </summary>
+void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
+{
+    ui->listView_RecordGraphicsList->setEnabled(false);
+    QItemSelectionModel *select = ui->listView_RecordGraphicsList->selectionModel();
+    QModelIndexList selectedRows = select->selectedRows();
+    int num_of_select_rows = selectedRows.size();
+
+    if (num_of_select_rows > 0)
+    {
+        // clean up list and delete entry and reset tmpEntry
+        qSort(selectedRows.begin(), selectedRows.end(), qGreater<QModelIndex>()); // so that rows are removed from highest index
+        foreach (QModelIndex index, selectedRows)
+        {
+            graphicEntries.removeAt(index.row());
+        }
+
+        // clean up instances if the tmpEntry was used
+        CleanTilesInstances();
+        CleanMappingDataInEntry(tmpEntry);
+        SelectedEntryID = -1;
+
+        // UI update
+        ClearMappingPanel();
+        ClearPalettePanel();
+        ClearTilesPanel();
+        UpdateEntryList();
+
+        // disable current entry editing
+        ui->pushButton_ImportGraphic->setEnabled(false);
+        ui->pushButton_ImportPaletteData->setEnabled(false);
+        ui->pushButton_ImportTile8x8Data->setEnabled(false);
+        ui->pushButton_validateAndSetMappingData->setEnabled(false);
+        ui->pushButton_RemoveGraphicEntries->setEnabled(false); // should always be false since on selected row any more
+    }
+
+    ui->listView_RecordGraphicsList->setEnabled(true);
+}
+
+/// <summary>
+/// only after import graphic, we can save tmpEntry into entrieslist.
+/// if the user touch import palette or import tiles again, save tmpEntry into entrieslist is not allowed
+/// </summary>
+void GraphicManagerDialog::on_pushButton_validateAndSetMappingData_clicked()
+{
+    if (CanSetChangedEntry && SelectedEntryID > -1)
+    {
+        graphicEntries[SelectedEntryID] = tmpEntry;
+    }
+    else
+    {
+        QMessageBox::critical(this, tr("Error"), tr("You can only save tmpEntry into entrieslist right after import mapping data!"));
+    }
 }
