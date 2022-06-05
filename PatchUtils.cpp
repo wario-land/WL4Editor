@@ -751,7 +751,7 @@ namespace PatchUtils
                     struct ROMUtils::SaveData saveData = CreatePatchSaveChunk(*patchAllocIter);
                     if(saveData.size + alignOffset + 12 > freeSpace.size)
                     {
-                        delete saveData.data;
+                        delete[] saveData.data;
                         // this prevents re-compiling while the callback iterates over all free space regions smaller than what was needed here
                         // we do not include alignment offset because the alignment offset is different for every free space region
                         neededSizeMap[patchAllocIter->HookAddress] = saveData.size + 12;
