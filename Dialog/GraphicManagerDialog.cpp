@@ -40,28 +40,6 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
         graphicEntries.clear();
     }
     graphicEntries = ScatteredGraphicUtils::GetScatteredGraphicsFromROM();
-
-    // -------------test code-----------------
-    struct ScatteredGraphicUtils::ScatteredGraphicEntryItem testentry;
-    testentry.TileDataAddress = 0x4E851C;
-    testentry.TileDataSize_Byte = 9376; // unit: Byte
-    testentry.TileDataRAMOffsetNum = 0x4DA - 0x200; // unit: per Tile8x8
-    testentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
-    testentry.TileDataName = "Tileset 0x11 bg tiles";
-    testentry.MappingDataAddress = 0x5FA6D0;
-    testentry.MappingDataSize_Byte = 0xC10; // unit: Byte
-    testentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
-    testentry.MappingDataName = "Tileset 0x11 bg";
-    testentry.PaletteAddress = 0x583C7C;
-    testentry.PaletteNum = 16; // when (optionalPaletteAddress + PaletteNum) > 16, we just discard the latter palettes
-    testentry.PaletteRAMOffsetNum = 0; // unit: per palette, 16 color
-    testentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
-    testentry.optionalGraphicHeight = 0;
-
-    ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(testentry);
-    graphicEntries.append(testentry);
-    // -------------test code end-------------
-
     UpdateEntryList();
 
     // init status of some buttons
@@ -96,6 +74,31 @@ void GraphicManagerDialog::StaticInitialization()
     {
         GraphicMappingDataCompressionTypeName << ScatteredGraphicMappingDataCompressionTypeNameData[i];
     }
+}
+
+/// <summary>
+/// Create a new default Entry and add it into the graphicEntries
+/// </summary>
+void GraphicManagerDialog::CreateAndAddDefaultEntry()
+{
+    struct ScatteredGraphicUtils::ScatteredGraphicEntryItem testentry;
+    testentry.TileDataAddress = 0x4E851C;
+    testentry.TileDataSize_Byte = 9376; // unit: Byte
+    testentry.TileDataRAMOffsetNum = 0x4DA - 0x200; // unit: per Tile8x8
+    testentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+    testentry.TileDataName = "Tileset 0x11 bg tiles";
+    testentry.MappingDataAddress = 0x5FA6D0;
+    testentry.MappingDataSize_Byte = 0xC10; // unit: Byte
+    testentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
+    testentry.MappingDataName = "Tileset 0x11 bg";
+    testentry.PaletteAddress = 0x583C7C;
+    testentry.PaletteNum = 16; // when (optionalPaletteAddress + PaletteNum) > 16, we just discard the latter palettes
+    testentry.PaletteRAMOffsetNum = 0; // unit: per palette, 16 color
+    testentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
+    testentry.optionalGraphicHeight = 0;
+
+    ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(testentry);
+    graphicEntries.append(testentry);
 }
 
 /// <summary>
@@ -750,3 +753,196 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
     }
 }
 
+/// <summary>
+/// Click the button to load mapping data from the ROM or from bin file
+/// </summary>
+void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
+{
+    if (SelectedEntryID != -1)
+    {
+        // try to use the settings from the UI to import mapping data
+        int mappingdataAddress = ui->lineEdit_mappingDataAddress->text().toUInt(nullptr, 16);
+        int mappingdatatype = ui->comboBox_mappingDataType->currentIndex();
+        int mappingdataSize_Byte = ui->lineEdit_mappingDataSize_Byte->text().toUInt(nullptr, 16);
+        int optionalgraphicWidth = ui->lineEdit_optionalGraphicWidth->text().toUInt(nullptr, 16);
+        int optionalgraphicHeight = ui->lineEdit_optionalGraphicHeight->text().toUInt(nullptr, 16);
+
+        // tiledataAddress is not a vanilla rom address, so we need to import tile data from file
+        if (!mappingdataAddress || mappingdataAddress >= WL4Constants::AvailableSpaceBeginningInROM)
+        {
+            switch (mappingdatatype)
+            {
+                case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
+                {
+                    // check if optionalgraphicWidth or optionalgraphicHeight looks correct
+                    if (optionalgraphicWidth != 0x20 && optionalgraphicWidth != 0x40)
+                    {
+                        QMessageBox::critical(this, tr("Load Error"), tr("Wrong graphic Width to import graphic for RLE_mappingtype_0x20,\n"
+                                                                              "it has to be 0x40 or 0x40!"));
+                        return;
+                    }
+                    if (optionalgraphicHeight != 0x20 && optionalgraphicHeight != 0x40)
+                    {
+                        QMessageBox::critical(this, tr("Load Error"), tr("Wrong graphic Height to import graphic for RLE_mappingtype_0x20,\n"
+                                                                              "it has to be 0x40 or 0x40!"));
+                        return;
+                    }
+
+                    // Let user to choose a palette for reference when import graphic by bin files
+                    int refPalette = QInputDialog::getText(this,
+                                                           tr("WL4Editor"),
+                                                           tr("Choose a palette to import mapping data of graphics:\n"
+                                                              "(Use Hex Id)"), QLineEdit::Normal,
+                                                           "0xF").toUInt(nullptr, 16);
+                    refPalette = qMin(refPalette, 0xF);
+                    refPalette = qMax(refPalette, 0);
+
+                    // Use the optional width and the imported tile data to check if the width and height are legal
+                    FileIOUtils::ImportTile8x8GfxData(this,
+                        tmpEntry.palettes[refPalette], // use a palette for palette comparison
+                        tr("Choose a color to covert to transparent:"),
+                        [this, &optionalgraphicWidth, &optionalgraphicHeight, &refPalette] (QByteArray finaldata, QWidget *parentPtr)
+                        {
+                            // Assume the file is fully filled with tiles
+                            int newtilenum = finaldata.size() / 32;
+                            if(newtilenum != 0x400 && newtilenum != 0x800 && newtilenum != 0x1000)
+                            {
+                                QMessageBox::critical(parentPtr, tr("Load Error"), tr("The pic size has to be 0x20 by 0x20,\n"
+                                                                                      "0x20 by 0x40 or 0x40 by 0x20!"));
+                                return;
+                            }
+                            else
+                            {
+                                // Get existing bg tile data
+                                int existingTile8x8Num = this->tmpEntry.TileDataSize_Byte / 32;
+                                int existingTilesdatasize = (existingTile8x8Num + 1) * 32;
+                                unsigned char *tmp_current_tile8x8_data = new unsigned char[existingTilesdatasize];
+                                memset(&tmp_current_tile8x8_data[0], 0, existingTilesdatasize);
+                                auto tile8x8array = this->tmpTile8x8array;
+                                int startId = this->tmpEntry.TileDataRAMOffsetNum;
+                                for (int j = startId; j < 0x400; j++)
+                                {
+                                    memcpy(&tmp_current_tile8x8_data[(j - startId) * 32], tile8x8array[j]->CreateGraphicsData().data(), 32);
+                                }
+
+                                // Reset optionalgraphicWidth and optionalgraphicHeight if needed
+                                if (newtilenum == 0x400)
+                                {
+                                    optionalgraphicWidth = 0x20;
+                                    optionalgraphicHeight = 0x20;
+                                }
+                                else if (newtilenum == 0x1000)
+                                {
+                                    optionalgraphicWidth = 0x40;
+                                    optionalgraphicHeight = 0x40;
+                                }
+                                else if (newtilenum == 0x800)
+                                {
+                                    // assume the optionalgraphicWidth is correct
+                                    optionalgraphicHeight = 0x800 / optionalgraphicWidth;
+                                }
+
+                                // Generate mapping data
+                                QVector<unsigned short> tmpMappingData;
+                                for(int i = 0; i < newtilenum; ++i)
+                                {
+                                    unsigned char newtmpdata[32];
+                                    unsigned char newtmpXFlipdata[32];
+                                    unsigned char newtmpYFlipdata[32];
+                                    unsigned char newtmpXYFlipdata[32];
+
+                                    memcpy(newtmpdata, finaldata.data() + 32 * i, 32);
+                                    ROMUtils::Tile8x8DataXFlip(newtmpdata, newtmpXFlipdata);
+                                    ROMUtils::Tile8x8DataYFlip(newtmpdata, newtmpYFlipdata);
+                                    ROMUtils::Tile8x8DataYFlip(newtmpXFlipdata, newtmpXYFlipdata);
+
+                                    bool find_eqaul = false;
+                                    unsigned short mappingdata;
+                                    // loop from the first blank tile, excluding those animated tiles
+                                    for (int j = startId; j < 0x400; j++)
+                                    {
+                                        int result0 = memcmp(newtmpdata, &tmp_current_tile8x8_data[(j - startId) * 32], 32);
+                                        int result1 = memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[(j - startId) * 32], 32);
+                                        int result2 = memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[(j - startId) * 32], 32);
+                                        int result3 = memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[(j - startId) * 32], 32);
+                                        int tileid = j;
+                                        int paletteId = refPalette;
+
+                                        if (!result0)
+                                        {
+                                            mappingdata = (paletteId & 0xF) << 12 | (0 << 11) | (0 << 10) | (tileid & 0x3FF);
+                                            find_eqaul = true;
+                                            break;
+                                        }
+                                        else if (!result1)
+                                        {
+                                            mappingdata = (paletteId & 0xF) << 12 | (0 << 11) | (1 << 10) | (tileid & 0x3FF);
+                                            find_eqaul = true;
+                                            break;
+                                        }
+                                        else if (!result2)
+                                        {
+                                            mappingdata = (paletteId & 0xF) << 12 | (1 << 11) | (0 << 10) | (tileid & 0x3FF);
+                                            find_eqaul = true;
+                                            break;
+                                        }
+                                        else if (!result3)
+                                        {
+                                            mappingdata = (paletteId & 0xF) << 12 | (1 << 11) | (1 << 10) | (tileid & 0x3FF);
+                                            find_eqaul = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!find_eqaul)
+                                    {// not find any existing tile8x8 eqaul to the current tile8x8
+                                        QMessageBox::critical(parentPtr, tr("Load Error"),
+                                                              tr("Detect a Tile8x8 cannot be found in the current Tile8x8 set!"));
+                                        delete[] tmp_current_tile8x8_data;
+                                        return;
+                                    }
+                                    tmpMappingData.push_back(mappingdata);
+                                }
+
+                                // set tmpEntry if everything looks correct
+                                this->tmpEntry.MappingDataAddress = 0;
+                                this->tmpEntry.MappingDataCompressType = ScatteredGraphicUtils::RLE_mappingtype_0x20;
+                                this->tmpEntry.MappingDataSize_Byte = finaldata.size();
+                                this->tmpEntry.mappingData = tmpMappingData;
+                                this->tmpEntry.optionalGraphicWidth = optionalgraphicWidth;
+                                this->tmpEntry.optionalGraphicHeight = optionalgraphicHeight;
+                                delete[] tmp_current_tile8x8_data;
+                            }
+                        });
+                    tmpEntry.MappingDataName = ui->lineEdit_mappingDataName->text();
+
+                    // UI reset
+                    UpdateMappingGraphicView(tmpEntry);
+                    SetMappingGraphicInfoGUI(tmpEntry);
+                }
+                break;
+            }
+
+        }
+        else // we need to import tile data from the current ROM directly
+        {
+            switch (mappingdatatype)
+            {
+                case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
+                {
+                    // TODO
+                }
+                break;
+            }
+            QMessageBox::critical(this, tr("Error"), tr("Import graphic from current ROM cannot work yet!"));
+        }
+    }
+}
+
+/// <summary>
+/// Add a new default Entry into the Listview
+/// </summary>
+void GraphicManagerDialog::on_pushButton_AddGraphicEntry_clicked()
+{
+    CreateAndAddDefaultEntry();
+    UpdateEntryList();
+}

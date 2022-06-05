@@ -28,6 +28,8 @@ private slots:
     void on_pushButton_ClearMappingData_clicked();
     void on_pushButton_ImportPaletteData_clicked();
     void on_pushButton_ImportTile8x8Data_clicked();
+    void on_pushButton_ImportGraphic_clicked();
+    void on_pushButton_AddGraphicEntry_clicked();
 
 private:
     Ui::GraphicManagerDialog *ui;
@@ -39,6 +41,7 @@ private:
     LevelComponents::Tile8x8 *tmpblankTile = nullptr;
 
     // functions
+    void CreateAndAddDefaultEntry();
     bool UpdateEntryList();
     QString GenerateEntryTextFromStruct(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
     void ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);

@@ -270,7 +270,7 @@
            <item row="15" column="0">
             <widget class="QLabel" name="label_optionalGraphicHeight">
              <property name="text">
-              <string>optional graphic height (Hex):</string>
+              <string>graphic height (Hex, Tile):</string>
              </property>
             </widget>
            </item>
@@ -283,7 +283,7 @@
            <item row="14" column="0">
             <widget class="QLabel" name="label_optionalGraphicWidth">
              <property name="text">
-              <string>optional graphic width (Hex):</string>
+              <string>graphic width (Hex, Tile):</string>
              </property>
             </widget>
            </item>
