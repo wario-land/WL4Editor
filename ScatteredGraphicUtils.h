@@ -80,6 +80,7 @@ namespace ScatteredGraphicUtils
     // functions
     QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> GetScatteredGraphicsFromROM();
     void ExtractDataFromEntryInfo_v1(struct ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    QString SaveScatteredGraphicsToROM(QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> entries);
 };
 
 #endif // SCATTEREDGRAPHICUTILS_H

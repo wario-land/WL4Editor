@@ -44,9 +44,6 @@ private:
     QVector<LevelComponents::Tile8x8 *> tmpTile8x8array;
     LevelComponents::Tile8x8 *tmpblankTile = nullptr;
 
-    // editing states
-    bool CanSetChangedEntry = false;
-
     // functions
     void CreateAndAddDefaultEntry();
     bool UpdateEntryList();

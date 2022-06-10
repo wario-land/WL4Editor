@@ -245,3 +245,17 @@ void ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(ScatteredGraphicEntryIte
         }
     }
 }
+
+/// <summary>
+/// Save the list of graphic entries to the ROM.
+/// </summary>
+/// <param name="entries">
+/// The array of struct data saves the info of all scattered graphic.
+/// </param>
+/// <returns>
+/// Error infos.
+/// </returns>
+QString ScatteredGraphicUtils::SaveScatteredGraphicsToROM(QVector<ScatteredGraphicEntryItem> entries)
+{
+    return QString("");
+}

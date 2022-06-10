@@ -132,8 +132,6 @@ bool GraphicManagerDialog::UpdateEntryList()
         result = true;
     }
 
-    CanSetChangedEntry = false;
-
     ui->listView_RecordGraphicsList->setModel(ListViewItemModel);
     return result;
 }
@@ -651,9 +649,6 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
                 tmpEntry.PaletteAddress = 0;
                 tmpEntry.PaletteNum = palnum;
                 tmpEntry.PaletteRAMOffsetNum = paloffset;
-
-                // disable entry save
-                CanSetChangedEntry = false;
             }
             else
             {
@@ -672,6 +667,10 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
         // UI reset
         UpdatePaletteGraphicView(tmpEntry);
         SetPaletteInfoGUI(tmpEntry);
+
+        // UI reset on other panels
+        UpdateTilesGraphicView(tmpEntry);
+        UpdateMappingGraphicView(tmpEntry);
     }
 }
 
@@ -720,9 +719,6 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                                 this->tmpEntry.TileDataSize_Byte = finaldata.size();
                                 this->tmpEntry.TileDataAddress = 0;
                                 this->tmpEntry.TileDataType = ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg;
-
-                                // disable entry save
-                                CanSetChangedEntry = false;
                             }
                         });
                     tmpEntry.TileDataName = ui->lineEdit_tileDataName->text();
@@ -732,6 +728,9 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                     GenerateBGTile8x8Instances(tmpEntry);
                     UpdateTilesGraphicView(tmpEntry);
                     SetTilesPanelInfoGUI(tmpEntry);
+
+                    // UI reset on other panels
+                    UpdateMappingGraphicView(tmpEntry);
                 }
                 break;
             }
@@ -922,9 +921,6 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                                 this->tmpEntry.optionalGraphicWidth = optionalgraphicWidth;
                                 this->tmpEntry.optionalGraphicHeight = optionalgraphicHeight;
                                 delete[] tmp_current_tile8x8_data;
-
-                                // enable entry save
-                                CanSetChangedEntry = true;
                             }
                         });
                     tmpEntry.MappingDataName = ui->lineEdit_mappingDataName->text();
@@ -1026,13 +1022,23 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
 /// </summary>
 void GraphicManagerDialog::on_pushButton_validateAndSetMappingData_clicked()
 {
-    if (CanSetChangedEntry && SelectedEntryID > -1)
+    if (SelectedEntryID > -1)
     {
+        // permit set entry as long as tmpEntry's tiles can work with the current mapping data
+        if (tmpEntry.TileDataType == ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
+                tmpEntry.MappingDataCompressType == ScatteredGraphicUtils::RLE_mappingtype_0x20)
         graphicEntries[SelectedEntryID] = tmpEntry;
-    }
-    else
-    {
-        QMessageBox::critical(this, tr("Error"), tr("You can only save tmpEntry into entrieslist right after import mapping data!"));
+
+        // reset ListView Item name
+        ListViewItemModel->item(SelectedEntryID, 0)->setText(GenerateEntryTextFromStruct(tmpEntry));
+
+        // UI reset
+        UpdatePaletteGraphicView(tmpEntry);
+        SetPaletteInfoGUI(tmpEntry);
+        UpdateTilesGraphicView(tmpEntry);
+        SetTilesPanelInfoGUI(tmpEntry);
+        UpdateMappingGraphicView(tmpEntry);
+        SetMappingGraphicInfoGUI(tmpEntry);
     }
 }
 
