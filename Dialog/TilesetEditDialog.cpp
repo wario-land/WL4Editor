@@ -6,9 +6,10 @@
 #include <QFileDevice>
 #include <QMessageBox>
 
+#include "WL4Constants.h"
 #include "ROMUtils.h"
 #include "FileIOUtils.h"
-#include "WL4Constants.h"
+#include "ScatteredGraphicUtils.h"
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
 
@@ -1196,6 +1197,7 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
             }
         }
     }
+    delete[] tmp_current_tile8x8_data;
 
     // update graphicview
     ReRenderTile16Map();
@@ -1204,3 +1206,84 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
     SetSelectedTile8x8(0, true);
 }
 
+/// <summary>
+/// Change BG Tile8x8 set and the last palette by searching legal scattered graphic entries.
+/// </summary>
+void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
+{
+    QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> graphicEntries = ScatteredGraphicUtils::GetScatteredGraphicsFromROM();
+
+    // Open a dialog to let user to choose a graphic entry
+    if (!graphicEntries.size())
+    {
+        QMessageBox::information(this, tr("Error"), tr("Cannot find graphic entry from the ROM!"));
+        return;
+    }
+
+    LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
+    int fgTileNum = tmp_newTilesetPtr->GetfgGFXlen() / 32;
+    QStringList items;
+    for (int i = 0; i < graphicEntries.size(); i++)
+    {
+        // incorrect tile data type
+        if (graphicEntries[i].TileDataType != ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg)
+        {
+            continue;
+        }
+
+        // the new bg tiles will overwrite the existing fg tiles
+        if ((graphicEntries[i].TileDataRAMOffsetNum + 0x200) <= (fgTileNum + 0x40))
+        {
+            continue;
+        }
+
+        // available entries need to be pushed into the list
+        // split the string with " " and we can always get the correct id on the first slice.
+        items << QString(QString::number(i) + "  " + graphicEntries[i].TileDataName + " - " + graphicEntries[i].MappingDataName);
+    }
+
+    // if the size == 0, the dialog will become a regular inputbox
+    if (!items.size())
+    {
+        QMessageBox::information(this, tr("Error"), tr("Cannot find any graphic entry suitable for the current Tileset!"));
+        return;
+    }
+
+    QInputDialog dialog;
+    dialog.setOptions(QInputDialog::UseListViewForComboBoxItems);
+    dialog.setComboBoxItems(items);
+    dialog.setWindowTitle(tr("Select a graphic entry to use its background tiles."));
+    if(dialog.exec() == QDialog::Accepted)
+    {
+        QStringList result = dialog.textValue().split(QChar(' '), Qt::SkipEmptyParts);
+        unsigned int id = result.at(0).toUInt(nullptr, 10);
+
+        unsigned char newtmpdata[32];
+        unsigned int bgTileNum = graphicEntries[id].TileDataSize_Byte / 32;
+        unsigned int startId = graphicEntries[id].TileDataRAMOffsetNum + 0x200;
+        for(int i = 0; i < bgTileNum; ++i)
+        {
+            memcpy(newtmpdata, graphicEntries[id].tileData.data() + 32 * i, 32);
+            OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(startId + i, newtmpdata);
+        }
+
+        // Reset the last palette
+        SelectedPaletteId = 15;
+        for (int i = 1; i < 16; i++)
+        {
+            tmp_newTilesetPtr->SetColor(SelectedPaletteId, i, graphicEntries[id].palettes[15][i]);
+        }
+
+        // update settings in the new tileset instance
+        tmp_newTilesetPtr->SetbgGFXlen(graphicEntries[id].TileDataSize_Byte);
+        tmp_newTilesetPtr->SetbgGFXptr(graphicEntries[id].TileDataAddress);
+
+        // update all the graphicviews
+        ResetPaletteBarGraphicView(SelectedPaletteId);
+        SetSelectedColorId(0);
+        ReRenderTile16Map();
+        ReRenderTile8x8Map(SelectedPaletteId);
+        SetSelectedTile16(0, true);
+        SetSelectedTile8x8(0, true);
+    }
+}

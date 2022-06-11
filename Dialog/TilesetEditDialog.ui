@@ -124,145 +124,172 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_AnimatedTileGroupSetter">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="widgetResizable">
+          <bool>true</bool>
          </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Slot and Group ID&lt;/span&gt;&lt;/p&gt;&lt;p&gt;There are some available animated tiles groups in the engine which you can use. You can use 16 of them in a Tileset which should always be in the front of all the other tiles, fill those 16 slots with IDs of group to add them into the Tileset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="title">
-          <string>Set Animated Tiles Group</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_6">
-          <item>
-           <layout class="QGridLayout" name="gridLayout_2">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item row="0" column="1">
-             <widget class="QLabel" name="label_AnimatedTileGroupId">
-              <property name="text">
-               <string>Group ID (Hex)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QSpinBox" name="spinBox_AnimatedTileSlot">
-              <property name="maximum">
-               <number>15</number>
-              </property>
-              <property name="displayIntegerBase">
-               <number>16</number>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QLabel" name="label_AnimatedTileSwitchId">
-              <property name="text">
-               <string>Switch ID (Hex)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_AnimatedTIleGroupSlot">
-              <property name="text">
-               <string>Slot (Hex)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QSpinBox" name="spinBox_AnimatedTileGroupId">
-              <property name="maximum">
-               <number>65535</number>
-              </property>
-              <property name="displayIntegerBase">
-               <number>16</number>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_AnimatedTileGroup2Id">
-              <property name="text">
-               <string>Group 2 ID (Hex)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QSpinBox" name="spinBox_AnimatedTileGroup2Id">
-              <property name="maximum">
-               <number>65535</number>
-              </property>
-              <property name="displayIntegerBase">
-               <number>16</number>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QSpinBox" name="spinBox_AnimatedTileSwitchId">
-              <property name="maximum">
-               <number>4</number>
-              </property>
-              <property name="displayIntegerBase">
-               <number>16</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton_SetAnimatedTileSlot">
-            <property name="text">
-             <string>Set Slot</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>-49</y>
+            <width>293</width>
+            <height>298</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_8">
+           <item>
+            <widget class="QGroupBox" name="groupBox_AnimatedTileGroupSetter">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Slot and Group ID&lt;/span&gt;&lt;/p&gt;&lt;p&gt;There are some available animated tiles groups in the engine which you can use. You can use 16 of them in a Tileset which should always be in the front of all the other tiles, fill those 16 slots with IDs of group to add them into the Tileset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="title">
+              <string>Set Animated Tiles Group</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_6">
+              <item>
+               <layout class="QGridLayout" name="gridLayout_2">
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <item row="0" column="1">
+                 <widget class="QLabel" name="label_AnimatedTileGroupId">
+                  <property name="text">
+                   <string>Group ID (Hex)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QSpinBox" name="spinBox_AnimatedTileSlot">
+                  <property name="maximum">
+                   <number>15</number>
+                  </property>
+                  <property name="displayIntegerBase">
+                   <number>16</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLabel" name="label_AnimatedTileSwitchId">
+                  <property name="text">
+                   <string>Switch ID (Hex)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_AnimatedTIleGroupSlot">
+                  <property name="text">
+                   <string>Slot (Hex)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QSpinBox" name="spinBox_AnimatedTileGroupId">
+                  <property name="maximum">
+                   <number>65535</number>
+                  </property>
+                  <property name="displayIntegerBase">
+                   <number>16</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_AnimatedTileGroup2Id">
+                  <property name="text">
+                   <string>Group 2 ID (Hex)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QSpinBox" name="spinBox_AnimatedTileGroup2Id">
+                  <property name="maximum">
+                   <number>65535</number>
+                  </property>
+                  <property name="displayIntegerBase">
+                   <number>16</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QSpinBox" name="spinBox_AnimatedTileSwitchId">
+                  <property name="maximum">
+                   <number>4</number>
+                  </property>
+                  <property name="displayIntegerBase">
+                   <number>16</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_SetAnimatedTileSlot">
+                <property name="text">
+                 <string>Set Slot</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_7">
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_ExportPNG">
+               <property name="text">
+                <string>Export PNG file:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_8">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QPushButton" name="pushButton_ExportTile8x8Map">
+                 <property name="text">
+                  <string>Export Tile8x8 set</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_ExportTile16Map">
+                 <property name="text">
+                  <string>Export Tile16 set</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_backgroundTiles">
+             <property name="text">
+              <string>background Tile8x8:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_changeBGTile8x8set">
+             <property name="text">
+              <string>Change BG Tile8x8 set</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_7">
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="label_ExportPNG">
-           <property name="text">
-            <string>Export PNG file:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_ExportTile8x8Map">
-           <property name="text">
-            <string>Export Tile8x8 set</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_ExportTile16Map">
-           <property name="text">
-            <string>Export Tile16 set</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </item>

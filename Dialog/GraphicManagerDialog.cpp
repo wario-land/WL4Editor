@@ -1024,6 +1024,18 @@ void GraphicManagerDialog::on_pushButton_validateAndSetMappingData_clicked()
 {
     if (SelectedEntryID > -1)
     {
+        for (int i = 0; i < graphicEntries.size(); i++)
+        {
+            if (i == SelectedEntryID) continue;
+            if (graphicEntries[i].MappingDataName == tmpEntry.MappingDataName &&
+                    graphicEntries[i].TileDataName == tmpEntry.TileDataName)
+            {
+                QMessageBox::information(this, tr("Error"), tr("Find the same MappingDataName and TileDataName from another entry,\n"
+                                                               "you need to make at least one of the names different."));
+                return;
+            }
+        }
+
         // permit set entry as long as tmpEntry's tiles can work with the current mapping data
         if (tmpEntry.TileDataType == ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
                 tmpEntry.MappingDataCompressType == ScatteredGraphicUtils::RLE_mappingtype_0x20)

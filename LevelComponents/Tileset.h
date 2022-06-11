@@ -55,8 +55,11 @@ namespace LevelComponents
         int GetfgGFXptr() { return fgGFXptr; }
         void SetfgGFXptr(int new_fgGFXptr) { fgGFXptr = new_fgGFXptr; }
         int GetfgGFXlen() { return fgGFXlen; }
-        int GetbgGFXlen() { return bgGFXlen; }
         void SetfgGFXlen(int lenth) { fgGFXlen = lenth; }
+        int GetbgGFXptr() { return bgGFXptr; }
+        void SetbgGFXptr(int new_bgGFXptr) { bgGFXptr = new_bgGFXptr; }
+        int GetbgGFXlen() { return bgGFXlen; }
+        void SetbgGFXlen(int lenth) { bgGFXlen = lenth; }
         void Setmap16ptr(int new_map16ptr) { map16ptr = new_map16ptr; }
 
         int GetPaletteAddr() { return paletteAddress; }
