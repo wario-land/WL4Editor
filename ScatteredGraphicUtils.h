@@ -6,6 +6,8 @@
 #include <QVector>
 #include <QByteArray>
 
+#include "ROMUtils.h"
+
 namespace ScatteredGraphicUtils
 {
     // structs
@@ -77,10 +79,29 @@ namespace ScatteredGraphicUtils
         void SetColor(int paletteId, int colorId, QRgb newcolor) { palettes[paletteId][colorId] = newcolor; }
     };
 
+    // used for reset ScatteredGraphicListChunk only
+    enum chunkSaveDataType
+    {
+        graphicPalette = 0,
+        graphictiles = 1,
+        graphicmappingdata = 2
+    };
+    struct entry_datatype_chunk
+    {
+        unsigned int entryID = 0;
+        enum chunkSaveDataType datatype = graphicPalette;
+        unsigned int chunkID = 0;
+    };
+    QVector<entry_datatype_chunk> entry_datatype_chunk_tuple;
+
     // functions
     QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> GetScatteredGraphicsFromROM();
     void ExtractDataFromEntryInfo_v1(struct ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
     QString SaveScatteredGraphicsToROM(QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> entries);
+
+    // savechunk relative functions
+    QVector<unsigned int> GetSaveDataAddresses(ScatteredGraphicEntryItem &entry);
+    QVector<struct ROMUtils::SaveData> CreateSaveData(ScatteredGraphicEntryItem &entry, unsigned int entryId);
 };
 
 #endif // SCATTEREDGRAPHICUTILS_H

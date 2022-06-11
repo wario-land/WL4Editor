@@ -354,6 +354,26 @@ namespace LevelComponents
     /// </returns>
     unsigned char *Layer::GetCompressedLayerData(unsigned int *dataSize)
     {
+        QVector<unsigned short> data;
+        for (int i = 0; i < Height; i++)
+        {
+            for (int j = 0; j < Width; j++)
+            {
+                data.append(LayerData[j + i * Width]);
+            }
+        }
+        return CompressLayerData(data, MappingType, Width, Height, dataSize);
+    }
+
+    /// <summary>
+    /// Create and returned compressed layer data (on the heap)
+    /// can be used without creating Layer instance
+    /// </summary>
+    /// <returns>
+    /// Pointer to the compressed data.
+    /// </returns>
+    unsigned char *Layer::CompressLayerData(QVector<unsigned short> &data, LayerMappingType mappingType, unsigned int width, unsigned int height, unsigned int *dataSize)
+    {
         unsigned char *dataBuffer;
 
         // Rearrange tile data for LayerTile8x8, width == 64, height == 32
@@ -361,35 +381,40 @@ namespace LevelComponents
         //   1 2 3 A B C      1 2 3 4 5 6
         //   4 5 6 D E F  =>  7 8 9 A B C
         //   7 8 9 G H I      D E F G H I
-        unsigned short *tmpLayerData = LayerData;
-        unsigned short *rearranged = nullptr;
-        if (MappingType == LayerTile8x8 && Width == 64 && Height == 32)
+        unsigned short *tmpLayerData = new unsigned short[width * height];
+        for (int i = 0; i < data.size(); i++)
         {
-            rearranged = new unsigned short[Width * Height];
+            tmpLayerData[i] = data[i];
+        }
+        unsigned short *rearranged = nullptr;
+        if (mappingType == LayerTile8x8 && width == 64 && height == 32)
+        {
+            rearranged = new unsigned short[width * height];
             for (int j = 0; j < 32; ++j)
             {
                 for (int k = 0; k < 32; ++k)
                 {
-                    rearranged[(j << 5) + k] = LayerData[(j << 6) + k];
-                    rearranged[(j << 5) + k + 1024] = LayerData[(j << 6) + k + 32];
+                    rearranged[(j << 5) + k] = data[(j << 6) + k];
+                    rearranged[(j << 5) + k + 1024] = data[(j << 6) + k + 32];
                 }
             }
+            delete[] tmpLayerData;
             tmpLayerData = rearranged;
         }
-        unsigned int compressedSize = ROMUtils::LayerRLECompress(Width * Height, tmpLayerData, &dataBuffer);
+        unsigned int compressedSize = ROMUtils::LayerRLECompress(width * height, tmpLayerData, &dataBuffer);
         delete[] rearranged;
-        unsigned int sizeInfoLen = MappingType == LayerMap16 ? 2 : 1;
+        unsigned int sizeInfoLen = mappingType == LayerMap16 ? 2 : 1;
         unsigned char *dataChunk = new unsigned char[sizeInfoLen + compressedSize];
         memcpy(dataChunk + sizeInfoLen, dataBuffer, compressedSize);
         delete[] dataBuffer;
-        if (MappingType == LayerMap16)
+        if (mappingType == LayerMap16)
         {
-            dataChunk[0] = (unsigned char) Width;
-            dataChunk[1] = (unsigned char) Height;
+            dataChunk[0] = (unsigned char) width;
+            dataChunk[1] = (unsigned char) height;
         }
         else
         {
-            dataChunk[0] = (unsigned char) ((Width >> 6) | ((Height >> 6) << 1));
+            dataChunk[0] = (unsigned char) ((width >> 6) | ((height >> 6) << 1));
         }
         *dataSize = sizeInfoLen + compressedSize;
         return dataChunk;

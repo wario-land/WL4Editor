@@ -1003,6 +1003,10 @@ allocationComplete:
                 singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal error: Chunk allocator created an invalidation chunk"));
             case SaveDataChunkType::PatchListChunk:
             case SaveDataChunkType::PatchChunk:
+            case SaveDataChunkType::ScatteredGraphicListChunkType:
+            case SaveDataChunkType::ScatteredGraphicPaletteChunkType:
+            case SaveDataChunkType::ScatteredGraphicmappingChunkType:
+            case SaveDataChunkType::ScatteredGraphicTile8x8DataChunkType:
                 continue; // the above chunk types are not associated with a modified pointer in main ROM
             default:;
             }
@@ -1693,6 +1697,27 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMFileMetadata->ROMDataPtr + chunkheaderAddr + 4);
         unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMFileMetadata->ROMDataPtr + chunkheaderAddr + 9) << 16;
         return chunkLen + extLen;
+    }
+
+    /// <summary>
+    /// Get the data of a palette's color element
+    /// </summary>
+    /// <param name="paletteElement">
+    /// The palette's color element.
+    /// </param>
+    /// <returns>
+    /// the data of the current color.
+    /// </returns>
+    unsigned short QRgbToData(QRgb paletteElement)
+    {
+        QColor tmp_color;
+        tmp_color.setRgb(paletteElement);
+
+        // RGB555 format: bbbbbgggggrrrrr
+        int b = (tmp_color.blue() >> 3) & 0x1F;
+        int g = (tmp_color.green() >> 3) & 0x1F;
+        int r = (tmp_color.red() >> 3) & 0x1F;
+        return (unsigned short) ((b << 10) | (g << 5) | r);
     }
 
 } // namespace ROMUtils

@@ -1,5 +1,5 @@
 #include "ScatteredGraphicUtils.h"
-#include "ROMUtils.h"
+#include "LevelComponents/Layer.h"
 #include "WL4EditorWindow.h"
 
 #define ScatteredGraphic_CHUNK_VERSION 0
@@ -257,5 +257,169 @@ void ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(ScatteredGraphicEntryIte
 /// </returns>
 QString ScatteredGraphicUtils::SaveScatteredGraphicsToROM(QVector<ScatteredGraphicEntryItem> entries)
 {
+    ROMUtils::SaveDataIndex = 1;
+    QVector<struct ROMUtils::SaveData> chunks;
+    entry_datatype_chunk_tuple.clear();
+
+    // logic to find changed graphics is so complicated, so we just remove all them.
+    QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> removeGraphics = GetScatteredGraphicsFromROM();
+
+    // Populate the chunk list with data to add to the ROM
+    for(int i = 0; i < entries.size(); i++)
+    {
+        QVector<struct ROMUtils::SaveData> savedata = CreateSaveData(entries[i], i);
+        chunks.append(savedata);
+    }
+
+    // Populate the chunk list with invalidation chunks for data to be removed from the ROM
+    QVector<unsigned int> invalidationChunks;
+    if (removeGraphics.size())
+    {
+        for(struct ScatteredGraphicUtils::ScatteredGraphicEntryItem &graphicEntry : removeGraphics)
+        {
+            QVector<unsigned int> chunkaddrs = GetSaveDataAddresses(graphicEntry);
+            invalidationChunks.append(chunkaddrs);
+        }
+    }
+
+    // We must invalidate the old patch list chunk (if it exists)
+    unsigned int patchListChunkAddr = ROMUtils::FindChunkInROM(
+        ROMUtils::ROMFileMetadata->ROMDataPtr,
+        ROMUtils::ROMFileMetadata->Length,
+        WL4Constants::AvailableSpaceBeginningInROM,
+        ROMUtils::SaveDataChunkType::ScatteredGraphicListChunkType
+    );
+    if(patchListChunkAddr)
+    {
+        invalidationChunks.append(patchListChunkAddr + 12);
+    }
+
     return QString("");
+}
+
+/// <summary>
+/// Get the addresses of chunk(s) if the input entry uses some chunks to save palette, tiles or mapping data.
+/// </summary>
+/// <param name="entry">
+/// The struct data saves the info of the graphic entry.
+/// </param>
+/// <returns>
+/// An array of chunks addresses.
+/// </returns>
+QVector<unsigned int> ScatteredGraphicUtils::GetSaveDataAddresses(ScatteredGraphicEntryItem &entry)
+{
+    QVector<unsigned int> result;
+    if (entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM)
+    {
+        result.append(entry.PaletteAddress);
+    }
+    if (entry.TileDataAddress >= WL4Constants::AvailableSpaceBeginningInROM)
+    {
+        result.append(entry.TileDataAddress);
+    }
+    if (entry.MappingDataAddress >= WL4Constants::AvailableSpaceBeginningInROM)
+    {
+        result.append(entry.MappingDataAddress);
+    }
+    return result;
+}
+
+/// <summary>
+/// Create SaveData if the current input entry need some chunks to save palette, tiles or mapping data.
+/// </summary>
+/// <param name="entry">
+/// The struct data saves the info of the graphic entry.
+/// </param>
+/// <returns>
+/// An array of new SaveData.
+/// </returns>
+QVector<ROMUtils::SaveData> ScatteredGraphicUtils::CreateSaveData(ScatteredGraphicEntryItem &entry, unsigned int entryId)
+{
+    QVector<ROMUtils::SaveData> result;
+    if (entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.PaletteAddress))
+    {
+        unsigned int datasize = entry.PaletteNum * 16 * 2; // 16 color, 2 bytes per color
+        unsigned char *data = new unsigned char[datasize];
+        memset(data, 0, datasize);
+        for(int i = 0; i < entry.PaletteNum; ++i)
+        {
+            // The first color is transparent
+            for(int j = 1; j < 16; ++j)
+            {
+                data[16 * i + j] = ROMUtils::QRgbToData(entry.palettes[i + entry.PaletteRAMOffsetNum][j]);
+            }
+        }
+
+        // Create the palette data save chunk
+        result.append({0,
+                       datasize,
+                       data,
+                       ROMUtils::SaveDataIndex++,
+                       true,
+                       0,
+                       0,
+                       ROMUtils::SaveDataChunkType::ScatteredGraphicPaletteChunkType});
+        entry_datatype_chunk_tuple.append({entryId, graphicPalette, result.last().index});
+    }
+    if (entry.TileDataAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.TileDataAddress))
+    {
+        switch (entry.TileDataType)
+        {
+            case Tile8x8_4bpp_no_comp_Tileset_text_bg:
+            {
+                unsigned int datasize = entry.TileDataSize_Byte;
+                unsigned char *data = new unsigned char[datasize];
+                memcpy(&data[0], entry.tileData.constData(), 32);
+
+                // Create the tile data save chunk
+                result.append({0,
+                               datasize,
+                               data,
+                               ROMUtils::SaveDataIndex++,
+                               true,
+                               0,
+                               0,
+                               ROMUtils::SaveDataChunkType::ScatteredGraphicTile8x8DataChunkType});
+                entry_datatype_chunk_tuple.append({entryId, graphictiles, result.last().index});
+                break;
+            }
+            case Tile8x8_4bpp_no_comp:
+            {
+                // TODO
+                // not supported yet
+                break;
+            }
+        }
+    }
+    if (entry.MappingDataAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.MappingDataAddress))
+    {
+        switch (entry.MappingDataCompressType)
+        {
+            case No_mapping_data_comp:
+            {
+                // TODO
+                // not supported yet
+                break;
+            }
+            case RLE_mappingtype_0x20:
+            {
+                unsigned int datasize = 0;
+                unsigned char *data = LevelComponents::Layer::CompressLayerData(entry.mappingData, LevelComponents::LayerTile8x8,
+                                                                                entry.optionalGraphicWidth, entry.optionalGraphicHeight, &datasize);
+
+                // Create the tile data save chunk
+                result.append({0,
+                               datasize,
+                               data,
+                               ROMUtils::SaveDataIndex++,
+                               false, // if this caused problem some day, dig into it, since there is some logic in layer data saving use true here -- ssp
+                               0,
+                               0,
+                               ROMUtils::SaveDataChunkType::ScatteredGraphicmappingChunkType});
+                entry_datatype_chunk_tuple.append({entryId, graphicmappingdata, result.last().index});
+                break;
+            }
+        }
+    }
+    return result;
 }

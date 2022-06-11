@@ -65,6 +65,10 @@ namespace LevelComponents
         unsigned int GetDataPtr() { return DataPtr; }
         void SetDataPtr(unsigned int _dataPtr) { DataPtr = _dataPtr; }
         void ResetData();
+
+        // tools
+        static unsigned char *CompressLayerData(QVector<unsigned short> &data, enum LayerMappingType mappingType,
+                                 unsigned int width,  unsigned int height, unsigned int *dataSize);
     };
 } // namespace LevelComponents
 

@@ -388,19 +388,13 @@ namespace LevelComponents
     /// </summary>
     void Tileset::ReGeneratePaletteData()
     {
-        QColor tmp_color;
         memset(TilesetPaletteData, 0, 16 * 16 * 2);
         for(int i = 0; i < 16; ++i)
         {
-            // First color is transparent
-            // RGB555 format: bbbbbgggggrrrrr
+            // The first color is transparent
             for(int j = 1; j < 16; ++j)
             {
-                tmp_color.setRgb(palettes[i][j]);
-                int b = (tmp_color.blue() >> 3) & 0x1F;
-                int g = (tmp_color.green() >> 3) & 0x1F;
-                int r = (tmp_color.red() >> 3) & 0x1F;
-                TilesetPaletteData[16 * i + j] = (unsigned short) ((b << 10) | (g << 5) | r);
+                TilesetPaletteData[16 * i + j] = ROMUtils::QRgbToData(palettes[i][j]);
             }
         }
     }
