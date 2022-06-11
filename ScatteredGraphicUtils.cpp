@@ -111,6 +111,29 @@ static QString SerializeScatteredGraphicMetadata(const struct ScatteredGraphicUt
 }
 
 /// <summary>
+/// Create the data for a Scattered Graphic List Chunk.
+/// </summary>
+/// <param name="entries">
+/// The entries used to create the Scattered Graphic List Chunk.
+/// </param>
+/// <returns>
+/// The data as an allocated char array.
+/// </returns>
+static QString CreateScatteredGraphicListChunkData(QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> &entries)
+{
+    QString contents;
+    bool first = true;
+    for(const struct ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry : entries)
+    {
+        // Delimit entries with semicolon
+        if(first) first = false; else contents += ";";
+
+        contents += SerializeScatteredGraphicMetadata(entry);
+    }
+    return contents;
+}
+
+/// <summary>
 /// Obtain the scattered graphic list chunk contents in the current version's format.
 /// </summary>
 /// <param name="scatteredGraphicDataAddr">
@@ -201,15 +224,16 @@ void ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(ScatteredGraphicEntryIte
         for (int j = 0; j < 16; ++j) // (re-)initialization
             entry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
     }
-    for (int i = entry.PaletteRAMOffsetNum; i < qMin((entry.PaletteRAMOffsetNum + entry.PaletteNum), (unsigned int)16); ++i)
+    for (int i = 0; ((i < entry.PaletteNum) && ((i + entry.PaletteRAMOffsetNum) < (unsigned int)16)); i++)
     { // set palette(s) by palette data
-        if (entry.palettes[i].size())
+        unsigned int tmpPalId = i + entry.PaletteRAMOffsetNum;
+        if (entry.palettes[tmpPalId].size())
         {
-            entry.palettes[i].clear();
+            entry.palettes[tmpPalId].clear();
         }
         int subPalettePtr = entry.PaletteAddress + i * 32;
         unsigned short *tmpptr = (unsigned short*) (ROMUtils::ROMFileMetadata->ROMDataPtr + subPalettePtr);
-        ROMUtils::LoadPalette(&(entry.palettes[i]), tmpptr);
+        ROMUtils::LoadPalette(&(entry.palettes[tmpPalId]), tmpptr);
     }
 
     // tiles data
@@ -255,7 +279,8 @@ void ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(ScatteredGraphicEntryIte
 /// <returns>
 /// Error infos.
 /// </returns>
-QString ScatteredGraphicUtils::SaveScatteredGraphicsToROM(QVector<ScatteredGraphicEntryItem> entries)
+QVector<ScatteredGraphicUtils::entry_datatype_chunk> entry_datatype_chunk_tuple;
+QString ScatteredGraphicUtils::SaveScatteredGraphicsToROM(QVector<ScatteredGraphicEntryItem> &entries)
 {
     ROMUtils::SaveDataIndex = 1;
     QVector<struct ROMUtils::SaveData> chunks;
@@ -294,7 +319,126 @@ QString ScatteredGraphicUtils::SaveScatteredGraphicsToROM(QVector<ScatteredGraph
         invalidationChunks.append(patchListChunkAddr + 12);
     }
 
-    return QString("");
+    // Allocate and save the chunks to the ROM
+    unsigned int currentChunkId = 0;
+    bool hasDoneListChunk = false;
+    bool ret = ROMUtils::SaveFile(ROMUtils::ROMFileMetadata->FilePath, invalidationChunks,
+
+        // ChunkAllocator
+
+        [&entries, &currentChunkId, &chunks, &hasDoneListChunk]
+        (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd, bool resetchunkIndex)
+        {
+            (void) TempFile;
+
+            // This part of code will be triggered when rom size needs to be expanded
+            // So all the chunks will be reallocated
+            if(resetchunkIndex)
+            {
+                currentChunkId = 0;
+                hasDoneListChunk = false;
+            }
+
+            // Create save data for all the entries in the iterator
+            if(currentChunkId < chunks.size())
+            {
+                // Get the size of the space that would be needed at this address depending on alignment
+                unsigned int alignOffset = 0;
+                if(chunks[currentChunkId].alignment)
+                {
+                    unsigned int startAddr = (freeSpace.addr + 3) & ~3;
+                    alignOffset = startAddr - freeSpace.addr;
+                }
+
+                // Check if there is space for the chunk in the offered area
+                // required_size > (freespace.size - alignment - 12 bytes (for header))
+                if(chunks[currentChunkId].size > freeSpace.size - alignOffset - 12)
+                {
+                    // This will request a larger free area
+                    return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                }
+                else
+                {
+                    // Accept the offered free area for this save chunk
+                    *sd = chunks[currentChunkId];
+
+                    // Reset address and other info for different type of chunks
+                    unsigned int chunkid = currentChunkId; // = entry_datatype_chunk_tuple[currentChunkId].chunkID;
+                    unsigned int entryid = entry_datatype_chunk_tuple[currentChunkId].entryID;
+                    enum chunkSaveDataType type = entry_datatype_chunk_tuple[currentChunkId].datatype;
+                    unsigned int tmpaddr = freeSpace.addr + alignOffset + 12;
+                    switch (type)
+                    {
+                        case graphicPalette:
+                        {
+                            entries[entryid].PaletteAddress = tmpaddr;
+                            break;
+                        }
+                        case graphictiles:
+                        {
+                            entries[entryid].TileDataAddress = tmpaddr;
+                            break;
+                        }
+                        case graphicmappingdata:
+                        {
+                            entries[entryid].MappingDataAddress = tmpaddr;
+                            break;
+                        }
+                    }
+
+                    currentChunkId++;
+                    return ROMUtils::ChunkAllocationStatus::Success;
+                }
+            }
+            else
+            {
+                // Create ScatteredGraphicListChunk after all entries have been processed
+                if (!hasDoneListChunk && entries.size())
+                {
+                    // Create patch list chunk contents, make sure there is sufficient space
+                    QString scatteredGraphicListChunkContents = CreateScatteredGraphicListChunkData(entries);
+                    // To see if the data will fit, we must include the text contents, size of the RATS header, and one byte for versioning
+                    if((unsigned int)scatteredGraphicListChunkContents.length() + 13 > freeSpace.size)
+                    {
+                        return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                    }
+
+                    // Create the save chunk data
+                    unsigned char *data = (unsigned char *) malloc(scatteredGraphicListChunkContents.length() + 1);
+                    memcpy(data + 1, scatteredGraphicListChunkContents.toLocal8Bit().constData(), scatteredGraphicListChunkContents.length());
+                    data[0] = ScatteredGraphic_CHUNK_VERSION;
+                    struct ROMUtils::SaveData scatteredGraphicListChunk =
+                    {
+                        0,
+                        static_cast<unsigned int>(scatteredGraphicListChunkContents.length() + 1),
+                        data,
+                        ROMUtils::SaveDataIndex++,
+                        false,
+                        0,
+                        0,
+                        ROMUtils::SaveDataChunkType::ScatteredGraphicListChunkType
+                    };
+                    *sd = scatteredGraphicListChunk;
+                    hasDoneListChunk = true;
+
+                    return ROMUtils::ChunkAllocationStatus::Success;
+                }
+
+                return ROMUtils::ChunkAllocationStatus::NoMoreChunks;
+            }
+        },
+
+        // PostProcessingCallback
+
+        []
+        (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
+        {
+            (void)indexToChunkPtr;
+            return QString("");
+        }
+    );
+
+    return ret ? QString("") : QString("Failed to save graphics data");
 }
 
 /// <summary>
@@ -339,7 +483,7 @@ QVector<ROMUtils::SaveData> ScatteredGraphicUtils::CreateSaveData(ScatteredGraph
     if (entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.PaletteAddress))
     {
         unsigned int datasize = entry.PaletteNum * 16 * 2; // 16 color, 2 bytes per color
-        unsigned char *data = new unsigned char[datasize];
+        unsigned short *data = new unsigned short[datasize];
         memset(data, 0, datasize);
         for(int i = 0; i < entry.PaletteNum; ++i)
         {
@@ -353,7 +497,7 @@ QVector<ROMUtils::SaveData> ScatteredGraphicUtils::CreateSaveData(ScatteredGraph
         // Create the palette data save chunk
         result.append({0,
                        datasize,
-                       data,
+                       (unsigned char*)data,
                        ROMUtils::SaveDataIndex++,
                        true,
                        0,
@@ -369,7 +513,7 @@ QVector<ROMUtils::SaveData> ScatteredGraphicUtils::CreateSaveData(ScatteredGraph
             {
                 unsigned int datasize = entry.TileDataSize_Byte;
                 unsigned char *data = new unsigned char[datasize];
-                memcpy(&data[0], entry.tileData.constData(), 32);
+                memcpy(&data[0], entry.tileData.constData(), datasize);
 
                 // Create the tile data save chunk
                 result.append({0,
@@ -406,6 +550,9 @@ QVector<ROMUtils::SaveData> ScatteredGraphicUtils::CreateSaveData(ScatteredGraph
                 unsigned int datasize = 0;
                 unsigned char *data = LevelComponents::Layer::CompressLayerData(entry.mappingData, LevelComponents::LayerTile8x8,
                                                                                 entry.optionalGraphicWidth, entry.optionalGraphicHeight, &datasize);
+
+                // set entry info
+                entry.MappingDataSizeAfterCompression_Byte = datasize;
 
                 // Create the tile data save chunk
                 result.append({0,

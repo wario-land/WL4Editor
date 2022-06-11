@@ -1047,8 +1047,17 @@ void GraphicManagerDialog::on_pushButton_validateAndSetMappingData_clicked()
 /// </summary>
 void GraphicManagerDialog::on_pushButton_saveAllGraphicEntries_clicked()
 {
-    // TODO
-    this->close();
+    // Generate the save chunks and write them to the ROM
+    QString errorStr = ScatteredGraphicUtils::SaveScatteredGraphicsToROM(graphicEntries);
+    if(errorStr.isEmpty())
+    {
+        singleton->GetOutputWidgetPtr()->PrintString(tr("Finished saving graphics to ROM. (entry number: %1)").arg(QString::number(graphicEntries.size())));
+        this->close();
+    }
+    else
+    {
+        QMessageBox::information(this, tr("Error saving graphics"), errorStr);
+    }
 }
 
 /// <summary>

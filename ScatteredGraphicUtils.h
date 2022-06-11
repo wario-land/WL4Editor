@@ -92,12 +92,11 @@ namespace ScatteredGraphicUtils
         enum chunkSaveDataType datatype = graphicPalette;
         unsigned int chunkID = 0;
     };
-    QVector<entry_datatype_chunk> entry_datatype_chunk_tuple;
 
     // functions
     QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> GetScatteredGraphicsFromROM();
     void ExtractDataFromEntryInfo_v1(struct ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    QString SaveScatteredGraphicsToROM(QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> entries);
+    QString SaveScatteredGraphicsToROM(QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> &entries);
 
     // savechunk relative functions
     QVector<unsigned int> GetSaveDataAddresses(ScatteredGraphicEntryItem &entry);
