@@ -1,5 +1,6 @@
 ﻿#include "ScriptInterface.h"
 
+#include "ROMUtils.h"
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
 
@@ -337,6 +338,25 @@ void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
     log("Done!");
 }
 
+void ScriptInterface::_GetTilesetGFXInfo(int tilesetId)
+{
+    if (tilesetId > 0x5B || tilesetId < 0)
+    {
+        log (tr("Illegal tilesetId. (0 <= tilesetId <= 0x4B)"));
+        return;
+    }
+    LevelComponents::Tileset *tileset = ROMUtils::singletonTilesets[tilesetId];
+    log("tileset 0x" + QString::number(tilesetId, 16) + ":");
+    int fgGFXptr = tileset->GetfgGFXptr();
+    log(" FG tile data address (Hex): 0x" + QString::number(fgGFXptr, 16));
+    int fgGFXlen = tileset->GetfgGFXlen();
+    log(" FG tile data length (Hex, Byte): 0x" + QString::number(fgGFXlen, 16));
+    int bgGFXptr = tileset->GetbgGFXptr();
+    log(" BG tile data address (Hex): 0x" + QString::number(bgGFXptr, 16));
+    int bgGFXlen = tileset->GetbgGFXlen();
+    log(" BG tile data length (Hex, Byte): 0x" + QString::number(bgGFXlen, 16));
+}
+
 QString ScriptInterface::GetEntityListData(int entitylistid)
 {
         if(entitylistid < 0 || entitylistid > 2)
@@ -512,4 +532,9 @@ QString ScriptInterface::ReadTxtFile(QString filepath)
     }
     QTextStream in(&f);
     return in.readAll();
+}
+
+void ScriptInterface::ShowSaveDataAnalysis()
+{
+    log(ROMUtils::SaveDataAnalysis());
 }

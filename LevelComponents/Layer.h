@@ -63,6 +63,8 @@ namespace LevelComponents
         unsigned char *GetCompressedLayerData(unsigned int *dataSize);
         ~Layer();
         unsigned int GetDataPtr() { return DataPtr; }
+        // don't use it before save level and reset layer pointer
+        // just let DataPtr keep the old layer data pointer for now
         void SetDataPtr(unsigned int _dataPtr) { DataPtr = _dataPtr; }
         void ResetData();
 

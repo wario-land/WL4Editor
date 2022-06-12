@@ -98,17 +98,24 @@ namespace ROMUtils
 
     // Global functions
     void CleanUpTmpCurrentFileMetaData();
+
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
-    unsigned int GetChunkDataLength(unsigned int chunkheaderAddr);
+    unsigned int EndianReverse(unsigned int n);
+
     void Tile8x8DataXFlip(unsigned char *source, unsigned char *destination);
     void Tile8x8DataYFlip(unsigned char *source, unsigned char *destination);
+
     unsigned int PackScreen(unsigned short *screenCharData, unsigned short *&outputCompressedData, bool skipzeros = true);
     unsigned short *UnPackScreen(uint32_t address);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
+
+    bool GetChunkType(unsigned int DataAddr, enum SaveDataChunkType &chunkType);
+    unsigned int GetChunkDataLength(unsigned int chunkheaderAddr);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);
+
     bool SaveFile(QString filePath, QVector<unsigned int> invalidationChunks,
         std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*, bool)> ChunkAllocator,
         std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback);
@@ -120,7 +127,7 @@ namespace ROMUtils
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySaveChunks(int GlobalEntityId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);
-    unsigned int EndianReverse(unsigned int n);
+
     QString SaveDataAnalysis();
     void StaticInitialization();
     bool WriteChunkSanityCheck(const struct SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks);

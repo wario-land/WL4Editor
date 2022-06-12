@@ -1288,10 +1288,12 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                         unsigned char *AnimatedTileSwitchInfoTable = singletonTilesets[i]->GetAnimatedTileSwitchTable();
                         memcpy(TempFile + i * 16 + WL4Constants::AnimatedTileSwitchInfoTable, (unsigned char*)AnimatedTileSwitchInfoTable, 16);
 
-                        // Reset size_of bgGFXLen and fgGBXLen
+                        // Reset bgGFXLen, bgGFXptr and fgGBXLen
                         int tilesetPtr = singletonTilesets[i]->getTilesetPtr();
                         int fgGFXLenaddr = singletonTilesets[i]->GetfgGFXlen();
                         *(int *) (TempFile + tilesetPtr + 4) = fgGFXLenaddr;
+                        unsigned int bgGFXdataaddr = singletonTilesets[i]->GetbgGFXptr();
+                        *(unsigned int *) (TempFile + tilesetPtr + 12) = bgGFXdataaddr | 0x800'0000;
                         int bgGFXLenaddr = singletonTilesets[i]->GetbgGFXlen();
                         *(int *) (TempFile + tilesetPtr + 16) = bgGFXLenaddr;
                         // don't needed, because this is done in the following internal pointers reset code
@@ -1718,6 +1720,31 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         int g = (tmp_color.green() >> 3) & 0x1F;
         int r = (tmp_color.red() >> 3) & 0x1F;
         return (unsigned short) ((b << 10) | (g << 5) | r);
+    }
+
+    /// <summary>
+    /// Get the chunk type of the data is in a chunk
+    /// </summary>
+    /// <param name="DataAddr">
+    /// The address of the data.
+    /// </param>
+    /// <param name="chunkType">
+    /// return a correct chunk type if the data is inside a chunk.
+    /// </param>
+    /// <returns>
+    /// return false if the data is not in a chunk, it could be in vanilla rom data area or the chunk got corrupted
+    /// </returns>
+    bool GetChunkType(unsigned int DataAddr, SaveDataChunkType &chunkType)
+    {
+        if (DataAddr > WL4Constants::AvailableSpaceBeginningInROM)
+        {
+            if (ValidRATS(ROMFileMetadata->ROMDataPtr + DataAddr - 12))
+            {
+                chunkType = static_cast<SaveDataChunkType>(ROMFileMetadata->ROMDataPtr[DataAddr - 8]);
+                return true;
+            }
+        }
+        return false;
     }
 
 } // namespace ROMUtils

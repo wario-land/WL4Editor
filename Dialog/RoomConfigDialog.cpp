@@ -2,6 +2,8 @@
 #include "ui_RoomConfigDialog.h"
 
 #include <cstring>
+#include <QMessageBox>
+#include "ScatteredGraphicUtils.h"
 
 // constexpr declarations for the initializers in the header
 constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
@@ -9,10 +11,11 @@ constexpr const char *RoomConfigDialog::LayerPrioritySetData[4];
 constexpr const char *RoomConfigDialog::AlphaBlendAttrsSetData[12];
 constexpr unsigned int RoomConfigDialog::BGLayerdataPtrsData[166];
 constexpr unsigned int RoomConfigDialog::UseMap8x8Layer0DefaultTilesetIds[2];
+constexpr unsigned int RoomConfigDialog::VanillaTilesetBGTilesDataAddr[0x5C];
 
 // static variables used by RoomConfigDialog
 static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet;
-static std::vector<int> BGLayerdataPtrs[0x5C];
+static std::vector<int> BGLayerdataPtrs;
 static std::vector<int> Map8x8Layer0Tilesetlist[2];
 
 /// <summary>
@@ -51,11 +54,11 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     // Initialize the items for the BG selection combobox
     // The hardcode layer 3 pointers have been added into the combobox when setting Tileset combobox id
     // Add the current layer 3 pointer if it is not record and hardcode in the editor
+    ResetBGLayerPickerComboBox(CurrentRoomParams->CurrentTilesetIndex);
     bool CurrentBGSelectionAvailable = false;
-    std::vector<int> CurrentBGLayerdataPtrs = BGLayerdataPtrs[CurrentRoomParams->CurrentTilesetIndex];
-    for (unsigned int i = 0; i < CurrentBGLayerdataPtrs.size(); ++i)
+    for (unsigned int i = 0; i < BGLayerdataPtrs.size(); ++i)
     {
-        if (CurrentRoomParams->BackgroundLayerDataPtr == CurrentBGLayerdataPtrs[i])
+        if (CurrentRoomParams->BackgroundLayerDataPtr == BGLayerdataPtrs[i])
         {
             CurrentBGSelectionAvailable = true;
             ui->ComboBox_BGLayerPicker->setCurrentIndex(i);
@@ -63,10 +66,11 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
         }
     }
     if (!CurrentBGSelectionAvailable)
-    {
+    {  // some bug case should not happen, we copy the layer data pointer from the input param directly
         ui->ComboBox_BGLayerPicker->addItem(QString::number(CurrentRoomParams->BackgroundLayerDataPtr, 16).toUpper());
         ui->ComboBox_BGLayerPicker->setCurrentIndex(ui->ComboBox_BGLayerPicker->count() - 1);
     }
+
     //  Initialize the items for the Layer 0 selection combobox
     ui->ComboBox_Layer0Picker->addItem(
                 QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper());
@@ -169,24 +173,6 @@ void RoomConfigDialog::StaticComboBoxesInitialization()
     {
         AlphaBlendAttrsSet << AlphaBlendAttrsSetData[i];
     }
-
-    // Initialize the selections for the tilesets's available BGs
-    for (unsigned int i = 0, idx = 0; idx < sizeof(BGLayerdataPtrsData) / sizeof(BGLayerdataPtrsData[0]); ++i)
-    {
-        std::vector<int> vec;
-        int count = BGLayerdataPtrsData[idx++];
-        while (count--)
-        {
-            vec.push_back(BGLayerdataPtrsData[idx++]);
-        }
-        BGLayerdataPtrs[i] = vec;
-    }
-
-    // Initialize the Tileset list which contains map8x8 layer 0
-    for (unsigned int i = 0; i < sizeof(UseMap8x8Layer0DefaultTilesetIds) / sizeof(UseMap8x8Layer0DefaultTilesetIds[0]); ++i)
-    {
-        Map8x8Layer0Tilesetlist->push_back(UseMap8x8Layer0DefaultTilesetIds[i]);
-    }
 }
 
 /// <summary>
@@ -212,29 +198,9 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         currentTileset = ROMUtils::singletonTilesets[index];
 
         // Update the available BG layers to choose from
-        std::vector<int> BGlayers = BGLayerdataPtrs[index];
-        ui->ComboBox_BGLayerPicker->clear();
-        QStringList elements;
-        if (BGlayers.size())
-        {
-            for (auto iter = BGlayers.begin(); iter != BGlayers.end(); ++iter)
-            {
-                elements << QString::number(*iter, 16).toUpper();
-            }
-        }
-        else
-        {
-            elements << QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper();
-        }
-        if (BGLayerdataPtrs[index].size() > 0)
-        {
-            ui->CheckBox_BGLayerEnable->setEnabled(true);
-        }
-        else
-        {
-            ui->CheckBox_BGLayerEnable->setEnabled(false);
-        }
-        ui->ComboBox_BGLayerPicker->addItems(elements);
+        ResetBGLayerPickerComboBox(index);
+
+        // Update the available FG layers to choose from
         if(index == 0x21 && ui->spinBox_Layer0MappingType->value() >= 0x20)
         {
             ui->ComboBox_Layer0Picker->setEnabled(true);
@@ -272,8 +238,7 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
 /// </summary>
 void RoomConfigDialog::on_CheckBox_BGLayerEnable_stateChanged(int state)
 {
-    int tilesetIndex = ui->ComboBox_TilesetID->currentIndex();
-    ui->ComboBox_BGLayerPicker->setEnabled(state == Qt::Checked && BGLayerdataPtrs[tilesetIndex].size());
+    ui->ComboBox_BGLayerPicker->setEnabled(state == Qt::Checked && BGLayerdataPtrs.size());
     if (ui->ComboBox_BGLayerPicker->count() > 0)
     {
         for (int i = ui->ComboBox_BGLayerPicker->count() - 1; i >= 0; i--)
@@ -281,11 +246,11 @@ void RoomConfigDialog::on_CheckBox_BGLayerEnable_stateChanged(int state)
             ui->ComboBox_BGLayerPicker->removeItem(i);
         }
     }
-    for (unsigned int i = 0; i < BGLayerdataPtrs[tilesetIndex].size(); ++i)
+    for (unsigned int i = 0; i < BGLayerdataPtrs.size(); ++i)
     {
-        if (BGLayerdataPtrs[tilesetIndex][i])
+        if (BGLayerdataPtrs[i])
         {
-            ui->ComboBox_BGLayerPicker->addItem(QString::number(BGLayerdataPtrs[tilesetIndex][i], 16).toUpper());
+            ui->ComboBox_BGLayerPicker->addItem(QString::number(BGLayerdataPtrs[i], 16).toUpper());
         }
     }
 }
@@ -562,5 +527,69 @@ void RoomConfigDialog::on_spinBox_RasterType_valueChanged(int arg1)
     case 0x08: ui->label_CurRasterType->setText("alpha Fire effect 1"); break;
     case 0x09: ui->label_CurRasterType->setText("alpha Fire effect 2"); break;
     default: ui->label_CurRasterType->setText("Undefined");
+    }
+}
+
+/// <summary>
+/// Reset ComboBox_BGLayerPicker with available items.
+/// </summary>
+/// <param name="newTilesetId">
+/// The tileset id to generate items.
+/// </param>
+void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
+{
+    // if the tileset is using some vanilla bg tile8x8 set
+    if (ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr() == VanillaTilesetBGTilesDataAddr[newTilesetId])
+    {
+        // Initialize the selections for the current tileset's available BGs
+        int count = BGLayerdataPtrsData[newTilesetId];
+        while (count--)
+        {
+            BGLayerdataPtrs.push_back(BGLayerdataPtrsData[newTilesetId]);
+        }
+        BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
+    }
+    else // use custom tile data
+    {
+        QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> graphicEntries = ScatteredGraphicUtils::GetScatteredGraphicsFromROM();
+
+        // some bug case should never happen
+        if (!graphicEntries.size())
+        {
+            QMessageBox::information(this, tr("Error"), tr("Unknown BG tile data pointer!"));
+            return;
+        }
+
+        // search through graphic entries
+        for (int i = 0; i < graphicEntries.size(); i++)
+        {
+            if (ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr() == graphicEntries[i].TileDataAddress &&
+                    graphicEntries[i].TileDataType == ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
+                    graphicEntries[i].MappingDataCompressType == ScatteredGraphicUtils::RLE_mappingtype_0x20)
+            {
+                BGLayerdataPtrs.push_back(graphicEntries[i].MappingDataAddress);
+            }
+        }
+        BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
+
+        // update ComboBox_BGLayerPicker
+        ui->ComboBox_BGLayerPicker->clear();
+        QStringList elements;
+        if (BGLayerdataPtrs.size())
+        {
+            for (auto item : BGLayerdataPtrs)
+            {
+                elements << QString::number(item, 16).toUpper();
+            }
+        }
+        ui->ComboBox_BGLayerPicker->addItems(elements);
+
+        // TODO: deal with layer 0 edge cases
+        // when Layer 0 mnapping type is 0x20, it uses the bg tiles too
+        // Initialize the Tileset list which contains map8x8 layer 0
+        for (unsigned int i = 0; i < sizeof(UseMap8x8Layer0DefaultTilesetIds) / sizeof(UseMap8x8Layer0DefaultTilesetIds[0]); ++i)
+        {
+            Map8x8Layer0Tilesetlist->push_back(UseMap8x8Layer0DefaultTilesetIds[i]);
+        }
     }
 }

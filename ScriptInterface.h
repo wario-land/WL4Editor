@@ -31,6 +31,7 @@ public:
     Q_INVOKABLE void _PrintRoomHeader();
     Q_INVOKABLE void _ExportLayerData(QString filePath = QString(""), int layerid = -1);
     Q_INVOKABLE void _ImportLayerData(QString fileName = QString(""), int layerid = -1);
+    Q_INVOKABLE void _GetTilesetGFXInfo(int tilesetId);
 
     // Setter
     Q_INVOKABLE void SetCurrentRoomId(int roomid);
@@ -50,6 +51,9 @@ public:
     // File operations
     Q_INVOKABLE void WriteTxtFile(QString filePath = QString(""), QString test = "");
     Q_INVOKABLE QString ReadTxtFile(QString filepath);
+
+    // helper functions
+    Q_INVOKABLE void ShowSaveDataAnalysis();
 
 signals:
 
