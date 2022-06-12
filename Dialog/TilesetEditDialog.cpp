@@ -1106,6 +1106,14 @@ QVector<int> TilesetEditDialog::FindUnusedPalettes()
 /// </summary>
 void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
 {
+    // ask user if eliminate similar tiles to reduce more tiles
+    int diff_upbound = QInputDialog::getInt(this,
+                                              tr("WL4Editor"),
+                                              tr("Input a number to eliminate similar tiles to reducing tiles aggressively.\n"
+                                                 "use a bigger number to reduce more tiles. but Tile16s' quality will drop more.\n"
+                                                 "do strictly tile reduce by set 0 here."),
+                                              0, 0, 8);
+
     LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
     int existingTile8x8Num = tmp_newTilesetPtr->GetfgGFXlen() / 32;
     unsigned char newtmpdata[32];
@@ -1135,31 +1143,31 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
         // loop from the first blank tile to the tile right before the current tile being checked, excluding those animated tiles
         for (int j = 0; j < i; j++)
         {
-            int result0 = memcmp(newtmpdata, &tmp_current_tile8x8_data[j * 32], 32);
-            int result1 = memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
-            int result2 = memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
-            int result3 = memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result0 = FileIOUtils::quasi_memcmp(newtmpdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result1 = FileIOUtils::quasi_memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result2 = FileIOUtils::quasi_memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result3 = FileIOUtils::quasi_memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
             bool find_eqaul = false;
             bool xflip = false;
             bool yflip = false;
             auto tile16array = tmp_newTilesetPtr->GetMap16arrayPtr();
             auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
 
-            if (!result0)
+            if (result0 <= diff_upbound)
             {
                 find_eqaul = true;
             }
-            else if (!result1)
+            else if (result1 <= diff_upbound)
             {
                 find_eqaul = true;
                 xflip = true;
             }
-            else if (!result2)
+            else if (result2 <= diff_upbound)
             {
                 find_eqaul = true;
                 yflip = true;
             }
-            else if (!result3)
+            else if (result3 <= diff_upbound)
             {
                 find_eqaul = true;
                 xflip = true;
