@@ -582,6 +582,7 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
                 elements << QString::number(item, 16).toUpper();
             }
         }
+        ui->ComboBox_BGLayerPicker->clear();
         ui->ComboBox_BGLayerPicker->addItems(elements);
 
         // TODO: deal with layer 0 edge cases

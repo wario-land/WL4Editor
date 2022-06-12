@@ -61,11 +61,6 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
                                                    "You may find that the editor acts differently from real game play.\n"
                                                    "In this case, you need to modify all of the entities that share the same tiles and palettes."));
 
-    // Init ComboBox
-    for (unsigned int i = 0; i < sizeof(OAMShapeTypeNameData) / sizeof(OAMShapeTypeNameData[0]); ++i)
-    {
-        OAMShapeTypeNameSet << OAMShapeTypeNameData[i];
-    }
     ui->comboBox_OamShapeType->addItems(OAMShapeTypeNameSet);
 
     // ListView Init
@@ -79,6 +74,18 @@ SpritesEditorDialog::SpritesEditorDialog(QWidget *parent, DialogParams::Entities
 SpritesEditorDialog::~SpritesEditorDialog()
 {
     delete ui;
+}
+
+/// <summary>
+/// Perform static initialization of constant data structures for the dialog.
+/// </summary>
+void SpritesEditorDialog::StaticInitialization()
+{
+    // Init ComboBox
+    for (unsigned int i = 0; i < sizeof(OAMShapeTypeNameData) / sizeof(OAMShapeTypeNameData[0]); ++i)
+    {
+        OAMShapeTypeNameSet << OAMShapeTypeNameData[i];
+    }
 }
 
 void SpritesEditorDialog::SetSelectedEntityColorId(int colorID)
