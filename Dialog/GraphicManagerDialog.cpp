@@ -1233,6 +1233,7 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
 
             // set tmpEntry if everything looks correct
             tmpEntry.TileDataAddress = 0;
+            tmpEntry.MappingDataAddress = 0;
 
             // UI reset
             CleanTilesInstances();
@@ -1240,8 +1241,9 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
             UpdateTilesGraphicView(tmpEntry);
             SetTilesPanelInfoGUI(tmpEntry);
 
-            // UI reset on other panels
+            // UI reset on panels
             UpdateMappingGraphicView(tmpEntry);
+            SetMappingGraphicInfoGUI(tmpEntry);
 
             break;
         }
