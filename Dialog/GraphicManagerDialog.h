@@ -34,6 +34,7 @@ private slots:
     void on_pushButton_validateAndSetMappingData_clicked();
     void on_pushButton_saveAllGraphicEntries_clicked();
     void on_pushButton_cancelEditing_clicked();
+    void on_pushButton_ReduceTiles_clicked();
 
 private:
     Ui::GraphicManagerDialog *ui;
@@ -66,6 +67,8 @@ private:
     void GenerateBGTile8x8Instances(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
     void CleanMappingDataInEntry(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry) { entry.mappingData.clear(); }
     void ClearAndResettmpEntryPalettes();
+
+    void DeltmpEntryTile(int tileId);
 
 public:
     // clang-format off

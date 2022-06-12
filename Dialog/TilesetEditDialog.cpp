@@ -1107,12 +1107,14 @@ QVector<int> TilesetEditDialog::FindUnusedPalettes()
 void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
 {
     // ask user if eliminate similar tiles to reduce more tiles
+    bool ok;
     int diff_upbound = QInputDialog::getInt(this,
                                               tr("WL4Editor"),
                                               tr("Input a number to eliminate similar tiles to reducing tiles aggressively.\n"
                                                  "use a bigger number to reduce more tiles. but Tile16s' quality will drop more.\n"
                                                  "do strictly tile reduce by set 0 here."),
-                                              0, 0, 8);
+                                              0, 0, 8, 1, &ok);
+    if (!ok) return;
 
     LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
     int existingTile8x8Num = tmp_newTilesetPtr->GetfgGFXlen() / 32;

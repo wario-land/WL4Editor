@@ -267,23 +267,10 @@
            <property name="rightMargin">
             <number>0</number>
            </property>
-           <item row="15" column="0">
-            <widget class="QLabel" name="label_optionalGraphicHeight">
+           <item row="18" column="1">
+            <widget class="QPushButton" name="pushButton_validateAndSetMappingData">
              <property name="text">
-              <string>graphic height (Hex, Tile):</string>
-             </property>
-            </widget>
-           </item>
-           <item row="13" column="1">
-            <widget class="QLineEdit" name="lineEdit_mappingDataName"/>
-           </item>
-           <item row="14" column="1">
-            <widget class="QLineEdit" name="lineEdit_optionalGraphicWidth"/>
-           </item>
-           <item row="14" column="0">
-            <widget class="QLabel" name="label_optionalGraphicWidth">
-             <property name="text">
-              <string>graphic width (Hex, Tile):</string>
+              <string>Validate and Set</string>
              </property>
             </widget>
            </item>
@@ -297,10 +284,66 @@
              </property>
             </widget>
            </item>
+           <item row="15" column="1">
+            <widget class="QLineEdit" name="lineEdit_optionalGraphicHeight"/>
+           </item>
+           <item row="12" column="1">
+            <widget class="QComboBox" name="comboBox_mappingDataType"/>
+           </item>
+           <item row="6" column="1">
+            <widget class="QPushButton" name="pushButton_ClearMappingData">
+             <property name="text">
+              <string>Clear</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="1">
+            <widget class="QLineEdit" name="lineEdit_mappingDataSize_Byte"/>
+           </item>
+           <item row="8" column="0" colspan="2">
+            <widget class="QGraphicsView" name="graphicsView_mappingGraphic"/>
+           </item>
+           <item row="10" column="1">
+            <widget class="QLineEdit" name="lineEdit_mappingDataAddress"/>
+           </item>
+           <item row="11" column="0">
+            <widget class="QLabel" name="label_mappingDataSize_Byte">
+             <property name="text">
+              <string>size after compression (Hex, Byte):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="14" column="1">
+            <widget class="QLineEdit" name="lineEdit_optionalGraphicWidth"/>
+           </item>
+           <item row="13" column="1">
+            <widget class="QLineEdit" name="lineEdit_mappingDataName"/>
+           </item>
+           <item row="13" column="0">
+            <widget class="QLabel" name="label_mappingDataName">
+             <property name="text">
+              <string>mapping data name:</string>
+             </property>
+            </widget>
+           </item>
            <item row="6" column="0">
             <widget class="QLabel" name="label_mapping">
              <property name="text">
               <string>tile mapping of pic:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="15" column="0">
+            <widget class="QLabel" name="label_optionalGraphicHeight">
+             <property name="text">
+              <string>graphic height (Hex, Tile):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="14" column="0">
+            <widget class="QLabel" name="label_optionalGraphicWidth">
+             <property name="text">
+              <string>graphic width (Hex, Tile):</string>
              </property>
             </widget>
            </item>
@@ -311,56 +354,20 @@
              </property>
             </widget>
            </item>
-           <item row="12" column="1">
-            <widget class="QComboBox" name="comboBox_mappingDataType"/>
+           <item row="18" column="0">
+            <widget class="QPushButton" name="pushButton_ReduceTiles">
+             <property name="text">
+              <string>Reduce Tile</string>
+             </property>
+            </widget>
            </item>
-           <item row="16" column="0">
+           <item row="16" column="0" colspan="2">
             <widget class="QPushButton" name="pushButton_ImportGraphic">
              <property name="toolTip">
               <string>Import from ROM or files</string>
              </property>
              <property name="text">
               <string>Import</string>
-             </property>
-            </widget>
-           </item>
-           <item row="15" column="1">
-            <widget class="QLineEdit" name="lineEdit_optionalGraphicHeight"/>
-           </item>
-           <item row="16" column="1">
-            <widget class="QPushButton" name="pushButton_validateAndSetMappingData">
-             <property name="text">
-              <string>Validate and Set</string>
-             </property>
-            </widget>
-           </item>
-           <item row="8" column="0" colspan="2">
-            <widget class="QGraphicsView" name="graphicsView_mappingGraphic"/>
-           </item>
-           <item row="6" column="1">
-            <widget class="QPushButton" name="pushButton_ClearMappingData">
-             <property name="text">
-              <string>Clear</string>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="1">
-            <widget class="QLineEdit" name="lineEdit_mappingDataAddress"/>
-           </item>
-           <item row="13" column="0">
-            <widget class="QLabel" name="label_mappingDataName">
-             <property name="text">
-              <string>mapping data name:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="11" column="1">
-            <widget class="QLineEdit" name="lineEdit_mappingDataSize_Byte"/>
-           </item>
-           <item row="11" column="0">
-            <widget class="QLabel" name="label_mappingDataSize_Byte">
-             <property name="text">
-              <string>size after compression (Hex, Byte):</string>
              </property>
             </widget>
            </item>

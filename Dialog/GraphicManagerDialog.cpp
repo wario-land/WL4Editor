@@ -529,6 +529,56 @@ void GraphicManagerDialog::ClearAndResettmpEntryPalettes()
 }
 
 /// <summary>
+/// Delete a Tile from the tmpEntry and from instances too.
+/// </summary>
+/// <param name="entry">
+/// The struct data used to generate entry text.
+/// </param>
+void GraphicManagerDialog::DeltmpEntryTile(int tileId)
+{
+    switch (tmpEntry.TileDataType)
+    {
+        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+        {
+            // change tmpEntry instance
+            int startid = tmpEntry.TileDataRAMOffsetNum;
+            if (tmpEntry.TileDataSize_Byte != tmpEntry.tileData.size())
+            { // something went wrong in the code
+                return;
+            }
+            QByteArray data;
+            int old_tilenum = tmpEntry.TileDataSize_Byte / 32;
+            data = tmpEntry.tileData.mid(0, 32 * (tileId - startid)) +
+                    tmpEntry.tileData.mid(32 * (tileId + 1 - startid), 32 * (old_tilenum + startid - tileId - 1));
+            tmpEntry.tileData = data;
+
+            tmpEntry.TileDataRAMOffsetNum += 1;
+            tmpEntry.TileDataSize_Byte -= 32;
+
+            // update mapping data
+            int width = tmpEntry.optionalGraphicWidth;
+            for (int h = 0; h < tmpEntry.optionalGraphicHeight; h++)
+            {
+                for (int w = 0; w < width; w++)
+                {
+                    unsigned short data = tmpEntry.mappingData[w + h * width];
+                    int id = data & 0x3FF;
+                    if ((tmpEntry.mappingData[w + h * width] & 0x3FF) <= tileId)
+                    {
+                        tmpEntry.mappingData[w + h * width] = (data & 0xFC00) | ((id + 1) & 0x3FF);
+                    }
+                }
+            }
+
+        }
+        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp:
+        {
+            // TODO
+        }
+    }
+}
+
+/// <summary>
 /// Generate the text of one entry according to a provided struct, to show in the listview.
 /// </summary>
 /// <param name="entry">
@@ -1082,3 +1132,122 @@ void GraphicManagerDialog::on_pushButton_cancelEditing_clicked()
     this->close();
 }
 
+/// <summary>
+/// Reduce Tile usage in graphic.
+/// </summary>
+void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
+{
+    switch (tmpEntry.TileDataType)
+    {
+        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+        {
+            // ask user if eliminate similar tiles to reduce more tiles
+            bool ok;
+            int diff_upbound = QInputDialog::getInt(this,
+                                                      tr("WL4Editor"),
+                                                      tr("Input a number to eliminate similar tiles to reducing tiles aggressively.\n"
+                                                         "use a bigger number to reduce more tiles. but Tile16s' quality will drop more.\n"
+                                                         "do strictly tile reduce by set 0 here."),
+                                                      0, 0, 8, 1, &ok);
+            if (!ok) return;
+
+            // tile reduce
+            int existingTile8x8Num = tmpEntry.tileData.size() / 32;
+            unsigned char newtmpdata[32];
+            unsigned char newtmpXFlipdata[32];
+            unsigned char newtmpYFlipdata[32];
+            unsigned char newtmpXYFlipdata[32];
+
+            int data_size = tmpEntry.tileData.size();
+            unsigned char *tmp_current_tile8x8_data = new unsigned char[data_size];
+            memcpy(tmp_current_tile8x8_data, tmpEntry.tileData.data(), data_size);
+            int constoffset = tmpEntry.TileDataRAMOffsetNum;
+
+            // Compare through all the existing foreground Tile8x8s
+            for(int i = 0; i < existingTile8x8Num; i++)
+            {
+                // Generate 4 possible existing Tile8x8 graphic data for comparison
+                memcpy(newtmpdata, &tmp_current_tile8x8_data[32 * i], 32);
+                ROMUtils::Tile8x8DataXFlip(newtmpdata, newtmpXFlipdata);
+                ROMUtils::Tile8x8DataYFlip(newtmpdata, newtmpYFlipdata);
+                ROMUtils::Tile8x8DataYFlip(newtmpXFlipdata, newtmpXYFlipdata);
+                int old_tileid = i + constoffset;
+
+                // loop from the last tile to the first tile
+                for (int j = existingTile8x8Num - 1; j > i; j--)
+                {
+                    unsigned char tile_data[32];
+                    memcpy(tile_data, &tmp_current_tile8x8_data[32 * j], 32);
+
+                    int result0 = FileIOUtils::quasi_memcmp(newtmpdata, tile_data, 32);
+                    int result1 = FileIOUtils::quasi_memcmp(newtmpXFlipdata, tile_data, 32);
+                    int result2 = FileIOUtils::quasi_memcmp(newtmpYFlipdata, tile_data, 32);
+                    int result3 = FileIOUtils::quasi_memcmp(newtmpXYFlipdata, tile_data, 32);
+                    bool find_eqaul = false;
+                    int tileid = j + constoffset;
+
+                    unsigned short mappingdata;
+                    if (result0 <= diff_upbound)
+                    {
+                        find_eqaul = true;
+                        mappingdata = 0xF << 12 | (0 << 11) | (0 << 10) | (tileid & 0x3FF);
+                    }
+                    else if (result1 <= diff_upbound)
+                    {
+                        find_eqaul = true;
+                        mappingdata = 0xF << 12 | (0 << 11) | (1 << 10) | (tileid & 0x3FF);
+                    }
+                    else if (result2 <= diff_upbound)
+                    {
+                        find_eqaul = true;
+                        mappingdata = 0xF << 12 | (1 << 11) | (0 << 10) | (tileid & 0x3FF);
+                    }
+                    else if (result3 <= diff_upbound)
+                    {
+                        find_eqaul = true;
+                        mappingdata = 0xF << 12 | (1 << 11) | (1 << 10) | (tileid & 0x3FF);
+                    }
+
+                    if (find_eqaul)
+                    {
+                        int width = tmpEntry.optionalGraphicWidth;
+                        for (int h = 0; h < tmpEntry.optionalGraphicHeight; h++)
+                        {
+                            for (int w = 0; w < width; w++)
+                            {
+                                if ((tmpEntry.mappingData[w + h * width] & 0x3FF) == old_tileid)
+                                {
+                                    tmpEntry.mappingData[w + h * width] = mappingdata;
+                                }
+                            }
+                        }
+
+                        // delete the Tile8x8 from the Tile8x8 set
+                        DeltmpEntryTile(old_tileid);
+                        break;
+                    }
+                }
+            }
+
+            delete[] tmp_current_tile8x8_data;
+
+            // set tmpEntry if everything looks correct
+            tmpEntry.TileDataAddress = 0;
+
+            // UI reset
+            CleanTilesInstances();
+            GenerateBGTile8x8Instances(tmpEntry);
+            UpdateTilesGraphicView(tmpEntry);
+            SetTilesPanelInfoGUI(tmpEntry);
+
+            // UI reset on other panels
+            UpdateMappingGraphicView(tmpEntry);
+
+            break;
+        }
+        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp:
+        {
+            // TODO
+        }
+    }
+}
