@@ -256,6 +256,8 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         {
             delete ROMUtils::entities[i];
         }
+        ResetUndoHistory();
+        DeleteUndoHistoryGlobal();
     }
 
     // Set the program title

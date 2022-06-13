@@ -22,7 +22,7 @@ namespace ROMUtils
     {
         unsigned int Length;
         QString FilePath;
-        unsigned char *ROMDataPtr;
+        unsigned char *ROMDataPtr = nullptr;
     };
 
     // Global variables

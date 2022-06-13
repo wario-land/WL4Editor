@@ -502,6 +502,10 @@ QString FileIOUtils::LoadROMFile(QString filePath)
 
     ROMUtils::ROMFileMetadata->Length = length;
     ROMUtils::ROMFileMetadata->FilePath = filePath;
+    if (ROMUtils::ROMFileMetadata->ROMDataPtr != nullptr)
+    {
+        delete[] ROMUtils::ROMFileMetadata->ROMDataPtr;
+    }
     ROMUtils::ROMFileMetadata->ROMDataPtr = (unsigned char *) ROMAddr;
 
     return "";
