@@ -2325,6 +2325,14 @@ void WL4EditorWindow::on_actionRolling_Save_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionGraphic_Manager_triggered()
 {
+    // perform File save before using graphic manager in case some silly cases happen to cause ROM data corruption
+    // Check for unsaved operations
+    if (!UnsavedChangesPrompt(tr("There are unsaved changes. You need to save the rom before using Graphic Manager to avoid ROM data corruption.\n"
+                                 "Or discard all the unsaved changes and directly reload the ROM.")))
+        return;
+    LoadROMDataFromFile(ROMUtils::ROMFileMetadata->FilePath);
+
+    // open graphic manager dialog
     GraphicManagerDialog dialog(this);
     dialog.exec();
 }
