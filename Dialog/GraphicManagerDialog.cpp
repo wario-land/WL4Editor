@@ -579,6 +579,42 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
 }
 
 /// <summary>
+/// Check if an entry can be edited or deleted
+/// </summary>
+/// <param name="entryId">
+/// The id of the entry in the entrylist.
+/// </param>
+/// <returns>
+/// Return true if the data is never used in the Tilesets or Rooms.
+/// </returns>
+bool GraphicManagerDialog::CheckEditability(int entryId)
+{
+    int tiledataaddr = graphicEntries[entryId].TileDataAddress;
+    unsigned int tilesetid = -1;
+
+    // check if the entry is used in any Room
+    unsigned int room_id = -1;
+    unsigned int level_id = -1;
+    unsigned int mappingdataaddr = graphicEntries[entryId].MappingDataAddress;
+    if (mappingdataaddr >= WL4Constants::AvailableSpaceBeginningInROM && FindLayerptrInAllRooms(mappingdataaddr, &level_id, &room_id))
+    {
+        QMessageBox::critical(this, tr("Error"), tr("Cannot delete or edit entry: ") + QString::number(entryId) + ",\n" +
+                              tr("its mapping data is found used in Level: ") + QString::number(level_id) +
+                              tr(", Room: ") + QString::number(room_id));
+        return false;
+    }
+
+    // check if the entry is used in any Tileset
+    if (tiledataaddr >= WL4Constants::AvailableSpaceBeginningInROM && FindbgGFXptrInAllTilesets(tiledataaddr, &tilesetid))
+    {
+        QMessageBox::critical(this, tr("Error"), tr("Cannot delete or edit entry: ") + QString::number(entryId) + ",\n" +
+                              tr("its Tile data is found used in Tileset: 0x") + QString::number(tilesetid, 16));
+        return false;
+    }
+    return true;
+}
+
+/// <summary>
 /// Find if a tile data chunk is used in any Tileset.
 /// </summary>
 /// <param name="address">
@@ -1130,26 +1166,8 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
         foreach (QModelIndex index, selectedRows)
         {
             int id = index.row();
-            int tiledataaddr = graphicEntries[id].TileDataAddress;
-            unsigned int tilesetid = -1;
-
-            // check if the entry is used in any Room
-            unsigned int room_id = -1;
-            unsigned int level_id = -1;
-            unsigned int mappingdataaddr = graphicEntries[id].MappingDataAddress;
-            if (mappingdataaddr >= WL4Constants::AvailableSpaceBeginningInROM && FindLayerptrInAllRooms(mappingdataaddr, &level_id, &room_id))
+            if (!CheckEditability(id))
             {
-                QMessageBox::critical(this, tr("Error"), tr("Cannot delete entry: ") + QString::number(id) + ",\n" +
-                                      tr("its mapping data is found used in Level: ") + QString::number(level_id) +
-                                      tr(", Room: ") + QString::number(room_id));
-                continue;
-            }
-
-            // check if the entry is used in any Tileset
-            if (tiledataaddr >= WL4Constants::AvailableSpaceBeginningInROM && FindbgGFXptrInAllTilesets(tiledataaddr, &tilesetid))
-            {
-                QMessageBox::critical(this, tr("Error"), tr("Cannot delete entry: ") + QString::number(id) + ",\n" +
-                                      tr("its Tile data is found used in Tileset: 0x") + QString::number(tilesetid, 16));
                 continue;
             }
 
@@ -1209,7 +1227,12 @@ void GraphicManagerDialog::on_pushButton_validateAndSetMappingData_clicked()
         // permit set entry as long as tmpEntry's tiles can work with the current mapping data
         if (tmpEntry.TileDataType == ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
                 tmpEntry.MappingDataCompressType == ScatteredGraphicUtils::RLE_mappingtype_0x20)
-        graphicEntries[SelectedEntryID] = tmpEntry;
+        {
+            if (CheckEditability(SelectedEntryID))
+            {
+                graphicEntries[SelectedEntryID] = tmpEntry;
+            }
+        }
 
         // reset ListView Item name
         ListViewItemModel->item(SelectedEntryID, 0)->setText(GenerateEntryTextFromStruct(tmpEntry));

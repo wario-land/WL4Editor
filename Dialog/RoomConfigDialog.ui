@@ -87,7 +87,7 @@
            <item>
             <widget class="QComboBox" name="ComboBox_BGLayerPicker">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="editable">
               <bool>false</bool>

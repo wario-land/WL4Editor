@@ -66,8 +66,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
         }
     }
     if (!CurrentBGSelectionAvailable)
-    {  // some bug case should not happen, we copy the layer data pointer from the input param directly
-        ui->ComboBox_BGLayerPicker->addItem(QString::number(CurrentRoomParams->BackgroundLayerDataPtr, 16).toUpper());
+    {
         ui->ComboBox_BGLayerPicker->setCurrentIndex(ui->ComboBox_BGLayerPicker->count() - 1);
     }
 
@@ -238,21 +237,7 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
 /// </summary>
 void RoomConfigDialog::on_CheckBox_BGLayerEnable_stateChanged(int state)
 {
-    ui->ComboBox_BGLayerPicker->setEnabled(state == Qt::Checked && BGLayerdataPtrs.size());
-    if (ui->ComboBox_BGLayerPicker->count() > 0)
-    {
-        for (int i = ui->ComboBox_BGLayerPicker->count() - 1; i >= 0; i--)
-        {
-            ui->ComboBox_BGLayerPicker->removeItem(i);
-        }
-    }
-    for (unsigned int i = 0; i < BGLayerdataPtrs.size(); ++i)
-    {
-        if (BGLayerdataPtrs[i])
-        {
-            ui->ComboBox_BGLayerPicker->addItem(QString::number(BGLayerdataPtrs[i], 16).toUpper());
-        }
-    }
+    ui->ComboBox_BGLayerPicker->setEnabled(state == Qt::Checked);
 }
 
 /// <summary>
@@ -539,7 +524,9 @@ void RoomConfigDialog::on_spinBox_RasterType_valueChanged(int arg1)
 void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
 {
     // if the tileset is using some vanilla bg tile8x8 set
-    if (ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr() == VanillaTilesetBGTilesDataAddr[newTilesetId])
+    unsigned int bgtiledataAddr = ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr();
+    BGLayerdataPtrs.clear();
+    if (bgtiledataAddr == VanillaTilesetBGTilesDataAddr[newTilesetId])
     {
         // Initialize the selections for the current tileset's available BGs
         int count = BGLayerdataPtrsData[newTilesetId];
@@ -549,8 +536,8 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
         }
         BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
     }
-    else // use custom tile data
-    {
+    else if (bgtiledataAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+    {   // use custom tile data
         QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> graphicEntries = ScatteredGraphicUtils::GetScatteredGraphicsFromROM();
 
         // some bug case should never happen
@@ -563,7 +550,7 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
         // search through graphic entries
         for (int i = 0; i < graphicEntries.size(); i++)
         {
-            if (ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr() == graphicEntries[i].TileDataAddress &&
+            if (bgtiledataAddr == graphicEntries[i].TileDataAddress &&
                     graphicEntries[i].TileDataType == ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
                     graphicEntries[i].MappingDataCompressType == ScatteredGraphicUtils::RLE_mappingtype_0x20)
             {
@@ -584,13 +571,18 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
         }
         ui->ComboBox_BGLayerPicker->clear();
         ui->ComboBox_BGLayerPicker->addItems(elements);
+    }
+    else
+    {
+        // we don't know where the tile data address is from, just paste the address into the combobox
+        BGLayerdataPtrs.push_back(bgtiledataAddr);
+    }
 
-        // TODO: deal with layer 0 edge cases
-        // when Layer 0 mnapping type is 0x20, it uses the bg tiles too
-        // Initialize the Tileset list which contains map8x8 layer 0
-        for (unsigned int i = 0; i < sizeof(UseMap8x8Layer0DefaultTilesetIds) / sizeof(UseMap8x8Layer0DefaultTilesetIds[0]); ++i)
-        {
-            Map8x8Layer0Tilesetlist->push_back(UseMap8x8Layer0DefaultTilesetIds[i]);
-        }
+    // TODO: deal with layer 0 edge cases
+    // when Layer 0 mnapping type is 0x20, it uses the bg tiles too
+    // Initialize the Tileset list which contains map8x8 layer 0
+    for (unsigned int i = 0; i < sizeof(UseMap8x8Layer0DefaultTilesetIds) / sizeof(UseMap8x8Layer0DefaultTilesetIds[0]); ++i)
+    {
+        Map8x8Layer0Tilesetlist->push_back(UseMap8x8Layer0DefaultTilesetIds[i]);
     }
 }
