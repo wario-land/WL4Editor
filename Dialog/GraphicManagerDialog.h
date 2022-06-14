@@ -70,6 +70,10 @@ private:
 
     void DeltmpEntryTile(int tileId);
 
+    // helper functions
+    bool FindbgGFXptrInAllTilesets(unsigned int address, unsigned int *tilesetId_find);
+    bool FindLayerptrInAllRooms(unsigned int address, unsigned int *levelId_found, unsigned int *roomId_found);
+
 public:
     // clang-format off
     static constexpr const char *ScatteredGraphicTileDataTypeNameData[1] =

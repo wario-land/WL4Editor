@@ -579,6 +579,93 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
 }
 
 /// <summary>
+/// Find if a tile data chunk is used in any Tileset.
+/// </summary>
+/// <param name="address">
+/// The address of the tile data.
+/// </param>
+/// <param name="tilesetId_find">
+/// output the id of the tileset in which the bgGFXptr is found.
+/// </param>
+/// <returns>
+/// Return true if the data is found be used.
+/// </returns>
+bool GraphicManagerDialog::FindbgGFXptrInAllTilesets(unsigned int address, unsigned int *tilesetId_find)
+{
+    // in case the return value is not initialzed in the caller
+    *tilesetId_find = -1;
+
+    // Go through all the Tilesets to see if tile data is used in any Tileset
+    for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
+    {
+        unsigned int addr = ROMUtils::singletonTilesets[i]->GetbgGFXptr();
+        if (addr == address)
+        {
+            *tilesetId_find = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+/// <summary>
+/// Find if a mapping data chunk is used in any Tileset.
+/// </summary>
+/// <param name="address">
+/// The address of the mapping data.
+/// </param>
+/// <param name="levelId">
+/// output the id of the Level in which the mapping data is found.
+/// </param>
+/// <param name="roomId">
+/// output the id of the Room in which the mapping data is found.
+/// </param>
+/// <returns>
+/// Return true if the data is found be used.
+/// </returns>
+bool GraphicManagerDialog::FindLayerptrInAllRooms(unsigned int address, unsigned int *levelId_found, unsigned int *roomId_found)
+{
+    // in case the return value is not initialzed in the caller
+    *levelId_found = -1;
+    *roomId_found = -1;
+
+    // TODO
+    QVector<unsigned int> levelid_array = {0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5};
+    QVector<unsigned int> roomid_array = {0, 2, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 4};
+    for (int i = 0; i < levelid_array.size(); i++)
+    {
+        LevelComponents::Level *tmpLevel = new LevelComponents::Level(static_cast<LevelComponents::__passage>(levelid_array[i]),
+                                                                      static_cast<LevelComponents::__stage>(roomid_array[i]));
+        for (int j = 0; j < tmpLevel->GetRooms().size(); j++)
+        {
+            LevelComponents::__RoomHeader header = tmpLevel->GetRooms()[j]->GetRoomHeader();
+            if ((header.Layer0MappingType & 0x30) == 0x20)
+            {
+                if ((header.Layer0Data & 0x7FFFFFF) == address)
+                {
+                    *levelId_found = levelid_array[i];
+                    *roomId_found = roomid_array[j];
+                    return true;
+                }
+            }
+            if ((header.Layer3MappingType & 0x30) == 0x20)
+            {
+                if ((header.Layer3Data & 0x7FFFFFF) == address)
+                {
+                    *levelId_found = levelid_array[i];
+                    *roomId_found = roomid_array[j];
+                    return true;
+                }
+            }
+        }
+
+        delete tmpLevel;
+    }
+
+    return false;
+}
+
+/// <summary>
 /// Generate the text of one entry according to a provided struct, to show in the listview.
 /// </summary>
 /// <param name="entry">
@@ -1041,7 +1128,32 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
         qSort(selectedRows.begin(), selectedRows.end(), qGreater<QModelIndex>()); // so that rows are removed from highest index
         foreach (QModelIndex index, selectedRows)
         {
-            graphicEntries.removeAt(index.row());
+            int id = index.row();
+            int tiledataaddr = graphicEntries[id].TileDataAddress;
+            unsigned int tilesetid = -1;
+
+            // check if the entry is used in any Room
+            unsigned int room_id = -1;
+            unsigned int level_id = -1;
+            unsigned int mappingdataaddr = graphicEntries[id].MappingDataAddress;
+            if (mappingdataaddr >= WL4Constants::AvailableSpaceBeginningInROM && FindLayerptrInAllRooms(mappingdataaddr, &level_id, &room_id))
+            {
+                QMessageBox::critical(this, tr("Error"), tr("Cannot delete entry: ") + QString::number(id) + ",\n" +
+                                      tr("its mapping data is found used in Level: ") + QString::number(level_id) +
+                                      tr(", Room: ") + QString::number(room_id));
+                continue;
+            }
+
+            // check if the entry is used in any Tileset
+            if (tiledataaddr >= WL4Constants::AvailableSpaceBeginningInROM && FindbgGFXptrInAllTilesets(tiledataaddr, &tilesetid))
+            {
+                QMessageBox::critical(this, tr("Error"), tr("Cannot delete entry: ") + QString::number(id) + ",\n" +
+                                      tr("its Tile data is found used in Tileset: 0x") + QString::number(tilesetid, 16));
+                continue;
+            }
+
+            // remove entry
+            graphicEntries.removeAt(id);
         }
 
         // clean up instances if the tmpEntry was used
