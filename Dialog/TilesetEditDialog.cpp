@@ -1113,7 +1113,7 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
                                               tr("Input a number to eliminate similar tiles to reducing tiles aggressively.\n"
                                                  "use a bigger number to reduce more tiles. but Tile16s' quality will drop more.\n"
                                                  "do strictly tile reduce by set 0 here."),
-                                              0, 0, 8, 1, &ok);
+                                              0, 0, 64, 1, &ok);
     if (!ok) return;
 
     LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;

@@ -1191,6 +1191,7 @@ bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
                 return false;
             }
             OutputWidget->PrintString(tr("Saved successfully!"));
+            return true;
         }
         else if (savePrompt.clickedButton() == discardButton)
         {

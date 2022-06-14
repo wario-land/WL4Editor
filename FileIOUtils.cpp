@@ -531,7 +531,11 @@ int FileIOUtils::quasi_memcmp(unsigned char *_Buf1, unsigned char *_Buf2, size_t
     size_t diff_counter = 0;
     for (size_t i = 0; i < _Size; i++)
     {
-        if (_Buf1[i] != _Buf2[i])
+        if ((_Buf1[i] & 0xF) != (_Buf2[i] & 0xF))
+        {
+            diff_counter++;
+        }
+        if ((_Buf1[i] & 0xF0) != (_Buf2[i] & 0xF0))
         {
             diff_counter++;
         }
