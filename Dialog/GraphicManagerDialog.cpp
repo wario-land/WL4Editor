@@ -1121,6 +1121,7 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
     QItemSelectionModel *select = ui->listView_RecordGraphicsList->selectionModel();
     QModelIndexList selectedRows = select->selectedRows();
     int num_of_select_rows = selectedRows.size();
+    bool no_removal = true;
 
     if (num_of_select_rows > 0)
     {
@@ -1154,6 +1155,13 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
 
             // remove entry
             graphicEntries.removeAt(id);
+            no_removal = false;
+        }
+
+        if (no_removal)
+        {
+            ui->listView_RecordGraphicsList->setEnabled(true);
+            return;
         }
 
         // clean up instances if the tmpEntry was used
@@ -1365,3 +1373,24 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
         }
     }
 }
+
+/// <summary>
+/// disallow user to input ';' into the box
+/// </summary>
+void GraphicManagerDialog::on_lineEdit_tileDataName_textChanged(const QString &arg1)
+{
+    QString tmp = arg1;
+    tmp.remove(';');
+    ui->lineEdit_tileDataName->setText(tmp);
+}
+
+/// <summary>
+/// disallow user to input ';' into the box
+/// </summary>
+void GraphicManagerDialog::on_lineEdit_mappingDataName_textChanged(const QString &arg1)
+{
+    QString tmp = arg1;
+    tmp.remove(';');
+    ui->lineEdit_tileDataName->setText(tmp);
+}
+

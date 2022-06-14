@@ -35,6 +35,8 @@ private slots:
     void on_pushButton_saveAllGraphicEntries_clicked();
     void on_pushButton_cancelEditing_clicked();
     void on_pushButton_ReduceTiles_clicked();
+    void on_lineEdit_tileDataName_textChanged(const QString &arg1);
+    void on_lineEdit_mappingDataName_textChanged(const QString &arg1);
 
 private:
     Ui::GraphicManagerDialog *ui;
