@@ -355,6 +355,9 @@ void ScriptInterface::_GetTilesetGFXInfo(int tilesetId)
     log(" BG tile data address (Hex): 0x" + QString::number(bgGFXptr, 16));
     int bgGFXlen = tileset->GetbgGFXlen();
     log(" BG tile data length (Hex, Byte): 0x" + QString::number(bgGFXlen, 16));
+    log(" BG tile offset in VRAM (Hex, Tile8x8): 0x" + QString::number(0x3FF - (bgGFXlen / 32), 16));
+    unsigned int palptr = ROMUtils::PointerFromData(tileset->getTilesetPtr() + 8);
+    log(" palette data address (Hex, Byte): 0x" + QString::number(palptr, 16));
 }
 
 QString ScriptInterface::GetEntityListData(int entitylistid)
