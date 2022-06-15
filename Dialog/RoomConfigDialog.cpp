@@ -529,12 +529,39 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
     if (bgtiledataAddr == VanillaTilesetBGTilesDataAddr[newTilesetId])
     {
         // Initialize the selections for the current tileset's available BGs
-        int count = BGLayerdataPtrsData[newTilesetId];
-        while (count--)
+        int curTilesetId = 0;
+        int count = 0;
+        int graphicNum = 0;
+        while (curTilesetId != newTilesetId)
         {
-            BGLayerdataPtrs.push_back(BGLayerdataPtrsData[newTilesetId]);
+            graphicNum = BGLayerdataPtrsData[count];
+            count += (graphicNum + 1);
+            curTilesetId++;
         }
-        BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
+        graphicNum = BGLayerdataPtrsData[count++];
+        if (graphicNum > 0)
+        {
+            for (int i = 0; i < graphicNum; i++)
+            {
+                BGLayerdataPtrs.push_back(BGLayerdataPtrsData[count + i]);
+            }
+        }
+        bool find_default_ptr = false;
+        if (int num = BGLayerdataPtrs.size())
+        {
+            for (int i = 0; i < num; i++)
+            {
+                if (BGLayerdataPtrs[i] == WL4Constants::BGLayerDefaultPtr)
+                {
+                    find_default_ptr = true;
+                    break;
+                }
+            }
+        }
+        if (!find_default_ptr)
+        {
+            BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
+        }
     }
     else if (bgtiledataAddr >= WL4Constants::AvailableSpaceBeginningInROM)
     {   // use custom tile data
@@ -558,25 +585,25 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
             }
         }
         BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
-
-        // update ComboBox_BGLayerPicker
-        ui->ComboBox_BGLayerPicker->clear();
-        QStringList elements;
-        if (BGLayerdataPtrs.size())
-        {
-            for (auto item : BGLayerdataPtrs)
-            {
-                elements << QString::number(item, 16).toUpper();
-            }
-        }
-        ui->ComboBox_BGLayerPicker->clear();
-        ui->ComboBox_BGLayerPicker->addItems(elements);
     }
     else
     {
         // we don't know where the tile data address is from, just paste the address into the combobox
         BGLayerdataPtrs.push_back(bgtiledataAddr);
     }
+
+    // update ComboBox_BGLayerPicker
+    ui->ComboBox_BGLayerPicker->clear();
+    QStringList elements;
+    if (BGLayerdataPtrs.size())
+    {
+        for (auto item : BGLayerdataPtrs)
+        {
+            elements << QString::number(item, 16).toUpper();
+        }
+    }
+    ui->ComboBox_BGLayerPicker->clear();
+    ui->ComboBox_BGLayerPicker->addItems(elements);
 
     // TODO: deal with layer 0 edge cases
     // when Layer 0 mnapping type is 0x20, it uses the bg tiles too

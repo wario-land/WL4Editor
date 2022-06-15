@@ -2328,11 +2328,14 @@ void WL4EditorWindow::on_actionGraphic_Manager_triggered()
 {
     // perform File save before using graphic manager in case some silly cases happen to cause ROM data corruption
     // Check for unsaved operations
-    if (!UnsavedChangesPrompt(tr("There are unsaved changes.\n"
-                                 "WL4Editor wants to save the Level and reload the ROM before using Graphic Manager to avoid potential ROM data corruption.\n"
-                                 "You can also discard all the unsaved changes. in this case, WL4Editor will directly reload the ROM.")))
-        return;
-    LoadROMDataFromFile(ROMUtils::ROMFileMetadata->FilePath);
+    if (UnsavedChanges) // add an extra check so it will be faster to debug the dialog
+    {
+        if (!UnsavedChangesPrompt(tr("There are unsaved changes.\n"
+                                     "WL4Editor wants to save the Level and reload the ROM before using Graphic Manager to avoid potential ROM data corruption.\n"
+                                     "You can also discard all the unsaved changes. in this case, WL4Editor will directly reload the ROM.")))
+            return;
+        LoadROMDataFromFile(ROMUtils::ROMFileMetadata->FilePath);
+    }
 
     // open graphic manager dialog
     GraphicManagerDialog dialog(this);

@@ -832,9 +832,41 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
         }
         else // we need to import palette from the current ROM directly
         {
-            // TODO
-            QMessageBox::critical(this, tr("Error"), tr("Import palettes from current ROM cannot work yet!"));
-            return;
+            // Sanity check
+            if ((palAddress & 3) || (palAddress < 0))
+            {
+                QMessageBox::critical(this, tr("Error"), tr("The address has to be multiple of 4!"));
+                return;
+            }
+            if ((palnum + paloffset) > 16)
+            {
+                QMessageBox::critical(this, tr("Error"), tr("The value of palnum + paloffset goes out of bound!"));
+                return;
+            }
+            if (palnum < 0)
+            {
+                QMessageBox::critical(this, tr("Error"), tr("Illegal palnum!"));
+                return;
+            }
+            if (paloffset < 0)
+            {
+                QMessageBox::critical(this, tr("Error"), tr("Illegal palnum!"));
+                return;
+            }
+
+            // Load palette from the ROM
+            for (int i = 0; i < palnum; ++i)
+            {
+                if (tmpEntry.palettes[i + paloffset].size())
+                    tmpEntry.palettes[i + paloffset].clear();
+                // First color is transparent
+                ROMUtils::LoadPalette(&(tmpEntry.palettes[i + paloffset]), (unsigned short *) (ROMUtils::ROMFileMetadata->ROMDataPtr + palAddress + i * 32));
+            }
+
+            // set tmpEntry if everything looks correct
+            tmpEntry.PaletteAddress = palAddress;
+            tmpEntry.PaletteNum = palnum;
+            tmpEntry.PaletteRAMOffsetNum = paloffset;
         }
 
         // UI reset
@@ -842,6 +874,8 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
         SetPaletteInfoGUI(tmpEntry);
 
         // UI reset on other panels
+        CleanTilesInstances();
+        GenerateBGTile8x8Instances(tmpEntry);
         UpdateTilesGraphicView(tmpEntry);
         UpdateMappingGraphicView(tmpEntry);
     }
@@ -1414,6 +1448,6 @@ void GraphicManagerDialog::on_lineEdit_mappingDataName_textChanged(const QString
 {
     QString tmp = arg1;
     tmp.remove(';');
-    ui->lineEdit_tileDataName->setText(tmp);
+    ui->lineEdit_mappingDataName->setText(tmp);
 }
 
