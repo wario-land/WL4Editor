@@ -899,11 +899,13 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
             {
                 case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
                 {
+                    QString tmpname = ui->lineEdit_tileDataName->text();
+
                     // Ignore the settings from the UI, import tile data directly and see if the data is legal
                     FileIOUtils::ImportTile8x8GfxData(this,
                         tmpEntry.palettes[15], // use the last palette for palette comparison
                         tr("Choose a color to covert to transparent:"),
-                        [this] (QByteArray finaldata, QWidget *parentPtr)
+                        [this, &tmpname] (QByteArray finaldata, QWidget *parentPtr)
                         {
                             // Assume the file is fully filled with tiles
                             int newtilenum = finaldata.size() / 32;
@@ -926,8 +928,75 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                                 this->tmpEntry.TileDataSize_Byte = finaldata.size();
                                 this->tmpEntry.TileDataAddress = 0;
                                 this->tmpEntry.TileDataType = ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+                                this->tmpEntry.TileDataName = tmpname;
                             }
                         });
+
+                    // UI reset
+                    CleanTilesInstances();
+                    GenerateBGTile8x8Instances(tmpEntry);
+                    UpdateTilesGraphicView(tmpEntry);
+                    SetTilesPanelInfoGUI(tmpEntry);
+
+                    // UI reset on other panels
+                    UpdateMappingGraphicView(tmpEntry);
+
+                    break;
+                }
+                case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp:
+                {
+                    QMessageBox::critical(this, tr("Error"), tr("Import tiles for Tile8x8_4bpp_no_comp cannot work yet!"));
+                    break;
+                }
+            }
+
+        }
+        else // we need to import tile data from the current ROM directly
+        {
+            switch (tiledatatype)
+            {
+                case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+                {
+                    // Sanity check
+                    unsigned int tiledataSize_byte = ui->lineEdit_tileDataSize_Byte->text().toUInt(nullptr, 16);
+                    unsigned int tileVRAMoffsetNum = ui->lineEdit_tileDataRAMoffset->text().toUInt(nullptr, 16);
+                    unsigned int tile8x8Num = tiledataSize_byte / 32;
+                    unsigned int tiledataaddr = ui->lineEdit_tileDataAddress->text().toUInt(nullptr, 16);
+                    if ((tile8x8Num << 5) != tiledataSize_byte)
+                    {
+                        QMessageBox::critical(this, tr("Error"), tr("Illegal tile data size, size has to be multiple of 0x20!"));
+                        return;
+                    }
+                    if ((tile8x8Num + tileVRAMoffsetNum) > 0x3FF)
+                    {
+                        QMessageBox::critical(this, tr("Error"), tr("Tile8x8 index(es) out of bound!\n"
+                                                                    "The last tile8x8 has to be indexed 0x3FE"));
+                        return;
+                    }
+                    if ((tile8x8Num + tileVRAMoffsetNum) < 0x3FF)
+                    {
+                        QMessageBox::critical(this, tr("Error"), tr("The index of the last Tile8x8 isn't 0x2FE,\n"
+                                                                    "which is a rule for Tileset background tiles."));
+                        return;
+                    }
+                    if (tiledataaddr & 3)
+                    {
+                        QMessageBox::critical(this, tr("Error"), tr("The address has to be multiple of 4!"));
+                        return;
+                    }
+
+                    // Load Tile data
+                    tmpEntry.tileData.resize(tiledataSize_byte);
+                    for (int j = 0; j < tiledataSize_byte; ++j)
+                    {
+                        tmpEntry.tileData[j] = *(ROMUtils::ROMFileMetadata->ROMDataPtr + tiledataaddr + j);
+                    }
+
+                    // set tmpEntry
+                    tmpEntry.TileDataSize_Byte = tiledataSize_byte;
+                    tmpEntry.TileDataAddress = tiledataaddr;
+                    tmpEntry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+                    tmpEntry.TileDataRAMOffsetNum = tileVRAMoffsetNum;
                     tmpEntry.TileDataName = ui->lineEdit_tileDataName->text();
 
                     // UI reset
@@ -938,34 +1007,16 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
 
                     // UI reset on other panels
                     UpdateMappingGraphicView(tmpEntry);
+
+                    break;
                 }
-                break;
+                case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp:
+                {
+                    QMessageBox::critical(this, tr("Error"), tr("Import tiles for Tile8x8_4bpp_no_comp cannot work yet!"));
+                    break;
+                }
             }
 
-        }
-        else // we need to import tile data from the current ROM directly
-        {
-            switch (tiledatatype)
-            {
-                case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
-                {
-                    // TODO
-//                    int tiledataSize_byte = ui->lineEdit_tileDataSize_Byte->text().toUInt(nullptr, 16);
-//                    int tileVRAMoffsetNum = ui->lineEdit_tileDataRAMoffset->text().toUInt(nullptr, 16);
-//                    int tile8x8Num = tiledataSize_byte / 32;
-//                    if ((tile8x8Num << 5) != tiledataSize_byte)
-//                    {
-//                        QMessageBox::critical(this, tr("Error"), tr("Illegal tile data size, size has to be multiple of 0x20!"));
-//                    }
-//                    if ((tile8x8Num + tileVRAMoffsetNum) > 0x3FF)
-//                    {
-//                        QMessageBox::critical(this, tr("Error"), tr("Tile8x8 index(es) out of bound!\n"
-//                                                                    "The last tile8x8 has to be indexed 0x3FE"));
-//                    }
-                }
-                break;
-            }
-            QMessageBox::critical(this, tr("Error"), tr("Import tiles from current ROM cannot work yet!"));
         }
     }
 }
@@ -1135,8 +1186,14 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                     // UI reset
                     UpdateMappingGraphicView(tmpEntry);
                     SetMappingGraphicInfoGUI(tmpEntry);
+
+                    break;
                 }
-                break;
+                case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::No_mapping_data_comp:
+                { // this case never work atm
+                    QMessageBox::critical(this, tr("Error"), tr("Import No_mapping_data_comp graphic from file cannot work yet!"));
+                    break;
+                }
             }
 
         }
@@ -1144,13 +1201,43 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
         {
             switch (mappingdatatype)
             {
+                case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::No_mapping_data_comp:
+                { // this case never work atm
+                    QMessageBox::critical(this, tr("Error"), tr("Import No_mapping_data_comp graphic from ROM cannot work yet!"));
+                    break;
+
+//                    for (int i = 0; i < optionalgraphicWidth * optionalgraphicHeight; ++i)
+//                    {
+//                        unsigned short *data = (unsigned short *)(ROMUtils::ROMFileMetadata->ROMDataPtr + mappingdataAddress);
+//                        tmpEntry.mappingData.push_back(data[i]);
+//                    }
+//                    break;
+                }
                 case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
                 {
-                    // TODO
+                    LevelComponents::Layer BGlayer(mappingdataAddress, LevelComponents::LayerTile8x8);
+                    optionalgraphicHeight = BGlayer.GetLayerHeight();
+                    optionalgraphicWidth = BGlayer.GetLayerWidth();
+                    unsigned short *layerdata = BGlayer.GetLayerData();
+                    for (int i = 0; i < optionalgraphicWidth * optionalgraphicHeight; ++i)
+                    {
+                        tmpEntry.mappingData.push_back(layerdata[i]);
+                    }
+
+                    // set tmpEntry if everything looks correct
+                    tmpEntry.MappingDataCompressType = ScatteredGraphicUtils::RLE_mappingtype_0x20;
+                    tmpEntry.MappingDataSizeAfterCompression_Byte = 0; // the save logic should set this
+                    tmpEntry.MappingDataName = ui->lineEdit_mappingDataName->text();
+                    tmpEntry.optionalGraphicWidth = optionalgraphicWidth;
+                    tmpEntry.optionalGraphicHeight = optionalgraphicHeight;
+
+                    // UI reset
+                    UpdateMappingGraphicView(tmpEntry);
+                    SetMappingGraphicInfoGUI(tmpEntry);
+
+                    break;
                 }
-                break;
             }
-            QMessageBox::critical(this, tr("Error"), tr("Import graphic from current ROM cannot work yet!"));
         }
     }
 }

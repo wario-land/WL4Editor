@@ -225,7 +225,7 @@
                 <string>Import from ROM or files</string>
                </property>
                <property name="text">
-                <string>Import</string>
+                <string>Load tiles</string>
                </property>
               </widget>
              </item>
@@ -235,7 +235,7 @@
                 <string>Import from ROM or files</string>
                </property>
                <property name="text">
-                <string>Import</string>
+                <string>Load palette</string>
                </property>
               </widget>
              </item>
@@ -367,7 +367,7 @@
               <string>Import from ROM or files</string>
              </property>
              <property name="text">
-              <string>Import</string>
+              <string>Load mapping data</string>
              </property>
             </widget>
            </item>
