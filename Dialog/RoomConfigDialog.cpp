@@ -563,7 +563,7 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
             BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
         }
     }
-    else if (bgtiledataAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+    else/* if (bgtiledataAddr >= WL4Constants::AvailableSpaceBeginningInROM)*/
     {   // use custom tile data
         QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> graphicEntries = ScatteredGraphicUtils::GetScatteredGraphicsFromROM();
 
@@ -585,11 +585,6 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
             }
         }
         BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
-    }
-    else
-    {
-        // we don't know where the tile data address is from, just paste the address into the combobox
-        BGLayerdataPtrs.push_back(bgtiledataAddr);
     }
 
     // update ComboBox_BGLayerPicker

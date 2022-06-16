@@ -41,6 +41,12 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
         graphicEntries.clear();
     }
     graphicEntries = ScatteredGraphicUtils::GetScatteredGraphicsFromROM();
+
+    // if there is no graphicEntry in the ROM, we generate entries from existing Tilesets and Rooms.
+    if (!graphicEntries.size())
+    {
+        GetVanillaGraphicEntriesFromROM();
+    }
     UpdateEntryList();
 
     // init status of some buttons
@@ -87,11 +93,11 @@ void GraphicManagerDialog::CreateAndAddDefaultEntry()
     testentry.TileDataSize_Byte = 9376; // unit: Byte
     testentry.TileDataRAMOffsetNum = 0x4DA - 0x200; // unit: per Tile8x8
     testentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
-    testentry.TileDataName = "Tileset 0x11 bg tiles";
+    testentry.TileDataName = "vanilla Tileset 0x11 bg tiles";
     testentry.MappingDataAddress = 0x5FA6D0;
     testentry.MappingDataSizeAfterCompression_Byte = 0xC10; // unit: Byte
     testentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
-    testentry.MappingDataName = "Tileset 0x11 bg";
+    testentry.MappingDataName = "Layer 3";
     testentry.PaletteAddress = 0x583C7C;
     testentry.PaletteNum = 16; // when (optionalPaletteAddress + PaletteNum) > 16, we just discard the latter palettes
     testentry.PaletteRAMOffsetNum = 0; // unit: per palette, 16 color
@@ -219,8 +225,8 @@ QPixmap GraphicManagerDialog::RenderAllTiles(ScatteredGraphicUtils::ScatteredGra
             int paletteId = -1;
             if (tmpEntry.PaletteNum)
             {
-//                paletteId = tmpEntry.PaletteRAMOffsetNum;
-                paletteId = 0xF;
+                paletteId = tmpEntry.PaletteRAMOffsetNum;
+//                paletteId = 0xF;
             }
             else
             {
@@ -665,7 +671,7 @@ bool GraphicManagerDialog::FindLayerptrInAllRooms(unsigned int address, unsigned
     *levelId_found = -1;
     *roomId_found = -1;
 
-    // TODO
+    // loop throough all the Rooms
     QVector<unsigned int> levelid_array = {0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5};
     QVector<unsigned int> roomid_array = {0, 2, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 4};
     for (int i = 0; i < levelid_array.size(); i++)
@@ -699,6 +705,170 @@ bool GraphicManagerDialog::FindLayerptrInAllRooms(unsigned int address, unsigned
     }
 
     return false;
+}
+
+/// <summary>
+/// Generate entries from the current ROM's Tileset and Rooms data.
+/// </summary>
+void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
+{
+    // don't run this function if there is some graphic Entry exist(s).
+    if (graphicEntries.size())
+    {
+        return;
+    }
+
+    // loop through all the Rooms
+    QVector<unsigned int> levelid_array = {0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5};
+    QVector<unsigned int> roomid_array = {0, 2, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 4};
+    for (int i = 0; i < levelid_array.size(); i++)
+    {
+        LevelComponents::Level *tmpLevel = new LevelComponents::Level(static_cast<LevelComponents::__passage>(levelid_array[i]),
+                                                                      static_cast<LevelComponents::__stage>(roomid_array[i]));
+        for (int j = 0; j < tmpLevel->GetRooms().size(); j++)
+        {
+            LevelComponents::__RoomHeader header = tmpLevel->GetRooms()[j]->GetRoomHeader();
+            if ((header.Layer0MappingType & 0x30) == 0x20)
+            {
+                unsigned int cur_entry_num = graphicEntries.size();
+                bool dontadd = false;
+                if (cur_entry_num)
+                {
+                    for (int n = 0; n < cur_entry_num; n++)
+                    {
+                        if (graphicEntries[n].MappingDataAddress == (header.Layer0Data & 0x7FFFFFF))
+                        {
+                            dontadd = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!dontadd)
+                {
+                    // not found, so we add new entry
+                    struct ScatteredGraphicUtils::ScatteredGraphicEntryItem newentry;
+                    LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
+                    newentry.TileDataAddress = roomtileset->GetbgGFXptr();
+                    newentry.TileDataSize_Byte = roomtileset->GetbgGFXlen();
+                    int tilenum = newentry.TileDataSize_Byte / 32;
+                    newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
+                    newentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+                    newentry.TileDataName = "vanilla Tileset 0x"+ QString::number(header.TilesetID, 16) +" bg tiles";
+                    newentry.MappingDataAddress = header.Layer0Data & 0x7FF'FFFF;
+                    newentry.MappingDataSizeAfterCompression_Byte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
+                    newentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
+                    newentry.MappingDataName = "Layer 0 found in: " + QString::number(levelid_array[i]) + "-" +
+                                                QString::number(roomid_array[i]) + "-" + QString::number(j);
+                    newentry.PaletteAddress = roomtileset->GetPaletteAddr();
+                    newentry.PaletteNum = 16;
+                    newentry.PaletteRAMOffsetNum = 0; // unit: per palette, 16 color
+                    newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
+                    newentry.optionalGraphicHeight = 0;
+
+                    ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(newentry);
+
+                    // reset a part of palette settings for bg graphic entries
+                    int usingpal = 15;
+                    for (int m = 0; m < newentry.mappingData.size(); m++)
+                    {
+                        int tileid = (newentry.mappingData[m] & 0x3FF);
+                        if (tileid != 0x3FF)
+                        {
+                            usingpal = (newentry.mappingData[m] & 0xF000) >> 12;
+                            newentry.PaletteAddress += usingpal * 32;
+                            newentry.PaletteNum = 1;
+                            newentry.PaletteRAMOffsetNum = usingpal;
+                            break;
+                        }
+                    }
+                    for (int i = 0; i < 16; ++i)
+                    {
+                        if (i != usingpal)
+                        {
+                            newentry.palettes[i].clear();
+                            for (int j = 0; j < 16; ++j) // (re-)initialization
+                            {
+                                newentry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+                            }
+                        }
+                    }
+                    graphicEntries.append(newentry);
+                }
+            }
+            if ((header.Layer3MappingType & 0x30) == 0x20)
+            {
+                unsigned int cur_entry_num = graphicEntries.size();
+                bool dontadd = false;
+                if (cur_entry_num)
+                {
+                    for (int n = 0; n < cur_entry_num; n++)
+                    {
+                        if (graphicEntries[n].MappingDataAddress == (header.Layer3Data & 0x7FFFFFF))
+                        {
+                            dontadd = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!dontadd)
+                {
+                    // not found, so we add new entry
+                    struct ScatteredGraphicUtils::ScatteredGraphicEntryItem newentry;
+                    LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
+                    newentry.TileDataAddress = roomtileset->GetbgGFXptr();
+                    newentry.TileDataSize_Byte = roomtileset->GetbgGFXlen();
+                    int tilenum = newentry.TileDataSize_Byte / 32;
+                    newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
+                    newentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+                    newentry.TileDataName = "vanilla Tileset 0x"+ QString::number(header.TilesetID, 16) +" bg tiles";
+                    newentry.MappingDataAddress = header.Layer3Data & 0x7FF'FFFF;
+                    newentry.MappingDataSizeAfterCompression_Byte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
+                    newentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
+                    newentry.MappingDataName = "Layer 3 found in: " + QString::number(levelid_array[i]) + "-" +
+                                                QString::number(roomid_array[i]) + "-" + QString::number(j);
+                    newentry.PaletteAddress = roomtileset->GetPaletteAddr();
+                    newentry.PaletteNum = 16;
+                    newentry.PaletteRAMOffsetNum = 0; // unit: per palette, 16 color
+                    newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
+                    newentry.optionalGraphicHeight = 0;
+
+                    ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(newentry);
+
+                    // reset a part of palette settings for bg graphic entries
+                    int usingpal = 15;
+                    for (int m = 0; m < newentry.mappingData.size(); m++)
+                    {
+                        int tileid = (newentry.mappingData[m] & 0x3FF);
+                        if (tileid != 0x3FF)
+                        {
+                            usingpal = (newentry.mappingData[m] & 0xF000) >> 12;
+                            newentry.PaletteAddress += usingpal * 32;
+                            newentry.PaletteNum = 1;
+                            newentry.PaletteRAMOffsetNum = usingpal;
+                            break;
+                        }
+                    }
+                    for (int i = 0; i < 16; ++i)
+                    {
+                        if (i != usingpal)
+                        {
+                            newentry.palettes[i].clear();
+                            for (int j = 0; j < 16; ++j) // (re-)initialization
+                            {
+                                newentry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+                            }
+                        }
+                    }
+                    graphicEntries.append(newentry);
+                }
+
+            }
+        }
+
+        delete tmpLevel;
+    }
 }
 
 /// <summary>

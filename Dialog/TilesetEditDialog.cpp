@@ -1263,8 +1263,20 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
     dialog.setOptions(QInputDialog::UseListViewForComboBoxItems);
     dialog.setComboBoxItems(items);
     dialog.setWindowTitle(tr("Select a graphic entry to use its background tiles."));
+    int bgTileNum = tmp_newTilesetPtr->GetbgGFXlen() / 32;
     if(dialog.exec() == QDialog::Accepted)
     {
+        // cleanup old bg tile instances
+        LevelComponents::Tile8x8 *blanktile = tmp_newTilesetPtr->GetblankTile();
+        for (int n = 0; n < bgTileNum; n++)
+        {
+            LevelComponents::Tile8x8 *tile = tmp_newTilesetPtr->GetTile8x8arrayPtr()[0x5FE - n];
+            if(tile != blanktile)
+                delete tile;
+            tilesetEditParams->newTileset->SetTile8x8(blanktile, 0x5FE - n);
+        }
+
+        // instanciate new tiles and put them into the Tileset
         QStringList result = dialog.textValue().split(QChar(' '), Qt::SkipEmptyParts);
         unsigned int id = result.at(0).toUInt(nullptr, 10);
 
@@ -1278,10 +1290,10 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
         }
 
         // Reset the last palette
-        SelectedPaletteId = 15;
+        int changepalId = graphicEntries[id].PaletteRAMOffsetNum;
         for (int i = 1; i < 16; i++)
         {
-            tmp_newTilesetPtr->SetColor(SelectedPaletteId, i, graphicEntries[id].palettes[15][i]);
+            tmp_newTilesetPtr->SetColor(changepalId, i, graphicEntries[id].palettes[15][i]);
         }
 
         // update settings in the new tileset instance
