@@ -838,21 +838,40 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
 
                     // reset a part of palette settings for bg graphic entries
                     int usingpal = 15;
+                    int tmpusingpal = -1;
+                    int palnum = 1;
                     for (int m = 0; m < newentry.mappingData.size(); m++)
                     {
                         int tileid = (newentry.mappingData[m] & 0x3FF);
                         if (tileid != 0x3FF)
                         {
                             usingpal = (newentry.mappingData[m] & 0xF000) >> 12;
-                            newentry.PaletteAddress += usingpal * 32;
-                            newentry.PaletteNum = 1;
-                            newentry.PaletteRAMOffsetNum = usingpal;
-                            break;
+                            if (tmpusingpal == -1)
+                            {
+                                tmpusingpal = usingpal;
+                            }
+                            else if (tmpusingpal != -1)
+                            {
+                                if (tmpusingpal == (usingpal - 1))
+                                {
+                                    palnum = 2;
+                                    usingpal = tmpusingpal;
+                                    break;
+                                }
+                                else if ((tmpusingpal - 1) == usingpal)
+                                {
+                                    palnum = 2;
+                                    break;
+                                }
+                            }
                         }
                     }
+                    newentry.PaletteAddress += usingpal * 32;
+                    newentry.PaletteNum = palnum;
+                    newentry.PaletteRAMOffsetNum = usingpal;
                     for (int i = 0; i < 16; ++i)
                     {
-                        if (i != usingpal)
+                        if (palnum == 1 ? (i != usingpal) : ((i != usingpal && (i != (usingpal + 1)))))
                         {
                             newentry.palettes[i].clear();
                             for (int j = 0; j < 16; ++j) // (re-)initialization

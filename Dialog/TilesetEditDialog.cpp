@@ -1289,11 +1289,15 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
             OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(startId + i, newtmpdata);
         }
 
-        // Reset the last palette
+        // Reset the palette(s) according to the entry
         int changepalId = graphicEntries[id].PaletteRAMOffsetNum;
-        for (int i = 1; i < 16; i++)
+        int palettenum = graphicEntries[id].PaletteNum;
+        for (int n = 0; n < palettenum; n++)
         {
-            tmp_newTilesetPtr->SetColor(changepalId, i, graphicEntries[id].palettes[15][i]);
+            for (int i = 1; i < 16; i++)
+            {
+                tmp_newTilesetPtr->SetColor(changepalId + n, i, graphicEntries[id].palettes[changepalId + n][i]);
+            }
         }
 
         // update settings in the new tileset instance
