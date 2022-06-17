@@ -345,13 +345,6 @@ private:
         0
     };
 
-    // Enumeration of the Tileset id contains Map8x8 layer 0
-    static constexpr const unsigned int UseMap8x8Layer0DefaultTilesetIds[2] =
-    {
-        0x21,
-        0x45
-    };
-
     // Enumeration of Tileset BG tile8x8 set data address (RLE format)
     static constexpr const unsigned int VanillaTilesetBGTilesDataAddr[0x5C] =
     {

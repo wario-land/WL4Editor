@@ -10,13 +10,11 @@ constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
 constexpr const char *RoomConfigDialog::LayerPrioritySetData[4];
 constexpr const char *RoomConfigDialog::AlphaBlendAttrsSetData[12];
 constexpr unsigned int RoomConfigDialog::BGLayerdataPtrsData[166];
-constexpr unsigned int RoomConfigDialog::UseMap8x8Layer0DefaultTilesetIds[2];
 constexpr unsigned int RoomConfigDialog::VanillaTilesetBGTilesDataAddr[0x5C];
 
 // static variables used by RoomConfigDialog
 static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet;
 static std::vector<int> BGLayerdataPtrs;
-static std::vector<int> Map8x8Layer0Tilesetlist[2];
 
 /// <summary>
 /// Construct the instance of the RoomConfigDialog.
@@ -73,12 +71,13 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     //  Initialize the items for the Layer 0 selection combobox
     ui->ComboBox_Layer0Picker->addItem(
                 QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper());
-    if(CurrentRoomParams->CurrentTilesetIndex == Map8x8Layer0Tilesetlist->at(0))
+    unsigned int bgtiledataaddr = ROMUtils::singletonTilesets[CurrentRoomParams->CurrentTilesetIndex]->GetbgGFXptr();
+    if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x21)
     {
         ui->ComboBox_Layer0Picker->addItem(
                     QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
     }
-    else if(CurrentRoomParams->CurrentTilesetIndex == Map8x8Layer0Tilesetlist->at(1))
+    else if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x45)
     {
         ui->ComboBox_Layer0Picker->addItem(
             QString::number(WL4Constants::FieryCavernDustyLayer0Ptr, 16).toUpper());
@@ -210,19 +209,17 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         }
 
         // Extra UI changes for Toxic Landfill dust Layer0
-        if (ui->ComboBox_TilesetID->currentIndex() == Map8x8Layer0Tilesetlist->at(0))
+        unsigned int bgtiledataaddr = ROMUtils::singletonTilesets[index]->GetbgGFXptr();
+        ui->ComboBox_Layer0Picker->clear();
+        if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x21)
         {
             ui->ComboBox_Layer0Picker->addItem(
-                QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
+                        QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
         }
-        else if (ui->ComboBox_TilesetID->currentIndex() == Map8x8Layer0Tilesetlist->at(1))
+        else if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x45)
         {
             ui->ComboBox_Layer0Picker->addItem(
                 QString::number(WL4Constants::FieryCavernDustyLayer0Ptr, 16).toUpper());
-        }
-        else
-        {
-            ui->ComboBox_Layer0Picker->clear();
         }
         int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
         int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
@@ -603,8 +600,4 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
     // TODO: deal with layer 0 edge cases
     // when Layer 0 mnapping type is 0x20, it uses the bg tiles too
     // Initialize the Tileset list which contains map8x8 layer 0
-    for (unsigned int i = 0; i < sizeof(UseMap8x8Layer0DefaultTilesetIds) / sizeof(UseMap8x8Layer0DefaultTilesetIds[0]); ++i)
-    {
-        Map8x8Layer0Tilesetlist->push_back(UseMap8x8Layer0DefaultTilesetIds[i]);
-    }
 }

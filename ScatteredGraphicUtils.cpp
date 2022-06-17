@@ -303,7 +303,14 @@ QString ScatteredGraphicUtils::SaveScatteredGraphicsToROM(QVector<ScatteredGraph
         for(struct ScatteredGraphicUtils::ScatteredGraphicEntryItem &graphicEntry : removeGraphics)
         {
             QVector<unsigned int> chunkaddrs = GetSaveDataAddresses(graphicEntry);
-            invalidationChunks.append(chunkaddrs);
+            for (auto &i: chunkaddrs)
+            {
+                // since people can use the same chunk in multiple entries
+                if (!invalidationChunks.contains(i))
+                {
+                    invalidationChunks.append(i);
+                }
+            }
         }
     }
 
