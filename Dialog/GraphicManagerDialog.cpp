@@ -728,6 +728,8 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
         for (int j = 0; j < tmpLevel->GetRooms().size(); j++)
         {
             LevelComponents::__RoomHeader header = tmpLevel->GetRooms()[j]->GetRoomHeader();
+            // don't generate entry for mappingtype0x20 Layer0 atm, we need a new graphic tile type for them
+/*
             if ((header.Layer0MappingType & 0x30) == 0x20)
             {
                 unsigned int cur_entry_num = graphicEntries.size();
@@ -796,6 +798,7 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                     graphicEntries.append(newentry);
                 }
             }
+*/
             if ((header.Layer3MappingType & 0x30) == 0x20)
             {
                 unsigned int cur_entry_num = graphicEntries.size();
@@ -1472,6 +1475,7 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
     if (num_of_select_rows > 0)
     {
         // clean up list and delete entry and reset tmpEntry
+        int lastid = graphicEntries.size() - 1;
         qSort(selectedRows.begin(), selectedRows.end(), qGreater<QModelIndex>()); // so that rows are removed from highest index
         foreach (QModelIndex index, selectedRows)
         {
@@ -1484,6 +1488,7 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
             // remove entry
             graphicEntries.removeAt(id);
             no_removal = false;
+            lastid = id;
         }
 
         if (no_removal)
@@ -1495,7 +1500,7 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
         // clean up instances if the tmpEntry was used
         CleanTilesInstances();
         CleanMappingDataInEntry(tmpEntry);
-        SelectedEntryID = -1;
+        SelectedEntryID = lastid - 1;
 
         // UI update
         ClearMappingPanel();
@@ -1503,15 +1508,22 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
         ClearTilesPanel();
         UpdateEntryList();
 
-        // disable current entry editing
-        ui->pushButton_ImportGraphic->setEnabled(false);
-        ui->pushButton_ImportPaletteData->setEnabled(false);
-        ui->pushButton_ImportTile8x8Data->setEnabled(false);
-        ui->pushButton_validateAndSetMappingData->setEnabled(false);
-        ui->pushButton_RemoveGraphicEntries->setEnabled(false); // should always be false since on selected row any more
+        if (lastid > 0)
+        {
+            tmpEntry = graphicEntries[lastid - 1];
+            ExtractEntryToGUI(tmpEntry);
+        }
+
+        // enable or disable current entry editing
+        ui->pushButton_ImportGraphic->setEnabled(lastid);
+        ui->pushButton_ImportPaletteData->setEnabled(lastid);
+        ui->pushButton_ImportTile8x8Data->setEnabled(lastid);
+        ui->pushButton_validateAndSetMappingData->setEnabled(lastid);
+        ui->pushButton_RemoveGraphicEntries->setEnabled(lastid);
     }
 
     ui->listView_RecordGraphicsList->setEnabled(true);
+    ui->listView_RecordGraphicsList->setCurrentIndex(ui->listView_RecordGraphicsList->selectionModel()->model()->index(SelectedEntryID, 0));
 }
 
 /// <summary>

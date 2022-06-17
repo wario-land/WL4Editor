@@ -1740,7 +1740,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         {
             if (ValidRATS(ROMFileMetadata->ROMDataPtr + DataAddr - 12))
             {
-                chunkType = static_cast<SaveDataChunkType>(ROMFileMetadata->ROMDataPtr[DataAddr - 8]);
+                chunkType = static_cast<SaveDataChunkType>(ROMFileMetadata->ROMDataPtr[DataAddr - 4]);
                 return true;
             }
         }

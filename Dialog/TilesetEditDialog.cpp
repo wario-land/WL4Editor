@@ -1247,6 +1247,19 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
             continue;
         }
 
+        // check if the palettes used by bg tiles are occupied by foreground Tile16s
+        QVector<int> unusedpal = FindUnusedPalettes();
+        bool skipthisentry = false;
+        for (int j = 0; j < graphicEntries[i].PaletteNum; j++)
+        {
+            if (!unusedpal.contains(graphicEntries[i].PaletteRAMOffsetNum + j))
+            {
+                skipthisentry = true;
+                break;
+            }
+        }
+        if (skipthisentry) continue;
+
         // available entries need to be pushed into the list
         // split the string with " " and we can always get the correct id on the first slice.
         items << QString(QString::number(i) + "  " + graphicEntries[i].TileDataName + " - " + graphicEntries[i].MappingDataName);
@@ -1255,14 +1268,17 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
     // if the size == 0, the dialog will become a regular inputbox
     if (!items.size())
     {
-        QMessageBox::information(this, tr("Error"), tr("Cannot find any graphic entry suitable for the current Tileset!"));
+        QMessageBox::information(this, tr("Error"), tr("Cannot find any graphic entry suitable for the current Tileset!\n"
+                                                       "only when the current Tileset has corresponding unused palettes used by graphics,\n"
+                                                       "then you can import the tiles."));
         return;
     }
 
     QInputDialog dialog;
     dialog.setOptions(QInputDialog::UseListViewForComboBoxItems);
     dialog.setComboBoxItems(items);
-    dialog.setWindowTitle(tr("Select a graphic entry to use its background tiles."));
+    dialog.setLabelText(tr("Select a graphic entry to use its background tiles."));
+    dialog.setWindowTitle("WL4Editor");
     int bgTileNum = tmp_newTilesetPtr->GetbgGFXlen() / 32;
     if(dialog.exec() == QDialog::Accepted)
     {

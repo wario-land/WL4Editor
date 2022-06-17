@@ -130,6 +130,7 @@ namespace LevelComponents
         int Layer0ColorBlendCoefficient_EVB = 0;
         std::vector<struct __CameraControlRecord *> CameraControlRecords;
         struct __RoomHeader RoomHeader;
+        unsigned int headerAddr; // used to read old layer pointer only, to decide if create invalidation chunks for them or not
         int CurrentEntitySetID = 0;
         EntitySet *currentEntitySet = nullptr;
         std::vector<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
@@ -155,6 +156,7 @@ namespace LevelComponents
         ~Room();
 
         // Getters
+        unsigned int GetRoomHeaderAddr() { return headerAddr; }
         size_t CountDoors() { return doors.size(); }
         unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
         unsigned char GetLayerGFXEffect01() { return RoomHeader.LayerGFXEffect01; }

@@ -27,7 +27,7 @@ namespace LevelComponents
     /// <param name="_LevelID">
     /// Level index value from 0x03000023 at run-time.
     /// </param>
-    Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) : RoomID(_RoomID), LevelID(_LevelID)
+    Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) : RoomID(_RoomID), LevelID(_LevelID), headerAddr(roomDataPtr)
     {
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
         memset(drawLayers, 0, sizeof(drawLayers));
@@ -110,7 +110,7 @@ namespace LevelComponents
     /// </remarks>
     Room::Room(Room *room) :
             CameraControlType(room->GetCameraControlType()), RoomID(room->GetRoomID()), LevelID(room->GetLevelID()),
-            Width(room->GetWidth()), Height(room->GetHeight()), RoomHeader(room->GetRoomHeader()),
+            Width(room->GetWidth()), Height(room->GetHeight()), RoomHeader(room->GetRoomHeader()), headerAddr(room->GetRoomHeaderAddr()),
             CurrentEntitySetID(room->GetCurrentEntitySetID()), IsCopy(true)
     {
         // Zero out the arrays
@@ -1053,13 +1053,11 @@ namespace LevelComponents
             Layer *layer = layers[i];
             if (layer->IsDirty())
             {
-                // TODO: need to save old layer pointer somewhere, and only change it during the save
+                // we read layer data pointer from ROM directly
                 // then, we can refer to the old pointer to see if the old chunk need to be invalidated or not
-                // the current logic is bad, the layer pointers are saved in RoomHeader and also layer instances
-                // and they are edited casually everywhere
 
                 // check if we are going to invalidate the old chunk first
-                unsigned int old_data_addr = layer->GetDataPtr();
+                unsigned int old_data_addr = ROMUtils::PointerFromData(headerAddr + i * 4 + 8);
                 enum ROMUtils::SaveDataChunkType type;
                 if (ROMUtils::GetChunkType(old_data_addr, type))
                 {
@@ -1070,6 +1068,10 @@ namespace LevelComponents
                     {
                         old_data_addr = 0;
                     }
+                }
+                else
+                {// cannot get chunk type, so it is not a chunk create by the editor, don't need invalidation
+                    old_data_addr = 0;
                 }
 
                 // generate chunk data
@@ -1109,10 +1111,10 @@ namespace LevelComponents
                             0,
                             nullptr,
                             ROMUtils::SaveDataIndex++,
-                                    false,
-                                    0,
-                                    old_data_addr,
-                                    ROMUtils::SaveDataChunkType::InvalidationChunk};
+                            false,
+                            0,
+                            old_data_addr,
+                            ROMUtils::SaveDataChunkType::InvalidationChunk};
                         chunks.append(invalidationChunk);
                     }
                 }

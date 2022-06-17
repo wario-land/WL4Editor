@@ -874,7 +874,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     }
 
     // Mark the layers as dirty
-    for (unsigned int i = 0; i < 4; ++i)
+    for (unsigned int i = 0; i < 3; ++i)
         currentRoom->GetLayer(i)->SetDirty(true);
 }
 
