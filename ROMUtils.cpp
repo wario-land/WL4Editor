@@ -1323,8 +1323,9 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
         for(unsigned int i = 0; i < rooms.size(); ++i)
         {
+            unsigned int newroomheaderAddr = roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader);
             struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
-                (ROMFileMetadata->ROMDataPtr + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
+                (ROMFileMetadata->ROMDataPtr + newroomheaderAddr);
             unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
             LevelComponents::Room *room = rooms[i];
             for(unsigned int j = 0; j < 4; ++j)
@@ -1340,6 +1341,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             struct LevelComponents::__RoomHeader newroomheader;
             memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
             room->ResetRoomHeader(newroomheader);
+            room->ResetRoomHeaderAddr(newroomheaderAddr);
         }
 
         // global history changed bool reset

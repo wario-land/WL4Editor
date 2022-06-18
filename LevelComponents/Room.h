@@ -156,7 +156,6 @@ namespace LevelComponents
         ~Room();
 
         // Getters
-        unsigned int GetRoomHeaderAddr() { return headerAddr; }
         size_t CountDoors() { return doors.size(); }
         unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
         unsigned char GetLayerGFXEffect01() { return RoomHeader.LayerGFXEffect01; }
@@ -196,6 +195,7 @@ namespace LevelComponents
         int GetLayerEffectsParam() { return RoomHeader.LayerPriorityColorBlendingFlag; }
         unsigned int GetLevelID() { return LevelID; }
         struct __RoomHeader GetRoomHeader() { return RoomHeader; }
+        unsigned int GetRoomHeaderAddr() { return headerAddr; }
         unsigned int GetRoomID() { return RoomID; }
         Tileset *GetTileset() { return tileset; }
         int GetTilesetID() { return RoomHeader.TilesetID; }
@@ -214,6 +214,7 @@ namespace LevelComponents
         void DeleteEntity(int index);
         void DeleteEntity(int difficulty, int index);
         void ClearEntitylist(int difficulty);
+        void ResetRoomHeaderAddr(unsigned int newaddr) { headerAddr = newaddr; }
         void SetLayerGFXEffect01(unsigned char flag) { RoomHeader.LayerGFXEffect01 = flag; }
         void SetLayerGFXEffect02(unsigned char flag) { RoomHeader.LayerGFXEffect02 = flag; }
         void SetBgmvolume(unsigned short bgmvolume) { RoomHeader.BGMVolume = bgmvolume; }
