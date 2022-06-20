@@ -249,7 +249,7 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->ResetEntitySetDockWidget();
 
         // hint to show undo operation
-        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Roomo Config changes."));
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Room Config changes."));
     }
     if (operation->objectPositionChange)
     {

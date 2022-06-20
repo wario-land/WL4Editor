@@ -3,7 +3,7 @@
 
 #include <cstring>
 #include <QMessageBox>
-#include "ScatteredGraphicUtils.h"
+#include "AssortedGraphicUtils.h"
 
 // constexpr declarations for the initializers in the header
 constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
@@ -562,7 +562,7 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
     }
     else/* if (bgtiledataAddr >= WL4Constants::AvailableSpaceBeginningInROM)*/
     {   // use custom tile data
-        QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> graphicEntries = ScatteredGraphicUtils::GetScatteredGraphicsFromROM();
+        QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> graphicEntries = AssortedGraphicUtils::GetAssortedGraphicsFromROM();
 
         // some bug case should never happen
         if (!graphicEntries.size())
@@ -575,8 +575,8 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
         for (int i = 0; i < graphicEntries.size(); i++)
         {
             if (bgtiledataAddr == graphicEntries[i].TileDataAddress &&
-                    graphicEntries[i].TileDataType == ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
-                    graphicEntries[i].MappingDataCompressType == ScatteredGraphicUtils::RLE_mappingtype_0x20)
+                    graphicEntries[i].TileDataType == AssortedGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
+                    graphicEntries[i].MappingDataCompressType == AssortedGraphicUtils::RLE_mappingtype_0x20)
             {
                 BGLayerdataPtrs.push_back(graphicEntries[i].MappingDataAddress);
             }

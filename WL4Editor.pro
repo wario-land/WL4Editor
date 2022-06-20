@@ -40,7 +40,7 @@ SOURCES += \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \
     DockWidget/OutputDockWidget.cpp \
     FileIOUtils.cpp \
-    ScatteredGraphicUtils.cpp \
+    AssortedGraphicUtils.cpp \
     ScriptInterface.cpp \
     main.cpp \
     WL4EditorWindow.cpp \
@@ -88,7 +88,7 @@ HEADERS += \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.h \
     DockWidget/OutputDockWidget.h \
     FileIOUtils.h \
-    ScatteredGraphicUtils.h \
+    AssortedGraphicUtils.h \
     ScriptInterface.h \
     WL4EditorWindow.h \
     LevelComponents/Level.h \

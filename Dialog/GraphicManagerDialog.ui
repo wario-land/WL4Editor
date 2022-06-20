@@ -28,7 +28,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QLabel" name="label_scatteredGraphicEntires">
+        <widget class="QLabel" name="label_assortedGraphicEntires">
          <property name="text">
           <string>graphic entries:</string>
          </property>

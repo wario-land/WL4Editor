@@ -6,7 +6,7 @@
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include "LevelComponents/Tile.h"
-#include "ScatteredGraphicUtils.h"
+#include "AssortedGraphicUtils.h"
 
 namespace Ui {
 class GraphicManagerDialog;
@@ -40,34 +40,34 @@ private slots:
 
 private:
     Ui::GraphicManagerDialog *ui;
-    QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> graphicEntries;
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> graphicEntries;
     QStandardItemModel *ListViewItemModel = nullptr;
     int SelectedEntryID = -1;
-    struct ScatteredGraphicUtils::ScatteredGraphicEntryItem tmpEntry;
+    struct AssortedGraphicUtils::AssortedGraphicEntryItem tmpEntry;
     QVector<LevelComponents::Tile8x8 *> tmpTile8x8array;
     LevelComponents::Tile8x8 *tmpblankTile = nullptr;
 
     // functions
     void CreateAndAddDefaultEntry();
     bool UpdateEntryList();
-    QString GenerateEntryTextFromStruct(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    void ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    QPixmap RenderAllPalette(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    QPixmap RenderAllTiles(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    QPixmap RenderGraphic(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    void UpdatePaletteGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    void UpdateTilesGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    void UpdateMappingGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    QString GenerateEntryTextFromStruct(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    void ExtractEntryToGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    QPixmap RenderAllPalette(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    QPixmap RenderAllTiles(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    QPixmap RenderGraphic(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    void UpdatePaletteGraphicView(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    void UpdateTilesGraphicView(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    void UpdateMappingGraphicView(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
     void ClearPalettePanel();
     void ClearTilesPanel();
     void ClearMappingPanel();
-    void SetPaletteInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    void SetTilesPanelInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    void SetMappingGraphicInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
+    void SetPaletteInfoGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    void SetTilesPanelInfoGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    void SetMappingGraphicInfoGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
 
     void CleanTilesInstances();
-    void GenerateBGTile8x8Instances(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry);
-    void CleanMappingDataInEntry(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry) { entry.mappingData.clear(); }
+    void GenerateBGTile8x8Instances(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    void CleanMappingDataInEntry(AssortedGraphicUtils::AssortedGraphicEntryItem &entry) { entry.mappingData.clear(); }
     void ClearAndResettmpEntryPalettes();
 
     void DeltmpEntryTile(int tileId);
@@ -80,12 +80,12 @@ private:
 
 public:
     // clang-format off
-    static constexpr const char *ScatteredGraphicTileDataTypeNameData[1] =
+    static constexpr const char *AssortedGraphicTileDataTypeNameData[1] =
     {
         "0: Tile8x8_4bpp_no_comp_Tileset_text_bg"
     };
 
-    static constexpr const char *ScatteredGraphicMappingDataCompressionTypeNameData[2] =
+    static constexpr const char *AssortedGraphicMappingDataCompressionTypeNameData[2] =
     {
         "0: No_mapping_data_comp",
         "1: RLE_mappingtype_0x20"

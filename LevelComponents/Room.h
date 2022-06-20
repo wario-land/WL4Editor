@@ -214,7 +214,7 @@ namespace LevelComponents
         void DeleteEntity(int index);
         void DeleteEntity(int difficulty, int index);
         void ClearEntitylist(int difficulty);
-        void ResetRoomHeaderAddr(unsigned int newaddr) { headerAddr = newaddr; }
+        void SetRoomHeaderAddr(unsigned int newaddr) { headerAddr = newaddr; }
         void SetLayerGFXEffect01(unsigned char flag) { RoomHeader.LayerGFXEffect01 = flag; }
         void SetLayerGFXEffect02(unsigned char flag) { RoomHeader.LayerGFXEffect02 = flag; }
         void SetBgmvolume(unsigned short bgmvolume) { RoomHeader.BGMVolume = bgmvolume; }

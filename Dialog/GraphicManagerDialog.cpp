@@ -11,8 +11,8 @@
 extern WL4EditorWindow *singleton;
 
 // constexpr declarations for the initializers in the header
-constexpr const char *GraphicManagerDialog::ScatteredGraphicTileDataTypeNameData[1];
-constexpr const char *GraphicManagerDialog::ScatteredGraphicMappingDataCompressionTypeNameData[2];
+constexpr const char *GraphicManagerDialog::AssortedGraphicTileDataTypeNameData[1];
+constexpr const char *GraphicManagerDialog::AssortedGraphicMappingDataCompressionTypeNameData[2];
 
 // static variables used by CameraControlDockWidget
 static QStringList GraphicTileDataTypeName;
@@ -40,7 +40,7 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
     {
         graphicEntries.clear();
     }
-    graphicEntries = ScatteredGraphicUtils::GetScatteredGraphicsFromROM();
+    graphicEntries = AssortedGraphicUtils::GetAssortedGraphicsFromROM();
 
     // if there is no graphicEntry in the ROM, we generate entries from existing Tilesets and Rooms.
     if (!graphicEntries.size())
@@ -72,14 +72,14 @@ void GraphicManagerDialog::StaticInitialization()
 {
     // Initialize the selections for the ComboBoxes
     for (unsigned int i = 0;
-         i < sizeof(ScatteredGraphicTileDataTypeNameData) / sizeof(ScatteredGraphicTileDataTypeNameData[0]); ++i)
+         i < sizeof(AssortedGraphicTileDataTypeNameData) / sizeof(AssortedGraphicTileDataTypeNameData[0]); ++i)
     {
-        GraphicTileDataTypeName << ScatteredGraphicTileDataTypeNameData[i];
+        GraphicTileDataTypeName << AssortedGraphicTileDataTypeNameData[i];
     }
     for (unsigned int i = 0;
-         i < sizeof(ScatteredGraphicMappingDataCompressionTypeNameData) / sizeof(ScatteredGraphicMappingDataCompressionTypeNameData[0]); ++i)
+         i < sizeof(AssortedGraphicMappingDataCompressionTypeNameData) / sizeof(AssortedGraphicMappingDataCompressionTypeNameData[0]); ++i)
     {
-        GraphicMappingDataCompressionTypeName << ScatteredGraphicMappingDataCompressionTypeNameData[i];
+        GraphicMappingDataCompressionTypeName << AssortedGraphicMappingDataCompressionTypeNameData[i];
     }
 }
 
@@ -88,15 +88,15 @@ void GraphicManagerDialog::StaticInitialization()
 /// </summary>
 void GraphicManagerDialog::CreateAndAddDefaultEntry()
 {
-    struct ScatteredGraphicUtils::ScatteredGraphicEntryItem testentry;
+    struct AssortedGraphicUtils::AssortedGraphicEntryItem testentry;
     testentry.TileDataAddress = 0x4E851C;
     testentry.TileDataSize_Byte = 9376; // unit: Byte
     testentry.TileDataRAMOffsetNum = 0x4DA - 0x200; // unit: per Tile8x8
-    testentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+    testentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
     testentry.TileDataName = "vanilla Tileset 0x11 bg tiles";
     testentry.MappingDataAddress = 0x5FA6D0;
     testentry.MappingDataSizeAfterCompression_Byte = 0xC10; // unit: Byte
-    testentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
+    testentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
     testentry.MappingDataName = "Layer 3";
     testentry.PaletteAddress = 0x583C7C;
     testentry.PaletteNum = 16; // when (optionalPaletteAddress + PaletteNum) > 16, we just discard the latter palettes
@@ -104,7 +104,7 @@ void GraphicManagerDialog::CreateAndAddDefaultEntry()
     testentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
     testentry.optionalGraphicHeight = 0;
 
-    ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(testentry);
+    AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(testentry);
     graphicEntries.append(testentry);
 }
 
@@ -148,13 +148,13 @@ bool GraphicManagerDialog::UpdateEntryList()
 /// <param name="entry">
 /// The struct data used to extract info of graphic.
 /// </param>
-void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+void GraphicManagerDialog::ExtractEntryToGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     // Cleanup then Load Tiles
     CleanTilesInstances();
     switch (static_cast<int>(entry.TileDataType))
     {
-        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+        case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
         {
             GenerateBGTile8x8Instances(entry);
             break;
@@ -181,7 +181,7 @@ void GraphicManagerDialog::ExtractEntryToGUI(ScatteredGraphicUtils::ScatteredGra
 /// <returns>
 /// The pixmap of the palettes recorded in the entry.
 /// </returns>
-QPixmap GraphicManagerDialog::RenderAllPalette(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+QPixmap GraphicManagerDialog::RenderAllPalette(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     // draw palette pixmap
     QPixmap PaletteBarpixmap(8 * 16, 8 * 16);
@@ -207,11 +207,11 @@ QPixmap GraphicManagerDialog::RenderAllPalette(ScatteredGraphicUtils::ScatteredG
 /// <returns>
 /// The pixmap of the tiles recorded in the entry.
 /// </returns>
-QPixmap GraphicManagerDialog::RenderAllTiles(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+QPixmap GraphicManagerDialog::RenderAllTiles(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     switch (static_cast<int>(entry.TileDataType))
     {
-        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+        case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
         {
             int lineNum = tmpTile8x8array.size() / 16;
             if ((lineNum * 16) < tmpTile8x8array.size())
@@ -284,13 +284,13 @@ QPixmap GraphicManagerDialog::RenderAllTiles(ScatteredGraphicUtils::ScatteredGra
 /// <returns>
 /// The pixmap of the graphic recorded in the entry.
 /// </returns>
-QPixmap GraphicManagerDialog::RenderGraphic(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+QPixmap GraphicManagerDialog::RenderGraphic(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     int graphicheight = entry.optionalGraphicHeight;
     int graphicwidth = entry.optionalGraphicWidth;
     switch (static_cast<int>(entry.MappingDataCompressType))
     {
-        case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
+        case AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
         {
             // Initialize the QPixmap with transparency
             int unit = 8;
@@ -329,7 +329,7 @@ QPixmap GraphicManagerDialog::RenderGraphic(ScatteredGraphicUtils::ScatteredGrap
 /// <summary>
 /// Update Palette graphicview.
 /// </summary>
-void GraphicManagerDialog::UpdatePaletteGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+void GraphicManagerDialog::UpdatePaletteGraphicView(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     if (ui->graphicsView_palettes->scene())
     {
@@ -345,7 +345,7 @@ void GraphicManagerDialog::UpdatePaletteGraphicView(ScatteredGraphicUtils::Scatt
 /// <summary>
 /// Update Tiles graphicview.
 /// </summary>
-void GraphicManagerDialog::UpdateTilesGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+void GraphicManagerDialog::UpdateTilesGraphicView(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     int linenum = tmpTile8x8array.size() / 16;
     if ((linenum * 16) < tmpTile8x8array.size())
@@ -366,7 +366,7 @@ void GraphicManagerDialog::UpdateTilesGraphicView(ScatteredGraphicUtils::Scatter
 /// <summary>
 /// Update Tiles graphicview.
 /// </summary>
-void GraphicManagerDialog::UpdateMappingGraphicView(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+void GraphicManagerDialog::UpdateMappingGraphicView(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     if (ui->graphicsView_mappingGraphic->scene())
     {
@@ -439,7 +439,7 @@ void GraphicManagerDialog::ClearMappingPanel()
 /// <param name="entry">
 /// The struct data of the entry.
 /// </param>
-void GraphicManagerDialog::SetPaletteInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+void GraphicManagerDialog::SetPaletteInfoGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     ui->lineEdit_paletteAddress->setText(QString::number(entry.PaletteAddress, 16));
     ui->lineEdit_paletteNum->setText(QString::number(entry.PaletteNum, 16));
@@ -452,7 +452,7 @@ void GraphicManagerDialog::SetPaletteInfoGUI(ScatteredGraphicUtils::ScatteredGra
 /// <param name="entry">
 /// The struct data of the entry.
 /// </param>
-void GraphicManagerDialog::SetTilesPanelInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+void GraphicManagerDialog::SetTilesPanelInfoGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     ui->lineEdit_tileDataAddress->setText(QString::number(entry.TileDataAddress, 16));
     ui->lineEdit_tileDataSize_Byte->setText(QString::number(entry.TileDataSize_Byte, 16));
@@ -467,7 +467,7 @@ void GraphicManagerDialog::SetTilesPanelInfoGUI(ScatteredGraphicUtils::Scattered
 /// <param name="entry">
 /// The struct data of the entry.
 /// </param>
-void GraphicManagerDialog::SetMappingGraphicInfoGUI(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+void GraphicManagerDialog::SetMappingGraphicInfoGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     ui->lineEdit_mappingDataAddress->setText(QString::number(entry.MappingDataAddress, 16));
     ui->lineEdit_mappingDataSize_Byte->setText(QString::number(entry.MappingDataSizeAfterCompression_Byte, 16));
@@ -503,7 +503,7 @@ void GraphicManagerDialog::CleanTilesInstances()
 /// <param name="entry">
 /// The struct data of the entry.
 /// </param>
-void GraphicManagerDialog::GenerateBGTile8x8Instances(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+void GraphicManagerDialog::GenerateBGTile8x8Instances(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     tmpblankTile = LevelComponents::Tile8x8::CreateBlankTile(entry.palettes);
     for (int i = 0; i < entry.TileDataRAMOffsetNum; ++i)
@@ -544,7 +544,7 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
 {
     switch (tmpEntry.TileDataType)
     {
-        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+        case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
         {
             // change tmpEntry instance
             int startid = tmpEntry.TileDataRAMOffsetNum;
@@ -577,7 +577,7 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
             }
 
         }
-        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp:
+        case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp:
         {
             // TODO
         }
@@ -749,17 +749,17 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                 if (!dontadd)
                 {
                     // not found, so we add new entry
-                    struct ScatteredGraphicUtils::ScatteredGraphicEntryItem newentry;
+                    struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
                     LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
                     newentry.TileDataAddress = roomtileset->GetbgGFXptr();
                     newentry.TileDataSize_Byte = roomtileset->GetbgGFXlen();
                     int tilenum = newentry.TileDataSize_Byte / 32;
                     newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
-                    newentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+                    newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
                     newentry.TileDataName = "vanilla Tileset 0x"+ QString::number(header.TilesetID, 16) +" bg tiles";
                     newentry.MappingDataAddress = header.Layer0Data & 0x7FF'FFFF;
                     newentry.MappingDataSizeAfterCompression_Byte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
-                    newentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
+                    newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
                     newentry.MappingDataName = "Layer 0 found in: " + QString::number(levelid_array[i]) + "-" +
                                                 QString::number(roomid_array[i]) + "-" + QString::number(j);
                     newentry.PaletteAddress = roomtileset->GetPaletteAddr();
@@ -768,7 +768,7 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                     newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
                     newentry.optionalGraphicHeight = 0;
 
-                    ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(newentry);
+                    AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(newentry);
 
                     // reset a part of palette settings for bg graphic entries
                     int usingpal = 15;
@@ -818,17 +818,17 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                 if (!dontadd)
                 {
                     // not found, so we add new entry
-                    struct ScatteredGraphicUtils::ScatteredGraphicEntryItem newentry;
+                    struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
                     LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
                     newentry.TileDataAddress = roomtileset->GetbgGFXptr();
                     newentry.TileDataSize_Byte = roomtileset->GetbgGFXlen();
                     int tilenum = newentry.TileDataSize_Byte / 32;
                     newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
-                    newentry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+                    newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
                     newentry.TileDataName = "vanilla Tileset 0x"+ QString::number(header.TilesetID, 16) +" bg tiles";
                     newentry.MappingDataAddress = header.Layer3Data & 0x7FF'FFFF;
                     newentry.MappingDataSizeAfterCompression_Byte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
-                    newentry.MappingDataCompressType = ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
+                    newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
                     newentry.MappingDataName = "Layer 3 found in: " + QString::number(levelid_array[i]) + "-" +
                                                 QString::number(roomid_array[i]) + "-" + QString::number(j);
                     newentry.PaletteAddress = roomtileset->GetPaletteAddr();
@@ -837,7 +837,7 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                     newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
                     newentry.optionalGraphicHeight = 0;
 
-                    ScatteredGraphicUtils::ExtractDataFromEntryInfo_v1(newentry);
+                    AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(newentry);
 
                     // reset a part of palette settings for bg graphic entries
                     int usingpal = 15;
@@ -902,7 +902,7 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
 /// <returns>
 /// The text of the entry to show in listview.
 /// </returns>
-QString GraphicManagerDialog::GenerateEntryTextFromStruct(ScatteredGraphicUtils::ScatteredGraphicEntryItem &entry)
+QString GraphicManagerDialog::GenerateEntryTextFromStruct(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     QString ret = entry.TileDataName + " - " + entry.MappingDataName;
     return ret;
@@ -1089,7 +1089,7 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
         {
             switch (tiledatatype)
             {
-                case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+                case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
                 {
                     QString tmpname = ui->lineEdit_tileDataName->text();
 
@@ -1119,7 +1119,7 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                                 this->tmpEntry.TileDataRAMOffsetNum = startid;
                                 this->tmpEntry.TileDataSize_Byte = finaldata.size();
                                 this->tmpEntry.TileDataAddress = 0;
-                                this->tmpEntry.TileDataType = ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+                                this->tmpEntry.TileDataType = AssortedGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg;
                                 this->tmpEntry.TileDataName = tmpname;
                             }
                         });
@@ -1135,7 +1135,7 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
 
                     break;
                 }
-                case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp:
+                case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp:
                 {
                     QMessageBox::critical(this, tr("Error"), tr("Import tiles for Tile8x8_4bpp_no_comp cannot work yet!"));
                     break;
@@ -1147,7 +1147,7 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
         {
             switch (tiledatatype)
             {
-                case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+                case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
                 {
                     // Sanity check
                     unsigned int tiledataSize_byte = ui->lineEdit_tileDataSize_Byte->text().toUInt(nullptr, 16);
@@ -1187,7 +1187,7 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                     // set tmpEntry
                     tmpEntry.TileDataSize_Byte = tiledataSize_byte;
                     tmpEntry.TileDataAddress = tiledataaddr;
-                    tmpEntry.TileDataType = ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+                    tmpEntry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
                     tmpEntry.TileDataRAMOffsetNum = tileVRAMoffsetNum;
                     tmpEntry.TileDataName = ui->lineEdit_tileDataName->text();
 
@@ -1202,7 +1202,7 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
 
                     break;
                 }
-                case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp:
+                case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp:
                 {
                     QMessageBox::critical(this, tr("Error"), tr("Import tiles for Tile8x8_4bpp_no_comp cannot work yet!"));
                     break;
@@ -1232,7 +1232,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
         {
             switch (mappingdatatype)
             {
-                case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
+                case AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
                 {
                     // check if optionalgraphicWidth or optionalgraphicHeight looks correct
                     if (optionalgraphicWidth != 0x20 && optionalgraphicWidth != 0x40)
@@ -1365,7 +1365,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
 
                                 // set tmpEntry if everything looks correct
                                 this->tmpEntry.MappingDataAddress = 0;
-                                this->tmpEntry.MappingDataCompressType = ScatteredGraphicUtils::RLE_mappingtype_0x20;
+                                this->tmpEntry.MappingDataCompressType = AssortedGraphicUtils::RLE_mappingtype_0x20;
                                 this->tmpEntry.MappingDataSizeAfterCompression_Byte = 0; // the save logic should set this
                                 this->tmpEntry.mappingData = tmpMappingData;
                                 this->tmpEntry.optionalGraphicWidth = optionalgraphicWidth;
@@ -1381,7 +1381,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
 
                     break;
                 }
-                case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::No_mapping_data_comp:
+                case AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::No_mapping_data_comp:
                 { // this case never work atm
                     QMessageBox::critical(this, tr("Error"), tr("Import No_mapping_data_comp graphic from file cannot work yet!"));
                     break;
@@ -1393,7 +1393,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
         {
             switch (mappingdatatype)
             {
-                case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::No_mapping_data_comp:
+                case AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::No_mapping_data_comp:
                 { // this case never work atm
                     QMessageBox::critical(this, tr("Error"), tr("Import No_mapping_data_comp graphic from ROM cannot work yet!"));
                     break;
@@ -1405,7 +1405,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
 //                    }
 //                    break;
                 }
-                case ScatteredGraphicUtils::ScatteredGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
+                case AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
                 {
                     LevelComponents::Layer BGlayer(mappingdataAddress, LevelComponents::LayerTile8x8);
                     optionalgraphicHeight = BGlayer.GetLayerHeight();
@@ -1417,7 +1417,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                     }
 
                     // set tmpEntry if everything looks correct
-                    tmpEntry.MappingDataCompressType = ScatteredGraphicUtils::RLE_mappingtype_0x20;
+                    tmpEntry.MappingDataCompressType = AssortedGraphicUtils::RLE_mappingtype_0x20;
                     tmpEntry.MappingDataSizeAfterCompression_Byte = 0; // the save logic should set this
                     tmpEntry.MappingDataName = ui->lineEdit_mappingDataName->text();
                     tmpEntry.optionalGraphicWidth = optionalgraphicWidth;
@@ -1547,8 +1547,8 @@ void GraphicManagerDialog::on_pushButton_validateAndSetMappingData_clicked()
         }
 
         // permit set entry as long as tmpEntry's tiles can work with the current mapping data
-        if (tmpEntry.TileDataType == ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
-                tmpEntry.MappingDataCompressType == ScatteredGraphicUtils::RLE_mappingtype_0x20)
+        if (tmpEntry.TileDataType == AssortedGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
+                tmpEntry.MappingDataCompressType == AssortedGraphicUtils::RLE_mappingtype_0x20)
         {
             if (CheckEditability(SelectedEntryID))
             {
@@ -1575,7 +1575,7 @@ void GraphicManagerDialog::on_pushButton_validateAndSetMappingData_clicked()
 void GraphicManagerDialog::on_pushButton_saveAllGraphicEntries_clicked()
 {
     // Generate the save chunks and write them to the ROM
-    QString errorStr = ScatteredGraphicUtils::SaveScatteredGraphicsToROM(graphicEntries);
+    QString errorStr = AssortedGraphicUtils::SaveAssortedGraphicsToROM(graphicEntries);
     if(errorStr.isEmpty())
     {
         singleton->GetOutputWidgetPtr()->PrintString(tr("Finished saving graphics to ROM. (entry number: %1)").arg(QString::number(graphicEntries.size())));
@@ -1604,7 +1604,7 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
 {
     switch (tmpEntry.TileDataType)
     {
-        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
+        case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
         {
             // ask user if eliminate similar tiles to reduce more tiles
             bool ok;
@@ -1712,7 +1712,7 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
 
             break;
         }
-        case ScatteredGraphicUtils::ScatteredGraphicTileDataType::Tile8x8_4bpp_no_comp:
+        case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp:
         {
             // TODO
         }

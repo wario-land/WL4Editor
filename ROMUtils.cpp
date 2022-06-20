@@ -75,10 +75,10 @@ namespace ROMUtils
         "EntityTile8x8DataChunkType",
         "EntityPaletteDataChunkType",
         "EntitySetLoadTableChunkType",
-        "ScatteredGraphicListChunkType",
-        "ScatteredGraphicTile8x8DataChunkType",
-        "ScatteredGraphicmappingChunkType",
-        "ScatteredGraphicPaletteChunkType"
+        "AssortedGraphicListChunkType",
+        "AssortedGraphicTile8x8DataChunkType",
+        "AssortedGraphicmappingChunkType",
+        "AssortedGraphicPaletteChunkType"
     };
 
     bool ChunkTypeAlignment[CHUNK_TYPE_COUNT] = {
@@ -100,10 +100,10 @@ namespace ROMUtils
         true,  // EntityTile8x8DataChunkType
         true,  // EntityPaletteDataChunkType
         true,  // EntitySetLoadTableChunkType
-        false, // ScatteredGraphicListChunkType         = '\x12',
-        true,  // ScatteredGraphicTile8x8DataChunkType  = '\x13',
-        false, // ScatteredGraphicmappingChunkType      = '\x14',
-        true,  // ScatteredGraphicPaletteChunkType      = '\x15'
+        false, // AssortedGraphicListChunkType         = '\x12',
+        true,  // AssortedGraphicTile8x8DataChunkType  = '\x13',
+        false, // AssortedGraphicmappingChunkType      = '\x14',
+        true,  // AssortedGraphicPaletteChunkType      = '\x15'
     };
 
     void StaticInitialization()
@@ -1003,10 +1003,10 @@ allocationComplete:
                 singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal error: Chunk allocator created an invalidation chunk"));
             case SaveDataChunkType::PatchListChunk:
             case SaveDataChunkType::PatchChunk:
-            case SaveDataChunkType::ScatteredGraphicListChunkType:
-            case SaveDataChunkType::ScatteredGraphicPaletteChunkType:
-            case SaveDataChunkType::ScatteredGraphicmappingChunkType:
-            case SaveDataChunkType::ScatteredGraphicTile8x8DataChunkType:
+            case SaveDataChunkType::AssortedGraphicListChunkType:
+            case SaveDataChunkType::AssortedGraphicPaletteChunkType:
+            case SaveDataChunkType::AssortedGraphicmappingChunkType:
+            case SaveDataChunkType::AssortedGraphicTile8x8DataChunkType:
                 continue; // the above chunk types are not associated with a modified pointer in main ROM
             default:;
             }
@@ -1341,7 +1341,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             struct LevelComponents::__RoomHeader newroomheader;
             memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
             room->ResetRoomHeader(newroomheader);
-            room->ResetRoomHeaderAddr(newroomheaderAddr);
+            room->SetRoomHeaderAddr(newroomheaderAddr);
         }
 
         // global history changed bool reset

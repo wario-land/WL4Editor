@@ -60,10 +60,10 @@ namespace ROMUtils
         EntityTile8x8DataChunkType            = '\x0F',
         EntityPaletteDataChunkType            = '\x10',
         EntitySetLoadTableChunkType           = '\x11',
-        ScatteredGraphicListChunkType         = '\x12',
-        ScatteredGraphicTile8x8DataChunkType  = '\x13',
-        ScatteredGraphicmappingChunkType      = '\x14',
-        ScatteredGraphicPaletteChunkType      = '\x15'
+        AssortedGraphicListChunkType         = '\x12',
+        AssortedGraphicTile8x8DataChunkType  = '\x13',
+        AssortedGraphicmappingChunkType      = '\x14',
+        AssortedGraphicPaletteChunkType      = '\x15'
     };
 
     enum ChunkAllocationStatus

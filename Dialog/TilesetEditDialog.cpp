@@ -9,7 +9,7 @@
 #include "WL4Constants.h"
 #include "ROMUtils.h"
 #include "FileIOUtils.h"
-#include "ScatteredGraphicUtils.h"
+#include "AssortedGraphicUtils.h"
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
 
@@ -1217,11 +1217,11 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
 }
 
 /// <summary>
-/// Change BG Tile8x8 set and the last palette by searching legal scattered graphic entries.
+/// Change BG Tile8x8 set and the last palette by searching legal assorted graphic entries.
 /// </summary>
 void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
 {
-    QVector<struct ScatteredGraphicUtils::ScatteredGraphicEntryItem> graphicEntries = ScatteredGraphicUtils::GetScatteredGraphicsFromROM();
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> graphicEntries = AssortedGraphicUtils::GetAssortedGraphicsFromROM();
 
     // Open a dialog to let user to choose a graphic entry
     if (!graphicEntries.size())
@@ -1236,7 +1236,7 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
     for (int i = 0; i < graphicEntries.size(); i++)
     {
         // incorrect tile data type
-        if (graphicEntries[i].TileDataType != ScatteredGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg)
+        if (graphicEntries[i].TileDataType != AssortedGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg)
         {
             continue;
         }
