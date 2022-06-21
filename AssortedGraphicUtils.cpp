@@ -14,12 +14,12 @@ extern WL4EditorWindow *singleton;
 /// Version 0:
 ///   Semicolon-delimited:
 ///      0: TileDataAddress         (hex string)
-///      1: TileDataSize_Byte       (hex string)
+///      1: TileDataSizeInByte       (hex string)
 ///      2: TileDataRAMOffsetNum    (hex string)
 ///      3: TileDataCompressType    (hex string)
 ///      4: TileDataName            (ascii string, may not contain a semicolon)
 ///      5: MappingDataAddress      (hex string)
-///      6: MappingDataSize_Byte    (hex string)
+///      6: MappingDataSizeInByte    (hex string)
 ///      7: MappingDataCompressType (hex string)
 ///      8: MappingDataName         (ascii string, may not contain a semicolon)
 ///      9: optionalPaletteAddress  (hex string)
@@ -63,12 +63,12 @@ static struct AssortedGraphicUtils::AssortedGraphicEntryItem DeserializeAssorted
     struct AssortedGraphicUtils::AssortedGraphicEntryItem entry
     {
         assortedgraphicTuples[0].toUInt(Q_NULLPTR, 16), // TileDataAddress
-        assortedgraphicTuples[1].toUInt(Q_NULLPTR, 16), // TileDataSize_Byte
+        assortedgraphicTuples[1].toUInt(Q_NULLPTR, 16), // TileDataSizeInByte
         assortedgraphicTuples[2].toUInt(Q_NULLPTR, 16), // TileDataRAMOffsetNum
         static_cast<enum AssortedGraphicUtils::AssortedGraphicTileDataType>(assortedgraphicTuples[3].toUInt(Q_NULLPTR, 16)), // TileDataCompressType
         assortedgraphicTuples[4], // TileDataName
         assortedgraphicTuples[5].toUInt(Q_NULLPTR, 16), // MappingDataAddress
-        assortedgraphicTuples[6].toUInt(Q_NULLPTR, 16), // MappingDataSize_Byte
+        assortedgraphicTuples[6].toUInt(Q_NULLPTR, 16), // MappingDataSizeInByte
         static_cast<enum AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType>(assortedgraphicTuples[7].toUInt(Q_NULLPTR, 16)), // MappingDataCompressType
         assortedgraphicTuples[8], // MappingDataName
         assortedgraphicTuples[9].toUInt(Q_NULLPTR, 16), // optionalPaletteAddress
@@ -93,12 +93,12 @@ static struct AssortedGraphicUtils::AssortedGraphicEntryItem DeserializeAssorted
 static QString SerializeAssortedGraphicMetadata(const struct AssortedGraphicUtils::AssortedGraphicEntryItem &assortedGraphicMetadata)
 {
     QString ret = QString::number(assortedGraphicMetadata.TileDataAddress, 16) + ";";
-    ret += QString::number(assortedGraphicMetadata.TileDataSize_Byte, 16) + ";";
+    ret += QString::number(assortedGraphicMetadata.TileDataSizeInByte, 16) + ";";
     ret += QString::number(assortedGraphicMetadata.TileDataRAMOffsetNum, 16) + ";";
     ret += QString::number(assortedGraphicMetadata.TileDataType, 16) + ";";
     ret += assortedGraphicMetadata.TileDataName + ";";
     ret += QString::number(assortedGraphicMetadata.MappingDataAddress, 16) + ";";
-    ret += QString::number(assortedGraphicMetadata.MappingDataSizeAfterCompression_Byte, 16) + ";";
+    ret += QString::number(assortedGraphicMetadata.MappingDataSizeAfterCompressionInByte, 16) + ";";
     ret += QString::number(assortedGraphicMetadata.MappingDataCompressType, 16) + ";";
     ret += assortedGraphicMetadata.MappingDataName + ";";
     ret += QString::number(assortedGraphicMetadata.PaletteAddress, 16) + ";";
@@ -237,8 +237,8 @@ void AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(AssortedGraphicEntryItem 
     }
 
     // tiles data
-    entry.tileData.resize(entry.TileDataSize_Byte);
-    for (int j = 0; j < entry.TileDataSize_Byte; ++j)
+    entry.tileData.resize(entry.TileDataSizeInByte);
+    for (int j = 0; j < entry.TileDataSizeInByte; ++j)
     {
         entry.tileData[j] = *(ROMUtils::ROMFileMetadata->ROMDataPtr + entry.TileDataAddress + j);
     }
@@ -325,6 +325,11 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
     {
         invalidationChunks.append(patchListChunkAddr + 12);
     }
+
+    // cleanup duplicated elements in invalidationChunks
+    std::sort(invalidationChunks.begin(), invalidationChunks.end());
+    auto it = std::unique(invalidationChunks.begin(), invalidationChunks.end());
+    invalidationChunks.erase(it, invalidationChunks.end());
 
     // Allocate and save the chunks to the ROM
     unsigned int currentChunkId = 0;
@@ -518,7 +523,7 @@ QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphic
         {
             case Tile8x8_4bpp_no_comp_Tileset_text_bg:
             {
-                unsigned int datasize = entry.TileDataSize_Byte;
+                unsigned int datasize = entry.TileDataSizeInByte;
                 unsigned char *data = new unsigned char[datasize];
                 memcpy(&data[0], entry.tileData.constData(), datasize);
 
@@ -559,7 +564,7 @@ QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphic
                                                                                 entry.optionalGraphicWidth, entry.optionalGraphicHeight, &datasize);
 
                 // set entry info
-                entry.MappingDataSizeAfterCompression_Byte = datasize;
+                entry.MappingDataSizeAfterCompressionInByte = datasize;
 
                 // Create the tile data save chunk
                 result.append({0,

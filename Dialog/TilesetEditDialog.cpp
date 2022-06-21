@@ -1297,7 +1297,7 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
         unsigned int id = result.at(0).toUInt(nullptr, 10);
 
         unsigned char newtmpdata[32];
-        unsigned int bgTileNum = graphicEntries[id].TileDataSize_Byte / 32;
+        unsigned int bgTileNum = graphicEntries[id].TileDataSizeInByte / 32;
         unsigned int startId = graphicEntries[id].TileDataRAMOffsetNum + 0x200;
         for(int i = 0; i < bgTileNum; ++i)
         {
@@ -1317,7 +1317,7 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
         }
 
         // update settings in the new tileset instance
-        tmp_newTilesetPtr->SetbgGFXlen(graphicEntries[id].TileDataSize_Byte);
+        tmp_newTilesetPtr->SetbgGFXlen(graphicEntries[id].TileDataSizeInByte);
         tmp_newTilesetPtr->SetbgGFXptr(graphicEntries[id].TileDataAddress);
 
         // update all the graphicviews

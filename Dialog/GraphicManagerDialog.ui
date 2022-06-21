@@ -116,7 +116,7 @@
               <widget class="QLineEdit" name="lineEdit_tileDataAddress"/>
              </item>
              <item row="3" column="2">
-              <widget class="QLineEdit" name="lineEdit_tileDataSize_Byte"/>
+              <widget class="QLineEdit" name="lineEdit_tileDataSizeInByte"/>
              </item>
              <item row="5" column="2">
               <widget class="QComboBox" name="comboBox_tileDataType"/>
@@ -165,7 +165,7 @@
               </widget>
              </item>
              <item row="3" column="1">
-              <widget class="QLabel" name="label_tileDataSize_Byte">
+              <widget class="QLabel" name="label_tileDataSizeInByte">
                <property name="text">
                 <string>Tile8x8 data size (Hex, Byte):</string>
                </property>
@@ -298,7 +298,7 @@
             </widget>
            </item>
            <item row="11" column="1">
-            <widget class="QLineEdit" name="lineEdit_mappingDataSize_Byte"/>
+            <widget class="QLineEdit" name="lineEdit_mappingDataSizeInByte"/>
            </item>
            <item row="8" column="0" colspan="2">
             <widget class="QGraphicsView" name="graphicsView_mappingGraphic"/>
@@ -307,7 +307,7 @@
             <widget class="QLineEdit" name="lineEdit_mappingDataAddress"/>
            </item>
            <item row="11" column="0">
-            <widget class="QLabel" name="label_mappingDataSize_Byte">
+            <widget class="QLabel" name="label_mappingDataSizeInByte">
              <property name="text">
               <string>size after compression (Hex, Byte):</string>
              </property>

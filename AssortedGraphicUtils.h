@@ -31,12 +31,12 @@ namespace AssortedGraphicUtils
     {
         // info params need to saved into the AssortedGraphicListChunk
         unsigned int TileDataAddress;
-        unsigned int TileDataSize_Byte; // unit: Byte
+        unsigned int TileDataSizeInByte; // unit: Byte
         unsigned int TileDataRAMOffsetNum = 0; // unit: per Tile8x8
         enum AssortedGraphicTileDataType TileDataType;
         QString TileDataName;
         unsigned int MappingDataAddress;
-        unsigned int MappingDataSizeAfterCompression_Byte; // unit: Byte
+        unsigned int MappingDataSizeAfterCompressionInByte; // unit: Byte
         enum AssortedGraphicMappingDataCompressionType MappingDataCompressType;
         QString MappingDataName;
         unsigned int PaletteAddress = 0;
@@ -53,12 +53,12 @@ namespace AssortedGraphicUtils
         AssortedGraphicEntryItem &operator = (const AssortedGraphicEntryItem &entry)
         {
             this->TileDataAddress = entry.TileDataAddress;
-            this->TileDataSize_Byte = entry.TileDataSize_Byte;
+            this->TileDataSizeInByte = entry.TileDataSizeInByte;
             this->TileDataRAMOffsetNum = entry.TileDataRAMOffsetNum;
             this->TileDataType = entry.TileDataType;
             this->TileDataName = entry.TileDataName;
             this->MappingDataAddress = entry.MappingDataAddress;
-            this->MappingDataSizeAfterCompression_Byte = entry.MappingDataSizeAfterCompression_Byte;
+            this->MappingDataSizeAfterCompressionInByte = entry.MappingDataSizeAfterCompressionInByte;
             this->MappingDataCompressType = entry.MappingDataCompressType;
             this->MappingDataName = entry.MappingDataName;
             this->PaletteAddress = entry.PaletteAddress;

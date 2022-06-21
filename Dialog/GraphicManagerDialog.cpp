@@ -90,12 +90,12 @@ void GraphicManagerDialog::CreateAndAddDefaultEntry()
 {
     struct AssortedGraphicUtils::AssortedGraphicEntryItem testentry;
     testentry.TileDataAddress = 0x4E851C;
-    testentry.TileDataSize_Byte = 9376; // unit: Byte
+    testentry.TileDataSizeInByte = 9376; // unit: Byte
     testentry.TileDataRAMOffsetNum = 0x4DA - 0x200; // unit: per Tile8x8
     testentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
     testentry.TileDataName = "vanilla Tileset 0x11 bg tiles";
     testentry.MappingDataAddress = 0x5FA6D0;
-    testentry.MappingDataSizeAfterCompression_Byte = 0xC10; // unit: Byte
+    testentry.MappingDataSizeAfterCompressionInByte = 0xC10; // unit: Byte
     testentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
     testentry.MappingDataName = "Layer 3";
     testentry.PaletteAddress = 0x583C7C;
@@ -408,7 +408,7 @@ void GraphicManagerDialog::ClearTilesPanel()
     ui->graphicsView_tile8x8setData->setScene(nullptr);
 
     ui->lineEdit_tileDataAddress->setText("");
-    ui->lineEdit_tileDataSize_Byte->setText("");
+    ui->lineEdit_tileDataSizeInByte->setText("");
     ui->lineEdit_tileDataRAMoffset->setText("");
     ui->comboBox_tileDataType->setCurrentIndex(0);
     ui->lineEdit_tileDataName->setText("");
@@ -426,7 +426,7 @@ void GraphicManagerDialog::ClearMappingPanel()
     ui->graphicsView_mappingGraphic->setScene(nullptr);
 
     ui->lineEdit_mappingDataAddress->setText("");
-    ui->lineEdit_mappingDataSize_Byte->setText("");
+    ui->lineEdit_mappingDataSizeInByte->setText("");
     ui->comboBox_mappingDataType->setCurrentIndex(0);
     ui->lineEdit_mappingDataName->setText("");
     ui->lineEdit_optionalGraphicHeight->setText("");
@@ -455,7 +455,7 @@ void GraphicManagerDialog::SetPaletteInfoGUI(AssortedGraphicUtils::AssortedGraph
 void GraphicManagerDialog::SetTilesPanelInfoGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     ui->lineEdit_tileDataAddress->setText(QString::number(entry.TileDataAddress, 16));
-    ui->lineEdit_tileDataSize_Byte->setText(QString::number(entry.TileDataSize_Byte, 16));
+    ui->lineEdit_tileDataSizeInByte->setText(QString::number(entry.TileDataSizeInByte, 16));
     ui->lineEdit_tileDataRAMoffset->setText(QString::number(entry.TileDataRAMOffsetNum, 16));
     ui->comboBox_tileDataType->setCurrentIndex(entry.TileDataType);
     ui->lineEdit_tileDataName->setText(entry.TileDataName);
@@ -470,7 +470,7 @@ void GraphicManagerDialog::SetTilesPanelInfoGUI(AssortedGraphicUtils::AssortedGr
 void GraphicManagerDialog::SetMappingGraphicInfoGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     ui->lineEdit_mappingDataAddress->setText(QString::number(entry.MappingDataAddress, 16));
-    ui->lineEdit_mappingDataSize_Byte->setText(QString::number(entry.MappingDataSizeAfterCompression_Byte, 16));
+    ui->lineEdit_mappingDataSizeInByte->setText(QString::number(entry.MappingDataSizeAfterCompressionInByte, 16));
     ui->comboBox_mappingDataType->setCurrentIndex(entry.MappingDataCompressType);
     ui->lineEdit_mappingDataName->setText(entry.MappingDataName);
     ui->lineEdit_optionalGraphicHeight->setText(QString::number(entry.optionalGraphicHeight, 16));
@@ -510,7 +510,7 @@ void GraphicManagerDialog::GenerateBGTile8x8Instances(AssortedGraphicUtils::Asso
     {
         tmpTile8x8array.push_back(tmpblankTile);
     }
-    int GFXcount = entry.TileDataSize_Byte / 32;
+    int GFXcount = entry.TileDataSizeInByte / 32;
     for (int i = 0; i < GFXcount; ++i)
     {
         tmpTile8x8array.push_back(new LevelComponents::Tile8x8((unsigned char *)(entry.tileData.data() + i * 32), entry.palettes));
@@ -548,18 +548,18 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
         {
             // change tmpEntry instance
             int startid = tmpEntry.TileDataRAMOffsetNum;
-            if (tmpEntry.TileDataSize_Byte != tmpEntry.tileData.size())
+            if (tmpEntry.TileDataSizeInByte != tmpEntry.tileData.size())
             { // something went wrong in the code
                 return;
             }
             QByteArray data;
-            int old_tilenum = tmpEntry.TileDataSize_Byte / 32;
+            int old_tilenum = tmpEntry.TileDataSizeInByte / 32;
             data = tmpEntry.tileData.mid(0, 32 * (tileId - startid)) +
                     tmpEntry.tileData.mid(32 * (tileId + 1 - startid), 32 * (old_tilenum + startid - tileId - 1));
             tmpEntry.tileData = data;
 
             tmpEntry.TileDataRAMOffsetNum += 1;
-            tmpEntry.TileDataSize_Byte -= 32;
+            tmpEntry.TileDataSizeInByte -= 32;
 
             // update mapping data
             int width = tmpEntry.optionalGraphicWidth;
@@ -752,13 +752,13 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                     struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
                     LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
                     newentry.TileDataAddress = roomtileset->GetbgGFXptr();
-                    newentry.TileDataSize_Byte = roomtileset->GetbgGFXlen();
-                    int tilenum = newentry.TileDataSize_Byte / 32;
+                    newentry.TileDataSizeInByte = roomtileset->GetbgGFXlen();
+                    int tilenum = newentry.TileDataSizeInByte / 32;
                     newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
                     newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
                     newentry.TileDataName = "vanilla Tileset 0x"+ QString::number(header.TilesetID, 16) +" bg tiles";
                     newentry.MappingDataAddress = header.Layer0Data & 0x7FF'FFFF;
-                    newentry.MappingDataSizeAfterCompression_Byte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
+                    newentry.MappingDataSizeAfterCompressionInByte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
                     newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
                     newentry.MappingDataName = "Layer 0 found in: " + QString::number(levelid_array[i]) + "-" +
                                                 QString::number(roomid_array[i]) + "-" + QString::number(j);
@@ -821,13 +821,13 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                     struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
                     LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
                     newentry.TileDataAddress = roomtileset->GetbgGFXptr();
-                    newentry.TileDataSize_Byte = roomtileset->GetbgGFXlen();
-                    int tilenum = newentry.TileDataSize_Byte / 32;
+                    newentry.TileDataSizeInByte = roomtileset->GetbgGFXlen();
+                    int tilenum = newentry.TileDataSizeInByte / 32;
                     newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
                     newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
                     newentry.TileDataName = "vanilla Tileset 0x"+ QString::number(header.TilesetID, 16) +" bg tiles";
                     newentry.MappingDataAddress = header.Layer3Data & 0x7FF'FFFF;
-                    newentry.MappingDataSizeAfterCompression_Byte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
+                    newentry.MappingDataSizeAfterCompressionInByte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
                     newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
                     newentry.MappingDataName = "Layer 3 found in: " + QString::number(levelid_array[i]) + "-" +
                                                 QString::number(roomid_array[i]) + "-" + QString::number(j);
@@ -1117,7 +1117,7 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                                 // set tmpEntry if everything looks correct
                                 int startid = 0x3FF - newtilenum;
                                 this->tmpEntry.TileDataRAMOffsetNum = startid;
-                                this->tmpEntry.TileDataSize_Byte = finaldata.size();
+                                this->tmpEntry.TileDataSizeInByte = finaldata.size();
                                 this->tmpEntry.TileDataAddress = 0;
                                 this->tmpEntry.TileDataType = AssortedGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg;
                                 this->tmpEntry.TileDataName = tmpname;
@@ -1150,11 +1150,11 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                 case AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg:
                 {
                     // Sanity check
-                    unsigned int tiledataSize_byte = ui->lineEdit_tileDataSize_Byte->text().toUInt(nullptr, 16);
+                    unsigned int tiledataSizeInByte = ui->lineEdit_tileDataSizeInByte->text().toUInt(nullptr, 16);
                     unsigned int tileVRAMoffsetNum = ui->lineEdit_tileDataRAMoffset->text().toUInt(nullptr, 16);
-                    unsigned int tile8x8Num = tiledataSize_byte / 32;
+                    unsigned int tile8x8Num = tiledataSizeInByte / 32;
                     unsigned int tiledataaddr = ui->lineEdit_tileDataAddress->text().toUInt(nullptr, 16);
-                    if ((tile8x8Num << 5) != tiledataSize_byte)
+                    if ((tile8x8Num << 5) != tiledataSizeInByte)
                     {
                         QMessageBox::critical(this, tr("Error"), tr("Illegal tile data size, size has to be multiple of 0x20!"));
                         return;
@@ -1178,14 +1178,14 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                     }
 
                     // Load Tile data
-                    tmpEntry.tileData.resize(tiledataSize_byte);
-                    for (int j = 0; j < tiledataSize_byte; ++j)
+                    tmpEntry.tileData.resize(tiledataSizeInByte);
+                    for (int j = 0; j < tiledataSizeInByte; ++j)
                     {
                         tmpEntry.tileData[j] = *(ROMUtils::ROMFileMetadata->ROMDataPtr + tiledataaddr + j);
                     }
 
                     // set tmpEntry
-                    tmpEntry.TileDataSize_Byte = tiledataSize_byte;
+                    tmpEntry.TileDataSizeInByte = tiledataSizeInByte;
                     tmpEntry.TileDataAddress = tiledataaddr;
                     tmpEntry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
                     tmpEntry.TileDataRAMOffsetNum = tileVRAMoffsetNum;
@@ -1223,7 +1223,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
         // try to use the settings from the UI to import mapping data
         int mappingdataAddress = ui->lineEdit_mappingDataAddress->text().toUInt(nullptr, 16);
         int mappingdatatype = ui->comboBox_mappingDataType->currentIndex();
-        int mappingdataSize_Byte = ui->lineEdit_mappingDataSize_Byte->text().toUInt(nullptr, 16);
+        int mappingdataSizeInByte = ui->lineEdit_mappingDataSizeInByte->text().toUInt(nullptr, 16);
         int optionalgraphicWidth = ui->lineEdit_optionalGraphicWidth->text().toUInt(nullptr, 16);
         int optionalgraphicHeight = ui->lineEdit_optionalGraphicHeight->text().toUInt(nullptr, 16);
 
@@ -1274,7 +1274,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                             else
                             {
                                 // Get existing bg tile data
-                                int existingTile8x8Num = this->tmpEntry.TileDataSize_Byte / 32;
+                                int existingTile8x8Num = this->tmpEntry.TileDataSizeInByte / 32;
                                 int existingTilesdatasize = (existingTile8x8Num + 1) * 32;
                                 unsigned char *tmp_current_tile8x8_data = new unsigned char[existingTilesdatasize];
                                 memset(&tmp_current_tile8x8_data[0], 0, existingTilesdatasize);
@@ -1366,7 +1366,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                                 // set tmpEntry if everything looks correct
                                 this->tmpEntry.MappingDataAddress = 0;
                                 this->tmpEntry.MappingDataCompressType = AssortedGraphicUtils::RLE_mappingtype_0x20;
-                                this->tmpEntry.MappingDataSizeAfterCompression_Byte = 0; // the save logic should set this
+                                this->tmpEntry.MappingDataSizeAfterCompressionInByte = 0; // the save logic should set this
                                 this->tmpEntry.mappingData = tmpMappingData;
                                 this->tmpEntry.optionalGraphicWidth = optionalgraphicWidth;
                                 this->tmpEntry.optionalGraphicHeight = optionalgraphicHeight;
@@ -1418,7 +1418,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
 
                     // set tmpEntry if everything looks correct
                     tmpEntry.MappingDataCompressType = AssortedGraphicUtils::RLE_mappingtype_0x20;
-                    tmpEntry.MappingDataSizeAfterCompression_Byte = 0; // the save logic should set this
+                    tmpEntry.MappingDataSizeAfterCompressionInByte = 0; // the save logic should set this
                     tmpEntry.MappingDataName = ui->lineEdit_mappingDataName->text();
                     tmpEntry.optionalGraphicWidth = optionalgraphicWidth;
                     tmpEntry.optionalGraphicHeight = optionalgraphicHeight;
