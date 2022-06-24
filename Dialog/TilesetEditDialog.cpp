@@ -62,6 +62,15 @@ TilesetEditDialog::~TilesetEditDialog()
 /// </param>
 void TilesetEditDialog::SetSelectedTile16(int tile16ID, bool resetscrollbar)
 {
+    if (tile16ID < 0)
+    {
+        tile16ID = 0;
+    }
+    else if (tile16ID >= Tile16DefaultNum)
+    {
+        tile16ID = Tile16DefaultNum - 1;
+    }
+
     IsSelectingTile16 = true;
 
     // Paint red Box to show selected Tile16
@@ -543,6 +552,11 @@ void TilesetEditDialog::CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile1
 /// </param>
 void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int tile16Id, int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip)
 {
+    if (tile16Id < 0)
+    {
+        return;
+    }
+
     // Update Data
     LevelComponents::TileMap16* tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16Id];
     tile16Data->ResetTile8x8(tilesetEditParams->newTileset->GetTile8x8arrayPtr()[newTile8x8_Id], position & 3, newTile8x8_Id, new_paletteIndex, xflip, yflip);
