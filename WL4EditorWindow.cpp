@@ -258,6 +258,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         }
         ResetUndoHistory();
         DeleteUndoHistoryGlobal();
+        ResetGlobalElementOperationIndexes();
     }
 
     // Set the program title

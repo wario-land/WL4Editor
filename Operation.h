@@ -159,6 +159,7 @@ void RedoOperationGlobal();
 void ResetUndoHistory();
 void DeleteUndoHistoryGlobal();
 void ResetChangedBoolsThroughHistory();
+void ResetGlobalElementOperationIndexes();
 
 
 #endif // OPERATION_H

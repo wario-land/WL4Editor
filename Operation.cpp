@@ -657,3 +657,16 @@ void ResetChangedBoolsThroughHistory()
         }
     }
 }
+
+/// <summary>
+/// Reset all the global elements operation indexes
+/// </summary>
+/// <remarks>
+/// the DeleteUndoHistoryGlobal() function won't set global element indexes back to 0,
+/// by using this function, we can reset some global element operation indexes back to 0 when we need to load a new ROM
+/// </remarks>
+void ResetGlobalElementOperationIndexes()
+{
+    CurrentTilesetOperationId = 0;
+    CurrentSpritestuffOperationId = 0;
+}
