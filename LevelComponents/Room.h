@@ -130,6 +130,7 @@ namespace LevelComponents
         int Layer0ColorBlendCoefficient_EVB = 0;
         std::vector<struct __CameraControlRecord *> CameraControlRecords;
         struct __RoomHeader RoomHeader;
+        unsigned int headerAddr; // used to read old layer pointer only, to decide if create invalidation chunks for them or not
         int CurrentEntitySetID = 0;
         EntitySet *currentEntitySet = nullptr;
         std::vector<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
@@ -194,6 +195,7 @@ namespace LevelComponents
         int GetLayerEffectsParam() { return RoomHeader.LayerPriorityColorBlendingFlag; }
         unsigned int GetLevelID() { return LevelID; }
         struct __RoomHeader GetRoomHeader() { return RoomHeader; }
+        unsigned int GetRoomHeaderAddr() { return headerAddr; }
         unsigned int GetRoomID() { return RoomID; }
         Tileset *GetTileset() { return tileset; }
         int GetTilesetID() { return RoomHeader.TilesetID; }
@@ -212,6 +214,7 @@ namespace LevelComponents
         void DeleteEntity(int index);
         void DeleteEntity(int difficulty, int index);
         void ClearEntitylist(int difficulty);
+        void SetRoomHeaderAddr(unsigned int newaddr) { headerAddr = newaddr; }
         void SetLayerGFXEffect01(unsigned char flag) { RoomHeader.LayerGFXEffect01 = flag; }
         void SetLayerGFXEffect02(unsigned char flag) { RoomHeader.LayerGFXEffect02 = flag; }
         void SetBgmvolume(unsigned short bgmvolume) { RoomHeader.BGMVolume = bgmvolume; }

@@ -235,6 +235,9 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->RenderScreenTilesChange(tilechangelist, tl1);
         if(tl2 == -1) return;
         singleton->RenderScreenTilesChange(tilechangelist2, tl2);
+
+        // hint to show undo operation
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo tile changes."));
     }
     if (operation->roomConfigChange)
     {
@@ -244,6 +247,9 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->SetEditModeDockWidgetLayerEditability();
         singleton->SetEditModeWidgetDifficultyRadioBox(1);
         singleton->ResetEntitySetDockWidget();
+
+        // hint to show undo operation
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Room Config changes."));
     }
     if (operation->objectPositionChange)
     {
@@ -304,6 +310,9 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
         singleton->RenderScreenFull();
         CurrentTilesetOperationId = operationIndexGlobal;
+
+        // hint to show undo operation
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Tileset changes."));
     }
     if (operation->SpritesSpritesetChange)
     {
@@ -329,6 +338,9 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
         CurrentSpritestuffOperationId = operationIndexGlobal;
+
+        // hint to show undo operation
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Sprites and Spritesets changes."));
     }
 }
 
@@ -418,6 +430,11 @@ static void UndoOperationImpl(std::deque<struct OperationParams *> &operationHis
         // TODO uncomment this once all operations that change the level go through Operation.cpp
         // singleton->SetUnsavedChanges(false);
     }
+    else
+    {
+        // hint to show undo operation
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("No more operation to undo."));
+    }
 }
 
 /// <summary>
@@ -472,6 +489,11 @@ static void RedoOperationImpl(std::deque<struct OperationParams *> &operationHis
 
         // Performing a "redo" will make unsaved changes
         singleton->SetUnsavedChanges(true);
+    }
+    else
+    {
+        // hint to show redo operation
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("No more operation to redo."));
     }
 }
 
@@ -634,4 +656,17 @@ void ResetChangedBoolsThroughHistory()
             }
         }
     }
+}
+
+/// <summary>
+/// Reset all the global elements operation indexes
+/// </summary>
+/// <remarks>
+/// the DeleteUndoHistoryGlobal() function won't set global element indexes back to 0,
+/// by using this function, we can reset some global element operation indexes back to 0 when we need to load a new ROM
+/// </remarks>
+void ResetGlobalElementOperationIndexes()
+{
+    CurrentTilesetOperationId = 0;
+    CurrentSpritestuffOperationId = 0;
 }

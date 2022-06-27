@@ -3,6 +3,8 @@
 #include "Dialog/PatchEditDialog.h"
 #include "Dialog/CreditsEditDialog.h"
 #include "DockWidget/CameraControlDockWidget.h"
+#include "Dialog/GraphicManagerDialog.h"
+#include "Dialog/SpritesEditorDialog.h"
 #include "WL4EditorWindow.h"
 
 #include <QApplication>
@@ -18,6 +20,8 @@ static void StaticInitialization_BeforeROMLoading()
     CameraControlDockWidget::StaticInitialization();
     CreditsEditDialog::StaticInitialization();
     PatchEditDialog::StaticComboBoxesInitialization();
+    GraphicManagerDialog::StaticInitialization();
+    SpritesEditorDialog::StaticInitialization();
 }
 
 /// <summary>

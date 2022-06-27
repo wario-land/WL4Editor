@@ -152,10 +152,10 @@ namespace LevelComponents
     /// Level numbers:
     ///      0x00: Level 1
     ///      0x01: Level 2
-    ///      0x02: Level 3
+    ///      0x02: Level 3, debug level in Entry Passage
     ///      0x03: Level 4
-    ///      0x04: Mini-game shop
-    ///      0x05: Boss door
+    ///      0x04: Boss door
+    ///      0x05: Mini-game shop
     /// The level header exists in a record of size 0x2B bytes.
     /// LH + 0x00 (1): Tileset ID
     ///      0x01 (1): Mapping type for layer 0 (0x00, 0x10, 0x20)

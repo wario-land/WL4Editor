@@ -18,6 +18,9 @@ namespace FileIOUtils
                               QString dialogTitle,
                               std::function<void (QByteArray&, QWidget *)> TilesReplaceCallback);
     QImage RenderBGColor(QImage image, QWidget *parent);
+
+    // helper functions
+    int quasi_memcmp(unsigned char *_Buf1, unsigned char *_Buf2, size_t _Size);
 } // namespace FileIOUtils
 
 #endif // FILEIOUTILS_H

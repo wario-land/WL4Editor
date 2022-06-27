@@ -1,3 +1,28 @@
+0.14.0:
+(major changes)
+- Resolve "opening a second rom will make the editor become unstable, which can also causes potential corruption in the rom file" (Issue #225)
+- Add Graphic Manager (Issue #274)
+- Support changing background tile8x8 set in Tileset Editor (Issue #273)
+- Support using custom graphics in layer 3 in Room Config Dialog (Issue #275)
+
+(minor changes)
+- Description of patches will be shown in a separate textbox in Patch Manager instead of popup tooltips
+- Changed but unsaved function patches or new function patches will be marked "TBD" in the "Patch address" column in Patch Manager.
+- Add "Reload" button in PatchEditDialog to re-parse the same patch file (Issue #228)
+- Add tile16 positional offset info to statusbar
+- All ID numbers in the WL4Editor should be shown in Hex (Issue #377)
+- Add info textbox in Tileset Editor to show unused palettes
+- Now you can import Tile16 by the same way you import Tile8x8 in Tileset Editor
+- Press BSP or DEL to delete selected Tile16 in Tileset Editor
+- Support cleanup duplicated Tile8x8 from the Tile8x8 set and Tile16 set in Tileset Editor
+- The room should be able to contain 64 entities in every difficulty not 46 (Issue #382)
+- Reset camera dock widget when applying room config changes (Issue #386)
+- Add window title for Select Color Dialog for all those transparent pixel conversion (Issue #385)
+- Fix mapping type 0x20 Layer transparent Tile8x8 render problem (Issue #211)
+- Add new js interface API functions: ShowSaveDataAnalysis() and _GetTilesetGFXInfo(int tilesetId)
+- Add the option to use quasi_memcmp to reduce Tile8x8 more aggressively in Tileset Editor.
+- Fix a combobox in OAM Designer keeps adding items every time when open the dialog (Issue #376)
+
 0.13.6:
 (major changes)
 - Fix FindAllChunksInROM does not find all chunks of a specified type; would theoretically affect patching routine though there's been no reports of problems from users so far (issue #349)

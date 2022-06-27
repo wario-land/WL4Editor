@@ -1,5 +1,5 @@
 #include "PatchUtils.h"
-#include <ROMUtils.h>
+#include "ROMUtils.h"
 #include <QVector>
 #include <QDir>
 #include <QFile>
@@ -189,7 +189,7 @@ static QString SerializePatchMetadata(const struct PatchEntryItem &patchMetadata
 /// </returns>
 static QString GetUpgradedPatchListChunkData(unsigned int chunkDataAddr)
 {
-    unsigned short contentSize = *reinterpret_cast<unsigned short*>(ROMUtils::ROMFileMetadata->ROMDataPtr + chunkDataAddr + 4) - 1;
+    unsigned short contentSize = ROMUtils::GetChunkDataLength(chunkDataAddr) - 1;
     int chunkVersion = ROMUtils::ROMFileMetadata->ROMDataPtr[chunkDataAddr + 12];
     if(chunkVersion > PATCH_CHUNK_VERSION)
     {
@@ -751,7 +751,7 @@ namespace PatchUtils
                     struct ROMUtils::SaveData saveData = CreatePatchSaveChunk(*patchAllocIter);
                     if(saveData.size + alignOffset + 12 > freeSpace.size)
                     {
-                        delete saveData.data;
+                        delete[] saveData.data;
                         // this prevents re-compiling while the callback iterates over all free space regions smaller than what was needed here
                         // we do not include alignment offset because the alignment offset is different for every free space region
                         neededSizeMap[patchAllocIter->HookAddress] = saveData.size + 12;

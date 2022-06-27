@@ -74,7 +74,11 @@ namespace ROMUtils
         "TilesetPaletteDataChunkType",
         "EntityTile8x8DataChunkType",
         "EntityPaletteDataChunkType",
-        "EntitySetLoadTableChunkType"
+        "EntitySetLoadTableChunkType",
+        "AssortedGraphicListChunkType",
+        "AssortedGraphicTile8x8DataChunkType",
+        "AssortedGraphicmappingChunkType",
+        "AssortedGraphicPaletteChunkType"
     };
 
     bool ChunkTypeAlignment[CHUNK_TYPE_COUNT] = {
@@ -96,6 +100,10 @@ namespace ROMUtils
         true,  // EntityTile8x8DataChunkType
         true,  // EntityPaletteDataChunkType
         true,  // EntitySetLoadTableChunkType
+        false, // AssortedGraphicListChunkType         = '\x12',
+        true,  // AssortedGraphicTile8x8DataChunkType  = '\x13',
+        false, // AssortedGraphicmappingChunkType      = '\x14',
+        true,  // AssortedGraphicPaletteChunkType      = '\x15'
     };
 
     void StaticInitialization()
@@ -995,6 +1003,10 @@ allocationComplete:
                 singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal error: Chunk allocator created an invalidation chunk"));
             case SaveDataChunkType::PatchListChunk:
             case SaveDataChunkType::PatchChunk:
+            case SaveDataChunkType::AssortedGraphicListChunkType:
+            case SaveDataChunkType::AssortedGraphicPaletteChunkType:
+            case SaveDataChunkType::AssortedGraphicmappingChunkType:
+            case SaveDataChunkType::AssortedGraphicTile8x8DataChunkType:
                 continue; // the above chunk types are not associated with a modified pointer in main ROM
             default:;
             }
@@ -1276,10 +1288,12 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                         unsigned char *AnimatedTileSwitchInfoTable = singletonTilesets[i]->GetAnimatedTileSwitchTable();
                         memcpy(TempFile + i * 16 + WL4Constants::AnimatedTileSwitchInfoTable, (unsigned char*)AnimatedTileSwitchInfoTable, 16);
 
-                        // Reset size_of bgGFXLen and fgGBXLen
+                        // Reset bgGFXLen, bgGFXptr and fgGBXLen
                         int tilesetPtr = singletonTilesets[i]->getTilesetPtr();
                         int fgGFXLenaddr = singletonTilesets[i]->GetfgGFXlen();
                         *(int *) (TempFile + tilesetPtr + 4) = fgGFXLenaddr;
+                        unsigned int bgGFXdataaddr = singletonTilesets[i]->GetbgGFXptr();
+                        *(unsigned int *) (TempFile + tilesetPtr + 12) = bgGFXdataaddr | 0x800'0000;
                         int bgGFXLenaddr = singletonTilesets[i]->GetbgGFXlen();
                         *(int *) (TempFile + tilesetPtr + 16) = bgGFXLenaddr;
                         // don't needed, because this is done in the following internal pointers reset code
@@ -1309,8 +1323,9 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         std::vector<LevelComponents::Room*> rooms = currentLevel->GetRooms();
         for(unsigned int i = 0; i < rooms.size(); ++i)
         {
+            unsigned int newroomheaderAddr = roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader);
             struct LevelComponents::__RoomHeader *roomHeader = (struct LevelComponents::__RoomHeader*)
-                (ROMFileMetadata->ROMDataPtr + roomHeaderInROM + i * sizeof(struct LevelComponents::__RoomHeader));
+                (ROMFileMetadata->ROMDataPtr + newroomheaderAddr);
             unsigned int *layerDataPtrs = (unsigned int*) &roomHeader->Layer0Data;
             LevelComponents::Room *room = rooms[i];
             for(unsigned int j = 0; j < 4; ++j)
@@ -1326,6 +1341,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             struct LevelComponents::__RoomHeader newroomheader;
             memcpy(&newroomheader, roomHeader, sizeof(newroomheader));
             room->ResetRoomHeader(newroomheader);
+            room->SetRoomHeaderAddr(newroomheaderAddr);
         }
 
         // global history changed bool reset
@@ -1501,11 +1517,9 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         QVector<struct ChunkData> chunkData;
         for(unsigned int chunkAddr : chunks)
         {
-            unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMFileMetadata->ROMDataPtr + chunkAddr + 4);
-            unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMFileMetadata->ROMDataPtr + chunkAddr + 9) << 16;
             struct ChunkData cd = {
                 chunkAddr,
-                chunkLen + extLen + 12,
+                ROMUtils::GetChunkDataLength(chunkAddr) + 12,
                 static_cast<enum SaveDataChunkType>(ROMFileMetadata->ROMDataPtr[chunkAddr + 8])
             };
             chunkData.append(cd);
@@ -1631,9 +1645,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         {
             middle = (low + high) / 2;
             unsigned int existChunkAddr_Middle = existChunks[middle];
-            unsigned int existChunkSize_Middle =
-                    (*((unsigned short *)(ROMFileMetadata->ROMDataPtr + existChunkAddr_Middle + 4)) & 0xFFFF) |
-                    ((*(ROMFileMetadata->ROMDataPtr + existChunkAddr_Middle + 9) << 16) & 0xFF0000);
+            unsigned int existChunkSize_Middle =ROMUtils::GetChunkDataLength(existChunkAddr_Middle + 4);
 
             // exist chunk range: [existChunkAddr_Middle, existChunkAddr_Middle + 12 + existChunkSize_Middle)
             // new chunk range: [chunk_addr, chunk_addr + 12 + chunk_size)
@@ -1673,6 +1685,68 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         {
             path.replace("//", "/");
         }
+    }
+
+    /// <summary>
+    /// Get the length of data in an existing chunk
+    /// </summary>
+    /// <param name="chunkheaderAddr">
+    /// The address of an existing chunk.
+    /// </param>
+    /// <returns>
+    /// the length of the data in the chunk.
+    /// </returns>
+    unsigned int GetChunkDataLength(unsigned int chunkheaderAddr)
+    {
+        unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMFileMetadata->ROMDataPtr + chunkheaderAddr + 4);
+        unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMFileMetadata->ROMDataPtr + chunkheaderAddr + 9) << 16;
+        return chunkLen + extLen;
+    }
+
+    /// <summary>
+    /// Get the data of a palette's color element
+    /// </summary>
+    /// <param name="paletteElement">
+    /// The palette's color element.
+    /// </param>
+    /// <returns>
+    /// the data of the current color.
+    /// </returns>
+    unsigned short QRgbToData(QRgb paletteElement)
+    {
+        QColor tmp_color;
+        tmp_color.setRgb(paletteElement);
+
+        // RGB555 format: bbbbbgggggrrrrr
+        int b = (tmp_color.blue() >> 3) & 0x1F;
+        int g = (tmp_color.green() >> 3) & 0x1F;
+        int r = (tmp_color.red() >> 3) & 0x1F;
+        return (unsigned short) ((b << 10) | (g << 5) | r);
+    }
+
+    /// <summary>
+    /// Get the chunk type of the data is in a chunk
+    /// </summary>
+    /// <param name="DataAddr">
+    /// The address of the data.
+    /// </param>
+    /// <param name="chunkType">
+    /// return a correct chunk type if the data is inside a chunk.
+    /// </param>
+    /// <returns>
+    /// return false if the data is not in a chunk, it could be in vanilla rom data area or the chunk got corrupted
+    /// </returns>
+    bool GetChunkType(unsigned int DataAddr, SaveDataChunkType &chunkType)
+    {
+        if (DataAddr > WL4Constants::AvailableSpaceBeginningInROM)
+        {
+            if (ValidRATS(ROMFileMetadata->ROMDataPtr + DataAddr - 12))
+            {
+                chunkType = static_cast<SaveDataChunkType>(ROMFileMetadata->ROMDataPtr[DataAddr - 4]);
+                return true;
+            }
+        }
+        return false;
     }
 
 } // namespace ROMUtils

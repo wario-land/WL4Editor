@@ -14,7 +14,7 @@
 #include "LevelComponents/Entity.h"
 #include "LevelComponents/Layer.h"
 
-#define CHUNK_TYPE_COUNT 18
+#define CHUNK_TYPE_COUNT 0x16
 
 namespace ROMUtils
 {
@@ -22,7 +22,7 @@ namespace ROMUtils
     {
         unsigned int Length;
         QString FilePath;
-        unsigned char *ROMDataPtr;
+        unsigned char *ROMDataPtr = nullptr;
     };
 
     // Global variables
@@ -59,7 +59,11 @@ namespace ROMUtils
         TilesetPaletteDataChunkType           = '\x0E',
         EntityTile8x8DataChunkType            = '\x0F',
         EntityPaletteDataChunkType            = '\x10',
-        EntitySetLoadTableChunkType           = '\x11'
+        EntitySetLoadTableChunkType           = '\x11',
+        AssortedGraphicListChunkType         = '\x12',
+        AssortedGraphicTile8x8DataChunkType  = '\x13',
+        AssortedGraphicmappingChunkType      = '\x14',
+        AssortedGraphicPaletteChunkType      = '\x15'
     };
 
     enum ChunkAllocationStatus
@@ -94,25 +98,36 @@ namespace ROMUtils
 
     // Global functions
     void CleanUpTmpCurrentFileMetaData();
+
     unsigned int IntFromData(int address);
     unsigned int PointerFromData(int address);
+    unsigned int EndianReverse(unsigned int n);
+
     void Tile8x8DataXFlip(unsigned char *source, unsigned char *destination);
     void Tile8x8DataYFlip(unsigned char *source, unsigned char *destination);
+
     unsigned int PackScreen(unsigned short *screenCharData, unsigned short *&outputCompressedData, bool skipzeros = true);
     unsigned short *UnPackScreen(uint32_t address);
     unsigned char *LayerRLEDecompress(int address, size_t outputSize);
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
+
+    bool GetChunkType(unsigned int DataAddr, enum SaveDataChunkType &chunkType);
+    unsigned int GetChunkDataLength(unsigned int chunkheaderAddr);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);
+
     bool SaveFile(QString filePath, QVector<unsigned int> invalidationChunks,
         std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*, bool)> ChunkAllocator,
         std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback);
     bool SaveLevel(QString fileName);
+
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor = false);
+    unsigned short QRgbToData(QRgb paletteElement);
+
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySaveChunks(int GlobalEntityId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);
-    unsigned int EndianReverse(unsigned int n);
+
     QString SaveDataAnalysis();
     void StaticInitialization();
     bool WriteChunkSanityCheck(const struct SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks);

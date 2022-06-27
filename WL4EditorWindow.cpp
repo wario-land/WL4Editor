@@ -1,6 +1,7 @@
 ﻿#include "WL4EditorWindow.h"
 #include "Operation.h"
 #include "Dialog/PatchManagerDialog.h"
+#include "Dialog/GraphicManagerDialog.h"
 #include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
 #include "Themes.h"
@@ -255,6 +256,9 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         {
             delete ROMUtils::entities[i];
         }
+        ResetUndoHistory();
+        DeleteUndoHistoryGlobal();
+        ResetGlobalElementOperationIndexes();
     }
 
     // Set the program title
@@ -486,6 +490,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menu_clear_Entity_list->setEnabled(true);
         ui->actionClear_all->setEnabled(true);
         ui->actionPatch_Manager->setEnabled(true);
+        ui->actionGraphic_Manager->setEnabled(true);
         ui->actionEdit_Entity_EntitySet->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->loadLevelButton->setEnabled(true);
@@ -870,7 +875,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     }
 
     // Mark the layers as dirty
-    for (unsigned int i = 0; i < 4; ++i)
+    for (unsigned int i = 0; i < 3; ++i)
         currentRoom->GetLayer(i)->SetDirty(true);
 }
 
@@ -1187,6 +1192,7 @@ bool WL4EditorWindow::UnsavedChangesPrompt(QString str)
                 return false;
             }
             OutputWidget->PrintString(tr("Saved successfully!"));
+            return true;
         }
         else if (savePrompt.clickedButton() == discardButton)
         {
@@ -2315,3 +2321,25 @@ void WL4EditorWindow::on_actionRolling_Save_triggered()
         ui->actionRolling_Save->setChecked(value);
     }
 }
+
+/// <summary>
+/// Open the Graphic manager.
+/// </summary>
+void WL4EditorWindow::on_actionGraphic_Manager_triggered()
+{
+    // perform File save before using graphic manager in case some silly cases happen to cause ROM data corruption
+    // Check for unsaved operations
+    if (UnsavedChanges) // add an extra check so it will be faster to debug the dialog
+    {
+        if (!UnsavedChangesPrompt(tr("There are unsaved changes.\n"
+                                     "WL4Editor wants to save the Level and reload the ROM before using Graphic Manager to avoid potential ROM data corruption.\n"
+                                     "You can also discard all the unsaved changes. in this case, WL4Editor will directly reload the ROM.")))
+            return;
+        LoadROMDataFromFile(ROMUtils::ROMFileMetadata->FilePath);
+    }
+
+    // open graphic manager dialog
+    GraphicManagerDialog dialog(this);
+    dialog.exec();
+}
+

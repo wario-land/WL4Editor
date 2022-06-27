@@ -126,7 +126,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -284,6 +284,7 @@
      <string>Managers</string>
     </property>
     <addaction name="actionPatch_Manager"/>
+    <addaction name="actionGraphic_Manager"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -637,6 +638,14 @@
    </property>
    <property name="text">
     <string>Rolling Save</string>
+   </property>
+  </action>
+  <action name="actionGraphic_Manager">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Graphic Manager</string>
    </property>
   </action>
  </widget>

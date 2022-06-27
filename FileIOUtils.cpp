@@ -502,7 +502,43 @@ QString FileIOUtils::LoadROMFile(QString filePath)
 
     ROMUtils::ROMFileMetadata->Length = length;
     ROMUtils::ROMFileMetadata->FilePath = filePath;
+    if (ROMUtils::ROMFileMetadata->ROMDataPtr != nullptr)
+    {
+        delete[] ROMUtils::ROMFileMetadata->ROMDataPtr;
+    }
     ROMUtils::ROMFileMetadata->ROMDataPtr = (unsigned char *) ROMAddr;
 
     return "";
+}
+
+/// <summary>
+/// Quasi memcmp used to compare the differences of 2 Tile8x8 data
+/// </summary>
+/// <param name="_Buf1">
+/// The pointer point to the first buff.
+/// </param>
+/// <param name="_Buf2">
+/// The pointer point to the second buff.
+/// </param>
+/// <param name="_Size">
+/// The byte number to compare.
+/// </param>
+/// <return>
+/// the different byte number.
+/// </return>
+int FileIOUtils::quasi_memcmp(unsigned char *_Buf1, unsigned char *_Buf2, size_t _Size)
+{
+    size_t diff_counter = 0;
+    for (size_t i = 0; i < _Size; i++)
+    {
+        if ((_Buf1[i] & 0xF) != (_Buf2[i] & 0xF))
+        {
+            diff_counter++;
+        }
+        if ((_Buf1[i] & 0xF0) != (_Buf2[i] & 0xF0))
+        {
+            diff_counter++;
+        }
+    }
+    return diff_counter;
 }

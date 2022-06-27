@@ -6,9 +6,10 @@
 #include <QFileDevice>
 #include <QMessageBox>
 
+#include "WL4Constants.h"
 #include "ROMUtils.h"
 #include "FileIOUtils.h"
-#include "WL4Constants.h"
+#include "AssortedGraphicUtils.h"
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
 
@@ -61,6 +62,15 @@ TilesetEditDialog::~TilesetEditDialog()
 /// </param>
 void TilesetEditDialog::SetSelectedTile16(int tile16ID, bool resetscrollbar)
 {
+    if (tile16ID < 0)
+    {
+        tile16ID = 0;
+    }
+    else if (tile16ID >= Tile16DefaultNum)
+    {
+        tile16ID = Tile16DefaultNum - 1;
+    }
+
     IsSelectingTile16 = true;
 
     // Paint red Box to show selected Tile16
@@ -542,6 +552,11 @@ void TilesetEditDialog::CopyTile16AndUpdateGraphic(int from_Tile16, int To_Tile1
 /// </param>
 void TilesetEditDialog::UpdateATile8x8ForSelectedTile16InTilesetData(int tile16Id, int newTile8x8_Id, int position, int new_paletteIndex, bool xflip, bool yflip)
 {
+    if (tile16Id < 0)
+    {
+        return;
+    }
+
     // Update Data
     LevelComponents::TileMap16* tile16Data = tilesetEditParams->newTileset->GetMap16arrayPtr()[tile16Id];
     tile16Data->ResetTile8x8(tilesetEditParams->newTileset->GetTile8x8arrayPtr()[newTile8x8_Id], position & 3, newTile8x8_Id, new_paletteIndex, xflip, yflip);
@@ -1059,6 +1074,7 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
                     return;
                 }
             }
+            delete[] tmp_current_tile8x8_data;
         });
 
     // update graphicview
@@ -1104,6 +1120,16 @@ QVector<int> TilesetEditDialog::FindUnusedPalettes()
 /// </summary>
 void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
 {
+    // ask user if eliminate similar tiles to reduce more tiles
+    bool ok;
+    int diff_upbound = QInputDialog::getInt(this,
+                                              tr("WL4Editor"),
+                                              tr("Input a number to eliminate similar tiles to reducing tiles aggressively.\n"
+                                                 "use a bigger number to reduce more tiles. but Tile16s' quality will drop more.\n"
+                                                 "do strictly tile reduce by set 0 here."),
+                                              0, 0, 64, 1, &ok);
+    if (!ok) return;
+
     LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
     int existingTile8x8Num = tmp_newTilesetPtr->GetfgGFXlen() / 32;
     unsigned char newtmpdata[32];
@@ -1133,31 +1159,31 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
         // loop from the first blank tile to the tile right before the current tile being checked, excluding those animated tiles
         for (int j = 0; j < i; j++)
         {
-            int result0 = memcmp(newtmpdata, &tmp_current_tile8x8_data[j * 32], 32);
-            int result1 = memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
-            int result2 = memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
-            int result3 = memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result0 = FileIOUtils::quasi_memcmp(newtmpdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result1 = FileIOUtils::quasi_memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result2 = FileIOUtils::quasi_memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            int result3 = FileIOUtils::quasi_memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
             bool find_eqaul = false;
             bool xflip = false;
             bool yflip = false;
             auto tile16array = tmp_newTilesetPtr->GetMap16arrayPtr();
             auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
 
-            if (!result0)
+            if (result0 <= diff_upbound)
             {
                 find_eqaul = true;
             }
-            else if (!result1)
+            else if (result1 <= diff_upbound)
             {
                 find_eqaul = true;
                 xflip = true;
             }
-            else if (!result2)
+            else if (result2 <= diff_upbound)
             {
                 find_eqaul = true;
                 yflip = true;
             }
-            else if (!result3)
+            else if (result3 <= diff_upbound)
             {
                 find_eqaul = true;
                 xflip = true;
@@ -1195,6 +1221,7 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
             }
         }
     }
+    delete[] tmp_current_tile8x8_data;
 
     // update graphicview
     ReRenderTile16Map();
@@ -1203,3 +1230,116 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
     SetSelectedTile8x8(0, true);
 }
 
+/// <summary>
+/// Change BG Tile8x8 set and the last palette by searching legal assorted graphic entries.
+/// </summary>
+void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
+{
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> graphicEntries = AssortedGraphicUtils::GetAssortedGraphicsFromROM();
+
+    // Open a dialog to let user to choose a graphic entry
+    if (!graphicEntries.size())
+    {
+        QMessageBox::information(this, tr("Error"), tr("Cannot find graphic entry from the ROM!"));
+        return;
+    }
+
+    LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
+    int fgTileNum = tmp_newTilesetPtr->GetfgGFXlen() / 32;
+    QStringList items;
+    for (int i = 0; i < graphicEntries.size(); i++)
+    {
+        // incorrect tile data type
+        if (graphicEntries[i].TileDataType != AssortedGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg)
+        {
+            continue;
+        }
+
+        // the new bg tiles will overwrite the existing fg tiles
+        if ((graphicEntries[i].TileDataRAMOffsetNum + 0x200) <= (fgTileNum + 0x40))
+        {
+            continue;
+        }
+
+        // check if the palettes used by bg tiles are occupied by foreground Tile16s
+        QVector<int> unusedpal = FindUnusedPalettes();
+        bool skipthisentry = false;
+        for (int j = 0; j < graphicEntries[i].PaletteNum; j++)
+        {
+            if (!unusedpal.contains(graphicEntries[i].PaletteRAMOffsetNum + j))
+            {
+                skipthisentry = true;
+                break;
+            }
+        }
+        if (skipthisentry) continue;
+
+        // available entries need to be pushed into the list
+        // split the string with " " and we can always get the correct id on the first slice.
+        items << QString(QString::number(i) + "  " + graphicEntries[i].TileDataName + " - " + graphicEntries[i].MappingDataName);
+    }
+
+    // if the size == 0, the dialog will become a regular inputbox
+    if (!items.size())
+    {
+        QMessageBox::information(this, tr("Error"), tr("Cannot find any graphic entry suitable for the current Tileset!\n"
+                                                       "only when the current Tileset has corresponding unused palettes used by graphics,\n"
+                                                       "then you can import the tiles."));
+        return;
+    }
+
+    QInputDialog dialog;
+    dialog.setOptions(QInputDialog::UseListViewForComboBoxItems);
+    dialog.setComboBoxItems(items);
+    dialog.setLabelText(tr("Select a graphic entry to use its background tiles."));
+    dialog.setWindowTitle("WL4Editor");
+    int bgTileNum = tmp_newTilesetPtr->GetbgGFXlen() / 32;
+    if(dialog.exec() == QDialog::Accepted)
+    {
+        // cleanup old bg tile instances
+        LevelComponents::Tile8x8 *blanktile = tmp_newTilesetPtr->GetblankTile();
+        for (int n = 0; n < bgTileNum; n++)
+        {
+            LevelComponents::Tile8x8 *tile = tmp_newTilesetPtr->GetTile8x8arrayPtr()[0x5FE - n];
+            if(tile != blanktile)
+                delete tile;
+            tilesetEditParams->newTileset->SetTile8x8(blanktile, 0x5FE - n);
+        }
+
+        // instanciate new tiles and put them into the Tileset
+        QStringList result = dialog.textValue().split(QChar(' '), Qt::SkipEmptyParts);
+        unsigned int id = result.at(0).toUInt(nullptr, 10);
+
+        unsigned char newtmpdata[32];
+        unsigned int bgTileNum = graphicEntries[id].TileDataSizeInByte / 32;
+        unsigned int startId = graphicEntries[id].TileDataRAMOffsetNum + 0x200;
+        for(int i = 0; i < bgTileNum; ++i)
+        {
+            memcpy(newtmpdata, graphicEntries[id].tileData.data() + 32 * i, 32);
+            OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(startId + i, newtmpdata);
+        }
+
+        // Reset the palette(s) according to the entry
+        int changepalId = graphicEntries[id].PaletteRAMOffsetNum;
+        int palettenum = graphicEntries[id].PaletteNum;
+        for (int n = 0; n < palettenum; n++)
+        {
+            for (int i = 1; i < 16; i++)
+            {
+                tmp_newTilesetPtr->SetColor(changepalId + n, i, graphicEntries[id].palettes[changepalId + n][i]);
+            }
+        }
+
+        // update settings in the new tileset instance
+        tmp_newTilesetPtr->SetbgGFXlen(graphicEntries[id].TileDataSizeInByte);
+        tmp_newTilesetPtr->SetbgGFXptr(graphicEntries[id].TileDataAddress);
+
+        // update all the graphicviews
+        ResetPaletteBarGraphicView(SelectedPaletteId);
+        SetSelectedColorId(0);
+        ReRenderTile16Map();
+        ReRenderTile8x8Map(SelectedPaletteId);
+        SetSelectedTile16(0, true);
+        SetSelectedTile8x8(0, true);
+    }
+}

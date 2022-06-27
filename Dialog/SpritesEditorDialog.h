@@ -32,6 +32,8 @@ class SpritesEditorDialog : public QDialog
 public:
     explicit SpritesEditorDialog(QWidget *parent, DialogParams::EntitiesAndEntitySetsEditParams *entitiesAndEntitySetsEditParams);
     ~SpritesEditorDialog();
+    static void StaticInitialization();
+
     void SetSelectedEntityColorId(int colorID);
     void SetSelectedEntityPaletteId(int paletteID);
     void SetColor(int paletteId, int colorId);
