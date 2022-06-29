@@ -1,11 +1,14 @@
 ﻿#include "WL4EditorWindow.h"
+
+#include "SettingsUtils.h"
+#include "Themes.h"
+#include "ROMUtils.h"
+#include "FileIOUtils.h"
 #include "Operation.h"
+
 #include "Dialog/PatchManagerDialog.h"
 #include "Dialog/GraphicManagerDialog.h"
-#include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
-#include "Themes.h"
-#include "FileIOUtils.h"
 
 #include <cstdio>
 #include <deque>
@@ -260,6 +263,9 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         DeleteUndoHistoryGlobal();
         ResetGlobalElementOperationIndexes();
     }
+
+    // Load the Project settings
+    SettingsUtils::ParseProjectSettings();
 
     // Set the program title
     std::string fileName = filePath.substr(filePath.rfind('/') + 1);

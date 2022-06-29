@@ -2,8 +2,6 @@
 #define SETTINGSUTILS_H
 
 #include <QCoreApplication>
-#include <QFileInfo>
-#include <QSettings>
 #include <QString>
 #include <QVector>
 
@@ -55,9 +53,17 @@ namespace SettingsUtils
     };
     // clang-format on
 
+    // functions
     void InitProgramSetupPath(QCoreApplication &application);
     void SetKey(enum IniKeys key, QString value);
     QString GetKey(enum IniKeys key);
+    // ---------------------------------------------------------------
+    // Project Settings
+    extern QString ProjectSettingFilePath;
+
+    // functions
+    void ParseProjectSettings();
+
 }; // namespace SettingsUtils
 
 #endif // SETTINGSUTILS_H

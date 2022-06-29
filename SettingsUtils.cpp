@@ -1,12 +1,25 @@
 #include "SettingsUtils.h"
+#include "ROMUtils.h"
+#include "ScriptInterface.h"
+
+#include <QDir>
+#include <QFileInfo>
+#include <QSettings>
+#include <QJsonParseError>
+#include <QJsonDocument>
+#include <QJsonObject>
+
+#include "WL4EditorWindow.h"
+extern WL4EditorWindow *singleton;
 
 namespace SettingsUtils
 {
     // Global variables
     QString ProgramSettingFilePath;
+    QString ProjectSettingFilePath;
 
     /// <summary>
-    /// Initialize ini file path and check the ini file.
+    /// Initialize editor's ini file path and check the ini file.
     /// </summary>
     void InitProgramSetupPath(QCoreApplication &application)
     {
@@ -51,5 +64,56 @@ namespace SettingsUtils
     {
         QSettings WL4EditorIni(ProgramSettingFilePath, QSettings::IniFormat);
         return WL4EditorIni.value(KeyStringSet[key]).toString();
+    }
+
+    /// <summary>
+    /// Load and parse the current project setting file
+    /// create the file if it does not exist.
+    /// </summary>
+    void ParseProjectSettings()
+    {
+        // generate json for new project
+        QJsonObject json;
+        json.insert("test-key", true);
+        QFileInfo curROMFileInfo(ROMUtils::ROMFileMetadata->FilePath);
+        QString projectSettingFilePath = QFileInfo(curROMFileInfo).dir().path() +
+                "/" + curROMFileInfo.completeBaseName() + ".json";
+
+        QFileInfo fileInfo(projectSettingFilePath);
+        if (!fileInfo.isFile())
+        {
+            // create file
+            QFile newFile(projectSettingFilePath);
+            newFile.open(QIODevice::ReadWrite);
+            newFile.write(QJsonDocument(json).toJson());
+            newFile.close();
+        }
+        ProjectSettingFilePath = projectSettingFilePath;
+
+        // Read file
+        QJsonParseError json_error;
+        QJsonObject jsonObj;
+        QFile loadFile(projectSettingFilePath);
+        loadFile.open(QIODevice::ReadWrite);
+        QByteArray saveData = loadFile.readAll();
+        loadFile.close();
+        QJsonDocument settingJsonDoc(QJsonDocument::fromJson(saveData, &json_error));
+        if (json_error.error == QJsonParseError::NoError)
+        {
+            if (settingJsonDoc.isObject())
+            {
+                jsonObj = settingJsonDoc.object();
+            }
+        }
+
+        // send project settings to WL4Editor
+        if (jsonObj.contains("test-key"))
+        {
+            QJsonValue value = jsonObj.take("test-key");
+            if (value.toBool() == true)
+            {
+                singleton->GetOutputWidgetPtr()->PrintString("test-key: true");
+            }
+        }
     }
 } // namespace SettingsUtils
