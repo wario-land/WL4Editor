@@ -212,8 +212,9 @@ void WL4EditorWindow::OpenROM()
         return;
 
     // Select a ROM file to open
+    QString openROMFileInitPath = SettingsUtils::GetKey(SettingsUtils::IniKeys::OpenRomInitPath);
     QString qFilePath =
-        QFileDialog::getOpenFileName(this, tr("Open ROM file"), dialogInitialPath, tr("GBA ROM files (*.gba)"));
+        QFileDialog::getOpenFileName(this, tr("Open ROM file"), openROMFileInitPath, tr("GBA ROM files (*.gba)"));
     if (!qFilePath.compare(""))
     {
         return;
@@ -241,6 +242,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         return;
     }
     dialogInitialPath = QFileInfo(qFilePath).dir().path();
+    SettingsUtils::SetKey(SettingsUtils::IniKeys::OpenRomInitPath, dialogInitialPath);
 
     // Clean-up
     if (CurrentLevel)

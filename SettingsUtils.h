@@ -25,6 +25,7 @@ namespace SettingsUtils
      * EditorThemeId    = string (convert to int after being read)
      * RollingSaveLimit = string (convert to int as the number of temp files the editor will keep)
      *                      (set 0 to disable this feature, set -1 to save infinite temp files)
+     * OpenRomInitPath  = path
      */
     enum IniKeys
     {
@@ -36,6 +37,7 @@ namespace SettingsUtils
         RecentROMPath_4            = 5,
         EditorThemeId              = 6,
         RollingSaveLimit           = 7,
+        OpenRomInitPath            = 8,
     };
 
     // Static Key QString set
@@ -50,6 +52,7 @@ namespace SettingsUtils
         "history/RecentROMPath_4",
         "settings/EditorThemeId",
         "settings/RollingSaveLimit",
+        "settings/OpenRomInitPath",
     };
     // clang-format on
 
