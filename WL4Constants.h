@@ -93,6 +93,9 @@ namespace WL4Constants
     const unsigned int BG_0x60ED78 = 0x60ED78;
 
     // vanilla BG Tile8x8 sets address
+    const unsigned int Tileset_BGTile_default_1 = 0x54b0bc;
+    const unsigned int Tileset_BGTile_default_1_size = 0x1840;
+
     const unsigned int Tileset_BGTile_0x00 = 0x4ea9bc;
     const unsigned int Tileset_BGTile_0x01 = 0x4ea9bc;
     const unsigned int Tileset_BGTile_0x02 = 0x4ee6dc;
@@ -134,7 +137,7 @@ namespace WL4Constants
     const unsigned int Tileset_BGTile_0x26 = 0x4fee1c;
     const unsigned int Tileset_BGTile_0x27 = 0x52515c;
     const unsigned int Tileset_BGTile_0x28 = 0x4fd4fc;
-    const unsigned int Tileset_BGTile_0x29 = 0x54b0bc;
+    const unsigned int Tileset_BGTile_0x29 = Tileset_BGTile_default_1;
     const unsigned int Tileset_BGTile_0x2A = 0x53ec5c;
     const unsigned int Tileset_BGTile_0x2B = 0x53ec5c;
     const unsigned int Tileset_BGTile_0x2C = 0x53ec5c;
@@ -159,14 +162,14 @@ namespace WL4Constants
     const unsigned int Tileset_BGTile_0x3F = 0x510abc;
     const unsigned int Tileset_BGTile_0x40 = 0x51df5c;
     const unsigned int Tileset_BGTile_0x41 = 0x53857c;
-    const unsigned int Tileset_BGTile_0x42 = 0x54b0bc;
+    const unsigned int Tileset_BGTile_0x42 = Tileset_BGTile_default_1;
     const unsigned int Tileset_BGTile_0x43 = 0x54e3bc;
-    const unsigned int Tileset_BGTile_0x44 = 0x54b0bc;
+    const unsigned int Tileset_BGTile_0x44 = Tileset_BGTile_default_1;
     const unsigned int Tileset_BGTile_0x45 = 0x54523c;
     const unsigned int Tileset_BGTile_0x46 = 0x54ab1c;
     const unsigned int Tileset_BGTile_0x47 = 0x4e851c;
-    const unsigned int Tileset_BGTile_0x48 = 0x54b0bc;
-    const unsigned int Tileset_BGTile_0x49 = 0x54b0bc;
+    const unsigned int Tileset_BGTile_0x48 = Tileset_BGTile_default_1;
+    const unsigned int Tileset_BGTile_0x49 = Tileset_BGTile_default_1;
     const unsigned int Tileset_BGTile_0x4A = 0x54e3bc;
     const unsigned int Tileset_BGTile_0x4B = 0x54e3bc;
     const unsigned int Tileset_BGTile_0x4C = 0x54e3bc;
