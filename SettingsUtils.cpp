@@ -7,7 +7,6 @@
 #include <QSettings>
 #include <QJsonParseError>
 #include <QJsonDocument>
-#include <QJsonObject>
 
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
@@ -70,11 +69,10 @@ namespace SettingsUtils
     /// Load and parse the current project setting file
     /// create the file if it does not exist.
     /// </summary>
-    void ParseProjectSettings()
+    void LoadProjectSettings()
     {
         // generate json for new project
         QJsonObject json;
-        json.insert("test-key", true);
         QFileInfo curROMFileInfo(ROMUtils::ROMFileMetadata->FilePath);
         QString projectSettingFilePath = QFileInfo(curROMFileInfo).dir().path() +
                 "/" + curROMFileInfo.completeBaseName() + ".json";
@@ -106,14 +104,42 @@ namespace SettingsUtils
             }
         }
 
-        // send project settings to WL4Editor
-        if (jsonObj.contains("test-key"))
+        // Load settings one by one, and send them into the runtime global variables of WL4Editor
+        QStringList list = jsonObj.keys();
+
+        // example to load key value pair
+        if (!list.contains("test-key"))
         {
-            QJsonValue value = jsonObj.take("test-key");
-            if (value.toBool() == true)
+            if (jsonObj["test-key"].isBool())
             {
+                // accept and apply the correct key - value pair
                 singleton->GetOutputWidgetPtr()->PrintString("test-key: true");
             }
+            else
+            {
+                goto test_key_insert;
+            }
         }
+        else
+        {
+test_key_insert:
+            // modify the key and value to the correct default contents
+            json.insert("test-key", true);
+        }
+
+        // TODO: add more project settings
+
+        // write the json obj back to the file to modify incorrect settings
+        SaveProjectSettings(json);
     }
+
+    void SaveProjectSettings(QJsonObject &jsonobj)
+    {
+        // test save
+        QFile newFile(ProjectSettingFilePath);
+        newFile.open(QIODevice::WriteOnly);
+        newFile.write(QJsonDocument(jsonobj).toJson());
+        newFile.close();
+    }
+
 } // namespace SettingsUtils

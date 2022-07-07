@@ -267,7 +267,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     }
 
     // Load the Project settings
-    SettingsUtils::ParseProjectSettings();
+    SettingsUtils::LoadProjectSettings();
 
     // Set the program title
     std::string fileName = filePath.substr(filePath.rfind('/') + 1);

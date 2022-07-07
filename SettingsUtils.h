@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QString>
 #include <QVector>
+#include <QJsonObject>
 
 namespace SettingsUtils
 {
@@ -65,7 +66,11 @@ namespace SettingsUtils
     extern QString ProjectSettingFilePath;
 
     // functions
-    void ParseProjectSettings();
+    void LoadProjectSettings();
+    void SaveProjectSettings(QJsonObject &jsonobj);
+
+    // helper functions
+
 
 }; // namespace SettingsUtils
 
