@@ -5,6 +5,7 @@
 #include <QString>
 #include <QVector>
 #include <QJsonObject>
+#include <QColor>
 
 namespace SettingsUtils
 {
@@ -65,12 +66,20 @@ namespace SettingsUtils
     // Project Settings
     extern QString ProjectSettingFilePath;
 
+    // expose the global variables
+    namespace projectSettings
+    {
+        extern QColor cameraboxcolor;
+        extern QColor cameraboxcolor_extended;
+    }
+
     // functions
     void LoadProjectSettings();
     void SaveProjectSettings(QJsonObject &jsonobj);
 
     // helper functions
-
+    QColor string2color(QString data);
+    QString color2string(QColor &color);
 
 }; // namespace SettingsUtils
 
