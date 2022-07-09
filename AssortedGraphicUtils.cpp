@@ -292,6 +292,15 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
     // Populate the chunk list with data to add to the ROM
     for(int i = 0; i < entries.size(); i++)
     {
+        // skip entries which has been used in Rooms and Tilesets
+        unsigned int dummy_uint;
+        if (!CheckEditability(entries[i], dummy_uint, dummy_uint, dummy_uint))
+        {
+            // we assume all the entries not used in Rooms and Tilesets are edited, and need to be re-processed
+            continue;
+        }
+
+        // chunks does not contain the things from the entries which should not be processed
         QVector<struct ROMUtils::SaveData> savedata = CreateSaveData(entries[i], i);
         chunks.append(savedata);
     }
@@ -300,15 +309,22 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
     QVector<unsigned int> invalidationChunks;
     if (removeGraphics.size())
     {
-        for(struct AssortedGraphicUtils::AssortedGraphicEntryItem &graphicEntry : removeGraphics)
+        for(int i = 0; i < removeGraphics.size(); i++)
         {
-            QVector<unsigned int> chunkaddrs = GetSaveDataAddresses(graphicEntry);
-            for (auto &i: chunkaddrs)
+            // skip entries which has been used in Rooms and Tilesets
+            unsigned int dummy_uint;
+            if (!CheckEditability(removeGraphics[i], dummy_uint, dummy_uint, dummy_uint))
+            {
+                continue;
+            }
+
+            QVector<unsigned int> chunkaddrs = GetSaveDataAddresses(removeGraphics[i]);
+            for (auto &j: chunkaddrs)
             {
                 // since people can use the same chunk in multiple entries
-                if (!invalidationChunks.contains(i))
+                if (!invalidationChunks.contains(j))
                 {
-                    invalidationChunks.append(i);
+                    invalidationChunks.append(j);
                 }
             }
         }
