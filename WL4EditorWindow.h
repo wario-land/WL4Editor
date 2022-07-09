@@ -5,8 +5,6 @@
 #include <QLabel>
 #include <QMainWindow>
 
-#include "SettingsUtils.h"
-
 #include "Dialog/ChooseLevelDialog.h"
 #include "Dialog/DoorConfigDialog.h"
 #include "Dialog/LevelConfigDialog.h"

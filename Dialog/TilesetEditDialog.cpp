@@ -185,6 +185,8 @@ void TilesetEditDialog::ClearTile16Data(int tile16ID)
     {
         UpdateATile8x8ForSelectedTile16InTilesetData(tile16ID, 0x40, i, 0, false, false);
     }
+    tilesetEditParams->newTileset->GetEventTablePtr()[tile16ID] = 0;
+    tilesetEditParams->newTileset->GetTerrainTypeIDTablePtr()[tile16ID] = 0;
 }
 
 void TilesetEditDialog::on_spinBox_valueChanged(int arg1)

@@ -292,6 +292,15 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
     // Populate the chunk list with data to add to the ROM
     for(int i = 0; i < entries.size(); i++)
     {
+        // skip entries which has been used in Rooms and Tilesets
+        unsigned int dummy_uint;
+        if (!CheckEditability(entries[i], dummy_uint, dummy_uint, dummy_uint))
+        {
+            // we assume all the entries not used in Rooms and Tilesets are edited, and need to be re-processed
+            continue;
+        }
+
+        // chunks does not contain the things from the entries which should not be processed
         QVector<struct ROMUtils::SaveData> savedata = CreateSaveData(entries[i], i);
         chunks.append(savedata);
     }
@@ -300,15 +309,22 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
     QVector<unsigned int> invalidationChunks;
     if (removeGraphics.size())
     {
-        for(struct AssortedGraphicUtils::AssortedGraphicEntryItem &graphicEntry : removeGraphics)
+        for(int i = 0; i < removeGraphics.size(); i++)
         {
-            QVector<unsigned int> chunkaddrs = GetSaveDataAddresses(graphicEntry);
-            for (auto &i: chunkaddrs)
+            // skip entries which has been used in Rooms and Tilesets
+            unsigned int dummy_uint;
+            if (!CheckEditability(removeGraphics[i], dummy_uint, dummy_uint, dummy_uint))
+            {
+                continue;
+            }
+
+            QVector<unsigned int> chunkaddrs = GetSaveDataAddresses(removeGraphics[i]);
+            for (auto &j: chunkaddrs)
             {
                 // since people can use the same chunk in multiple entries
-                if (!invalidationChunks.contains(i))
+                if (!invalidationChunks.contains(j))
                 {
-                    invalidationChunks.append(i);
+                    invalidationChunks.append(j);
                 }
             }
         }
@@ -581,4 +597,132 @@ QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphic
         }
     }
     return result;
+}
+
+/// <summary>
+/// Cehck if the current input entry can be changed or deleted.
+/// </summary>
+/// <param name="entry">
+/// The struct data of the graphic entry.
+/// </param>
+/// <param name="find_l">
+/// if the entry is found be used in a Room, then set the level id of that Room to find_l so the caller can get the value.
+/// </param>
+/// <param name="find_r">
+/// if the entry is found be used in a Room, then set the Room id to find_r so the caller can get the value.
+/// </param>
+/// <param name="find_t">
+/// if the entry is found be used in a Tileset, then set the Tileset id to find_t so the caller can get the value.
+/// </param>
+/// <returns>
+/// return true if the entry is not used in any Tilesets or Rooms.
+/// </returns>
+bool AssortedGraphicUtils::CheckEditability(AssortedGraphicEntryItem &entry, unsigned int &find_l, unsigned int &find_r, unsigned int &find_t)
+{
+    int tiledataaddr = entry.TileDataAddress;
+    find_t = -1;
+
+    // check if the entry is used in any Room
+    find_l = -1;
+    find_r = -1;
+    unsigned int mappingdataaddr = entry.MappingDataAddress;
+
+    if (mappingdataaddr >= WL4Constants::AvailableSpaceBeginningInROM && FindLayerptrInAllRooms(mappingdataaddr, &find_l, &find_r))
+    {
+        return false;
+    }
+
+    // check if the entry is used in any Tileset
+    if (tiledataaddr >= WL4Constants::AvailableSpaceBeginningInROM && FindbgGFXptrInAllTilesets(tiledataaddr, &find_t))
+    {
+        return false;
+    }
+    return true;
+}
+
+/// <summary>
+/// Find if a tile data chunk is used in any Tileset.
+/// </summary>
+/// <param name="address">
+/// The address of the tile data.
+/// </param>
+/// <param name="tilesetId_find">
+/// output the id of the tileset in which the bgGFXptr is found.
+/// </param>
+/// <returns>
+/// Return true if the data is found be used.
+/// </returns>
+bool AssortedGraphicUtils::FindbgGFXptrInAllTilesets(unsigned int address, unsigned int *tilesetId_find)
+{
+    // in case the return value is not initialzed in the caller
+    *tilesetId_find = -1;
+
+    // Go through all the Tilesets to see if tile data is used in any Tileset
+    for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
+    {
+        unsigned int addr = ROMUtils::singletonTilesets[i]->GetbgGFXptr();
+        if (addr == address)
+        {
+            *tilesetId_find = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+/// <summary>
+/// Find if a mapping data chunk is used in any Tileset.
+/// </summary>
+/// <param name="address">
+/// The address of the mapping data.
+/// </param>
+/// <param name="levelId">
+/// output the id of the Level in which the mapping data is found.
+/// </param>
+/// <param name="roomId">
+/// output the id of the Room in which the mapping data is found.
+/// </param>
+/// <returns>
+/// Return true if the data is found be used.
+/// </returns>
+bool AssortedGraphicUtils::FindLayerptrInAllRooms(unsigned int address, unsigned int *levelId_found, unsigned int *roomId_found)
+{
+    // in case the return value is not initialzed in the caller
+    *levelId_found = -1;
+    *roomId_found = -1;
+
+    // loop throough all the Rooms
+    QVector<unsigned int> levelid_array = {0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5};
+    QVector<unsigned int> roomid_array = {0, 2, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 4};
+    for (int i = 0; i < levelid_array.size(); i++)
+    {
+        LevelComponents::Level *tmpLevel = new LevelComponents::Level(static_cast<LevelComponents::__passage>(levelid_array[i]),
+                                                                      static_cast<LevelComponents::__stage>(roomid_array[i]));
+        for (int j = 0; j < tmpLevel->GetRooms().size(); j++)
+        {
+            LevelComponents::__RoomHeader header = tmpLevel->GetRooms()[j]->GetRoomHeader();
+            if ((header.Layer0MappingType & 0x30) == 0x20)
+            {
+                if ((header.Layer0Data & 0x7FFFFFF) == address)
+                {
+                    *levelId_found = levelid_array[i];
+                    *roomId_found = roomid_array[j];
+                    return true;
+                }
+            }
+            if ((header.Layer3MappingType & 0x30) == 0x20)
+            {
+                if ((header.Layer3Data & 0x7FFFFFF) == address)
+                {
+                    *levelId_found = levelid_array[i];
+                    *roomId_found = roomid_array[j];
+                    return true;
+                }
+            }
+        }
+
+        delete tmpLevel;
+    }
+
+    return false;
 }

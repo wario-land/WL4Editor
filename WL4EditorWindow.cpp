@@ -1,11 +1,14 @@
 ﻿#include "WL4EditorWindow.h"
+
+#include "SettingsUtils.h"
+#include "Themes.h"
+#include "ROMUtils.h"
+#include "FileIOUtils.h"
 #include "Operation.h"
+
 #include "Dialog/PatchManagerDialog.h"
 #include "Dialog/GraphicManagerDialog.h"
-#include "ROMUtils.h"
 #include "ui_WL4EditorWindow.h"
-#include "Themes.h"
-#include "FileIOUtils.h"
 
 #include <cstdio>
 #include <deque>
@@ -209,8 +212,9 @@ void WL4EditorWindow::OpenROM()
         return;
 
     // Select a ROM file to open
+    QString openROMFileInitPath = SettingsUtils::GetKey(SettingsUtils::IniKeys::OpenRomInitPath);
     QString qFilePath =
-        QFileDialog::getOpenFileName(this, tr("Open ROM file"), dialogInitialPath, tr("GBA ROM files (*.gba)"));
+        QFileDialog::getOpenFileName(this, tr("Open ROM file"), openROMFileInitPath, tr("GBA ROM files (*.gba)"));
     if (!qFilePath.compare(""))
     {
         return;
@@ -238,6 +242,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         return;
     }
     dialogInitialPath = QFileInfo(qFilePath).dir().path();
+    SettingsUtils::SetKey(SettingsUtils::IniKeys::OpenRomInitPath, dialogInitialPath);
 
     // Clean-up
     if (CurrentLevel)
@@ -260,6 +265,9 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         DeleteUndoHistoryGlobal();
         ResetGlobalElementOperationIndexes();
     }
+
+    // Load the Project settings
+    SettingsUtils::LoadProjectSettings();
 
     // Set the program title
     std::string fileName = filePath.substr(filePath.rfind('/') + 1);

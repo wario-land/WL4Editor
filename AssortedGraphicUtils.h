@@ -101,6 +101,11 @@ namespace AssortedGraphicUtils
     // savechunk relative functions
     QVector<unsigned int> GetSaveDataAddresses(AssortedGraphicEntryItem &entry);
     QVector<struct ROMUtils::SaveData> CreateSaveData(AssortedGraphicEntryItem &entry, unsigned int entryId);
+
+    // helper functions
+    bool CheckEditability(struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry, unsigned int &find_l, unsigned int &find_r, unsigned int &find_t);
+    bool FindbgGFXptrInAllTilesets(unsigned int address, unsigned int *tilesetId_find);
+    bool FindLayerptrInAllRooms(unsigned int address, unsigned int *levelId_found, unsigned int *roomId_found);
 };
 
 #endif // ASSORTEDGRAPHICUTILS_H

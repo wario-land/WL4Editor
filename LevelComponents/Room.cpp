@@ -1,6 +1,7 @@
 ﻿#include "Room.h"
 #include "ROMUtils.h"
 #include "WL4Constants.h"
+#include "SettingsUtils.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -489,8 +490,8 @@ namespace LevelComponents
             CameraLimitationPixmap.fill(Qt::transparent);
             QPainter CameraLimitationPainter(&CameraLimitationPixmap);
             CameraLimitationPainter.setRenderHint(QPainter::Antialiasing);
-            QPen CameraLimitationPen = QPen(QBrush(Qt::red), 2);
-            QPen CameraLimitationPen2 = QPen(QBrush(Qt::green), 2);
+            QPen CameraLimitationPen = QPen(QBrush(SettingsUtils::projectSettings::cameraboxcolor), 2);
+            QPen CameraLimitationPen2 = QPen(QBrush(SettingsUtils::projectSettings::cameraboxcolor_extended), 2);
             CameraLimitationPen.setJoinStyle(Qt::MiterJoin);
             CameraLimitationPen2.setJoinStyle(Qt::MiterJoin);
             CameraLimitationPainter.setPen(CameraLimitationPen);

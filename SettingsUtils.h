@@ -2,10 +2,10 @@
 #define SETTINGSUTILS_H
 
 #include <QCoreApplication>
-#include <QFileInfo>
-#include <QSettings>
 #include <QString>
 #include <QVector>
+#include <QJsonObject>
+#include <QColor>
 
 namespace SettingsUtils
 {
@@ -27,6 +27,7 @@ namespace SettingsUtils
      * EditorThemeId    = string (convert to int after being read)
      * RollingSaveLimit = string (convert to int as the number of temp files the editor will keep)
      *                      (set 0 to disable this feature, set -1 to save infinite temp files)
+     * OpenRomInitPath  = path
      */
     enum IniKeys
     {
@@ -38,6 +39,7 @@ namespace SettingsUtils
         RecentROMPath_4            = 5,
         EditorThemeId              = 6,
         RollingSaveLimit           = 7,
+        OpenRomInitPath            = 8,
     };
 
     // Static Key QString set
@@ -52,12 +54,33 @@ namespace SettingsUtils
         "history/RecentROMPath_4",
         "settings/EditorThemeId",
         "settings/RollingSaveLimit",
+        "settings/OpenRomInitPath",
     };
     // clang-format on
 
+    // functions
     void InitProgramSetupPath(QCoreApplication &application);
     void SetKey(enum IniKeys key, QString value);
     QString GetKey(enum IniKeys key);
+    // ---------------------------------------------------------------
+    // Project Settings
+    extern QString ProjectSettingFilePath;
+
+    // expose the global variables
+    namespace projectSettings
+    {
+        extern QColor cameraboxcolor;
+        extern QColor cameraboxcolor_extended;
+    }
+
+    // functions
+    void LoadProjectSettings();
+    void SaveProjectSettings(QJsonObject &jsonobj);
+
+    // helper functions
+    QColor string2color(QString data);
+    QString color2string(QColor &color);
+
 }; // namespace SettingsUtils
 
 #endif // SETTINGSUTILS_H
