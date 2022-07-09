@@ -117,7 +117,7 @@ namespace SettingsUtils
 
         //--------------------------------------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------------------------------------
-        // super long shitty logic to maintain project settings
+        // the logic to maintain project settings
         // example to load key value pair
         if (list.contains("test-key") && jsonObj["test-key"].isBool())
         {

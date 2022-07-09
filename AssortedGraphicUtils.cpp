@@ -605,6 +605,15 @@ QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphic
 /// <param name="entry">
 /// The struct data of the graphic entry.
 /// </param>
+/// <param name="find_l">
+/// if the entry is found be used in a Room, then set the level id of that Room to find_l so the caller can get the value.
+/// </param>
+/// <param name="find_r">
+/// if the entry is found be used in a Room, then set the Room id to find_r so the caller can get the value.
+/// </param>
+/// <param name="find_t">
+/// if the entry is found be used in a Tileset, then set the Tileset id to find_t so the caller can get the value.
+/// </param>
 /// <returns>
 /// return true if the entry is not used in any Tilesets or Rooms.
 /// </returns>
