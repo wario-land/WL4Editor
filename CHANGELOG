@@ -1,3 +1,13 @@
+0.14.1:
+(major changes)
+- Fix "the graphic manager will cause crash on both the WL4Editor and the game rom after the second save" (Issue #395)
+- Add project setting load and save feature, now users can modify the json file in the same folder of the gbs file to change project settings
+
+(minor changes)
+- Now the "Tileset import from another ROM" feature will use default bg tile data stuff to avoid potential conflicts caused by the Graphic Manager features (Issue #394)
+- Fix deleting Tile16 by pressing backspace or delete key in Tileset Editor cannot reset its terrain type and event id
+- Add OpenRomInitPath to the ini file (Issue #363)
+
 0.14.0:
 (major changes)
 - Resolve "opening a second rom will make the editor become unstable, which can also causes potential corruption in the rom file" (Issue #225)
