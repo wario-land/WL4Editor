@@ -21,6 +21,7 @@ namespace FileIOUtils
 
     // helper functions
     int quasi_memcmp(unsigned char *_Buf1, unsigned char *_Buf2, size_t _Size);
+    unsigned char *find_less_feature_buff(unsigned char *_Buf1, unsigned char *_Buf2, size_t _Size);
 } // namespace FileIOUtils
 
 #endif // FILEIOUTILS_H
