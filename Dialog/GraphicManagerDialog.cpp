@@ -1,4 +1,4 @@
-#include "GraphicManagerDialog.h"
+﻿#include "GraphicManagerDialog.h"
 #include "ui_GraphicManagerDialog.h"
 
 #include <QMessageBox>
@@ -571,7 +571,7 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
                 }
                 else if (id == tileId)
                 {
-                    // something went wrong in the previous code
+                    // something went wrong in the previous code if this part of code gets executed
                     // there should be no existance of the current tile when calling this function
                     // we just set it to use the default 0x3FF Tile8x8 and use the palette 0xF
                     tmpEntry.mappingData[w] = 0xF000 | 0x3FF;
@@ -1521,9 +1521,10 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
             bool ok;
             int diff_upbound = QInputDialog::getInt(this,
                                                       tr("WL4Editor"),
-                                                      tr("Input a number to eliminate similar tiles to reducing tiles aggressively.\n"
-                                                         "use a bigger number to reduce more tiles. but Tile16s' quality will drop more.\n"
-                                                         "do strictly tile reduce by set 0 here."),
+                                                    tr("Input a tolerance value for the number of different pixels between 2 Tile8x8.\n"
+                                                        "The editor will merge similar Tile8x8s to reduce tile count aggressively.\n"
+                                                        "Use a bigger value to reduce more tiles. However, the quality of the combined tiles will drop.\n"
+                                                        "To perform regular tile reduction, use a value of 0."),
                                                       0, 0, 64, 1, &ok);
             if (!ok) return;
 
@@ -1563,7 +1564,6 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
                     int find_tileid = j + constoffset;
 
                     int reserved_tileid = find_tileid;
-                    int discard_tileid = old_tileid;
 
                     int x_flip = 0;
                     int y_flip = 0;
@@ -1575,7 +1575,6 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
                         if (newtmpdata == FileIOUtils::find_less_feature_buff(newtmpdata, tile_data, 32))
                         {
                             reserved_tileid = old_tileid;
-                            discard_tileid = find_tileid;
                         }
                     }
                     else if (result1 <= diff_upbound)
@@ -1584,7 +1583,6 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
                         if (newtmpXFlipdata == FileIOUtils::find_less_feature_buff(newtmpXFlipdata, tile_data, 32))
                         {
                             reserved_tileid = old_tileid;
-                            discard_tileid = find_tileid;
                         }
                         x_flip = 1 << 10;
                     }
@@ -1594,7 +1592,6 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
                         if (newtmpYFlipdata == FileIOUtils::find_less_feature_buff(newtmpYFlipdata, tile_data, 32))
                         {
                             reserved_tileid = old_tileid;
-                            discard_tileid = find_tileid;
                         }
                         y_flip = 1 << 11;
                     }
@@ -1604,7 +1601,6 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
                         if (newtmpXYFlipdata == FileIOUtils::find_less_feature_buff(newtmpXYFlipdata, tile_data, 32))
                         {
                             reserved_tileid = old_tileid;
-                            discard_tileid = find_tileid;
                         }
                         x_flip = 1 << 10;
                         y_flip = 1 << 11;
@@ -1614,19 +1610,20 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
                     {
                         for (int w = 0; w < tmpEntry.mappingData.size(); w++)
                         {
-                            if ((tmpEntry.mappingData[w] & 0x3FF) == discard_tileid)
+                            if ((tmpEntry.mappingData[w] & 0x3FF) == old_tileid)
                             {
                                 int old_x_flip_state = tmpEntry.mappingData[w] & (1 << 10);
                                 int old_y_flip_state = tmpEntry.mappingData[w] & (1 << 11);
                                 mappingdata = 0xF << 12 |
                                              (y_flip ^ old_y_flip_state) |
                                              (x_flip ^ old_x_flip_state) |
-                                             (reserved_tileid & 0x3FF);
+                                             (find_tileid & 0x3FF);
                                 tmpEntry.mappingData[w] = mappingdata;
                             }
                         }
 
-                        // change the tmp_current_tile8x8_data
+                        // we need to change the tmp_current_tile8x8_data and tmpEntry.tileData
+                        // if the old_tileid needs to be reserved
                         if (reserved_tileid == old_tileid)
                         {
                             memcpy(&tmp_current_tile8x8_data[32 * j], newtmpdata, 32);
@@ -1634,12 +1631,12 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
                             int startid = tmpEntry.TileDataRAMOffsetNum;
                             for (int k = 0; k < 32; k++)
                             {
-                                tmpEntry.tileData[32 * (reserved_tileid - startid) + k] = newtmpdata[k];
+                                tmpEntry.tileData[32 * (find_tileid - startid) + k] = newtmpdata[k];
                             }
                         }
 
-                        // delete the Tile8x8 from the Tile8x8 set
-                        DeltmpEntryTile(discard_tileid);
+                        // delete the Tile8x8 from the tmpEntry's Tile8x8 set
+                        DeltmpEntryTile(old_tileid);
                         break;
                     }
                 }
