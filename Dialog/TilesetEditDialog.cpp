@@ -1125,11 +1125,12 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
     // ask user if eliminate similar tiles to reduce more tiles
     bool ok;
     int diff_upbound = QInputDialog::getInt(this,
-                                              tr("WL4Editor"),
-                                              tr("Input a number to eliminate similar tiles to reducing tiles aggressively.\n"
-                                                 "use a bigger number to reduce more tiles. but Tile16s' quality will drop more.\n"
-                                                 "do strictly tile reduce by set 0 here."),
-                                              0, 0, 64, 1, &ok);
+                                            tr("WL4Editor"),
+                                            tr("Input a tolerance value for the number of different pixels between 2 Tile8x8s.\n"
+                                               "The editor will merge similar Tile8x8s to reduce tile count aggressively.\n"
+                                               "Use a bigger value to reduce more tiles. However, the quality of the Tile16s will drop.\n"
+                                               "To perform regular tile reduction, use a value of 0."),
+                                            0, 0, 64, 1, &ok);
     if (!ok) return;
 
     LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
@@ -1157,43 +1158,78 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
         ROMUtils::Tile8x8DataXFlip(newtmpdata, newtmpXFlipdata);
         ROMUtils::Tile8x8DataYFlip(newtmpdata, newtmpYFlipdata);
         ROMUtils::Tile8x8DataYFlip(newtmpXFlipdata, newtmpXYFlipdata);
+        int old_tileid = i + 0x40;
 
         // loop from the first blank tile to the tile right before the current tile being checked, excluding those animated tiles
         for (int j = 0; j < i; j++)
         {
-            int result0 = FileIOUtils::quasi_memcmp(newtmpdata, &tmp_current_tile8x8_data[j * 32], 32);
-            int result1 = FileIOUtils::quasi_memcmp(newtmpXFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
-            int result2 = FileIOUtils::quasi_memcmp(newtmpYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
-            int result3 = FileIOUtils::quasi_memcmp(newtmpXYFlipdata, &tmp_current_tile8x8_data[j * 32], 32);
+            unsigned char tile_data[32];
+            memcpy(tile_data, &tmp_current_tile8x8_data[32 * j], 32);
+
+            int result0 = FileIOUtils::quasi_memcmp(newtmpdata, tile_data, 32);
+            int result1 = FileIOUtils::quasi_memcmp(newtmpXFlipdata, tile_data, 32);
+            int result2 = FileIOUtils::quasi_memcmp(newtmpYFlipdata, tile_data, 32);
+            int result3 = FileIOUtils::quasi_memcmp(newtmpXYFlipdata, tile_data, 32);
             bool find_eqaul = false;
             bool xflip = false;
             bool yflip = false;
             auto tile16array = tmp_newTilesetPtr->GetMap16arrayPtr();
             auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
 
+            int find_tileid = j + 0x40;
+            int reserved_tileid = find_tileid;
+
             if (result0 <= diff_upbound)
             {
                 find_eqaul = true;
+                if (newtmpdata == FileIOUtils::find_less_feature_buff(newtmpdata, tile_data, 32))
+                {
+                    reserved_tileid = old_tileid;
+                }
             }
             else if (result1 <= diff_upbound)
             {
                 find_eqaul = true;
+                if (newtmpXFlipdata == FileIOUtils::find_less_feature_buff(newtmpXFlipdata, tile_data, 32))
+                {
+                    reserved_tileid = old_tileid;
+                }
                 xflip = true;
             }
             else if (result2 <= diff_upbound)
             {
                 find_eqaul = true;
+                if (newtmpYFlipdata == FileIOUtils::find_less_feature_buff(newtmpYFlipdata, tile_data, 32))
+                {
+                    reserved_tileid = old_tileid;
+                }
                 yflip = true;
             }
             else if (result3 <= diff_upbound)
             {
                 find_eqaul = true;
+                if (newtmpXYFlipdata == FileIOUtils::find_less_feature_buff(newtmpXYFlipdata, tile_data, 32))
+                {
+                    reserved_tileid = old_tileid;
+                }
                 xflip = true;
                 yflip = true;
             }
 
             if (find_eqaul)
             {
+                // we need to change the tmp_current_tile8x8_data and tile8x8array
+                // if the old_tileid needs to be reserved
+                if (reserved_tileid == old_tileid)
+                {
+                    memcpy(&tmp_current_tile8x8_data[32 * j], newtmpdata, 32);
+
+                    LevelComponents::Tile8x8 *tmptile = tile8x8array[old_tileid];
+                    tile8x8array[old_tileid] = tile8x8array[find_tileid];
+                    tile8x8array[find_tileid] = tmptile;
+                }
+
+                // always replace the old_tileid instance with the find_tileid instance
                 for (int k = 0; k < Tile16DefaultNum; k++)
                 {
                     for (int pos = 0; pos < 4; pos++)
@@ -1201,7 +1237,7 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
                         bool tmp_xflip = xflip;
                         bool tmp_yflip = yflip;
                         auto tile8 = tile16array[k]->GetTile8X8(pos);
-                        if (tile8->GetIndex() == (i + 0x40))
+                        if (tile8->GetIndex() == old_tileid)
                         {
                             if (tile8->GetFlipX())
                             {
@@ -1211,14 +1247,14 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
                             {
                                 tmp_yflip = !yflip;
                             }
-                            tile16array[k]->ResetTile8x8(tile8x8array[j + 0x40], pos, j + 0x40,
+                            tile16array[k]->ResetTile8x8(tile8x8array[find_tileid], pos, find_tileid,
                                                          tile8->GetPaletteIndex(), tmp_xflip, tmp_yflip);
                         }
                     }
                 }
 
                 // delete the Tile8x8 from the Tile8x8 set
-                tilesetEditParams->newTileset->DelTile8x8(i + 0x40);
+                tilesetEditParams->newTileset->DelTile8x8(old_tileid);
                 break;
             }
         }

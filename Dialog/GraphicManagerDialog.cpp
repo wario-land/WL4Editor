@@ -1520,11 +1520,11 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
             // ask user if eliminate similar tiles to reduce more tiles
             bool ok;
             int diff_upbound = QInputDialog::getInt(this,
-                                                      tr("WL4Editor"),
-                                                    tr("Input a tolerance value for the number of different pixels between 2 Tile8x8.\n"
-                                                        "The editor will merge similar Tile8x8s to reduce tile count aggressively.\n"
-                                                        "Use a bigger value to reduce more tiles. However, the quality of the combined tiles will drop.\n"
-                                                        "To perform regular tile reduction, use a value of 0."),
+                                                    tr("WL4Editor"),
+                                                    tr("Input a tolerance value for the number of different pixels between 2 Tile8x8s.\n"
+                                                       "The editor will merge similar Tile8x8s to reduce tile count aggressively.\n"
+                                                       "Use a bigger value to reduce more tiles. However, the quality of the combined tiles will drop.\n"
+                                                       "To perform regular tile reduction, use a value of 0."),
                                                       0, 0, 64, 1, &ok);
             if (!ok) return;
 
@@ -1562,7 +1562,6 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
                     int result3 = FileIOUtils::quasi_memcmp(newtmpXYFlipdata, tile_data, 32);
                     bool find_eqaul = false;
                     int find_tileid = j + constoffset;
-
                     int reserved_tileid = find_tileid;
 
                     int x_flip = 0;
@@ -1608,6 +1607,7 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
 
                     if (find_eqaul)
                     {
+                        // always replace the old_tileid instance with the find_tileid instance
                         for (int w = 0; w < tmpEntry.mappingData.size(); w++)
                         {
                             if ((tmpEntry.mappingData[w] & 0x3FF) == old_tileid)
