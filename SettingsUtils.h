@@ -71,6 +71,12 @@ namespace SettingsUtils
     {
         extern QColor cameraboxcolor;
         extern QColor cameraboxcolor_extended;
+        extern QColor doorboxcolor;
+        extern QColor doorboxcolor_filling;
+        extern QColor doorboxcolorselected;
+        extern QColor doorboxcolorselected_filling;
+        extern QColor entityboxcolor;
+        extern QColor entityboxcolorselected;
     }
 
     // functions

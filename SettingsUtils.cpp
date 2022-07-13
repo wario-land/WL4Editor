@@ -69,8 +69,14 @@ namespace SettingsUtils
     // definition of project setting global variables
     namespace projectSettings
     {
-        QColor cameraboxcolor = QColor(255, 0, 0);
-        QColor cameraboxcolor_extended = QColor(0, 255, 0);
+        QColor cameraboxcolor = QColor(0xFF, 0, 0);
+        QColor cameraboxcolor_extended = QColor(0, 0xFF, 0);
+        QColor doorboxcolor = QColor(0, 0, 0xFF);
+        QColor doorboxcolor_filling = QColor(0, 0, 0xFF, 0x5F);
+        QColor doorboxcolorselected = QColor(0, 0xFF, 0xFF);  // cyan
+        QColor doorboxcolorselected_filling = QColor(0, 0xFF, 0xFF, 0x5F);
+        QColor entityboxcolor = QColor(0xFF, 0xFF, 0);
+        QColor entityboxcolorselected = QColor(0xFF, 0x7F, 0);
     }
 
     /// <summary>
@@ -119,28 +125,68 @@ namespace SettingsUtils
         //--------------------------------------------------------------------------------------------------------------
         // the logic to maintain project settings
         // example to load key value pair
-        if (list.contains("test-key") && jsonObj["test-key"].isBool())
+        QString key = "test-key";
+        if (list.contains(key) && jsonObj[key].isBool())
         {
             // accept and apply the correct key - value pair
             singleton->GetOutputWidgetPtr()->PrintString("project setting file loaded correctly.");
         }
         // modify the key and value to the correct default contents, and write the value we read to the new json, so it is always clean
-        json.insert("test-key", true);
+        json.insert(key, true);
 
         // camera box render color settings
-        if (list.contains("camerabox_render_color") && jsonObj["camerabox_render_color"].isString())
+        key = "camerabox_render_color";
+        if (list.contains(key) && jsonObj[key].isString())
         {
-            projectSettings::cameraboxcolor = string2color(jsonObj["camerabox_render_color"].toString());
+            projectSettings::cameraboxcolor = string2color(jsonObj[key].toString());
         }
-        json.insert("camerabox_render_color", color2string(projectSettings::cameraboxcolor));
-
-        // camera box render color extended settings
-        if (list.contains("camerabox_render_color_extended") && jsonObj["camerabox_render_color_extended"].isString())
+        json.insert(key, color2string(projectSettings::cameraboxcolor));
+        key = "camerabox_render_color_extended";
+        if (list.contains(key) && jsonObj[key].isString())
         {
-            projectSettings::cameraboxcolor_extended = string2color(jsonObj["camerabox_render_color_extended"].toString());
+            projectSettings::cameraboxcolor_extended = string2color(jsonObj[key].toString());
         }
-        json.insert("camerabox_render_color_extended", color2string(projectSettings::cameraboxcolor_extended));
+        json.insert(key, color2string(projectSettings::cameraboxcolor_extended));
 
+        // door box render color settings
+        key = "doorbox_render_color";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            projectSettings::doorboxcolor = string2color(jsonObj[key].toString());
+        }
+        json.insert(key, color2string(projectSettings::doorboxcolor));
+        key = "doorbox_filling_render_color";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            projectSettings::doorboxcolor_filling = string2color(jsonObj[key].toString());
+        }
+        json.insert(key, color2string(projectSettings::doorboxcolor_filling));
+        key = "doorbox_selected_render_color";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            projectSettings::doorboxcolorselected = string2color(jsonObj[key].toString());
+        }
+        json.insert(key, color2string(projectSettings::doorboxcolorselected));
+        key = "doorbox_selected_filling_render_color";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            projectSettings::doorboxcolorselected_filling = string2color(jsonObj[key].toString());
+        }
+        json.insert(key, color2string(projectSettings::doorboxcolorselected_filling));
+
+        // entity box render color settings
+        key = "entitybox_render_color";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            projectSettings::entityboxcolor = string2color(jsonObj[key].toString());
+        }
+        json.insert(key, color2string(projectSettings::entityboxcolor));
+        key = "entitybox_selected_render_color";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            projectSettings::entityboxcolorselected = string2color(jsonObj[key].toString());
+        }
+        json.insert(key, color2string(projectSettings::entityboxcolorselected));
 
         // TODO: add more project settings
 
@@ -170,7 +216,12 @@ namespace SettingsUtils
         unsigned int r = colordata[0].toUInt(nullptr, 16);
         unsigned int g = colordata[1].toUInt(nullptr, 16);
         unsigned int b = colordata[2].toUInt(nullptr, 16);
-        return QColor(r, g, b);
+        unsigned int a = 0xFF;
+        if (colordata.size() > 3)
+        {
+            a = colordata[3].toUInt(nullptr, 16);
+        }
+        return QColor(r, g, b, a);
     }
 
     /// <summary>
@@ -179,7 +230,8 @@ namespace SettingsUtils
     QString color2string(QColor &color)
     {
         // use RGB888 in both QColor and int
-        return QString::number(color.red(), 16) + "," + QString::number(color.green(), 16) + "," + QString::number(color.blue(), 16);
+        return QString::number(color.red(), 16) + "," + QString::number(color.green(), 16) +
+                "," + QString::number(color.blue(), 16) + "," + QString::number(color.alpha(), 16);
     }
 
 } // namespace SettingsUtils

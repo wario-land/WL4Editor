@@ -448,7 +448,7 @@ namespace LevelComponents
             QPixmap doorPixmap(sceneWidth, sceneHeight);
             doorPixmap.fill(Qt::transparent);
             QPainter doorPainter(&doorPixmap);
-            QPen DoorPen = QPen(QBrush(Qt::blue), 2);
+            QPen DoorPen = QPen(QBrush(SettingsUtils::projectSettings::doorboxcolor), 2);
             DoorPen.setJoinStyle(Qt::MiterJoin);
             doorPainter.setPen(DoorPen);
             for (unsigned int i = 0; i < doors.size(); i++)
@@ -459,18 +459,18 @@ namespace LevelComponents
                 int doorHeight = (qAbs(doors[i]->GetY1() - doors[i]->GetY2()) + 1) * 16;
                 if (i == renderParams->SelectedDoorID)
                 {
-                    QPen DoorPen2 = QPen(QBrush(Qt::cyan), 2);
+                    QPen DoorPen2 = QPen(QBrush(SettingsUtils::projectSettings::doorboxcolorselected), 2);
                     DoorPen2.setJoinStyle(Qt::MiterJoin);
                     doorPainter.setPen(DoorPen2);
                     doorPainter.drawRect(doorX, doorY, doorWidth, doorHeight);
                     doorPainter.fillRect(doorX + 1, doorY + 1, doorWidth - 2, doorHeight - 2,
-                                         QColor(0, 0xFF, 0xFF, 0x5F));
+                                         SettingsUtils::projectSettings::doorboxcolorselected_filling);
                     doorPainter.setPen(DoorPen);
                 }
                 else
                 {
                     doorPainter.drawRect(doorX, doorY, doorWidth, doorHeight);
-                    doorPainter.fillRect(doorX + 1, doorY + 1, doorWidth - 2, doorHeight - 2, QColor(0, 0, 0xFF, 0x5F));
+                    doorPainter.fillRect(doorX + 1, doorY + 1, doorWidth - 2, doorHeight - 2, SettingsUtils::projectSettings::doorboxcolor_filling);
                 }
             }
             QGraphicsPixmapItem *doorpixmapItem;
@@ -598,14 +598,14 @@ namespace LevelComponents
             QPixmap EntityBoxPixmap(sceneWidth, sceneHeight);
             EntityBoxPixmap.fill(Qt::transparent);
             QPainter EntityBoxPainter(&EntityBoxPixmap);
-            QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0xFF)), 2);
+            QPen EntityBoxPen = QPen(QBrush(SettingsUtils::projectSettings::entityboxcolor), 2);
             EntityBoxPen.setJoinStyle(Qt::MiterJoin);
             EntityBoxPainter.setPen(EntityBoxPen);
             for (int i = 0; i < (int) EntityList[currentDifficulty].size(); ++i)
             {
                 if (i == renderParams->SelectedEntityID)
                 {
-                    QPen EntityBoxPen2 = QPen(QBrush(QColor(0xFF, 0x7F, 0, 0xFF)), 2);
+                    QPen EntityBoxPen2 = QPen(QBrush(SettingsUtils::projectSettings::entityboxcolorselected), 2);
                     EntityBoxPen2.setJoinStyle(Qt::MiterJoin);
                     EntityBoxPainter.setPen(EntityBoxPen2);
                     EntityBoxPainter.drawRect(16 * EntityList[currentDifficulty][i].XPos,
