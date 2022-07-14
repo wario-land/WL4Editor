@@ -263,9 +263,6 @@ namespace LevelComponents
     {
         int sceneWidth = Width * 16, sceneHeight = Height * 16;
         int Z = 0;
-        std::vector<int> eventidwithhiddencoin = {
-            0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C
-        }; // TODO: There perhaps will be more
         switch (renderParams->type)
         {
         case FullRender:
@@ -632,37 +629,39 @@ namespace LevelComponents
                 RenderedLayers[4]->setPixmap(EntityBoxPixmap);
             }
 
-            // Render hidden coins layer
-            QPixmap hiddencoinsPixmap(sceneWidth, sceneHeight);
-            hiddencoinsPixmap.fill(Qt::transparent);
-            QPainter hiddencoinsPainter(&hiddencoinsPixmap);
-            QPen hiddencionBoxPen = QPen(QBrush(QColor(255, 153, 18, 0xFF)), 2); // chrome yellow
-            hiddencionBoxPen.setJoinStyle(Qt::MiterJoin);
-            hiddencoinsPainter.setPen(hiddencionBoxPen);
+            // Extra hint layer
+            QPixmap extrahintPixmap(sceneWidth, sceneHeight);
+            extrahintPixmap.fill(Qt::transparent);
+            QPainter extrahintPainter(&extrahintPixmap);
+            QPen exytahintBoxPen = QPen(QBrush(SettingsUtils::projectSettings::extraEventIDhintboxcolor), 2); // chrome yellow
+            exytahintBoxPen.setJoinStyle(Qt::MiterJoin);
+            extrahintPainter.setPen(exytahintBoxPen);
             unsigned short *Layer1data = layers[1]->GetLayerData();
             unsigned short *eventtable = tileset->GetEventTablePtr();
+            unsigned char *terraintable = tileset->GetTerrainTypeIDTablePtr();
             for (uint j = 0; j < Height; ++j)
             {
                 for (uint i = 0; i < Width; ++i)
                 {
                     int val = eventtable[Layer1data[j * Width + i]];
-                    if (std::find(eventidwithhiddencoin.begin(), eventidwithhiddencoin.end(), val) !=
-                        eventidwithhiddencoin.end())
+                    if (std::find(SettingsUtils::projectSettings::extraEventIDhinteventids.begin(),
+                                  SettingsUtils::projectSettings::extraEventIDhinteventids.end(), val) !=
+                                        SettingsUtils::projectSettings::extraEventIDhinteventids.end())
                     {
-                        hiddencoinsPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
+                        extrahintPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
                     }
                 }
             }
-            QGraphicsPixmapItem *hiddencoinspixmapItem;
+            QGraphicsPixmapItem *extrahintpixmapItem;
             if (!RenderedLayers[12] || renderParams->type == FullRender)
             {
-                hiddencoinspixmapItem = scene->addPixmap(hiddencoinsPixmap);
-                hiddencoinspixmapItem->setZValue(Z++);
-                RenderedLayers[12] = hiddencoinspixmapItem;
+                extrahintpixmapItem = scene->addPixmap(extrahintPixmap);
+                extrahintpixmapItem->setZValue(Z++);
+                RenderedLayers[12] = extrahintpixmapItem;
             }
             else
             {
-                RenderedLayers[12]->setPixmap(hiddencoinsPixmap);
+                RenderedLayers[12]->setPixmap(extrahintPixmap);
             }
         }
 
@@ -745,7 +744,7 @@ namespace LevelComponents
                 }
                 RenderedLayers[7]->setVisible(layerVisibility->alphaBlendingEnabled);
             }
-            RenderedLayers[12]->setVisible(layerVisibility->hiddencoinsEnabled);
+            RenderedLayers[12]->setVisible(layerVisibility->ExtraHintsEnabled);
         }
             return scene;
         case TileChanges:
@@ -864,25 +863,26 @@ namespace LevelComponents
                 }
             }
 
-            // Update hidden coins layer
-            QGraphicsPixmapItem *hiddencoinpixmapitem = RenderedLayers[12];
-            QPixmap hiddencoinPixmapTemp = hiddencoinpixmapitem->pixmap();
-            QPainter hiddencoinPainterTemp(&hiddencoinPixmapTemp);
-            hiddencoinPainterTemp.setCompositionMode(QPainter::CompositionMode_Source);
-            QPen hiddencionBoxPen = QPen(QBrush(QColor(255, 153, 18, 0xFF)), 2); // chrome yellow
-            hiddencionBoxPen.setJoinStyle(Qt::MiterJoin);
-            hiddencoinPainterTemp.setPen(hiddencionBoxPen);
+            // Extra hint layer
+            QGraphicsPixmapItem *extrahintpixmapitem = RenderedLayers[12];
+            QPixmap extrahintPixmapTemp = extrahintpixmapitem->pixmap();
+            QPainter extrahintPainterTemp(&extrahintPixmapTemp);
+            extrahintPainterTemp.setCompositionMode(QPainter::CompositionMode_Source);
+            QPen extrahintBoxPen = QPen(QBrush(SettingsUtils::projectSettings::extraEventIDhintboxcolor), 2); // chrome yellow
+            extrahintBoxPen.setJoinStyle(Qt::MiterJoin);
+            extrahintPainterTemp.setPen(extrahintBoxPen);
             for(auto iter: renderParams->tilechangelist) {
                 int eventidtmp = tileset->GetEventTablePtr()[iter.tileID];
-                if (std::find(eventidwithhiddencoin.begin(), eventidwithhiddencoin.end(), eventidtmp) !=
-                    eventidwithhiddencoin.end())
+                if (std::find(SettingsUtils::projectSettings::extraEventIDhinteventids.begin(),
+                              SettingsUtils::projectSettings::extraEventIDhinteventids.end(), eventidtmp) !=
+                                    SettingsUtils::projectSettings::extraEventIDhinteventids.end())
                 {
-                    hiddencoinPainterTemp.drawRect(16 * iter.tileX + 4, 16 * iter.tileY + 4, 8, 8);
+                    extrahintPainterTemp.drawRect(16 * iter.tileX + 4, 16 * iter.tileY + 4, 8, 8);
                 } else {
-                    hiddencoinPainterTemp.fillRect(16 * iter.tileX, 16 * iter.tileY, 16, 16, Qt::transparent);
+                    extrahintPainterTemp.fillRect(16 * iter.tileX, 16 * iter.tileY, 16, 16, Qt::transparent);
                 }
             }
-            hiddencoinpixmapitem->setPixmap(hiddencoinPixmapTemp);
+            extrahintpixmapitem->setPixmap(extrahintPixmapTemp);
         }
         return scene;
         }

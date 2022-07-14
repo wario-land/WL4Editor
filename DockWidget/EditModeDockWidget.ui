@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>332</width>
+    <width>344</width>
     <height>335</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>332</width>
+    <width>344</width>
     <height>335</height>
    </size>
   </property>
@@ -232,7 +232,7 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QCheckBox" name="CheckBox_hiddencoinsView">
+        <widget class="QCheckBox" name="CheckBox_ExtraHintView">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
            <horstretch>0</horstretch>
@@ -246,7 +246,7 @@
           </size>
          </property>
          <property name="text">
-          <string>View hidden coins</string>
+          <string>View Extra Hints</string>
          </property>
         </widget>
        </item>

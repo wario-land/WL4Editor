@@ -77,6 +77,8 @@ namespace SettingsUtils
         QColor doorboxcolorselected_filling = QColor(0, 0xFF, 0xFF, 0x5F);
         QColor entityboxcolor = QColor(0xFF, 0xFF, 0);
         QColor entityboxcolorselected = QColor(0xFF, 0x7F, 0);
+        QColor extraEventIDhintboxcolor = QColor(255, 153, 18, 0xFF);
+        QVector<int> extraEventIDhinteventids = {0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C};
     }
 
     /// <summary>
@@ -136,15 +138,23 @@ namespace SettingsUtils
 
         // camera box render color settings
         key = "camerabox_render_color";
+        bool okay = false;
         if (list.contains(key) && jsonObj[key].isString())
         {
-            projectSettings::cameraboxcolor = string2color(jsonObj[key].toString());
+            if (QColor tmpcolor = string2color(jsonObj[key].toString(), okay) ; okay)
+            {
+                projectSettings::cameraboxcolor = tmpcolor;
+            }
+
         }
         json.insert(key, color2string(projectSettings::cameraboxcolor));
         key = "camerabox_render_color_extended";
         if (list.contains(key) && jsonObj[key].isString())
         {
-            projectSettings::cameraboxcolor_extended = string2color(jsonObj[key].toString());
+            if (QColor tmpcolor = string2color(jsonObj[key].toString(), okay) ; okay)
+            {
+                projectSettings::cameraboxcolor_extended = tmpcolor;
+            }
         }
         json.insert(key, color2string(projectSettings::cameraboxcolor_extended));
 
@@ -152,25 +162,37 @@ namespace SettingsUtils
         key = "doorbox_render_color";
         if (list.contains(key) && jsonObj[key].isString())
         {
-            projectSettings::doorboxcolor = string2color(jsonObj[key].toString());
+            if (QColor tmpcolor = string2color(jsonObj[key].toString(), okay) ; okay)
+            {
+                projectSettings::doorboxcolor = tmpcolor;
+            }
         }
         json.insert(key, color2string(projectSettings::doorboxcolor));
         key = "doorbox_filling_render_color";
         if (list.contains(key) && jsonObj[key].isString())
         {
-            projectSettings::doorboxcolor_filling = string2color(jsonObj[key].toString());
+            if (QColor tmpcolor = string2color(jsonObj[key].toString(), okay) ; okay)
+            {
+                projectSettings::doorboxcolor_filling = tmpcolor;
+            }
         }
         json.insert(key, color2string(projectSettings::doorboxcolor_filling));
         key = "doorbox_selected_render_color";
         if (list.contains(key) && jsonObj[key].isString())
         {
-            projectSettings::doorboxcolorselected = string2color(jsonObj[key].toString());
+            if (QColor tmpcolor = string2color(jsonObj[key].toString(), okay) ; okay)
+            {
+                projectSettings::doorboxcolorselected = tmpcolor;
+            }
         }
         json.insert(key, color2string(projectSettings::doorboxcolorselected));
         key = "doorbox_selected_filling_render_color";
         if (list.contains(key) && jsonObj[key].isString())
         {
-            projectSettings::doorboxcolorselected_filling = string2color(jsonObj[key].toString());
+            if (QColor tmpcolor = string2color(jsonObj[key].toString(), okay) ; okay)
+            {
+                projectSettings::doorboxcolorselected_filling = tmpcolor;
+            }
         }
         json.insert(key, color2string(projectSettings::doorboxcolorselected_filling));
 
@@ -178,15 +200,42 @@ namespace SettingsUtils
         key = "entitybox_render_color";
         if (list.contains(key) && jsonObj[key].isString())
         {
-            projectSettings::entityboxcolor = string2color(jsonObj[key].toString());
+            if (QColor tmpcolor = string2color(jsonObj[key].toString(), okay) ; okay)
+            {
+                projectSettings::entityboxcolor = tmpcolor;
+            }
         }
         json.insert(key, color2string(projectSettings::entityboxcolor));
         key = "entitybox_selected_render_color";
         if (list.contains(key) && jsonObj[key].isString())
         {
-            projectSettings::entityboxcolorselected = string2color(jsonObj[key].toString());
+            if (QColor tmpcolor = string2color(jsonObj[key].toString(), okay) ; okay)
+            {
+                projectSettings::entityboxcolorselected = tmpcolor;
+            }
         }
         json.insert(key, color2string(projectSettings::entityboxcolorselected));
+
+        // extra layer hint box render settings
+        key = "extraEventIDhintbox_render_color";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            if (QColor tmpcolor = string2color(jsonObj[key].toString(), okay) ; okay)
+            {
+                projectSettings::extraEventIDhintboxcolor = tmpcolor;
+            }
+        }
+        json.insert(key, color2string(projectSettings::extraEventIDhintboxcolor));
+        key = "extraEventIDhintbox_event_indexes";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            QString tmpstr = jsonObj[key].toString();
+            if (auto datavec = string2intvec(tmpstr) ; datavec.size())
+            {
+                projectSettings::extraEventIDhinteventids = datavec;
+            }
+        }
+        json.insert(key, intvec2string(projectSettings::extraEventIDhinteventids));
 
         // TODO: add more project settings
 
@@ -209,18 +258,25 @@ namespace SettingsUtils
     /// <summary>
     /// int to QColor
     /// </summary>
-    QColor string2color(QString data)
+    QColor string2color(QString data, bool &ok)
     {
         // use RGB888 in both QColor and int
-        QStringList colordata = data.split(QChar(','));
-        unsigned int r = colordata[0].toUInt(nullptr, 16);
-        unsigned int g = colordata[1].toUInt(nullptr, 16);
-        unsigned int b = colordata[2].toUInt(nullptr, 16);
-        unsigned int a = 0xFF;
-        if (colordata.size() > 3)
+        QVector<int> intvec = string2intvec(data);
+        if (intvec.size() < 3)
         {
-            a = colordata[3].toUInt(nullptr, 16);
+            // return non-transparent black if the format is incorrect
+            ok = false;
+            return QColor(0, 0, 0, 0xFF);
         }
+        unsigned int r = intvec[0];
+        unsigned int g = intvec[1];
+        unsigned int b = intvec[2];
+        unsigned int a = 0xFF;
+        if (intvec.size() > 3)
+        {
+            a = intvec[3];
+        }
+        ok = true;
         return QColor(r, g, b, a);
     }
 
@@ -232,6 +288,34 @@ namespace SettingsUtils
         // use RGB888 in both QColor and int
         return QString::number(color.red(), 16) + "," + QString::number(color.green(), 16) +
                 "," + QString::number(color.blue(), 16) + "," + QString::number(color.alpha(), 16);
+    }
+
+    /// <summary>
+    /// QString (should always use hex when representing values) to a QVector of int
+    /// </summary>
+    QVector<int> string2intvec(QString &data)
+    {
+        QStringList datalist = data.split(QChar(','));
+        QVector<int> result;
+        for (auto &substr : datalist)
+        {
+            result.append(substr.toInt(nullptr, 16));
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// A QVector of int to a QString (should always use hex when representing values)
+    /// </summary>
+    QString intvec2string(QVector<int> &intvec)
+    {
+        QString result;
+        for (auto &substr : intvec)
+        {
+            result += QString::number(substr, 16) + ",";
+        }
+        result.chop(1); // chop the last ","
+        return result;
     }
 
 } // namespace SettingsUtils

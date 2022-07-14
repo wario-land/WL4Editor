@@ -29,7 +29,7 @@ namespace Ui
         bool alphaBlendingEnabled = true;
         int selectedDifficulty = 0;
         bool entitiesboxesDisabled = false;
-        bool hiddencoinsEnabled = false;
+        bool ExtraHintsEnabled = false;
     };
 } // namespace Ui
 
@@ -72,7 +72,7 @@ private slots:
     void on_RadioButton_LayerMode_toggled(bool checked);
     void on_RadioButton_EntityMode_toggled(bool checked);
     void on_RadioButton_CameraMode_toggled(bool checked);
-    void on_CheckBox_hiddencoinsView_stateChanged(int arg1);
+    void on_CheckBox_ExtraHintView_stateChanged(int arg1);
 };
 
 #endif // EDITMODEDOCKWIDGET_H

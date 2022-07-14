@@ -77,6 +77,8 @@ namespace SettingsUtils
         extern QColor doorboxcolorselected_filling;
         extern QColor entityboxcolor;
         extern QColor entityboxcolorselected;
+        extern QColor extraEventIDhintboxcolor;
+        extern QVector<int> extraEventIDhinteventids;
     }
 
     // functions
@@ -84,7 +86,9 @@ namespace SettingsUtils
     void SaveProjectSettings(QJsonObject &jsonobj);
 
     // helper functions
-    QColor string2color(QString data);
+    QVector<int> string2intvec(QString &data);
+    QString intvec2string(QVector<int> &intvec);
+    QColor string2color(QString data, bool &ok);
     QString color2string(QColor &color);
 
 }; // namespace SettingsUtils
