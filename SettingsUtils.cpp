@@ -79,8 +79,10 @@ namespace SettingsUtils
         QColor entityboxcolorselected = QColor(0xFF, 0x7F, 0);
         QColor extraEventIDhintboxcolor = QColor(255, 153, 18, 0xFF); // chrome yellow
         QVector<int> extraEventIDhinteventids = {0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C}; // blocks with coin
+        QStringList extraEventIDhintChars = {"C", "C", "C", "C", "C", "C"};
         QColor extraTerrainIDhintboxcolor = QColor(0xFF, 0, 0xFF, 0xFF);
         QVector<int> extraTerrainIDhintTerrainids = {};
+        QStringList extraTerrainIDhintChars = {};
     }
 
     /// <summary>
@@ -140,6 +142,7 @@ namespace SettingsUtils
 
         // camera box render color settings
         key = "camerabox_render_color";
+        int helper_size = 0;
         bool okay = false;
         if (list.contains(key) && jsonObj[key].isString())
         {
@@ -229,15 +232,40 @@ namespace SettingsUtils
         }
         json.insert(key, color2string(projectSettings::extraEventIDhintboxcolor));
         key = "extraEventIDhintbox_event_indexes";
+        helper_size = 6;
         if (list.contains(key) && jsonObj[key].isString())
         {
             QString tmpstr = jsonObj[key].toString();
             if (auto datavec = string2intvec(tmpstr) ; datavec.size())
             {
+                helper_size = datavec.size();
                 projectSettings::extraEventIDhinteventids = datavec;
             }
         }
         json.insert(key, intvec2string(projectSettings::extraEventIDhinteventids));
+        key = "extraEventIDhint_optional_characters";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            QString tmpstr = jsonObj[key].toString();
+            QStringList strlist = string2strlist(tmpstr, 1);
+            if (int strlistsize = strlist.size(); strlistsize && (strlistsize == helper_size))
+            {
+                projectSettings::extraEventIDhintChars = strlist;
+            }
+            else
+            {
+                strlist.clear();
+                if (helper_size)
+                {
+                    for (int i = 0; i < helper_size; i++)
+                    {
+                        strlist << "";
+                    }
+                }
+                projectSettings::extraEventIDhintChars = strlist;
+            }
+        }
+        json.insert(key, strlist2string(projectSettings::extraEventIDhintChars, 1));
         key = "extraTerrainIDhintbox_render_color";
         if (list.contains(key) && jsonObj[key].isString())
         {
@@ -248,13 +276,40 @@ namespace SettingsUtils
         }
         json.insert(key, color2string(projectSettings::extraTerrainIDhintboxcolor));
         key = "extraTerrainIDhintbox_terrain_indexes";
+        helper_size = 0;
         if (list.contains(key) && jsonObj[key].isString())
         {
             QString tmpstr = jsonObj[key].toString();
-            auto datavec = string2intvec(tmpstr);
-            projectSettings::extraTerrainIDhintTerrainids = datavec;
+            if (auto datavec = string2intvec(tmpstr) ; datavec.size())
+            {
+                helper_size = datavec.size();
+                projectSettings::extraTerrainIDhintTerrainids = datavec;
+            }
         }
         json.insert(key, intvec2string(projectSettings::extraTerrainIDhintTerrainids));
+        key = "extraTerrainIDhint_optional_characters";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            QString tmpstr = jsonObj[key].toString();
+            QStringList strlist = string2strlist(tmpstr, 1);
+            if (int strlistsize = strlist.size(); strlistsize && (strlistsize == helper_size))
+            {
+                projectSettings::extraTerrainIDhintChars = strlist;
+            }
+            else
+            {
+                strlist.clear();
+                if (helper_size)
+                {
+                    for (int i = 0; i < helper_size; i++)
+                    {
+                        strlist << "";
+                    }
+                }
+                projectSettings::extraTerrainIDhintChars = strlist;
+            }
+        }
+        json.insert(key, strlist2string(projectSettings::extraTerrainIDhintChars, 1));
 
         // TODO: add more project settings
 
@@ -302,7 +357,7 @@ namespace SettingsUtils
     /// <summary>
     /// QColor to int
     /// </summary>
-    QString color2string(QColor &color)
+    QString color2string(QColor color)
     {
         // use RGB888 in both QColor and int
         return QString::number(color.red(), 16) + "," + QString::number(color.green(), 16) +
@@ -342,6 +397,58 @@ namespace SettingsUtils
             result += QString::number(substr, 16) + ",";
         }
         result.chop(1); // chop the last ","
+        return result;
+    }
+
+    /// <summary>
+    /// Convert a QString to a string list
+    /// </summary>
+    QStringList string2strlist(QString data, int size_per_str)
+    {
+        QStringList datalist;
+        if (!data.size())
+        {
+            return datalist;
+        }
+        datalist = data.split(QChar(','));
+        if (size_per_str > 0)
+        {
+            for (int i = 0; i < datalist.size(); i++)
+            {
+                if (datalist[i].size())
+                {
+                    datalist[i] = datalist[i].left(1);
+                }
+            }
+        }
+        return datalist;
+    }
+
+    /// <summary>
+    /// Convert a QStringlist to a string
+    /// </summary>
+    QString strlist2string(QStringList datalist, int size_per_str)
+    {
+        QString result;
+        if (!datalist.size())
+        {
+            return result;
+        }
+        if (size_per_str > 0)
+        {
+            for (auto &substr : datalist)
+            {
+                result += substr.left(size_per_str) + ",";
+            }
+            result.chop(1); // chop the last ","
+        }
+        else
+        {
+            for (int i = 0; i < (datalist.size() - 1); i++)
+            {
+                result += ",";
+            }
+        }
         return result;
     }
 

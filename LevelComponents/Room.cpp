@@ -8,6 +8,7 @@
 #include <cstring>
 
 #include <QPainter>
+#include <QFont>
 #include <iostream>
 
 #include "WL4EditorWindow.h"
@@ -642,6 +643,7 @@ namespace LevelComponents
             QPen extrahintBoxPen = QPen(QBrush(SettingsUtils::projectSettings::extraEventIDhintboxcolor), 2);
             extrahintBoxPen.setJoinStyle(Qt::MiterJoin);
             extrahintPainter.setPen(extrahintBoxPen);
+            extrahintPainter.setFont(QFont(singleton->font().family(), 12));
             unsigned short *Layer1data = layers[1]->GetLayerData();
             unsigned short *eventtable = tileset->GetEventTablePtr();
             unsigned char *terraintable = tileset->GetTerrainTypeIDTablePtr();
@@ -652,11 +654,19 @@ namespace LevelComponents
                 for (uint i = 0; i < Width; ++i)
                 {
                     int eventID_val = eventtable[Layer1data[j * Width + i]];
-                    if (std::find(SettingsUtils::projectSettings::extraEventIDhinteventids.begin(),
-                                  SettingsUtils::projectSettings::extraEventIDhinteventids.end(), eventID_val) !=
-                                        SettingsUtils::projectSettings::extraEventIDhinteventids.end())
+                    if (auto it = std::find(SettingsUtils::projectSettings::extraEventIDhinteventids.begin(),
+                                  SettingsUtils::projectSettings::extraEventIDhinteventids.end(), eventID_val);
+                        it != SettingsUtils::projectSettings::extraEventIDhinteventids.end())
                     {
-                        extrahintPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
+                        int n = it - SettingsUtils::projectSettings::extraEventIDhinteventids.begin();
+                        if (auto hintchar = SettingsUtils::projectSettings::extraEventIDhintChars[n]; hintchar.isEmpty())
+                        {
+                            extrahintPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
+                        }
+                        else
+                        {
+                            extrahintPainter.drawText(16 * i + 4, 16 * j + 16, hintchar);
+                        }
                     }
                 }
             }
@@ -674,14 +684,23 @@ namespace LevelComponents
                         for (uint i = 0; i < w; ++i)
                         {
                             int terrainID_val = terraintable[LayerNdata[j * w + i]];
-                            if (std::find(SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.begin(),
-                                          SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end(), terrainID_val) !=
-                                                SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end())
+                            if (auto it = std::find(SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.begin(),
+                                          SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end(), terrainID_val);
+                                it != SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end())
                             {
+                                int n = it - SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.begin();
+
                                 QPen extrahintBoxPen2 = QPen(QBrush(SettingsUtils::projectSettings::extraTerrainIDhintboxcolor), 2);
                                 extrahintBoxPen2.setJoinStyle(Qt::MiterJoin);
                                 extrahintPainter.setPen(extrahintBoxPen2);
-                                extrahintPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
+                                if (auto hintchar = SettingsUtils::projectSettings::extraTerrainIDhintChars[n]; hintchar.isEmpty())
+                                {
+                                    extrahintPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
+                                }
+                                else
+                                {
+                                    extrahintPainter.drawText(16 * i + 4, 16 * j + 16, hintchar);
+                                }
                                 extrahintPainter.setPen(extrahintBoxPen);
                             }
                         }
@@ -908,31 +927,55 @@ namespace LevelComponents
             QPen extrahintBoxPen = QPen(QBrush(SettingsUtils::projectSettings::extraEventIDhintboxcolor), 2);
             extrahintBoxPen.setJoinStyle(Qt::MiterJoin);
             extrahintPainterTemp.setPen(extrahintBoxPen);
+            extrahintPainterTemp.setFont(QFont(singleton->font().family(), 12));
             for(auto iter: renderParams->tilechangelist) {
                 // change event id hint boxes
                 int eventidtmp = tileset->GetEventTablePtr()[iter.tileID];
-                if (std::find(SettingsUtils::projectSettings::extraEventIDhinteventids.begin(),
-                              SettingsUtils::projectSettings::extraEventIDhinteventids.end(), eventidtmp) !=
-                                    SettingsUtils::projectSettings::extraEventIDhinteventids.end())
+                bool haseventid = false;
+                if (auto it = std::find(SettingsUtils::projectSettings::extraEventIDhinteventids.begin(),
+                              SettingsUtils::projectSettings::extraEventIDhinteventids.end(), eventidtmp);
+                    it != SettingsUtils::projectSettings::extraEventIDhinteventids.end())
                 {
-                    extrahintPainterTemp.drawRect(16 * iter.tileX + 4, 16 * iter.tileY + 4, 8, 8);
+                    int n = it - SettingsUtils::projectSettings::extraEventIDhinteventids.begin();
+                    if (auto hintchar = SettingsUtils::projectSettings::extraEventIDhintChars[n]; hintchar.isEmpty())
+                    {
+                        extrahintPainterTemp.drawRect(16 * iter.tileX, 16 * iter.tileY + 4, 8, 8);
+                    }
+                    else
+                    {
+                        extrahintPainterTemp.drawText(16 * iter.tileX + 4, 16 * iter.tileY + 16, hintchar);
+                    }
+                    haseventid = true;
                 } else {
                     extrahintPainterTemp.fillRect(16 * iter.tileX, 16 * iter.tileY, 16, 16, Qt::transparent);
                 }
 
                 // change terrain id hint boxes
                 unsigned char terrainidtmp = tileset->GetTerrainTypeIDTablePtr()[iter.tileID];
-                if (std::find(SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.begin(),
-                              SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end(), terrainidtmp) !=
-                                    SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end())
+                if (auto it = std::find(SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.begin(),
+                                        SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end(), terrainidtmp);
+                              it != SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end())
                 {
+                    int n = it - SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.begin();
+
                     QPen extrahintBoxPen2tmp = QPen(QBrush(SettingsUtils::projectSettings::extraTerrainIDhintboxcolor), 2);
                     extrahintBoxPen2tmp.setJoinStyle(Qt::MiterJoin);
                     extrahintPainterTemp.setPen(extrahintBoxPen2tmp);
-                    extrahintPainterTemp.drawRect(16 * iter.tileX + 4, 16 * iter.tileY + 4, 8, 8);
+                    if (auto hintchar = SettingsUtils::projectSettings::extraTerrainIDhintChars[n]; hintchar.isEmpty())
+                    {
+                        extrahintPainterTemp.drawRect(16 * iter.tileX + 4, 16 * iter.tileY + 4, 8, 8);
+                    }
+                    else
+                    {
+                        extrahintPainterTemp.drawText(16 * iter.tileX + 4, 16 * iter.tileY + 16, hintchar);
+                    }
                     extrahintPainterTemp.setPen(extrahintBoxPen);
                 } else {
-                    extrahintPainterTemp.fillRect(16 * iter.tileX, 16 * iter.tileY, 16, 16, Qt::transparent);
+                    // don't clear the hint draw for the event id
+                    if (!haseventid)
+                    {
+                        extrahintPainterTemp.fillRect(16 * iter.tileX, 16 * iter.tileY, 16, 16, Qt::transparent);
+                    }
                 }
 
             }
