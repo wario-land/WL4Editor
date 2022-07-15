@@ -77,8 +77,10 @@ namespace SettingsUtils
         QColor doorboxcolorselected_filling = QColor(0, 0xFF, 0xFF, 0x5F);
         QColor entityboxcolor = QColor(0xFF, 0xFF, 0);
         QColor entityboxcolorselected = QColor(0xFF, 0x7F, 0);
-        QColor extraEventIDhintboxcolor = QColor(255, 153, 18, 0xFF);
-        QVector<int> extraEventIDhinteventids = {0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C};
+        QColor extraEventIDhintboxcolor = QColor(255, 153, 18, 0xFF); // chrome yellow
+        QVector<int> extraEventIDhinteventids = {0x0C, 0x0E, 0x20, 0x22, 0x2E, 0x5C}; // blocks with coin
+        QColor extraTerrainIDhintboxcolor = QColor(0xFF, 0, 0xFF, 0xFF);
+        QVector<int> extraTerrainIDhintTerrainids = {};
     }
 
     /// <summary>
@@ -236,6 +238,23 @@ namespace SettingsUtils
             }
         }
         json.insert(key, intvec2string(projectSettings::extraEventIDhinteventids));
+        key = "extraTerrainIDhintbox_render_color";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            if (QColor tmpcolor = string2color(jsonObj[key].toString(), okay) ; okay)
+            {
+                projectSettings::extraTerrainIDhintboxcolor = tmpcolor;
+            }
+        }
+        json.insert(key, color2string(projectSettings::extraTerrainIDhintboxcolor));
+        key = "extraTerrainIDhintbox_terrain_indexes";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            QString tmpstr = jsonObj[key].toString();
+            auto datavec = string2intvec(tmpstr);
+            projectSettings::extraTerrainIDhintTerrainids = datavec;
+        }
+        json.insert(key, intvec2string(projectSettings::extraTerrainIDhintTerrainids));
 
         // TODO: add more project settings
 
@@ -297,6 +316,10 @@ namespace SettingsUtils
     {
         QStringList datalist = data.split(QChar(','));
         QVector<int> result;
+        if (!data.size())
+        {
+            return result;
+        }
         for (auto &substr : datalist)
         {
             result.append(substr.toInt(nullptr, 16));
@@ -310,6 +333,10 @@ namespace SettingsUtils
     QString intvec2string(QVector<int> &intvec)
     {
         QString result;
+        if (!intvec.size())
+        {
+            return result;
+        }
         for (auto &substr : intvec)
         {
             result += QString::number(substr, 16) + ",";

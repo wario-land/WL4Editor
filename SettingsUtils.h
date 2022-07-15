@@ -79,6 +79,8 @@ namespace SettingsUtils
         extern QColor entityboxcolorselected;
         extern QColor extraEventIDhintboxcolor;
         extern QVector<int> extraEventIDhinteventids;
+        extern QColor extraTerrainIDhintboxcolor;
+        extern QVector<int> extraTerrainIDhintTerrainids;
     }
 
     // functions

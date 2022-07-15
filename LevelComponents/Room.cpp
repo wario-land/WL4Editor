@@ -261,8 +261,16 @@ namespace LevelComponents
     /// </return>
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, RenderUpdateParams *renderParams)
     {
-        int sceneWidth = Width * 16, sceneHeight = Height * 16;
+        // init scene size
+        int layer0unit = (this->GetLayer(0)->GetMappingType() == LevelComponents::LayerTile8x8) ? 8 : 16;
+        int layer2unit = (this->GetLayer(2)->GetMappingType() == LevelComponents::LayerTile8x8) ? 8 : 16;
+        int sceneWidth = qMax((int)(Width * 16), layer0unit * this->GetLayer(0)->GetLayerWidth());
+        sceneWidth = qMax(sceneWidth, layer2unit * this->GetLayer(2)->GetLayerWidth());
+        int sceneHeight = qMax((int)(Height * 16), layer0unit * this->GetLayer(0)->GetLayerHeight());
+        sceneHeight = qMax(sceneHeight, layer2unit * this->GetLayer(2)->GetLayerHeight());
         int Z = 0;
+
+        // render cases
         switch (renderParams->type)
         {
         case FullRender:
@@ -287,9 +295,7 @@ namespace LevelComponents
             {
                 delete scene;
             } // Make a new graphics scene to draw to
-            int layer0unit = (this->GetLayer(0)->GetMappingType() == LevelComponents::LayerTile8x8) ? 8 : 16;
-            scene = new QGraphicsScene(0, 0, qMax(sceneWidth, layer0unit * this->GetLayer(0)->GetLayerWidth()),
-                                       qMax(sceneHeight, layer0unit * this->GetLayer(0)->GetLayerHeight()));
+            scene = new QGraphicsScene(0, 0, sceneWidth, sceneHeight);
 
             // This represents the EVA alpha layer, which will be rendered in passes before the alpha layer is finalized
             QPixmap alphaPixmap(sceneWidth, sceneHeight);
@@ -633,25 +639,56 @@ namespace LevelComponents
             QPixmap extrahintPixmap(sceneWidth, sceneHeight);
             extrahintPixmap.fill(Qt::transparent);
             QPainter extrahintPainter(&extrahintPixmap);
-            QPen exytahintBoxPen = QPen(QBrush(SettingsUtils::projectSettings::extraEventIDhintboxcolor), 2); // chrome yellow
-            exytahintBoxPen.setJoinStyle(Qt::MiterJoin);
-            extrahintPainter.setPen(exytahintBoxPen);
+            QPen extrahintBoxPen = QPen(QBrush(SettingsUtils::projectSettings::extraEventIDhintboxcolor), 2);
+            extrahintBoxPen.setJoinStyle(Qt::MiterJoin);
+            extrahintPainter.setPen(extrahintBoxPen);
             unsigned short *Layer1data = layers[1]->GetLayerData();
             unsigned short *eventtable = tileset->GetEventTablePtr();
             unsigned char *terraintable = tileset->GetTerrainTypeIDTablePtr();
+
+            // event id hint
             for (uint j = 0; j < Height; ++j)
             {
                 for (uint i = 0; i < Width; ++i)
                 {
-                    int val = eventtable[Layer1data[j * Width + i]];
+                    int eventID_val = eventtable[Layer1data[j * Width + i]];
                     if (std::find(SettingsUtils::projectSettings::extraEventIDhinteventids.begin(),
-                                  SettingsUtils::projectSettings::extraEventIDhinteventids.end(), val) !=
+                                  SettingsUtils::projectSettings::extraEventIDhinteventids.end(), eventID_val) !=
                                         SettingsUtils::projectSettings::extraEventIDhinteventids.end())
                     {
                         extrahintPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
                     }
                 }
             }
+
+            // terrain id hint
+            for (int n = 0; n < 3; n++)
+            {
+                if (layers[n]->GetMappingType() == LevelComponents::LayerMappingType::LayerMap16)
+                {
+                    int w = layers[n]->GetLayerWidth();
+                    int h = layers[n]->GetLayerHeight();
+                    unsigned short *LayerNdata = layers[n]->GetLayerData();
+                    for (uint j = 0; j < h; ++j)
+                    {
+                        for (uint i = 0; i < w; ++i)
+                        {
+                            int terrainID_val = terraintable[LayerNdata[j * w + i]];
+                            if (std::find(SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.begin(),
+                                          SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end(), terrainID_val) !=
+                                                SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end())
+                            {
+                                QPen extrahintBoxPen2 = QPen(QBrush(SettingsUtils::projectSettings::extraTerrainIDhintboxcolor), 2);
+                                extrahintBoxPen2.setJoinStyle(Qt::MiterJoin);
+                                extrahintPainter.setPen(extrahintBoxPen2);
+                                extrahintPainter.drawRect(16 * i + 4, 16 * j + 4, 8, 8);
+                                extrahintPainter.setPen(extrahintBoxPen);
+                            }
+                        }
+                    }
+                }
+            }
+
             QGraphicsPixmapItem *extrahintpixmapItem;
             if (!RenderedLayers[12] || renderParams->type == FullRender)
             {
@@ -868,10 +905,11 @@ namespace LevelComponents
             QPixmap extrahintPixmapTemp = extrahintpixmapitem->pixmap();
             QPainter extrahintPainterTemp(&extrahintPixmapTemp);
             extrahintPainterTemp.setCompositionMode(QPainter::CompositionMode_Source);
-            QPen extrahintBoxPen = QPen(QBrush(SettingsUtils::projectSettings::extraEventIDhintboxcolor), 2); // chrome yellow
+            QPen extrahintBoxPen = QPen(QBrush(SettingsUtils::projectSettings::extraEventIDhintboxcolor), 2);
             extrahintBoxPen.setJoinStyle(Qt::MiterJoin);
             extrahintPainterTemp.setPen(extrahintBoxPen);
             for(auto iter: renderParams->tilechangelist) {
+                // change event id hint boxes
                 int eventidtmp = tileset->GetEventTablePtr()[iter.tileID];
                 if (std::find(SettingsUtils::projectSettings::extraEventIDhinteventids.begin(),
                               SettingsUtils::projectSettings::extraEventIDhinteventids.end(), eventidtmp) !=
@@ -881,6 +919,22 @@ namespace LevelComponents
                 } else {
                     extrahintPainterTemp.fillRect(16 * iter.tileX, 16 * iter.tileY, 16, 16, Qt::transparent);
                 }
+
+                // change terrain id hint boxes
+                unsigned char terrainidtmp = tileset->GetTerrainTypeIDTablePtr()[iter.tileID];
+                if (std::find(SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.begin(),
+                              SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end(), terrainidtmp) !=
+                                    SettingsUtils::projectSettings::extraTerrainIDhintTerrainids.end())
+                {
+                    QPen extrahintBoxPen2tmp = QPen(QBrush(SettingsUtils::projectSettings::extraTerrainIDhintboxcolor), 2);
+                    extrahintBoxPen2tmp.setJoinStyle(Qt::MiterJoin);
+                    extrahintPainterTemp.setPen(extrahintBoxPen2tmp);
+                    extrahintPainterTemp.drawRect(16 * iter.tileX + 4, 16 * iter.tileY + 4, 8, 8);
+                    extrahintPainterTemp.setPen(extrahintBoxPen);
+                } else {
+                    extrahintPainterTemp.fillRect(16 * iter.tileX, 16 * iter.tileY, 16, 16, Qt::transparent);
+                }
+
             }
             extrahintpixmapitem->setPixmap(extrahintPixmapTemp);
         }
