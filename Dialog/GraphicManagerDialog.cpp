@@ -1,4 +1,4 @@
-#include "GraphicManagerDialog.h"
+﻿#include "GraphicManagerDialog.h"
 #include "ui_GraphicManagerDialog.h"
 
 #include <QMessageBox>
@@ -554,26 +554,35 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
             }
             QByteArray data;
             int old_tilenum = tmpEntry.TileDataSizeInByte / 32;
-            data = tmpEntry.tileData.mid(0, 32 * (tileId - startid)) +
-                    tmpEntry.tileData.mid(32 * (tileId + 1 - startid), 32 * (old_tilenum + startid - tileId - 1));
+            data = tmpEntry.tileData.left(32 * (tileId - startid)) + tmpEntry.tileData.right(32 * (old_tilenum + startid - tileId - 1));
             tmpEntry.tileData = data;
 
             tmpEntry.TileDataRAMOffsetNum += 1;
             tmpEntry.TileDataSizeInByte -= 32;
 
             // update mapping data
-            int width = tmpEntry.optionalGraphicWidth;
-            for (int h = 0; h < tmpEntry.optionalGraphicHeight; h++)
+            bool find_bug = false;
+            for (int w = 0; w < tmpEntry.mappingData.size(); w++)
             {
-                for (int w = 0; w < width; w++)
+                unsigned short data = tmpEntry.mappingData[w];
+                unsigned short id = data & 0x3FF;
+                if (id < tileId)
                 {
-                    unsigned short data = tmpEntry.mappingData[w + h * width];
-                    int id = data & 0x3FF;
-                    if ((tmpEntry.mappingData[w + h * width] & 0x3FF) <= tileId)
-                    {
-                        tmpEntry.mappingData[w + h * width] = (data & 0xFC00) | ((id + 1) & 0x3FF);
-                    }
+                    tmpEntry.mappingData[w] = (data & 0xFC00) | ((id + 1) & 0x3FF);
                 }
+                else if (id == tileId)
+                {
+                    // something went wrong in the previous code if this part of code gets executed
+                    // there should be no existance of the current tile when calling this function
+                    // we just set it to use the default 0x3FF Tile8x8 and use the palette 0xF
+                    tmpEntry.mappingData[w] = 0xF000 | 0x3FF;
+                    find_bug = true;
+                }
+            }
+            if (find_bug)
+            {
+                QMessageBox::critical(this, tr("Warning"), tr("Something went wrong when reducing tiles.\n"
+                                                              "Contact developers for more details."));
             }
 
         }
@@ -1518,10 +1527,11 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
             // ask user if eliminate similar tiles to reduce more tiles
             bool ok;
             int diff_upbound = QInputDialog::getInt(this,
-                                                      tr("WL4Editor"),
-                                                      tr("Input a number to eliminate similar tiles to reducing tiles aggressively.\n"
-                                                         "use a bigger number to reduce more tiles. but Tile16s' quality will drop more.\n"
-                                                         "do strictly tile reduce by set 0 here."),
+                                                    tr("WL4Editor"),
+                                                    tr("Input a tolerance value for the number of different pixels between 2 Tile8x8s.\n"
+                                                       "The editor will merge similar Tile8x8s to reduce tile count aggressively.\n"
+                                                       "Use a bigger value to reduce more tiles. However, the quality of the combined tiles will drop.\n"
+                                                       "To perform regular tile reduction, use a value of 0."),
                                                       0, 0, 64, 1, &ok);
             if (!ok) return;
 
@@ -1558,45 +1568,81 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
                     int result2 = FileIOUtils::quasi_memcmp(newtmpYFlipdata, tile_data, 32);
                     int result3 = FileIOUtils::quasi_memcmp(newtmpXYFlipdata, tile_data, 32);
                     bool find_eqaul = false;
-                    int tileid = j + constoffset;
+                    int find_tileid = j + constoffset;
+                    int reserved_tileid = find_tileid;
+
+                    int x_flip = 0;
+                    int y_flip = 0;
 
                     unsigned short mappingdata;
                     if (result0 <= diff_upbound)
                     {
                         find_eqaul = true;
-                        mappingdata = 0xF << 12 | (0 << 11) | (0 << 10) | (tileid & 0x3FF);
+                        if (newtmpdata == FileIOUtils::find_less_feature_buff(newtmpdata, tile_data, 32))
+                        {
+                            reserved_tileid = old_tileid;
+                        }
                     }
                     else if (result1 <= diff_upbound)
                     {
                         find_eqaul = true;
-                        mappingdata = 0xF << 12 | (0 << 11) | (1 << 10) | (tileid & 0x3FF);
+                        if (newtmpXFlipdata == FileIOUtils::find_less_feature_buff(newtmpXFlipdata, tile_data, 32))
+                        {
+                            reserved_tileid = old_tileid;
+                        }
+                        x_flip = 1 << 10;
                     }
                     else if (result2 <= diff_upbound)
                     {
                         find_eqaul = true;
-                        mappingdata = 0xF << 12 | (1 << 11) | (0 << 10) | (tileid & 0x3FF);
+                        if (newtmpYFlipdata == FileIOUtils::find_less_feature_buff(newtmpYFlipdata, tile_data, 32))
+                        {
+                            reserved_tileid = old_tileid;
+                        }
+                        y_flip = 1 << 11;
                     }
                     else if (result3 <= diff_upbound)
                     {
                         find_eqaul = true;
-                        mappingdata = 0xF << 12 | (1 << 11) | (1 << 10) | (tileid & 0x3FF);
+                        if (newtmpXYFlipdata == FileIOUtils::find_less_feature_buff(newtmpXYFlipdata, tile_data, 32))
+                        {
+                            reserved_tileid = old_tileid;
+                        }
+                        x_flip = 1 << 10;
+                        y_flip = 1 << 11;
                     }
 
                     if (find_eqaul)
                     {
-                        int width = tmpEntry.optionalGraphicWidth;
-                        for (int h = 0; h < tmpEntry.optionalGraphicHeight; h++)
+                        // always replace the old_tileid instance with the find_tileid instance
+                        for (int w = 0; w < tmpEntry.mappingData.size(); w++)
                         {
-                            for (int w = 0; w < width; w++)
+                            if ((tmpEntry.mappingData[w] & 0x3FF) == old_tileid)
                             {
-                                if ((tmpEntry.mappingData[w + h * width] & 0x3FF) == old_tileid)
-                                {
-                                    tmpEntry.mappingData[w + h * width] = mappingdata;
-                                }
+                                int old_x_flip_state = tmpEntry.mappingData[w] & (1 << 10);
+                                int old_y_flip_state = tmpEntry.mappingData[w] & (1 << 11);
+                                mappingdata = 0xF << 12 |
+                                             (y_flip ^ old_y_flip_state) |
+                                             (x_flip ^ old_x_flip_state) |
+                                             (find_tileid & 0x3FF);
+                                tmpEntry.mappingData[w] = mappingdata;
                             }
                         }
 
-                        // delete the Tile8x8 from the Tile8x8 set
+                        // we need to change the tmp_current_tile8x8_data and tmpEntry.tileData
+                        // if the old_tileid needs to be reserved
+                        if (reserved_tileid == old_tileid)
+                        {
+                            memcpy(&tmp_current_tile8x8_data[32 * j], newtmpdata, 32);
+
+                            int startid = tmpEntry.TileDataRAMOffsetNum;
+                            for (int k = 0; k < 32; k++)
+                            {
+                                tmpEntry.tileData[32 * (find_tileid - startid) + k] = newtmpdata[k];
+                            }
+                        }
+
+                        // delete the Tile8x8 from the tmpEntry's Tile8x8 set
                         DeltmpEntryTile(old_tileid);
                         break;
                     }
@@ -1608,6 +1654,7 @@ void GraphicManagerDialog::on_pushButton_ReduceTiles_clicked()
             // set tmpEntry if everything looks correct
             tmpEntry.TileDataAddress = 0;
             tmpEntry.MappingDataAddress = 0;
+            tmpEntry.MappingDataSizeAfterCompressionInByte = 0;
 
             // UI reset
             CleanTilesInstances();

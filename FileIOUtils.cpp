@@ -542,3 +542,63 @@ int FileIOUtils::quasi_memcmp(unsigned char *_Buf1, unsigned char *_Buf2, size_t
     }
     return diff_counter;
 }
+
+/// <summary>
+/// find the Tile8x8 data with less features by any means
+/// </summary>
+/// <param name="_Buf1">
+/// The pointer point to the first buff.
+/// </param>
+/// <param name="_Buf2">
+/// The pointer point to the second buff.
+/// </param>
+/// <param name="_Size">
+/// The byte number to compare.
+/// </param>
+/// <return>
+/// the different byte number.
+/// </return>
+unsigned char *FileIOUtils::find_less_feature_buff(unsigned char *_Buf1, unsigned char *_Buf2, size_t _Size)
+{
+    // test method, find the buff changed less time thru the whole data array
+    size_t change_counter_1 = 0;
+    size_t change_counter_2 = 0;
+    unsigned char last_id_1 = -1;
+    unsigned char last_id_2 = -1;
+    for (size_t i = 0; i < _Size; i++)
+    {
+        // process buff 1
+        if (unsigned char cur_id = ((_Buf1[i] & 0xF0) >> 4) & 0xF; last_id_1 != cur_id)
+        {
+            last_id_1 = cur_id;
+            change_counter_1++;
+        }
+        if (unsigned char cur_id = _Buf1[i] & 0xF; last_id_1 != cur_id)
+        {
+            last_id_1 = cur_id;
+            change_counter_1++;
+        }
+
+        // process buff 2
+        if (unsigned char cur_id = ((_Buf2[i] & 0xF0) >> 4) & 0xF; last_id_2 != cur_id)
+        {
+            last_id_2 = cur_id;
+            change_counter_2++;
+        }
+        if (unsigned char cur_id = _Buf2[i] & 0xF; last_id_2 != cur_id)
+        {
+            last_id_2 = cur_id;
+            change_counter_2++;
+        }
+    }
+
+    // return the buff pointer with less changed time in pixel index
+    if (change_counter_1 >= change_counter_2)
+    {
+        return _Buf2;
+    }
+    else
+    {
+        return _Buf1;
+    }
+}
