@@ -71,6 +71,18 @@ namespace SettingsUtils
     {
         extern QColor cameraboxcolor;
         extern QColor cameraboxcolor_extended;
+        extern QColor doorboxcolor;
+        extern QColor doorboxcolor_filling;
+        extern QColor doorboxcolorselected;
+        extern QColor doorboxcolorselected_filling;
+        extern QColor entityboxcolor;
+        extern QColor entityboxcolorselected;
+        extern QColor extraEventIDhintboxcolor;
+        extern QVector<int> extraEventIDhinteventids;
+        extern QStringList extraEventIDhintChars;
+        extern QColor extraTerrainIDhintboxcolor;
+        extern QVector<int> extraTerrainIDhintTerrainids;
+        extern QStringList extraTerrainIDhintChars;
     }
 
     // functions
@@ -78,8 +90,12 @@ namespace SettingsUtils
     void SaveProjectSettings(QJsonObject &jsonobj);
 
     // helper functions
-    QColor string2color(QString data);
-    QString color2string(QColor &color);
+    QVector<int> string2intvec(QString &data);
+    QString intvec2string(QVector<int> &intvec);
+    QColor string2color(QString data, bool &ok);
+    QString color2string(QColor color);
+    QStringList string2strlist(QString data, int size_per_str = 1);
+    QString strlist2string(QStringList datalist, int size_per_str = 1);
 
 }; // namespace SettingsUtils
 

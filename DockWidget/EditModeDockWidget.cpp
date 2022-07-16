@@ -137,7 +137,7 @@ struct Ui::EditModeParams EditModeDockWidget::GetEditModeParams()
     params.alphaBlendingEnabled = ui->CheckBox_AlphaView->isChecked();
     params.cameraAreasEnabled = ui->CheckBox_CameraView->isChecked();
     params.selectedDifficulty = difficultyIndices[selectedDifficultyButton];
-    params.hiddencoinsEnabled = ui->CheckBox_hiddencoinsView->isChecked();
+    params.ExtraHintsEnabled = ui->CheckBox_ExtraHintView->isChecked();
     return params;
 }
 
@@ -365,12 +365,12 @@ void EditModeDockWidget::on_RadioButton_CameraMode_toggled(bool checked)
 }
 
 /// <summary>
-/// Show hidden coins layer when CheckBox_hiddencoinsView is toggled.
+/// Show ExtraHint layer when CheckBox_ExtraHintView is toggled.
 /// </summary>
 /// <param name="arg1">
 /// Unused.
 /// </param>
-void EditModeDockWidget::on_CheckBox_hiddencoinsView_stateChanged(int arg1)
+void EditModeDockWidget::on_CheckBox_ExtraHintView_stateChanged(int arg1)
 {
     (void) arg1;
     singleton->RenderScreenVisibilityChange();
