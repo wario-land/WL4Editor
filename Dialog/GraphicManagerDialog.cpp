@@ -561,6 +561,7 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
             tmpEntry.TileDataSizeInByte -= 32;
 
             // update mapping data
+            bool find_bug = false;
             for (int w = 0; w < tmpEntry.mappingData.size(); w++)
             {
                 unsigned short data = tmpEntry.mappingData[w];
@@ -575,7 +576,13 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
                     // there should be no existance of the current tile when calling this function
                     // we just set it to use the default 0x3FF Tile8x8 and use the palette 0xF
                     tmpEntry.mappingData[w] = 0xF000 | 0x3FF;
+                    find_bug = true;
                 }
+            }
+            if (find_bug)
+            {
+                QMessageBox::critical(this, tr("Warning"), tr("Something went wrong when reducing tiles.\n"
+                                                              "Contact developers for more details."));
             }
 
         }
