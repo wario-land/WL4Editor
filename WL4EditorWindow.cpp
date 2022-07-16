@@ -502,6 +502,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionEdit_Entity_EntitySet->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->loadLevelButton->setEnabled(true);
+        ui->actionReload_project_settings->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -2349,5 +2350,17 @@ void WL4EditorWindow::on_actionGraphic_Manager_triggered()
     // open graphic manager dialog
     GraphicManagerDialog dialog(this);
     dialog.exec();
+}
+
+/// <summary>
+/// Reload project settings from json file.
+/// </summary>
+void WL4EditorWindow::on_actionReload_project_settings_triggered()
+{
+    // Load the Project settings
+    SettingsUtils::LoadProjectSettings();
+
+    // Render the screen
+    RenderScreenFull();
 }
 

@@ -307,6 +307,7 @@
     <addaction name="menuThemes"/>
     <addaction name="menuZoom"/>
     <addaction name="actionRolling_Save"/>
+    <addaction name="actionReload_project_settings"/>
    </widget>
    <widget class="QMenu" name="menuScript">
     <property name="title">
@@ -646,6 +647,14 @@
    </property>
    <property name="text">
     <string>Graphic Manager</string>
+   </property>
+  </action>
+  <action name="actionReload_project_settings">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Reload project settings</string>
    </property>
   </action>
  </widget>

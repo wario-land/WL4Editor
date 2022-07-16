@@ -241,6 +241,11 @@ namespace SettingsUtils
                 helper_size = datavec.size();
                 projectSettings::extraEventIDhinteventids = datavec;
             }
+            else
+            {
+                helper_size = 0;
+                projectSettings::extraEventIDhinteventids.clear();
+            }
         }
         json.insert(key, intvec2string(projectSettings::extraEventIDhinteventids));
         key = "extraEventIDhint_optional_characters";
@@ -261,6 +266,10 @@ namespace SettingsUtils
                     {
                         strlist << "";
                     }
+                }
+                else
+                {
+                    strlist << "";
                 }
                 projectSettings::extraEventIDhintChars = strlist;
             }
@@ -285,6 +294,10 @@ namespace SettingsUtils
                 helper_size = datavec.size();
                 projectSettings::extraTerrainIDhintTerrainids = datavec;
             }
+            else
+            {
+                projectSettings::extraTerrainIDhintTerrainids.clear();
+            }
         }
         json.insert(key, intvec2string(projectSettings::extraTerrainIDhintTerrainids));
         key = "extraTerrainIDhint_optional_characters";
@@ -305,6 +318,10 @@ namespace SettingsUtils
                     {
                         strlist << "";
                     }
+                }
+                else
+                {
+                    strlist << "";
                 }
                 projectSettings::extraTerrainIDhintChars = strlist;
             }
@@ -390,6 +407,7 @@ namespace SettingsUtils
         QString result;
         if (!intvec.size())
         {
+            result += "";
             return result;
         }
         for (auto &substr : intvec)
@@ -408,6 +426,7 @@ namespace SettingsUtils
         QStringList datalist;
         if (!data.size())
         {
+            datalist << "";
             return datalist;
         }
         datalist = data.split(QChar(','));
@@ -417,7 +436,7 @@ namespace SettingsUtils
             {
                 if (datalist[i].size())
                 {
-                    datalist[i] = datalist[i].left(1);
+                    datalist[i] = datalist[i][0];
                 }
             }
         }
