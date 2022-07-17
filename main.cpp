@@ -70,5 +70,16 @@ int main(int argc, char *argv[])
 //    testFile.close();
     //-------------------------------------------------------------------
 
+    // load the ROM file from argv if exists
+    if (argc > 1)
+    {
+        QString filePath(argv[1]);
+        ROMUtils::FormatPathSeperators(filePath);
+        if(QFile::exists(filePath) && filePath.endsWith(".gba", Qt::CaseInsensitive))
+        {
+            window.LoadROMDataFromFile(filePath);
+        }
+    }
+
     return application.exec();
 }
