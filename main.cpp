@@ -79,6 +79,11 @@ int main(int argc, char *argv[])
         {
             window.LoadROMDataFromFile(filePath);
         }
+        else
+        {
+            QMessageBox::critical(&window, "WL4Editor", QObject::tr("Wrong command line parameter:\n"
+                                                                    "it needs to be a valid gba file path."));
+        }
     }
 
     return application.exec();
