@@ -56,6 +56,11 @@ private:
     bool UnsavedChangesPrompt(QString str);
     void ClearEverythingInRoom(bool no_warning = false);
 
+    // recent file manager functions
+    void InitRecentFileMenuEntries();
+    bool OpenRecentFile(QString newFilepath);
+    void ManageRecentFilesOrScripts(QString newFilepath);
+
 protected:
     void resizeEvent(QResizeEvent *event);
 
