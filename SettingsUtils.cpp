@@ -66,6 +66,8 @@ namespace SettingsUtils
     }
 
 
+    // ***************************************************project settings****************************************************
+
     // definition of project setting global variables
     namespace projectSettings
     {
@@ -370,6 +372,8 @@ namespace SettingsUtils
         ok = true;
         return QColor(r, g, b, a);
     }
+
+    // ***************************************************helper functions****************************************************
 
     /// <summary>
     /// QColor to int

@@ -43,6 +43,8 @@ private:
     LevelComponents::Level *CurrentLevel = nullptr;
     QAction *RecentROMs[5];
     uint recentROMnum = 0;
+    QAction *RecentScripts[5];
+    uint recentScriptNum = 0;
 
     unsigned int selectedRoom = 0;
     uint graphicViewScalerate = 2;
@@ -57,9 +59,9 @@ private:
     void ClearEverythingInRoom(bool no_warning = false);
 
     // recent file manager functions
-    void InitRecentFileMenuEntries();
-    bool OpenRecentFile(QString newFilepath);
-    void ManageRecentFilesOrScripts(QString newFilepath);
+    void InitRecentFileMenuEntries(const bool manageRecentScripts = false);
+    bool OpenRecentFile(QString newFilepath, const bool manageRecentScripts = false);
+    void ManageRecentFilesOrScripts(QString newFilepath, const bool manageRecentScripts = false);
 
 protected:
     void resizeEvent(QResizeEvent *event);
@@ -118,6 +120,7 @@ public:
 private slots:
     // called slots
     void openRecentROM();
+    void openRecentScript();
 
     // Auto-generated
     void on_actionOpen_ROM_triggered();
