@@ -1372,6 +1372,7 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
 
     // Check if the file exist, if not, modify the Recent ROM QAction list
     QFile file(filepath);
+    bool result = true;
     if(!file.exists())
     {
         if(recentFileNum == 1)
@@ -1400,7 +1401,7 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
         }
         recentFileNum--;
         QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(tr("This File no longer exists!")));
-        return false;
+        result = false;
     }
 
     // write back the value to the global variables
@@ -1418,7 +1419,7 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
         }
     }
 
-    return true;
+    return result;
 }
 
 /// <summary>
