@@ -313,7 +313,16 @@
     <property name="title">
      <string>Script</string>
     </property>
+    <widget class="QMenu" name="menuRecent_Script">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>Recent Script</string>
+     </property>
+    </widget>
     <addaction name="actionRun_from_file"/>
+    <addaction name="menuRecent_Script"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">

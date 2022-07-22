@@ -9,6 +9,9 @@
 
 namespace SettingsUtils
 {
+    // Global const
+    static const unsigned int RecentFileNum = 0x300;
+
     // Global variables
     extern QString ProgramSettingFilePath;
 
@@ -22,6 +25,11 @@ namespace SettingsUtils
      * RecentROMPath_2 = path
      * RecentROMPath_3 = path
      * RecentROMPath_4 = path
+     * RecentScriptPath_0 = path
+     * RecentScriptPath_1 = path
+     * RecentScriptPath_2 = path
+     * RecentScriptPath_3 = path
+     * RecentScriptPath_4 = path
      *
      * [settings]
      * EditorThemeId    = string (convert to int after being read)
@@ -40,6 +48,11 @@ namespace SettingsUtils
         EditorThemeId              = 6,
         RollingSaveLimit           = 7,
         OpenRomInitPath            = 8,
+        RecentScriptPath_0         = 9,
+        RecentScriptPath_1         = 10,
+        RecentScriptPath_2         = 11,
+        RecentScriptPath_3         = 12,
+        RecentScriptPath_4         = 13,
     };
 
     // Static Key QString set
@@ -55,6 +68,11 @@ namespace SettingsUtils
         "settings/EditorThemeId",
         "settings/RollingSaveLimit",
         "settings/OpenRomInitPath",
+        "history/RecentScriptPath_0",
+        "history/RecentScriptPath_1",
+        "history/RecentScriptPath_2",
+        "history/RecentScriptPath_3",
+        "history/RecentScriptPath_4",
     };
     // clang-format on
 

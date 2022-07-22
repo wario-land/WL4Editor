@@ -19,6 +19,7 @@
 #include <QMessageBox>
 #include <QTextEdit>
 #include <QSizePolicy>
+#include <algorithm>
 
 // Variables used by WL4EditorWindow
 bool editModeWidgetInitialized = false;
@@ -77,25 +78,8 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     OutputWidget = new OutputDockWidget();
 
     // Add Recent ROM QAction according to the INI file
-    QMenu *filemenu = ui->menuRecent_ROM;
-    for(uint i = 0; i < sizeof(RecentROMs) / sizeof(RecentROMs[0]); i++)
-    {
-        recentROMnum = i;
-        QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + 1));
-        if(!filepath.length())
-        {
-            if(i == 0)
-            {
-                RecentROMs[0] = new QAction("-/-", this);
-                filemenu->addAction(RecentROMs[0]);
-                connect(RecentROMs[0], SIGNAL(triggered()), this, SLOT(openRecentROM()));
-            }
-            break;
-        }
-        RecentROMs[i] = new QAction(filepath, this);
-        filemenu->addAction(RecentROMs[i]);
-        connect(RecentROMs[i], SIGNAL(triggered()), this, SLOT(openRecentROM()));
-    }
+    InitRecentFileMenuEntries();
+    InitRecentFileMenuEntries(true);
 
     // Memory Initialization
     memset(ROMUtils::singletonTilesets, 0, sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0]));
@@ -501,6 +485,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionGraphic_Manager->setEnabled(true);
         ui->actionEdit_Entity_EntitySet->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
+        ui->menuRecent_Script->setEnabled(true);
         ui->loadLevelButton->setEnabled(true);
         ui->actionReload_project_settings->setEnabled(true);
 
@@ -520,55 +505,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
     CameraControlWidget->PopulateCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
 
     // Modify Recent ROM menu
-    int findedInRecentFile = -1; // start by 0
-    if(recentROMnum > 0)
-    {
-        for(uint i = 0; i < recentROMnum; i++)
-        {
-            QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + 1));
-            if(filepath == ROMUtils::ROMFileMetadata->FilePath)
-            {
-                findedInRecentFile = i;
-                break;
-            }
-        }
-    }
-    QMenu *filemenu = ui->menuRecent_ROM;
-    if(findedInRecentFile == -1)
-    {
-        if(recentROMnum > 0)
-        {
-            if(recentROMnum < (sizeof(RecentROMs) / sizeof(RecentROMs[0])))
-            {
-                RecentROMs[recentROMnum] = new QAction(RecentROMs[recentROMnum - 1]->text(), this);
-                filemenu->addAction(RecentROMs[recentROMnum]);
-                connect(RecentROMs[recentROMnum], SIGNAL(triggered()), this, SLOT(openRecentROM()));
-            }
-            for(uint i = ((recentROMnum < (sizeof(RecentROMs) / sizeof(RecentROMs[0]) - 1) ? recentROMnum : (sizeof(RecentROMs) / sizeof(RecentROMs[0]) - 1))); i > 0 ; i--)
-            {
-                QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i));
-                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), filepath);
-                RecentROMs[i]->setText(filepath);
-            }
-        }
-        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFileMetadata->FilePath);
-        RecentROMs[0]->setText(ROMUtils::ROMFileMetadata->FilePath);
-        recentROMnum++;
-    }
-    else
-    {
-        if(findedInRecentFile > 0)
-        {
-            for(int i = findedInRecentFile; i > -1; i--)
-            {
-                QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i));
-                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), filepath);
-                RecentROMs[i]->setText(filepath);
-            }
-            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), ROMUtils::ROMFileMetadata->FilePath);
-            RecentROMs[0]->setText(ROMUtils::ROMFileMetadata->FilePath);
-        }
-    }
+    ManageRecentFilesOrScripts(ROMUtils::ROMFileMetadata->FilePath);
 
     // UI update
     LoadRoomUIUpdate();
@@ -963,43 +900,40 @@ void WL4EditorWindow::openRecentROM()
     {
         filepath = action->text();
     }
-    // Check if it is a valid slot function call
-    if(filepath == "-/-" || filepath == "") return;
 
-    // Check if the file exist, if not, modify the Recent ROM QAction list
-    QFile file(filepath);
-    if(!file.exists())
-    {
-        if(recentROMnum == 1)
-        {
-            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(1), "");
-            RecentROMs[0]->setText("-/-");
-        }
-        if(recentROMnum > 1)
-        {
-            int deletelinenum = -1;
-            for(int i = 0; i < 5; i++)
-            {
-                if(RecentROMs[i]->text() == filepath)
-                {
-                    deletelinenum = i;
-                    break;
-                }
-            }
-            for(int i = deletelinenum; i < (recentROMnum - 1); i++)
-            {
-                RecentROMs[i]->setText(RecentROMs[i+1]->text());
-                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + 1), RecentROMs[i+1]->text());
-            }
-            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentROMnum), "");
-            delete RecentROMs[recentROMnum - 1];
-        }
-        recentROMnum--;
-        QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(tr("This ROM no longer exists!")));
-        return;
-    }
+    // check if the file loaded from the recent file record still exist
+    // manage the QAction list if it needs changes
+    if (!OpenRecentFile(filepath)) return;
 
     LoadROMDataFromFile(filepath);
+}
+
+/// <summary>
+/// Slot function to load and execute a js script.
+/// </summary>
+void WL4EditorWindow::openRecentScript()
+{
+    QString filepath;
+    QAction *action = qobject_cast<QAction *>(sender());
+    if(action)
+    {
+        filepath = action->text();
+    }
+
+    // check if the file loaded from the recent file record still exist
+    // manage the QAction list if it needs changes
+    if (!OpenRecentFile(filepath, true)) return;
+
+    // Modify Recent Script menu
+    ManageRecentFilesOrScripts(filepath, true);
+
+    QFile file(filepath);
+    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+            QMessageBox::critical(this, tr("Error"), tr("Can't open file."));
+            return;
+    }
+    QString code = QString::fromUtf8(file.readAll());
+    OutputWidget->ExecuteJSScript(code);
 }
 
 /// <summary>
@@ -1333,6 +1267,264 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
 
     // Set change flag
     SetUnsavedChanges(true);
+}
+
+/// <summary>
+/// Initialize the recent file menu entries.
+/// </summary>
+void WL4EditorWindow::InitRecentFileMenuEntries(const bool manageRecentScripts)
+{
+    // variable settings
+    QMenu *filemenu = ui->menuRecent_ROM;
+    int recentFileNum = recentROMnum;
+    int array_max_size = SettingsUtils::RecentFileNum;
+    int array_start_id = 1;
+    if (manageRecentScripts)
+    {
+        filemenu = ui->menuRecent_Script;
+        recentFileNum = recentScriptNum;
+        array_start_id = 9;
+    }
+    QAction **actionlist_ptr = new QAction*[array_max_size];
+    if (!manageRecentScripts) {
+        for (int i = 0; i < array_max_size; i++) {
+            actionlist_ptr[i] = RecentROMs[i];
+        }
+    } else {
+        for (int i = 0; i < array_max_size; i++) {
+            actionlist_ptr[i] = RecentScripts[i];
+        }
+    }
+
+    // Add Recent ROM QAction according to the INI file
+    for(uint i = 0; i < array_max_size; i++)
+    {
+        recentFileNum = i;
+        QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id));
+        if(!filepath.length())
+        {
+            if(i == 0)
+            {
+                actionlist_ptr[0] = new QAction("-/-", this);
+                filemenu->addAction(actionlist_ptr[0]);
+                if (!manageRecentScripts) {
+                    connect(actionlist_ptr[0], SIGNAL(triggered()), this, SLOT(openRecentROM()));
+                } else {
+                    connect(actionlist_ptr[0], SIGNAL(triggered()), this, SLOT(openRecentScript()));
+                }
+            }
+            break;
+        }
+        actionlist_ptr[i] = new QAction(filepath, this);
+        filemenu->addAction(actionlist_ptr[i]);
+        if (!manageRecentScripts) {
+            connect(actionlist_ptr[i], SIGNAL(triggered()), this, SLOT(openRecentROM()));
+        } else {
+            connect(actionlist_ptr[i], SIGNAL(triggered()), this, SLOT(openRecentScript()));
+        }
+    }
+
+    // write back the value to the global variables
+    if (!manageRecentScripts) {
+        recentROMnum = recentFileNum;
+        for (int i = 0; i < array_max_size; i++)
+        {
+            RecentROMs[i] = actionlist_ptr[i];
+        }
+    } else {
+        recentScriptNum = recentFileNum;
+        for (int i = 0; i < array_max_size; i++)
+        {
+            RecentScripts[i] = actionlist_ptr[i];
+        }
+    }
+}
+
+/// <summary>
+/// open a recent ROM or a recent script file from a menu entry.
+/// </summary>
+/// <return>
+/// return false if the file cannot be loaded.
+/// </return>
+bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentScripts)
+{
+    // Check if it is a valid slot function call
+    if(filepath == "-/-" || filepath == "") return false;
+
+    int recentFileNum = recentROMnum;
+    int array_max_size = SettingsUtils::RecentFileNum;
+    int array_start_id = 1;
+    if (manageRecentScripts)
+    {
+        recentFileNum = recentScriptNum;
+        array_start_id = 9;
+    }
+    QAction **actionlist_ptr = new QAction*[array_max_size];
+    if (!manageRecentScripts) {
+        for (int i = 0; i < array_max_size; i++) {
+            actionlist_ptr[i] = RecentROMs[i];
+        }
+    } else {
+        for (int i = 0; i < array_max_size; i++) {
+            actionlist_ptr[i] = RecentScripts[i];
+        }
+    }
+
+    // Check if the file exist, if not, modify the Recent ROM QAction list
+    QFile file(filepath);
+    bool result = true;
+    if(!file.exists())
+    {
+        if(recentFileNum == 1)
+        {
+            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_start_id), "");
+            actionlist_ptr[0]->setText("-/-");
+        }
+        if(recentFileNum > 1)
+        {
+            int deletelinenum = -1;
+            for(int i = 0; i < array_max_size; i++)
+            {
+                if(actionlist_ptr[i]->text() == filepath)
+                {
+                    deletelinenum = i;
+                    break;
+                }
+            }
+            for(int i = deletelinenum; i < (recentFileNum - 1); i++)
+            {
+                actionlist_ptr[i]->setText(actionlist_ptr[i + 1]->text());
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id), actionlist_ptr[i + 1]->text());
+            }
+            SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentFileNum + array_start_id - 1), "");
+            delete actionlist_ptr[recentFileNum - 1];
+        }
+        recentFileNum--;
+        QMessageBox::critical(nullptr, QString(tr("Load Error")), QString(tr("This File no longer exists!")));
+        result = false;
+    }
+
+    // write back the value to the global variables
+    if (!manageRecentScripts) {
+        recentROMnum = recentFileNum;
+        for (int i = 0; i < array_max_size; i++)
+        {
+            RecentROMs[i] = actionlist_ptr[i];
+        }
+    } else {
+        recentScriptNum = recentFileNum;
+        for (int i = 0; i < array_max_size; i++)
+        {
+            RecentScripts[i] = actionlist_ptr[i];
+        }
+    }
+
+    return result;
+}
+
+/// <summary>
+/// a manager to deal with the recent ROM and recent script files' actions in the menu.
+/// </summary>
+void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool manageRecentScripts)
+{
+    int findedInRecentFile = -1; // start by 0
+    int recentFileNum = recentROMnum;
+    int array_max_size = SettingsUtils::RecentFileNum;
+    int array_start_id = 1;
+    QMenu *filemenu = ui->menuRecent_ROM;
+    if (manageRecentScripts)
+    {
+        filemenu = ui->menuRecent_Script;
+        recentFileNum = recentScriptNum;
+        array_start_id = 9;
+    }
+    if(recentFileNum > 0)
+    {
+        for(uint i = 0; i < recentFileNum; i++)
+        {
+            QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id));
+            if(filepath == newFilepath)
+            {
+                findedInRecentFile = i;
+                break;
+            }
+        }
+    }
+    QAction **actionlist_ptr = new QAction*[array_max_size];
+    if (!manageRecentScripts) {
+        for (int i = 0; i < array_max_size; i++) {
+            actionlist_ptr[i] = RecentROMs[i];
+        }
+    } else {
+        for (int i = 0; i < array_max_size; i++) {
+            actionlist_ptr[i] = RecentScripts[i];
+        }
+    }
+
+    // new file never be loaded into the WL4Editor before
+    if(findedInRecentFile == -1)
+    {
+        // we have other recent file record in the list
+        if(recentFileNum > 0)
+        {
+            // add the new file QAction to the menu, append a new entry to the bottom of the list, using the last name from the list
+            if(recentFileNum < array_max_size)
+            {
+                actionlist_ptr[recentFileNum] = new QAction(actionlist_ptr[recentFileNum - 1]->text(), this);
+                filemenu->addAction(actionlist_ptr[recentFileNum]);
+                if (!manageRecentScripts) {
+                    connect(actionlist_ptr[recentFileNum], SIGNAL(triggered()), this, SLOT(openRecentROM()));
+                } else {
+                    connect(actionlist_ptr[recentFileNum], SIGNAL(triggered()), this, SLOT(openRecentScript()));
+                }
+            }
+
+            // get recent file record from the ini file and set the other QActions text, from oldest to newest
+            // move 3 -> 4, 2 -> 3, 1 -> 2, 0 -> 1
+            for(uint i = (std::min(recentFileNum, array_max_size - 1)); i > 0 ; i--)
+            {
+                QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id - 1));
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id), filepath);
+                actionlist_ptr[i]->setText(filepath);
+            }
+        }
+        recentFileNum++;
+    }
+    else
+    {
+        // it is some file which has record in the recent file list
+        // do nothing if it is already the first one in the list
+        // modify the list if it is not the fist one in the list
+        if(findedInRecentFile > 0)
+        {
+            for(int i = findedInRecentFile; i > -1; i--)
+            {
+                // get recent file record from the ini file and set the other QActions text, from oldest to newest
+                // do a part of (3 -> 4, 2 -> 3, 1 -> 2, 0 -> 1) move, from where the file got found in the recent file list
+                QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id - 1));
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id), filepath);
+                actionlist_ptr[i]->setText(filepath);
+            }
+        }
+    }
+    // now we update the current file to be the first one in the list, in both ini and runtime WL4Editor variables
+    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_start_id), newFilepath);
+    actionlist_ptr[0]->setText(newFilepath);
+
+    // write back the value to the global variables
+    if (!manageRecentScripts) {
+        recentROMnum = recentFileNum;
+        for (int i = 0; i < array_max_size; i++)
+        {
+            RecentROMs[i] = actionlist_ptr[i];
+        }
+    } else {
+        recentScriptNum = recentFileNum;
+        for (int i = 0; i < array_max_size; i++)
+        {
+            RecentScripts[i] = actionlist_ptr[i];
+        }
+    }
 }
 
 /// <summary>
@@ -1982,6 +2174,10 @@ void WL4EditorWindow::on_actionRun_from_file_triggered()
             QMessageBox::critical(this, tr("Error"), tr("Can't open file."));
             return;
     }
+
+    // Modify Recent ROM menu
+    ManageRecentFilesOrScripts(qFilePath, true);
+
     QString code = QString::fromUtf8(file.readAll());
     OutputWidget->ExecuteJSScript(code);
 }
