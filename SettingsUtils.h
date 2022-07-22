@@ -9,6 +9,9 @@
 
 namespace SettingsUtils
 {
+    // Global const
+    static const unsigned int RecentFileNum = 0x300;
+
     // Global variables
     extern QString ProgramSettingFilePath;
 

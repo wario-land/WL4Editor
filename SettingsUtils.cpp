@@ -1,6 +1,5 @@
 #include "SettingsUtils.h"
 #include "ROMUtils.h"
-#include "ScriptInterface.h"
 
 #include <QDir>
 #include <QFileInfo>

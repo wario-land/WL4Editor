@@ -1277,7 +1277,7 @@ void WL4EditorWindow::InitRecentFileMenuEntries(const bool manageRecentScripts)
     // variable settings
     QMenu *filemenu = ui->menuRecent_ROM;
     int recentFileNum = recentROMnum;
-    int array_max_size = 5;
+    int array_max_size = SettingsUtils::RecentFileNum;
     int array_start_id = 1;
     if (manageRecentScripts)
     {
@@ -1352,7 +1352,7 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
     if(filepath == "-/-" || filepath == "") return false;
 
     int recentFileNum = recentROMnum;
-    int array_max_size = 5;
+    int array_max_size = SettingsUtils::RecentFileNum;
     int array_start_id = 1;
     if (manageRecentScripts)
     {
@@ -1429,7 +1429,7 @@ void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool
 {
     int findedInRecentFile = -1; // start by 0
     int recentFileNum = recentROMnum;
-    int array_max_size = 5;
+    int array_max_size = SettingsUtils::RecentFileNum;
     int array_start_id = 1;
     QMenu *filemenu = ui->menuRecent_ROM;
     if (manageRecentScripts)
