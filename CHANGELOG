@@ -1,3 +1,14 @@
+0.14.2:
+(major changes)
+- Support recent script menu items. (Issue #329)
+- the old "view hidden coin" feature got replaced by "View Extra Hints", support showing terrain and event id hints, while all the id hints can be represented with a customized character which can be config in the project json setting file. (Issue #372)
+
+(minor changes)
+- now you can drag and drop gba file to the WL4Editor.exe to open rom.
+- Fix the aggressive tile reduce in Tileset Editor and Graphic Manager cannot reserve the tiles with less noise pixels or with less graphic features. (Issue #391)
+- now the color of door and entity boxes can be changed in project json too.
+- now you can update project settings via  "Reload project setting" menu item.
+
 0.14.1:
 (major changes)
 - Fix "the graphic manager will cause crash on both the WL4Editor and the game rom after the second save" (Issue #395)
