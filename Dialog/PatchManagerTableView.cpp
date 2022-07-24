@@ -195,7 +195,7 @@ PatchEntryTableModel::PatchEntryTableModel(QWidget *_parent) : QStandardItemMode
 /// </param>
 void PatchEntryTableModel::RemoveEntries(QModelIndexList entryList)
 {
-    qSort(entryList.begin(), entryList.end(), qGreater<QModelIndex>()); // so that rows are removed from highest index
+    std::sort(entryList.begin(), entryList.end(), [] ( auto &a, auto &b) { return a.row() > b.row(); }); // so that rows are removed from highest index
     foreach (QModelIndex index, entryList)
     {
         entries.removeAt(index.row());

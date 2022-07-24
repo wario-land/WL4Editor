@@ -6,6 +6,10 @@
 #include "FileIOUtils.h"
 #include "Operation.h"
 
+#include "Dialog/ChooseLevelDialog.h"
+#include "Dialog/LevelConfigDialog.h"
+#include "Dialog/CreditsEditDialog.h"
+#include "Dialog/SpritesEditorDialog.h"
 #include "Dialog/PatchManagerDialog.h"
 #include "Dialog/GraphicManagerDialog.h"
 #include "ui_WL4EditorWindow.h"
@@ -42,7 +46,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
 {
     // Render Themes
     int themeId = SettingsUtils::GetKey(SettingsUtils::IniKeys::EditorThemeId).toInt();
-    QApplication::setStyle(new PhantomStyle);
+    QApplication::setStyle("fusion");
     QApplication::setPalette(namedColorSchemePalette(static_cast<ThemeColorType>(themeId)));
 
     ui->setupUi(this);
@@ -310,7 +314,7 @@ void WL4EditorWindow::PrintMousePos(int x, int y)
     QString offset_text = "";
     if(!is8x8)
     {
-        offset_text.sprintf(" Positional offset (y * width + x): 0x%04X", layer->GetLayerWidth() * y + x);
+        offset_text = tr(" Positional offset (y * width + x): 0x%1").arg(layer->GetLayerWidth() * y + x, 4, 16, QChar('0'));
     }
     if(xBound && yBound)
     {

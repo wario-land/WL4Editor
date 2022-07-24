@@ -10,9 +10,6 @@
     <height>200</height>
    </rect>
   </property>
-  <property name="features">
-   <set>QDockWidget::AllDockWidgetFeatures</set>
-  </property>
   <property name="allowedAreas">
    <set>Qt::BottomDockWidgetArea</set>
   </property>

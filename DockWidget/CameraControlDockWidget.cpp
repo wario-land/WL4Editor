@@ -46,7 +46,7 @@ void CameraControlDockWidget::PopulateCameraControlInfo(LevelComponents::Room *c
     }
     SelectedLimitator = -1;
     ClearCurrentLimitatorSetting();
-    ui->LimitatorSetting_groupBox->setEnabled(false);
+    ui->ExistingLimitators_groupBox->setEnabled(false);
     enum LevelComponents::__CameraControlType currentcameracontroltype = currentroom->GetCameraControlType();
 
     // Enable/disable the appropriate radio button for the room's camera type
@@ -246,7 +246,7 @@ void CameraControlDockWidget::ClearListView()
 void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelIndex &index)
 {
     IsSavingData = false;
-    ui->LimitatorSetting_groupBox->setEnabled(false);
+    ui->ExistingLimitators_groupBox->setEnabled(false);
     std::vector<struct LevelComponents::__CameraControlRecord *> currentCameraLimitators =
         currentRoom->GetCameraControlRecords();
     int linenum = index.row();
@@ -290,7 +290,7 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
         ui->TriggerBlockPositionY_spinBox->setEnabled(false);
     }
     SetCurrentLimitator(); // only used to set maximums for all the spinboxes
-    ui->LimitatorSetting_groupBox->setEnabled(true);
+    ui->ExistingLimitators_groupBox->setEnabled(true);
     IsSavingData = true;
 }
 
@@ -459,7 +459,6 @@ void CameraControlDockWidget::on_CameraYFixed_radioButton_clicked(bool checked)
         ClearCurrentLimitatorSetting();
         ClearListView();
         ui->ExistingLimitators_groupBox->setEnabled(false);
-        ui->LimitatorSetting_groupBox->setEnabled(false);
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
@@ -482,7 +481,6 @@ void CameraControlDockWidget::on_FollowWario_radioButton_clicked(bool checked)
         ClearCurrentLimitatorSetting();
         ClearListView();
         ui->ExistingLimitators_groupBox->setEnabled(false);
-        ui->LimitatorSetting_groupBox->setEnabled(false);
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
@@ -510,7 +508,6 @@ void CameraControlDockWidget::on_UseCameraLimitators_radioButton_clicked(bool ch
         }
         PaintListView();
         ui->ExistingLimitators_groupBox->setEnabled(true);
-        ui->LimitatorSetting_groupBox->setEnabled(false);
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }
@@ -544,7 +541,7 @@ void CameraControlDockWidget::on_DeleteCameraLimitator_pushButton_clicked()
     {
         return;
     }
-    ui->LimitatorSetting_groupBox->setEnabled(false);
+    ui->ExistingLimitators_groupBox->setEnabled(false);
     currentRoom->DeleteCameraLimitator(SelectedLimitator);
     SelectedLimitator = -1;
     ClearCurrentLimitatorSetting();
@@ -574,7 +571,6 @@ void CameraControlDockWidget::on_VerticalSeperate_radioButton_clicked(bool check
         ClearCurrentLimitatorSetting();
         ClearListView();
         ui->ExistingLimitators_groupBox->setEnabled(false);
-        ui->LimitatorSetting_groupBox->setEnabled(false);
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     }

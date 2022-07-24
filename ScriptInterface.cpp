@@ -33,7 +33,7 @@ unsigned short *QStringToU16(QString input)
         int index = 0;
         while (index < input.size())
         {
-            *operation_ptr = input.midRef(index, 4).toUInt(nullptr, 16) & 0xFFFF;
+            *operation_ptr = input.mid(index, 4).toUInt(nullptr, 16) & 0xFFFF;
             operation_ptr++;
             index += 4;
         }

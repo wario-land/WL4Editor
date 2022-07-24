@@ -7,11 +7,10 @@
 QT += core gui
 QT += qml        # Need this to compile QJSEngine
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
 TARGET = WL4Editor
 TEMPLATE = app
-
-include(./ThirdParty/phantomstyle/src/phantom/phantom.pri)
 
 RC_ICONS = images/icon.ico
 
@@ -28,7 +27,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++17 strict_c++
 
+# idk why this part works, but it works
+# msvc compiler can get "-fpermissive" without showing error
+# while mingw compiler will showing error when getting "/Zc:__cplusplus" and "/permissive-" required by Qt6
+# things for mingw
 QMAKE_CXXFLAGS = -fpermissive
+# things for msvc
+msvc* {
+QMAKE_CXXFLAGS += /Zc:__cplusplus
+QMAKE_CXXFLAGS += /permissive-
+}
 
 SOURCES += \
     Dialog/GraphicManagerDialog.cpp \
