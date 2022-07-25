@@ -41,6 +41,7 @@ SOURCES += \
     DockWidget/OutputDockWidget.cpp \
     FileIOUtils.cpp \
     AssortedGraphicUtils.cpp \
+    LevelComponents/AnimatedTile8x8Group.cpp \
     ScriptInterface.cpp \
     main.cpp \
     WL4EditorWindow.cpp \
@@ -89,6 +90,7 @@ HEADERS += \
     DockWidget/OutputDockWidget.h \
     FileIOUtils.h \
     AssortedGraphicUtils.h \
+    LevelComponents/AnimatedTile8x8Group.h \
     ScriptInterface.h \
     WL4EditorWindow.h \
     LevelComponents/Level.h \
