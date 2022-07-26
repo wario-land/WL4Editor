@@ -19,7 +19,7 @@
      <item>
       <widget class="QLabel" name="label_GlobalAnimatedTileGroupID">
        <property name="text">
-        <string>Animated Tile Group Global ID:</string>
+        <string>Animated Tile Group Global ID (Hex):</string>
        </property>
       </widget>
      </item>
@@ -41,7 +41,7 @@
        <item>
         <widget class="QLabel" name="label_TileAnimationType">
          <property name="text">
-          <string>Animation Type:</string>
+          <string>Animation Type (Hex):</string>
          </property>
         </widget>
        </item>
@@ -67,7 +67,7 @@
      <item>
       <widget class="QLabel" name="label_CountPerFrame">
        <property name="text">
-        <string>Count per Frame:</string>
+        <string>Count per Frame (Hex):</string>
        </property>
       </widget>
      </item>
@@ -84,7 +84,7 @@
      <item>
       <widget class="QLabel" name="label_TIle16Num">
        <property name="text">
-        <string>Tile16 number:</string>
+        <string>Tile16 number (Hex):</string>
        </property>
       </widget>
      </item>
@@ -128,6 +128,30 @@
         <string>reference palette from current Tileset:</string>
        </property>
       </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_paletteId">
+         <property name="text">
+          <string>palette id for reference (Hex):</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_paletteId">
+         <property name="maximum">
+          <number>15</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <widget class="QGraphicsView" name="graphicsView_RefPalettes"/>

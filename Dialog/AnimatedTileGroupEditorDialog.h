@@ -30,6 +30,7 @@ public:
 private slots:
     void on_spinBox_AnimationType_valueChanged(int arg1);
     void on_spinBox_GlobalID_valueChanged(int arg1);
+    void on_spinBox_paletteId_valueChanged(int arg1);
 
 private:
     Ui::AnimatedTileGroupEditorDialog *ui;

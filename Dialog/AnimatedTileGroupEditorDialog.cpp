@@ -29,6 +29,7 @@ AnimatedTileGroupEditorDialog::AnimatedTileGroupEditorDialog(QWidget *parent,
 
     ui->spinBox_GlobalID->setValue(0);
     ExtractAnimatedTileGroupInfoToUI(0);
+    UpdateTileArrayGraphicView(0);
 }
 
 /// <summary>
@@ -53,8 +54,9 @@ void AnimatedTileGroupEditorDialog::ExtractAnimatedTileGroupInfoToUI(unsigned in
     unsigned int tile16Num = ROMUtils::animatedTileGroups[_animatedTileGroup_globalId]->GetTotalFrameCount();
     ui->spinBox_TIle16Num->setValue(tile16Num);
 
-    // TODO: render palettes and TIle8x8 array into graphicviews
+    // Render palettes and TIle8x8 array into graphicviews
     UpdatePaletteGraphicView();
+    UpdateTileArrayGraphicView(ui->spinBox_paletteId->value());
 }
 
 /// <summary>
@@ -160,5 +162,13 @@ void AnimatedTileGroupEditorDialog::on_spinBox_AnimationType_valueChanged(int ar
 void AnimatedTileGroupEditorDialog::on_spinBox_GlobalID_valueChanged(int arg1)
 {
     ExtractAnimatedTileGroupInfoToUI(arg1);
+}
+
+/// <summary>
+/// Render all the Tile8x8s in the current animated tile8x8 group using the reference palette.
+/// </summary>
+void AnimatedTileGroupEditorDialog::on_spinBox_paletteId_valueChanged(int arg1)
+{
+    UpdateTileArrayGraphicView(arg1);
 }
 

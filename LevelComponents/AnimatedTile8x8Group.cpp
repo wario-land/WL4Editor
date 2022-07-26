@@ -45,6 +45,8 @@ namespace LevelComponents
     /// </returns>
     QPixmap AnimatedTile8x8Group::RenderWholeAnimatedTileGroup(QVector<QRgb> *palettes, unsigned int paletteId)
     {
+        if (!tile8x8Numcount) return QPixmap();
+
         // only use Tile8x8 instances during the rendering
         // create Tile8x8 instances
         std::vector<Tile8x8 *> tile8x8array;
@@ -57,7 +59,7 @@ namespace LevelComponents
         // drawing
         QPixmap pixmap(8 * tile8x8Numcount, 8);
         pixmap.fill(Qt::transparent);
-        for (int i = 0; i < 16; ++i)
+        for (int i = 0; i < tile8x8Numcount; ++i)
         {
             tile8x8array[i]->SetPaletteIndex(paletteId);
             tile8x8array[i]->DrawTile(&pixmap, i * 8, 0);
