@@ -264,6 +264,7 @@
     <addaction name="separator"/>
     <addaction name="actionLevel_Config"/>
     <addaction name="actionRoom_Config"/>
+    <addaction name="actionEdit_Animated_Tile_Groups"/>
     <addaction name="actionEdit_Tileset"/>
     <addaction name="actionEdit_Entity_EntitySet"/>
     <addaction name="actionEdit_Credits"/>
@@ -664,6 +665,14 @@
    </property>
    <property name="text">
     <string>Reload project settings</string>
+   </property>
+  </action>
+  <action name="actionEdit_Animated_Tile_Groups">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit Animated Tile Groups</string>
    </property>
   </action>
  </widget>

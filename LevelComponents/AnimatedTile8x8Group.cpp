@@ -1,6 +1,5 @@
 #include "AnimatedTile8x8Group.h"
 
-#include "Tile.h"
 #include "ROMUtils.h"
 
 namespace LevelComponents
@@ -11,15 +10,18 @@ namespace LevelComponents
     /// <param name="animatedTilegroupHeaderPtr">
     /// Pointer to the beginning of an animated tile group's tile8x8 data.
     /// </param>
-    AnimatedTile8x8Group::AnimatedTile8x8Group(unsigned int animatedTilegroupHeaderPtr)
+    AnimatedTile8x8Group::AnimatedTile8x8Group(unsigned int animatedTilegroupHeaderPtr, unsigned short _globalId) :
+        globalId(_globalId)
     {
         unsigned char *curFilePtr = ROMUtils::ROMFileMetadata->ROMDataPtr;
         unsigned char *tmpptr = curFilePtr + animatedTilegroupHeaderPtr;
 
         // set properties
-        animationtype = static_cast<enum TileAnimationType>(tmpptr[0]);
+        animationtype = tmpptr[0];
         countPerFrame = tmpptr[1];
         tile8x8Numcount = tmpptr[2] * 4;
+        unsigned int tiledataAddr = ROMUtils::PointerFromData(animatedTilegroupHeaderPtr + 4);
+        tmpptr = ROMUtils::ROMFileMetadata->ROMDataPtr + tiledataAddr;
 
         // load tiles data
         tileData.resize(tile8x8Numcount * 32);
@@ -69,6 +71,41 @@ namespace LevelComponents
         tile8x8array.clear();
 
         return pixmap;
+    }
+
+    /// <summary>
+    /// Get the 4 Tile8x8 used for Layer rendering. usually this function should be used by Tileset
+    /// </summary>
+    /// <param name="switchIsOn">
+    /// input the switch stat to tell what it should return.
+    /// <returns>
+    /// The 4 Tile8x8s will be rendered on the layer.
+    /// </returns>
+    QVector<Tile8x8 *> AnimatedTile8x8Group::GetRenderTile8x8s(bool switchIsOn, QVector<QRgb> *palettes)
+    {
+        (void) switchIsOn; // assume switchIsOn cannot work atm
+        // the follow code assume all the switches are off
+        QVector<Tile8x8 *> result;
+        unsigned char *tiledata = (unsigned char *) tileData.data();
+        int tile8x8Num = tileData.size() / 32;
+        if (animationtype == MinToMaxThenStop || animationtype == ReverseLoop)
+        {
+            // use the last 4 Tile8x8s
+            for (int i = tile8x8Num - 4; i < tile8x8Num; i++)
+            {
+                result.push_back(new Tile8x8(tiledata + i * 32, palettes));
+            }
+        }
+        else
+        {
+            // use the first 4 Tile8x8s
+            for (int i = 0; i < 4; i++)
+            {
+                result.push_back(new Tile8x8(tiledata + i * 32, palettes));
+            }
+        }
+
+        return result;
     }
 }
 

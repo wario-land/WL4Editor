@@ -242,24 +242,12 @@ namespace LevelComponents
         AnimatedTileData[0][startTile8x8Id >> 2] = tile8x8groupId;
         AnimatedTileData[1][startTile8x8Id >> 2] = tile8x8group2Id;
         AnimatedTileSwitchTable[startTile8x8Id >> 2] = SwitchId;
-        int tmpAnimatedTilesHeaderPtr = 0x3F7828 + 8 * tile8x8groupId;
-        int tmpAnimatedTilesdataPtr = ROMUtils::PointerFromData(tmpAnimatedTilesHeaderPtr + 4);
-        int tmpoffset = (int) ROMUtils::ROMFileMetadata->ROMDataPtr[tmpAnimatedTilesHeaderPtr + 2];
-        if ((ROMUtils::ROMFileMetadata->ROMDataPtr[tmpAnimatedTilesHeaderPtr] == '\x03') ||
-            (ROMUtils::ROMFileMetadata->ROMDataPtr[tmpAnimatedTilesHeaderPtr] == '\x06'))
-        {
-            tmpoffset -= 1;
-        }
-        else
-        {
-            tmpoffset = 0;
-        }
-        tmpoffset *= 128;
+        QVector<LevelComponents::Tile8x8 *> tmptiles = ROMUtils::animatedTileGroups[tile8x8groupId]->GetRenderTile8x8s(false, palettes);
         for (int i = 0; i < 4; ++i)
         {
             if(tile8x8array[i + startTile8x8Id] != blankTile)
                 delete tile8x8array[i + startTile8x8Id];
-            tile8x8array[i + startTile8x8Id] = new Tile8x8(tmpAnimatedTilesdataPtr + tmpoffset + i * 32, palettes);
+            tile8x8array[i + startTile8x8Id] = tmptiles[i];
         }
 
         // Update Tile16 data

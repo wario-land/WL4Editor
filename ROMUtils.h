@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "WL4Constants.h"
+#include "LevelComponents/AnimatedTile8x8Group.h"
 #include "LevelComponents/Tileset.h"
 #include "LevelComponents/EntitySet.h"
 #include "LevelComponents/Entity.h"
@@ -32,6 +33,7 @@ namespace ROMUtils
 
     extern unsigned int SaveDataIndex;
 
+    extern LevelComponents::AnimatedTile8x8Group *animatedTileGroups[270];
     extern LevelComponents::Tileset *singletonTilesets[92];
     extern LevelComponents::Entity *entities[129];
     extern LevelComponents::EntitySet *entitiessets[90];

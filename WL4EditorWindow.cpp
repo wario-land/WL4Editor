@@ -8,6 +8,7 @@
 
 #include "Dialog/PatchManagerDialog.h"
 #include "Dialog/GraphicManagerDialog.h"
+#include "Dialog/AnimatedTileGroupEditorDialog.h"
 #include "ui_WL4EditorWindow.h"
 
 #include <cstdio>
@@ -82,6 +83,7 @@ WL4EditorWindow::WL4EditorWindow(QWidget *parent) : QMainWindow(parent), ui(new 
     InitRecentFileMenuEntries(true);
 
     // Memory Initialization
+    memset(ROMUtils::animatedTileGroups, 0, sizeof(ROMUtils::animatedTileGroups) / sizeof(ROMUtils::animatedTileGroups[0]));
     memset(ROMUtils::singletonTilesets, 0, sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0]));
     memset(ROMUtils::entitiessets, 0, sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0]));
     memset(ROMUtils::entities, 0, sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0]));
@@ -105,6 +107,11 @@ WL4EditorWindow::~WL4EditorWindow()
     delete statusBarLabel_Scalerate;
 
     // Decomstruct all Tileset singletons
+    for(int i = 0; i < (sizeof(ROMUtils::animatedTileGroups) / sizeof(ROMUtils::animatedTileGroups[0])); i++)
+    {
+        delete ROMUtils::animatedTileGroups[i];
+        ROMUtils::animatedTileGroups[i] = nullptr;
+    }
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
     {
         delete ROMUtils::singletonTilesets[i];
@@ -233,17 +240,25 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     {
         delete CurrentLevel;
         // Decomstruct all LevelComponents singletons
+        for(int i = 0; i < (sizeof(ROMUtils::animatedTileGroups) / sizeof(ROMUtils::animatedTileGroups[0])); i++)
+        {
+            delete ROMUtils::animatedTileGroups[i];
+            ROMUtils::animatedTileGroups[i] = nullptr;
+        }
         for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
         {
             delete ROMUtils::singletonTilesets[i];
+            ROMUtils::singletonTilesets[i] = nullptr;
         }
         for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entitiessets[0])); i++)
         {
             delete ROMUtils::entitiessets[i];
+            ROMUtils::entitiessets[i] = nullptr;
         }
         for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entities[0])); i++)
         {
             delete ROMUtils::entities[i];
+            ROMUtils::entities[i] = nullptr;
         }
         ResetUndoHistory();
         DeleteUndoHistoryGlobal();
@@ -258,6 +273,11 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     setWindowTitle(fileName.c_str());
 
     // Load all LevelComponents singletons
+    for(int i = 0; i < (sizeof(ROMUtils::animatedTileGroups) / sizeof(ROMUtils::animatedTileGroups[0])); i++)
+    {
+        int animatedTileGroupHeaderAddr = WL4Constants::AnimatedTileHeaderTable + i * 8;
+        ROMUtils::animatedTileGroups[i] = new LevelComponents::AnimatedTile8x8Group(animatedTileGroupHeaderAddr, i);
+    }
     for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0])); i++)
     {
         int tilesetPtr = WL4Constants::TilesetDataTable + i * 36;
@@ -471,6 +491,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->actionRedo_global->setEnabled(true);
         ui->actionLevel_Config->setEnabled(true);
         ui->actionRoom_Config->setEnabled(true);
+        ui->actionEdit_Animated_Tile_Groups->setEnabled(true);
         ui->actionEdit_Tileset->setEnabled(true);
         ui->actionEdit_Credits->setEnabled(true);
         ui->menuAdd->setEnabled(true);
@@ -2558,5 +2579,23 @@ void WL4EditorWindow::on_actionReload_project_settings_triggered()
 
     // Render the screen
     RenderScreenFull();
+}
+
+
+void WL4EditorWindow::on_actionEdit_Animated_Tile_Groups_triggered()
+{
+    DialogParams::AnimatedTileGroupsEditParams *_currentAnimatedTileGroupsEditParams =
+        new DialogParams::AnimatedTileGroupsEditParams();
+
+    AnimatedTileGroupEditorDialog tmpdialog(this, CurrentLevel->GetRooms()[selectedRoom]->GetTileset(), _currentAnimatedTileGroupsEditParams);
+    if (tmpdialog.exec() == QDialog::Accepted)
+    {
+        LoadRoomUIUpdate();
+        int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
+        Tile16SelecterWidget->SetTileset(tmpTilesetID);
+
+        // Set program control changes
+        UnsavedChanges = false;
+    }
 }
 

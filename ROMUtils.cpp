@@ -52,6 +52,7 @@ namespace ROMUtils
     struct ROMFileMetadata *ROMFileMetadata;
 
     unsigned int SaveDataIndex;
+    LevelComponents::AnimatedTile8x8Group *animatedTileGroups[270];
     LevelComponents::Tileset *singletonTilesets[92];
     LevelComponents::EntitySet *entitiessets[90];
     LevelComponents::Entity *entities[129];

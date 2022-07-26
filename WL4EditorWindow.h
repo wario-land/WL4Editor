@@ -170,6 +170,7 @@ private slots:
     void on_actionRolling_Save_triggered();
     void on_actionGraphic_Manager_triggered();
     void on_actionReload_project_settings_triggered();
+    void on_actionEdit_Animated_Tile_Groups_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H
