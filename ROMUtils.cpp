@@ -1349,7 +1349,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         ResetChangedBoolsThroughHistory();
 
         // Tilesets instances internal pointers reset
-        for(int i = 0; i < 92; ++i)
+        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets)) / sizeof(ROMUtils::singletonTilesets[0]); ++i)
         {
             if(singletonTilesets[i]->IsNewTileset())
             {
@@ -1362,18 +1362,27 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         }
 
         // Entities and Entitysets members reset
-        for(int i = 0x11; i < 129; ++i) // we skip the first 0x10 sprites, they should be addressed differently
+        for(int i = 0x11; i < (sizeof(ROMUtils::entities)) / sizeof(ROMUtils::entities[0]); ++i) // we skip the first 0x10 sprites, they should be addressed differently
         {
             if(entities[i]->IsNewEntity())
             {
                 entities[i]->SetChanged(false);
             }
         }
-        for(int i = 0; i < 90; ++i)
+        for(int i = 0; i < (sizeof(ROMUtils::entitiessets)) / sizeof(ROMUtils::entitiessets[0]); ++i)
         {
             if(entitiessets[i]->IsNewEntitySet())
             {
                 entitiessets[i]->SetChanged(false);
+            }
+        }
+
+        // animated Tile Group members set
+        for(int i = 0; i < (sizeof(ROMUtils::animatedTileGroups)) / sizeof(ROMUtils::animatedTileGroups[0]); i++)
+        {
+            if(animatedTileGroups[i]->IsNewAnimatedTile8x8Group())
+            {
+                ROMUtils::animatedTileGroups[i]->SetChanged(false);
             }
         }
         // --------------------------------------------------------------------

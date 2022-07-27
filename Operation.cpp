@@ -705,6 +705,17 @@ void ResetChangedBoolsThroughHistory()
                 }
             }
         }
+        else if (operationHistoryGlobal[j]->AnimatedTileGroupChange)
+        {
+            for (LevelComponents::AnimatedTile8x8Group *&animtedTileGroupIter: operationHistoryGlobal[j]->lastAnimatedTileEditParam->animatedTileGroups)
+            {
+                animtedTileGroupIter->SetChanged(true);
+            }
+            for (LevelComponents::AnimatedTile8x8Group *&animtedTileGroupIter: operationHistoryGlobal[j]->newAnimatedTileEditParam->animatedTileGroups)
+            {
+                animtedTileGroupIter->SetChanged(true);
+            }
+        }
     }
 }
 

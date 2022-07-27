@@ -46,11 +46,13 @@ namespace LevelComponents
         unsigned char GetCountPerFrame() { return countPerFrame; }
         int GetTotalFrameCount() { return tile8x8Numcount / 4; }
         QVector<Tile8x8 *> GetRenderTile8x8s(bool switchIsOn, QVector<QRgb> *palettes);
+        bool IsNewAnimatedTile8x8Group() { return Changed; }
 
         // setters
         void SetAnimationType(unsigned int value) { animationtype = static_cast<enum TileAnimationType>(value); }
         void SetCountPerFrame(unsigned char _countPerFrame) { countPerFrame = _countPerFrame; }
         void SetTileData(QByteArray _tiledata) { if (!(_tiledata.size() % (32 * 4))) {tileData = _tiledata; tile8x8Numcount = _tiledata.size() / (32 * 4);} }
+        void SetChanged(bool change) { Changed = change; }
 
     private:
         unsigned short globalId = -1;
@@ -67,6 +69,7 @@ namespace LevelComponents
         unsigned char countPerFrame;
         int tile8x8Numcount = 0; // tile8x8Numcount = TotalFrameCount * 4
         QByteArray tileData;
+        bool Changed = false;
     };
 }
 
