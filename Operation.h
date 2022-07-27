@@ -5,6 +5,7 @@
 #include "Dialog/TilesetEditDialog.h"
 #include "Dialog/CreditsEditDialog.h"
 #include "Dialog/SpritesEditorDialog.h"
+#include "Dialog/AnimatedTileGroupEditorDialog.h"
 #include "LevelComponents/Tile.h"
 
 // Enumerate the type of operations that can be performed and undone
@@ -15,6 +16,7 @@ enum OperationType
     ObjectMoveOperation,
     ChangeTilesetOperation,
     ChangeSpritesAndSpritesetsOperation,
+    AnimatedTileGroupOperation,
 };
 
 // The parameters specific to a tile change operation
@@ -50,8 +52,8 @@ struct ObjectMoveParams
     int type; // DOOR_TYPE or ENTITY_TYPE
     int objectID;
 
-    const static int DOOR_TYPE=1;
-    const static int ENTITY_TYPE=2;
+    const static int DOOR_TYPE = 1;
+    const static int ENTITY_TYPE = 2;
 
     // Create an instance of ObjectMoveParams on the heap, which represents a moved obect
     static ObjectMoveParams *Create(int pX, int pY, int nX, int nY, int type, int objectID)
@@ -75,21 +77,24 @@ struct OperationParams
     // Fields
     enum OperationType type; // TODO: this seems not needed or those following bools are not needed -- ssp
     std::vector<struct TileChangeParams *> tileChangeParams;
-    ObjectMoveParams *objectMoveParams;
-    DialogParams::RoomConfigParams *lastRoomConfigParams;
-    DialogParams::RoomConfigParams *newRoomConfigParams;
-    DialogParams::TilesetEditParams *lastTilesetEditParams;
-    DialogParams::TilesetEditParams *newTilesetEditParams;
-    DialogParams::CreditsEditParams *lastCreditsEditParams;
-    DialogParams::CreditsEditParams *newCreditsEditParams;
-    DialogParams::EntitiesAndEntitySetsEditParams *lastSpritesAndSetParam;
-    DialogParams::EntitiesAndEntitySetsEditParams *newSpritesAndSetParam;
+    ObjectMoveParams *objectMoveParams = nullptr;
+    DialogParams::RoomConfigParams *lastRoomConfigParams = nullptr;
+    DialogParams::RoomConfigParams *newRoomConfigParams = nullptr;
+    DialogParams::TilesetEditParams *lastTilesetEditParams = nullptr;
+    DialogParams::TilesetEditParams *newTilesetEditParams = nullptr;
+    DialogParams::CreditsEditParams *lastCreditsEditParams = nullptr;
+    DialogParams::CreditsEditParams *newCreditsEditParams = nullptr;
+    DialogParams::EntitiesAndEntitySetsEditParams *lastSpritesAndSetParam = nullptr;
+    DialogParams::EntitiesAndEntitySetsEditParams *newSpritesAndSetParam = nullptr;
+    DialogParams::AnimatedTileGroupsEditParams *lastAnimatedTileEditParam = nullptr;
+    DialogParams::AnimatedTileGroupsEditParams *newAnimatedTileEditParam = nullptr;
     bool tileChange;
     bool roomConfigChange;
     bool objectPositionChange;
     bool TilesetChange;
     bool CreditChange;
     bool SpritesSpritesetChange;
+    bool AnimatedTileGroupChange;
 
     OperationParams() :
             lastRoomConfigParams(nullptr),
@@ -99,7 +104,8 @@ struct OperationParams
             objectPositionChange(false),
             TilesetChange(false),
             CreditChange(false),
-            SpritesSpritesetChange(false)
+            SpritesSpritesetChange(false),
+            AnimatedTileGroupChange(false)
     {}
 
     // Clean up the struct when it is deconstructed
@@ -116,25 +122,38 @@ struct OperationParams
         if (roomConfigChange)
         {
             if (lastRoomConfigParams)
+            {
                 delete lastRoomConfigParams;
+                lastRoomConfigParams = nullptr;
+            }
             if (newRoomConfigParams)
+            {
                 delete newRoomConfigParams;
+                newRoomConfigParams = nullptr;
+            }
         }
         if (TilesetChange)
         {
             if (lastTilesetEditParams)
+            {
                 delete lastTilesetEditParams;
+                lastTilesetEditParams = nullptr;
+            }
             if (newTilesetEditParams)
             {
                 delete newTilesetEditParams->newTileset;
                 newTilesetEditParams->newTileset = nullptr;
                 delete newTilesetEditParams;
+                newTilesetEditParams = nullptr;
             }
         }
         if (SpritesSpritesetChange)
         {
             if (lastSpritesAndSetParam)
+            {
                 delete lastSpritesAndSetParam;
+                lastSpritesAndSetParam = nullptr;
+            }
             if (newSpritesAndSetParam)
             {
                 for (LevelComponents::Entity *&entityIter: newSpritesAndSetParam->entities)
@@ -142,6 +161,21 @@ struct OperationParams
                 for (LevelComponents::EntitySet *&entitySetIter: newSpritesAndSetParam->entitySets)
                 { delete entitySetIter; entitySetIter = nullptr; }
                 delete newSpritesAndSetParam;
+                newSpritesAndSetParam = nullptr;
+            }
+        }
+        if (AnimatedTileGroupChange)
+        {
+            if (lastAnimatedTileEditParam)
+            {
+                delete lastAnimatedTileEditParam;
+                lastAnimatedTileEditParam = nullptr;
+            }
+            if (newAnimatedTileEditParam)
+            {
+                for (LevelComponents::AnimatedTile8x8Group *&animtedTileGroupIter: newAnimatedTileEditParam->animatedTileGroups)
+                { delete animtedTileGroupIter; animtedTileGroupIter = nullptr; }
+                newAnimatedTileEditParam = nullptr;
             }
         }
     }
