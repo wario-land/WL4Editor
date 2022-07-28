@@ -15,7 +15,7 @@
 #include "LevelComponents/Entity.h"
 #include "LevelComponents/Layer.h"
 
-#define CHUNK_TYPE_COUNT 0x16
+#define CHUNK_TYPE_COUNT 0x17
 
 namespace ROMUtils
 {
@@ -62,10 +62,11 @@ namespace ROMUtils
         EntityTile8x8DataChunkType            = '\x0F',
         EntityPaletteDataChunkType            = '\x10',
         EntitySetLoadTableChunkType           = '\x11',
-        AssortedGraphicListChunkType         = '\x12',
-        AssortedGraphicTile8x8DataChunkType  = '\x13',
-        AssortedGraphicmappingChunkType      = '\x14',
-        AssortedGraphicPaletteChunkType      = '\x15'
+        AssortedGraphicListChunkType          = '\x12',
+        AssortedGraphicTile8x8DataChunkType   = '\x13',
+        AssortedGraphicmappingChunkType       = '\x14',
+        AssortedGraphicPaletteChunkType       = '\x15',
+        AnimatedTileGroupTile8x8DataChunkType = '\x16',
     };
 
     enum ChunkAllocationStatus
@@ -126,6 +127,7 @@ namespace ROMUtils
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor = false);
     unsigned short QRgbToData(QRgb paletteElement);
 
+    void GenerateAnimatedTileGroupChunks(int _globalAnimatedTileGroupId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySaveChunks(int GlobalEntityId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);

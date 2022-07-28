@@ -46,6 +46,7 @@ namespace LevelComponents
         unsigned char GetCountPerFrame() { return countPerFrame; }
         int GetTotalFrameCount() { return tile8x8Numcount / 4; }
         QVector<Tile8x8 *> GetRenderTile8x8s(bool switchIsOn, QVector<QRgb> *palettes);
+        QByteArray GetTileData() {return tileData; }
         bool IsNewAnimatedTile8x8Group() { return Changed; }
 
         // setters
