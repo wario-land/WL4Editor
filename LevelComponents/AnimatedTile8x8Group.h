@@ -51,7 +51,7 @@ namespace LevelComponents
         // setters
         void SetAnimationType(unsigned int value) { animationtype = static_cast<enum TileAnimationType>(value); }
         void SetCountPerFrame(unsigned char _countPerFrame) { countPerFrame = _countPerFrame; }
-        void SetTileData(QByteArray _tiledata) { if (!(_tiledata.size() % (32 * 4))) {tileData = _tiledata; tile8x8Numcount = _tiledata.size() / (32 * 4);} }
+        void SetTileData(QByteArray _tiledata) { if (!(_tiledata.size() % (32 * 4))) {tileData = _tiledata; tile8x8Numcount = _tiledata.size() / 32;} }
         void SetChanged(bool change) { Changed = change; }
 
     private:

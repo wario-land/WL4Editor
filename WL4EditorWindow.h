@@ -51,6 +51,8 @@ private:
     bool UnsavedChanges = false; // state check bool only be used when user try loading another ROM, another Level or
                                  // close the editor without saving changes
     bool firstROMLoaded = false;
+    QString dialogInitialPath = QString("");
+
     void closeEvent(QCloseEvent *event);
     bool notify(QObject *receiver, QEvent *event);
     static bool SaveCurrentFile() { return ROMUtils::SaveLevel(ROMUtils::ROMFileMetadata->FilePath); }
@@ -116,6 +118,8 @@ public:
     void SetChangeCurrentRoomEnabled(bool state);
     void SetCurrentRoomId(int roomid);
     void EditCurrentTileset(DialogParams::TilesetEditParams *_newTilesetEditParams);
+    QString GetdDialogInitialPath() { return dialogInitialPath; }
+    void SetDialogInitialPath(QString newpath) { dialogInitialPath = newpath; }
 
 private slots:
     // called slots

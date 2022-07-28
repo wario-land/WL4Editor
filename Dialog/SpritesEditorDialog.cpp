@@ -553,9 +553,6 @@ void SpritesEditorDialog::on_spinBox_SpritesetPaletteID_valueChanged(int arg1)
 /// </summary>
 void SpritesEditorDialog::on_pushButton_ResetLoadTable_clicked()
 {
-    // Find if new entityset data exist
-    LevelComponents::EntitySet *curEntityset = GetCurEntitySetPtr(true);
-
     // Generate Entityset Load Table and update them into the new entityset instance
     QStringList loadtableStrData = ui->lineEdit_SpritesetLoadTable->text().split(QChar(' '), Qt::SkipEmptyParts);
     if (loadtableStrData.size() & 1)
@@ -589,6 +586,9 @@ void SpritesEditorDialog::on_pushButton_ResetLoadTable_clicked()
             return;
         }
     }
+
+    // Find if new entityset data exist
+    LevelComponents::EntitySet *curEntityset = GetCurEntitySetPtr(true);
     curEntityset->ClearEntityLoadTable();
     for (int i = 0; i < loadtableStrData.size(); i += 2)
     {

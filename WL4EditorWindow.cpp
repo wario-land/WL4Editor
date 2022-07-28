@@ -28,7 +28,6 @@ bool editModeWidgetInitialized = false;
 // Global variables
 struct DialogParams::PassageAndLevelIndex selectedLevel = { 0, 0 };
 WL4EditorWindow *singleton;
-QString dialogInitialPath = QString("");
 
 /// <summary>
 /// Construct the instance of the WL4EditorWindow.
@@ -2590,12 +2589,30 @@ void WL4EditorWindow::on_actionEdit_Animated_Tile_Groups_triggered()
     AnimatedTileGroupEditorDialog tmpdialog(this, CurrentLevel->GetRooms()[selectedRoom]->GetTileset(), _currentAnimatedTileGroupsEditParams);
     if (tmpdialog.exec() == QDialog::Accepted)
     {
-        LoadRoomUIUpdate();
-        int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
-        Tile16SelecterWidget->SetTileset(tmpTilesetID);
+        // Generate operation history data
+        // Set changed bools in to all the new data
+        DialogParams::AnimatedTileGroupsEditParams *_oldAnimatedTileGroupsEditParams =
+            new DialogParams::AnimatedTileGroupsEditParams();
+        for (auto *&animatedTileGroupIter: _currentAnimatedTileGroupsEditParams->animatedTileGroups)
+        {
+            _oldAnimatedTileGroupsEditParams->animatedTileGroups.push_back(ROMUtils::animatedTileGroups[animatedTileGroupIter->GetGlobalID()]);
+            animatedTileGroupIter->SetChanged(true);
+        }
 
-        // Set program control changes
-        UnsavedChanges = false;
+        // Execute Operation
+        OperationParams *operation = new OperationParams;
+        operation->type = ChangeAnimatedTileGroupOperation;
+        operation->AnimatedTileGroupChange = true;
+        operation->lastAnimatedTileEditParam = _oldAnimatedTileGroupsEditParams;
+        operation->newAnimatedTileEditParam = _currentAnimatedTileGroupsEditParams;
+        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
+    }
+    else
+    {
+        // We don't call the operation deconstructor, so we need to manually delete them if cancel the changes
+        for (auto *&animatedTileGroupIter: _currentAnimatedTileGroupsEditParams->animatedTileGroups)
+        { delete animatedTileGroupIter; }
+        delete _currentAnimatedTileGroupsEditParams;
     }
 }
 

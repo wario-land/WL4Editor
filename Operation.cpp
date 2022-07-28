@@ -183,7 +183,11 @@ void PerformOperation(struct OperationParams *operation)
             ROMUtils::animatedTileGroups[animatedTileGroupIter->GetGlobalID()] = animatedTileGroupIter;
         }
 
-        // TODO: Update all the Tilesets using the current ROMUtils::animatedTileGroups instances
+        // Update all the Tilesets using the current ROMUtils::animatedTileGroups instances
+        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets)) / sizeof(ROMUtils::singletonTilesets[0]); ++i)
+        {
+            ROMUtils::singletonTilesets[i]->UpdateAllAnimatedTileFromGlobalSingletons();
+        }
 
         singleton->GetTile16DockWidgetPtr()->SetTileset(singleton->GetCurrentRoom()->GetTilesetID());
         singleton->RenderScreenFull();
@@ -365,7 +369,11 @@ void BackTrackOperation(struct OperationParams *operation)
             ROMUtils::animatedTileGroups[animatedTileGroupIter->GetGlobalID()] = animatedTileGroupIter;
         }
 
-        // TODO: Update all the Tilesets using the current ROMUtils::animatedTileGroups instances
+        // Update all the Tilesets using the current ROMUtils::animatedTileGroups instances
+        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets)) / sizeof(ROMUtils::singletonTilesets[0]); ++i)
+        {
+            ROMUtils::singletonTilesets[i]->UpdateAllAnimatedTileFromGlobalSingletons();
+        }
 
         singleton->GetTile16DockWidgetPtr()->SetTileset(singleton->GetCurrentRoom()->GetTilesetID());
         singleton->RenderScreenFull();

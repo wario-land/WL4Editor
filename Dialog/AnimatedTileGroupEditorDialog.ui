@@ -84,7 +84,7 @@
      <item>
       <widget class="QLabel" name="label_TIle16Num">
        <property name="text">
-        <string>Tile16 number (Hex):</string>
+        <string>equivalent Tile16 number (Hex):</string>
        </property>
       </widget>
      </item>

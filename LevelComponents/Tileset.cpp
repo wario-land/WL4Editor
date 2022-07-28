@@ -60,10 +60,7 @@ namespace LevelComponents
         memcpy(AnimatedTileSwitchTable, curFilePtr + __TilesetID * 16 + WL4Constants::AnimatedTileSwitchInfoTable, 16);
         AnimatedTileData[1] = new unsigned short[16];
         memcpy((unsigned char *)AnimatedTileData[1], curFilePtr + __TilesetID * 32 + WL4Constants::AnimatedTileIdTableSwitchOn, 32);
-        for (int v1 = 0; v1 < 16; ++v1)
-        {
-            SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
-        }
+        UpdateAllAnimatedTileFromGlobalSingletons();
 
         // Load the 8x8 tile graphics
         fgGFXptr = ROMUtils::PointerFromData(tilesetPtr);
@@ -191,10 +188,7 @@ namespace LevelComponents
         memcpy(AnimatedTileSwitchTable, old_tileset->GetAnimatedTileSwitchTable(), 16 * sizeof(unsigned char));
 
         // Copy all the Tile8x8
-        for (int v1 = 0; v1 < 16; ++v1)
-        {
-            SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
-        }
+        UpdateAllAnimatedTileFromGlobalSingletons();
         QVector<Tile8x8 *> oldTile8x8Data = old_tileset->GetTile8x8arrayPtr();
         int fgGFXcount = fgGFXlen / 32;
         for (int i = 0; i < fgGFXcount; ++i)
@@ -435,6 +429,17 @@ namespace LevelComponents
                     tile16->ResetTile8x8(tile8x8array[0x40], j, 0x40, 0, false, false);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Update Animated Tiles into TIle8x8 and Tile16 set from the current global singletons.
+    /// </summary>
+    void Tileset::UpdateAllAnimatedTileFromGlobalSingletons()
+    {
+        for (int v1 = 0; v1 < 16; ++v1)
+        {
+            SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
         }
     }
 } // namespace LevelComponents

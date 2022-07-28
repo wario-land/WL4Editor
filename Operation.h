@@ -16,7 +16,7 @@ enum OperationType
     ObjectMoveOperation,
     ChangeTilesetOperation,
     ChangeSpritesAndSpritesetsOperation,
-    AnimatedTileGroupOperation,
+    ChangeAnimatedTileGroupOperation,
 };
 
 // The parameters specific to a tile change operation

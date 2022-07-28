@@ -4,6 +4,7 @@
 #include <QScrollBar>
 
 #include "ROMUtils.h"
+#include "FileIOUtils.h"
 
 /// <summary>
 /// Construct an instance of AnimatedTileGroupEditorDialog.
@@ -47,16 +48,20 @@ void AnimatedTileGroupEditorDialog::ExtractAnimatedTileGroupInfoToUI(unsigned in
 {
     // Set spinboxes
     ui->spinBox_GlobalID->setValue(_animatedTileGroup_globalId);
-    unsigned int type = ROMUtils::animatedTileGroups[_animatedTileGroup_globalId]->GetAnimationType();
+    auto animatedTileGroupPtr = GetAnimatedTileGroupPtr(_animatedTileGroup_globalId);
+    unsigned int type = animatedTileGroupPtr->GetAnimationType();
     ui->spinBox_AnimationType->setValue(type);
-    unsigned int countperframe = ROMUtils::animatedTileGroups[_animatedTileGroup_globalId]->GetCountPerFrame();
+    unsigned int countperframe = animatedTileGroupPtr->GetCountPerFrame();
     ui->spinBox_CountPerFrame->setValue(countperframe);
-    unsigned int tile16Num = ROMUtils::animatedTileGroups[_animatedTileGroup_globalId]->GetTotalFrameCount();
+    unsigned int tile16Num = animatedTileGroupPtr->GetTotalFrameCount();
     ui->spinBox_TIle16Num->setValue(tile16Num);
 
     // Render palettes and TIle8x8 array into graphicviews
     UpdatePaletteGraphicView();
     UpdateTileArrayGraphicView(ui->spinBox_paletteId->value());
+
+    // we should not edit the first entry in the whole list always
+    ui->pushButton_ImportAndSetSlot->setEnabled(_animatedTileGroup_globalId);
 }
 
 /// <summary>
@@ -170,5 +175,44 @@ void AnimatedTileGroupEditorDialog::on_spinBox_GlobalID_valueChanged(int arg1)
 void AnimatedTileGroupEditorDialog::on_spinBox_paletteId_valueChanged(int arg1)
 {
     UpdateTileArrayGraphicView(arg1);
+}
+
+/// <summary>
+/// Import and reset the current animated Tile group entry's Tile data according to its settings in the UI if suitable.
+/// </summary>
+void AnimatedTileGroupEditorDialog::on_pushButton_ImportAndSetSlot_clicked()
+{
+
+    LevelComponents::AnimatedTile8x8Group *curAnimatedTileGroup = GetAnimatedTileGroupPtr(true);
+    unsigned int paletteId = ui->spinBox_paletteId->value();
+    unsigned int equivalentTile16Num = ui->spinBox_TIle16Num->value();
+    bool success = false;
+    FileIOUtils::ImportTile8x8GfxData(this,
+        currentTileset->GetPalettes()[paletteId],
+        tr("Choose a color to covert to transparent:"),
+        [&curAnimatedTileGroup, &equivalentTile16Num, &success] (QByteArray finaldata, QWidget *parentPtr)
+        {
+            // Assume the file is fully filled with tiles
+            int newtilenum = finaldata.size() / 32;
+            if(newtilenum != (equivalentTile16Num * 4))
+            {
+                QMessageBox::critical(parentPtr, tr("Load Error"), tr("Incorrect Tile8x8 data length,\n") +
+                                                                   tr("the data needs to contains 0x") +
+                                      QString::number(equivalentTile16Num * 4, 16) + tr(" Tile8x8s."));
+                return;
+            }
+
+            // Set tile data for the current animated Tile Group
+            curAnimatedTileGroup->SetTileData(finaldata);
+            success = true;
+        });
+
+    // update and global singleton and the graphicviews
+    if (success)
+    {
+        curAnimatedTileGroup->SetAnimationType(ui->spinBox_AnimationType->value());
+        curAnimatedTileGroup->SetCountPerFrame(ui->spinBox_CountPerFrame->value());
+        UpdateTileArrayGraphicView(ui->spinBox_paletteId->value());
+    }
 }
 
