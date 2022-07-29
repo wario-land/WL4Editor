@@ -62,6 +62,25 @@ void AnimatedTileGroupEditorDialog::ExtractAnimatedTileGroupInfoToUI(unsigned in
 
     // we should not edit the first entry in the whole list always
     ui->pushButton_ImportAndSetSlot->setEnabled(_animatedTileGroup_globalId);
+
+    // Add Extra Info into the textbox
+    ui->textEdit_ExtraInfo->setText("current Animated Tile Group find in Tileset(s): ");
+    if (_animatedTileGroup_globalId)
+    {
+        for (int i = 0; i < (sizeof(ROMUtils::singletonTilesets)) / sizeof(ROMUtils::singletonTilesets[0]); i++)
+        {
+            unsigned short *_value1_slots = ROMUtils::singletonTilesets[i]->GetAnimatedTileData(0);
+            unsigned short *_value2_slots = ROMUtils::singletonTilesets[i]->GetAnimatedTileData(1);
+            for (int j = 0; j < 16; j++)
+            {
+                if (_value1_slots[j] == _animatedTileGroup_globalId || _value2_slots[j] == _animatedTileGroup_globalId)
+                {
+                    ui->textEdit_ExtraInfo->append("0x" + QString::number(i, 16) + ", ");
+                    break;
+                }
+            }
+        }
+    }
 }
 
 /// <summary>
