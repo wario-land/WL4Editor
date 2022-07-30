@@ -32,6 +32,8 @@ public:
     Q_INVOKABLE void _ExportLayerData(QString filePath = QString(""), int layerid = -1);
     Q_INVOKABLE void _ImportLayerData(QString fileName = QString(""), int layerid = -1);
     Q_INVOKABLE void _GetTilesetGFXInfo(int tilesetId);
+    Q_INVOKABLE void _ExtractSpriteOAMPackage(int address);
+    Q_INVOKABLE void _ExtractSpriteOAMPackage(QString address);
 
     // Setter
     Q_INVOKABLE void SetCurrentRoomId(int roomid);

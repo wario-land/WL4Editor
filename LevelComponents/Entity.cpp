@@ -277,6 +277,7 @@ namespace LevelComponents
         if (!oamNum) return QImage();
 
         QVector<OAMTile *> tmpOAMTiles;
+        bool has_illegal_pal = false;
         for (int i = 0; i < oamNum; ++i)
         {
             // Obtain short values for the OAM tile
@@ -315,6 +316,10 @@ namespace LevelComponents
                     if (tile8x8data[offsetID] == blankTile) continue; // skip dummy tiles if used
                     Tile8x8 *newTile = new Tile8x8(tile8x8data[offsetID]);
                     if (palNum > 7) palNum = palNum - 8; // the game engine use pal Id with offset in the oam data
+                    if (!palettes[palNum].size())
+                    {
+                        has_illegal_pal = true;
+                    }
                     newTile->SetPaletteIndex(palNum);
                     entityTile->objTile = newTile;
                     newOAM->tile8x8.push_back(entityTile);
@@ -336,8 +341,11 @@ namespace LevelComponents
         for (auto iter = tmpOAMTiles.rbegin(); iter != tmpOAMTiles.rend(); ++iter)
         {
             OAMTile *ot = *iter;
-            // x + 8, y + 16, this works in the room rendering to match the box
-            p.drawImage(ot->Xoff + 512 + 8, ot->Yoff + 256 + 16, ot->Render());
+            if (!has_illegal_pal)
+            {
+                // x + 8, y + 16, this works in the room rendering to match the box
+                p.drawImage(ot->Xoff + 512 + 8, ot->Yoff + 256 + 16, ot->Render());
+            }
             delete ot;
         }
         tmpOAMTiles.clear();
