@@ -375,13 +375,13 @@ void ScriptInterface::_ExtractSpriteOAMPackage(int address)
     log(tr("OAM data pack extract start from ") + QString::number(address, 16) + " in C format:");
     unsigned int oamdatapackPtr = ROMUtils::PointerFromData(address);
     int frameNum = ROMUtils::IntFromData(address + 4);
-    QString oamdatatable = "const unsigned int oam_data_table[] = { 0x";
+    QString oamdatatable = "const unsigned int oam_data_table[] = { ";
     int offset = 0;
     while (oamdatapackPtr)
     {
         unsigned short *data = (unsigned short *) (ROMUtils::ROMFileMetadata->ROMDataPtr + oamdatapackPtr);
         unsigned short oamnum = data[0];
-        QString oamdata = "const unsigned int oam_data_0x" + QString::number(offset / 8, 16) + "[] = { 0x" + QString::number(oamnum, 16) + ", 0x";
+        QString oamdata = "const unsigned short oam_data_0x" + QString::number(offset / 8, 16) + "[] = { 0x" + QString::number(oamnum, 16) + ", 0x";
         for (int i = 0; i < oamnum; i++)
         {
             oamdata += QString::number(data[i * 3 + 1], 16) + ", 0x" +
