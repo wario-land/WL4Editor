@@ -374,7 +374,7 @@ void ScriptInterface::_ExtractSpriteOAMPackage(int address)
     }
     log(tr("OAM data pack extract start from ") + QString::number(address, 16) + " in C format:");
     unsigned int oamdatapackPtr = ROMUtils::PointerFromData(address);
-    int frameNum = ROMUtils::IntFromData(address + 4);
+    int count_per_frame = ROMUtils::IntFromData(address + 4);
     QString oamdatatable = "const unsigned int oam_data_table[] = { ";
     int offset = 0;
     while (oamdatapackPtr)
@@ -392,13 +392,13 @@ void ScriptInterface::_ExtractSpriteOAMPackage(int address)
         oamdata += " };";
         log(oamdata);
         oamdatatable += "oam_data_0x" +
-                        QString::number(offset / 8, 16) + ", " +
-                        QString::number(frameNum, 16) + ", ";
+                        QString::number(offset / 8, 16) + ", 0x" +
+                        QString::number(count_per_frame, 16) + ", ";
 
         // next package addresses prepare
         offset += 8;
         oamdatapackPtr = ROMUtils::PointerFromData(address + offset);
-        frameNum = ROMUtils::IntFromData(address + 4 + offset);
+        count_per_frame = ROMUtils::IntFromData(address + 4 + offset);
     }
     oamdatatable += "0, 0 };";
     log(oamdatatable);
