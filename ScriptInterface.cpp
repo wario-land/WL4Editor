@@ -360,29 +360,78 @@ void ScriptInterface::_GetTilesetGFXInfo(int tilesetId)
     log(" palette data address (Hex, Byte): 0x" + QString::number(palptr, 16));
 }
 
+void ScriptInterface::_ExtractSpriteOAMPackage(int address)
+{
+    if (address % 4)
+    {
+        log("Illegal address, the address value need to be a multiple of 4 to load the data pack correctly.");
+        return;
+    }
+    if (address >= WL4Constants::AvailableSpaceBeginningInROM )
+    {
+        log("Illegal address, you should read oam data package from the vanilla ROM data area.");
+        return;
+    }
+    log(tr("OAM data pack extract start from ") + QString::number(address, 16) + " in C format:");
+    unsigned int oamdatapackPtr = ROMUtils::PointerFromData(address);
+    int count_per_frame = ROMUtils::IntFromData(address + 4);
+    QString oamdatatable = "const unsigned int oam_data_table[] = { ";
+    int offset = 0;
+    while (oamdatapackPtr)
+    {
+        unsigned short *data = (unsigned short *) (ROMUtils::ROMFileMetadata->ROMDataPtr + oamdatapackPtr);
+        unsigned short oamnum = data[0];
+        QString oamdata = "const unsigned short oam_data_0x" + QString::number(offset / 8, 16) + "[] = { 0x" + QString::number(oamnum, 16) + ", 0x";
+        for (int i = 0; i < oamnum; i++)
+        {
+            oamdata += QString::number(data[i * 3 + 1], 16) + ", 0x" +
+                       QString::number(data[i * 3 + 2], 16) + ", 0x" +
+                       QString::number(data[i * 3 + 3], 16) + ", 0x";
+        }
+        oamdata.chop(4); // delete the last 4 chars ", 0x"
+        oamdata += " };";
+        log(oamdata);
+        oamdatatable += "oam_data_0x" +
+                        QString::number(offset / 8, 16) + ", 0x" +
+                        QString::number(count_per_frame, 16) + ", ";
+
+        // next package addresses prepare
+        offset += 8;
+        oamdatapackPtr = ROMUtils::PointerFromData(address + offset);
+        count_per_frame = ROMUtils::IntFromData(address + 4 + offset);
+    }
+    oamdatatable += "0, 0 };";
+    log(oamdatatable);
+}
+
+void ScriptInterface::_ExtractSpriteOAMPackage(QString address)
+{
+    _ExtractSpriteOAMPackage(address.toUInt(nullptr, 16));
+}
+
 QString ScriptInterface::GetEntityListData(int entitylistid)
 {
-        if(entitylistid < 0 || entitylistid > 2)
-            entitylistid = prompt(tr("Illegal entitylist id, input it manually/n"
-                                     "Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)"),
-                                  "0").toInt();
-        if(entitylistid < 0 || entitylistid > 2)
-        {
-            log("Illegal Entity list id!");
-            return "";
-        }
-        LevelComponents::Room *room = singleton->GetCurrentRoom();
-        std::vector<struct LevelComponents::EntityRoomAttribute> tmpvec = room->GetEntityListData(entitylistid);
-        int size = tmpvec.size() * sizeof(struct LevelComponents::EntityRoomAttribute);
-        if(!size) return "";
-        QString result;
-        for(auto entity: tmpvec)
-        {
-            result += QString::number(entity.YPos, 16).toUpper() + QChar(' ');
-            result += QString::number(entity.XPos, 16).toUpper() + QChar(' ');
-            result += QString::number(entity.EntityID, 16).toUpper() + QChar(' ');
-        }
-        return result;
+    if(entitylistid < 0 || entitylistid > 2)
+        entitylistid = prompt(tr("Illegal entitylist id, input it manually/n"
+                                 "Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)"),
+                              "0").toInt();
+    if(entitylistid < 0 || entitylistid > 2)
+    {
+        log("Illegal Entity list id!");
+        return "";
+    }
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    std::vector<struct LevelComponents::EntityRoomAttribute> tmpvec = room->GetEntityListData(entitylistid);
+    int size = tmpvec.size() * sizeof(struct LevelComponents::EntityRoomAttribute);
+    if(!size) return "";
+    QString result;
+    for(auto entity: tmpvec)
+    {
+        result += QString::number(entity.YPos, 16).toUpper() + QChar(' ');
+        result += QString::number(entity.XPos, 16).toUpper() + QChar(' ');
+        result += QString::number(entity.EntityID, 16).toUpper() + QChar(' ');
+    }
+    return result;
 }
 
 void ScriptInterface::SetEntityListData(QString entitylistdata, int entitylistid)

@@ -21,6 +21,7 @@ namespace WL4Constants
     const unsigned int AnimatedTileIdTableSwitchOff  = 0x3F8098;
     const unsigned int AnimatedTileIdTableSwitchOn   = 0x3F91D8;
     const unsigned int AnimatedTileSwitchInfoTable   = 0x3F8C18;
+    const unsigned int AnimatedTileHeaderTable       = 0x3F7828; // 270 slots, i.e. 0x10E slots
 
     // Miscellaneous definitions
     const unsigned int CameraRecordSentinel        = 0x3F9D58;

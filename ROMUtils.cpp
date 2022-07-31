@@ -52,6 +52,7 @@ namespace ROMUtils
     struct ROMFileMetadata *ROMFileMetadata;
 
     unsigned int SaveDataIndex;
+    LevelComponents::AnimatedTile8x8Group *animatedTileGroups[270];
     LevelComponents::Tileset *singletonTilesets[92];
     LevelComponents::EntitySet *entitiessets[90];
     LevelComponents::Entity *entities[129];
@@ -78,7 +79,8 @@ namespace ROMUtils
         "AssortedGraphicListChunkType",
         "AssortedGraphicTile8x8DataChunkType",
         "AssortedGraphicmappingChunkType",
-        "AssortedGraphicPaletteChunkType"
+        "AssortedGraphicPaletteChunkType",
+        "AnimatedTileGroupTile8x8DataChunkType",
     };
 
     bool ChunkTypeAlignment[CHUNK_TYPE_COUNT] = {
@@ -100,10 +102,11 @@ namespace ROMUtils
         true,  // EntityTile8x8DataChunkType
         true,  // EntityPaletteDataChunkType
         true,  // EntitySetLoadTableChunkType
-        false, // AssortedGraphicListChunkType         = '\x12',
-        true,  // AssortedGraphicTile8x8DataChunkType  = '\x13',
-        false, // AssortedGraphicmappingChunkType      = '\x14',
-        true,  // AssortedGraphicPaletteChunkType      = '\x15'
+        false, // AssortedGraphicListChunkType          = '\x12',
+        true,  // AssortedGraphicTile8x8DataChunkType   = '\x13',
+        false, // AssortedGraphicmappingChunkType       = '\x14',
+        true,  // AssortedGraphicPaletteChunkType       = '\x15',
+        true,  // AnimatedTileGroupTile8x8DataChunkType = '\x16',
     };
 
     void StaticInitialization()
@@ -1210,21 +1213,28 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         }
 
         // Get Global instances chunks
-        for(int i = 0; i < 92; ++i)
+        for(int i = 0; i < (sizeof(ROMUtils::animatedTileGroups)) / sizeof(ROMUtils::animatedTileGroups[0]); i++)
+        {
+            if(animatedTileGroups[i]->IsNewAnimatedTile8x8Group())
+            {
+                GenerateAnimatedTileGroupChunks(i, chunks);
+            }
+        }
+        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets)) / sizeof(ROMUtils::singletonTilesets[0]); ++i)
         {
             if(singletonTilesets[i]->IsNewTileset())
             {
                 GenerateTilesetSaveChunks(i, chunks);
             }
         }
-        for(int i = 0x11; i < 129; ++i) // we skip the first 0x10 sprites, they should be addressed differently
+        for(int i = 0x11; i < (sizeof(ROMUtils::entities)) / sizeof(ROMUtils::entities[0]); ++i) // we skip the first 0x10 sprites, they should be addressed differently
         {
             if(entities[i]->IsNewEntity())
             {
                 GenerateEntitySaveChunks(i, chunks);
             }
         }
-        for(int i = 0; i < 90; ++i)
+        for(int i = 0; i < (sizeof(ROMUtils::entitiessets)) / sizeof(ROMUtils::entitiessets[0]); ++i)
         {
             if(entitiessets[i]->IsNewEntitySet())
             {
@@ -1276,7 +1286,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                 memcpy(TempFile + levelHeaderPointer, currentLevel->GetLevelHeader(), sizeof(struct LevelComponents::__LevelHeader));
 
                 // Write Tileset data length and animtated tiles info
-                for(int i = 0; i < 92; ++i)
+                for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets)) / sizeof(ROMUtils::singletonTilesets[0]); ++i)
                 {
                     if(singletonTilesets[i]->IsNewTileset())
                     {
@@ -1302,13 +1312,27 @@ error:      free(TempFile); // free up temporary file if there was a processing 
                 }
 
                 // Write Sprite data length info
-                for(int i = 0x11; i < 129; ++i) // we skip the first 0x10 sprites, they should be addressed differently
+                for(int i = 0x11; i < (sizeof(ROMUtils::entities)) / sizeof(ROMUtils::entities[0]); ++i) // we skip the first 0x10 sprites, they should be addressed differently
                 {
                     if(entities[i]->IsNewEntity())
                     {
                         *(unsigned int *) (TempFile + WL4Constants::EntityTilesetLengthTable + 4 * (i - 0x10)) = entities[i]->GetPalNum() * (32 * 32 * 2);
                     }
                 }
+
+                // Write the Animated Tile Group param bytes into their header table
+                for(int i = 0; i < (sizeof(ROMUtils::animatedTileGroups)) / sizeof(ROMUtils::animatedTileGroups[0]); i++)
+                {
+                    int animatedTileGroupHeaderAddr = WL4Constants::AnimatedTileHeaderTable + i * 8;
+                    if(animatedTileGroups[i]->IsNewAnimatedTile8x8Group())
+                    {
+                        *(TempFile + animatedTileGroupHeaderAddr) = animatedTileGroups[i]->GetAnimationType();
+                        *(TempFile + animatedTileGroupHeaderAddr + 1) = animatedTileGroups[i]->GetCountPerFrame();
+                        *(TempFile + animatedTileGroupHeaderAddr + 2) = animatedTileGroups[i]->GetTotalFrameCount();
+                        *(TempFile + animatedTileGroupHeaderAddr + 3) = 0;  // keep the unused byte 0 for now
+                    }
+                }
+
                 return QString("");
             }
         );
@@ -1348,7 +1372,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         ResetChangedBoolsThroughHistory();
 
         // Tilesets instances internal pointers reset
-        for(int i = 0; i < 92; ++i)
+        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets)) / sizeof(ROMUtils::singletonTilesets[0]); ++i)
         {
             if(singletonTilesets[i]->IsNewTileset())
             {
@@ -1361,18 +1385,27 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         }
 
         // Entities and Entitysets members reset
-        for(int i = 0x11; i < 129; ++i) // we skip the first 0x10 sprites, they should be addressed differently
+        for(int i = 0x11; i < (sizeof(ROMUtils::entities)) / sizeof(ROMUtils::entities[0]); ++i) // we skip the first 0x10 sprites, they should be addressed differently
         {
             if(entities[i]->IsNewEntity())
             {
                 entities[i]->SetChanged(false);
             }
         }
-        for(int i = 0; i < 90; ++i)
+        for(int i = 0; i < (sizeof(ROMUtils::entitiessets)) / sizeof(ROMUtils::entitiessets[0]); ++i)
         {
             if(entitiessets[i]->IsNewEntitySet())
             {
                 entitiessets[i]->SetChanged(false);
+            }
+        }
+
+        // animated Tile Group members set
+        for(int i = 0; i < (sizeof(ROMUtils::animatedTileGroups)) / sizeof(ROMUtils::animatedTileGroups[0]); i++)
+        {
+            if(animatedTileGroups[i]->IsNewAnimatedTile8x8Group())
+            {
+                ROMUtils::animatedTileGroups[i]->SetChanged(false);
             }
         }
         // --------------------------------------------------------------------
@@ -1747,6 +1780,27 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             }
         }
         return false;
+    }
+
+    void GenerateAnimatedTileGroupChunks(int _globalAnimatedTileGroupId, QVector<SaveData> &chunks)
+    {
+        int animatedTileGroupHeaderAddr = WL4Constants::AnimatedTileHeaderTable + _globalAnimatedTileGroupId * 8;
+
+        // Create FGTile8x8GraphicData chunk
+        int TileGfxDataLen = animatedTileGroups[_globalAnimatedTileGroupId]->GetTotalFrameCount() * 4 * 32;
+        unsigned char *map8x8tiledata = new unsigned char[TileGfxDataLen];
+        QByteArray tile8x8array = animatedTileGroups[_globalAnimatedTileGroupId]->GetTileData();
+        memcpy(map8x8tiledata, tile8x8array.data(), TileGfxDataLen);
+
+        struct ROMUtils::SaveData Tile8x8GraphicDataChunk = { static_cast<unsigned int>(animatedTileGroupHeaderAddr + 4),
+                                                         static_cast<unsigned int>(TileGfxDataLen),
+                                                         map8x8tiledata,
+                                                         ROMUtils::SaveDataIndex++,
+                                                         true,
+                                                         0,
+                                                         ROMUtils::PointerFromData(animatedTileGroupHeaderAddr + 4),
+                                                         ROMUtils::SaveDataChunkType::AnimatedTileGroupTile8x8DataChunkType };
+        chunks.append(Tile8x8GraphicDataChunk);
     }
 
 } // namespace ROMUtils

@@ -31,6 +31,7 @@ CONFIG += c++17 strict_c++
 QMAKE_CXXFLAGS = -fpermissive
 
 SOURCES += \
+    Dialog/AnimatedTileGroupEditorDialog.cpp \
     Dialog/GraphicManagerDialog.cpp \
     Dialog/SelectColorDialog.cpp \
     Dialog/SelectColorDialog_PaletteBar.cpp \
@@ -41,6 +42,7 @@ SOURCES += \
     DockWidget/OutputDockWidget.cpp \
     FileIOUtils.cpp \
     AssortedGraphicUtils.cpp \
+    LevelComponents/AnimatedTile8x8Group.cpp \
     ScriptInterface.cpp \
     main.cpp \
     WL4EditorWindow.cpp \
@@ -79,6 +81,7 @@ SOURCES += \
     Dialog/CreditEditor_TableView.cpp
 
 HEADERS += \
+    Dialog/AnimatedTileGroupEditorDialog.h \
     Dialog/GraphicManagerDialog.h \
     Dialog/SelectColorDialog.h \
     Dialog/SelectColorDialog_PaletteBar.h \
@@ -89,6 +92,7 @@ HEADERS += \
     DockWidget/OutputDockWidget.h \
     FileIOUtils.h \
     AssortedGraphicUtils.h \
+    LevelComponents/AnimatedTile8x8Group.h \
     ScriptInterface.h \
     WL4EditorWindow.h \
     LevelComponents/Level.h \
@@ -129,6 +133,7 @@ HEADERS += \
     Dialog/CreditEditor_TableView.h
 
 FORMS += \
+    Dialog/AnimatedTileGroupEditorDialog.ui \
     Dialog/GraphicManagerDialog.ui \
     Dialog/SelectColorDialog.ui \
     Dialog/SpritesEditorDialog.ui \

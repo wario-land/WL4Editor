@@ -9,12 +9,13 @@
 #include <vector>
 
 #include "WL4Constants.h"
+#include "LevelComponents/AnimatedTile8x8Group.h"
 #include "LevelComponents/Tileset.h"
 #include "LevelComponents/EntitySet.h"
 #include "LevelComponents/Entity.h"
 #include "LevelComponents/Layer.h"
 
-#define CHUNK_TYPE_COUNT 0x16
+#define CHUNK_TYPE_COUNT 0x17
 
 namespace ROMUtils
 {
@@ -32,6 +33,7 @@ namespace ROMUtils
 
     extern unsigned int SaveDataIndex;
 
+    extern LevelComponents::AnimatedTile8x8Group *animatedTileGroups[270];
     extern LevelComponents::Tileset *singletonTilesets[92];
     extern LevelComponents::Entity *entities[129];
     extern LevelComponents::EntitySet *entitiessets[90];
@@ -60,10 +62,11 @@ namespace ROMUtils
         EntityTile8x8DataChunkType            = '\x0F',
         EntityPaletteDataChunkType            = '\x10',
         EntitySetLoadTableChunkType           = '\x11',
-        AssortedGraphicListChunkType         = '\x12',
-        AssortedGraphicTile8x8DataChunkType  = '\x13',
-        AssortedGraphicmappingChunkType      = '\x14',
-        AssortedGraphicPaletteChunkType      = '\x15'
+        AssortedGraphicListChunkType          = '\x12',
+        AssortedGraphicTile8x8DataChunkType   = '\x13',
+        AssortedGraphicmappingChunkType       = '\x14',
+        AssortedGraphicPaletteChunkType       = '\x15',
+        AnimatedTileGroupTile8x8DataChunkType = '\x16',
     };
 
     enum ChunkAllocationStatus
@@ -124,6 +127,7 @@ namespace ROMUtils
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor = false);
     unsigned short QRgbToData(QRgb paletteElement);
 
+    void GenerateAnimatedTileGroupChunks(int _globalAnimatedTileGroupId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySaveChunks(int GlobalEntityId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateEntitySetSaveChunks(int EntitySetId, QVector<struct ROMUtils::SaveData> &chunks);

@@ -306,7 +306,8 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent,
 
     // Load gfx bin file
     QString fileName = QFileDialog::getOpenFileName(parent,
-                                                    QObject::tr("Load Tileset graphic bin file"), QString(""),
+                                                    QObject::tr("Load Tileset graphic bin file"),
+                                                    singleton->GetdDialogInitialPath(),
                                                     QObject::tr("bin file") + " (*.bin)");
 
     // load data into QBytearray
@@ -333,9 +334,13 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent,
         return false;
     }
 
+    // reset dialogInitialPath
+    singleton->SetDialogInitialPath(QFileInfo(fileName).dir().path());
+
     // Load palette data from bin file
     fileName = QFileDialog::getOpenFileName(parent,
-                                            QObject::tr("Load palette bin file"), QString(""),
+                                            QObject::tr("Load palette bin file"),
+                                            singleton->GetdDialogInitialPath(),
                                             QObject::tr("bin file (*.bin)"));
     QByteArray tmppalettedata;
     QFile palbinfile(fileName);

@@ -553,9 +553,6 @@ void SpritesEditorDialog::on_spinBox_SpritesetPaletteID_valueChanged(int arg1)
 /// </summary>
 void SpritesEditorDialog::on_pushButton_ResetLoadTable_clicked()
 {
-    // Find if new entityset data exist
-    LevelComponents::EntitySet *curEntityset = GetCurEntitySetPtr(true);
-
     // Generate Entityset Load Table and update them into the new entityset instance
     QStringList loadtableStrData = ui->lineEdit_SpritesetLoadTable->text().split(QChar(' '), Qt::SkipEmptyParts);
     if (loadtableStrData.size() & 1)
@@ -589,6 +586,9 @@ void SpritesEditorDialog::on_pushButton_ResetLoadTable_clicked()
             return;
         }
     }
+
+    // Find if new entityset data exist
+    LevelComponents::EntitySet *curEntityset = GetCurEntitySetPtr(true);
     curEntityset->ClearEntityLoadTable();
     for (int i = 0; i < loadtableStrData.size(); i += 2)
     {
@@ -749,10 +749,14 @@ void SpritesEditorDialog::on_pushButton_SwapPal_clicked()
 /// </summary>
 void SpritesEditorDialog::on_pushButton_ResetAllOamData_clicked()
 {
-    QStringList listStrs = QInputDialog::getText(this, tr("InputBox"),
-                                                  tr("Input OAM Data Hex String without 0x prefix:"),
-                                                  QLineEdit::Normal,
-                                                  GetOAMArray()).split(QChar(' '), Qt::SkipEmptyParts);
+    QString tmplist = QInputDialog::getText(this, tr("InputBox"),
+                                            tr("Input OAM Data Hex String:"),
+                                            QLineEdit::Normal,
+                                            GetOAMArray());
+    tmplist.replace(",", " ");
+    tmplist.replace("0x", " ");
+    QStringList listStrs = tmplist.split(QChar(' '), Qt::SkipEmptyParts);
+
     if (!listStrs.size()) return;
     if (listStrs.size() % 3)
     {

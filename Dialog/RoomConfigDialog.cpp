@@ -523,13 +523,26 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
     // if the tileset is using some vanilla bg tile8x8 set
     unsigned int bgtiledataAddr = ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr();
     BGLayerdataPtrs.clear();
-    if (bgtiledataAddr == VanillaTilesetBGTilesDataAddr[newTilesetId])
+    bool find_using_vanilla_bg_tiledata = false;
+    int find_using_vanilla_bg_from_vanilla_tileset_id = -1;
+    for ( int i = 0; i < (sizeof(VanillaTilesetBGTilesDataAddr) / sizeof(VanillaTilesetBGTilesDataAddr[0])); i++)
+    {
+        if (bgtiledataAddr == VanillaTilesetBGTilesDataAddr[i])
+        {
+            find_using_vanilla_bg_tiledata = true;
+            find_using_vanilla_bg_from_vanilla_tileset_id = i;
+            break;
+        }
+    }
+    if (find_using_vanilla_bg_tiledata)
     {
         // Initialize the selections for the current tileset's available BGs
+        // it is possible that user set a bg tileset from another vanilla tileset
+        // so we need to go thru all the data and find the suitable BG Layer data pointer(s) to push into BGLayerdataPtrs
         int curTilesetId = 0;
         int count = 0;
         int graphicNum = 0;
-        while (curTilesetId != newTilesetId)
+        while (curTilesetId != find_using_vanilla_bg_from_vanilla_tileset_id)
         {
             graphicNum = BGLayerdataPtrsData[count];
             count += (graphicNum + 1);

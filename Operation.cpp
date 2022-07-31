@@ -13,6 +13,7 @@ static unsigned int operationIndexGlobal; // For level-wide changes
 
 static unsigned int CurrentTilesetOperationId = 0;
 static unsigned int CurrentSpritestuffOperationId = 0;
+static unsigned int CurrentAnimatedTileGroupOperationId = 0;
 
 /// <summary>
 /// Perform an operation based on its parameters.
@@ -171,6 +172,24 @@ void PerformOperation(struct OperationParams *operation)
         }
 
         singleton->ResetEntitySetDockWidget();
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
+    }
+    if (operation->AnimatedTileGroupChange)
+    {
+        // update all animated tile group to global singletons
+        for (LevelComponents::AnimatedTile8x8Group *&animatedTileGroupIter : operation->newAnimatedTileEditParam->animatedTileGroups)
+        {
+            ROMUtils::animatedTileGroups[animatedTileGroupIter->GetGlobalID()] = animatedTileGroupIter;
+        }
+
+        // Update all the Tilesets using the current ROMUtils::animatedTileGroups instances
+        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets)) / sizeof(ROMUtils::singletonTilesets[0]); ++i)
+        {
+            ROMUtils::singletonTilesets[i]->UpdateAllAnimatedTileFromGlobalSingletons();
+        }
+
+        singleton->GetTile16DockWidgetPtr()->SetTileset(singleton->GetCurrentRoom()->GetTilesetID());
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
     }
@@ -341,6 +360,25 @@ void BackTrackOperation(struct OperationParams *operation)
 
         // hint to show undo operation
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Sprites and Spritesets changes."));
+    }
+    if (operation->AnimatedTileGroupChange)
+    {
+        // update all animated tile group to global singletons
+        for (LevelComponents::AnimatedTile8x8Group *&animatedTileGroupIter : operation->lastAnimatedTileEditParam->animatedTileGroups)
+        {
+            ROMUtils::animatedTileGroups[animatedTileGroupIter->GetGlobalID()] = animatedTileGroupIter;
+        }
+
+        // Update all the Tilesets using the current ROMUtils::animatedTileGroups instances
+        for(int i = 0; i < (sizeof(ROMUtils::singletonTilesets)) / sizeof(ROMUtils::singletonTilesets[0]); ++i)
+        {
+            ROMUtils::singletonTilesets[i]->UpdateAllAnimatedTileFromGlobalSingletons();
+        }
+
+        singleton->GetTile16DockWidgetPtr()->SetTileset(singleton->GetCurrentRoom()->GetTilesetID());
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
+        CurrentAnimatedTileGroupOperationId = operationIndexGlobal;
     }
 }
 
@@ -562,10 +600,9 @@ void DeleteUndoHistoryGlobal()
     {
         if (operationHistoryGlobal[j]->TilesetChange)
         {
-            if (CurrentTilesetOperationId > 0)
+            if (CurrentTilesetOperationId > j)
             {
                 delete operationHistoryGlobal[j]; // call default deconstructor
-                CurrentTilesetOperationId--;
             }
             else
             {
@@ -583,10 +620,9 @@ void DeleteUndoHistoryGlobal()
         }
         else if (operationHistoryGlobal[j]->SpritesSpritesetChange)
         {
-            if (CurrentSpritestuffOperationId > 0)
+            if (CurrentSpritestuffOperationId > j)
             {
                 delete operationHistoryGlobal[j]; // call default deconstructor
-                CurrentSpritestuffOperationId--;
             }
             else
             {
@@ -602,9 +638,31 @@ void DeleteUndoHistoryGlobal()
                 }
             }
         }
+        else if (operationHistoryGlobal[j]->AnimatedTileGroupChange)
+        {
+            if (CurrentAnimatedTileGroupOperationId > j)
+            {
+                delete operationHistoryGlobal[j]; // call default deconstructor
+            }
+            else
+            {
+                if (operationHistoryGlobal[j]->newAnimatedTileEditParam)
+                {
+                    delete operationHistoryGlobal[j]->newAnimatedTileEditParam;
+                }
+                if (operationHistoryGlobal[j]->lastAnimatedTileEditParam)
+                {
+                    qDeleteAll(operationHistoryGlobal[j]->lastAnimatedTileEditParam->animatedTileGroups);
+                    delete operationHistoryGlobal[j]->lastAnimatedTileEditParam;
+                }
+            }
+        }
     }
     operationHistoryGlobal.clear();
     operationIndexGlobal = 0;
+    CurrentTilesetOperationId = 0;
+    CurrentSpritestuffOperationId = 0;
+    CurrentAnimatedTileGroupOperationId = 0;
 }
 
 /// <summary>
@@ -655,6 +713,17 @@ void ResetChangedBoolsThroughHistory()
                 }
             }
         }
+        else if (operationHistoryGlobal[j]->AnimatedTileGroupChange)
+        {
+            for (LevelComponents::AnimatedTile8x8Group *&animtedTileGroupIter: operationHistoryGlobal[j]->lastAnimatedTileEditParam->animatedTileGroups)
+            {
+                animtedTileGroupIter->SetChanged(true);
+            }
+            for (LevelComponents::AnimatedTile8x8Group *&animtedTileGroupIter: operationHistoryGlobal[j]->newAnimatedTileEditParam->animatedTileGroups)
+            {
+                animtedTileGroupIter->SetChanged(true);
+            }
+        }
     }
 }
 
@@ -669,4 +738,5 @@ void ResetGlobalElementOperationIndexes()
 {
     CurrentTilesetOperationId = 0;
     CurrentSpritestuffOperationId = 0;
+    CurrentAnimatedTileGroupOperationId = 0;
 }
