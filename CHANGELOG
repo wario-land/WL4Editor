@@ -1,3 +1,13 @@
+0.15.0:
+(major changes)
+- Add Animated Tile Groups Editor.
+- Fix importing tileset from other rom will cause problem when opening Room Config Dialog (Issue #402)
+
+(minor changes)
+- add 2 new API test functions "_ExtractSpriteOAMPackage(...)"
+- now you can import oam data with "0x" prefix and commas as separators in the data string when using "Reset All" button in Oam Designer in the Sprites Editor to render sprites.
+- now bad palette number in oam data won't crash the WL4Editor when rendering sprites or oam data.
+
 0.14.2:
 (major changes)
 - Support recent script menu items. (Issue #329)
