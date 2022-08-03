@@ -24,6 +24,9 @@ public:
 private slots:
     void on_pushButton_PreviousEntity_clicked();
     void on_pushButton_NextEntity_clicked();
+    void on_pushButton_firstEntity_clicked();
+    void on_pushButton_lastEntity_clicked();
+    void on_pushButton_0x10Entity_clicked();
 
 private:
     Ui::EntitySetDockWidget *ui;
