@@ -1822,7 +1822,8 @@ void WL4EditorWindow::on_actionAbout_triggered()
                                "Special Thanks:\n"
                                "    becored\n"
                                "    Blanchon\n"
-                               "    Dax89 (QHexView)\n"
+                               /*"    Dax89 (QHexView)\n"*/ // have not been used in release builds yet
+                               "    Hiro_sofT"
                                "    interdpth\n"
                                "    randrew (phantomstyle)\n"
                                "    Spleeeeen\n"

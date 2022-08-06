@@ -122,3 +122,28 @@ void EntitySetDockWidget::on_pushButton_NextEntity_clicked()
     if (EntityMaxNum == currentEntityId)
         ui->pushButton_NextEntity->setEnabled(false);
 }
+
+/// <summary>
+/// Go to the first Entity and render it.
+/// </summary>
+void EntitySetDockWidget::on_pushButton_firstEntity_clicked()
+{
+    SetCurrentEntity(currentEntityId = 0);
+}
+
+/// <summary>
+/// Go to the last Entity and render it.
+/// </summary>
+void EntitySetDockWidget::on_pushButton_lastEntity_clicked()
+{
+    SetCurrentEntity(currentEntityId = EntityMaxNum);
+}
+
+/// <summary>
+/// Go to the no.0x10 Entity and render it.
+/// </summary>
+void EntitySetDockWidget::on_pushButton_0x10Entity_clicked()
+{
+    SetCurrentEntity(currentEntityId = 0x10);
+}
+
