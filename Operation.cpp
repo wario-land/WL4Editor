@@ -144,6 +144,10 @@ void PerformOperation(struct OperationParams *operation)
             }
         }
 
+        // Update the Tileset using the current ROMUtils::animatedTileGroups instances
+        ROMUtils::singletonTilesets[tilesetId]->UpdateAllAnimatedTileFromGlobalSingletons();
+
+        // UI update if needed
         if (singleton->GetCurrentRoom()->GetTilesetID() == tilesetId)
         {
             singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
