@@ -144,6 +144,10 @@ void PerformOperation(struct OperationParams *operation)
             }
         }
 
+        // Update the Tileset using the current ROMUtils::animatedTileGroups instances
+        ROMUtils::singletonTilesets[tilesetId]->UpdateAllAnimatedTileFromGlobalSingletons();
+
+        // UI update if needed
         if (singleton->GetCurrentRoom()->GetTilesetID() == tilesetId)
         {
             singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
@@ -326,8 +330,15 @@ void BackTrackOperation(struct OperationParams *operation)
             }
         }
 
-        singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
-        singleton->RenderScreenFull();
+        // Update the Tileset using the current ROMUtils::animatedTileGroups instances
+        ROMUtils::singletonTilesets[tilesetId]->UpdateAllAnimatedTileFromGlobalSingletons();
+
+        // UI update if needed
+        if (singleton->GetCurrentRoom()->GetTilesetID() == tilesetId)
+        {
+            singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
+            singleton->RenderScreenFull();
+        }
         CurrentTilesetOperationId = operationIndexGlobal;
 
         // hint to show undo operation
