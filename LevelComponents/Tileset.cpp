@@ -258,7 +258,7 @@ namespace LevelComponents
                         bool FlipX = tile->GetFlipX();
                         bool FlipY = tile->GetFlipY();
                         int paletteIndex = tile->GetPaletteIndex();
-                        map16array[i]->ResetTile8x8(tile8x8array[index], j, index, paletteIndex, FlipY, FlipX);
+                        map16array[i]->ResetTile8x8(tile8x8array[index], j, index, paletteIndex, FlipX, FlipY);
                     }
                 }
             }
