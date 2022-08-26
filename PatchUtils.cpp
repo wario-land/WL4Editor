@@ -586,7 +586,7 @@ namespace PatchUtils
     /// <returns>
     /// The error string if saving failed, or empty if successful.
     /// </returns>
-    QString SavePatchesToROM(QVector<struct PatchEntryItem> entries)
+    QString SavePatchesToROM(QVector<PatchEntryItem> entries)
     {
         QString compileErrorMsg = CompilePatchEntries(entries);
         if(compileErrorMsg != "") return compileErrorMsg;
