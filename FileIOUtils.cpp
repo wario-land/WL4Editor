@@ -607,3 +607,97 @@ unsigned char *FileIOUtils::find_less_feature_buff(unsigned char *_Buf1, unsigne
         return _Buf1;
     }
 }
+
+/// <summary>
+/// find a patch param from the patch code file
+/// </summary>
+/// <param name="filePath">
+/// Read text file from filePath.
+/// </param>
+/// <param name="identifier">
+/// The identifier to show the line with param info from it.
+/// </param>
+/// <param name="validator">
+/// To check if the format is correct.
+/// </param>
+/// <return>
+/// the QString result of the param.
+/// </return>
+QString FileIOUtils::PatchParamFromTextFile(QString filePath, QString identifier, QRegExp validator)
+{
+    QFile file(filePath);
+    file.open(QIODevice::ReadOnly);
+    QTextStream in(&file);
+    QString line;
+    do {
+        line = in.readLine();
+        if (line.contains(identifier, Qt::CaseSensitive)) {
+            QString contents = line.mid(line.indexOf(identifier) + identifier.length());
+            return validator.indexIn(contents) ? "" : contents.trimmed();
+        }
+    } while (!line.isNull());
+    return "";
+}
+
+/// <summary>
+/// Convert a relative file path to a absolute file path
+/// </summary>
+/// <param name="relativeFilePath">
+/// relative file filePath.
+/// </param>
+/// <return>
+/// the QString result of the absolute file path.
+/// </return>
+QString FileIOUtils::relativeFilePathToAbsoluteFilePath(QString relativeFilePath)
+{
+    if(!relativeFilePath.length()) return "";
+
+    QDir ROMdir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir();
+    return QString(ROMdir.absolutePath() + QDir::separator() + relativeFilePath);
+}
+
+/// <summary>
+/// Get the entry function's address when .elf.txt file appear
+/// </summary>
+/// <param name="txtfilePath">
+/// .elf.txt filePath.
+/// </param>
+/// <param name="entryFunctionSymbol">
+/// entry function symbol should be find in the .c or .s patch file
+/// </param>
+/// <return>
+/// the unsigned int result of the new entry address.
+/// </return>
+unsigned int FileIOUtils::FindEntryFunctionAddress(QString txtfilePath, QString entryFunctionSymbol)
+{
+    if (!entryFunctionSymbol.size()) return 0;
+    QFile file(txtfilePath);
+    file.open(QIODevice::ReadOnly);
+    QTextStream in(&file);
+    QString line;
+    unsigned int result = 0;
+    bool skiprest = false;
+    do {
+        line = in.readLine();
+        line.replace(QChar('\t'), QChar(' '));
+        QStringList strlist = line.split(QChar(' '), Qt::SkipEmptyParts);
+        for (int i = 0; i < (strlist.size() - 1); i++)
+        {
+            if (strlist[i] == "F" && strlist[i + 1] == ".text")
+            {
+                if (strlist[i + 3] == entryFunctionSymbol)
+                {
+                    result = strlist[0].toUInt(nullptr, 16);
+                    skiprest = true;
+                    break;
+                }
+            }
+        }
+        if (skiprest)
+        {
+            break;
+        }
+    } while (!line.isNull());
+    file.close();
+    return result;
+}
