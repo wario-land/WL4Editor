@@ -882,20 +882,14 @@ namespace PatchUtils
                         uint32_t patchAddress = 0x8000000 | (patch.PatchAddress + 13); // STAR header + 1 so that BL goes into thumb mode
 
                         // let optional entry function symbol indicator works
-                        if (patch.PatchType != PatchType::Binary)
+                        // the current method only works for c patch
+                        if (patch.PatchType == PatchType::C)
                         {
                             QString src_patch_filepath = FileIOUtils::relativeFilePathToAbsoluteFilePath(patch.FileName);
                             QString entryfunctionsymbol = FileIOUtils::PatchParamFromTextFile(src_patch_filepath, ENTRY_FUNCTION_SYMBOL, entryFunctionSymbolRegex);
                             if (entryfunctionsymbol.size())
                             {
-                                if (patch.PatchType == PatchType::Assembly)
-                                {
-                                    REPLACE_EXT(src_patch_filepath, ".s", ".elf.txt");
-                                }
-                                else if (patch.PatchType == PatchType::C)
-                                {
-                                    REPLACE_EXT(src_patch_filepath, ".c", ".elf.txt");
-                                }
+                                REPLACE_EXT(src_patch_filepath, ".c", ".elf.txt");
 
                                 unsigned int tmpresult = FileIOUtils::FindEntryFunctionAddress(src_patch_filepath, entryfunctionsymbol);
                                 if (tmpresult != 0)
