@@ -1,5 +1,6 @@
 #include "PatchUtils.h"
 #include "ROMUtils.h"
+#include "FileIOUtils.h"
 #include <QVector>
 #include <QDir>
 #include <QFile>
@@ -16,11 +17,13 @@
 #define EABI_AS      "arm-none-eabi-as.exe"
 #define EABI_LD      "arm-none-eabi-ld.exe"
 #define EABI_OBJCOPY "arm-none-eabi-objcopy.exe"
+#define EABI_OBJDump "arm-none-eabi-objdump.exe"
 #else // _WIN32 (else linux)
 #define EABI_GCC     "arm-none-eabi-gcc"
 #define EABI_AS      "arm-none-eabi-as"
 #define EABI_LD      "arm-none-eabi-ld"
 #define EABI_OBJCOPY "arm-none-eabi-objcopy"
+#define EABI_OBJDump "arm-none-eabi-objdump"
 #endif
 
 #define REPLACE_EXT(qstr,fromstr,tostr) do { \
@@ -35,6 +38,9 @@ struct CompileEntry {
 };
 
 extern WL4EditorWindow *singleton;
+
+static QRegExp entryFunctionSymbolRegex("^\\s*[a-zA-Z\\_]{1}[0-9a-zA-Z\\_]*\\s*$");
+#define ENTRY_FUNCTION_SYMBOL "@EntryFunctionSymbol"
 
 /// <summary>
 /// Convert a region of binary into a hex string.
@@ -387,6 +393,40 @@ static QString ExtractELFFile(QString elfFile)
 }
 
 /// <summary>
+/// Extract the symbols from elf file to txt file.
+/// </summary>
+/// <param name="elfFile">
+/// The ELF file from which to extract the binary.
+/// </param>
+/// <returns>
+/// An empty string if successful, or an error string if failure.
+/// </returns>
+static QString ExtractELFSymbols(QString elfFile)
+{
+    if(!elfFile.endsWith(".elf"))
+    {
+        QString msg = QString(QT_TR_NOOP("ELF file does not have correct extension (should be .elf): ")) + elfFile;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
+    }
+
+    // Create args
+    QString outfile(elfFile);
+    REPLACE_EXT(outfile, ".elf", ".elf.txt");
+    QString executable(QString(PatchUtils::EABI_INSTALLATION) + "/" + EABI_OBJDump);
+    QStringList args;
+    args << "-t" << elfFile;
+
+    // Run OBJDump and redirect output to file
+    // since we need the output be saved into file, the previous function cannot be used
+    QProcess process;
+    process.setStandardOutputFile(outfile);
+    process.start(executable, args);
+    process.waitForFinished();
+    return !process.exitCode() ? "" : QString(process.readAllStandardError());
+}
+
+/// <summary>
 /// Create the data for a patch list chunk.
 /// </summary>
 /// <param name="entries">
@@ -420,10 +460,9 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> &entries)
 /// </returns>
 static QString CompilePatchEntry(const struct PatchEntryItem &entry)
 {
-    if(!entry.FileName.length() || entry.PatchType == PatchType::Binary) return "";
-
-    QDir ROMdir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir();
-    QString filename(ROMdir.absolutePath() + QDir::separator() + entry.FileName);
+    if(entry.PatchType == PatchType::Binary) return "";
+    QString filename = FileIOUtils::RelativeFilePathToAbsoluteFilePath(entry.FileName);
+    if (!filename.size()) return "";
 
     QString output;
     switch(entry.PatchType)
@@ -450,6 +489,10 @@ static QString CompilePatchEntry(const struct PatchEntryItem &entry)
         }
         REPLACE_EXT(filename, ".o", ".elf");
         if((output = ExtractELFFile(filename)) != "")
+        {
+            return QString(QT_TR_NOOP("ObjCopy error: ")) + output;
+        }
+        if((output = ExtractELFSymbols(filename)) != "")
         {
             return QString(QT_TR_NOOP("ObjCopy error: ")) + output;
         }
@@ -837,6 +880,25 @@ namespace PatchUtils
                     if(patch.PatchOffsetInHookString != static_cast<unsigned int>(-1))
                     {
                         uint32_t patchAddress = 0x8000000 | (patch.PatchAddress + 13); // STAR header + 1 so that BL goes into thumb mode
+
+                        // let optional entry function symbol indicator works
+                        // the current method only works for c patch
+                        if (patch.PatchType == PatchType::C)
+                        {
+                            QString src_patch_filepath = FileIOUtils::RelativeFilePathToAbsoluteFilePath(patch.FileName);
+                            QString entryfunctionsymbol = FileIOUtils::GetParamFromSourceFile(src_patch_filepath, ENTRY_FUNCTION_SYMBOL, entryFunctionSymbolRegex);
+                            if (entryfunctionsymbol.size())
+                            {
+                                REPLACE_EXT(src_patch_filepath, ".c", ".elf.txt");
+
+                                unsigned int tmpresult = FileIOUtils::FindEntryFunctionAddress(src_patch_filepath, entryfunctionsymbol);
+                                if (tmpresult != 0)
+                                {
+                                    patchAddress = tmpresult + 1; // the parsed txt file shows function address by even number
+                                }
+                            }
+                        }
+
                         patchAddress = ROMUtils::EndianReverse(patchAddress);
                         QString patchAddressString = QString("%1").arg(patchAddress, 8, 16, QChar('0')).toUpper();
                         hookString = hookString.mid(0, patch.PatchOffsetInHookString * 2) +

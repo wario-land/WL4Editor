@@ -4,6 +4,7 @@
 #include "PatchEditDialog.h"
 #include "ui_PatchEditDialog.h"
 #include "ROMUtils.h"
+#include "FileIOUtils.h"
 
 static QStringList PatchTypeNameSet;
 static QRegExp hookAddressRegex("^ *(0x)?[a-fA-F0-9]{1,6} *$");
@@ -110,22 +111,6 @@ static QString FormatHookText(QString hookStr, int patchOffset)
     return ret.length() ? ret.mid(1) : "";
 }
 
-static QString InferFromIdentifier(QString filePath, QString identifier, QRegExp validator)
-{
-    QFile file(filePath);
-    file.open(QIODevice::ReadOnly);
-    QTextStream in(&file);
-    QString line;
-    do {
-        line = in.readLine();
-        if (line.contains(identifier, Qt::CaseSensitive)) {
-            QString contents = line.mid(line.indexOf(identifier) + identifier.length());
-            return validator.indexIn(contents) ? "" : contents.trimmed();
-        }
-    } while (!line.isNull());
-    return "";
-}
-
 /// <summary>
 /// Deconstruct the PatchEditDialog and clean up its instance objects on the heap.
 /// </summary>
@@ -201,19 +186,19 @@ void PatchEditDialog::ParsePatchFile(QString patchfilepath)
         // Infer fields from file comments
         if(fileType != PatchType::Binary)
         {
-            QString hookAddress = InferFromIdentifier(patchfilepath, HOOK_ADDR_IDENTIFIER, hookAddressRegex);
+            QString hookAddress = FileIOUtils::GetParamFromSourceFile(patchfilepath, HOOK_ADDR_IDENTIFIER, hookAddressRegex);
             if(hookAddress != "")
             {
                 ui->lineEdit_HookAddress->setText(hookAddress);
             }
 
-            QString hookString = InferFromIdentifier(patchfilepath, HOOK_STRING_IDENTIFIER, hookStringRegex);
+            QString hookString = FileIOUtils::GetParamFromSourceFile(patchfilepath, HOOK_STRING_IDENTIFIER, hookStringRegex);
             if(hookString != "")
             {
                 ui->lineEdit_HookText->setText(hookString);
             }
 
-            QString descString = InferFromIdentifier(patchfilepath, DESCRIPTION_IDENTIFIER, descriptionRegex);
+            QString descString = FileIOUtils::GetParamFromSourceFile(patchfilepath, DESCRIPTION_IDENTIFIER, descriptionRegex);
             if(descString != "")
             {
                 ui->textEdit_Description->setText(descString);
