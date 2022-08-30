@@ -186,19 +186,19 @@ void PatchEditDialog::ParsePatchFile(QString patchfilepath)
         // Infer fields from file comments
         if(fileType != PatchType::Binary)
         {
-            QString hookAddress = FileIOUtils::PatchParamFromTextFile(patchfilepath, HOOK_ADDR_IDENTIFIER, hookAddressRegex);
+            QString hookAddress = FileIOUtils::GetParamFromSourceFile(patchfilepath, HOOK_ADDR_IDENTIFIER, hookAddressRegex);
             if(hookAddress != "")
             {
                 ui->lineEdit_HookAddress->setText(hookAddress);
             }
 
-            QString hookString = FileIOUtils::PatchParamFromTextFile(patchfilepath, HOOK_STRING_IDENTIFIER, hookStringRegex);
+            QString hookString = FileIOUtils::GetParamFromSourceFile(patchfilepath, HOOK_STRING_IDENTIFIER, hookStringRegex);
             if(hookString != "")
             {
                 ui->lineEdit_HookText->setText(hookString);
             }
 
-            QString descString = FileIOUtils::PatchParamFromTextFile(patchfilepath, DESCRIPTION_IDENTIFIER, descriptionRegex);
+            QString descString = FileIOUtils::GetParamFromSourceFile(patchfilepath, DESCRIPTION_IDENTIFIER, descriptionRegex);
             if(descString != "")
             {
                 ui->textEdit_Description->setText(descString);

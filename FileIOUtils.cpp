@@ -623,7 +623,7 @@ unsigned char *FileIOUtils::find_less_feature_buff(unsigned char *_Buf1, unsigne
 /// <return>
 /// the QString result of the param.
 /// </return>
-QString FileIOUtils::PatchParamFromTextFile(QString filePath, QString identifier, QRegExp validator)
+QString FileIOUtils::GetParamFromSourceFile(QString filePath, QString identifier, QRegExp validator)
 {
     QFile file(filePath);
     file.open(QIODevice::ReadOnly);
@@ -648,7 +648,7 @@ QString FileIOUtils::PatchParamFromTextFile(QString filePath, QString identifier
 /// <return>
 /// the QString result of the absolute file path.
 /// </return>
-QString FileIOUtils::relativeFilePathToAbsoluteFilePath(QString relativeFilePath)
+QString FileIOUtils::RelativeFilePathToAbsoluteFilePath(QString relativeFilePath)
 {
     if(!relativeFilePath.length()) return "";
 

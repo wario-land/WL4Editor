@@ -461,7 +461,7 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> &entries)
 static QString CompilePatchEntry(const struct PatchEntryItem &entry)
 {
     if(entry.PatchType == PatchType::Binary) return "";
-    QString filename = FileIOUtils::relativeFilePathToAbsoluteFilePath(entry.FileName);
+    QString filename = FileIOUtils::RelativeFilePathToAbsoluteFilePath(entry.FileName);
     if (!filename.size()) return "";
 
     QString output;
@@ -885,8 +885,8 @@ namespace PatchUtils
                         // the current method only works for c patch
                         if (patch.PatchType == PatchType::C)
                         {
-                            QString src_patch_filepath = FileIOUtils::relativeFilePathToAbsoluteFilePath(patch.FileName);
-                            QString entryfunctionsymbol = FileIOUtils::PatchParamFromTextFile(src_patch_filepath, ENTRY_FUNCTION_SYMBOL, entryFunctionSymbolRegex);
+                            QString src_patch_filepath = FileIOUtils::RelativeFilePathToAbsoluteFilePath(patch.FileName);
+                            QString entryfunctionsymbol = FileIOUtils::GetParamFromSourceFile(src_patch_filepath, ENTRY_FUNCTION_SYMBOL, entryFunctionSymbolRegex);
                             if (entryfunctionsymbol.size())
                             {
                                 REPLACE_EXT(src_patch_filepath, ".c", ".elf.txt");
