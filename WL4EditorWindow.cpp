@@ -814,8 +814,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetHeight(nextroomconfig->RoomHeight);
     currentRoom->SetWidth(nextroomconfig->RoomWidth);
     currentRoom->SetLayer0MappingParam(nextroomconfig->Layer0MappingTypeParam);
-    currentRoom->SetLayer0ColorBlendingEnabled(nextroomconfig->Layer0Alpha);
-    currentRoom->SetLayerPriorityAndAlphaAttributes(nextroomconfig->LayerPriorityAndAlphaAttr);
+    currentRoom->SetRenderEffectFlag(nextroomconfig->LayerPriorityAndAlphaAttr);
     currentRoom->SetLayer2Enabled(nextroomconfig->Layer2Enable);
     if (nextroomconfig->Layer0DataPtr)
         currentRoom->SetRoomHeaderDataPtr(0, nextroomconfig->Layer0DataPtr);
@@ -2318,10 +2317,6 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     for(int _offset: offsetlist)
     {
         CurrentLevel->GetRooms()[newRoomId]->SetRoomHeaderDataPtr(_offset, 0);
-    }
-    for(int i = offsetlist[0] ? 1 : 0; i < 3; i++)
-    {
-        CurrentLevel->GetRooms()[newRoomId]->GetLayer(i)->SetDataPtr(0);
     }
     CurrentLevel->GetRooms()[newRoomId]->SetCameraControlType(LevelComponents::__CameraControlType::NoLimit);
 

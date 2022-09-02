@@ -1355,7 +1355,6 @@ error:      free(TempFile); // free up temporary file if there was a processing 
             for(unsigned int j = 0; j < 4; ++j)
             {
                 LevelComponents::Layer *layer = room->GetLayer(j);
-                layer->SetDataPtr(layerDataPtrs[j] & 0x7FFFFFF);
                 layer->SetDirty(false);
             }
             for(unsigned int j = 0; j < 3; ++j)
