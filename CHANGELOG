@@ -1,3 +1,12 @@
+0.15.1:
+(major changes)
+- now you can use optional EntryFunctionSymbol identifier to set the entry function in every c patch file
+
+(minor changes)
+- Add the buttons to jump to the first, the last, the 0x10-th entity immediately in Entity Selector Dock Widget.
+- Fix undo or redo Tileset changes cannot keep the graphics of global animated tiles up to date.
+- Fix the UI logic of H-Flip and V-Flip when editing animated TIle8x8s in Tile16 set in Tileset Editor, they acts like swapped after accepting the editing. (Issue #407)
+
 0.15.0:
 (major changes)
 - Add Animated Tile Groups Editor.
