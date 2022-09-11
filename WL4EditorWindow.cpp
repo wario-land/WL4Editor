@@ -1823,7 +1823,7 @@ void WL4EditorWindow::on_actionAbout_triggered()
                                "    becored\n"
                                "    Blanchon\n"
                                /*"    Dax89 (QHexView)\n"*/ // have not been used in release builds yet
-                               "    Hiro_sofT"
+                               "    Hiro_sofT\n"
                                "    interdpth\n"
                                "    randrew (phantomstyle)\n"
                                "    Spleeeeen\n"
