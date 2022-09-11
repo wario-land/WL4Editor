@@ -100,6 +100,16 @@ int ScriptInterface::GetCurRoomId()
     return singleton->GetCurrentRoomId();
 }
 
+int ScriptInterface::GetCurTilesetTile16EventId(unsigned short tile16Id)
+{
+    return singleton->GetCurrentRoom()->GetTileset()->GetEventTablePtr()[(tile16Id > 0x2FF) ? 0 : tile16Id];
+}
+
+int ScriptInterface::GetCurTilesetTile16TerrainType(unsigned short tile16Id)
+{
+    return singleton->GetCurrentRoom()->GetTileset()->GetTerrainTypeIDTablePtr()[(tile16Id > 0x2FF) ? 0 : tile16Id];
+}
+
 void ScriptInterface::_UnpackScreen(int address)
 {
     unsigned short *LayerData = ROMUtils::UnPackScreen(address);

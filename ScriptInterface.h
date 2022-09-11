@@ -21,6 +21,8 @@ public:
     Q_INVOKABLE int GetCurRoomTile8(int layerID, int x, int y);
     Q_INVOKABLE int GetRoomNum();
     Q_INVOKABLE int GetCurRoomId();
+    Q_INVOKABLE int GetCurTilesetTile16EventId(unsigned short tile16Id);
+    Q_INVOKABLE int GetCurTilesetTile16TerrainType(unsigned short tile16Id);
     Q_INVOKABLE QString GetEntityListData(int entitylistid = -1);
 
     // Test
