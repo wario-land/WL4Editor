@@ -1381,3 +1381,42 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
         SetSelectedTile8x8(0, true);
     }
 }
+
+/// <summary>
+/// Change BG Tile8x8 set and the last palette by searching legal assorted graphic entries.
+/// </summary>
+void TilesetEditDialog::on_pushButton_CleanUpUnusedTile8x8_clicked()
+{
+    LevelComponents::Tileset *tmp_newTilesetPtr = tilesetEditParams->newTileset;
+    int existingTile8x8Num = tmp_newTilesetPtr->GetfgGFXlen() / 32;
+
+    // go through all the existing foreground Tile8x8s
+    for(int i = existingTile8x8Num; i > 0; i--)
+    {
+        int old_tileid = i + 0x40;
+        auto tile16array = tmp_newTilesetPtr->GetMap16arrayPtr();
+        for (int k = 0; k < Tile16DefaultNum; k++)
+        {
+            for (int pos = 0; pos < 4; pos++)
+            {
+                auto tile8 = tile16array[k]->GetTile8X8(pos);
+                if (tile8->GetIndex() == old_tileid)
+                {
+                    goto find_next_tile8x8;
+                }
+            }
+        }
+
+        // delete the Tile8x8 from the Tile8x8 set
+        tilesetEditParams->newTileset->DelTile8x8(old_tileid);
+
+find_next_tile8x8: {} // do nothing here
+    }
+
+    // update graphicview
+    ReRenderTile16Map();
+    ReRenderTile8x8Map(SelectedPaletteId);
+    SetSelectedTile16(0, true);
+    SetSelectedTile8x8(0, true);
+}
+

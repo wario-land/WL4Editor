@@ -132,7 +132,7 @@
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-49</y>
+            <y>0</y>
             <width>293</width>
             <height>298</height>
            </rect>
@@ -663,6 +663,13 @@
         <widget class="QPushButton" name="pushButton_CleanUpDuplicatedTile8x8">
          <property name="text">
           <string>Clean up duplicated Tile8x8</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_CleanUpUnusedTile8x8">
+         <property name="text">
+          <string>Clean up unused foreground Tile8x8</string>
          </property>
         </widget>
        </item>

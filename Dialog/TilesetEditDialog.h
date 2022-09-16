@@ -91,6 +91,7 @@ private slots:
     void on_pushButton_ImportTile16Graphic_clicked();
     void on_pushButton_CleanUpDuplicatedTile8x8_clicked();
     void on_pushButton_changeBGTile8x8set_clicked();
+    void on_pushButton_CleanUpUnusedTile8x8_clicked();
 
 private:
     Ui::TilesetEditDialog *ui;
