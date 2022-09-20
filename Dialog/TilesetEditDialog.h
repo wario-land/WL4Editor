@@ -92,6 +92,7 @@ private slots:
     void on_pushButton_CleanUpDuplicatedTile8x8_clicked();
     void on_pushButton_changeBGTile8x8set_clicked();
     void on_pushButton_CleanUpUnusedTile8x8_clicked();
+    void on_pushButton_FindTile16ByItsUsingPaletteId_clicked();
 
 private:
     Ui::TilesetEditDialog *ui;
