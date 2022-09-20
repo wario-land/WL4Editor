@@ -345,6 +345,13 @@
           <number>0</number>
          </property>
          <item>
+          <widget class="QPushButton" name="pushButton_FindTile16ByItsUsingPaletteId">
+           <property name="text">
+            <string>Find Tile16 by pal</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="pushButton_ImportTile16Graphic">
            <property name="text">
             <string>Import and Overwrite</string>

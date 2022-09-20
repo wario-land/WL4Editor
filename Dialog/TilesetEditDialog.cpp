@@ -1420,3 +1420,30 @@ find_next_tile8x8: {} // do nothing here
     SetSelectedTile8x8(0, true);
 }
 
+/// <summary>
+/// Find the first Tile16 which uses a specified palette id.
+/// </summary>
+void TilesetEditDialog::on_pushButton_FindTile16ByItsUsingPaletteId_clicked()
+{
+    if(!HasInitialized || IsSelectingTile16) return;
+    int palette_id = QInputDialog::getInt(this,
+                                          tr("WL4Editor"),
+                                          tr("Input the (decimal) palette id to find the first Tile16 which uses the specified palette:"),
+                                          0, 0, 15);
+    QVector<LevelComponents::TileMap16*> tile16array = tilesetEditParams->newTileset->GetMap16arrayPtr();
+    for (int i = 0; i < Tile16DefaultNum; i++)
+    {
+        LevelComponents::TileMap16* tile16 = tile16array[i];
+        for(int j = 0; j < 4; ++j)
+        {
+            int pal = tile16->GetTile8X8(j)->GetPaletteIndex();
+            if (palette_id == pal)
+            {
+                SetSelectedTile16(i, true);
+                return;
+            }
+        }
+    }
+    QMessageBox::information(this, tr("WL4Editor"), tr("Cannot find any Tile16 using the palette id you specified."));
+}
+
