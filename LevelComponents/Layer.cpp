@@ -20,7 +20,7 @@ namespace LevelComponents
     /// The mapping type for the layer.
     /// </param>
     Layer::Layer(int layerDataPtr, enum LayerMappingType mappingType) :
-            MappingType(mappingType), Enabled(mappingType != LayerDisabled)
+            MappingType(mappingType), Enabled(mappingType != LayerDisabled), DataPtr(layerDataPtr)
     {
         if (mappingType == LayerDisabled)
         {
@@ -81,7 +81,7 @@ namespace LevelComponents
     /// </param>
     Layer::Layer(Layer &layer) :
             MappingType(layer.MappingType), Enabled(layer.Enabled), Width(layer.Width), Height(layer.Height),
-            LayerPriority(layer.LayerPriority), dirty(layer.dirty)
+            LayerPriority(layer.LayerPriority), dirty(layer.dirty), DataPtr(layer.DataPtr)
     {
         int layerDataSize = Width * Height * 2;
         LayerData = (unsigned short *) malloc(layerDataSize);

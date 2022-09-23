@@ -119,7 +119,7 @@ namespace LevelComponents
         memset(EntityLayerZValue, 0, sizeof(EntityLayerZValue));
         memset(EntityListDirty, 0, sizeof(EntityListDirty));
 
-        // Set up tileset, TODO: if we support Tileset changes in the editor, this need to be changed
+        // Set up tileset
         tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
 
         // Set up the layer data
@@ -1073,28 +1073,6 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Get the layer data pointer for a layer.
-    /// </summary>
-    /// <remarks>
-    /// The pointer starts in the 0x8000000 range, so the 28th bit is set to 0 to normalize the address.
-    /// </remarks>
-    /// <param name="LayerNum">
-    /// The number of the layer to retrieve the data pointer for.
-    /// </param>
-    /// <return>
-    /// The normalized data pointer for the requested layer.
-    /// </return>
-    int Room::GetLayerDataPtr(unsigned int LayerNum)
-    {
-        if(LayerNum & 0xFFFFFFFC)
-        {
-            singleton->GetOutputWidgetPtr()->PrintString("Warning: Possible data corruption when using GetLayerDataPtr(unsigned int LayerNum),"
-                                                         "LayerNum must be within range [0, 4).");
-        }
-        return ((unsigned int *) (&RoomHeader.Layer0Data))[LayerNum] & 0x7FFFFFF;
-    }
-
-    /// <summary>
     /// Set a data pointer in RoomHeader struct used for changes based on saving and creating new Rooms.
     /// </summary>
     void Room::SetRoomHeaderDataPtr(int pointerId, int dataPtr)
@@ -1151,6 +1129,11 @@ namespace LevelComponents
         // Populate layer chunks (uses chunk-relative addresses)
         unsigned int *layerPtrs =
             reinterpret_cast<unsigned int *>(headerChunk->data + RoomID * sizeof(struct __RoomHeader) + 8);
+        std::vector<unsigned int> old_layer_ptr;
+        old_layer_ptr.push_back(RoomHeader.Layer0Data);
+        old_layer_ptr.push_back(RoomHeader.Layer1Data);
+        old_layer_ptr.push_back(RoomHeader.Layer2Data);
+        old_layer_ptr.push_back(RoomHeader.Layer3Data);
         for (unsigned int i = 0; i < 4; ++i)
         {
             Layer *layer = layers[i];
@@ -1160,7 +1143,7 @@ namespace LevelComponents
                 // then, we can refer to the old pointer to see if the old chunk need to be invalidated or not
 
                 // check if we are going to invalidate the old chunk first
-                unsigned int old_data_addr = ROMUtils::PointerFromData(headerAddr + i * 4 + 8);
+                unsigned int old_data_addr = old_layer_ptr[i] & 0x7FF'FFFF;
                 enum ROMUtils::SaveDataChunkType type;
                 if (ROMUtils::GetChunkType(old_data_addr, type))
                 {
@@ -1198,12 +1181,12 @@ namespace LevelComponents
                     // Set the room header layer pointer from the data pointer, and invalidate the old layer save chunk
                     layerPtrs[i] =
                         (layer->GetMappingType() == LayerMappingType::LayerTile8x8
-                             ? static_cast<unsigned int>(GetLayerDataPtr(i)) // layer->GetDataPtr() can work here too
+                             ? static_cast<unsigned int>(layer->GetDataPtr()) // layer->GetDataPtr() can work here too
                              : // else LayerMappingType::LayerDisabled
                              (i == 3 ? WL4Constants::BGLayerDefaultPtr : WL4Constants::NormalLayerDefaultPtr)) |
                         0x8000000;
 
-                    // idk if this can work, but we should rewrite the logic here to deal with edge case like:
+                    // the logic here is used to deal with edge case like:
                     // layer 0 was using 0x10 mapping before, but reset with 0x20 mapping
                     // then the old chunk need to be invalidated,
                     // which cannot be done on the current Room and Layer backend
@@ -1225,7 +1208,7 @@ namespace LevelComponents
             else
             {
                 // Write the old layer data pointer to the header
-                layerPtrs[i] = static_cast<unsigned int>(GetLayerDataPtr(i)) | 0x8000000;
+                layerPtrs[i] = static_cast<unsigned int>(layer->GetDataPtr()) | 0x8000000;
             }
         }
 

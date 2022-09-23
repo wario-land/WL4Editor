@@ -191,7 +191,6 @@ namespace LevelComponents
         unsigned int GetLayer0Height() { return layers[0]->GetLayerHeight(); }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         int GetLayer0MappingParam() { return RoomHeader.Layer0MappingType; }
-        int GetLayerDataPtr(unsigned int LayerNum);
         int GetLayerEffectsParam() { return RoomHeader.RenderEffect; }
         unsigned int GetLevelID() { return LevelID; }
         struct __RoomHeader GetRoomHeader() { return RoomHeader; }

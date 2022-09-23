@@ -25,6 +25,7 @@ namespace LevelComponents
         unsigned short *LayerData = nullptr;
         int LayerPriority = 0;
         bool dirty = false;
+        unsigned int DataPtr; // this pointer does not include the 0x8000000 bit
         void DeconstructTiles();
 
     public:
@@ -59,6 +60,10 @@ namespace LevelComponents
         void SetDirty(bool _dirty) { dirty = _dirty; }
         unsigned char *GetCompressedLayerData(unsigned int *dataSize);
         ~Layer();
+        unsigned int GetDataPtr() { return DataPtr; }
+        // don't use it before save level and reset layer pointer
+        // just let DataPtr keep the old layer data pointer for now
+        void SetDataPtr(unsigned int _dataPtr) { DataPtr = _dataPtr; }
         void ResetData();
 
         // tools
