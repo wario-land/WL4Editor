@@ -1,3 +1,12 @@
+0.15.2:
+(major changes)
+- Fix random rom corruption after adding new Room then save changes, which is caused by logic conflict between the old "Add new Room" code and the new "old layer data invalidation" code after 0.14.X release.
+
+(minor changes)
+- Add more script APIs: GetCurTilesetTile16EventId(...) and GetCurTilesetTile16TerrainType(...).
+- Add "clean up unused forground Tile8x8" button to the Tileset Editor.
+- Add "find Tile16 by pal" button to the Tileset Editor.
+
 0.15.1:
 (major changes)
 - now you can use optional EntryFunctionSymbol identifier to set the entry function in every c patch file
