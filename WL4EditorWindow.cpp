@@ -814,31 +814,13 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetHeight(nextroomconfig->RoomHeight);
     currentRoom->SetWidth(nextroomconfig->RoomWidth);
     currentRoom->SetLayer0MappingParam(nextroomconfig->Layer0MappingTypeParam);
-    currentRoom->SetLayer0ColorBlendingEnabled(nextroomconfig->Layer0Alpha);
-    currentRoom->SetLayerPriorityAndAlphaAttributes(nextroomconfig->LayerPriorityAndAlphaAttr);
+    currentRoom->SetRenderEffectFlag(nextroomconfig->LayerPriorityAndAlphaAttr);
     currentRoom->SetLayer2Enabled(nextroomconfig->Layer2Enable);
-    if (nextroomconfig->Layer0DataPtr)
-        currentRoom->SetRoomHeaderDataPtr(0, nextroomconfig->Layer0DataPtr);
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
     currentRoom->SetBGLayerScrollFlag(nextroomconfig->BGLayerScrollFlag);
-    currentRoom->SetRoomHeaderDataPtr(3, nextroomconfig->BackgroundLayerDataPtr);
     currentRoom->SetLayerGFXEffect01(nextroomconfig->RasterType);
     currentRoom->SetLayerGFXEffect02(nextroomconfig->Water);
     currentRoom->SetBgmvolume(nextroomconfig->BGMVolume);
-
-    // reset LayerDataPtr in RoomHeader because Layer::SetDisabled() doesn't change the data in RoomHeader
-    for (int i = 0; i < 3; ++i)
-    {
-        if (currentRoom->GetLayer(i)->GetMappingType() == LevelComponents::LayerDisabled)
-        {
-            currentRoom->SetRoomHeaderDataPtr(
-                i, WL4Constants::NormalLayerDefaultPtr); // TODO: need a fix for a Tileset in toxic landfill
-        }
-    }
-    if (currentRoom->GetLayer(3)->GetMappingType() == LevelComponents::LayerDisabled)
-    {
-        currentRoom->SetRoomHeaderDataPtr(3, WL4Constants::BGLayerDefaultPtr);
-    }
 
     // Mark the layers as dirty
     for (unsigned int i = 0; i < 3; ++i)
@@ -2280,6 +2262,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 
     int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + CurrentLevel->GetLevelID() * 4);
     CurrentLevel->AddRoom(new LevelComponents::Room(roomTableAddress + selectedRoom * 0x2C, newRoomId, CurrentLevel->GetLevelID()));
+    LevelComponents::Room *newRoom = CurrentLevel->GetRooms()[newRoomId];
 
     // Add one Door to the new Room as well as spriteset settings
     {
@@ -2302,28 +2285,32 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
         CurrentLevel->AddDoor(newDoor);
 
         // Set Current Entity list
-        CurrentLevel->GetRooms()[newRoomId]->SetCurrentEntitySet(entitysetId);
+        newRoom->SetCurrentEntitySet(entitysetId);
     }
 
     // Reset LevelHeader param
     CurrentLevel->GetLevelHeader()->NumOfMap++;
 
     // Reset pointers in RoomHeader to avoid save chunk invalidation corruption
+    // for regular layer chunk invalidation,
+    // the editor should check the RoomHeader instance from the Room instance to see if old layer data need to be invalidated.
+    // the RoomHeader should not be read as ref when creating layer chunks since new Room does not have RoomHeader in the ROM.
+    // those new mapping type 0x20 layer should save their layer pointer inside layer instance
     QVector<int> offsetlist;
-    offsetlist << 0 << 1 << 2 << 5 << 6 << 7;
-    if((CurrentLevel->GetRooms()[newRoomId]->GetLayer(0)->GetMappingType() & 0x30) == 0x20)
+    if(!(newRoom->GetLayer(0)->GetMappingType() & 0x20))
     {
-        offsetlist.pop_front();
+        offsetlist << 0;
     }
-    for(int _offset: offsetlist)
+    offsetlist << 1 << 2 << 5 << 6 << 7;
+    for(auto& _offset: offsetlist)
     {
-        CurrentLevel->GetRooms()[newRoomId]->SetRoomHeaderDataPtr(_offset, 0);
+        newRoom->SetRoomHeaderDataPtr(_offset, 0);
     }
-    for(int i = offsetlist[0] ? 1 : 0; i < 3; i++)
+    for(int i = offsetlist[0]; i < 3; i++)
     {
-        CurrentLevel->GetRooms()[newRoomId]->GetLayer(i)->SetDataPtr(0);
+        newRoom->GetLayer(i)->SetDataPtr(0);
     }
-    CurrentLevel->GetRooms()[newRoomId]->SetCameraControlType(LevelComponents::__CameraControlType::NoLimit);
+    newRoom->SetCameraControlType(LevelComponents::__CameraControlType::NoLimit);
 
     // UI updates
     SetCurrentRoomId(newRoomId);

@@ -48,7 +48,7 @@ namespace DialogParams
                 LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
                 Layer0MappingTypeParam(room->GetLayer0MappingParam()),
                 RoomWidth(room->GetWidth()), RoomHeight(room->GetHeight()), Layer2Enable(room->IsLayer2Enabled()),
-                Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayerDataPtr(0) : 0),
+                Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayer(0)->GetDataPtr() : 0),
                 BackgroundLayerEnable(room->IsBGLayerEnabled()), RasterType(room->GetLayerGFXEffect01()),
                 Water(room->GetLayerGFXEffect02()), BGMVolume(room->GetBgmvolume())
         {
@@ -64,7 +64,7 @@ namespace DialogParams
             }
             if (BackgroundLayerEnable)
             {
-                BackgroundLayerDataPtr = room->GetLayerDataPtr(3);
+                BackgroundLayerDataPtr = room->GetLayer(3)->GetDataPtr();
             } else {
                 BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
             }

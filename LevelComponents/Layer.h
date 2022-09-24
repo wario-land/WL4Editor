@@ -34,8 +34,6 @@ namespace LevelComponents
         QPixmap RenderLayer(Tileset *tileset);
         int GetLayerWidth() { return Width; }
         int GetLayerHeight() { return Height; }
-        void SetWidth(int width) { Width = width; }
-        void SetHeight(int height) { Height = height; }
         enum LayerMappingType GetMappingType() { return MappingType; }
         unsigned short *GetLayerData() { return LayerData; }
         void SetLayerData(unsigned short *ptr) { LayerData = ptr; }

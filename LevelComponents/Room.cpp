@@ -54,8 +54,6 @@ namespace LevelComponents
             layers[i] = new Layer(layerPtr, mappingType);
         }
 
-        SetLayerPriorityAndAlphaAttributes(ROMUtils::ROMFileMetadata->ROMDataPtr[roomDataPtr + 26]);
-
         // Set up camera control data
         if ((CameraControlType = static_cast<enum __CameraControlType>(ROMUtils::ROMFileMetadata->ROMDataPtr[roomDataPtr + 24])) ==
             __CameraControlType::HasControlAttrs)
@@ -121,7 +119,7 @@ namespace LevelComponents
         memset(EntityLayerZValue, 0, sizeof(EntityLayerZValue));
         memset(EntityListDirty, 0, sizeof(EntityListDirty));
 
-        // Set up tileset, TODO: if we support Tileset changes in the editor, this need to be changed
+        // Set up tileset
         tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
 
         // Set up the layer data
@@ -130,7 +128,7 @@ namespace LevelComponents
             layers[i] = new Layer(*room->GetLayer(i));
         }
 
-        SetLayerPriorityAndAlphaAttributes(room->GetRoomHeader().LayerPriorityColorBlendingFlag);
+        SetRenderEffectFlag(room->GetRoomHeader().RenderEffect);
 
         // Set up camera control data
         if (CameraControlType == LevelComponents::HasControlAttrs)
@@ -271,26 +269,32 @@ namespace LevelComponents
         sceneHeight = qMax(sceneHeight, layer2unit * this->GetLayer(2)->GetLayerHeight());
         int Z = 0;
 
+        QVector<int> layerpriorities = RenderEffectParamToLayerPriorities(RoomHeader.RenderEffect);
+        QVector<int> eva_evb = RenderEffectParamToEVAAndEVB(RoomHeader.RenderEffect);
+        bool Layer0ColorBlending = GetLayer0ColorBlending(RoomHeader.RenderEffect);
+
+        // Order the layers by their priority
+        FreeDrawLayers();
+        for (int i = 0; i < 4; ++i)
+        {
+            struct DLS *newDLS = new struct DLS;
+            for (int j = 0; j < 4; j++)
+            {
+                if (layerpriorities[j] == i)
+                {
+                    newDLS->layer = layers[j];
+                    newDLS->index = j;
+                    drawLayers[3 - i] = newDLS; // don't ask me what is the correct order, just render the room and see -- ssp
+                    break;
+                }
+            }
+        }
+
         // render cases
         switch (renderParams->type)
         {
         case FullRender:
         {
-            // Order the layers by their priority
-            FreeDrawLayers();
-            for (int i = 0; i < 4; ++i)
-            {
-                struct DLS *newDLS = new struct DLS;
-                newDLS->layer = layers[i];
-                newDLS->index = i;
-                drawLayers[i] = newDLS;
-            }
-            qsort(drawLayers, 4, sizeof(void *), [](const void *data1, const void *data2) {
-                struct DLS *layer1 = *(struct DLS **) data1;
-                struct DLS *layer2 = *(struct DLS **) data2;
-                return layer2->layer->GetLayerPriority() - layer1->layer->GetLayerPriority();
-            });
-
             // Create a graphics scene with the layers added in order of priority
             if (scene)
             {
@@ -332,13 +336,13 @@ namespace LevelComponents
                 RenderedLayers[drawLayers[i]->index] = pixmapItem;
 
                 // Render alpha blended composite pixmap for layer 0 if alpha blending is enabled
-                if (Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
+                if (Layer0ColorBlending && (eva_evb[1] != 0))
                 {
                     // If this is a pass for a layer under the alpha layer, draw the rendered layer to the EVA component
                     // image
-                    if ((3 - i) > layers[0]->GetLayerPriority() && LayersCurrentVisibility[drawLayers[i]->index])
+                    if ((3 - i) > layerpriorities[0] && LayersCurrentVisibility[drawLayers[i]->index])
                         alphaPainter.drawImage(0, 0, RenderedLayers[drawLayers[i]->index]->pixmap().toImage());
-                    else if ((3 - i) == layers[0]->GetLayerPriority())
+                    else if ((3 - i) == layerpriorities[0])
                     {
                         // Blend the EVA and EVB pixels for the new layer
                         Z--;
@@ -347,8 +351,8 @@ namespace LevelComponents
 
                         // Add the alpha pixmap above the non-blended layer 0, but below the next one to be rendered
                         QGraphicsPixmapItem *alphaItem = scene->addPixmap(
-                                    QPixmap::fromImage(AlphaBlend(Layer0ColorBlendCoefficient_EVA,
-                                                                  Layer0ColorBlendCoefficient_EVB,
+                                    QPixmap::fromImage(AlphaBlend(eva_evb[0],
+                                                                  eva_evb[1],
                                                                   sceneHeight,
                                                                   sceneWidth,
                                                                   imageA,
@@ -385,11 +389,11 @@ namespace LevelComponents
                     continue;
                 Entity *currententity = currentEntityListSource[EntityID];
                 // Use an alternative method to render the Entity in a not-so-bad place
-                if (Layer0ColorBlending && !Layer0ColorBlendCoefficient_EVB)
+                if (Layer0ColorBlending && !eva_evb[1])
                 {
-                    int tmppriority = (layers[1]->GetLayerPriority()) > (layers[2]->GetLayerPriority())
-                                          ? layers[1]->GetLayerPriority()
-                                          : (layers[2]->GetLayerPriority());
+                    int tmppriority = (layerpriorities[1]) > (layerpriorities[2])
+                                          ? layerpriorities[1]
+                                          : layerpriorities[2];
                     EntityPainter[tmppriority]->drawImage(
                         16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 +
                             (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
@@ -401,9 +405,9 @@ namespace LevelComponents
                                 4,
                         currententity->Render());
                 }
-                else if (Layer0ColorBlending && Layer0ColorBlendCoefficient_EVB)
+                else if (Layer0ColorBlending && eva_evb[1])
                 {
-                    EntityPainter[layers[0]->GetLayerPriority()]->drawImage(
+                    EntityPainter[layerpriorities[0]]->drawImage(
                         16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 +
                             (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
                              98) /
@@ -416,7 +420,7 @@ namespace LevelComponents
                 }
                 else
                 {
-                    EntityPainter[layers[1]->GetLayerPriority() + 1]->drawImage(
+                    EntityPainter[layerpriorities[1] + 1]->drawImage(
                         16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 +
                             (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
                              98) /
@@ -446,7 +450,7 @@ namespace LevelComponents
             }
 
             // Reset Z value
-            Z = (Layer0ColorBlending && Layer0ColorBlendCoefficient_EVB) ? 9 : 8;
+            Z = (Layer0ColorBlending && eva_evb[1]) ? 9 : 8;
 
             // Render door layer
             QPixmap doorPixmap(sceneWidth, sceneHeight);
@@ -747,22 +751,13 @@ namespace LevelComponents
             if (RenderedLayers[7])
             {
                 // Update alpha layer for cases when layer 1, 2, 3 are under it but disabled
-                if (Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
+                if (Layer0ColorBlending && (eva_evb[1] != 0))
                 {
                     QGraphicsPixmapItem *alphalayeritem = RenderedLayers[7];
                     Layer *layerqueue[4];
-                    QList<Layer *> layerlist;
-                    layerlist.push_back(layers[0]);
-                    layerlist.push_back(layers[1]);
-                    layerlist.push_back(layers[2]);
-                    layerlist.push_back(layers[3]);
-
-                    std::sort(layerlist.begin(), layerlist.end(), [](Layer *layera, Layer *layerb) {
-                        return layera->GetLayerPriority() < layerb->GetLayerPriority();
-                    });
                     for (int i = 0; i < 4; i++)
                     {
-                        layerqueue[i] = layerlist.at(3 - i);
+                        layerqueue[i] = drawLayers[i]->layer;
                     }
 
                     QPixmap alphaPixmapTemp = alphalayeritem->pixmap();
@@ -788,8 +783,8 @@ namespace LevelComponents
                             QImage imageA = RenderedLayers[0]->pixmap().toImage();
                             QImage imageB = alphaPixmapTemp.toImage();
                             alphalayeritem->setPixmap(
-                                        QPixmap::fromImage(AlphaBlend(Layer0ColorBlendCoefficient_EVA,
-                                                                      Layer0ColorBlendCoefficient_EVB,
+                                        QPixmap::fromImage(AlphaBlend(eva_evb[0],
+                                                                      eva_evb[1],
                                                                       sceneHeight,
                                                                       sceneWidth,
                                                                       imageA,
@@ -809,7 +804,7 @@ namespace LevelComponents
             Layer *layer = layers[renderParams->mode.selectedLayer];
             if (layer->IsEnabled() == false)
                 return scene;
-            for(auto iter: renderParams->tilechangelist) {
+            for(auto &iter: renderParams->tilechangelist) {
                 layer->ReRenderTile(iter.tileX, iter.tileY, iter.tileID, tileset);
             }
 
@@ -820,7 +815,7 @@ namespace LevelComponents
             QPixmap pm(item->pixmap());
             int units = layer->GetMappingType() == LayerMap16 ? 16 : 8;
             int lw = layer->GetLayerWidth();
-            for(auto iter: renderParams->tilechangelist) {
+            for(auto &iter: renderParams->tilechangelist) {
                 int X = iter.tileX * units;
                 int Y = iter.tileY * units;
                 int tileDataIndex = iter.tileX + iter.tileY * lw;
@@ -831,22 +826,13 @@ namespace LevelComponents
             item->setPixmap(pm);
 
             // Update alpha layer
-            if (Layer0ColorBlending && (Layer0ColorBlendCoefficient_EVB != 0))
+            if (Layer0ColorBlending && (eva_evb[1] != 0))
             {
                 QGraphicsPixmapItem *alphalayeritem = RenderedLayers[7];
                 Layer *layerqueue[4];
-                QList<Layer *> layerlist;
-                layerlist.push_back(layers[0]);
-                layerlist.push_back(layers[1]);
-                layerlist.push_back(layers[2]);
-                layerlist.push_back(layers[3]);
-
-                std::sort(layerlist.begin(), layerlist.end(), [](Layer *layera, Layer *layerb) {
-                    return layera->GetLayerPriority() < layerb->GetLayerPriority();
-                });
                 for (int i = 0; i < 4; i++)
                 {
-                    layerqueue[i] = layerlist.at(3 - i);
+                    layerqueue[i] = drawLayers[i]->layer;
                 }
 
                 QPixmap alphaPixmapTemp = alphalayeritem->pixmap();
@@ -879,10 +865,10 @@ namespace LevelComponents
                         QImage imageA = RenderedLayers[0]->pixmap().toImage();
                         QImage imageB = alphaPixmapTemp.toImage();
                         for(auto iter: renderParams->tilechangelist) {
-                            int substituteEVA = Layer0ColorBlendCoefficient_EVA;
+                            int substituteEVA = eva_evb[0];
                             if ((static_cast<unsigned int>(iter.tileX) >= this->Width ||
                                     static_cast<unsigned int>(iter.tileY) >= this->Height) &&
-                                    Layer0ColorBlendCoefficient_EVA != 16)
+                                    eva_evb[0] != 16)
                             {
                                 // No color blending in areas where other layers do not exist
                                 substituteEVA = 16;
@@ -895,13 +881,13 @@ namespace LevelComponents
                                     {
                                         QColor PXA = QColor(imageA.pixel(k, j)), PXB = QColor(imageB.pixel(k, j));
                                         int R = qMin(((substituteEVA * PXA.red()) >> 4) +
-                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.red()) >> 4),
+                                                         ((eva_evb[1] * PXB.red()) >> 4),
                                                      255);
                                         int G = qMin(((substituteEVA * PXA.green()) >> 4) +
-                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.green()) >> 4),
+                                                         ((eva_evb[1] * PXB.green()) >> 4),
                                                      255);
                                         int B = qMin(((substituteEVA * PXA.blue()) >> 4) +
-                                                         ((Layer0ColorBlendCoefficient_EVB * PXB.blue()) >> 4),
+                                                         ((eva_evb[1] * PXB.blue()) >> 4),
                                                      255);
                                         imageB.setPixel(k, j, QColor(R, G, B).rgb());
                                     }
@@ -988,105 +974,102 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Set Layers Priority and Alpha Attributes for Layer instances and class members in Room (this) class.
+    /// Set render_effect Attributes in RoomHeader.
     /// </summary>
-    void Room::SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr)
+    void Room::SetRenderEffectFlag(int render_effect)
     {
-        // Prioritize the layers
-        int priorityFlag = layerPriorityAndAlphaAttr;
-        RoomHeader.LayerPriorityColorBlendingFlag = (unsigned char) layerPriorityAndAlphaAttr;
-        switch (priorityFlag & 3)
-        {
-        case 0:
-            layers[0]->SetLayerPriority(0);
-            layers[1]->SetLayerPriority(1);
-            layers[2]->SetLayerPriority(2);
-            break;
-        case 1:
-        case 2:
-            layers[0]->SetLayerPriority(1);
-            layers[1]->SetLayerPriority(0);
-            layers[2]->SetLayerPriority(2);
-            break;
-        case 3:
-            layers[0]->SetLayerPriority(2);
-            layers[1]->SetLayerPriority(0);
-            layers[2]->SetLayerPriority(1);
-        }
-        layers[3]->SetLayerPriority(3);
-
-        // Get the information about Layer 0 color blending, using priorityFlag
-        if ((Layer0ColorBlending = priorityFlag > 7))
-        {
-            switch ((priorityFlag - 8) >> 2)
-            {
-            case 0:
-                Layer0ColorBlendCoefficient_EVA = 7;
-                Layer0ColorBlendCoefficient_EVB = 16;
-                break;
-            case 1:
-                Layer0ColorBlendCoefficient_EVA = 10;
-                Layer0ColorBlendCoefficient_EVB = 16;
-                break;
-            case 2:
-                Layer0ColorBlendCoefficient_EVA = 13;
-                Layer0ColorBlendCoefficient_EVB = 16;
-                break;
-            case 3:
-                Layer0ColorBlendCoefficient_EVA = 16;
-                Layer0ColorBlendCoefficient_EVB = 16;
-                break;
-            case 4:
-                Layer0ColorBlendCoefficient_EVA = 16;
-                Layer0ColorBlendCoefficient_EVB = 0;
-                break;
-            case 5:
-                Layer0ColorBlendCoefficient_EVA = 13;
-                Layer0ColorBlendCoefficient_EVB = 3;
-                break;
-            case 6:
-                Layer0ColorBlendCoefficient_EVA = 10;
-                Layer0ColorBlendCoefficient_EVB = 6;
-                break;
-            case 7:
-                Layer0ColorBlendCoefficient_EVA = 7;
-                Layer0ColorBlendCoefficient_EVB = 9;
-                break;
-            case 8:
-                Layer0ColorBlendCoefficient_EVA = 5;
-                Layer0ColorBlendCoefficient_EVB = 11;
-                break;
-            case 9:
-                Layer0ColorBlendCoefficient_EVA = 3;
-                Layer0ColorBlendCoefficient_EVB = 13;
-                break;
-            case 10:
-                Layer0ColorBlendCoefficient_EVA = 0;
-                Layer0ColorBlendCoefficient_EVB = 16;
-            }
-        }
+        RoomHeader.RenderEffect = (unsigned char) render_effect;
     }
 
     /// <summary>
-    /// Get the layer data pointer for a layer.
+    /// return an array shows L0, L1, L2, L3 priorities in order.
     /// </summary>
-    /// <remarks>
-    /// The pointer starts in the 0x8000000 range, so the 28th bit is set to 0 to normalize the address.
-    /// </remarks>
-    /// <param name="LayerNum">
-    /// The number of the layer to retrieve the data pointer for.
-    /// </param>
-    /// <return>
-    /// The normalized data pointer for the requested layer.
-    /// </return>
-    int Room::GetLayerDataPtr(unsigned int LayerNum)
+    QVector<int> Room::RenderEffectParamToLayerPriorities(unsigned char render_effect)
     {
-        if(LayerNum & 0xFFFFFFFC)
+        // Prioritize the layers
+        int priorityFlag = render_effect; // = RoomHeader.RenderEffect
+        QVector<int> result;
+        switch (priorityFlag & 3)
         {
-            singleton->GetOutputWidgetPtr()->PrintString("Warning: Possible data corruption when using GetLayerDataPtr(unsigned int LayerNum),"
-                                                         "LayerNum must be within range [0, 4).");
+        case 0:
+            result.append(0);
+            result.append(1);
+            result.append(2);
+            break;
+        case 1:
+        case 2:
+            result.append(1);
+            result.append(0);
+            result.append(2);
+            break;
+        case 3:
+            result.append(2);
+            result.append(0);
+            result.append(1);
         }
-        return ((unsigned int *) (&RoomHeader.Layer0Data))[LayerNum] & 0x7FFFFFF;
+        result.append(3);
+        return result;
+    }
+
+    /// <summary>
+    /// return an array shows EVA and EVB in order.
+    /// </summary>
+    QVector<int> Room::RenderEffectParamToEVAAndEVB(unsigned char render_effect)
+    {
+        int eva = 16, evb = 0;
+        if (render_effect > 7)
+        {
+            switch ((render_effect - 8) >> 2)
+            {
+            case 0:
+                eva = 7;
+                evb = 16;
+                break;
+            case 1:
+                eva = 10;
+                evb = 16;
+                break;
+            case 2:
+                eva = 13;
+                evb = 16;
+                break;
+            case 3:
+                eva = 16;
+                evb = 16;
+                break;
+            case 4:
+                eva = 16;
+                evb = 0;
+                break;
+            case 5:
+                eva = 13;
+                evb = 3;
+                break;
+            case 6:
+                eva = 10;
+                evb = 6;
+                break;
+            case 7:
+                eva = 7;
+                evb = 9;
+                break;
+            case 8:
+                eva = 5;
+                evb = 11;
+                break;
+            case 9:
+                eva = 3;
+                evb = 13;
+                break;
+            case 10:
+                eva = 0;
+                evb = 16;
+            }
+        }
+        QVector<int> result;
+        result.append(eva);
+        result.append(evb);
+        return result;
     }
 
     /// <summary>
@@ -1146,6 +1129,11 @@ namespace LevelComponents
         // Populate layer chunks (uses chunk-relative addresses)
         unsigned int *layerPtrs =
             reinterpret_cast<unsigned int *>(headerChunk->data + RoomID * sizeof(struct __RoomHeader) + 8);
+        std::vector<unsigned int> old_layer_ptr;
+        old_layer_ptr.push_back(RoomHeader.Layer0Data);
+        old_layer_ptr.push_back(RoomHeader.Layer1Data);
+        old_layer_ptr.push_back(RoomHeader.Layer2Data);
+        old_layer_ptr.push_back(RoomHeader.Layer3Data);
         for (unsigned int i = 0; i < 4; ++i)
         {
             Layer *layer = layers[i];
@@ -1155,7 +1143,7 @@ namespace LevelComponents
                 // then, we can refer to the old pointer to see if the old chunk need to be invalidated or not
 
                 // check if we are going to invalidate the old chunk first
-                unsigned int old_data_addr = ROMUtils::PointerFromData(headerAddr + i * 4 + 8);
+                unsigned int old_data_addr = old_layer_ptr[i] & 0x7FF'FFFF;
                 enum ROMUtils::SaveDataChunkType type;
                 if (ROMUtils::GetChunkType(old_data_addr, type))
                 {
@@ -1193,12 +1181,12 @@ namespace LevelComponents
                     // Set the room header layer pointer from the data pointer, and invalidate the old layer save chunk
                     layerPtrs[i] =
                         (layer->GetMappingType() == LayerMappingType::LayerTile8x8
-                             ? static_cast<unsigned int>(GetLayerDataPtr(i)) // layer->GetDataPtr() can work here too
+                             ? static_cast<unsigned int>(layer->GetDataPtr()) // layer->GetDataPtr() can work here too
                              : // else LayerMappingType::LayerDisabled
                              (i == 3 ? WL4Constants::BGLayerDefaultPtr : WL4Constants::NormalLayerDefaultPtr)) |
                         0x8000000;
 
-                    // idk if this can work, but we should rewrite the logic here to deal with edge case like:
+                    // the logic here is used to deal with edge case like:
                     // layer 0 was using 0x10 mapping before, but reset with 0x20 mapping
                     // then the old chunk need to be invalidated,
                     // which cannot be done on the current Room and Layer backend
@@ -1220,7 +1208,7 @@ namespace LevelComponents
             else
             {
                 // Write the old layer data pointer to the header
-                layerPtrs[i] = static_cast<unsigned int>(GetLayerDataPtr(i)) | 0x8000000;
+                layerPtrs[i] = static_cast<unsigned int>(layer->GetDataPtr()) | 0x8000000;
             }
         }
 
@@ -1339,7 +1327,7 @@ namespace LevelComponents
             Layer2MappingType(room->GetLayer(2)->GetMappingType()),
             Layer3MappingType(room->GetLayer(3)->GetMappingType()), Layer0Data(0), // set manually
             Layer1Data(0), Layer2Data(0), Layer3Data(0), CameraControlType(room->GetCameraControlType()),
-            Layer3Scrolling(room->GetBGScrollParameter()), LayerPriorityColorBlendingFlag(room->GetLayerEffectsParam()), DATA_1B(0),
+            Layer3Scrolling(room->GetBGScrollParameter()), RenderEffect(room->GetLayerEffectsParam()), DATA_1B(0),
             EntityTableHard(0), // set manually
             EntityTableNormal(0), EntityTableSHard(0), LayerGFXEffect01(room->GetLayerGFXEffect01()),
             LayerGFXEffect02(room->GetLayerGFXEffect02()), BGMVolume(room->GetBgmvolume())

@@ -31,7 +31,7 @@ namespace LevelComponents
         unsigned int Layer3Data;
         unsigned char CameraControlType;
         unsigned char Layer3Scrolling;
-        unsigned char LayerPriorityColorBlendingFlag;
+        unsigned char RenderEffect;
         unsigned char DATA_1B;
         unsigned int EntityTableHard;
         unsigned int EntityTableNormal;
@@ -125,9 +125,6 @@ namespace LevelComponents
         unsigned int RoomID;
         unsigned int LevelID;
         unsigned int Width, Height;
-        bool Layer0ColorBlending = false;
-        int Layer0ColorBlendCoefficient_EVA = 16;
-        int Layer0ColorBlendCoefficient_EVB = 0;
         std::vector<struct __CameraControlRecord *> CameraControlRecords;
         struct __RoomHeader RoomHeader;
         unsigned int headerAddr; // used to read old layer pointer only, to decide if create invalidation chunks for them or not
@@ -148,6 +145,11 @@ namespace LevelComponents
         void FreeDrawLayers();
         void ClearCurrentEntityListSource();
         void ResetEntitySet(int entitysetId);
+
+        // new helper functions
+        QVector<int> RenderEffectParamToLayerPriorities(unsigned char render_effect);
+        QVector<int> RenderEffectParamToEVAAndEVB(unsigned char render_effect);
+        bool GetLayer0ColorBlending(unsigned char render_effect) {return render_effect > 7; }
 
     public:
         // Object construction
@@ -183,16 +185,13 @@ namespace LevelComponents
         std::vector<Door *> GetDoors() { return doors; }
         bool GetEntityListDirty(int difficulty) { return EntityListDirty[difficulty]; }
         std::vector<struct EntityRoomAttribute> GetEntityListData(int difficulty) { return EntityList[difficulty]; }
-        int GetEVA() { return Layer0ColorBlendCoefficient_EVA; }
-        int GetEVB() { return Layer0ColorBlendCoefficient_EVB; }
         unsigned int GetHeight() { return Height; }
         unsigned int GetWidth() { return Width; }
         unsigned int GetLayer0Width() { return layers[0]->GetLayerWidth(); }
         unsigned int GetLayer0Height() { return layers[0]->GetLayerHeight(); }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         int GetLayer0MappingParam() { return RoomHeader.Layer0MappingType; }
-        int GetLayerDataPtr(unsigned int LayerNum);
-        int GetLayerEffectsParam() { return RoomHeader.LayerPriorityColorBlendingFlag; }
+        int GetLayerEffectsParam() { return RoomHeader.RenderEffect; }
         unsigned int GetLevelID() { return LevelID; }
         struct __RoomHeader GetRoomHeader() { return RoomHeader; }
         unsigned int GetRoomHeaderAddr() { return headerAddr; }
@@ -203,7 +202,7 @@ namespace LevelComponents
         int GetEntityY(int index);
         unsigned char GetBGLayerScrollFlag() { return RoomHeader.Layer3Scrolling; }
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
-        bool IsLayer0ColorBlendingEnabled() { return Layer0ColorBlending; }
+        bool IsLayer0ColorBlendingEnabled() { return GetLayer0ColorBlending(RoomHeader.RenderEffect); }
         bool IsLayer2Enabled() { return RoomHeader.Layer2MappingType; }
 
         // Setters
@@ -248,14 +247,13 @@ namespace LevelComponents
         void SetHeight(int _height) { Height = (unsigned int) _height; }
         void SetWidth(int _width) { Width = (unsigned int) _width; }
         void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
-        void SetLayer0ColorBlendingEnabled(bool enability) { Layer0ColorBlending = enability; }
         void SetLayer0MappingParam(int layer0MappingTypeParam)
         {
             RoomHeader.Layer0MappingType = layer0MappingTypeParam;
         }
         void SetLayer2Enabled(bool enability) { RoomHeader.Layer2MappingType = enability ? '\x10' : '\x00'; }
         void SetRoomHeaderDataPtr(int pointerId, int dataPtr);
-        void SetLayerPriorityAndAlphaAttributes(int layerPriorityAndAlphaAttr);
+        void SetRenderEffectFlag(int render_effect);
         void SetTileset(Tileset *newtileset, int tilesetID)
         {
             tileset = newtileset;
