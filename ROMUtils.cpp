@@ -6,6 +6,7 @@
 #include "WL4EditorWindow.h"
 #include "PatchUtils.h"
 
+#include <cmath>
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
