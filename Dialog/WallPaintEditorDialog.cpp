@@ -65,7 +65,6 @@ void WallPaintEditorDialog::AcceptChanges()
     memcpy(&(ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr]), gfxdata, sizeof(gfxdata));
     memcpy(&(ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor]), pal_passage_color, sizeof(pal_passage_color));
     memcpy(&(ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray]), pal_passage_gray, sizeof(pal_passage_gray));
-    memset(pal_startlevel_color, 0, sizeof(pal_startlevel_color));
     for (int passage = 0; passage < 6; passage++)
     {
         for (int level = 0; level < 4; level++)
