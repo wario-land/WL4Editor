@@ -39,6 +39,7 @@ SOURCES += \
     Dialog/SpritesEditorDialog_PaletteGraphicView.cpp \
     Dialog/SpritesEditorDialog_SpriteTileMapGraphicView.cpp \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.cpp \
+    Dialog/WallPaintEditorDialog.cpp \
     DockWidget/OutputDockWidget.cpp \
     FileIOUtils.cpp \
     AssortedGraphicUtils.cpp \
@@ -89,6 +90,7 @@ HEADERS += \
     Dialog/SpritesEditorDialog_PaletteGraphicView.h \
     Dialog/SpritesEditorDialog_SpriteTileMapGraphicView.h \
     Dialog/TilesetEditor_Tile8x8EditorGraphicView.h \
+    Dialog/WallPaintEditorDialog.h \
     DockWidget/OutputDockWidget.h \
     FileIOUtils.h \
     AssortedGraphicUtils.h \
@@ -137,6 +139,7 @@ FORMS += \
     Dialog/GraphicManagerDialog.ui \
     Dialog/SelectColorDialog.ui \
     Dialog/SpritesEditorDialog.ui \
+    Dialog/WallPaintEditorDialog.ui \
     DockWidget/OutputDockWidget.ui \
     WL4EditorWindow.ui \
     Dialog/ChooseLevelDialog.ui \
