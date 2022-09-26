@@ -2,6 +2,7 @@
 #define WALLPAINTEDITORDIALOG_H
 
 #include <QDialog>
+#include <QPixmap>
 
 namespace Ui {
 class WallPaintEditorDialog;
@@ -24,6 +25,7 @@ private slots:
     void on_pushButton_ImportColoredPalette_clicked();
     void on_pushButton_ImportGraphics_clicked();
     void on_pushButton_ExportColoredPalette_clicked();
+    void on_pushButton_ExportWallPaintPNG_clicked();
 
 private:
     Ui::WallPaintEditorDialog *ui;
@@ -38,6 +40,7 @@ private:
 
     // helper functions
     unsigned int GetGradPalStartAddr(int passage_Id, int local_level_id);
+    QPixmap GetWallPaint(int passage_Id, int local_level_id, QVector<QRgb> *palettes, int palette_id);
 };
 
 #endif // WALLPAINTEDITORDIALOG_H

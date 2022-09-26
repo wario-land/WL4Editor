@@ -2,6 +2,7 @@
 #include "ui_AnimatedTileGroupEditorDialog.h"
 
 #include <QScrollBar>
+#include <QMessageBox>
 
 #include "ROMUtils.h"
 #include "FileIOUtils.h"

@@ -6,6 +6,7 @@
 #include "FileIOUtils.h"
 #include "Operation.h"
 
+#include "Dialog/SpritesEditorDialog.h"
 #include "Dialog/PatchManagerDialog.h"
 #include "Dialog/GraphicManagerDialog.h"
 #include "Dialog/AnimatedTileGroupEditorDialog.h"

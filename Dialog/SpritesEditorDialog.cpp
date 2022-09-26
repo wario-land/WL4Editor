@@ -7,6 +7,7 @@
 #include <QInputDialog>
 #include <QColorDialog>
 #include <QFileDialog>
+#include <QTextStream>
 #include "ROMUtils.h"
 #include "FileIOUtils.h"
 
@@ -607,8 +608,9 @@ void SpritesEditorDialog::on_pushButton_ResetLoadTable_clicked()
 /// </summary>
 void SpritesEditorDialog::on_pushButton_SpriteTilesExport_clicked()
 {
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
     QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile8x8 map to a file"),
-                                                     QString(""), tr("PNG file (*.png)"));
+                                                     romFileDir, tr("PNG file (*.png)"));
     if (!qFilePath.isEmpty())
     {
         LevelComponents::Entity *curEntity = GetCurEntityPtr();

@@ -160,6 +160,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pushButton_ExportWallPaintPNG">
+         <property name="text">
+          <string>Export Wall Paint to PNG file</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="pushButton_ImportGraphics">
          <property name="text">
           <string>Import gfx data</string>

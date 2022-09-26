@@ -3,6 +3,8 @@
 
 #include <QScrollBar>
 #include <QGraphicsView>
+#include <QFileDialog>
+#include <QMessageBox>
 
 #include "WL4Constants.h"
 #include "ROMUtils.h"
@@ -164,19 +166,6 @@ void WallPaintEditorDialog::RenderCurrentWallPaintAndPalette()
     }
 
     // draw wall paint
-    int gfx_offset = (1024 * 5) * passageid + (5 * 32) * locallevelid;
-    QPixmap pixmap(8 * 5, 8 * 5);
-    pixmap.fill(Qt::transparent);
-    for (int c = 0; c < 5; ++c)
-    {
-        for (int r = 0; r < 5; ++r)
-        {
-            LevelComponents::Tile8x8 *tmptile = new LevelComponents::Tile8x8(gfxdata + r * 32 + c * 1024 + gfx_offset, palettes);
-            tmptile->SetPaletteIndex(usedpal);
-            tmptile->DrawTile(&pixmap, r * 8, c * 8);
-            delete tmptile;
-        }
-    }
     if (ui->graphicsView_WallPaintGraphic->scene())
     {
         delete ui->graphicsView_WallPaintGraphic->scene();
@@ -184,7 +173,7 @@ void WallPaintEditorDialog::RenderCurrentWallPaintAndPalette()
     scene = new QGraphicsScene(0, 0, 8 * 5, 8 * 5);
     ui->graphicsView_WallPaintGraphic->setScene(scene);
     ui->graphicsView_WallPaintGraphic->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    scene->addPixmap(pixmap);
+    scene->addPixmap(GetWallPaint(passageid, locallevelid, palettes, usedpal));
     ui->graphicsView_WallPaintGraphic->verticalScrollBar()->setValue(0);
 }
 
@@ -194,6 +183,27 @@ void WallPaintEditorDialog::RenderCurrentWallPaintAndPalette()
 unsigned int WallPaintEditorDialog::GetGradPalStartAddr(int passage_Id, int local_level_id)
 {
     return ROMUtils::PointerFromData(WL4Constants::WallPaintPalStartLevelPointerTable + passage_Id * 16 + local_level_id * 4);
+}
+
+/// <summary>
+/// A helper function to generate wall paint pixmap since it can be used in multiple places
+/// </summary>
+QPixmap WallPaintEditorDialog::GetWallPaint(int passage_Id, int local_level_id, QVector<QRgb> *palettes, int palette_id)
+{
+    int gfx_offset = (1024 * 5) * passage_Id + (5 * 32) * local_level_id;
+    QPixmap pixmap(8 * 5, 8 * 5);
+    pixmap.fill(Qt::transparent);
+    for (int c = 0; c < 5; ++c)
+    {
+        for (int r = 0; r < 5; ++r)
+        {
+            LevelComponents::Tile8x8 *tmptile = new LevelComponents::Tile8x8(gfxdata + r * 32 + c * 1024 + gfx_offset, palettes);
+            tmptile->SetPaletteIndex(palette_id);
+            tmptile->DrawTile(&pixmap, r * 8, c * 8);
+            delete tmptile;
+        }
+    }
+    return pixmap;
 }
 
 void WallPaintEditorDialog::on_spinBox_PassageID_valueChanged(int arg1)
@@ -360,5 +370,33 @@ void WallPaintEditorDialog::on_pushButton_ExportColoredPalette_clicked()
     tmpptr = (unsigned short*) (pal_passage_color + palette_offset);
     ROMUtils::LoadPalette(&palette, tmpptr, true);
     FileIOUtils::ExportPalette(this, palette);
+}
+
+/// <summary>
+/// Export the wall paint to PNG file.
+/// </summary>
+void WallPaintEditorDialog::on_pushButton_ExportWallPaintPNG_clicked()
+{
+    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
+    QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile8x8 map to a file"),
+                                                     romFileDir, tr("PNG file (*.png)"));
+    if (qFilePath.compare(""))
+    {
+        int passageid = ui->spinBox_PassageID->value();
+        if (passageid < 0) passageid = 0;
+        int locallevelid = ui->spinBox_LocalLevelID->value();
+        if (locallevelid < 0) locallevelid = 0;
+        QVector<QRgb> palette;
+        int palette_offset = 32 * 5 * passageid + 32 * locallevelid;
+        unsigned short *tmpptr;
+        tmpptr = (unsigned short*) (pal_passage_color + palette_offset);
+        ROMUtils::LoadPalette(&palette, tmpptr, true);
+
+        QPixmap Tile8x8Pixmap(8 * 5, 8 * 5);
+        Tile8x8Pixmap.fill(Qt::transparent);
+        QPainter Tile8x8PixmapPainter(&Tile8x8Pixmap);
+        Tile8x8PixmapPainter.drawImage(0, 0, FileIOUtils::RenderBGColor(GetWallPaint(passageid, locallevelid, &palette, 0).toImage(), this));
+        Tile8x8Pixmap.save(qFilePath, "PNG", 100);
+    }
 }
 

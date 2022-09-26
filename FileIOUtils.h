@@ -6,8 +6,6 @@
 #include <QImage>
 #include <functional>
 
-#include "Dialog/TilesetEditDialog.h"
-
 namespace FileIOUtils
 {
     QString LoadROMFile(QString filePath);

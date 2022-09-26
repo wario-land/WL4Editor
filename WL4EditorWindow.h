@@ -11,7 +11,6 @@
 #include "Dialog/RoomConfigDialog.h"
 #include "Dialog/TilesetEditDialog.h"
 #include "Dialog/CreditsEditDialog.h"
-#include "Dialog/SpritesEditorDialog.h"
 #include "DockWidget/CameraControlDockWidget.h"
 #include "DockWidget/EditModeDockWidget.h"
 #include "DockWidget/EntitySetDockWidget.h"

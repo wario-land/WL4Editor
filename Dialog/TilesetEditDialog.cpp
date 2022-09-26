@@ -830,7 +830,7 @@ void TilesetEditDialog::on_pushButton_SetAnimatedTileSlot_clicked()
 void TilesetEditDialog::on_pushButton_ExportTile8x8Map_clicked()
 {
     QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile8x8 map to a file"),
-                                                     QString(""), tr("PNG file (*.png)"));
+                                                     singleton->GetdDialogInitialPath(), tr("PNG file (*.png)"));
     if (qFilePath.compare(""))
     {
         QPixmap Tile8x8Pixmap(8 * 16, 0x600 / 2);
@@ -847,7 +847,7 @@ void TilesetEditDialog::on_pushButton_ExportTile8x8Map_clicked()
 void TilesetEditDialog::on_pushButton_ExportTile16Map_clicked()
 {
     QString qFilePath = QFileDialog::getSaveFileName(this, tr("Save current Tile16 map to a file"),
-                                                     QString(""), tr("PNG file (*.png)"));
+                                                     singleton->GetdDialogInitialPath(), tr("PNG file (*.png)"));
     if (qFilePath.compare(""))
     {
         // draw pixmaps

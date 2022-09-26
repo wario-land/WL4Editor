@@ -236,7 +236,7 @@ void ScriptInterface::_ExportLayerData(QString filePath, int layerid)
 {
     log("Export Layer Data from current Room.");
     if(!filePath.compare(""))
-        filePath = QFileDialog::getSaveFileName(singleton, tr("Save Layer data file"), "", tr("bin files (*.bin)"));
+        filePath = QFileDialog::getSaveFileName(singleton, tr("Save Layer data file"), singleton->GetdDialogInitialPath(), tr("bin files (*.bin)"));
     if (filePath.compare(""))
     {
         if(layerid == -1)
@@ -285,8 +285,9 @@ void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
     if(!fileName.compare(""))
     {
         fileName = QFileDialog::getOpenFileName(singleton,
-                                                    tr("Load Layer data bin file"), "",
-                                                    tr("bin files (*.bin)"));
+                                                tr("Load Layer data bin file"),
+                                                singleton->GetdDialogInitialPath(),
+                                                tr("bin files (*.bin)"));
     }
     if (!fileName.compare(""))
     {
@@ -562,7 +563,7 @@ void ScriptInterface::UpdateRoomGFXFull()
 void ScriptInterface::WriteTxtFile(QString filepath, QString test)
 {
     if(!filepath.compare(""))
-        filepath = QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), "", tr("bin files (*.bin)"));
+        filepath = QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), singleton->GetdDialogInitialPath(), tr("bin files (*.bin)"));
     if(!filepath.compare(""))
     {
         log("Invalid file path!");
