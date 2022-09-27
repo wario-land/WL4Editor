@@ -67,12 +67,12 @@ namespace LevelComponents
         fgGFXlen = ROMUtils::IntFromData(tilesetPtr + 4);
         bgGFXptr = ROMUtils::PointerFromData(tilesetPtr + 12);
         bgGFXlen = ROMUtils::IntFromData(tilesetPtr + 16);
-        if (IsloadFromTmpROM)
+        if (IsloadFromTmpROM && (bgGFXptr >= WL4Constants::AvailableSpaceBeginningInROM))
         {
             // use the bg ptr and data from the vanilla game
             // since directly use the bg things from the changed Tileset in the current ROM sometimes will have problem
             // we don't know if the numbers of the fg and bg tiles will cause conflict when loading tile8x8
-            // so we use the default value
+            // so we use the default value if the bg gfx data is not from vanilla ROM
             bgGFXptr = WL4Constants::Tileset_BGTile_default_1;
             bgGFXlen = WL4Constants::Tileset_BGTile_default_1_size;
         }
