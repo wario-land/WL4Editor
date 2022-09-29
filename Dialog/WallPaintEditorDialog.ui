@@ -51,7 +51,7 @@
        <item>
         <widget class="QLabel" name="label_PassagePalColored">
          <property name="text">
-          <string>colored Palette in passage screen:</string>
+          <string>colored palette in passage screen:</string>
          </property>
         </widget>
        </item>
@@ -68,7 +68,7 @@
        <item>
         <widget class="QLabel" name="label_PassagePalGray">
          <property name="text">
-          <string>gray Palette in passage screen:</string>
+          <string>auto-generated gray palette:</string>
          </property>
         </widget>
        </item>
@@ -85,7 +85,7 @@
        <item>
         <widget class="QLabel" name="label_StartLevelPalColored">
          <property name="text">
-          <string>colored Palette when start level:</string>
+          <string>auto-generated gradient palettes:</string>
          </property>
         </widget>
        </item>
