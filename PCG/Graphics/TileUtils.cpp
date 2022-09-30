@@ -29,6 +29,22 @@ int PCG::GFXUtils::TileUtils::GetFitness_CurTilesetJoinTile16_LR(unsigned int le
     return GetFitnessJoinTile16_LR(tile16s[left_tile16_id], tile16s[right_tile16_id]);
 }
 
+bool PCG::GFXUtils::TileUtils::IsBlankTile_CurTilesetTile16(unsigned int tile16_id)
+{
+    int tileset_id = singleton->GetCurrentRoom()->GetTilesetID();
+    LevelComponents::Tileset *tileset = ROMUtils::singletonTilesets[tileset_id];
+    auto tile16s = tileset->GetMap16arrayPtr();
+    for (int pos = 0; pos < 4; pos++)
+    {
+        char *data = tile16s[tile16_id]->GetTile8X8(pos)->CreateGraphicsData().data();
+        for (int i = 0; i < 32; i++)
+        {
+            if (data[i] != 0) return false;
+        }
+    }
+    return true;
+}
+
 /// <summary>
 /// Check if an upper tile16 and a lower tile16 can be joined together.
 /// </summary>
