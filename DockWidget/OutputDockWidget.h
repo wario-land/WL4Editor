@@ -2,6 +2,7 @@
 #define OUTPUTDOCKWIDGET_H
 
 #include "ScriptInterface.h"
+#include "PCG/Graphics/TileUtils.h"
 #include <QDockWidget>
 #include <QJSEngine>
 
@@ -27,8 +28,11 @@ private slots:
 
 private:
     Ui::OutputDockWidget *ui;
-    ScriptInterface *interface;
     QJSEngine jsEngine;
+
+    // Qt meta object
+    ScriptInterface *interface = nullptr;
+    PCG::GFXUtils::TileUtils *tileUtils = nullptr;
 };
 
 #endif // OUTPUTDOCKWIDGET_H

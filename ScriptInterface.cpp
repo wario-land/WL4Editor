@@ -1,8 +1,12 @@
 ﻿#include "ScriptInterface.h"
 
 #include "ROMUtils.h"
+
+#ifndef WINDOW_INSTANCE_SINGLETON
+#define WINDOW_INSTANCE_SINGLETON
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
+#endif
 
 // ---------------------------Helper functions--------------------------------------
 unsigned short *QStringToU16(QString input)
