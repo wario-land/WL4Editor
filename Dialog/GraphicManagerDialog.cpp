@@ -1011,9 +1011,18 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                 {
                     QString tmpname = ui->lineEdit_tileDataName->text();
 
+                    // Let user to choose a palette for reference when import graphic by bin files
+                    int refPalette = QInputDialog::getText(this,
+                                                           tr("WL4Editor"),
+                                                           tr("Choose a ref palette to import Tile8x8 data:\n"
+                                                              "(Use Hex Id)"), QLineEdit::Normal,
+                                                           "0xF").toUInt(nullptr, 16);
+                    refPalette = qMin(refPalette, 0xF);
+                    refPalette = qMax(refPalette, 0);
+
                     // Ignore the settings from the UI, import tile data directly and see if the data is legal
                     FileIOUtils::ImportTile8x8GfxData(this,
-                        tmpEntry.palettes[15], // use the last palette for palette comparison
+                        tmpEntry.palettes[refPalette],
                         tr("Choose a color to covert to transparent:"),
                         [this, &tmpname] (QByteArray finaldata, QWidget *parentPtr)
                         {
@@ -1174,7 +1183,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                     // Let user to choose a palette for reference when import graphic by bin files
                     int refPalette = QInputDialog::getText(this,
                                                            tr("WL4Editor"),
-                                                           tr("Choose a palette to import mapping data of graphics:\n"
+                                                           tr("Choose a ref palette to import mapping data of graphics:\n"
                                                               "(Use Hex Id)"), QLineEdit::Normal,
                                                            "0xF").toUInt(nullptr, 16);
                     refPalette = qMin(refPalette, 0xF);
