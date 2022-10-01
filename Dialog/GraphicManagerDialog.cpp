@@ -1165,6 +1165,11 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                                                                               "it has to be 0x40 or 0x40!"));
                         return;
                     }
+                    if (optionalgraphicWidth == 0x20 && optionalgraphicHeight == 0x40)
+                    {
+                        QMessageBox::critical(this, tr("Load Error"), tr("vanilla Layer 3 cannot be 0x40 by 0x40 in size!"));
+                        return;
+                    }
 
                     // Let user to choose a palette for reference when import graphic by bin files
                     int refPalette = QInputDialog::getText(this,
