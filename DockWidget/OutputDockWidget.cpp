@@ -1,9 +1,12 @@
 ﻿#include "OutputDockWidget.h"
 #include "ui_OutputDockWidget.h"
-#include "WL4EditorWindow.h"
 #include <QQmlEngine>
 
+#ifndef WINDOW_INSTANCE_SINGLETON
+#define WINDOW_INSTANCE_SINGLETON
+#include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
+#endif
 
 /// <summary>
 /// Construct the instance of the OutputDockWidget and initialize jsEngine.
@@ -14,10 +17,21 @@ OutputDockWidget::OutputDockWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // Initialize jsEngine with QObject
-    interface = new ScriptInterface();
+    // Initialize jsEngine and use "interface" to call its member functions
+    if (!interface)
+    {
+        interface = new ScriptInterface();
+    }
     QJSValue funcInterface = jsEngine.newQObject(interface);
     jsEngine.globalObject().setProperty("interface", funcInterface);
+
+    // Initialize tileUtils and use "TileUtils" to call its member functions
+    if (!tileUtils)
+    {
+        tileUtils = new PCG::GFXUtils::TileUtils();
+    }
+    QJSValue JSObject_tileUtils = jsEngine.newQObject(tileUtils);
+    jsEngine.globalObject().setProperty("TileUtils", JSObject_tileUtils);
 }
 
 /// <summary>
@@ -49,6 +63,7 @@ OutputDockWidget::~OutputDockWidget()
 {
     singleton->InvalidOutputWidgetPtr();
     delete interface;
+    delete tileUtils;
     delete ui;
 }
 

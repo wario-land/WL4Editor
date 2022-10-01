@@ -43,6 +43,7 @@ SOURCES += \
     FileIOUtils.cpp \
     AssortedGraphicUtils.cpp \
     LevelComponents/AnimatedTile8x8Group.cpp \
+    PCG/Graphics/TileUtils.cpp \
     ScriptInterface.cpp \
     main.cpp \
     WL4EditorWindow.cpp \
@@ -93,6 +94,7 @@ HEADERS += \
     FileIOUtils.h \
     AssortedGraphicUtils.h \
     LevelComponents/AnimatedTile8x8Group.h \
+    PCG/Graphics/TileUtils.h \
     ScriptInterface.h \
     WL4EditorWindow.h \
     LevelComponents/Level.h \
