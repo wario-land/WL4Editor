@@ -6,6 +6,7 @@
 #include "WL4EditorWindow.h"
 #include "PatchUtils.h"
 
+#include <cmath>
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
@@ -1755,6 +1756,31 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         int g = (tmp_color.green() >> 3) & 0x1F;
         int r = (tmp_color.red() >> 3) & 0x1F;
         return (unsigned short) ((b << 10) | (g << 5) | r);
+    }
+
+
+    /// <summary>
+    /// Gray scale a QRgb color
+    /// </summary>
+    /// <param name="realcolor">
+    /// The real color.
+    /// </param>
+    /// <returns>
+    /// the gray-scaled QRgb.
+    /// </returns>
+    QRgb QRgbGrayScale(QRgb realcolor)
+    {
+        QColor tmp_color;
+        tmp_color.setRgb(realcolor);
+        double b = (double)tmp_color.blue() / 255.0;
+        double g = (double)tmp_color.green() / 255.0;
+        double r = (double)tmp_color.red() / 255.0;
+        double gray = pow((pow(r, 2.2) + pow(1.5 * g, 2.2) + pow(0.6 * b, 2.2)) / (1 + pow(1.5, 2.2) + pow(0.6, 2.2)), 5.0 / 11.0);
+        int gray_255 = ceil(gray * 255);
+        if (gray_255 < 0) gray_255 = 0;
+        gray_255 = gray_255 < 256 ? gray_255 : 255;
+        QRgb result = ((gray_255 << 16) & 0xFF0000) | ((gray_255 << 8) & 0xFF00) | (gray_255 & 0xFF);
+        return result;
     }
 
     /// <summary>

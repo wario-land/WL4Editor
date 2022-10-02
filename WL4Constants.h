@@ -35,6 +35,12 @@ namespace WL4Constants
     const unsigned int TreasureBoxGFXTiles         = 0x352CF0;
     const unsigned int CreditsTiles                = 0x789FCC;
 
+    // Wall Paint GFX and Palettes
+    const unsigned int WallPaintGFXAddr                   = 0x64C8C4;
+    const unsigned int WallPaintPalPassageColor           = 0x6A0A48;
+    const unsigned int WallPaintPalPassageGray            = 0x6A0E08;
+    const unsigned int WallPaintPalStartLevelPointerTable = 0x63A25C;
+
     // Other
     const unsigned int AvailableSpaceBeginningInROM = 0x78F970;
 

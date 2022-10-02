@@ -6,9 +6,11 @@
 #include "FileIOUtils.h"
 #include "Operation.h"
 
+#include "Dialog/SpritesEditorDialog.h"
 #include "Dialog/PatchManagerDialog.h"
 #include "Dialog/GraphicManagerDialog.h"
 #include "Dialog/AnimatedTileGroupEditorDialog.h"
+#include "Dialog/WallPaintEditorDialog.h"
 #include "ui_WL4EditorWindow.h"
 
 #include <cstdio>
@@ -508,6 +510,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->menuRecent_Script->setEnabled(true);
         ui->loadLevelButton->setEnabled(true);
         ui->actionReload_project_settings->setEnabled(true);
+        ui->actionEdit_Wall_Paints->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -2601,6 +2604,19 @@ void WL4EditorWindow::on_actionEdit_Animated_Tile_Groups_triggered()
         for (auto *&animatedTileGroupIter: _currentAnimatedTileGroupsEditParams->animatedTileGroups)
         { delete animatedTileGroupIter; }
         delete _currentAnimatedTileGroupsEditParams;
+    }
+}
+
+void WL4EditorWindow::on_actionEdit_Wall_Paints_triggered()
+{
+    WallPaintEditorDialog dialog;
+
+    // If OK is pressed, then save changes to the temp rom data
+    auto acc = dialog.exec();
+    if (acc == QDialog::Accepted)
+    {
+        dialog.AcceptChanges();
+        SetUnsavedChanges(true);
     }
 }
 

@@ -126,6 +126,7 @@ namespace ROMUtils
 
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor = false);
     unsigned short QRgbToData(QRgb paletteElement);
+    QRgb QRgbGrayScale(QRgb realcolor);
 
     void GenerateAnimatedTileGroupChunks(int _globalAnimatedTileGroupId, QVector<struct ROMUtils::SaveData> &chunks);
     void GenerateTilesetSaveChunks(int TilesetId, QVector<struct ROMUtils::SaveData> &chunks);

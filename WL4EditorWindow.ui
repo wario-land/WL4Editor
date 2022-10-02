@@ -268,6 +268,7 @@
     <addaction name="actionEdit_Tileset"/>
     <addaction name="actionEdit_Entity_EntitySet"/>
     <addaction name="actionEdit_Credits"/>
+    <addaction name="actionEdit_Wall_Paints"/>
     <addaction name="menuAdd"/>
     <addaction name="menuDuplicate"/>
     <addaction name="menuSwap"/>
@@ -673,6 +674,14 @@
    </property>
    <property name="text">
     <string>Edit Animated Tile Groups</string>
+   </property>
+  </action>
+  <action name="actionEdit_Wall_Paints">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit Wall Paints</string>
    </property>
   </action>
  </widget>
