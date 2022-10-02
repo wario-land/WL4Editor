@@ -1,3 +1,14 @@
+0.16.0:
+(major changes)
+- Add Wall Paints Editor.
+- Fix hookstring cannot be removed correctly if hook address and hookstring change at the same time.
+
+(minor changes)
+- Now you can import a tileset with its vanilla background tileset from another ROM.
+- Add TileUtils object into the js script engine with its 3 member functions.
+- stop user from import 40 by 40 layer 3 in Graphic Manager.
+- let user to choose a ref palette when import tile data in Graphic Manager.
+
 0.15.2:
 (major changes)
 - Fix random rom corruption after adding new Room then save changes, which is caused by logic conflict between the old "Add new Room" code and the new "old layer data invalidation" code after 0.14.X release.
