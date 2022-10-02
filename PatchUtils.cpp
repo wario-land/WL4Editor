@@ -638,7 +638,6 @@ namespace PatchUtils
         QVector<struct ROMUtils::SaveData> chunks;
         // logic to find changed patches is so complicated, so we just remove all them.
         QVector<struct PatchEntryItem> removePatches = GetPatchesFromROM();
-        std::map<int, struct PatchEntryItem*> saveChunkIndexToMetadata, saveChunkIndexToRemoval;
 
         // Populate the chunk list with patches to add to the ROM
         for(struct PatchEntryItem &patch : entries)
@@ -650,11 +649,6 @@ namespace PatchUtils
             binName += "bin";
 
             struct ROMUtils::SaveData patchChunk = CreatePatchSaveChunk(patch);
-
-            // Save the mapping for the save chunk onto the added patch
-            saveChunkIndexToMetadata[ROMUtils::SaveDataIndex] = std::find_if(entries.begin(), entries.end(),
-                [patch](struct PatchEntryItem origPatch){return patch.HookAddress == origPatch.HookAddress;});
-
             chunks.append(patchChunk);
         }
         
@@ -663,9 +657,6 @@ namespace PatchUtils
         for(struct PatchEntryItem &patch : removePatches)
         {
             if(!patch.FileName.length()) continue; // no save chunks to invalidate for hook-only patches
-
-            saveChunkIndexToRemoval[ROMUtils::SaveDataIndex] = std::find_if(removePatches.begin(), removePatches.end(),
-                [&patch](struct PatchEntryItem removePatch){return patch.HookAddress == removePatch.HookAddress;});
             invalidationChunks.append(patch.PatchAddress + 12);
         }
 
@@ -718,10 +709,20 @@ namespace PatchUtils
 
                 // On the first callback, we must recalculate the substituted bytes for the hook strings
                 // of the unmodified ROM. This must occur strictly before the new patch list chunk is created.
+                // We don't need to redo this part if rom size expanding happens
                 if(firstCallback)
                 {
+                    // just remove all the old patches from the ROM
+                    for (struct PatchEntryItem &patch : removePatches)
+                    {
+                        // write back the original data before modified by hookstring
+                        int hookstringsize = patch.SubstitutedBytes.length() / 2;
+                        unsigned char *originalBytes = HexStringToBinary(patch.SubstitutedBytes);
+                        memcpy(TempFile + patch.HookAddress, originalBytes, hookstringsize);
+                        delete[] originalBytes;
+                    }
+
                     // Capture data from hook address for the entry's substituted bytes (depends on size of hook)
-                    // We don't need to redo this part if rom size expanding happens
                     for(struct PatchEntryItem &patch : entries)
                     {
                         int hookLength = patch.HookString.length() / 2; // hook string is hex string, 2 digits per byte
@@ -729,34 +730,7 @@ namespace PatchUtils
                         {
                             hookLength += 4;
                         }
-
-                        // Set substituted bytes data
-                        auto currentPatch_OldVersion = std::find_if(removePatches.begin(),
-                                                                    removePatches.end(),
-                                                                    [&patch](struct PatchEntryItem removepatch)
-                                                                    { return removepatch.HookAddress == patch.HookAddress; });
-                        bool PatchNotExistInFile = removePatches.end() == currentPatch_OldVersion;
-                        if(PatchNotExistInFile) // new patches
-                        {
-                            patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
-                        }
-                        else // edit patches or unchanged patches
-                        {
-                            // Temp undo patch's hookstring to generate new substituted bytes
-                            int hookstringsize = currentPatch_OldVersion->SubstitutedBytes.length() / 2;
-                            unsigned char *hookStringBytes_Old = new unsigned char[hookstringsize];
-                            memcpy(hookStringBytes_Old, TempFile + currentPatch_OldVersion->HookAddress, hookstringsize);
-                            unsigned char *originalBytes = HexStringToBinary(currentPatch_OldVersion->SubstitutedBytes);
-                            memcpy(TempFile + currentPatch_OldVersion->HookAddress, originalBytes, hookstringsize);
-                            delete[] originalBytes;
-
-                            // generate new SubstitutedBytes
-                            patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
-
-                            // recover old patch's hookstring
-                            memcpy(TempFile + currentPatch_OldVersion->HookAddress, hookStringBytes_Old, hookstringsize);
-                            delete[] hookStringBytes_Old;
-                        }
+                        patch.SubstitutedBytes = BinaryToHexString(TempFile + patch.HookAddress, hookLength);
                     }
 
                     firstCallback = false;
