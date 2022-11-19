@@ -68,12 +68,22 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="selectedRoomLabel">
+       <widget class="QLabel" name="label_selectedRoomID">
         <property name="enabled">
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>Room 0</string>
+         <string>Room id:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinBox_RoomID">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="maximum">
+         <number>15</number>
         </property>
        </widget>
       </item>
