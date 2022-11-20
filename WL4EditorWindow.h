@@ -54,7 +54,7 @@ private:
 
     void closeEvent(QCloseEvent *event);
     bool notify(QObject *receiver, QEvent *event);
-    static bool SaveCurrentFile() { return ROMUtils::SaveLevel(ROMUtils::ROMFileMetadata->FilePath); }
+    bool SaveCurrentFile();
     bool SaveCurrentFileAs();
     bool UnsavedChangesPrompt(QString str);
     void ClearEverythingInRoom(bool no_warning = false);
@@ -87,7 +87,7 @@ public:
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
     bool FirstROMIsLoaded() { return firstROMLoaded; }
     void OpenROM();
-    void UIStartUp(int currentTilesetID);
+    void UIStartUp();
     void SetEditModeDockWidgetLayerEditability();
     QVector<bool> GetLayersVisibilityArray() { return EditModeWidget->GetLayersVisibilityArray(); }
     void Graphicsview_UnselectDoorAndEntity();

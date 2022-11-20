@@ -297,16 +297,8 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     {
         ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i);
     }
-
-    // Load the first level and render the screen
-    selectedLevel._PassageIndex = selectedLevel._LevelIndex = 0;
-    CurrentLevel = new LevelComponents::Level(static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
-                                              static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex));
-    ui->spinBox_RoomID->setValue(0);
-    int tmpTilesetID = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetTilesetID();
     UnsavedChanges = false;
-
-    UIStartUp(tmpTilesetID);
+    UIStartUp();
 }
 
 /// <summary>
@@ -498,7 +490,7 @@ void WL4EditorWindow::EditCurrentTileset(DialogParams::TilesetEditParams *_newTi
 /// <summary>
 /// Update the UI after loading a ROM.
 /// </summary>
-void WL4EditorWindow::UIStartUp(int currentTilesetID)
+void WL4EditorWindow::UIStartUp()
 {
     // Only modify UI on the first time a ROM is loaded
     if (!firstROMLoaded)
@@ -550,14 +542,23 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         EntitySetWidget->setVisible(false);
     }
 
-    // Modify UI every time when a ROM is loaded
-    unsigned int currentroomid = ui->spinBox_RoomID->value();
-    EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[currentroomid]);
-    Tile16SelecterWidget->SetTileset(currentTilesetID);
-    CameraControlWidget->PopulateCameraControlInfo(CurrentLevel->GetRooms()[currentroomid]);
-
     // Modify Recent ROM menu
     ManageRecentFilesOrScripts(ROMUtils::ROMFileMetadata->FilePath);
+
+    // Load the first level and render the screen, also set up the UI
+    selectedLevel._PassageIndex = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(SettingsUtils::IniKeys::RecentROM_0_RecentPassage_id)).toInt();
+    selectedLevel._LevelIndex = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(SettingsUtils::IniKeys::RecentROM_0_RecentLevel_id)).toInt();
+    CurrentLevel = new LevelComponents::Level(static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
+                                              static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex));
+    ui->spinBox_RoomID->setValue(SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(SettingsUtils::IniKeys::RecentROM_0_RecentRoom_id)).toInt());
+
+    unsigned int currentroomid = ui->spinBox_RoomID->value();
+    int tmpTilesetID = CurrentLevel->GetRooms()[currentroomid]->GetTilesetID();
+    auto currentroom = CurrentLevel->GetRooms()[currentroomid];
+
+    EntitySetWidget->ResetEntitySet(currentroom);
+    Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    CameraControlWidget->PopulateCameraControlInfo(currentroom);
 
     // UI update
     LoadRoomUIUpdate();
@@ -1098,6 +1099,21 @@ void WL4EditorWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
+bool WL4EditorWindow::SaveCurrentFile()
+{
+    bool result = ROMUtils::SaveLevel(ROMUtils::ROMFileMetadata->FilePath);
+    if (result)
+    {
+        int array_recent_room_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentRoom_id;
+        int array_recent_level_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentLevel_id;
+        int array_recent_passage_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentPassage_id;
+        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_level_start_id), QString::number(selectedLevel._LevelIndex));
+        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_room_start_id), QString::number(ui->spinBox_RoomID->value()));
+        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_passage_start_id), QString::number(selectedLevel._PassageIndex));
+    }
+    return result;
+}
+
 /// <summary>
 /// Present the user with an "open level" dialog, in which a level can be selected to load.
 /// </summary>
@@ -1377,6 +1393,7 @@ void WL4EditorWindow::InitRecentFileMenuEntries(const bool manageRecentScripts)
 
 /// <summary>
 /// open a recent ROM or a recent script file from a menu entry.
+/// this function check file existance. and don't add new file into the list.
 /// </summary>
 /// <return>
 /// return false if the file cannot be loaded.
@@ -1388,11 +1405,14 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
 
     int recentFileNum = recentROMnum;
     int array_max_size = SettingsUtils::RecentFileNum;
-    int array_start_id = 1;
+    int array_start_id = SettingsUtils::IniKeys::RecentROMPath_0;
+    int array_recent_room_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentRoom_id;
+    int array_recent_level_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentLevel_id;
+    int array_recent_passage_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentPassage_id;
     if (manageRecentScripts)
     {
         recentFileNum = recentScriptNum;
-        array_start_id = 9;
+        array_start_id = SettingsUtils::IniKeys::RecentScriptPath_0;
     }
     QAction **actionlist_ptr = new QAction*[array_max_size];
     if (!manageRecentScripts) {
@@ -1413,6 +1433,12 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
         if(recentFileNum == 1)
         {
             SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_start_id), "");
+            if (manageRecentScripts == false)
+            {
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_level_start_id), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_room_start_id), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_passage_start_id), "");
+            }
             actionlist_ptr[0]->setText("-/-");
         }
         if(recentFileNum > 1)
@@ -1430,8 +1456,23 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
             {
                 actionlist_ptr[i]->setText(actionlist_ptr[i + 1]->text());
                 SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id), actionlist_ptr[i + 1]->text());
+                if (manageRecentScripts == false)
+                {
+                    QString recent_levelid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id + 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id), recent_levelid);
+                    QString recent_roomid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id + 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id), recent_roomid);
+                    QString recent_passageid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id + 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id), recent_passageid);
+                }
             }
             SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentFileNum + array_start_id - 1), "");
+            if (manageRecentScripts == false)
+            {
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentFileNum + array_recent_level_start_id - 1), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentFileNum + array_recent_room_start_id - 1), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentFileNum + array_recent_passage_start_id - 1), "");
+            }
             delete actionlist_ptr[recentFileNum - 1];
         }
         recentFileNum--;
@@ -1459,19 +1500,23 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
 
 /// <summary>
 /// a manager to deal with the recent ROM and recent script files' actions in the menu.
+/// this function won't check file existance. and will add new file into the list.
 /// </summary>
 void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool manageRecentScripts)
 {
     int findedInRecentFile = -1; // start by 0
     int recentFileNum = recentROMnum;
     int array_max_size = SettingsUtils::RecentFileNum;
-    int array_start_id = 1;
+    int array_start_id = SettingsUtils::IniKeys::RecentROMPath_0;
+    int array_recent_room_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentRoom_id;
+    int array_recent_level_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentLevel_id;
+    int array_recent_passage_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentPassage_id;
     QMenu *filemenu = ui->menuRecent_ROM;
     if (manageRecentScripts)
     {
         filemenu = ui->menuRecent_Script;
         recentFileNum = recentScriptNum;
-        array_start_id = 9;
+        array_start_id = SettingsUtils::IniKeys::RecentScriptPath_0;
     }
     if(recentFileNum > 0)
     {
@@ -1520,7 +1565,23 @@ void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool
             {
                 QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id - 1));
                 SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id), filepath);
+                if (manageRecentScripts == false)
+                {
+                    QString recent_levelid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id), recent_levelid);
+                    QString recent_roomid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id), recent_roomid);
+                    QString recent_passageid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id), recent_passageid);
+                }
                 actionlist_ptr[i]->setText(filepath);
+            }
+            // reset recent passage, level and room id to 0 for new rom
+            if (manageRecentScripts == false)
+            {
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_level_start_id), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_room_start_id), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_passage_start_id), "");
             }
         }
         recentFileNum++;
@@ -1538,6 +1599,15 @@ void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool
                 // do a part of (3 -> 4, 2 -> 3, 1 -> 2, 0 -> 1) move, from where the file got found in the recent file list
                 QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id - 1));
                 SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id), filepath);
+                if (manageRecentScripts == false)
+                {
+                    QString recent_levelid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id), recent_levelid);
+                    QString recent_roomid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id), recent_roomid);
+                    QString recent_passageid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id), recent_passageid);
+                }
                 actionlist_ptr[i]->setText(filepath);
             }
         }
