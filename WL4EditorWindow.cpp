@@ -172,18 +172,22 @@ void WL4EditorWindow::LoadRoomUIUpdate()
 {
     // Set the text for which room is currently loaded, near the top of the editor window
     char tmpStr[30];
-    sprintf(tmpStr, "Room %d", selectedRoom);
-    ui->selectedRoomLabel->setText(tmpStr);
+    unsigned int currentroomid = ui->spinBox_RoomID->value();
 
     // Set the text for which level is loaded, near the bottom of the editor window
     sprintf(tmpStr, "Level ID: %d-%d", selectedLevel._PassageIndex, selectedLevel._LevelIndex);
     statusBarLabel->setText(tmpStr);
-    ui->roomDecreaseButton->setEnabled(selectedRoom);
-    ui->roomIncreaseButton->setEnabled(CurrentLevel->GetRooms().size() > selectedRoom + 1);
+    ui->roomDecreaseButton->setEnabled(currentroomid);
+    ui->roomIncreaseButton->setEnabled(CurrentLevel->GetRooms().size() > currentroomid + 1);
 
     // Render the screen
     RenderScreenFull();
     SetEditModeDockWidgetLayerEditability();
+}
+
+int WL4EditorWindow::GetCurrentRoomId()
+{
+    return ui->spinBox_RoomID->value();
 }
 
 /// <summary>
@@ -293,16 +297,8 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     {
         ROMUtils::entitiessets[i] = new LevelComponents::EntitySet(i);
     }
-
-    // Load the first level and render the screen
-    selectedLevel._PassageIndex = selectedLevel._LevelIndex = 0;
-    CurrentLevel = new LevelComponents::Level(static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
-                                              static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex));
-    selectedRoom = 0;
-    int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
     UnsavedChanges = false;
-
-    UIStartUp(tmpTilesetID);
+    UIStartUp();
 }
 
 /// <summary>
@@ -317,7 +313,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
 void WL4EditorWindow::PrintMousePos(int x, int y)
 {
     int selectedLayer = EditModeWidget->GetEditModeParams().selectedLayer;
-    LevelComponents::Layer *layer = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(selectedLayer);
+    LevelComponents::Layer *layer = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetLayer(selectedLayer);
     int tileSize;
     if(layer->GetMappingType() == LevelComponents::LayerMappingType::LayerDisabled)
     {
@@ -397,9 +393,10 @@ QGraphicsView *WL4EditorWindow::Getgraphicview()
 void WL4EditorWindow::SetChangeCurrentRoomEnabled(bool state)
 {
     if (state) {
-        if (selectedRoom)
+        unsigned int currentroomid = ui->spinBox_RoomID->value();
+        if (currentroomid)
             ui->roomDecreaseButton->setEnabled(state);
-        if (selectedRoom < (CurrentLevel->GetRooms().size() - 1))
+        if (currentroomid < (CurrentLevel->GetRooms().size() - 1))
             ui->roomIncreaseButton->setEnabled(state);
     } else {
         ui->roomDecreaseButton->setEnabled(state);
@@ -413,27 +410,49 @@ void WL4EditorWindow::SetChangeCurrentRoomEnabled(bool state)
 /// <param name="roomid">
 /// The new room's id.
 /// </param>
-void WL4EditorWindow::SetCurrentRoomId(int roomid)
+void WL4EditorWindow::SetCurrentRoomId(int roomid, bool call_from_spinbox_valuechange)
 {
-    if (static_cast<int>(selectedRoom) == roomid)
-        return;
+    bool illegal_input = false;
+    if (roomid == ui->spinBox_RoomID->value() && call_from_spinbox_valuechange == false)
+        illegal_input = true;
     if(roomid < 0 || roomid >= static_cast<int>(CurrentLevel->GetRooms().size()))
+        illegal_input = true;
+    if (illegal_input && call_from_spinbox_valuechange)
+    {
+        QMessageBox::critical(this, tr("Error"), tr("Illegal Room ID !"));
+        ui->spinBox_RoomID->setValue(old_roomid_value);
         return;
+    }
+
+    // enable or disable those buttons
+    if (!roomid)
+        ui->roomDecreaseButton->setEnabled(false);
+    else
+        ui->roomDecreaseButton->setEnabled(true);
+
+    int currentRoomMaxId = CurrentLevel->GetRooms().size() - 1;
+    if (roomid == currentRoomMaxId)
+        ui->roomIncreaseButton->setEnabled(false);
+    else if (roomid < currentRoomMaxId)
+        ui->roomIncreaseButton->setEnabled(true);
 
     // Deselect rect
     // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
     // Deselect Door and Entity
-    ui->graphicsView->DeselectDoorAndEntity(true);
+    ui->graphicsView->DeselectDoorAndEntity(false);
     ui->graphicsView->ResetRectPixmaps();
     ui->graphicsView->ResetRect();
 
-    // Load the previous room
-    selectedRoom = roomid;
+    // Load the room
+    if (call_from_spinbox_valuechange == false) ui->spinBox_RoomID->setValue(roomid);
     LoadRoomUIUpdate();
-    int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
+    int tmpTilesetID = CurrentLevel->GetRooms()[roomid]->GetTilesetID();
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     ResetEntitySetDockWidget();
     ResetCameraControlDockWidget();
+
+    // reserve the legal id
+    old_roomid_value = roomid;
 }
 
 /// <summary>
@@ -471,7 +490,7 @@ void WL4EditorWindow::EditCurrentTileset(DialogParams::TilesetEditParams *_newTi
 /// <summary>
 /// Update the UI after loading a ROM.
 /// </summary>
-void WL4EditorWindow::UIStartUp(int currentTilesetID)
+void WL4EditorWindow::UIStartUp()
 {
     // Only modify UI on the first time a ROM is loaded
     if (!firstROMLoaded)
@@ -511,6 +530,7 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         ui->loadLevelButton->setEnabled(true);
         ui->actionReload_project_settings->setEnabled(true);
         ui->actionEdit_Wall_Paints->setEnabled(true);
+        ui->spinBox_RoomID->setEnabled(true);
 
         // Load Dock widget
         addDockWidget(Qt::RightDockWidgetArea, EditModeWidget);
@@ -522,13 +542,23 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
         EntitySetWidget->setVisible(false);
     }
 
-    // Modify UI every time when a ROM is loaded
-    EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]);
-    Tile16SelecterWidget->SetTileset(currentTilesetID);
-    CameraControlWidget->PopulateCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
-
     // Modify Recent ROM menu
     ManageRecentFilesOrScripts(ROMUtils::ROMFileMetadata->FilePath);
+
+    // Load the first level and render the screen, also set up the UI
+    selectedLevel._PassageIndex = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(SettingsUtils::IniKeys::RecentROM_0_RecentPassage_id)).toInt();
+    selectedLevel._LevelIndex = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(SettingsUtils::IniKeys::RecentROM_0_RecentLevel_id)).toInt();
+    CurrentLevel = new LevelComponents::Level(static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
+                                              static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex));
+    ui->spinBox_RoomID->setValue(SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(SettingsUtils::IniKeys::RecentROM_0_RecentRoom_id)).toInt());
+
+    unsigned int currentroomid = ui->spinBox_RoomID->value();
+    int tmpTilesetID = CurrentLevel->GetRooms()[currentroomid]->GetTilesetID();
+    auto currentroom = CurrentLevel->GetRooms()[currentroomid];
+
+    EntitySetWidget->ResetEntitySet(currentroom);
+    Tile16SelecterWidget->SetTileset(tmpTilesetID);
+    CameraControlWidget->PopulateCameraControlInfo(currentroom);
 
     // UI update
     LoadRoomUIUpdate();
@@ -539,12 +569,13 @@ void WL4EditorWindow::UIStartUp(int currentTilesetID)
 /// </summary>
 void WL4EditorWindow::SetEditModeDockWidgetLayerEditability()
 {
-    bool layer0enable = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled();
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    bool layer0enable = currentroom->GetLayer(0)->IsEnabled();
     EditModeWidget->SetLayersCheckBoxEnabled(0, layer0enable);
-    EditModeWidget->SetLayersCheckBoxEnabled(1, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->IsEnabled());
-    EditModeWidget->SetLayersCheckBoxEnabled(2, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled());
-    EditModeWidget->SetLayersCheckBoxEnabled(3, CurrentLevel->GetRooms()[selectedRoom]->GetLayer(3)->IsEnabled());
-    EditModeWidget->SetLayersCheckBoxEnabled(7, CurrentLevel->GetRooms()[selectedRoom]->IsLayer0ColorBlendingEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(1, currentroom->GetLayer(1)->IsEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(2, currentroom->GetLayer(2)->IsEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(3, currentroom->GetLayer(3)->IsEnabled());
+    EditModeWidget->SetLayersCheckBoxEnabled(7, currentroom->IsLayer0ColorBlendingEnabled());
 }
 
 /// <summary>
@@ -566,7 +597,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
 {
     // Apply the selected parameters to the current room
     // reset the Tileset instance in Room class
-    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
     if (nextroomconfig->CurrentTilesetIndex != currentroomconfig->CurrentTilesetIndex)
     {
         currentRoom->SetTileset(ROMUtils::singletonTilesets[nextroomconfig->CurrentTilesetIndex], nextroomconfig->CurrentTilesetIndex);
@@ -967,7 +998,7 @@ void WL4EditorWindow::RenderScreenFull()
     renderParams.mode = EditModeWidget->GetEditModeParams();
     renderParams.SelectedDoorID = (unsigned int) ui->graphicsView->GetSelectedDoorID();
     QGraphicsScene *scene =
-        CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+        CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
@@ -980,7 +1011,7 @@ void WL4EditorWindow::RenderScreenVisibilityChange()
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::LayerEnable);
     renderParams.mode = EditModeWidget->GetEditModeParams();
     QGraphicsScene *scene =
-        CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+        CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
@@ -995,7 +1026,7 @@ void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId, int 
     renderParams.SelectedDoorID = DoorId;
     renderParams.SelectedEntityID = EntityId;
     QGraphicsScene *scene =
-        CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+        CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
@@ -1009,7 +1040,7 @@ void WL4EditorWindow::RenderScreenTilesChange(QVector<LevelComponents::Tileinfo>
     renderParams.mode = EditModeWidget->GetEditModeParams();
     renderParams.mode.selectedLayer = LayerID;
     renderParams.tilechangelist = tilelist;
-    CurrentLevel->GetRooms()[selectedRoom]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+    CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
 }
 
 /// <summary>
@@ -1068,6 +1099,21 @@ void WL4EditorWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
+bool WL4EditorWindow::SaveCurrentFile()
+{
+    bool result = ROMUtils::SaveLevel(ROMUtils::ROMFileMetadata->FilePath);
+    if (result)
+    {
+        int array_recent_room_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentRoom_id;
+        int array_recent_level_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentLevel_id;
+        int array_recent_passage_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentPassage_id;
+        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_level_start_id), QString::number(selectedLevel._LevelIndex));
+        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_room_start_id), QString::number(ui->spinBox_RoomID->value()));
+        SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_passage_start_id), QString::number(selectedLevel._PassageIndex));
+    }
+    return result;
+}
+
 /// <summary>
 /// Present the user with an "open level" dialog, in which a level can be selected to load.
 /// </summary>
@@ -1081,7 +1127,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         return;
 
     // Deselect Door and Entity and deselect rect
-    ui->graphicsView->DeselectDoorAndEntity(true);
+    ui->graphicsView->DeselectDoorAndEntity(false);
     ui->graphicsView->ResetRectPixmaps();
     ui->graphicsView->ResetRect();
 
@@ -1095,9 +1141,9 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         CurrentLevel =
             new LevelComponents::Level(static_cast<enum LevelComponents::__passage>(selectedLevel._PassageIndex),
                                        static_cast<enum LevelComponents::__stage>(selectedLevel._LevelIndex));
-        selectedRoom = 0;
+        ui->spinBox_RoomID->setValue(0);
         LoadRoomUIUpdate();
-        int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
+        int tmpTilesetID = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetTilesetID();
         Tile16SelecterWidget->SetTileset(tmpTilesetID);
         ResetEntitySetDockWidget();
         ResetCameraControlDockWidget();
@@ -1194,7 +1240,7 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
     }
 
     // Clear Layers 0, 1, 2
-    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[selectedRoom];
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
     for (int i = 0; i < 3; ++i)
     {
         LevelComponents::Layer *layer = currentRoom->GetLayer(i);
@@ -1347,6 +1393,7 @@ void WL4EditorWindow::InitRecentFileMenuEntries(const bool manageRecentScripts)
 
 /// <summary>
 /// open a recent ROM or a recent script file from a menu entry.
+/// this function check file existance. and don't add new file into the list.
 /// </summary>
 /// <return>
 /// return false if the file cannot be loaded.
@@ -1358,11 +1405,14 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
 
     int recentFileNum = recentROMnum;
     int array_max_size = SettingsUtils::RecentFileNum;
-    int array_start_id = 1;
+    int array_start_id = SettingsUtils::IniKeys::RecentROMPath_0;
+    int array_recent_room_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentRoom_id;
+    int array_recent_level_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentLevel_id;
+    int array_recent_passage_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentPassage_id;
     if (manageRecentScripts)
     {
         recentFileNum = recentScriptNum;
-        array_start_id = 9;
+        array_start_id = SettingsUtils::IniKeys::RecentScriptPath_0;
     }
     QAction **actionlist_ptr = new QAction*[array_max_size];
     if (!manageRecentScripts) {
@@ -1383,6 +1433,12 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
         if(recentFileNum == 1)
         {
             SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_start_id), "");
+            if (manageRecentScripts == false)
+            {
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_level_start_id), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_room_start_id), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_passage_start_id), "");
+            }
             actionlist_ptr[0]->setText("-/-");
         }
         if(recentFileNum > 1)
@@ -1400,8 +1456,23 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
             {
                 actionlist_ptr[i]->setText(actionlist_ptr[i + 1]->text());
                 SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id), actionlist_ptr[i + 1]->text());
+                if (manageRecentScripts == false)
+                {
+                    QString recent_levelid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id + 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id), recent_levelid);
+                    QString recent_roomid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id + 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id), recent_roomid);
+                    QString recent_passageid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id + 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id), recent_passageid);
+                }
             }
             SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentFileNum + array_start_id - 1), "");
+            if (manageRecentScripts == false)
+            {
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentFileNum + array_recent_level_start_id - 1), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentFileNum + array_recent_room_start_id - 1), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(recentFileNum + array_recent_passage_start_id - 1), "");
+            }
             delete actionlist_ptr[recentFileNum - 1];
         }
         recentFileNum--;
@@ -1429,19 +1500,23 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
 
 /// <summary>
 /// a manager to deal with the recent ROM and recent script files' actions in the menu.
+/// this function won't check file existance. and will add new file into the list.
 /// </summary>
 void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool manageRecentScripts)
 {
     int findedInRecentFile = -1; // start by 0
     int recentFileNum = recentROMnum;
     int array_max_size = SettingsUtils::RecentFileNum;
-    int array_start_id = 1;
+    int array_start_id = SettingsUtils::IniKeys::RecentROMPath_0;
+    int array_recent_room_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentRoom_id;
+    int array_recent_level_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentLevel_id;
+    int array_recent_passage_start_id = SettingsUtils::IniKeys::RecentROM_0_RecentPassage_id;
     QMenu *filemenu = ui->menuRecent_ROM;
     if (manageRecentScripts)
     {
         filemenu = ui->menuRecent_Script;
         recentFileNum = recentScriptNum;
-        array_start_id = 9;
+        array_start_id = SettingsUtils::IniKeys::RecentScriptPath_0;
     }
     if(recentFileNum > 0)
     {
@@ -1490,7 +1565,23 @@ void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool
             {
                 QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id - 1));
                 SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id), filepath);
+                if (manageRecentScripts == false)
+                {
+                    QString recent_levelid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id), recent_levelid);
+                    QString recent_roomid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id), recent_roomid);
+                    QString recent_passageid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id), recent_passageid);
+                }
                 actionlist_ptr[i]->setText(filepath);
+            }
+            // reset recent passage, level and room id to 0 for new rom
+            if (manageRecentScripts == false)
+            {
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_level_start_id), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_room_start_id), "");
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_passage_start_id), "");
             }
         }
         recentFileNum++;
@@ -1508,6 +1599,15 @@ void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool
                 // do a part of (3 -> 4, 2 -> 3, 1 -> 2, 0 -> 1) move, from where the file got found in the recent file list
                 QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id - 1));
                 SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id), filepath);
+                if (manageRecentScripts == false)
+                {
+                    QString recent_levelid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_level_start_id), recent_levelid);
+                    QString recent_roomid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_room_start_id), recent_roomid);
+                    QString recent_passageid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id - 1));
+                    SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id), recent_passageid);
+                }
                 actionlist_ptr[i]->setText(filepath);
             }
         }
@@ -1541,23 +1641,8 @@ void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool
 /// </remarks>
 void WL4EditorWindow::on_roomDecreaseButton_clicked()
 {
-    if (!selectedRoom)
-        return;
-
-    // Deselect rect
-    // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
-    // Deselect Door and Entity
-    ui->graphicsView->DeselectDoorAndEntity(true);
-    ui->graphicsView->ResetRectPixmaps();
-    ui->graphicsView->ResetRect();
-
-    // Load the previous room
-    --selectedRoom;
-    LoadRoomUIUpdate();
-    int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
-    Tile16SelecterWidget->SetTileset(tmpTilesetID);
-    ResetEntitySetDockWidget();
-    ResetCameraControlDockWidget();
+    unsigned int currentroomid = ui->spinBox_RoomID->value();
+    SetCurrentRoomId(currentroomid - 1);
 }
 
 /// <summary>
@@ -1569,23 +1654,8 @@ void WL4EditorWindow::on_roomDecreaseButton_clicked()
 /// </remarks>
 void WL4EditorWindow::on_roomIncreaseButton_clicked()
 {
-    if (selectedRoom == (CurrentLevel->GetRooms().size() - 1))
-        return;
-
-    // Deselect rect
-    // SetRectSelectMode(ui->actionRect_Select_Mode->isChecked());
-    // Deselect Door and Entity
-    ui->graphicsView->DeselectDoorAndEntity(true);
-    ui->graphicsView->ResetRectPixmaps();
-    ui->graphicsView->ResetRect();
-
-    // Load the next room
-    ++selectedRoom;
-    LoadRoomUIUpdate();
-    int tmpTilesetID = CurrentLevel->GetRooms()[selectedRoom]->GetTilesetID();
-    Tile16SelecterWidget->SetTileset(tmpTilesetID);
-    ResetEntitySetDockWidget();
-    ResetCameraControlDockWidget();
+    unsigned int currentroomid = ui->spinBox_RoomID->value();
+    SetCurrentRoomId(currentroomid + 1);
 }
 
 /// <summary>
@@ -1679,7 +1749,7 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
 {
     // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
     DialogParams::RoomConfigParams *_currentRoomConfigParams =
-        new DialogParams::RoomConfigParams(CurrentLevel->GetRooms()[selectedRoom]);
+        new DialogParams::RoomConfigParams(CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]);
 
     // Show the dialog
     RoomConfigDialog dialog(this, _currentRoomConfigParams);
@@ -1702,7 +1772,7 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
 {
     // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
     DialogParams::TilesetEditParams *_newRoomTilesetEditParams =
-        new DialogParams::TilesetEditParams(CurrentLevel->GetRooms()[selectedRoom]);
+        new DialogParams::TilesetEditParams(CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]);
 
     // call helper function to open dialog and apply changes
     EditCurrentTileset(_newRoomTilesetEditParams);
@@ -1720,11 +1790,12 @@ void WL4EditorWindow::on_actionNew_Door_triggered()
     // Initialize the fields
     newDoorEntry.DoorTypeByte = (unsigned char) 2;
     newDoorEntry.EntitySetID = (unsigned char) 1;
-    newDoorEntry.RoomID = (unsigned char) selectedRoom;
+    unsigned int currentroomid = ui->spinBox_RoomID->value();
+    newDoorEntry.RoomID = (unsigned char) currentroomid;
     newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
     LevelComponents::Door *newDoor =
-        new LevelComponents::Door(newDoorEntry, (unsigned char) selectedRoom, CurrentLevel->GetDoors().size());
-    newDoor->SetEntitySetID((unsigned char) CurrentLevel->GetRooms()[selectedRoom]->GetCurrentEntitySetID());
+        new LevelComponents::Door(newDoorEntry, (unsigned char) currentroomid, CurrentLevel->GetDoors().size());
+    newDoor->SetEntitySetID((unsigned char) CurrentLevel->GetRooms()[currentroomid]->GetCurrentEntitySetID());
     newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
 
     // Add the new door to the Level object and re-render the screen
@@ -1858,20 +1929,21 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
     // swap Layerdata pointers if possible
-    if (!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled()))
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    if (!(currentroom->GetLayer(0)->IsEnabled()))
     {
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    if (CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
+    if (currentroom->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
     {
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetLayerData();
-    unsigned short *dataptr2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->GetLayerData();
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->SetLayerData(dataptr2);
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->SetLayerData(dataptr1);
+    unsigned short *dataptr1 = currentroom->GetLayer(0)->GetLayerData();
+    unsigned short *dataptr2 = currentroom->GetLayer(1)->GetLayerData();
+    currentroom->GetLayer(0)->SetLayerData(dataptr2);
+    currentroom->GetLayer(1)->SetLayerData(dataptr1);
 
     // TODO: add history record
 
@@ -1879,8 +1951,8 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
     RenderScreenFull();
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->SetDirty(true);
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->SetDirty(true);
+    currentroom->GetLayer(0)->SetDirty(true);
+    currentroom->GetLayer(1)->SetDirty(true);
     SetUnsavedChanges(true);
 }
 
@@ -1891,15 +1963,16 @@ void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
     // swap Layerdata pointers if possible
-    if (!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled()))
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    if (!(currentroom->GetLayer(2)->IsEnabled()))
     {
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->GetLayerData();
-    unsigned short *dataptr2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->GetLayerData();
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->SetLayerData(dataptr2);
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->SetLayerData(dataptr1);
+    unsigned short *dataptr1 = currentroom->GetLayer(1)->GetLayerData();
+    unsigned short *dataptr2 = currentroom->GetLayer(2)->GetLayerData();
+    currentroom->GetLayer(1)->SetLayerData(dataptr2);
+    currentroom->GetLayer(2)->SetLayerData(dataptr1);
 
     // TODO: add history record
 
@@ -1907,8 +1980,8 @@ void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
     RenderScreenFull();
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1)->SetDirty(true);
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->SetDirty(true);
+    currentroom->GetLayer(1)->SetDirty(true);
+    currentroom->GetLayer(2)->SetDirty(true);
     SetUnsavedChanges(true);
 }
 
@@ -1919,21 +1992,22 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
     // swap Layerdata pointers if possible
-    if (!(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->IsEnabled()) ||
-        !(CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->IsEnabled()))
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    if (!(currentroom->GetLayer(0)->IsEnabled()) ||
+        !(currentroom->GetLayer(2)->IsEnabled()))
     {
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    if (CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
+    if (currentroom->GetLayer(0)->GetMappingType() != LevelComponents::LayerMap16)
     {
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    unsigned short *dataptr1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->GetLayerData();
-    unsigned short *dataptr2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->GetLayerData();
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->SetLayerData(dataptr2);
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->SetLayerData(dataptr1);
+    unsigned short *dataptr1 = currentroom->GetLayer(0)->GetLayerData();
+    unsigned short *dataptr2 = currentroom->GetLayer(2)->GetLayerData();
+    currentroom->GetLayer(0)->SetLayerData(dataptr2);
+    currentroom->GetLayer(2)->SetLayerData(dataptr1);
 
     // TODO: add history record
 
@@ -1941,8 +2015,8 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
     RenderScreenFull();
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0)->SetDirty(true);
-    CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2)->SetDirty(true);
+    currentroom->GetLayer(0)->SetDirty(true);
+    currentroom->GetLayer(2)->SetDirty(true);
     SetUnsavedChanges(true);
 }
 
@@ -1952,7 +2026,8 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
 void WL4EditorWindow::on_action_swap_Normal_Hard_triggered()
 {
     // swap Entity lists
-    CurrentLevel->GetRooms()[selectedRoom]->SwapEntityLists(0, 1);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    currentroom->SwapEntityLists(0, 1);
 
     // TODO: add history record
 
@@ -1960,8 +2035,8 @@ void WL4EditorWindow::on_action_swap_Normal_Hard_triggered()
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
+    currentroom->SetEntityListDirty(0, true);
+    currentroom->SetEntityListDirty(1, true);
     SetUnsavedChanges(true);
 }
 
@@ -1971,7 +2046,8 @@ void WL4EditorWindow::on_action_swap_Normal_Hard_triggered()
 void WL4EditorWindow::on_action_swap_Hard_S_Hard_triggered()
 {
     // swap Entity lists
-    CurrentLevel->GetRooms()[selectedRoom]->SwapEntityLists(0, 2);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    currentroom->SwapEntityLists(0, 2);
 
     // TODO: add history record
 
@@ -1979,8 +2055,8 @@ void WL4EditorWindow::on_action_swap_Hard_S_Hard_triggered()
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
+    currentroom->SetEntityListDirty(0, true);
+    currentroom->SetEntityListDirty(2, true);
     SetUnsavedChanges(true);
 }
 
@@ -1990,7 +2066,8 @@ void WL4EditorWindow::on_action_swap_Hard_S_Hard_triggered()
 void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
 {
     // swap Entity lists
-    CurrentLevel->GetRooms()[selectedRoom]->SwapEntityLists(1, 2);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    currentroom->SwapEntityLists(1, 2);
 
     // TODO: add history record
 
@@ -1998,8 +2075,8 @@ void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
+    currentroom->SetEntityListDirty(1, true);
+    currentroom->SetEntityListDirty(2, true);
     SetUnsavedChanges(true);
 }
 
@@ -2008,7 +2085,7 @@ void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_clear_Layer_0_triggered()
 {
-    LevelComponents::Layer *layer0 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(0);
+    LevelComponents::Layer *layer0 = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetLayer(0);
     if (layer0->GetMappingType() == LevelComponents::LayerMap16)
     {
         layer0->ResetData();
@@ -2027,7 +2104,7 @@ void WL4EditorWindow::on_action_clear_Layer_0_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_clear_Layer_1_triggered()
 {
-    LevelComponents::Layer *layer1 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(1);
+    LevelComponents::Layer *layer1 = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetLayer(1);
     if (layer1->GetMappingType() == LevelComponents::LayerMap16)
     {
         layer1->ResetData();
@@ -2046,7 +2123,7 @@ void WL4EditorWindow::on_action_clear_Layer_1_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_clear_Layer_2_triggered()
 {
-    LevelComponents::Layer *layer2 = CurrentLevel->GetRooms()[selectedRoom]->GetLayer(2);
+    LevelComponents::Layer *layer2 = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetLayer(2);
     if (layer2->GetMappingType() == LevelComponents::LayerMap16)
     {
         layer2->ResetData();
@@ -2066,7 +2143,8 @@ void WL4EditorWindow::on_action_clear_Layer_2_triggered()
 void WL4EditorWindow::on_action_clear_Normal_triggered()
 {
     // Delete Entity list
-    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(1);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    currentroom->ClearEntitylist(1);
 
     // TODO: add history record
 
@@ -2074,7 +2152,7 @@ void WL4EditorWindow::on_action_clear_Normal_triggered()
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
+    currentroom->SetEntityListDirty(1, true);
     SetUnsavedChanges(true);
 }
 
@@ -2084,7 +2162,8 @@ void WL4EditorWindow::on_action_clear_Normal_triggered()
 void WL4EditorWindow::on_action_clear_Hard_triggered()
 {
     // Delete Entity list
-    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(0);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    currentroom->ClearEntitylist(0);
 
     // TODO: add history record
 
@@ -2092,7 +2171,7 @@ void WL4EditorWindow::on_action_clear_Hard_triggered()
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
+    currentroom->SetEntityListDirty(0, true);
     SetUnsavedChanges(true);
 }
 
@@ -2102,7 +2181,8 @@ void WL4EditorWindow::on_action_clear_Hard_triggered()
 void WL4EditorWindow::on_action_clear_S_Hard_triggered()
 {
     // Delete Entity list
-    CurrentLevel->GetRooms()[selectedRoom]->ClearEntitylist(2);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    currentroom->ClearEntitylist(2);
 
     // TODO: add history record
 
@@ -2110,7 +2190,7 @@ void WL4EditorWindow::on_action_clear_S_Hard_triggered()
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
+    currentroom->SetEntityListDirty(2, true);
     SetUnsavedChanges(true);
 }
 
@@ -2124,8 +2204,9 @@ void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
     if (qFilePath.compare(""))
     {
         int CR_width, CR_height;
-        CR_width = CurrentLevel->GetRooms()[selectedRoom]->GetWidth();
-        CR_height = CurrentLevel->GetRooms()[selectedRoom]->GetHeight();
+        auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+        CR_width = currentroom->GetWidth();
+        CR_height = currentroom->GetHeight();
         QGraphicsScene *tmpscene = ui->graphicsView->scene();
         QPixmap currentRoompixmap(CR_width * 16, CR_height * 16);
         QPainter tmppainter(&currentRoompixmap);
@@ -2257,14 +2338,15 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
     int levelHeaderIndex = ROMUtils::IntFromData(offset);
     int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
     int roomCount = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderPointer + 1];
-    if (roomCount <= static_cast<int>(selectedRoom))
+    unsigned int currentroomid = ui->spinBox_RoomID->value();
+    if (roomCount <= static_cast<int>(currentroomid))
     {
         OutputWidget->PrintString(tr("Cannot create room, current Room has not been saved to the ROM yet!"));
         return;
     }
 
     int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + CurrentLevel->GetLevelID() * 4);
-    CurrentLevel->AddRoom(new LevelComponents::Room(roomTableAddress + selectedRoom * 0x2C, newRoomId, CurrentLevel->GetLevelID()));
+    CurrentLevel->AddRoom(new LevelComponents::Room(roomTableAddress + currentroomid * 0x2C, newRoomId, CurrentLevel->GetLevelID()));
     LevelComponents::Room *newRoom = CurrentLevel->GetRooms()[newRoomId];
 
     // Add one Door to the new Room as well as spriteset settings
@@ -2280,7 +2362,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
         newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
         LevelComponents::Door *newDoor =
             new LevelComponents::Door(newDoorEntry, (unsigned char) newRoomId, CurrentLevel->GetDoors().size());
-        int entitysetId = CurrentLevel->GetRooms()[selectedRoom]->GetCurrentEntitySetID();
+        int entitysetId = CurrentLevel->GetRooms()[currentroomid]->GetCurrentEntitySetID();
         newDoor->SetEntitySetID(entitysetId);
         newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
 
@@ -2392,8 +2474,9 @@ void WL4EditorWindow::on_action_duplicate_Normal_triggered()
 {
     int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
-    // copy  Hard Entity list into Super Hard Entity list
-    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 1);
+    // copy Hard Entity list into Super Hard Entity list
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    currentroom->CopyEntityLists(selectedDifficulty, 1);
 
     // TODO: add history record
 
@@ -2401,7 +2484,7 @@ void WL4EditorWindow::on_action_duplicate_Normal_triggered()
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(1, true);
+    currentroom->SetEntityListDirty(1, true);
     SetUnsavedChanges(true);
 }
 
@@ -2413,7 +2496,8 @@ void WL4EditorWindow::on_action_duplicate_Hard_triggered()
     int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
     // copy  Hard Entity list into Super Hard Entity list
-    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 0);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    currentroom->CopyEntityLists(selectedDifficulty, 0);
 
     // TODO: add history record
 
@@ -2421,7 +2505,7 @@ void WL4EditorWindow::on_action_duplicate_Hard_triggered()
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(0, true);
+    currentroom->SetEntityListDirty(0, true);
     SetUnsavedChanges(true);
 }
 
@@ -2433,7 +2517,8 @@ void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
     int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
     // copy  Hard Entity list into Super Hard Entity list
-    CurrentLevel->GetRooms()[selectedRoom]->CopyEntityLists(selectedDifficulty, 2);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    currentroom->CopyEntityLists(selectedDifficulty, 2);
 
     // TODO: add history record
 
@@ -2441,7 +2526,7 @@ void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
 
     // Set Dirty and change flag
-    CurrentLevel->GetRooms()[selectedRoom]->SetEntityListDirty(2, true);
+    currentroom->SetEntityListDirty(2, true);
     SetUnsavedChanges(true);
 }
 
@@ -2577,7 +2662,8 @@ void WL4EditorWindow::on_actionEdit_Animated_Tile_Groups_triggered()
     DialogParams::AnimatedTileGroupsEditParams *_currentAnimatedTileGroupsEditParams =
         new DialogParams::AnimatedTileGroupsEditParams();
 
-    AnimatedTileGroupEditorDialog tmpdialog(this, CurrentLevel->GetRooms()[selectedRoom]->GetTileset(), _currentAnimatedTileGroupsEditParams);
+    unsigned int currentroomid = ui->spinBox_RoomID->value();
+    AnimatedTileGroupEditorDialog tmpdialog(this, CurrentLevel->GetRooms()[currentroomid]->GetTileset(), _currentAnimatedTileGroupsEditParams);
     if (tmpdialog.exec() == QDialog::Accepted)
     {
         // Generate operation history data
@@ -2620,3 +2706,10 @@ void WL4EditorWindow::on_actionEdit_Wall_Paints_triggered()
     }
 }
 
+/// <summary>
+/// Go to a new Room while set the buttons' enability.
+/// </summary>
+void WL4EditorWindow::on_spinBox_RoomID_valueChanged(int arg1)
+{
+    if (firstROMLoaded) SetCurrentRoomId(arg1, true);
+}

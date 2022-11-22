@@ -45,7 +45,7 @@ private:
     QAction *RecentScripts[5];
     uint recentScriptNum = 0;
 
-    unsigned int selectedRoom = 0;
+    int old_roomid_value = 0; // only use this to set value when illegal input appear in the spinbox_RoomId
     uint graphicViewScalerate = 2;
     bool UnsavedChanges = false; // state check bool only be used when user try loading another ROM, another Level or
                                  // close the editor without saving changes
@@ -54,7 +54,7 @@ private:
 
     void closeEvent(QCloseEvent *event);
     bool notify(QObject *receiver, QEvent *event);
-    static bool SaveCurrentFile() { return ROMUtils::SaveLevel(ROMUtils::ROMFileMetadata->FilePath); }
+    bool SaveCurrentFile();
     bool SaveCurrentFileAs();
     bool UnsavedChangesPrompt(QString str);
     void ClearEverythingInRoom(bool no_warning = false);
@@ -81,13 +81,13 @@ public:
     EntitySetDockWidget *GetEntitySetDockWidgetPtr() { return EntitySetWidget; }
     OutputDockWidget *GetOutputWidgetPtr() { return OutputWidget; }
     void InvalidOutputWidgetPtr() { OutputWidget = nullptr; }
-    LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[selectedRoom]; }
-    int GetCurrentRoomId() { return selectedRoom; }
+    LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[GetCurrentRoomId()]; }
+    int GetCurrentRoomId();
     LevelComponents::Level *GetCurrentLevel() { return CurrentLevel; }
     void SetUnsavedChanges(bool newValue) { UnsavedChanges = newValue; }
     bool FirstROMIsLoaded() { return firstROMLoaded; }
     void OpenROM();
-    void UIStartUp(int currentTilesetID);
+    void UIStartUp();
     void SetEditModeDockWidgetLayerEditability();
     QVector<bool> GetLayersVisibilityArray() { return EditModeWidget->GetLayersVisibilityArray(); }
     void Graphicsview_UnselectDoorAndEntity();
@@ -99,12 +99,12 @@ public:
     void HideCameraControlDockWidget() { CameraControlWidget->setVisible(false); }
     void HideEntitySetDockWidget() { EntitySetWidget->setVisible(false); }
     void HideTile16DockWidget() { Tile16SelecterWidget->setVisible(false); }
-    void ResetEntitySetDockWidget() { EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[selectedRoom]); }
+    void ResetEntitySetDockWidget() { EntitySetWidget->ResetEntitySet(CurrentLevel->GetRooms()[GetCurrentRoomId()]); }
     void ResetCameraControlDockWidget()
     {
-        CameraControlWidget->PopulateCameraControlInfo(CurrentLevel->GetRooms()[selectedRoom]);
+        CameraControlWidget->PopulateCameraControlInfo(CurrentLevel->GetRooms()[GetCurrentRoomId()]);
     }
-    void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[selectedRoom]->DeleteEntity(EntityIndex); }
+    void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[GetCurrentRoomId()]->DeleteEntity(EntityIndex); }
     bool DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
     void LoadROMDataFromFile(QString qFilePath);
@@ -115,7 +115,7 @@ public:
     void SetRectSelectMode(bool state);
     QGraphicsView *Getgraphicview();
     void SetChangeCurrentRoomEnabled(bool state);
-    void SetCurrentRoomId(int roomid);
+    void SetCurrentRoomId(int roomid, bool call_from_spinbox_valuechange = false);
     void EditCurrentTileset(DialogParams::TilesetEditParams *_newTilesetEditParams);
     QString GetdDialogInitialPath() { return dialogInitialPath; }
     void SetDialogInitialPath(QString newpath) { dialogInitialPath = newpath; }
@@ -175,6 +175,7 @@ private slots:
     void on_actionReload_project_settings_triggered();
     void on_actionEdit_Animated_Tile_Groups_triggered();
     void on_actionEdit_Wall_Paints_triggered();
+    void on_spinBox_RoomID_valueChanged(int arg1);
 };
 
 #endif // WL4EDITORWINDOW_H

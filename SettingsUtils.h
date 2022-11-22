@@ -53,6 +53,21 @@ namespace SettingsUtils
         RecentScriptPath_2         = 11,
         RecentScriptPath_3         = 12,
         RecentScriptPath_4         = 13,
+        RecentROM_0_RecentRoom_id  = 14,
+        RecentROM_1_RecentRoom_id  = 15,
+        RecentROM_2_RecentRoom_id  = 16,
+        RecentROM_3_RecentRoom_id  = 17,
+        RecentROM_4_RecentRoom_id  = 18,
+        RecentROM_0_RecentLevel_id = 19,
+        RecentROM_1_RecentLevel_id = 20,
+        RecentROM_2_RecentLevel_id = 21,
+        RecentROM_3_RecentLevel_id = 22,
+        RecentROM_4_RecentLevel_id = 23,
+        RecentROM_0_RecentPassage_id = 24,
+        RecentROM_1_RecentPassage_id = 25,
+        RecentROM_2_RecentPassage_id = 26,
+        RecentROM_3_RecentPassage_id = 27,
+        RecentROM_4_RecentPassage_id = 28,
     };
 
     // Static Key QString set
@@ -73,6 +88,21 @@ namespace SettingsUtils
         "history/RecentScriptPath_2",
         "history/RecentScriptPath_3",
         "history/RecentScriptPath_4",
+        "history/RecentROM_0_RecentRoom_id",
+        "history/RecentROM_1_RecentRoom_id",
+        "history/RecentROM_2_RecentRoom_id",
+        "history/RecentROM_3_RecentRoom_id",
+        "history/RecentROM_4_RecentRoom_id",
+        "history/RecentROM_0_RecentLevel_id",
+        "history/RecentROM_1_RecentLevel_id",
+        "history/RecentROM_2_RecentLevel_id",
+        "history/RecentROM_3_RecentLevel_id",
+        "history/RecentROM_4_RecentLevel_id",
+        "history/RecentROM_0_RecentPassage_id",
+        "history/RecentROM_1_RecentPassage_id",
+        "history/RecentROM_2_RecentPassage_id",
+        "history/RecentROM_3_RecentPassage_id",
+        "history/RecentROM_4_RecentPassage_id",
     };
     // clang-format on
 
