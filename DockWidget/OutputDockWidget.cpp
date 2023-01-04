@@ -23,7 +23,7 @@ OutputDockWidget::OutputDockWidget(QWidget *parent) :
         interface = new ScriptInterface();
     }
     QJSValue funcInterface = jsEngine.newQObject(interface);
-    jsEngine.globalObject().setProperty("interface", funcInterface);
+    jsEngine.globalObject().setProperty("WL4EditorInterface", funcInterface);
 
     // Initialize tileUtils and use "TileUtils" to call its member functions
     if (!tileUtils)

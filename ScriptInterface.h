@@ -51,6 +51,7 @@ public:
 
     // UI
     Q_INVOKABLE void UpdateRoomGFXFull();
+    Q_INVOKABLE void DoEvents();
 
     // File operations
     Q_INVOKABLE void WriteTxtFile(QString filePath = QString(""), QString test = "");

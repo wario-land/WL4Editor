@@ -8,6 +8,8 @@
 extern WL4EditorWindow *singleton;
 #endif
 
+#include <QApplication>
+
 // ---------------------------Helper functions--------------------------------------
 unsigned short *QStringToU16(QString input)
 {
@@ -562,6 +564,11 @@ QString ScriptInterface::prompt(QString message, QString defaultInput)
 void ScriptInterface::UpdateRoomGFXFull()
 {
     singleton->RenderScreenFull();
+}
+
+void ScriptInterface::DoEvents()
+{
+    QApplication::processEvents();
 }
 
 void ScriptInterface::WriteTxtFile(QString filepath, QString test)
