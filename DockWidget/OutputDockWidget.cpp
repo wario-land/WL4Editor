@@ -94,3 +94,12 @@ void OutputDockWidget::on_pushButton_Execute_clicked()
         ui->lineEdit_JsCode->clear();
     }
 }
+
+/// <summary>
+/// slot function when clicking pushButton_Abort.
+/// </summary>
+void OutputDockWidget::on_pushButton_Abort_clicked()
+{
+    jsEngine.setInterrupted(true);
+}
+

@@ -25,6 +25,7 @@ public:
 
 private slots:
     void on_pushButton_Execute_clicked();
+    void on_pushButton_Abort_clicked();
 
 private:
     Ui::OutputDockWidget *ui;
