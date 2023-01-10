@@ -451,6 +451,22 @@ QString ScriptInterface::GetEntityListData(int entitylistid)
     return result;
 }
 
+QString ScriptInterface::GetCurRoomAllDoorsRangeData()
+{
+    auto doorlist = singleton->GetCurrentRoom()->GetDoors();
+    QString result = "";
+    for (auto &door: doorlist)
+    {
+        int x1 = door->GetX1();
+        int x2 = door->GetX2();
+        int y1 = door->GetY1();
+        int y2 = door->GetY2();
+        result += QString::number(x1, 10) + "," + QString::number(x2, 10) + "," + QString::number(y1, 10) + "," + QString::number(y2, 10) + ";";
+    }
+    result.chop(1); // get rid of the last ";"
+    return result;
+}
+
 void ScriptInterface::SetEntityListData(QString entitylistdata, int entitylistid)
 {
     QStringList EntitylistStrData = entitylistdata.split(QChar(' '), Qt::SkipEmptyParts);
