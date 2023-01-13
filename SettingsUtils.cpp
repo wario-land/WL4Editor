@@ -136,7 +136,7 @@ namespace SettingsUtils
         if (list.contains(key) && jsonObj[key].isBool())
         {
             // accept and apply the correct key - value pair
-            singleton->GetOutputWidgetPtr()->PrintString("project setting file loaded correctly.");
+            singleton->GetOutputWidgetPtr()->PrintString("project setting file loaded correctly.\n");
         }
         // modify the key and value to the correct default contents, and write the value we read to the new json, so it is always clean
         json.insert(key, true);

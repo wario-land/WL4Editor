@@ -17,20 +17,20 @@ jobs:
         os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
       - name: Download Submodules
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
           
-      - name: Install Python 3.7 version
-        uses: actions/setup-python@v1
+      - name: Install Python 3.X version
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.7'
-          architecture: 'x64'  
+          python-version: '3.10'
+          architecture: 'x64'
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v3
         with:
-          version: 5.14.1
+          version: 5.15.2
 
       - name: Setup MSVC environment
         if: startsWith(matrix.os, 'windows')

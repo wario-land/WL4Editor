@@ -23,7 +23,7 @@ OutputDockWidget::OutputDockWidget(QWidget *parent) :
         interface = new ScriptInterface();
     }
     QJSValue funcInterface = jsEngine.newQObject(interface);
-    jsEngine.globalObject().setProperty("interface", funcInterface);
+    jsEngine.globalObject().setProperty("WL4EditorInterface", funcInterface);
 
     // Initialize tileUtils and use "TileUtils" to call its member functions
     if (!tileUtils)
@@ -94,3 +94,12 @@ void OutputDockWidget::on_pushButton_Execute_clicked()
         ui->lineEdit_JsCode->clear();
     }
 }
+
+/// <summary>
+/// slot function when clicking pushButton_Abort.
+/// </summary>
+void OutputDockWidget::on_pushButton_Abort_clicked()
+{
+    jsEngine.setInterrupted(true);
+}
+

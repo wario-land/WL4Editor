@@ -18,7 +18,10 @@ int PCG::GFXUtils::TileUtils::GetFitness_CurTilesetJoinTile16_UL(unsigned int up
     int tileset_id = singleton->GetCurrentRoom()->GetTilesetID();
     LevelComponents::Tileset *tileset = ROMUtils::singletonTilesets[tileset_id];
     auto tile16s = tileset->GetMap16arrayPtr();
-    return GetFitnessJoinTile16_UL(tile16s[upper_tile16_id], tile16s[lower_tile16_id]);
+    int tmp_result = GetFitnessJoinTile16_UL(tile16s[upper_tile16_id], tile16s[lower_tile16_id]);
+    if (tmp_result == max_Tile16_border_pixels_color_channel_diff_value && (upper_tile16_id == 0 || lower_tile16_id == 0))
+        return 0;
+    return tmp_result;
 }
 
 int PCG::GFXUtils::TileUtils::GetFitness_CurTilesetJoinTile16_LR(unsigned int left_tile16_id, unsigned int right_tile16_id)
@@ -26,7 +29,10 @@ int PCG::GFXUtils::TileUtils::GetFitness_CurTilesetJoinTile16_LR(unsigned int le
     int tileset_id = singleton->GetCurrentRoom()->GetTilesetID();
     LevelComponents::Tileset *tileset = ROMUtils::singletonTilesets[tileset_id];
     auto tile16s = tileset->GetMap16arrayPtr();
-    return GetFitnessJoinTile16_LR(tile16s[left_tile16_id], tile16s[right_tile16_id]);
+    int tmp_result = GetFitnessJoinTile16_LR(tile16s[left_tile16_id], tile16s[right_tile16_id]);
+    if (tmp_result == max_Tile16_border_pixels_color_channel_diff_value && (left_tile16_id == 0 || right_tile16_id == 0))
+        return 0;
+    return tmp_result;
 }
 
 bool PCG::GFXUtils::TileUtils::IsBlankTile_CurTilesetTile16(unsigned int tile16_id)
@@ -63,33 +69,30 @@ int PCG::GFXUtils::TileUtils::GetFitnessJoinTile16_UL(LevelComponents::TileMap16
     // get the color difference between the bottom row of the upper tile16 and the top row of the lower tile16 per pixel
     QColor border_u[16], border_l[16];
     int delta_r[16], delta_g[16], delta_b[16];
+    double diff_r = 0.0, diff_b = 0.0, diff_g = 0.0;
     QImage image = pixmap.toImage();
+    char l_black_pixel = 0;
+    char u_black_pixel = 0;
     for (int i = 0; i < 16; i++)
     {
         border_u[i] = image.pixel(i, 15);
         border_l[i] = image.pixel(i, 16);
+        if (border_l[i].red() < 8 && border_l[i].green() < 8 && border_l[i].blue() < 8)
+        {
+            l_black_pixel += 1;
+        }
+        if (border_u[i].red() < 8 && border_u[i].green() < 8 && border_u[i].blue() < 8)
+        {
+            u_black_pixel += 1;
+        }
+        if (l_black_pixel > 8 || u_black_pixel > 8)
+            return max_Tile16_border_pixels_color_channel_diff_value;
         delta_r[i] = border_u[i].red() - border_l[i].red();
         delta_g[i] = border_u[i].green() - border_l[i].green();
         delta_b[i] = border_u[i].blue() - border_l[i].blue();
-    }
-
-    // the check if the 16 differences pixel pair looks similar in changes from the upper tile16 to lower tile16
-    double ave_r = 0.0, ave_b = 0.0, ave_g = 0.0;
-    for (int i = 0; i < 16; i++)
-    {
-        ave_r += (double)delta_r[i];
-        ave_g += (double)delta_g[i];
-        ave_b += (double)delta_b[i];
-    }
-    ave_r = ave_r / 16.0;
-    ave_g = ave_g / 16.0;
-    ave_b = ave_b / 16.0;
-    double diff_r = 0.0, diff_b = 0.0, diff_g = 0.0;
-    for (int i = 0; i < 16; i++)
-    {
-        diff_r += (double)delta_r[i] - ave_r;
-        diff_g += (double)delta_g[i] - ave_g;
-        diff_b += (double)delta_b[i] - ave_b;
+        diff_r += (double)delta_r[i];
+        diff_g += (double)delta_g[i];
+        diff_b += (double)delta_b[i];
     }
     return diff_r + diff_b + diff_g;
 }
@@ -112,33 +115,30 @@ int PCG::GFXUtils::TileUtils::GetFitnessJoinTile16_LR(LevelComponents::TileMap16
     // get the color difference between the bottom row of the upper tile16 and the top row of the lower tile16 per pixel
     QColor border_l[16], border_r[16];
     int delta_r[16], delta_g[16], delta_b[16];
+    double diff_r = 0.0, diff_b = 0.0, diff_g = 0.0;
     QImage image = pixmap.toImage();
+    char l_black_pixel = 0;
+    char r_black_pixel = 0;
     for (int i = 0; i < 16; i++)
     {
         border_l[i] = image.pixel(15, i);
         border_r[i] = image.pixel(16, i);
+        if (border_l[i].red() < 8 && border_l[i].green() < 8 && border_l[i].blue() < 8)
+        {
+            l_black_pixel += 1;
+        }
+        if (border_r[i].red() < 8 && border_r[i].green() < 8 && border_r[i].blue() < 8)
+        {
+            r_black_pixel += 1;
+        }
+        if (l_black_pixel > 8 || r_black_pixel > 8)
+            return max_Tile16_border_pixels_color_channel_diff_value;
         delta_r[i] = border_l[i].red() - border_r[i].red();
         delta_g[i] = border_l[i].green() - border_r[i].green();
         delta_b[i] = border_l[i].blue() - border_r[i].blue();
-    }
-
-    // the check if the 16 differences pixel pair looks similar in changes from the upper tile16 to lower tile16
-    double ave_r = 0.0, ave_b = 0.0, ave_g = 0.0;
-    for (int i = 0; i < 16; i++)
-    {
-        ave_r += (double)delta_r[i];
-        ave_g += (double)delta_g[i];
-        ave_b += (double)delta_b[i];
-    }
-    ave_r = ave_r / 16.0;
-    ave_g = ave_g / 16.0;
-    ave_b = ave_b / 16.0;
-    double diff_r = 0.0, diff_b = 0.0, diff_g = 0.0;
-    for (int i = 0; i < 16; i++)
-    {
-        diff_r += (double)delta_r[i] - ave_r;
-        diff_g += (double)delta_g[i] - ave_g;
-        diff_b += (double)delta_b[i] - ave_b;
+        diff_r += (double)delta_r[i];
+        diff_g += (double)delta_g[i];
+        diff_b += (double)delta_b[i];
     }
     return diff_r + diff_b + diff_g;
 }
