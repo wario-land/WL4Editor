@@ -24,6 +24,10 @@ namespace PCG
             int GetFitnessJoinTile16_LR(LevelComponents::TileMap16 *Left_tile16, LevelComponents::TileMap16 *Right_tile16);
 
         signals:
+            // nothings here
+
+        private:
+            static const int max_Tile16_border_pixels_color_channel_diff_value = 0xFF * 16 * 3;
 
         };
     }

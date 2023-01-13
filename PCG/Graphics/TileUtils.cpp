@@ -19,7 +19,7 @@ int PCG::GFXUtils::TileUtils::GetFitness_CurTilesetJoinTile16_UL(unsigned int up
     LevelComponents::Tileset *tileset = ROMUtils::singletonTilesets[tileset_id];
     auto tile16s = tileset->GetMap16arrayPtr();
     int tmp_result = GetFitnessJoinTile16_UL(tile16s[upper_tile16_id], tile16s[lower_tile16_id]);
-    if (tmp_result == 0xFF * 16 * 3 && (upper_tile16_id == 0 || lower_tile16_id == 0))
+    if (tmp_result == max_Tile16_border_pixels_color_channel_diff_value && (upper_tile16_id == 0 || lower_tile16_id == 0))
         return 0;
     return tmp_result;
 }
@@ -30,7 +30,7 @@ int PCG::GFXUtils::TileUtils::GetFitness_CurTilesetJoinTile16_LR(unsigned int le
     LevelComponents::Tileset *tileset = ROMUtils::singletonTilesets[tileset_id];
     auto tile16s = tileset->GetMap16arrayPtr();
     int tmp_result = GetFitnessJoinTile16_LR(tile16s[left_tile16_id], tile16s[right_tile16_id]);
-    if (tmp_result == 0xFF * 16 * 3 && (left_tile16_id == 0 || right_tile16_id == 0))
+    if (tmp_result == max_Tile16_border_pixels_color_channel_diff_value && (left_tile16_id == 0 || right_tile16_id == 0))
         return 0;
     return tmp_result;
 }
@@ -86,7 +86,7 @@ int PCG::GFXUtils::TileUtils::GetFitnessJoinTile16_UL(LevelComponents::TileMap16
             u_black_pixel += 1;
         }
         if (l_black_pixel > 8 || u_black_pixel > 8)
-            return 0xFF * 16 * 3;
+            return max_Tile16_border_pixels_color_channel_diff_value;
         delta_r[i] = border_u[i].red() - border_l[i].red();
         delta_g[i] = border_u[i].green() - border_l[i].green();
         delta_b[i] = border_u[i].blue() - border_l[i].blue();
@@ -132,7 +132,7 @@ int PCG::GFXUtils::TileUtils::GetFitnessJoinTile16_LR(LevelComponents::TileMap16
             r_black_pixel += 1;
         }
         if (l_black_pixel > 8 || r_black_pixel > 8)
-            return 0xFF * 16 * 3;
+            return max_Tile16_border_pixels_color_channel_diff_value;
         delta_r[i] = border_l[i].red() - border_r[i].red();
         delta_g[i] = border_l[i].green() - border_r[i].green();
         delta_b[i] = border_l[i].blue() - border_r[i].blue();
