@@ -1504,7 +1504,7 @@ bool WL4EditorWindow::OpenRecentFile(QString filepath, const bool manageRecentSc
 /// </summary>
 void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool manageRecentScripts)
 {
-    int findedInRecentFile = -1; // start by 0
+    int foundInRecentFile = -1; // start by 0
     int recentFileNum = recentROMnum;
     int array_max_size = SettingsUtils::RecentFileNum;
     int array_start_id = SettingsUtils::IniKeys::RecentROMPath_0;
@@ -1525,7 +1525,7 @@ void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool
             QString filepath = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(i + array_start_id));
             if(filepath == newFilepath)
             {
-                findedInRecentFile = i;
+                foundInRecentFile = i;
                 break;
             }
         }
@@ -1542,7 +1542,7 @@ void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool
     }
 
     // new file never be loaded into the WL4Editor before
-    if(findedInRecentFile == -1)
+    if(foundInRecentFile == -1)
     {
         // we have other recent file record in the list
         if(recentFileNum > 0)
@@ -1591,9 +1591,13 @@ void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool
         // it is some file which has record in the recent file list
         // do nothing if it is already the first one in the list
         // modify the list if it is not the fist one in the list
-        if(findedInRecentFile > 0)
+        if(foundInRecentFile > 0)
         {
-            for(int i = findedInRecentFile; i > -1; i--)
+            // backup the ROM loading info from the current one
+            QString current_levelid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(foundInRecentFile + array_recent_level_start_id));
+            QString current_roomid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(foundInRecentFile + array_recent_room_start_id));
+            QString current_passageid = SettingsUtils::GetKey(static_cast<SettingsUtils::IniKeys>(foundInRecentFile + array_recent_passage_start_id));
+            for(int i = foundInRecentFile; i > 0; i--)
             {
                 // get recent file record from the ini file and set the other QActions text, from oldest to newest
                 // do a part of (3 -> 4, 2 -> 3, 1 -> 2, 0 -> 1) move, from where the file got found in the recent file list
@@ -1609,6 +1613,14 @@ void WL4EditorWindow::ManageRecentFilesOrScripts(QString newFilepath, const bool
                     SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(i + array_recent_passage_start_id), recent_passageid);
                 }
                 actionlist_ptr[i]->setText(filepath);
+            }
+            // then the ROM loading info of the current one will be put on the top
+            // do (foundInRecentFile -> 0) move
+            if (manageRecentScripts == false)
+            {
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_level_start_id), current_levelid);
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_room_start_id), current_roomid);
+                SettingsUtils::SetKey(static_cast<SettingsUtils::IniKeys>(array_recent_passage_start_id), current_passageid);
             }
         }
     }
