@@ -41,7 +41,7 @@ QJSValue OutputDockWidget::ExecuteJSScript(QString scriptSourceCode)
 {
     // execute scripts and output
     QTextCursor logCursor = ui->textEdit_Output->textCursor();
-    QJSValue result = jsEngine.evaluate(scriptSourceCode, windowFilePath());
+    QJSValue result = jsEngine.evaluate(scriptSourceCode/*, windowFilePath()*/);
     if(result.isError()) { // Only output error if needed
             QTextCharFormat errFormat;
             logCursor.insertText(tr("Exception at line %1:\n").arg(result.property("lineNumber").toInt()), errFormat);
