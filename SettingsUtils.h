@@ -1,6 +1,7 @@
 #ifndef SETTINGSUTILS_H
 #define SETTINGSUTILS_H
 
+#include <map>
 #include <QCoreApplication>
 #include <QString>
 #include <QVector>
@@ -131,6 +132,7 @@ namespace SettingsUtils
         extern QColor extraTerrainIDhintboxcolor;
         extern QVector<int> extraTerrainIDhintTerrainids;
         extern QStringList extraTerrainIDhintChars;
+        extern std::map<int, QString> bgmNameList;
     }
 
     // functions

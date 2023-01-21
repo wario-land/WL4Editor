@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QJsonParseError>
 #include <QJsonDocument>
+#include <QJsonArray>
 
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
@@ -84,6 +85,7 @@ namespace SettingsUtils
         QColor extraTerrainIDhintboxcolor = QColor(0xFF, 0, 0xFF, 0xFF);
         QVector<int> extraTerrainIDhintTerrainids = {};
         QStringList extraTerrainIDhintChars = {};
+        std::map<int, QString> bgmNameList;
     }
 
     /// <summary>
@@ -328,6 +330,30 @@ namespace SettingsUtils
             }
         }
         json.insert(key, strlist2string(projectSettings::extraTerrainIDhintChars, 1));
+
+        // array stuff
+        key = "new_bgm_name";
+        QJsonObject saving_arr;
+        saving_arr.insert("-1", "invalid bgm name");
+        if (list.contains(key) && jsonObj[key].isObject())
+        {
+            QJsonObject name_list_obj = jsonObj[key].toObject();
+            if (int name_num = name_list_obj.count())
+            {
+                projectSettings::bgmNameList.clear();
+                QStringList tmpkeys = name_list_obj.keys();
+                for (int i = 0; i < name_num; i++)
+                {
+                    if (int bgm_id = tmpkeys[i].toInt(); (bgm_id > -1) && name_list_obj[tmpkeys[i]].isString())
+                    {
+                        QString bgm_name = name_list_obj[tmpkeys[i]].toString();
+                        projectSettings::bgmNameList[bgm_id] = bgm_name;
+                        saving_arr.insert(QString::number(bgm_id), bgm_name);
+                    }
+                }
+            }
+        }
+        json.insert(key, saving_arr);
 
         // TODO: add more project settings
 
