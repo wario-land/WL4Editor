@@ -79,13 +79,6 @@ namespace LevelComponents
         // Set the OAM tile information
         ExtractSpritesTiles();
 
-        // Set the image offsets for the entity
-        foreach (OAMTile *ot, OAMTiles)
-        {
-            xOffset = qMin(xOffset, ot->Xoff);
-            yOffset = qMin(yOffset, ot->Yoff);
-        }
-
         // Extra blank tile used as dummy tiles when adding tiles to the entity
         blankTile = Tile8x8::CreateBlankTile(palettes);
     }
@@ -96,8 +89,8 @@ namespace LevelComponents
     /// <param name="entity">
     /// The entity used to copy construct new Entity.
     /// </param>
-    Entity::Entity(const Entity &entity) : xOffset(entity.xOffset), yOffset(entity.yOffset),
-        EntityGlobalID(entity.EntityGlobalID), EntityPaletteNum(entity.EntityPaletteNum), UnusedEntity(entity.UnusedEntity)
+    Entity::Entity(const Entity &entity) : EntityGlobalID(entity.EntityGlobalID),
+        EntityPaletteNum(entity.EntityPaletteNum), UnusedEntity(entity.UnusedEntity)
     {
         if (UnusedEntity) return;
 
@@ -216,7 +209,10 @@ namespace LevelComponents
             maxX = qMax(maxX, ot->OAMwidth * 8 + (ot->Xoff));
             maxY = qMax(maxY, ot->OAMheight * 8 + (ot->Yoff));
         }
-        int width = maxX - xOffset, height = maxY - yOffset;
+        QVector<unsigned short> nakedOAMdata = LevelComponents::Entity::GetDefaultOAMData(this->EntityGlobalID);
+        LevelComponents::EntityPositionalOffset position =
+            LevelComponents::Entity::GetEntityPositionalOffset(nakedOAMdata);
+        int width = maxX - position.XOffset, height = maxY - position.YOffset;
         QPixmap pm(width, height);
         pm.fill(Qt::transparent);
         QPainter p(&pm);
@@ -224,7 +220,7 @@ namespace LevelComponents
         for (auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
         {
             OAMTile *ot = *iter;
-            p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, ot->Render());
+            p.drawImage(ot->Xoff - position.XOffset, ot->Yoff - position.YOffset, ot->Render());
         }
         return pm.toImage();
     }
@@ -363,6 +359,25 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Get Entity default oam data qvector.
+    /// </summary>
+    /// <param name="entityglobalId">
+    /// Entity global id.
+    /// </param>
+    QVector<unsigned short> Entity::GetDefaultOAMData(int entityGlobalId)
+    {
+        QVector<unsigned short> result;
+        for (int i = 0; i < EntitySampleOamNumArray[entityGlobalId]; ++i)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                result.push_back(EntitiesOamSampleSets[entityGlobalId][j + i * 3]);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
     /// Get Entity Positional offset by its global id.
     /// </summary>
     /// <param name="entityglobalId">
@@ -373,6 +388,35 @@ namespace LevelComponents
         EntityPositionalOffset tmpEntityPositionalOffset;
         tmpEntityPositionalOffset.XOffset = EntityPositinalOffset[2 * entityglobalId];
         tmpEntityPositionalOffset.YOffset = EntityPositinalOffset[2 * entityglobalId + 1];
+        return tmpEntityPositionalOffset;
+    }
+
+    /// <summary>
+    /// Get Entity Positional offset by a QVector of a temp naked oam data.
+    /// </summary>
+    /// <param name="nakedOAMarray">
+    /// Entity's naked oam data.
+    /// </param>
+    EntityPositionalOffset Entity::GetEntityPositionalOffset(QVector<unsigned short> &nakedOAMarray)
+    {
+        EntityPositionalOffset tmpEntityPositionalOffset;
+        tmpEntityPositionalOffset.XOffset = 0xFF; // init them using the biggest possible positive value
+        tmpEntityPositionalOffset.YOffset = 0x7F;
+        int oamNum = nakedOAMarray.size() / 3;
+        for (int i = 0; i < oamNum; ++i)
+        {
+            // Obtain short values for the OAM tile
+            unsigned short attr0 = nakedOAMarray[3 * i];
+            unsigned short attr1 = nakedOAMarray[3 * i + 1];
+            unsigned short attr2 = nakedOAMarray[3 * i + 2];
+            // skip affine transformation (double size)
+
+            // Obtain the tile parameters for the OAM tile
+            int Xoff = (attr1 & 0xFF) - (attr1 & 0x100); // Offset of OAM tile from entity origin
+            int Yoff = (attr0 & 0x7F) - (attr0 & 0x80); // they are signed char
+            tmpEntityPositionalOffset.XOffset = std::min(Xoff, tmpEntityPositionalOffset.XOffset);
+            tmpEntityPositionalOffset.YOffset = std::min(Yoff, tmpEntityPositionalOffset.YOffset);
+        }
         return tmpEntityPositionalOffset;
     }
 

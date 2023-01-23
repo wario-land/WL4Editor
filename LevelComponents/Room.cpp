@@ -388,6 +388,12 @@ namespace LevelComponents
                 if ((unsigned int) EntityID > currentEntityListSource.size() - 1)
                     continue;
                 Entity *currententity = currentEntityListSource[EntityID];
+
+                // use OAM data to get x and y offset to render sprites
+                QVector<unsigned short> nakedOAMdata = LevelComponents::Entity::GetDefaultOAMData(currententity->GetEntityGlobalID());
+                LevelComponents::EntityPositionalOffset position =
+                    LevelComponents::Entity::GetEntityPositionalOffset(nakedOAMdata);
+
                 // Use an alternative method to render the Entity in a not-so-bad place
                 if (Layer0ColorBlending && !eva_evb[1])
                 {
@@ -395,41 +401,23 @@ namespace LevelComponents
                                           ? layerpriorities[1]
                                           : layerpriorities[2];
                     EntityPainter[tmppriority]->drawImage(
-                        16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 +
-                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
-                             98) /
-                                4,
-                        16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 +
-                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
-                             66) /
-                                4,
+                        16 * EntityList[currentDifficulty][i].XPos + position.XOffset + 8,
+                        16 * EntityList[currentDifficulty][i].YPos + position.YOffset + 16,
                         currententity->Render());
                 }
                 else if (Layer0ColorBlending && eva_evb[1])
                 {
                     EntityPainter[layerpriorities[0]]->drawImage(
-                        16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 +
-                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
-                             98) /
-                                4,
-                        16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 +
-                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
-                             66) /
-                                4,
-                        currententity->Render());
+                                16 * EntityList[currentDifficulty][i].XPos + position.XOffset + 8,
+                                16 * EntityList[currentDifficulty][i].YPos + position.YOffset + 16,
+                                currententity->Render());
                 }
                 else
                 {
                     EntityPainter[layerpriorities[1] + 1]->drawImage(
-                        16 * EntityList[currentDifficulty][i].XPos + currententity->GetXOffset() + 8 +
-                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).XOffset +
-                             98) /
-                                4,
-                        16 * EntityList[currentDifficulty][i].YPos + currententity->GetYOffset() + 16 +
-                            (LevelComponents::Entity::GetEntityPositionalOffset(currententity->GetEntityGlobalID()).YOffset +
-                             66) /
-                                4,
-                        currententity->Render());
+                                16 * EntityList[currentDifficulty][i].XPos + position.XOffset + 8,
+                                16 * EntityList[currentDifficulty][i].YPos + position.YOffset + 16,
+                                currententity->Render());
                 }
             }
             for (int i = 0; i < 4; ++i)

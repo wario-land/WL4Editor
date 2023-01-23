@@ -16,7 +16,7 @@ class OutputDockWidget : public QDockWidget
 
 public:
     explicit OutputDockWidget(QWidget *parent = nullptr);
-    QJSValue ExecuteJSScript(QString scriptSourceCode);
+    QJSValue ExecuteJSScript(QString scriptSourceCode, bool silenceFinishInfo = false);
     ~OutputDockWidget();
 
     // Functions

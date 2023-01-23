@@ -25,6 +25,7 @@ public:
     Q_INVOKABLE int GetCurTilesetTile16TerrainType(unsigned short tile16Id);
     Q_INVOKABLE QString GetEntityListData(int entitylistid = -1);
     Q_INVOKABLE QString GetCurRoomAllDoorsRangeData();
+    Q_INVOKABLE void PrintEntityDefaultOAMData(int globalEntityId);
 
     // Test
     Q_INVOKABLE void _UnpackScreen(int address);
