@@ -9,7 +9,6 @@
 #define EntityReferenceBoxRGB 0xFFFF00
 
 constexpr unsigned char LevelComponents::Entity::EntitySampleOamNumArray[129];
-constexpr int LevelComponents::Entity::EntityPositinalOffset[258];
 constexpr unsigned short LevelComponents::Entity::EntitiesOamSampleSets[129][0x2A * 3];
 
 // tuples of (width, height) in 8x8 tiles; see TONC table. Row major: size attribute
@@ -375,20 +374,6 @@ namespace LevelComponents
             }
         }
         return result;
-    }
-
-    /// <summary>
-    /// Get Entity Positional offset by its global id.
-    /// </summary>
-    /// <param name="entityglobalId">
-    /// Entity global id.
-    /// </param>
-    EntityPositionalOffset Entity::GetEntityPositionalOffset(int entityglobalId)
-    {
-        EntityPositionalOffset tmpEntityPositionalOffset;
-        tmpEntityPositionalOffset.XOffset = EntityPositinalOffset[2 * entityglobalId];
-        tmpEntityPositionalOffset.YOffset = EntityPositinalOffset[2 * entityglobalId + 1];
-        return tmpEntityPositionalOffset;
     }
 
     /// <summary>
