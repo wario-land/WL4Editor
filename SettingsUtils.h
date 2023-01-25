@@ -133,6 +133,7 @@ namespace SettingsUtils
         extern QVector<int> extraTerrainIDhintTerrainids;
         extern QStringList extraTerrainIDhintChars;
         extern std::map<int, QString> bgmNameList;
+        extern std::map<int, QVector<unsigned short> > cusomOAMdata;
     }
 
     // functions
@@ -140,7 +141,7 @@ namespace SettingsUtils
     void SaveProjectSettings(QJsonObject &jsonobj);
 
     // helper functions
-    QVector<int> string2intvec(QString &data);
+    template <typename TypeInt> QVector<TypeInt> string2intvec(QString &data);
     QString intvec2string(QVector<int> &intvec);
     QColor string2color(QString data, bool &ok);
     QString color2string(QColor color);

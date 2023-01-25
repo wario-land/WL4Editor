@@ -65,7 +65,7 @@ namespace LevelComponents
         void SetColor(int paletteId, int colorId, QRgb newcolor) { palettes[paletteId][colorId] = newcolor; }
         void SetTile8x8(Tile8x8 *newtile, int tileId) { tile8x8data[tileId] = newtile; }
         QVector<QRgb> *GetPalettes() { return palettes; }
-        void ExtractSpritesTiles();
+        void ExtractSpritesTiles(QVector<unsigned short> customOAMdata = QVector<unsigned short>());
         void AddTilesAndPaletteByOneRow();
         void DeleteTilesAndPaletteByOneRow(int palID);
         void SwapPalettes(int palID_1, int palID_2);
@@ -79,7 +79,6 @@ namespace LevelComponents
         Tile8x8 *blankTile = nullptr;
         int EntityGlobalID = 0;
         int EntityPaletteNum = 0;
-        bool UnusedEntity = false;
         QVector<OAMTile *> OAMTiles;
         bool Changed = false;
 
