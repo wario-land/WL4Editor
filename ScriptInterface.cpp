@@ -467,6 +467,24 @@ QString ScriptInterface::GetCurRoomAllDoorsRangeData()
     return result;
 }
 
+void ScriptInterface::PrintEntityDefaultOAMData(int globalEntityId)
+{
+    auto oamdata = LevelComponents::Entity::GetDefaultOAMData(globalEntityId);
+    QString result = "no default oam data for this Entity.";
+    if (oamdata.length() > 0)
+    {
+        result = "naked OAM data (no obj number in the first u16): ";
+        for (int i = 0; i < (oamdata.length() / 3); i++)
+        {
+            result += "0x" + QString::number(oamdata[i * 3], 16) + ", 0x" + \
+                    QString::number(oamdata[i * 3 + 1], 16) + ", 0x" + \
+                    QString::number(oamdata[i * 3 + 2], 16) + ", ";
+        }
+        result.chop(2);
+    }
+    log(result);
+}
+
 void ScriptInterface::SetEntityListData(QString entitylistdata, int entitylistid)
 {
     QStringList EntitylistStrData = entitylistdata.split(QChar(' '), Qt::SkipEmptyParts);

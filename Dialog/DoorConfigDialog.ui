@@ -201,12 +201,19 @@
         </sizepolicy>
        </property>
        <property name="title">
-        <string>Reset BGM ID (Decimal):</string>
+        <string>BGM ID (Decimal):</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QLabel" name="label_bgm_name">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QSpinBox" name="SpinBox_BGM_ID">
           <property name="maximum">

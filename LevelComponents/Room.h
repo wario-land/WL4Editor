@@ -138,7 +138,7 @@ namespace LevelComponents
         Tileset *tileset;
         std::vector<Door *> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem
-            *RenderedLayers[13]; // L0 - 3, E(Entities boxes), D, C, A (may not exist), E0 - 3, hidden coins
+            *RenderedLayers[13]; // L0 - 3, E(Entities boxes), D(Door boxes), C(Camera boxes), A (alpha blending, may not exist), E0 - 3, custom hint
         bool IsCopy = false;
 
         // Helper functions

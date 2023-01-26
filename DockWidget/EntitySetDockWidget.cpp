@@ -72,10 +72,11 @@ void EntitySetDockWidget::RenderEntityAndResetInfo()
     QPen EntityBoxPen = QPen(QBrush(QColor(0xFF, 0xFF, 0, 0xFF)), 2);
     EntityBoxPen.setJoinStyle(Qt::MiterJoin);
     EntityBoxPainter.setPen(EntityBoxPen);
+    QVector<unsigned short> nakedOAMdata = LevelComponents::Entity::GetDefaultOAMData(currentEntityPtr->GetEntityGlobalID());
     LevelComponents::EntityPositionalOffset position =
-        LevelComponents::Entity::GetEntityPositionalOffset(currentEntityPtr->GetEntityGlobalID());
-    EntityBoxPainter.drawRect(-((position.XOffset + 98) / 4 + currentEntityPtr->GetXOffset() + 8),
-                              -((position.YOffset + 66) / 4 + currentEntityPtr->GetYOffset() + 16), 16, 16);
+        LevelComponents::Entity::GetEntityPositionalOffset(nakedOAMdata);
+    EntityBoxPainter.drawRect(-(position.XOffset + 8),
+                              -(position.YOffset + 16), 16, 16);
     scene->addPixmap(pixmap);
     scene->addPixmap(pixmap2);
     ui->graphicsView_CurrentEntity->setScene(scene);

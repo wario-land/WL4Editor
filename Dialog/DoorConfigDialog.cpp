@@ -1,6 +1,7 @@
 ﻿#include "DoorConfigDialog.h"
 #include "ui_DoorConfigDialog.h"
 #include "ROMUtils.h"
+#include "SettingsUtils.h"
 
 // constexpr declarations for the initializers in the header
 constexpr const char *DoorConfigDialog::DoortypeSetData[5];
@@ -581,10 +582,19 @@ void DoorConfigDialog::on_SpinBox_WarioY_valueChanged(int arg1)
 /// </param>
 void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
 {
-    (void) arg1;
     if (!IsInitialized)
         return;
-    tmpCurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) ui->SpinBox_BGM_ID->value());
+    tmpCurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) arg1);
+
+    // set bgm name for the label
+    if (SettingsUtils::projectSettings::bgmNameList.find(arg1) != SettingsUtils::projectSettings::bgmNameList.end())
+    {
+        ui->label_bgm_name->setText(SettingsUtils::projectSettings::bgmNameList[arg1]);
+    }
+    else
+    {
+        ui->label_bgm_name->setText("no name");
+    }
 }
 
 /// <summary>

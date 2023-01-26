@@ -37,11 +37,11 @@ OutputDockWidget::OutputDockWidget(QWidget *parent) :
 /// <summary>
 /// Execute JS scripts and output the result to textEdit_Output.
 /// </summary>
-QJSValue OutputDockWidget::ExecuteJSScript(QString scriptSourceCode)
+QJSValue OutputDockWidget::ExecuteJSScript(QString scriptSourceCode, bool silenceFinishInfo)
 {
     // execute scripts and output
     QTextCursor logCursor = ui->textEdit_Output->textCursor();
-    QJSValue result = jsEngine.evaluate(scriptSourceCode, windowFilePath());
+    QJSValue result = jsEngine.evaluate(scriptSourceCode/*, windowFilePath()*/);
     if(result.isError()) { // Only output error if needed
             QTextCharFormat errFormat;
             logCursor.insertText(tr("Exception at line %1:\n").arg(result.property("lineNumber").toInt()), errFormat);
@@ -49,7 +49,7 @@ QJSValue OutputDockWidget::ExecuteJSScript(QString scriptSourceCode)
             logCursor.insertBlock();
             logCursor.insertText(result.property("stack").toString(), errFormat);
     } else {
-        ui->textEdit_Output->append("Script processing finished.\n");
+        if (!silenceFinishInfo) ui->textEdit_Output->append("Script processing finished.\n");
     }
     QQmlEngine::setObjectOwnership(interface, QQmlEngine::CppOwnership);
     //jsEngine.collectGarbage();

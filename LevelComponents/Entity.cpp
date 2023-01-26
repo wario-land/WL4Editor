@@ -6,10 +6,11 @@
 
 #include <cassert>
 
+#include "SettingsUtils.h"
+
 #define EntityReferenceBoxRGB 0xFFFF00
 
 constexpr unsigned char LevelComponents::Entity::EntitySampleOamNumArray[129];
-constexpr int LevelComponents::Entity::EntityPositinalOffset[258];
 constexpr unsigned short LevelComponents::Entity::EntitiesOamSampleSets[129][0x2A * 3];
 
 // tuples of (width, height) in 8x8 tiles; see TONC table. Row major: size attribute
@@ -43,12 +44,6 @@ namespace LevelComponents
     /// </param>
     Entity::Entity(int entityGlobalId, int basicElementPalettePtr) : EntityGlobalID(entityGlobalId)
     {
-        if (EntitySampleOamNumArray[entityGlobalId] == 0)
-        {
-            UnusedEntity = true;
-            return;
-        }
-
         // Load tiles and palettes
         if (entityGlobalId > 0x10)
         {
@@ -79,13 +74,6 @@ namespace LevelComponents
         // Set the OAM tile information
         ExtractSpritesTiles();
 
-        // Set the image offsets for the entity
-        foreach (OAMTile *ot, OAMTiles)
-        {
-            xOffset = qMin(xOffset, ot->Xoff);
-            yOffset = qMin(yOffset, ot->Yoff);
-        }
-
         // Extra blank tile used as dummy tiles when adding tiles to the entity
         blankTile = Tile8x8::CreateBlankTile(palettes);
     }
@@ -96,10 +84,10 @@ namespace LevelComponents
     /// <param name="entity">
     /// The entity used to copy construct new Entity.
     /// </param>
-    Entity::Entity(const Entity &entity) : xOffset(entity.xOffset), yOffset(entity.yOffset),
-        EntityGlobalID(entity.EntityGlobalID), EntityPaletteNum(entity.EntityPaletteNum), UnusedEntity(entity.UnusedEntity)
+    Entity::Entity(const Entity &entity) : EntityGlobalID(entity.EntityGlobalID),
+        EntityPaletteNum(entity.EntityPaletteNum)
     {
-        if (UnusedEntity) return;
+        if (!EntityPaletteNum) return;
 
         for (int i = 0; i < EntityPaletteNum; ++i)
         {
@@ -107,6 +95,9 @@ namespace LevelComponents
         }
         tile8x8data = entity.GetSpriteTiles(palettes);
         ExtractSpritesTiles();
+
+        // Extra blank tile used as dummy tiles when adding tiles to the entity
+        blankTile = Tile8x8::CreateBlankTile(palettes);
     }
 
     /// <summary>
@@ -144,6 +135,7 @@ namespace LevelComponents
         newOAM->yFlip = (attr1 & (1 << 0xD));
         int SZ = (attr1 >> 0xE) & 3;                         // object size
         int SH = (attr0 >> 0xE) & 3;                         // object shape
+        if (SH == 3) SH = 0;          // 0=Normal, 1=Semi-Transparent, 2=OBJ Window, 3=Prohibited, so 3 is not allowed
         newOAM->OAMwidth = OAMDimensions[2 * (SZ * 3 + SH)]; // unit: 8x8 tiles
         newOAM->OAMheight = OAMDimensions[2 * (SZ * 3 + SH) + 1];
         int tileID = attr2 & 0x3FF;
@@ -159,6 +151,16 @@ namespace LevelComponents
                 entityTile->deltaY = y * 8;                
                 int offsetID = tileID + y * 0x20 + x;
 
+                // we allow user to render custom oam, so char id and palette id with offset is allowed here
+                // logic copied directly from RenderOAMPreview()
+                // TODO: perhaps the next step, we can discard RenderOAMPreview()
+                // since the 2 render functions are getting similar
+                if (offsetID >= 0x200) offsetID = offsetID - 0x200; // the game engine use char Id with offset in the oam data
+                if (offsetID >= tile8x8data.size()) continue; // this data have problems, just skip it
+                if (tile8x8data[offsetID] == blankTile) continue; // skip dummy tiles if used
+                if (palNum > 7) palNum = palNum - 8; // the game engine use pal Id with offset in the oam data
+                if (!palettes[palNum].size()) continue; // skip tiles if it is using an invalid palette
+
                 // this part of logic will be needed when we want to support custom oam, so keep it here
                 // i put it here only for loading data testing -- ssp
 #ifndef QT_NO_DEBUG
@@ -171,7 +173,6 @@ namespace LevelComponents
                 assert(palNum >= 0);
 #endif
 
-                if (tile8x8data[offsetID] == blankTile) continue; // skip dummy tiles if used
                 Tile8x8 *newTile = new Tile8x8(tile8x8data[offsetID]);
                 newTile->SetPaletteIndex(palNum);
                 entityTile->objTile = newTile;
@@ -206,9 +207,15 @@ namespace LevelComponents
     /// </returns>
     QImage Entity::Render()
     {
-        if (UnusedEntity)
+        if (!EntityPaletteNum)
         {
             return QImage();
+        }
+        bool has_alternative_oam_data = false;
+        if (SettingsUtils::projectSettings::cusomOAMdata.find(EntityGlobalID) != SettingsUtils::projectSettings::cusomOAMdata.end())
+        {
+            has_alternative_oam_data = true;
+            ExtractSpritesTiles(SettingsUtils::projectSettings::cusomOAMdata[EntityGlobalID]);
         }
         int maxX = 0x80000000, maxY = 0x80000000;
         foreach (OAMTile *ot, OAMTiles)
@@ -216,7 +223,19 @@ namespace LevelComponents
             maxX = qMax(maxX, ot->OAMwidth * 8 + (ot->Xoff));
             maxY = qMax(maxY, ot->OAMheight * 8 + (ot->Yoff));
         }
-        int width = maxX - xOffset, height = maxY - yOffset;
+
+        QVector<unsigned short> nakedOAMdata;
+        if (has_alternative_oam_data)
+        {
+            nakedOAMdata = SettingsUtils::projectSettings::cusomOAMdata[EntityGlobalID];
+        }
+        else
+        {
+            nakedOAMdata = LevelComponents::Entity::GetDefaultOAMData(this->EntityGlobalID);
+        }
+        LevelComponents::EntityPositionalOffset position =
+            LevelComponents::Entity::GetEntityPositionalOffset(nakedOAMdata);
+        int width = maxX - position.XOffset, height = maxY - position.YOffset;
         QPixmap pm(width, height);
         pm.fill(Qt::transparent);
         QPainter p(&pm);
@@ -224,7 +243,7 @@ namespace LevelComponents
         for (auto iter = OAMTiles.rbegin(); iter != OAMTiles.rend(); ++iter)
         {
             OAMTile *ot = *iter;
-            p.drawImage(ot->Xoff - xOffset, ot->Yoff - yOffset, ot->Render());
+            p.drawImage(ot->Xoff - position.XOffset, ot->Yoff - position.YOffset, ot->Render());
         }
         return pm.toImage();
     }
@@ -277,7 +296,6 @@ namespace LevelComponents
         if (!oamNum) return QImage();
 
         QVector<OAMTile *> tmpOAMTiles;
-        bool has_illegal_pal = false;
         for (int i = 0; i < oamNum; ++i)
         {
             // Obtain short values for the OAM tile
@@ -314,12 +332,9 @@ namespace LevelComponents
                     if (offsetID >= 0x200) offsetID = offsetID - 0x200; // the game engine use char Id with offset in the oam data
                     if (offsetID >= tile8x8data.size()) continue; // this data have problems, just skip it
                     if (tile8x8data[offsetID] == blankTile) continue; // skip dummy tiles if used
-                    Tile8x8 *newTile = new Tile8x8(tile8x8data[offsetID]);
                     if (palNum > 7) palNum = palNum - 8; // the game engine use pal Id with offset in the oam data
-                    if (!palettes[palNum].size())
-                    {
-                        has_illegal_pal = true;
-                    }
+                    if (!palettes[palNum].size()) continue; // skip tiles if it is using an invalid palette
+                    Tile8x8 *newTile = new Tile8x8(tile8x8data[offsetID]);
                     newTile->SetPaletteIndex(palNum);
                     entityTile->objTile = newTile;
                     newOAM->tile8x8.push_back(entityTile);
@@ -341,11 +356,8 @@ namespace LevelComponents
         for (auto iter = tmpOAMTiles.rbegin(); iter != tmpOAMTiles.rend(); ++iter)
         {
             OAMTile *ot = *iter;
-            if (!has_illegal_pal)
-            {
-                // x + 8, y + 16, this works in the room rendering to match the box
-                p.drawImage(ot->Xoff + 512 + 8, ot->Yoff + 256 + 16, ot->Render());
-            }
+            // x + 8, y + 16, this works in the room rendering to match the box
+            p.drawImage(ot->Xoff + 512 + 8, ot->Yoff + 256 + 16, ot->Render());
             delete ot;
         }
         tmpOAMTiles.clear();
@@ -363,16 +375,50 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Get Entity Positional offset by its global id.
+    /// Get Entity default oam data qvector.
     /// </summary>
     /// <param name="entityglobalId">
     /// Entity global id.
     /// </param>
-    EntityPositionalOffset Entity::GetEntityPositionalOffset(int entityglobalId)
+    QVector<unsigned short> Entity::GetDefaultOAMData(int entityGlobalId)
+    {
+        QVector<unsigned short> result;
+        for (int i = 0; i < EntitySampleOamNumArray[entityGlobalId]; ++i)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                result.push_back(EntitiesOamSampleSets[entityGlobalId][j + i * 3]);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Get Entity Positional offset by a QVector of a temp naked oam data.
+    /// </summary>
+    /// <param name="nakedOAMarray">
+    /// Entity's naked oam data.
+    /// </param>
+    EntityPositionalOffset Entity::GetEntityPositionalOffset(QVector<unsigned short> &nakedOAMarray)
     {
         EntityPositionalOffset tmpEntityPositionalOffset;
-        tmpEntityPositionalOffset.XOffset = EntityPositinalOffset[2 * entityglobalId];
-        tmpEntityPositionalOffset.YOffset = EntityPositinalOffset[2 * entityglobalId + 1];
+        tmpEntityPositionalOffset.XOffset = 0xFF; // init them using the biggest possible positive value
+        tmpEntityPositionalOffset.YOffset = 0x7F;
+        int oamNum = nakedOAMarray.size() / 3;
+        for (int i = 0; i < oamNum; ++i)
+        {
+            // Obtain short values for the OAM tile
+            unsigned short attr0 = nakedOAMarray[3 * i];
+            unsigned short attr1 = nakedOAMarray[3 * i + 1];
+            unsigned short attr2 = nakedOAMarray[3 * i + 2];
+            // skip affine transformation (double size)
+
+            // Obtain the tile parameters for the OAM tile
+            int Xoff = (attr1 & 0xFF) - (attr1 & 0x100); // Offset of OAM tile from entity origin
+            int Yoff = (attr0 & 0x7F) - (attr0 & 0x80); // they are signed char
+            tmpEntityPositionalOffset.XOffset = std::min(Xoff, tmpEntityPositionalOffset.XOffset);
+            tmpEntityPositionalOffset.YOffset = std::min(Yoff, tmpEntityPositionalOffset.YOffset);
+        }
         return tmpEntityPositionalOffset;
     }
 
@@ -459,7 +505,7 @@ namespace LevelComponents
     /// <summary>
     /// Extract all the Sprite tiles8x8 using frame data in one frame.
     /// </summary>
-    void Entity::ExtractSpritesTiles()
+    void Entity::ExtractSpritesTiles(QVector<unsigned short> customOAMdata)
     {
         // Clear old oams if exist
         for (OAMTile *oam: OAMTiles)
@@ -469,9 +515,24 @@ namespace LevelComponents
         OAMTiles.clear();
 
         // Reset oams
-        for (int i = 0; i < EntitySampleOamNumArray[EntityGlobalID]; ++i)
+        if (customOAMdata.isEmpty())
         {
-            OAMtoTiles(const_cast<unsigned short *>(EntitiesOamSampleSets[EntityGlobalID]) + i * 3);
+            for (int i = 0; i < EntitySampleOamNumArray[EntityGlobalID]; ++i)
+            {
+                OAMtoTiles(const_cast<unsigned short *>(EntitiesOamSampleSets[EntityGlobalID]) + i * 3);
+            }
+        }
+        else
+        {
+            int oam_num = customOAMdata.size() / 3;
+            for (int i = 0; i < oam_num; ++i)
+            {
+                unsigned short tmp_data[3];
+                tmp_data[0] = customOAMdata[3 * i];
+                tmp_data[1] = customOAMdata[3 * i + 1];
+                tmp_data[2] = customOAMdata[3 * i + 2];
+                OAMtoTiles(tmp_data);
+            }
         }
     }
 

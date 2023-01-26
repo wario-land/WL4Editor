@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QJsonParseError>
 #include <QJsonDocument>
+#include <QJsonArray>
 
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
@@ -84,6 +85,8 @@ namespace SettingsUtils
         QColor extraTerrainIDhintboxcolor = QColor(0xFF, 0, 0xFF, 0xFF);
         QVector<int> extraTerrainIDhintTerrainids = {};
         QStringList extraTerrainIDhintChars = {};
+        std::map<int, QString> bgmNameList;
+        std::map<int, QVector<unsigned short> > cusomOAMdata;
     }
 
     /// <summary>
@@ -237,7 +240,7 @@ namespace SettingsUtils
         if (list.contains(key) && jsonObj[key].isString())
         {
             QString tmpstr = jsonObj[key].toString();
-            if (auto datavec = string2intvec(tmpstr) ; datavec.size())
+            if (auto datavec = string2intvec<int>(tmpstr) ; datavec.size())
             {
                 helper_size = datavec.size();
                 projectSettings::extraEventIDhinteventids = datavec;
@@ -290,7 +293,7 @@ namespace SettingsUtils
         if (list.contains(key) && jsonObj[key].isString())
         {
             QString tmpstr = jsonObj[key].toString();
-            if (auto datavec = string2intvec(tmpstr) ; datavec.size())
+            if (auto datavec = string2intvec<int>(tmpstr) ; datavec.size())
             {
                 helper_size = datavec.size();
                 projectSettings::extraTerrainIDhintTerrainids = datavec;
@@ -329,6 +332,58 @@ namespace SettingsUtils
         }
         json.insert(key, strlist2string(projectSettings::extraTerrainIDhintChars, 1));
 
+        // array stuff
+        key = "new_bgm_name";
+        QJsonObject saving_arr;
+        saving_arr.insert("-1", "invalid exmaple bgm name");
+        if (list.contains(key) && jsonObj[key].isObject())
+        {
+            QJsonObject name_list_obj = jsonObj[key].toObject();
+            if (int name_num = name_list_obj.count())
+            {
+                projectSettings::bgmNameList.clear();
+                QStringList tmpkeys = name_list_obj.keys();
+                for (int i = 0; i < name_num; i++)
+                {
+                    if (int bgm_id = tmpkeys[i].toInt(); (bgm_id > -1) && name_list_obj[tmpkeys[i]].isString())
+                    {
+                        QString bgm_name = name_list_obj[tmpkeys[i]].toString();
+                        projectSettings::bgmNameList[bgm_id] = bgm_name;
+                        saving_arr.insert(QString::number(bgm_id), bgm_name);
+                    }
+                }
+            }
+        }
+        json.insert(key, saving_arr);
+        key = "custom_entity_oam_data";
+        QJsonObject saving_arr_oam;
+        saving_arr_oam.insert("-1 (use prefix 0x if you want to use hex number for entiy's global id)",
+                              "0xE3, 0x11FD, 0x14 (three u16 per oam, you can fetch the data from Oam designer in Sprites Editor)");
+        if (list.contains(key) && jsonObj[key].isObject())
+        {
+            QJsonObject oam_list_obj = jsonObj[key].toObject();
+            if (int oam_data_num = oam_list_obj.count())
+            {
+                projectSettings::cusomOAMdata.clear();
+                QStringList tmpkeys = oam_list_obj.keys();
+                for (int i = 0; i < oam_data_num; i++)
+                {
+                    int global_entity_id = tmpkeys[i].contains("0x") ? tmpkeys[i].toInt(nullptr, 16) : tmpkeys[i].toInt();
+                    if ((global_entity_id > -1) && oam_list_obj[tmpkeys[i]].isString())
+                    {
+                        QString oam_string = oam_list_obj[tmpkeys[i]].toString();
+                        QVector<unsigned short> oamdata = string2intvec<unsigned short>(oam_string);
+                        if (int oam_data_size = oamdata.size(); oam_data_size && ((oam_data_size % 3) == 0))
+                        {
+                            projectSettings::cusomOAMdata[global_entity_id] = oamdata;
+                            saving_arr_oam.insert("0x" + QString::number(global_entity_id, 16).toUpper(), oam_string);
+                        }
+                    }
+                }
+            }
+        }
+        json.insert(key, saving_arr_oam);
+
         // TODO: add more project settings
 
         //--------------------------------------------------------------------------------------------------------------
@@ -353,7 +408,7 @@ namespace SettingsUtils
     QColor string2color(QString data, bool &ok)
     {
         // use RGB888 in both QColor and int
-        QVector<int> intvec = string2intvec(data);
+        QVector<int> intvec = string2intvec<int>(data);
         if (intvec.size() < 3)
         {
             // return non-transparent black if the format is incorrect
@@ -385,19 +440,20 @@ namespace SettingsUtils
     }
 
     /// <summary>
-    /// QString (should always use hex when representing values) to a QVector of int
+    /// QString (should always use hex when representing values) to a QVector of int, or short, or char
     /// </summary>
-    QVector<int> string2intvec(QString &data)
+    template<typename TypeInt> QVector<TypeInt> string2intvec(QString &data)
     {
+        static_assert(std::is_integral<TypeInt>::value, "Incorrect type for string2intvec<T>() !");
         QStringList datalist = data.split(QChar(','));
-        QVector<int> result;
+        QVector<TypeInt> result;
         if (!data.size())
         {
             return result;
         }
         for (auto &substr : datalist)
         {
-            result.append(substr.toInt(nullptr, 16));
+            result.append((TypeInt) substr.toInt(nullptr, 16));
         }
         return result;
     }
@@ -473,5 +529,4 @@ namespace SettingsUtils
         }
         return result;
     }
-
 } // namespace SettingsUtils
