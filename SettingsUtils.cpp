@@ -87,6 +87,7 @@ namespace SettingsUtils
         QStringList extraTerrainIDhintChars = {};
         std::map<int, QString> bgmNameList;
         std::map<int, QVector<unsigned short> > cusomOAMdata;
+        QString customHintRenderJSFilePath = "";
     }
 
     /// <summary>
@@ -331,6 +332,17 @@ namespace SettingsUtils
             }
         }
         json.insert(key, strlist2string(projectSettings::extraTerrainIDhintChars, 1));
+        key = "customHint_renderlogic_JSfilePath";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            QString filepath = jsonObj[key].toString();
+            QFile jsfile(filepath);
+            if (jsfile.exists() && filepath.endsWith(".js"))
+            {
+                projectSettings::customHintRenderJSFilePath = filepath;
+            }
+        }
+        json.insert(key, projectSettings::customHintRenderJSFilePath);
 
         // array stuff
         key = "new_bgm_name";

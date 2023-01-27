@@ -134,6 +134,7 @@ namespace SettingsUtils
         extern QStringList extraTerrainIDhintChars;
         extern std::map<int, QString> bgmNameList;
         extern std::map<int, QVector<unsigned short> > cusomOAMdata;
+        extern QString customHintRenderJSFilePath;
     }
 
     // functions

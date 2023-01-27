@@ -277,6 +277,8 @@ namespace LevelComponents
         bool IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2);
         bool IsNewEntityPositionInsideRoom(int x, int y);
         QPixmap GetLayerPixmap(int layerId, int x, int y, int w, int h);
+        QPixmap GetHintLayerPixmap() {return RenderedLayers[12]->pixmap();}
+        void SetHintLayerPixmap(QPixmap newHintLayerPixmap);
     };
 } // namespace LevelComponents
 

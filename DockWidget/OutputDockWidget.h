@@ -33,6 +33,7 @@ private:
 
     // Qt meta object
     ScriptInterface *interface = nullptr;
+    HintLayer *CurrentRoomHintLayer = nullptr;
     PCG::GFXUtils::TileUtils *tileUtils = nullptr;
 };
 

@@ -17,7 +17,8 @@ OutputDockWidget::OutputDockWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // Initialize jsEngine and use "interface" to call its member functions
+    // Initialize jsEngine
+    // use "WL4EditorInterface" to call its regular member functions
     if (!interface)
     {
         interface = new ScriptInterface();
@@ -25,7 +26,15 @@ OutputDockWidget::OutputDockWidget(QWidget *parent) :
     QJSValue funcInterface = jsEngine.newQObject(interface);
     jsEngine.globalObject().setProperty("WL4EditorInterface", funcInterface);
 
-    // Initialize tileUtils and use "TileUtils" to call its member functions
+    // use "CurrentRoomHintLayer" to manipulate the hint layer
+    if (!CurrentRoomHintLayer)
+    {
+        CurrentRoomHintLayer = new HintLayer();
+    }
+    QJSValue JSObject_hintlayer = jsEngine.newQObject(CurrentRoomHintLayer);
+    jsEngine.globalObject().setProperty("CurrentRoomHintLayer", JSObject_hintlayer);
+
+    // use "TileUtils" to do PCG (procedual contents generation) Tile's graphic job
     if (!tileUtils)
     {
         tileUtils = new PCG::GFXUtils::TileUtils();

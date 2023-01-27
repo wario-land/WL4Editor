@@ -711,6 +711,17 @@ namespace LevelComponents
             {
                 RenderedLayers[12]->setPixmap(extrahintPixmap);
             }
+
+            // render custom hint
+            if (SettingsUtils::projectSettings::customHintRenderJSFilePath.length())
+            {
+                QFile file(SettingsUtils::projectSettings::customHintRenderJSFilePath);
+                if (file.open(QFile::ReadOnly | QFile::Text))
+                {
+                    QString code = QString::fromUtf8(file.readAll());
+                    singleton->GetOutputWidgetPtr()->ExecuteJSScript(code, true);
+                }
+            }
         }
 
             // Fall through to layer enable section
@@ -1631,5 +1642,13 @@ namespace LevelComponents
             return QPixmap();
 
         return RenderedLayers[layerId]->pixmap().copy(x * 16, y * 16, w * 16, h * 16);
+    }
+
+    void Room::SetHintLayerPixmap(QPixmap newHintLayerPixmap)
+    {
+        if (RenderedLayers[12])
+        {
+            RenderedLayers[12]->setPixmap(newHintLayerPixmap);
+        }
     }
 } // namespace LevelComponents
