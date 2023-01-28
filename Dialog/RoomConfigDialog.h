@@ -28,7 +28,7 @@ namespace DialogParams
         int Layer0Height;
         int RoomWidth;
         int RoomHeight;
-        bool Layer2Enable;
+        int Layer2MappingTypeParam;
         int Layer0DataPtr;
         bool BackgroundLayerEnable;
         unsigned char BGLayerScrollFlag;
@@ -47,7 +47,7 @@ namespace DialogParams
                 Layer0Alpha(room->IsLayer0ColorBlendingEnabled()),
                 LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
                 Layer0MappingTypeParam(room->GetLayer0MappingParam()),
-                RoomWidth(room->GetWidth()), RoomHeight(room->GetHeight()), Layer2Enable(room->IsLayer2Enabled()),
+                RoomWidth(room->GetWidth()), RoomHeight(room->GetHeight()), Layer2MappingTypeParam(room->GetLayer2MappingParam()),
                 Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayer(0)->GetDataPtr() : 0),
                 BackgroundLayerEnable(room->IsBGLayerEnabled()), RasterType(room->GetLayerGFXEffect01()),
                 Water(room->GetLayerGFXEffect02()), BGMVolume(room->GetBgmvolume())
@@ -111,6 +111,7 @@ private slots:
     void on_spinBox_BGLayerScrollingFlag_valueChanged(int arg1);
     void on_spinBox_Layer0MappingType_valueChanged(int arg1);
     void on_spinBox_RasterType_valueChanged(int arg1);
+    void on_spinBox_Layer2MappingType_valueChanged(int arg1);
 
 private:
     bool ComboBoxInitialized = false;

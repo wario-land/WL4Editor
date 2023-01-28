@@ -45,7 +45,7 @@
           <x>0</x>
           <y>0</y>
           <width>781</width>
-          <height>711</height>
+          <height>718</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -58,7 +58,7 @@
             <number>6</number>
            </property>
            <property name="bottomMargin">
-            <number>20</number>
+            <number>0</number>
            </property>
            <item>
             <widget class="QLabel" name="tilesetLabel">
@@ -133,7 +133,7 @@
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Layer 0 Mapping Type&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This property is hardly used. It's only used if you're using the Toxic Landfill Tileset with an existing dust foreground.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
-                <string>Layer 0 Mapping Type:</string>
+                <string>Layer 0 Mapping Type (Hex):</string>
                </property>
               </widget>
              </item>
@@ -184,7 +184,7 @@
              <item>
               <widget class="QLabel" name="label_Layer0Width">
                <property name="text">
-                <string>Layer 0 Width:</string>
+                <string>Layer 0 Width (Hex):</string>
                </property>
               </widget>
              </item>
@@ -199,12 +199,15 @@
                <property name="maximum">
                 <number>255</number>
                </property>
+               <property name="displayIntegerBase">
+                <number>16</number>
+               </property>
               </widget>
              </item>
              <item>
               <widget class="QLabel" name="label_Layer0Height">
                <property name="text">
-                <string>Layer 0 Height:</string>
+                <string>Layer 0 Height (Hex):</string>
                </property>
               </widget>
              </item>
@@ -218,6 +221,9 @@
                </property>
                <property name="maximum">
                 <number>255</number>
+               </property>
+               <property name="displayIntegerBase">
+                <number>16</number>
                </property>
               </widget>
              </item>
@@ -244,12 +250,33 @@
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="CheckBox_Layer2Enable">
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Enable Layer 2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Enable layer X to set its mapping type from 0x00 to 0x01.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Layer X can be Layer 0 or Layer 2.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <property name="bottomMargin">
+              <number>0</number>
              </property>
-             <property name="text">
-              <string>Enable Layer 2</string>
+             <item>
+              <widget class="QLabel" name="L2MappingTypeLabel">
+               <property name="text">
+                <string>Layer 2 Mapping Type (Hex):</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_CurLayer2MappingType">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="spinBox_Layer2MappingType">
+             <property name="maximum">
+              <number>31</number>
+             </property>
+             <property name="displayIntegerBase">
+              <number>16</number>
              </property>
             </widget>
            </item>
@@ -274,7 +301,7 @@
              <item>
               <widget class="QLabel" name="roomWidthLabel">
                <property name="text">
-                <string>Room Width:</string>
+                <string>Room Width (Hex):</string>
                </property>
               </widget>
              </item>
@@ -286,12 +313,15 @@
                <property name="maximum">
                 <number>255</number>
                </property>
+               <property name="displayIntegerBase">
+                <number>16</number>
+               </property>
               </widget>
              </item>
              <item>
               <widget class="QLabel" name="roomHeightLabel">
                <property name="text">
-                <string>Room Height:</string>
+                <string>Room Height (Hex):</string>
                </property>
               </widget>
              </item>
@@ -302,6 +332,9 @@
                </property>
                <property name="maximum">
                 <number>255</number>
+               </property>
+               <property name="displayIntegerBase">
+                <number>16</number>
                </property>
               </widget>
              </item>

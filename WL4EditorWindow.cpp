@@ -605,7 +605,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     }
 
     // refresh the Layer 2, 0, 3 instances
-    if (nextroomconfig->Layer2Enable && !currentroomconfig->Layer2Enable)
+    if ((nextroomconfig->Layer2MappingTypeParam > 0xF) && (currentroomconfig->Layer2MappingTypeParam < 0x10))
     {
         currentRoom->GetLayer(2)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
         if(nextroomconfig->LayerData[2]) // recover layer 2 data if needed, don't need to set dirty
@@ -618,7 +618,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             currentRoom->GetLayer(2)->SetLayerData(tmpLayerdata2);
         }
     }
-    else if (currentroomconfig->Layer2Enable && !nextroomconfig->Layer2Enable)
+    else if ((nextroomconfig->Layer2MappingTypeParam > 0xF) && (currentroomconfig->Layer2MappingTypeParam < 0x10))
     {
         // save old layer 2 data if needed
         if(!currentroomconfig->LayerData[2])
@@ -849,7 +849,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetWidth(nextroomconfig->RoomWidth);
     currentRoom->SetLayer0MappingParam(nextroomconfig->Layer0MappingTypeParam);
     currentRoom->SetRenderEffectFlag(nextroomconfig->LayerPriorityAndAlphaAttr);
-    currentRoom->SetLayer2Enabled(nextroomconfig->Layer2Enable);
+    currentRoom->SetLayer2MappingType(nextroomconfig->Layer2MappingTypeParam);
     currentRoom->SetBGLayerEnabled(nextroomconfig->BackgroundLayerEnable);
     currentRoom->SetBGLayerScrollFlag(nextroomconfig->BGLayerScrollFlag);
     currentRoom->SetLayerGFXEffect01(nextroomconfig->RasterType);
