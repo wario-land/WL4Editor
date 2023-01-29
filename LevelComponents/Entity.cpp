@@ -217,6 +217,11 @@ namespace LevelComponents
             has_alternative_oam_data = true;
             ExtractSpritesTiles(SettingsUtils::projectSettings::cusomOAMdata[EntityGlobalID]);
         }
+        else // use default oam data
+        {
+            // when removing custom oam from the json or undo and redo Entity changes, the Entity can render default graphic if needed
+            ExtractSpritesTiles();
+        }
         int maxX = 0x80000000, maxY = 0x80000000;
         foreach (OAMTile *ot, OAMTiles)
         {

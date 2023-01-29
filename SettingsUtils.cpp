@@ -87,6 +87,7 @@ namespace SettingsUtils
         QStringList extraTerrainIDhintChars = {};
         std::map<int, QString> bgmNameList;
         std::map<int, QVector<unsigned short> > cusomOAMdata;
+        QString customHintRenderJSFilePath = "";
     }
 
     /// <summary>
@@ -331,11 +332,22 @@ namespace SettingsUtils
             }
         }
         json.insert(key, strlist2string(projectSettings::extraTerrainIDhintChars, 1));
+        key = "customHint_renderlogic_JSfilePath";
+        if (list.contains(key) && jsonObj[key].isString())
+        {
+            QString filepath = jsonObj[key].toString();
+            QFile jsfile(filepath);
+            if (jsfile.exists() && filepath.endsWith(".js"))
+            {
+                projectSettings::customHintRenderJSFilePath = filepath;
+            }
+        }
+        json.insert(key, projectSettings::customHintRenderJSFilePath);
 
         // array stuff
         key = "new_bgm_name";
         QJsonObject saving_arr;
-        saving_arr.insert("-1", "invalid exmaple bgm name");
+        saving_arr.insert("-1 (decimal only)", "invalid exmaple bgm name");
         if (list.contains(key) && jsonObj[key].isObject())
         {
             QJsonObject name_list_obj = jsonObj[key].toObject();
@@ -357,7 +369,7 @@ namespace SettingsUtils
         json.insert(key, saving_arr);
         key = "custom_entity_oam_data";
         QJsonObject saving_arr_oam;
-        saving_arr_oam.insert("-1 (use prefix 0x if you want to use hex number for entiy's global id)",
+        saving_arr_oam.insert("-1 (use prefix 0x if you want to use hex number for entiy's global id, decimal can works too)",
                               "0xE3, 0x11FD, 0x14 (three u16 per oam, you can fetch the data from Oam designer in Sprites Editor)");
         if (list.contains(key) && jsonObj[key].isObject())
         {
