@@ -203,7 +203,7 @@ namespace LevelComponents
         unsigned char GetBGLayerScrollFlag() { return RoomHeader.Layer3Scrolling; }
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
         bool IsLayer0ColorBlendingEnabled() { return GetLayer0ColorBlending(RoomHeader.RenderEffect); }
-        bool IsLayer2Enabled() { return RoomHeader.Layer2MappingType; }
+        int GetLayer2MappingParam() { return RoomHeader.Layer2MappingType; }
 
         // Setters
         void AddDoor(Door *newdoor);
@@ -251,7 +251,7 @@ namespace LevelComponents
         {
             RoomHeader.Layer0MappingType = layer0MappingTypeParam;
         }
-        void SetLayer2Enabled(bool enability) { RoomHeader.Layer2MappingType = enability ? '\x10' : '\x00'; }
+        void SetLayer2MappingType(int value) { RoomHeader.Layer2MappingType = value; }
         void SetRoomHeaderDataPtr(int pointerId, int dataPtr);
         void SetRenderEffectFlag(int render_effect);
         void SetTileset(Tileset *newtileset, int tilesetID)

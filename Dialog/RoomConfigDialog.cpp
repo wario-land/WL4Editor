@@ -42,7 +42,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->spinBox_Layer0Height->setValue(CurrentRoomParams->Layer0Height);
     ui->SpinBox_RoomWidth->setValue(CurrentRoomParams->RoomWidth);
     ui->SpinBox_RoomHeight->setValue(CurrentRoomParams->RoomHeight);
-    ui->CheckBox_Layer2Enable->setChecked(CurrentRoomParams->Layer2Enable);
+    ui->spinBox_Layer2MappingType->setValue(CurrentRoomParams->Layer2MappingTypeParam);
     ui->CheckBox_BGLayerEnable->setChecked(CurrentRoomParams->BackgroundLayerEnable);
     ui->spinBox_BGLayerScrollingFlag->setValue(CurrentRoomParams->BGLayerScrollFlag);
     ui->spinBox_RasterType->setValue(CurrentRoomParams->RasterType);
@@ -127,7 +127,7 @@ DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
     }
     configParams.Layer0DataPtr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
 
-    configParams.Layer2Enable = ui->CheckBox_Layer2Enable->isChecked();
+    configParams.Layer2MappingTypeParam = ui->spinBox_Layer2MappingType->value();
     configParams.LayerPriorityAndAlphaAttr = ui->ComboBox_LayerPriority->currentIndex() + 4;
     configParams.LayerPriorityAndAlphaAttr += (qMax(ui->ComboBox_AlphaBlendAttribute->currentIndex(), 0) << 2);
     configParams.BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
@@ -617,3 +617,51 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
     // when Layer 0 mnapping type is 0x20, it uses the bg tiles too
     // Initialize the Tileset list which contains map8x8 layer 0
 }
+
+void RoomConfigDialog::on_spinBox_Layer2MappingType_valueChanged(int arg1)
+{
+    switch(arg1)
+    {
+        case 0x00:
+        case 0x01:
+        case 0x02:
+        case 0x03:
+        case 0x04:
+        case 0x05:
+        case 0x06:
+        case 0x07:
+        case 0x08:
+        case 0x09:
+        case 0x0A:
+        case 0x0B:
+        case 0x0C:
+        case 0x0D:
+        case 0x0E:
+        case 0x0F:
+        {
+            ui->label_CurLayer2MappingType->setText("Disabled"); break;
+        }
+        case 0x10:
+        case 0x11:
+        case 0x12:
+//        case 0x13: // we define it below
+        case 0x14:
+        case 0x15:
+        case 0x16:
+        case 0x17:
+        case 0x18:
+        case 0x19:
+        case 0x1A:
+        case 0x1B:
+        case 0x1C:
+        case 0x1D:
+        case 0x1E:
+        case 0x1F:
+        {
+            ui->label_CurLayer2MappingType->setText("Map16");
+            break;
+        }
+        case 0x13: ui->label_CurLayer2MappingType->setText("Map16 & Boss Room Layer 2 X shifting"); break;
+    }
+}
+
