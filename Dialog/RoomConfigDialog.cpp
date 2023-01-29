@@ -415,6 +415,8 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
         ui->label_CurLayer0MappingType->setText("Disabled"); break;
     }
     case 0x10:
+//    case 0x11:
+//    case 0x12:
     case 0x13:
     case 0x14:
     case 0x15:
@@ -437,7 +439,7 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
     case 0x11: ui->label_CurLayer0MappingType->setText("Map16 & The Big Board result Bar control"); break;
     case 0x12: ui->label_CurLayer0MappingType->setText("Map16 & asyn cam-based H-scroll"); break;
     case 0x20:
-    case 0x21:
+//    case 0x21:
     case 0x23:
     case 0x24:
     case 0x25:
@@ -454,6 +456,7 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
     {
         ui->label_CurLayer0MappingType->setText("Tile8x8"); break;
     }
+    case 0x21: ui->label_CurLayer0MappingType->setText("Tile8x8 & Layer 0 temp ASC-BOSS"); break;
     case 0x22: ui->label_CurLayer0MappingType->setText("Tile8x8 & autoscroll"); break;
     }
 
