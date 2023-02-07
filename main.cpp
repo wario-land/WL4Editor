@@ -37,11 +37,9 @@ int main(int argc, char *argv[])
 {
     StaticInitialization_BeforeROMLoading();
 
-    // High DPI support, perhaps won't work in all the OS but better than nothing
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
-    // Disable help button in every Dialog
-    QApplication::setAttribute(Qt::AA_DisableWindowContextHelpButton);
+    // High DPI support in Qt6 will cause problems in position calculation without using devicePixelRatio
+    // use this to deal with the problems
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Floor);
 
     QApplication application(argc, argv);
     SettingsUtils::InitProgramSetupPath(application);

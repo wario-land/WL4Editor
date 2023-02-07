@@ -66,7 +66,7 @@
 - now you can drag and drop gba file to the WL4Editor.exe to open rom.
 - Fix the aggressive tile reduce in Tileset Editor and Graphic Manager cannot reserve the tiles with less noise pixels or with less graphic features. (Issue #391)
 - now the color of door and entity boxes can be changed in project json too.
-- now you can update project settings via  "Reload project setting" menu item.
+- now you can update project settings via "Reload project setting" menu item.
 
 0.14.1:
 (major changes)

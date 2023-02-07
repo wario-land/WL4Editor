@@ -27,7 +27,7 @@ private slots:
 private:
     Ui::PatchEditDialog *ui;
     void InitializeComponents(struct PatchEntryItem patchEntry);
-    QRegExpValidator *addressvalidator;
+    QRegularExpressionValidator *addressvalidator;
     void ParsePatchFile(QString patchfilepath);
 };
 

@@ -7,9 +7,9 @@
 #include "FileIOUtils.h"
 
 static QStringList PatchTypeNameSet;
-static QRegExp hookAddressRegex("^ *(0x)?[a-fA-F0-9]{1,6} *$");
-static QRegExp hookStringRegex("^( *[a-fA-F0-9] *[a-fA-F0-9])*( *[pP])?( *[a-fA-F0-9] *[a-fA-F0-9])* *$");
-static QRegExp descriptionRegex("^[^;]+$");
+static QRegularExpression  hookAddressRegex("^ *(0x)?[a-fA-F0-9]{1,6} *$");
+static QRegularExpression  hookStringRegex("^( *[a-fA-F0-9] *[a-fA-F0-9])*( *[pP])?( *[a-fA-F0-9] *[a-fA-F0-9])* *$");
+static QRegularExpression  descriptionRegex("^[^;]+$");
 
 #define HOOK_ADDR_IDENTIFIER "@HookAddress"
 #define HOOK_STRING_IDENTIFIER "@HookString"
@@ -42,10 +42,10 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     ui->comboBox_PatchType->addItems(PatchTypeNameSet);
 
     // Set Validator for lineEdit_HookAddress
-    ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegExpValidator(hookAddressRegex, this));
+    ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegularExpressionValidator(hookAddressRegex, this));
 
     // Set Validator for lineEdit_HookText
-    ui->lineEdit_HookText->setValidator(addressvalidator = new QRegExpValidator(hookStringRegex, this));
+    ui->lineEdit_HookText->setValidator(addressvalidator = new QRegularExpressionValidator(hookStringRegex, this));
 
     // Initialize the components with the patch entry item
     InitializeComponents(patchEntry);

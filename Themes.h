@@ -1,7 +1,6 @@
 #ifndef THEMES_H
 #define THEMES_H
 
-#include "phantomstyle.h"
 #include <QMainWindow>
 
 enum ThemeColorType : int

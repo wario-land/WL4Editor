@@ -20,7 +20,7 @@ namespace FileIOUtils
     QImage RenderBGColor(QImage image, QWidget *parent);
 
     // patch parser stuff
-    QString GetParamFromSourceFile(QString filePath, QString identifier, QRegExp validator);
+    QString GetParamFromSourceFile(QString filePath, QString identifier, QRegularExpression validator);
     unsigned int FindEntryFunctionAddress(QString txtfilePath, QString entryFunctionSymbol = "");
 
     // helper functions

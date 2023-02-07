@@ -1,5 +1,6 @@
 ﻿#include "MainGraphicsView.h"
 #include "WL4EditorWindow.h"
+#include "Dialog/DoorConfigDialog.h"
 #include "Operation.h"
 
 #include <QMessageBox>
