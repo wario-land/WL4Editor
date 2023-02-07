@@ -32,6 +32,7 @@ jobs:
         with:
           version: 6.4.2
           modules: qt5compat
+          tools: tools_ifw tools_qtcreator,qt.tools.qtcreator
 
       - name: Setup MSVC environment
         if: startsWith(matrix.os, 'windows')
@@ -48,7 +49,7 @@ jobs:
       - name: Build WL4Editor on *nix
         if: (!startsWith(matrix.os, 'windows'))
         run: |
-          ls $Qt6_Dir/lib/cmake
+          ls "$Qt6_DIR/lib/cmake"
           qmake WL4Editor.pro
           make
         shell: bash
