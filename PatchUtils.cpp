@@ -748,27 +748,29 @@ namespace PatchUtils
 
                     // We must get the size of the compiled binary and check it against the space we were offered
                     // To see if the data will fit, we must include the alignment offset and the size of the RATS header
-                    struct ROMUtils::SaveData saveData = CreatePatchSaveChunk(*patchAllocIter);
-                    if(saveData.size + alignOffset + 12 > freeSpace.size)
                     {
-                        delete[] saveData.data;
-                        // this prevents re-compiling while the callback iterates over all free space regions smaller than what was needed here
-                        // we do not include alignment offset because the alignment offset is different for every free space region
-                        neededSizeMap[patchAllocIter->HookAddress] = saveData.size + 12;
-                        return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
-                    }
+                        struct ROMUtils::SaveData saveData = CreatePatchSaveChunk(*patchAllocIter);
+                        if(saveData.size + alignOffset + 12 > freeSpace.size)
+                        {
+                            delete[] saveData.data;
+                            // this prevents re-compiling while the callback iterates over all free space regions smaller than what was needed here
+                            // we do not include alignment offset because the alignment offset is different for every free space region
+                            neededSizeMap[patchAllocIter->HookAddress] = saveData.size + 12;
+                            return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                        }
 
-                    // Allocation success
-                    *sd = saveData;
+                        // Allocation success
+                        *sd = saveData;
 
-                    // Advance patch iterator to next non-hex-edit patch
-                    patchAllocIter++;
-                    while(patchAllocIter != entries.end() && !patchAllocIter->FileName.length())
-                    {
+                        // Advance patch iterator to next non-hex-edit patch
                         patchAllocIter++;
-                    }
+                        while(patchAllocIter != entries.end() && !patchAllocIter->FileName.length())
+                        {
+                            patchAllocIter++;
+                        }
 
-                    SaveDataList.push_back(saveData.data);
+                        SaveDataList.push_back(saveData.data);
+                    }
                     return ROMUtils::ChunkAllocationStatus::Success;
                 }
                 else
