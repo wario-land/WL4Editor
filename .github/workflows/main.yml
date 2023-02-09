@@ -30,7 +30,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
-          version: 5.15.2
+          version: 6.4.2
 
       - name: Setup MSVC environment
         if: startsWith(matrix.os, 'windows')
@@ -39,7 +39,7 @@ jobs:
       - name: Build WL4Editor on Windows
         if: startsWith(matrix.os, 'windows')
         run: |
-          dir %Qt5_Dir%/lib/cmake
+          dir %Qt6_Dir%/lib/cmake
           qmake WL4Editor.pro
           nmake debug
         shell: cmd
@@ -47,7 +47,7 @@ jobs:
       - name: Build WL4Editor on *nix
         if: (!startsWith(matrix.os, 'windows'))
         run: |
-          ls $Qt5_Dir/lib/cmake
+          ls "$Qt6_DIR/lib/cmake"
           qmake WL4Editor.pro
           make
         shell: bash

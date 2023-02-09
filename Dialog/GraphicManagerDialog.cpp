@@ -1408,7 +1408,7 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
     {
         // clean up list and delete entry and reset tmpEntry
         int lastid = graphicEntries.size() - 1;
-        qSort(selectedRows.begin(), selectedRows.end(), qGreater<QModelIndex>()); // so that rows are removed from highest index
+        std::sort(selectedRows.begin(), selectedRows.end(), [] ( auto &a, auto &b) { return a.row() > b.row(); }); // so that rows are removed from highest index
         foreach (QModelIndex index, selectedRows)
         {
             int id = index.row();

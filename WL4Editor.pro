@@ -11,8 +11,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = WL4Editor
 TEMPLATE = app
 
-include(./ThirdParty/phantomstyle/src/phantom/phantom.pri)
-
 RC_ICONS = images/icon.ico
 
 # The following define makes your compiler emit warnings if you use
@@ -26,9 +24,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++17 strict_c++
+CONFIG += c++2a strict_c++
 
+# idk why this part works, but it works
+# msvc compiler can get "-fpermissive" without showing error
+# while mingw compiler will showing error when getting "/Zc:__cplusplus" and "/permissive-" required by Qt6
+# things for mingw
 QMAKE_CXXFLAGS = -fpermissive
+# things for msvc
+msvc* {
+QMAKE_CXXFLAGS += /Zc:__cplusplus
+QMAKE_CXXFLAGS += /permissive-
+}
 
 SOURCES += \
     Dialog/AnimatedTileGroupEditorDialog.cpp \

@@ -1,8 +1,10 @@
 ﻿#include "LevelConfigDialog.h"
 #include "ui_LevelConfigDialog.h"
 
+#include <QRegularExpressionValidator>
+
 #include "LevelComponents/Level.h"
-QRegExp TimerRegx("^[0-9]:[0-5][0-9]$");
+QRegularExpression TimerRegx("^[0-9]:[0-5][0-9]$");
 
 /// <summary>
 /// Enable or disable the OK button depending on the validity of the input fields.
@@ -70,11 +72,11 @@ LevelConfigDialog::LevelConfigDialog(QWidget *parent) : QDialog(parent), ui(new 
     ui->LevelName_TextBox->setAttribute(Qt::WA_InputMethodEnabled, true);
     ui->LevelNameJ_TextBox->setAttribute(Qt::WA_InputMethodEnabled, true);
     ui->HModeTimer_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
-    ui->HModeTimer_TextBox->setValidator(new QRegExpValidator(TimerRegx, ui->HModeTimer_TextBox));
+    ui->HModeTimer_TextBox->setValidator(new QRegularExpressionValidator(TimerRegx, ui->HModeTimer_TextBox));
     ui->NModeTimer_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
-    ui->NModeTimer_TextBox->setValidator(new QRegExpValidator(TimerRegx, ui->NModeTimer_TextBox));
+    ui->NModeTimer_TextBox->setValidator(new QRegularExpressionValidator(TimerRegx, ui->NModeTimer_TextBox));
     ui->SHModeTimer_TextBox->setAttribute(Qt::WA_InputMethodEnabled, false);
-    ui->SHModeTimer_TextBox->setValidator(new QRegExpValidator(TimerRegx, ui->SHModeTimer_TextBox));
+    ui->SHModeTimer_TextBox->setValidator(new QRegularExpressionValidator(TimerRegx, ui->SHModeTimer_TextBox));
 }
 
 /// <summary>

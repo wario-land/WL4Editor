@@ -623,7 +623,7 @@ unsigned char *FileIOUtils::find_less_feature_buff(unsigned char *_Buf1, unsigne
 /// <return>
 /// the QString result of the param.
 /// </return>
-QString FileIOUtils::GetParamFromSourceFile(QString filePath, QString identifier, QRegExp validator)
+QString FileIOUtils::GetParamFromSourceFile(QString filePath, QString identifier, QRegularExpression validator)
 {
     QFile file(filePath);
     file.open(QIODevice::ReadOnly);
@@ -633,7 +633,7 @@ QString FileIOUtils::GetParamFromSourceFile(QString filePath, QString identifier
         line = in.readLine();
         if (line.contains(identifier, Qt::CaseSensitive)) {
             QString contents = line.mid(line.indexOf(identifier) + identifier.length());
-            return validator.indexIn(contents) ? "" : contents.trimmed();
+            return validator.match(contents).captured().trimmed();
         }
     } while (!line.isNull());
     return "";
