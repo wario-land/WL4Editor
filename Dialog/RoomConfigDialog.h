@@ -24,16 +24,17 @@ namespace DialogParams
         bool Layer0Alpha;
         int LayerPriorityAndAlphaAttr;
         int Layer0MappingTypeParam;
+        int Layer0DataPtr;
         int Layer0Width;
         int Layer0Height;
         int RoomWidth;
         int RoomHeight;
         int Layer2MappingTypeParam;
-        int Layer0DataPtr;
+
         bool BackgroundLayerEnable;
         unsigned char BGLayerScrollFlag;
         int BackgroundLayerDataPtr;
-        unsigned short *LayerData[3]; //only use it when room & layer0 size change, and layer 0 and 2, enability changes or mapping type changes
+        unsigned short *LayerData[3]; //always copy the layerdata, don't pass the pointer directly
         unsigned char RasterType;
         unsigned char Water;
         unsigned short BGMVolume;
@@ -47,8 +48,8 @@ namespace DialogParams
                 Layer0Alpha(room->IsLayer0ColorBlendingEnabled()),
                 LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
                 Layer0MappingTypeParam(room->GetLayer0MappingParam()),
-                RoomWidth(room->GetWidth()), RoomHeight(room->GetHeight()), Layer2MappingTypeParam(room->GetLayer2MappingParam()),
                 Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayer(0)->GetDataPtr() : 0),
+                RoomWidth(room->GetWidth()), RoomHeight(room->GetHeight()), Layer2MappingTypeParam(room->GetLayer2MappingParam()),
                 BackgroundLayerEnable(room->IsBGLayerEnabled()), RasterType(room->GetLayerGFXEffect01()),
                 Water(room->GetLayerGFXEffect02()), BGMVolume(room->GetBgmvolume())
         {
@@ -57,13 +58,14 @@ namespace DialogParams
             } else {
                 Layer0Width = 0; Layer0Height = 0;
             }
-            for (int i = 0; i < 3; i++)
-            {
-                // it is no needed to copy from other.
-                LayerData[i] = nullptr;
+            for (int i = 0; i < 3; i++) {
+                if (room->GetLayer(i)->GetMappingType() == LevelComponents::LayerMap16) {
+                    LayerData[i] = room->GetLayer(i)->CreateLayerDataCopy();
+                } else {
+                    LayerData[i] = nullptr;
+                }
             }
-            if (BackgroundLayerEnable)
-            {
+            if (BackgroundLayerEnable) {
                 BackgroundLayerDataPtr = room->GetLayer(3)->GetDataPtr();
             } else {
                 BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
@@ -95,7 +97,7 @@ public:
     explicit RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigParams *CurrentRoomParams);
     ~RoomConfigDialog();
     static void StaticComboBoxesInitialization();
-    DialogParams::RoomConfigParams GetConfigParams();
+    DialogParams::RoomConfigParams *GetConfigParams(DialogParams::RoomConfigParams *prevRoomParams);
 
 private slots:
     void on_CheckBox_Layer0Alpha_stateChanged(int state);

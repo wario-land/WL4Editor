@@ -36,6 +36,13 @@ namespace LevelComponents
         int GetLayerHeight() { return Height; }
         enum LayerMappingType GetMappingType() { return MappingType; }
         unsigned short *GetLayerData() { return LayerData; }
+        unsigned short *CreateLayerDataCopy()
+        {
+            if (MappingType != LayerMap16) return nullptr;
+            unsigned short *datacopy = new unsigned short[Width * Height];
+            memcpy(datacopy, LayerData, 2 * Width * Height);
+            return datacopy;
+        }
         void SetLayerData(unsigned short *ptr) { LayerData = ptr; }
         void SetTileData(unsigned short id, unsigned char x, unsigned char y)
         {
@@ -54,8 +61,29 @@ namespace LevelComponents
         std::vector<Tile *> GetTiles() { return tiles; }
         bool IsEnabled() { return Enabled; }
         void SetDisabled();
-        void CreateNewLayer_type0x10(int layerWidth, int layerHeight);
-        void ChangeDimensions(int newWidth, int newHeight);
+        void SetWidthHeightData(int layerWidth, int layerHeight, unsigned short *data)
+        {
+            if (layerWidth < 1 || layerHeight < 1) return;
+            SetDisabled();
+            MappingType = LayerMap16;
+            Enabled = true;
+            Width = layerWidth; Height = layerHeight;
+            LayerData = new unsigned short[Width * Height];
+            if (data != nullptr)
+            {
+                for (int i = 0; i < (Width * Height); i++)
+                {
+                    LayerData[i] = data[i];
+                }
+            }
+            else
+            {
+                for (int i = 0; i < (Width * Height); i++)
+                {
+                    LayerData[i] = 0x0000;
+                }
+            }
+        }
         bool IsDirty() { return dirty; }
         void SetDirty(bool _dirty) { dirty = _dirty; }
         unsigned char *GetCompressedLayerData(unsigned int *dataSize);
