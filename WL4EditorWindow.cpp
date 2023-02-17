@@ -2256,6 +2256,7 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
                                                     CurrentLevel->GetLevelID(),
                                                     GetCurrentRoom()->GetTilesetID(),
                                                     entitysetId));
+    LevelComponents::Room *newRoom = CurrentLevel->GetRooms()[newRoomId];
 
     // Add one Door to the new Room as well as spriteset settings
     {
@@ -2277,6 +2278,12 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 
     // Reset LevelHeader param
     CurrentLevel->GetLevelHeader()->NumOfMap++;
+
+    // set dirty
+    SetUnsavedChanges(true);
+    newRoom->SetEntityListDirty(0, true);
+    newRoom->SetEntityListDirty(1, true);
+    newRoom->SetEntityListDirty(2, true);
 
     // UI updates
     SetCurrentRoomId(newRoomId);
