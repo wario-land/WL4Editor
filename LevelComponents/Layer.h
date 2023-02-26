@@ -71,17 +71,11 @@ namespace LevelComponents
             LayerData = new unsigned short[Width * Height];
             if (data != nullptr)
             {
-                for (int i = 0; i < (Width * Height); i++)
-                {
-                    LayerData[i] = data[i];
-                }
+                memcpy(LayerData, data, 2 * Width * Height);
             }
             else
             {
-                for (int i = 0; i < (Width * Height); i++)
-                {
-                    LayerData[i] = 0x0000;
-                }
+                memset(LayerData, 0, 2 * Width * Height);
             }
         }
         bool IsDirty() { return dirty; }

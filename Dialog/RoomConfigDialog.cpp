@@ -26,10 +26,7 @@ static unsigned short *ChangeLayerDimensions(int newWidth, int newHeight, int ol
     unsigned short defaultValue = 0x0000;
 
     // init
-    for (int i = 0; i < newWidth * newHeight; ++i)
-    {
-        tmpLayerData[i] = defaultValue;
-    }
+    memset(tmpLayerData, defaultValue, 2 * newWidth * newHeight);
 
     // copy old data
     if (oldWidth > 0 && oldHeight > 0)
