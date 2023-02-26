@@ -153,6 +153,7 @@ namespace LevelComponents
 
     public:
         // Object construction
+        Room(unsigned char _RoomID, unsigned int _LevelID, unsigned char _tilesetId, unsigned char _entitysetId);
         Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID);
         Room(Room *room);
         ~Room();

@@ -604,120 +604,47 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         Tile16SelecterWidget->SetTileset(nextroomconfig->CurrentTilesetIndex);
     }
 
-    // refresh the Layer 2, 0, 3 instances
-    if ((nextroomconfig->Layer2MappingTypeParam > 0xF) && (currentroomconfig->Layer2MappingTypeParam < 0x10))
+    // update the Layer 0. 1. 2, 3 instances
+    // Layer 0
+    if (nextroomconfig->Layer0MappingTypeParam > 0xF && nextroomconfig->Layer0MappingTypeParam < 0x20)
     {
-        currentRoom->GetLayer(2)->CreateNewLayer_type0x10(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
-        if(nextroomconfig->LayerData[2]) // recover layer 2 data if needed, don't need to set dirty
-        {
-            // replace layer data
-            delete[] currentRoom->GetLayer(2)->GetLayerData();
-            size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
-            unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
-            memcpy(tmpLayerdata2, nextroomconfig->LayerData[2], datasize2);
-            currentRoom->GetLayer(2)->SetLayerData(tmpLayerdata2);
-        }
+        currentRoom->GetLayer(0)->SetWidthHeightData(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height, nextroomconfig->LayerData[0]);
     }
-    else if ((nextroomconfig->Layer2MappingTypeParam > 0xF) && (currentroomconfig->Layer2MappingTypeParam < 0x10))
+    else if (nextroomconfig->Layer0MappingTypeParam < 0x10)
     {
-        // save old layer 2 data if needed
-        if(!currentroomconfig->LayerData[2])
-        {
-            // save Layer data to operation history
-            size_t datasize2 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
-            unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
-            memcpy(tmpLayerdata2, currentRoom->GetLayer(2)->GetLayerData(), datasize2);
-            currentroomconfig->LayerData[2] = tmpLayerdata2;
-        }
-        currentRoom->GetLayer(2)->SetDisabled();
+        currentRoom->GetLayer(0)->SetDisabled();
     }
-
-    // Need to change layer 0 data when Layer 0 size changed, which contains the cases of mapping type changes of layer 0
-    if (nextroomconfig->Layer0Width != currentroomconfig->Layer0Width ||
-            nextroomconfig->Layer0Height != currentroomconfig->Layer0Height)
-    {
-        if ((currentroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16 && !nextroomconfig->LayerData[0] && !currentroomconfig->LayerData[0])
-        { // only run this part when creating new operation, so undo does not run this part of code
-            // save previous Layer data
-            size_t datasize1 = 0;
-            datasize1 = 2 * currentroomconfig->Layer0Width * currentroomconfig->Layer0Height;
-            unsigned short *tmpLayerdata1 = new unsigned short[datasize1 >> 1];
-            memcpy(tmpLayerdata1, currentRoom->GetLayer(0)->GetLayerData(), datasize1);
-            currentroomconfig->LayerData[0] = tmpLayerdata1;
-
-            if ((nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
-            {
-                // reset Layer size
-                size_t datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
-                currentRoom->GetLayer(0)->ChangeDimensions(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
-
-                // save result Layer data
-                unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
-                memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
-                nextroomconfig->LayerData[0] = tmpLayerdata2;
-            }
-        }
-        else if((currentroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerMap16 &&
-                (nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
-        {
-            currentRoom->GetLayer(0)->CreateNewLayer_type0x10(nextroomconfig->Layer0Width, nextroomconfig->Layer0Height);
-
-            if(!nextroomconfig->LayerData[0]) // create new layer 0
-            {
-                // save Layer data to operation history
-                size_t datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
-                unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
-                memcpy(tmpLayerdata2, currentRoom->GetLayer(0)->GetLayerData(), datasize2);
-                nextroomconfig->LayerData[0] = tmpLayerdata2;
-            }
-            else // recover layer 0 data, don't need to set dirty
-            {
-                // replace layer data
-                delete[] currentRoom->GetLayer(0)->GetLayerData();
-                size_t datasize2 = 2 * nextroomconfig->Layer0Width * nextroomconfig->Layer0Height;
-                unsigned short *tmpLayerdata2 = new unsigned short[datasize2 >> 1];
-                memcpy(tmpLayerdata2, nextroomconfig->LayerData[0], datasize2);
-                currentRoom->GetLayer(0)->SetLayerData(tmpLayerdata2);
-            }
-        }
-        else
-        {
-            currentroomconfig->LayerData[0] = nullptr;
-            nextroomconfig->LayerData[0] = nullptr;
-        }
-    }
-
-    // Deal with the cases that the new room use Tile8x8 layer 0
-    if ((currentroomconfig->Layer0MappingTypeParam & 0x30) != LevelComponents::LayerTile8x8 &&
-            (nextroomconfig->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerTile8x8)
+    else // if (currentroomconfig->Layer0MappingTypeParam > 0x1F)
     {
         LevelComponents::Layer *currentLayer0 = currentRoom->GetLayer(0);
         delete currentLayer0;
         currentLayer0 = new LevelComponents::Layer(nextroomconfig->Layer0DataPtr, LevelComponents::LayerTile8x8);
         currentRoom->SetLayer(0, currentLayer0);
     }
-
-    // Layer 0 is disabled (or customized) in the new settings
-    if ((currentroomconfig->Layer0MappingTypeParam >= 0x10) && (nextroomconfig->Layer0MappingTypeParam < 0x10))
+    // Layer 1
+    currentRoom->GetLayer(1)->SetWidthHeightData(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight, nextroomconfig->LayerData[1]);
+    // Layer 2
+    if (nextroomconfig->Layer2MappingTypeParam > 0xF)
     {
-        currentRoom->GetLayer(0)->SetDisabled();
+        currentRoom->GetLayer(2)->SetWidthHeightData(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight, nextroomconfig->LayerData[2]);
+    } else // if (currentroomconfig->Layer2MappingTypeParam < 0x10)
+    {
+        currentRoom->GetLayer(2)->SetDisabled();
     }
-
-    // Create new Layer 3
+    // Layer 3
     if (nextroomconfig->BackgroundLayerEnable)
     {
         LevelComponents::Layer *currentLayer3 = currentRoom->GetLayer(3);
         delete currentLayer3;
-        currentLayer3 =
-            new LevelComponents::Layer(nextroomconfig->BackgroundLayerDataPtr, LevelComponents::LayerTile8x8);
+        currentLayer3 = new LevelComponents::Layer(nextroomconfig->BackgroundLayerDataPtr, LevelComponents::LayerTile8x8);
         currentRoom->SetLayer(3, currentLayer3);
     }
-    else if (currentroomconfig->BackgroundLayerEnable && !nextroomconfig->BackgroundLayerEnable)
+    else if (!nextroomconfig->BackgroundLayerEnable)
     {
         currentRoom->GetLayer(3)->SetDisabled();
     }
 
-    // Need to change layers data and modify the inside doors, entities, camera boxes when Room size changed
+    // Need to modify the inside doors, entities, camera boxes when Room size changed
     if (nextroomconfig->RoomWidth != currentroomconfig->RoomWidth ||
             nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
     {
@@ -820,28 +747,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
             }
         }
         delete[] deleteLimitatorIdlist;
-
-        // Reset Layers
-        for (int i = 1; i < 3; ++i)
-        {
-            if ((currentRoom->GetLayer(i)->GetMappingType() & 0x30) == LevelComponents::LayerMap16)
-            {
-                // save previous Layer data
-                size_t datasize1 = 2 * currentroomconfig->RoomWidth * currentroomconfig->RoomHeight;
-                unsigned short *tmpLayerdata1 = new unsigned short[datasize1];
-                memcpy(tmpLayerdata1, currentRoom->GetLayer(i)->GetLayerData(), datasize1);
-                currentroomconfig->LayerData[i] = tmpLayerdata1;
-
-                // reset Layer size
-                currentRoom->GetLayer(i)->ChangeDimensions(nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
-
-                // save result Layer data
-                size_t datasize2 = 2 * nextroomconfig->RoomWidth * nextroomconfig->RoomHeight;
-                unsigned short *tmpLayerdata2 = new unsigned short[datasize2];
-                memcpy(tmpLayerdata2, currentRoom->GetLayer(i)->GetLayerData(), datasize2);
-                nextroomconfig->LayerData[i] = tmpLayerdata2;
-            }
-        }
     }
 
     // reset all the Parameters in Room class, except new layer data pointers, generate them on saving
@@ -1772,7 +1677,7 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
         operation->type = ChangeRoomConfigOperation;
         operation->roomConfigChange = true;
         operation->lastRoomConfigParams = new DialogParams::RoomConfigParams(*_currentRoomConfigParams);
-        operation->newRoomConfigParams = new DialogParams::RoomConfigParams(dialog.GetConfigParams());
+        operation->newRoomConfigParams = dialog.GetConfigParams(_currentRoomConfigParams);
         ExecuteOperation(operation); // Set UnsavedChanges bool inside
     }
 }
@@ -2345,19 +2250,12 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
         OutputWidget->PrintString(tr("Cannot add another Room to the current Level!"));
         return;
     }
-    int offset = WL4Constants::LevelHeaderIndexTable + selectedLevel._PassageIndex * 24 + selectedLevel._LevelIndex * 4;
-    int levelHeaderIndex = ROMUtils::IntFromData(offset);
-    int levelHeaderPointer = WL4Constants::LevelHeaderTable + levelHeaderIndex * 12;
-    int roomCount = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderPointer + 1];
-    unsigned int currentroomid = ui->spinBox_RoomID->value();
-    if (roomCount <= static_cast<int>(currentroomid))
-    {
-        OutputWidget->PrintString(tr("Cannot create room, current Room has not been saved to the ROM yet!"));
-        return;
-    }
 
-    int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + CurrentLevel->GetLevelID() * 4);
-    CurrentLevel->AddRoom(new LevelComponents::Room(roomTableAddress + currentroomid * 0x2C, newRoomId, CurrentLevel->GetLevelID()));
+    int entitysetId = GetCurrentRoom()->GetCurrentEntitySetID();
+    CurrentLevel->AddRoom(new LevelComponents::Room(newRoomId,
+                                                    CurrentLevel->GetLevelID(),
+                                                    GetCurrentRoom()->GetTilesetID(),
+                                                    entitysetId));
     LevelComponents::Room *newRoom = CurrentLevel->GetRooms()[newRoomId];
 
     // Add one Door to the new Room as well as spriteset settings
@@ -2367,53 +2265,31 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
         memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
 
         // Initialize the fields
-        newDoorEntry.DoorTypeByte = (unsigned char) 2;
-        newDoorEntry.EntitySetID = (unsigned char) 1;
+        newDoorEntry.EntitySetID = entitysetId;
         newDoorEntry.RoomID = (unsigned char) newRoomId;
         newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
         LevelComponents::Door *newDoor =
             new LevelComponents::Door(newDoorEntry, (unsigned char) newRoomId, CurrentLevel->GetDoors().size());
-        int entitysetId = CurrentLevel->GetRooms()[currentroomid]->GetCurrentEntitySetID();
-        newDoor->SetEntitySetID(entitysetId);
         newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
 
-        // Add the new door to the Level object and re-render the screen
+        // Add the new door to the Level object
         CurrentLevel->AddDoor(newDoor);
-
-        // Set Current Entity list
-        newRoom->SetCurrentEntitySet(entitysetId);
     }
 
     // Reset LevelHeader param
     CurrentLevel->GetLevelHeader()->NumOfMap++;
 
-    // Reset pointers in RoomHeader to avoid save chunk invalidation corruption
-    // for regular layer chunk invalidation,
-    // the editor should check the RoomHeader instance from the Room instance to see if old layer data need to be invalidated.
-    // the RoomHeader should not be read as ref when creating layer chunks since new Room does not have RoomHeader in the ROM.
-    // those new mapping type 0x20 layer should save their layer pointer inside layer instance
-    QVector<int> offsetlist;
-    if(!(newRoom->GetLayer(0)->GetMappingType() & 0x20))
-    {
-        offsetlist << 0;
-    }
-    offsetlist << 1 << 2 << 5 << 6 << 7;
-    for(auto& _offset: offsetlist)
-    {
-        newRoom->SetRoomHeaderDataPtr(_offset, 0);
-    }
-    for(int i = offsetlist[0]; i < 3; i++)
-    {
-        newRoom->GetLayer(i)->SetDataPtr(0);
-    }
-    newRoom->SetCameraControlType(LevelComponents::__CameraControlType::NoLimit);
+    // set dirty
+    SetUnsavedChanges(true);
+    newRoom->SetEntityListDirty(0, true);
+    newRoom->SetEntityListDirty(1, true);
+    newRoom->SetEntityListDirty(2, true);
 
     // UI updates
     SetCurrentRoomId(newRoomId);
-    OutputWidget->PrintString(QString(tr("Created a new blank room")) + " (# 0x" + QString::number(newRoomId, 16) + ") " + tr("using the current room's data saved in the ROM."));
-
-    // Clear everything in the new room
-    ClearEverythingInRoom(true);
+    OutputWidget->PrintString(QString(tr("Created a new blank room")) +
+                              " (# 0x" + QString::number(newRoomId, 16) + ") " +
+                              tr("successfully using tileset and entityset from the current room."));
 }
 
 /// <summary>

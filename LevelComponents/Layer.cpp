@@ -285,69 +285,6 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Use this function to take the place of one existing layer in a room.
-    /// </summary>
-    /// <param name="layerWidth">
-    /// New layer width.
-    /// </param>
-    /// <param name="layerHeight">
-    /// New layer height.
-    /// </param>
-    void Layer::CreateNewLayer_type0x10(int layerWidth, int layerHeight)
-    {
-        Width = layerWidth;
-        Height = layerHeight;
-        dirty = Enabled = true;
-        MappingType = LayerMap16;
-        if (LayerData)
-        {
-            delete[] LayerData;
-        }
-        LayerData = new unsigned short[layerWidth * layerHeight];
-        memset(LayerData, 0, 2 * layerWidth * layerHeight);
-    }
-
-    /// <summary>
-    /// Change the size of the Layer.
-    /// </summary>
-    /// <remarks>
-    /// This function will initialize new tiles to 0x40
-    /// </remarks>
-    /// <param name="newWidth">
-    /// New layer width.
-    /// </param>
-    /// <param name="newHeight">
-    /// New layer height.
-    /// </param>
-    void Layer::ChangeDimensions(int newWidth, int newHeight)
-    {
-        unsigned short *tmpLayerData = new unsigned short[newWidth * newHeight];
-        int boundX = qMin(Width, newWidth), boundY = qMin(Height, newHeight);
-        unsigned short defaultValue = 0x0000;
-
-        // init
-        for (int i = 0; i < newWidth * newHeight; ++i)
-        {
-            tmpLayerData[i] = defaultValue;
-        }
-
-        // copy old data
-        for (int i = 0; i < boundY; ++i)
-        {
-            for (int j = 0; j < boundX; ++j)
-            {
-                tmpLayerData[i * newWidth + j] = LayerData[i * Width + j];
-            }
-        }
-
-        Width = newWidth;
-        Height = newHeight;
-        delete LayerData;
-        LayerData = tmpLayerData;
-        dirty = true;
-    }
-
-    /// <summary>
     /// Create and returned compressed layer data (on the heap)
     /// </summary>
     /// <param name="dataSize">

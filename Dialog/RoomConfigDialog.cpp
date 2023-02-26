@@ -16,6 +16,32 @@ constexpr unsigned int RoomConfigDialog::VanillaTilesetBGTilesDataAddr[0x5C];
 static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet;
 static std::vector<int> BGLayerdataPtrs;
 
+// helper function
+static unsigned short *ChangeLayerDimensions(int newWidth, int newHeight, int oldWidth, int oldHeight, unsigned short *oldData)
+{
+    if ((newWidth < 1 || newHeight < 1) || (oldData == nullptr)) return nullptr;
+
+    unsigned short *tmpLayerData = new unsigned short[newWidth * newHeight];
+    int boundX = qMin(oldWidth, newWidth), boundY = qMin(oldHeight, newHeight);
+    unsigned short defaultValue = 0x0000;
+
+    // init
+    memset(tmpLayerData, defaultValue, 2 * newWidth * newHeight);
+
+    // copy old data
+    if (oldWidth > 0 && oldHeight > 0)
+    {
+        for (int i = 0; i < boundY; ++i)
+        {
+            for (int j = 0; j < boundX; ++j)
+            {
+                tmpLayerData[i * newWidth + j] = oldData[i * oldWidth + j];
+            }
+        }
+    }
+    return tmpLayerData;
+}
+
 /// <summary>
 /// Construct the instance of the RoomConfigDialog.
 /// </summary>
@@ -109,42 +135,70 @@ RoomConfigDialog::~RoomConfigDialog() { delete ui; }
 /// <summary>
 /// Get the selected config parameters based on the UI selections.
 /// </summary>
+/// <param name="prevRoomParams">
+/// Use the prevRoomParams to config layerdata in the new configParams.
+/// </param>
 /// <returns>
 /// A RoomConfigParams struct containing the selected parameters from the dialog.
 /// </returns>
-DialogParams::RoomConfigParams RoomConfigDialog::GetConfigParams()
+DialogParams::RoomConfigParams *RoomConfigDialog::GetConfigParams(DialogParams::RoomConfigParams *prevRoomParams)
 {
-    DialogParams::RoomConfigParams configParams;
+    DialogParams::RoomConfigParams *configParams = new DialogParams::RoomConfigParams();
 
     // Get all the Room Configuration data
-    configParams.CurrentTilesetIndex = ui->ComboBox_TilesetID->currentIndex();
-    configParams.Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();
-    configParams.Layer0MappingTypeParam = ui->spinBox_Layer0MappingType->value();
-    if((configParams.Layer0MappingTypeParam & 0x10) == LevelComponents::LayerMap16)
+    configParams->CurrentTilesetIndex = ui->ComboBox_TilesetID->currentIndex();
+    configParams->Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();
+    configParams->Layer0MappingTypeParam = ui->spinBox_Layer0MappingType->value();
+    if((configParams->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
     {
-        configParams.Layer0Width = ui->spinBox_Layer0Width->value();
-        configParams.Layer0Height = ui->spinBox_Layer0Height->value();
+        configParams->Layer0Width = ui->spinBox_Layer0Width->value();
+        configParams->Layer0Height = ui->spinBox_Layer0Height->value();
+        configParams->Layer0DataPtr = 0;
     }
-    configParams.Layer0DataPtr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
-
-    configParams.Layer2MappingTypeParam = ui->spinBox_Layer2MappingType->value();
-    configParams.LayerPriorityAndAlphaAttr = ui->ComboBox_LayerPriority->currentIndex() + 4;
-    configParams.LayerPriorityAndAlphaAttr += (qMax(ui->ComboBox_AlphaBlendAttribute->currentIndex(), 0) << 2);
-    configParams.BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
-    configParams.BGLayerScrollFlag = ui->spinBox_BGLayerScrollingFlag->value();
-    if (configParams.BackgroundLayerEnable)
+    else if ((configParams->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerTile8x8)
     {
-        configParams.BackgroundLayerDataPtr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
+        configParams->Layer0Width = configParams->Layer0Height = 0;
+        configParams->Layer0DataPtr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
     }
     else
     {
-        configParams.BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
+        configParams->Layer0DataPtr = configParams->Layer0Width = configParams->Layer0Height = 0;
     }
-    configParams.RoomHeight = ui->SpinBox_RoomHeight->value();
-    configParams.RoomWidth = ui->SpinBox_RoomWidth->value();
-    configParams.RasterType = ui->spinBox_RasterType->value();
-    configParams.Water = ui->spinBox_Water->value();
-    configParams.BGMVolume = ui->spinBox_BgmVolume->value();
+
+    configParams->Layer2MappingTypeParam = ui->spinBox_Layer2MappingType->value();
+    configParams->LayerPriorityAndAlphaAttr = ui->ComboBox_LayerPriority->currentIndex() + 4;
+    configParams->LayerPriorityAndAlphaAttr += (qMax(ui->ComboBox_AlphaBlendAttribute->currentIndex(), 0) << 2);
+    configParams->BackgroundLayerEnable = ui->CheckBox_BGLayerEnable->isChecked();
+    configParams->BGLayerScrollFlag = ui->spinBox_BGLayerScrollingFlag->value();
+    if (configParams->BackgroundLayerEnable)
+    {
+        configParams->BackgroundLayerDataPtr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
+    }
+    else
+    {
+        configParams->BackgroundLayerDataPtr = WL4Constants::BGLayerDefaultPtr;
+    }
+    configParams->RoomHeight = ui->SpinBox_RoomHeight->value();
+    configParams->RoomWidth = ui->SpinBox_RoomWidth->value();
+    configParams->RasterType = ui->spinBox_RasterType->value();
+    configParams->Water = ui->spinBox_Water->value();
+    configParams->BGMVolume = ui->spinBox_BgmVolume->value();
+
+    // Reset Layers, iterate 0, 1, 2
+    if((configParams->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16) {
+        configParams->LayerData[0] = ChangeLayerDimensions(configParams->Layer0Width, configParams->Layer0Height,
+                                                          prevRoomParams->Layer0Width, prevRoomParams->Layer0Height, prevRoomParams->LayerData[0]);
+    } else {
+        configParams->LayerData[0] = nullptr;
+    }
+    configParams->LayerData[1] = ChangeLayerDimensions(configParams->RoomWidth, configParams->RoomHeight,
+                                                      prevRoomParams->RoomWidth, prevRoomParams->RoomHeight, prevRoomParams->LayerData[1]);
+    if((configParams->Layer2MappingTypeParam & 0x30) == LevelComponents::LayerMap16) {
+        configParams->LayerData[2] = ChangeLayerDimensions(configParams->RoomWidth, configParams->RoomHeight,
+                                                          prevRoomParams->RoomWidth, prevRoomParams->RoomHeight, prevRoomParams->LayerData[2]);
+    } else {
+        configParams->LayerData[2] = nullptr;
+    }
 
     return configParams;
 }

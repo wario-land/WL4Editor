@@ -17,6 +17,48 @@ extern WL4EditorWindow *singleton;
 namespace LevelComponents
 {
     /// <summary>
+    /// Construct a new empty Room object.
+    /// </summary>
+    Room::Room(unsigned char _RoomID, unsigned int _LevelID, unsigned char _tilesetId, unsigned char _entitysetId) :
+        RoomID(_RoomID), LevelID(_LevelID), headerAddr(0), CurrentEntitySetID(_entitysetId)
+    {
+        memset(RenderedLayers, 0, sizeof(RenderedLayers));
+        memset(drawLayers, 0, sizeof(drawLayers));
+        memset(EntityLayerZValue, 0, sizeof(EntityLayerZValue));
+        memset(EntityListDirty, 0, sizeof(EntityListDirty));
+
+        memset(&RoomHeader, 0, sizeof(struct __RoomHeader));
+
+        RoomHeader.TilesetID = _tilesetId;
+        RoomHeader.Layer0MappingType = RoomHeader.Layer1MappingType = RoomHeader.Layer2MappingType = 0x10;
+        RoomHeader.Layer0Data = RoomHeader.Layer1Data = RoomHeader.Layer2Data = 0x800'0000 | WL4Constants::NormalLayerDefaultPtr;
+        RoomHeader.Layer3MappingType = 0x20;
+        RoomHeader.Layer3Data = 0x800'0000 | WL4Constants::BGLayerDefaultPtr;
+        RoomHeader.CameraControlType = NoLimit;
+        CameraControlType = static_cast<enum __CameraControlType>(NoLimit);
+        RoomHeader.EntityTableHard = RoomHeader.EntityTableNormal = RoomHeader.EntityTableSHard = 0x800'0000;
+        RoomHeader.LayerGFXEffect02 = 0xFF;
+        RoomHeader.BGMVolume = 0x100;
+
+        // Set up tileset
+        tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
+
+        // layer data
+        for (int i = 0; i < 4; ++i)
+        {
+            enum LayerMappingType mappingType =
+                static_cast<enum LayerMappingType>(*( ((unsigned char *)(&RoomHeader.Layer0MappingType)) + i) & 0x30);
+            int layerPtr = *( ((unsigned int *)(&RoomHeader.Layer0Data)) + i) & 0x7FF'FFFF;
+            layers[i] = new Layer(layerPtr, mappingType);
+        }
+        Width = layers[1]->GetLayerWidth();
+        Height = layers[1]->GetLayerHeight();
+
+        // Copy Entityset's and Entities' pointers
+        ResetEntitySet(CurrentEntitySetID);
+    }
+
+    /// <summary>
     /// Construct a new Room object.
     /// </summary>
     /// <param name="roomDataPtr">
@@ -142,7 +184,7 @@ namespace LevelComponents
             EntityList[i] = room->GetEntityListData(i);
         }
 
-        // Deep Copy Entityset and Entities
+        // Copy Entityset's and Entities' pointers
         ResetEntitySet(CurrentEntitySetID);
     }
 
@@ -1180,7 +1222,7 @@ namespace LevelComponents
                     // Set the room header layer pointer from the data pointer, and invalidate the old layer save chunk
                     layerPtrs[i] =
                         (layer->GetMappingType() == LayerMappingType::LayerTile8x8
-                             ? static_cast<unsigned int>(layer->GetDataPtr()) // layer->GetDataPtr() can work here too
+                             ? static_cast<unsigned int>(layer->GetDataPtr())
                              : // else LayerMappingType::LayerDisabled
                              (i == 3 ? WL4Constants::BGLayerDefaultPtr : WL4Constants::NormalLayerDefaultPtr)) |
                         0x8000000;
