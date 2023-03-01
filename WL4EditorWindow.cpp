@@ -1705,14 +1705,12 @@ void WL4EditorWindow::on_actionNew_Door_triggered()
     memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
 
     // Initialize the fields
-    newDoorEntry.DoorTypeByte = (unsigned char) 2;
-    newDoorEntry.EntitySetID = (unsigned char) 1;
-    unsigned int currentroomid = ui->spinBox_RoomID->value();
-    newDoorEntry.RoomID = (unsigned char) currentroomid;
     newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
+    unsigned int currentroomid = ui->spinBox_RoomID->value();
+    newDoorEntry.EntitySetID = (unsigned char) CurrentLevel->GetRooms()[currentroomid]->GetCurrentEntitySetID();
+    newDoorEntry.RoomID = (unsigned char) currentroomid;
     LevelComponents::Door *newDoor =
         new LevelComponents::Door(newDoorEntry, (unsigned char) currentroomid, CurrentLevel->GetDoors().size());
-    newDoor->SetEntitySetID((unsigned char) CurrentLevel->GetRooms()[currentroomid]->GetCurrentEntitySetID());
     newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
 
     // Add the new door to the Level object and re-render the screen
