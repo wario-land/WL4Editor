@@ -8,7 +8,7 @@ namespace LevelComponents
 {
     // An enumeration of the types of doors in the game.
     // The integers correspond to the real values the games uses internally to represent a door.
-    enum DoorType
+    enum _DoorType
     {
         _EndOfVector = 0,     // this is not a valid type, but the end of the door vector of a Level
         _Portal = 1,          // A special type just for the level's portal
