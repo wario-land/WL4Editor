@@ -236,6 +236,9 @@ namespace LevelComponents
         // Distribute door data to every room
         RedistributeDoor();
 
+        // Door rewrite logic
+        doorlist = LevelDoorVector(doorStartAddress);
+
         // Load the level names
         int LevelNameAddress =
             ROMUtils::PointerFromData(WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4);

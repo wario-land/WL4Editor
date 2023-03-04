@@ -41,7 +41,7 @@ LevelComponents::LevelDoorVector::LevelDoorVector(QString &str)
     QRegularExpression tmp_regex(",|\\s+"); // split using " " and "," at the same time
     QStringList u8_datalist = str.split(tmp_regex, Qt::SkipEmptyParts);
     int entry_num = u8_datalist.size() / 0xC;
-    if ((u8_datalist.size() % 0xC) || (entry_num == 1 && (u8_datalist[0].toInt() == EndOfVector)))
+    if ((u8_datalist.size() % 0xC) || (entry_num == 1 && (u8_datalist[0].toInt() == _EndOfVector)))
     {
         // keep the this->doorvec empty, we should check if the vec is empty when load from QString
         return;
@@ -78,6 +78,23 @@ QString LevelComponents::LevelDoorVector::toString(bool endWithFullZeroEntry)
     }
     result.chop(2);
     return result;
+}
+
+/// <summary>
+/// Create an u8 array on the heap for undo and redo operation logic.
+/// the delete logic will be maintained by the operation code.
+/// </summary>
+unsigned char *LevelComponents::LevelDoorVector::CreateOperationData()
+{
+    int doorcount = this->doorvec.size();
+    if (doorcount < 1) return nullptr;
+    unsigned char *data = new unsigned char[doorcount * sizeof(DoorEntry)];
+
+    for (int i = 0; i < doorcount; i++)
+    {
+        memcpy(data + i * sizeof(DoorEntry), &(this->doorvec[i]), sizeof(DoorEntry));
+    }
+    return data;
 }
 
 /// <return>
@@ -132,7 +149,7 @@ QPoint LevelComponents::LevelDoorVector::GetWarioOriginalPosition_x4(unsigned ch
 {
     int ypos, xpos;
     struct DoorEntry &currentDoor = this->doorvec[doorGlobalId];
-    if (currentDoor.DoorTypeByte == NormalDoor)
+    if (currentDoor.DoorTypeByte == _NormalDoor)
     {
         xpos = ((currentDoor.x1 + 1) << 6) - 1;
         ypos = (currentDoor.y2 + 1) << 6;

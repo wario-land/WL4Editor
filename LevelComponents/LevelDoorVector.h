@@ -10,12 +10,12 @@ namespace LevelComponents
     // The integers correspond to the real values the games uses internally to represent a door.
     enum DoorType
     {
-        EndOfVector = 0,     // this is not a valid type, but the end of the door vector of a Level
-        Portal = 1,          // A special type just for the level's portal
-        InstantWarp = 2,     // Automatically warp from door to door. For example, the edge of a room leading to another one
-        NormalDoor = 3,      // A door with normal "door"-like behavior. Press up to enter
-        BossDoor = 4,        // Boss Door
-        ItemShopDoor = 5     // Item shop in the boss corrider
+        _EndOfVector = 0,     // this is not a valid type, but the end of the door vector of a Level
+        _Portal = 1,          // A special type just for the level's portal
+        _InstantWarp = 2,     // Automatically warp from door to door. For example, the edge of a room leading to another one
+        _NormalDoor = 3,      // A door with normal "door"-like behavior. Press up to enter
+        _BossDoor = 4,        // Boss Door
+        _ItemShopDoor = 5     // Item shop in the boss corrider
     };
 
     struct DoorEntry
@@ -42,6 +42,7 @@ namespace LevelComponents
         LevelDoorVector(QString &str);
 
         QString toString(bool endWithFullZeroEntry = false);
+        unsigned char *CreateOperationData();
 
         // operations
         int AddDoor(unsigned char roomID, unsigned char entitySetID = 1, unsigned char doorType = 2); // return the added door global id

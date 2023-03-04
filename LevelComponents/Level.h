@@ -2,6 +2,7 @@
 #define LEVEL_H
 
 #include "Door.h"
+#include "LevelDoorVector.h"
 #include "Room.h"
 #include <string>
 #include <vector>
@@ -60,6 +61,7 @@ namespace LevelComponents
         QString LevelName;
         QString LevelNameJ;
         std::vector<Door *> doors;
+        LevelDoorVector doorlist;
         __LevelHeader LevelHeader;
         enum __passage passage;
         enum __stage stage;
