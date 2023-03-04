@@ -44,14 +44,14 @@ namespace LevelComponents
         QString toString(bool endWithFullZeroEntry = false);
         unsigned char *CreateOperationData();
 
-        // operations
-        int AddDoor(unsigned char roomID, unsigned char entitySetID = 1, unsigned char doorType = 2); // return the added door global id
-        bool DeleteDoor(unsigned char doorGlobalId);
-
         // Getters
         struct DoorEntry GetDoor(unsigned char doorGlobalId);
         QPoint GetWarioOriginalPosition_x4(unsigned char doorGlobalId);
         QVector<struct DoorEntry> GetDoorsByRoomID(unsigned char roomID);
+
+        // operations
+        int AddDoor(unsigned char roomID, unsigned char entitySetID = 1, unsigned char doorType = 2); // return the added door global id
+        bool DeleteDoor(unsigned char doorGlobalId);
 
         // Setters
         void SetBGM(unsigned char doorGlobalId, unsigned short _BGM_ID)

@@ -132,6 +132,7 @@ bool LevelComponents::LevelDoorVector::DeleteDoor(unsigned char doorGlobalId)
         }
     }
     this->doorvec.remove(doorGlobalId);
+    this->Dirty = true;
     return true;
 }
 
