@@ -73,20 +73,30 @@ namespace LevelComponents
         static QString GetAvailableLevelNameChars();
         static QString ConvertDataToLevelName(int address);
         static void ConvertLevelNameToData(QString levelName, unsigned char *buffer);
+
         Level(enum __passage passage, enum __stage stage);
+        ~Level();
+
         void SetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty, unsigned int seconds);
         int GetTimeCountdownCounter(enum __LevelDifficulty LevelDifficulty);
-        std::vector<Door *> GetDoors() { return doors; } // get Doors without copying the data
         std::vector<Room *> GetRooms() { return rooms; }
         void AddRoom(Room *newroom) { rooms.push_back(newroom); }
         QString GetLevelName(int levelnameid = 0) { return levelnameid ? LevelNameJ : LevelName; }
         unsigned int GetLevelID() { return LevelID; }
         void SetLevelName(QString newlevelname, int levelnameid = 0) { (levelnameid ? LevelNameJ : LevelName) = newlevelname; }
+
+        // Door stuff
+        std::vector<Door *> GetDoors() { return doors; } // get Doors without copying the data
+        QVector<struct DoorEntry> GetDoorVec() {return doorlist.GetDoorVecDeepCopy(); }
         void RedistributeDoor();
         std::vector<Door *> GetRoomDoors(unsigned int roomId); // get Doors and copy the data
+        QVector<struct DoorEntry> GetRoomDoorVec(unsigned int roomId) {return doorlist.GetDoorsByRoomID(roomId); }
         void DeleteDoor(int globalDoorIndex);
+        void DeleteDoorByGlobalID(int globalDoorIndex) { doorlist.DeleteDoor(globalDoorIndex); }
         void AddDoor(Door *newdoor);
-        ~Level();
+        void AddDoor(unsigned char roomId, unsigned char entitySetId = 1, unsigned char doorTypeId = 2)
+        { doorlist.AddDoor(roomId, entitySetId, doorTypeId); }
+
         bool GetSaveChunks(QVector<struct ROMUtils::SaveData> &chunks);
         struct __LevelHeader *GetLevelHeader() { return &LevelHeader; }
         enum __passage GetPassage() { return passage; }

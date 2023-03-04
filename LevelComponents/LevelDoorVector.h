@@ -48,6 +48,7 @@ namespace LevelComponents
         struct DoorEntry GetDoor(unsigned char doorGlobalId);
         QPoint GetWarioOriginalPosition_x4(unsigned char doorGlobalId);
         QVector<struct DoorEntry> GetDoorsByRoomID(unsigned char roomID);
+        QVector<struct DoorEntry> GetDoorVecDeepCopy();
 
         // operations
         int AddDoor(unsigned char roomID, unsigned char entitySetID = 1, unsigned char doorType = 2); // return the added door global id
@@ -64,7 +65,7 @@ namespace LevelComponents
             this->doorvec[doorGlobalId].DestinationDoorGlobalID = destinationDoorGlobalId;
             this->Dirty = true;
         }
-        void SetDoorType(unsigned char doorGlobalId, enum DoorType _DoorType)
+        void SetDoorType(unsigned char doorGlobalId, enum _DoorType _DoorType)
         {
             this->doorvec[doorGlobalId].DoorTypeByte = (unsigned char) _DoorType;
             this->Dirty = true;
