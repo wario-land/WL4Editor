@@ -134,33 +134,32 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         }
         else if (editMode == Ui::DoorEditMode) // select a door
         {
-            unsigned int doorCount = room->CountDoors();
+            auto doorsInRoom = singleton->GetCurrentLevel()->GetDoorList().GetDoorsByRoomID(room->GetRoomID());
+            unsigned int doorCount = doorsInRoom.size();
             if (doorCount)
             {
                 // Select a Door if possible
                 for (unsigned int i = 0; i < doorCount; i++)
                 {
-                    LevelComponents::Door *door = room->GetDoor(i);
-                    bool b1 = door->GetX1() <= (int) tileX;
-                    bool b2 = door->GetX2() >= (int) tileX;
-                    bool b3 = door->GetY1() <= (int) tileY;
-                    bool b4 = door->GetY2() >= (int) tileY;
+                    bool b1 = doorsInRoom[i].x1 <= (int) tileX;
+                    bool b2 = doorsInRoom[i].x2 >= (int) tileX;
+                    bool b3 = doorsInRoom[i].y1 <= (int) tileY;
+                    bool b4 = doorsInRoom[i].y2 >= (int) tileY;
                     if (b1 && b2 && b3 && b4) {
 
                         // If the door that was clicked was not already selected, then select it
                         SelectedDoorID = i;
                         // Let the Entityset change with the last selected Door
-                        singleton->GetCurrentRoom()->SetCurrentEntitySet(
-                            singleton->GetCurrentRoom()->GetDoor(i)->GetEntitySetID());
+                        singleton->GetCurrentRoom()->SetCurrentEntitySet(doorsInRoom[i].EntitySetID);
                         singleton->ResetEntitySetDockWidget();
-                        holdingEntityOrDoor=true;
-                        objectInitialX=door->GetX1();
-                        objectInitialY=door->GetY1();
-                        goto DOOR_FOUND;
+                        holdingEntityOrDoor = true;
+                        objectInitialX = doorsInRoom[i].x1;
+                        objectInitialY = doorsInRoom[i].y1;
+                        goto DOOR_FOUND_MousePress;
                     }
                 }
                 SelectedDoorID = -1;
-            DOOR_FOUND:;
+            DOOR_FOUND_MousePress:;
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
         }
@@ -220,17 +219,17 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
 
         if (editMode == Ui::DoorEditMode) // select a door
         {
-            unsigned int doorCount = room->CountDoors();
+            auto doorsInRoom = singleton->GetCurrentLevel()->GetDoorList().GetDoorsByRoomID(room->GetRoomID());
+            unsigned int doorCount = doorsInRoom.size();
             if (doorCount)
             {
                 // Select a Door if possible
                 for (unsigned int i = 0; i < doorCount; i++)
                 {
-                    LevelComponents::Door *door = room->GetDoor(i);
-                    bool b1 = door->GetX1() <= (int) tileX;
-                    bool b2 = door->GetX2() >= (int) tileX;
-                    bool b3 = door->GetY1() <= (int) tileY;
-                    bool b4 = door->GetY2() >= (int) tileY;
+                    bool b1 = doorsInRoom[i].x1 <= (int) tileX;
+                    bool b2 = doorsInRoom[i].x2 >= (int) tileX;
+                    bool b3 = doorsInRoom[i].y1 <= (int) tileY;
+                    bool b4 = doorsInRoom[i].y2 >= (int) tileY;
                     if (b1 && b2 && b3 && b4)
                     {
                         // Door "i" was selected
@@ -240,8 +239,9 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
                             DoorConfigDialog _doorconfigdialog(singleton, room, i, singleton->GetCurrentLevel());
                             if (_doorconfigdialog.exec() == QDialog::Accepted)
                             {
-                                // Apply changes from the door config dialog
-                                _doorconfigdialog.UpdateCurrentDoorData();
+                                // Apply changes
+                                // TODO: put the logic to the operation class to support Undo and Redo of Door things
+                                singleton->GetCurrentLevel()->SetDoorVec(_doorconfigdialog.GetChangedDoorVectorResult());
                                 singleton->ResetEntitySetDockWidget();
                                 singleton->SetUnsavedChanges(true);
                             }
@@ -251,18 +251,17 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
                             // If the door that was clicked was not already selected, then select it
                             SelectedDoorID = i;
                             // Let the Entityset change with the last selected Door
-                            singleton->GetCurrentRoom()->SetCurrentEntitySet(
-                                singleton->GetCurrentRoom()->GetDoor(i)->GetEntitySetID());
+                            singleton->GetCurrentRoom()->SetCurrentEntitySet(doorsInRoom[i].EntitySetID);
                             singleton->ResetEntitySetDockWidget();
-                            holdingEntityOrDoor=true;
-                            objectInitialX=door->GetX1();
-                            objectInitialY=door->GetY1();
+                            holdingEntityOrDoor = true;
+                            objectInitialX = doorsInRoom[i].x1;
+                            objectInitialY = doorsInRoom[i].y1;
                         }
-                        goto DOOR_FOUND;
+                        goto DOOR_FOUND_DoubleClick;
                     }
                 }
                 SelectedDoorID = -1;
-                DOOR_FOUND:;
+                DOOR_FOUND_DoubleClick:;
             }
             singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
         }
@@ -386,21 +385,22 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
         {
             if (holdingEntityOrDoor && SelectedDoorID != -1)
             {
-                LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-                LevelComponents::Door *selectedDoor = currentRoom->GetDoor(SelectedDoorID);
+                auto doorsInRoom = singleton->GetCurrentLevel()->GetDoorList().GetDoorsByRoomID(room->GetRoomID());
+                auto curDoor = doorsInRoom[SelectedDoorID];
 
                 // The new positions
-                int px1 = selectedDoor->GetX1();
-                int py1 = selectedDoor->GetY1();
-                int deltaX = selectedDoor->GetX2()-px1;
-                int deltaY = selectedDoor->GetY2()-py1;
+                int px1 = curDoor.x1;
+                int py1 = curDoor.y1;
+                int deltaX = curDoor.x2 - px1;
+                int deltaY = curDoor.y2 - py1;
 
                 // If the door position has changed
                 if (px1 != tileX || py1 != tileY)
                 {
-                    if (currentRoom->IsNewDoorPositionInsideRoom(tileX, tileX+deltaX, tileY, tileY+deltaY))
+                    if (room->IsNewDoorPositionInsideRoom(tileX, tileX + deltaX, tileY, tileY + deltaY))
                     {
-                        selectedDoor->SetDoorPlace(tileX, tileX+deltaX, tileY, tileY+deltaY);
+                        int globalDoorId = singleton->GetCurrentLevel()->GetDoorList().GetGlobalIDByLocalID(room->GetRoomID(), SelectedDoorID);
+                        singleton->GetCurrentLevel()->GetDoorListRef().SetDoorPlace(globalDoorId, tileX, tileX + deltaX, tileY, tileY + deltaY);
                         singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
                     }
                 }
@@ -572,9 +572,10 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
             struct OperationParams *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
             params->objectPositionChange = true;
-            LevelComponents::Door *curdoor = singleton->GetCurrentRoom()->GetDoor(SelectedDoorID);
-            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, curdoor->GetX1(), curdoor->GetY1(),ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
-            // Only perform and not execute because of a bug after deletion and undo
+            auto curDoor = singleton->GetCurrentLevel()->GetDoorListRef().GetDoor(singleton->GetCurrentRoom()->GetRoomID(), SelectedDoorID);
+            params->objectMoveParams = ObjectMoveParams::Create(objectInitialX, objectInitialY, curDoor.x1, curDoor.y1, ObjectMoveParams::DOOR_TYPE, SelectedDoorID);
+
+            // TODO: Only perform and not execute because not support undo redo yet
             PerformOperation(params);
         }
     } else if (editMode == Ui::EntityEditMode) { // Add a move operation for entity (for CTRL-Z)
@@ -582,8 +583,9 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
             struct OperationParams *params = new struct OperationParams();
             params->type = ObjectMoveOperation;
             params->objectPositionChange = true;
-            params->objectMoveParams=ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY,ObjectMoveParams::ENTITY_TYPE,SelectedEntityID);
-            // Only perform and not execute because of a bug after deletion and undo
+            params->objectMoveParams = ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY, ObjectMoveParams::ENTITY_TYPE, SelectedEntityID);
+
+            // TODO: Only perform and not execute because not support undo redo yet
             PerformOperation(params);
         }
     }
@@ -606,6 +608,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 {
     // If an entity is selected
     enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
+    LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
 
     switch(editMode)
     {
@@ -622,7 +625,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             SelectedEntityID = -1;
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
             int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
-            singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+            currentRoom->SetEntityListDirty(difficulty, true);
             singleton->SetUnsavedChanges(true);
         }; break;
 
@@ -632,10 +635,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Up:
         case Qt::Key_Down:
         {
-            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-
             // The new positions
-
             int pX = currentRoom->GetEntityX(SelectedEntityID);
             int pY = currentRoom->GetEntityY(SelectedEntityID);
 
@@ -682,7 +682,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Backspace:
         case Qt::Key_Delete:
         {
-            if (singleton->DeleteDoor(singleton->GetCurrentRoom()->GetDoor(SelectedDoorID)->GetGlobalDoorID()))
+            if (singleton->DeleteDoor(singleton->GetCurrentLevel()->GetDoorListRef().GetGlobalIDByLocalID(currentRoom->GetRoomID(), SelectedDoorID)))
             {
                 SelectedDoorID = -1;
                 singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
@@ -696,14 +696,13 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Up:
         case Qt::Key_Down:
         {
-            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-            LevelComponents::Door *selectedDoor = currentRoom->GetDoor(SelectedDoorID);
+            auto curDoor = singleton->GetCurrentLevel()->GetDoorListRef().GetDoor(currentRoom->GetRoomID(), SelectedDoorID);
 
             // The new positions
-            int pX1 = selectedDoor->GetX1();
-            int pY1 = selectedDoor->GetY1();
-            int pX2 = selectedDoor->GetX2();
-            int pY2 = selectedDoor->GetY2();
+            int pX1 = curDoor.x1;
+            int pY1 = curDoor.y1;
+            int pX2 = curDoor.x2;
+            int pY2 = curDoor.y2;
 
             // Old positions (x1 and y1)
             int oldX=pX1;
@@ -735,7 +734,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 struct OperationParams *params = new struct OperationParams();
                 params->type = ObjectMoveOperation;
                 params->objectPositionChange = true;
-                params->objectMoveParams=ObjectMoveParams::Create(oldX, oldY, pX1, pY1,ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
+                params->objectMoveParams = ObjectMoveParams::Create(oldX, oldY, pX1, pY1, ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
 
                 // Only perform and not execute because of a bug after deletion and undo
                 PerformOperation(params);

@@ -31,6 +31,26 @@ namespace LevelComponents
         signed char VerticalDeltaWario;
         unsigned char EntitySetID;
         unsigned short BGM_ID;
+
+        QPoint GetWarioOriginalPosition_x4()
+        {
+            int ypos, xpos;
+            if (this->DoorTypeByte == _NormalDoor)
+            {
+                xpos = ((this->x1 + 1) << 6) - 1;
+                ypos = (this->y2 + 1) << 6;
+                // The ypos is related to current Wario animations, we only generate case for standing Wario
+            }
+            else
+            {
+                xpos = ((this->x1 + 1) << 6) + 4 * (this->HorizontalDeltaWario + 8);
+                ypos = ((this->y2 + 1) << 6) + 4 * this->VerticalDeltaWario - 1;
+            }
+            QPoint WarioLeftTopPosition;
+            WarioLeftTopPosition.setX(xpos);
+            WarioLeftTopPosition.setY(ypos);
+            return WarioLeftTopPosition;
+        }
     };
 
     class LevelDoorVector
@@ -42,13 +62,22 @@ namespace LevelComponents
         LevelDoorVector(QString &str);
 
         QString toString(bool endWithFullZeroEntry = false);
-        unsigned char *CreateOperationData();
+        unsigned char *CreateDataArray(bool endWithAllZeroEntry = false);
 
         // Getters
         struct DoorEntry GetDoor(unsigned char doorGlobalId);
-        QPoint GetWarioOriginalPosition_x4(unsigned char doorGlobalId);
+        struct DoorEntry GetDoor(unsigned char roomID, unsigned char doorLocalId);
+        struct DoorEntry GetDestinationDoor(unsigned char roomID, unsigned char doorLocalId);
+        QString GetDoorName(unsigned char doorGlobalId)
+        {
+            return "Room 0x" + QString::number((int) doorvec[doorGlobalId].RoomID, 16) + " Door " + QString::number(doorGlobalId, 10);
+        }
         QVector<struct DoorEntry> GetDoorsByRoomID(unsigned char roomID);
         QVector<struct DoorEntry> GetDoorVecDeepCopy();
+        unsigned char GetLocalIDByGlobalID(unsigned char doorGlobalId);
+        unsigned char GetGlobalIDByLocalID(unsigned char roomID, unsigned char doorLocalId);
+        int size() { return doorvec.size(); }
+        bool IsDirty() { return Dirty; }
 
         // operations
         int AddDoor(unsigned char roomID, unsigned char entitySetID = 1, unsigned char doorType = 2); // return the added door global id
@@ -65,9 +94,9 @@ namespace LevelComponents
             this->doorvec[doorGlobalId].DestinationDoorGlobalID = destinationDoorGlobalId;
             this->Dirty = true;
         }
-        void SetDoorType(unsigned char doorGlobalId, enum _DoorType _DoorType)
+        void SetDoorType(unsigned char doorGlobalId, unsigned char _DoorType)
         {
-            this->doorvec[doorGlobalId].DoorTypeByte = (unsigned char) _DoorType;
+            this->doorvec[doorGlobalId].DoorTypeByte = _DoorType;
             this->Dirty = true;
         }
         void SetEntitySetID(unsigned char doorGlobalId, unsigned char _EntitySetID)

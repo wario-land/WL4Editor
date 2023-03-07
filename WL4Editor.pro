@@ -59,7 +59,6 @@ SOURCES += \
     LevelComponents/Level.cpp \
     LevelComponents/Room.cpp \
     LevelComponents/Layer.cpp \
-    LevelComponents/Door.cpp \
     LevelComponents/Tile.cpp \
     LevelComponents/Tileset.cpp \
     ROMUtils.cpp \
@@ -111,7 +110,6 @@ HEADERS += \
     LevelComponents/Level.h \
     LevelComponents/Room.h \
     LevelComponents/Layer.h \
-    LevelComponents/Door.h \
     ROMUtils.h \
     WL4Constants.h \
     LevelComponents/Tile.h \

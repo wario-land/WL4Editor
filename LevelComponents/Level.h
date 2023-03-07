@@ -1,7 +1,6 @@
 ﻿#ifndef LEVEL_H
 #define LEVEL_H
 
-#include "Door.h"
 #include "LevelDoorVector.h"
 #include "Room.h"
 #include <string>
@@ -60,7 +59,6 @@ namespace LevelComponents
         std::vector<Room *> rooms;
         QString LevelName;
         QString LevelNameJ;
-        std::vector<Door *> doors;
         LevelDoorVector doorlist;
         __LevelHeader LevelHeader;
         enum __passage passage;
@@ -86,14 +84,13 @@ namespace LevelComponents
         void SetLevelName(QString newlevelname, int levelnameid = 0) { (levelnameid ? LevelNameJ : LevelName) = newlevelname; }
 
         // Door stuff
-        std::vector<Door *> GetDoors() { return doors; } // get Doors without copying the data
+        LevelDoorVector GetDoorList() {return LevelDoorVector(doorlist); } // rerurn a copy of doorlist
+        LevelDoorVector &GetDoorListRef() {return doorlist; } // for fast editing
         QVector<struct DoorEntry> GetDoorVec() {return doorlist.GetDoorVecDeepCopy(); }
-        void RedistributeDoor();
-        std::vector<Door *> GetRoomDoors(unsigned int roomId); // get Doors and copy the data
+        void SetDoorVec(LevelDoorVector newdoorlist) { doorlist = LevelDoorVector(newdoorlist); }
+        void SetLevelEntitySet();
         QVector<struct DoorEntry> GetRoomDoorVec(unsigned int roomId) {return doorlist.GetDoorsByRoomID(roomId); }
-        void DeleteDoor(int globalDoorIndex);
-        void DeleteDoorByGlobalID(int globalDoorIndex) { doorlist.DeleteDoor(globalDoorIndex); }
-        void AddDoor(Door *newdoor);
+        bool DeleteDoorByGlobalID(int globalDoorIndex) { return doorlist.DeleteDoor(globalDoorIndex); }
         void AddDoor(unsigned char roomId, unsigned char entitySetId = 1, unsigned char doorTypeId = 2)
         { doorlist.AddDoor(roomId, entitySetId, doorTypeId); }
 

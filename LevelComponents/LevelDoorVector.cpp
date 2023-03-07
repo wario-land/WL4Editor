@@ -16,7 +16,7 @@ LevelComponents::LevelDoorVector::LevelDoorVector(unsigned int doorDataStartAddr
     {
         // there is something wrong with the Door vector data
         // the Level cannot be loaded in this case
-        assert(currentDoorGlobalId > 0xFF);
+        assert(currentDoorGlobalId <= 0xFF);
 
         struct DoorEntry tmpDoor;
         memcpy(&tmpDoor, doorPtr, sizeof(DoorEntry));
@@ -84,15 +84,20 @@ QString LevelComponents::LevelDoorVector::toString(bool endWithFullZeroEntry)
 /// Create an u8 array on the heap for undo and redo operation logic.
 /// the delete logic will be maintained by the operation code.
 /// </summary>
-unsigned char *LevelComponents::LevelDoorVector::CreateOperationData()
+unsigned char *LevelComponents::LevelDoorVector::CreateDataArray(bool endWithAllZeroEntry)
 {
     int doorcount = this->doorvec.size();
     if (doorcount < 1) return nullptr;
-    unsigned char *data = new unsigned char[doorcount * sizeof(DoorEntry)];
+    int size_helper = endWithAllZeroEntry ? 1 : 0;
+    unsigned char *data = new unsigned char[(doorcount + size_helper) * sizeof(DoorEntry)];
 
     for (int i = 0; i < doorcount; i++)
     {
         memcpy(data + i * sizeof(DoorEntry), &(this->doorvec[i]), sizeof(DoorEntry));
+    }
+    if (endWithAllZeroEntry)
+    {
+        memset(data + doorcount * sizeof(DoorEntry), 0, sizeof(DoorEntry));
     }
     return data;
 }
@@ -123,6 +128,7 @@ bool LevelComponents::LevelDoorVector::DeleteDoor(unsigned char doorGlobalId)
     int doorcount = this->doorvec.size();
     if (doorGlobalId > (doorcount - 1)) return false;
     if (doorGlobalId < 1) return false;
+    if (GetDoorsByRoomID(this->doorvec[doorGlobalId].RoomID).size() < 2) return false; // don't delete the last Door from a Room
 
     for (auto &door: this->doorvec)
     {
@@ -143,28 +149,50 @@ LevelComponents::DoorEntry LevelComponents::LevelDoorVector::GetDoor(unsigned ch
     return tmpDoor;
 }
 
-/// <summary>
-/// A helper function to render camera boxes.
-/// </summary>
-QPoint LevelComponents::LevelDoorVector::GetWarioOriginalPosition_x4(unsigned char doorGlobalId)
+LevelComponents::DoorEntry LevelComponents::LevelDoorVector::GetDoor(unsigned char roomID, unsigned char doorLocalId)
 {
-    int ypos, xpos;
-    struct DoorEntry &currentDoor = this->doorvec[doorGlobalId];
-    if (currentDoor.DoorTypeByte == _NormalDoor)
+    struct DoorEntry tmpDoor;
+    memset(&tmpDoor, 0, sizeof(DoorEntry));
+    int doorcount = this->doorvec.size();
+    if (doorcount < 1) return tmpDoor;
+
+    int localDoorIdIter = -1;
+    for (auto &door: this->doorvec)
     {
-        xpos = ((currentDoor.x1 + 1) << 6) - 1;
-        ypos = (currentDoor.y2 + 1) << 6;
-        // The ypos is related to current Wario animations, we only generate case for standing Wario
+        if (door.RoomID == roomID)
+        {
+            localDoorIdIter++;
+            if (localDoorIdIter == doorLocalId)
+            {
+                memcpy(&tmpDoor, &(door), sizeof(DoorEntry));
+                return tmpDoor;
+            }
+        }
     }
-    else
+    return tmpDoor;
+}
+
+LevelComponents::DoorEntry LevelComponents::LevelDoorVector::GetDestinationDoor(unsigned char roomID, unsigned char doorLocalId)
+{
+    struct DoorEntry tmpDoor;
+    memset(&tmpDoor, 0, sizeof(DoorEntry));
+    int doorcount = this->doorvec.size();
+    if (doorcount < 1) return tmpDoor;
+
+    int localDoorIdIter = -1;
+    for (int i = 0; i < doorcount; i++)
     {
-        xpos = ((currentDoor.x1 + 1) << 6) + 4 * (currentDoor.HorizontalDeltaWario + 8);
-        ypos = ((currentDoor.y2 + 1) << 6) + 4 * currentDoor.VerticalDeltaWario - 1;
+        if (this->doorvec[i].RoomID == roomID)
+        {
+            localDoorIdIter++;
+            if (localDoorIdIter == doorLocalId)
+            {
+                memcpy(&tmpDoor, &(this->doorvec[i]), sizeof(DoorEntry));
+                return tmpDoor;
+            }
+        }
     }
-    QPoint WarioLeftTopPosition;
-    WarioLeftTopPosition.setX(xpos);
-    WarioLeftTopPosition.setY(ypos);
-    return WarioLeftTopPosition;
+    return tmpDoor;
 }
 
 /// <summary>
@@ -195,4 +223,39 @@ QVector<LevelComponents::DoorEntry> LevelComponents::LevelDoorVector::GetDoorVec
         result.push_back(tmpDoor);
     }
     return result;
+}
+
+unsigned char LevelComponents::LevelDoorVector::GetLocalIDByGlobalID(unsigned char doorGlobalId)
+{
+    int roomID = this->doorvec[doorGlobalId].RoomID;
+    int localID_result = -1;
+    for (int i = 0; i < this->doorvec.size(); i++)
+    {
+        if (this->doorvec[i].RoomID == roomID)
+        {
+            localID_result++;
+        }
+        if (doorGlobalId == i)
+        {
+            break;
+        }
+    }
+    return localID_result;
+}
+
+unsigned char LevelComponents::LevelDoorVector::GetGlobalIDByLocalID(unsigned char roomID, unsigned char doorLocalId)
+{
+    int localID_counter = -1;
+    for (int i = 0; i < this->doorvec.size(); i++)
+    {
+        if (this->doorvec[i].RoomID == roomID)
+        {
+            localID_counter++;
+        }
+        if (localID_counter == doorLocalId)
+        {
+            return i;
+        }
+    }
+    return 0;
 }

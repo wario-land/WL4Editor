@@ -94,20 +94,26 @@ void PerformOperation(struct OperationParams *operation)
         if (om->type == ObjectMoveParams::DOOR_TYPE)
         {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-            LevelComponents::Door *selectedDoor = currentRoom->GetDoor(om->objectID);
+            LevelComponents::LevelDoorVector tmpDoorVec = singleton->GetCurrentLevel()->GetDoorList();
+            int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(currentRoom->GetRoomID(), om->objectID);
+            auto curDoor = tmpDoorVec.GetDoor(globalDoorId);
 
             // Calculating the deltas
-            int px1 = selectedDoor->GetX1();
-            int py1 = selectedDoor->GetY1();
-            int deltaX = selectedDoor->GetX2()-px1;
-            int deltaY = selectedDoor->GetY2()-py1;
+            int px1 = curDoor.x1;
+            int py1 = curDoor.y1;
+            int deltaX = curDoor.x2 - px1;
+            int deltaY = curDoor.y2 - py1;
 
             // If the door exists and if it is still in the room
-            if (om->objectID != -1 && selectedDoor)
+            if (om->objectID != -1 && curDoor.DoorTypeByte)
             {
-                if (currentRoom->IsNewDoorPositionInsideRoom(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY + deltaY))
+                if (currentRoom->IsNewDoorPositionInsideRoom(om->nextPositionX, om->nextPositionX + deltaX, om->nextPositionY, om->nextPositionY + deltaY))
                 {
-                    selectedDoor->SetDoorPlace(om->nextPositionX, om->nextPositionX+deltaX, om->nextPositionY, om->nextPositionY + deltaY);
+                    singleton->GetCurrentLevel()->GetDoorListRef().SetDoorPlace(globalDoorId,
+                                                                                om->nextPositionX,
+                                                                                om->nextPositionX + deltaX,
+                                                                                om->nextPositionY,
+                                                                                om->nextPositionY + deltaY);
                     singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
                 }
             }
@@ -276,26 +282,32 @@ void BackTrackOperation(struct OperationParams *operation)
     }
     if (operation->objectPositionChange)
     {
-        struct ObjectMoveParams *om=operation->objectMoveParams;
+        struct ObjectMoveParams *om = operation->objectMoveParams;
         /*om->previousPositionX = pX;
         om->previousPositionY = pY;*/
         if (om->type == ObjectMoveParams::DOOR_TYPE)
         {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-            LevelComponents::Door *selectedDoor = currentRoom->GetDoor(om->objectID);
+            LevelComponents::LevelDoorVector tmpDoorVec = singleton->GetCurrentLevel()->GetDoorList();
+            int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(currentRoom->GetRoomID(), om->objectID);
+            auto curDoor = tmpDoorVec.GetDoor(globalDoorId);
 
             // Calculating the deltas
-            int px1 = selectedDoor->GetX1();
-            int py1 = selectedDoor->GetY1();
-            int deltaX = selectedDoor->GetX2()-px1;
-            int deltaY = selectedDoor->GetY2()-py1;
+            int px1 = curDoor.x1;
+            int py1 = curDoor.y1;
+            int deltaX = curDoor.x2 - px1;
+            int deltaY = curDoor.y2 - py1;
 
             // If the door exists and if it is still in the room
-            if (om->objectID != -1)
+            if (om->objectID != -1 && curDoor.DoorTypeByte)
             {
                 if (currentRoom->IsNewDoorPositionInsideRoom(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY + deltaY))
                 {
-                    selectedDoor->SetDoorPlace(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY + deltaY);
+                    singleton->GetCurrentLevel()->GetDoorListRef().SetDoorPlace(globalDoorId,
+                                                                                om->previousPositionX,
+                                                                                om->previousPositionX + deltaX,
+                                                                                om->previousPositionY,
+                                                                                om->previousPositionY + deltaY);
                     singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
                 }
             }
