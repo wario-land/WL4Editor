@@ -211,12 +211,6 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
     ui->GraphicsView_DestinationDoor->setScene(scene);
     ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
-    // TODO: is this part useful any more ?
-    if(tmpDestinationRoom->GetRoomID() == tmpCurrentRoom->GetRoomID())
-    {
-        UpdateDoorLayerGraphicsView_DestinationDoor();
-    }
-
     // Set scrollbars
     LevelComponents::DoorEntry destDoorData = tmpDoorVec.GetDoor(tmpDestinationRoom->GetRoomID(), doorIDinRoom);
     int door_DesX1 = destDoorData.x1;
