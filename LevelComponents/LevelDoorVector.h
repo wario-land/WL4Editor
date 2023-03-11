@@ -73,7 +73,6 @@ namespace LevelComponents
             return "Room 0x" + QString::number((int) doorvec[doorGlobalId].RoomID, 16) + " Door " + QString::number(doorGlobalId, 10);
         }
         QVector<struct DoorEntry> GetDoorsByRoomID(unsigned char roomID);
-        QVector<struct DoorEntry> GetDoorVecDeepCopy();
         unsigned char GetLocalIDByGlobalID(unsigned char doorGlobalId);
         unsigned char GetGlobalIDByLocalID(unsigned char roomID, unsigned char doorLocalId);
         int size() { return doorvec.size(); }

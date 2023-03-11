@@ -213,18 +213,6 @@ QVector<LevelComponents::DoorEntry> LevelComponents::LevelDoorVector::GetDoorsBy
     return result;
 }
 
-QVector<LevelComponents::DoorEntry> LevelComponents::LevelDoorVector::GetDoorVecDeepCopy()
-{
-    QVector<LevelComponents::DoorEntry> result;
-    for (auto &door: this->doorvec)
-    {
-        struct DoorEntry tmpDoor;
-        memcpy(&tmpDoor, &door, sizeof(DoorEntry));
-        result.push_back(tmpDoor);
-    }
-    return result;
-}
-
 unsigned char LevelComponents::LevelDoorVector::GetLocalIDByGlobalID(unsigned char doorGlobalId)
 {
     int roomID = this->doorvec[doorGlobalId].RoomID;

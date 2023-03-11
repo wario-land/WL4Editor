@@ -71,7 +71,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     // Initialize the selections for destination door combobox
     QStringList doorofLevelSet;
     doorofLevelSet << "Disable destination door";
-    auto doorvec = _level->GetDoorList();
+    LevelComponents::LevelDoorVector &doorvec = _level->GetDoorListRef();
     if (int doorsize = doorvec.size(); doorsize > 1)
     {
         for (unsigned int i = 1; i < doorsize; ++i)

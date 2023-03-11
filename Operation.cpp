@@ -94,7 +94,7 @@ void PerformOperation(struct OperationParams *operation)
         if (om->type == ObjectMoveParams::DOOR_TYPE)
         {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-            LevelComponents::LevelDoorVector tmpDoorVec = singleton->GetCurrentLevel()->GetDoorList();
+            LevelComponents::LevelDoorVector &tmpDoorVec = singleton->GetCurrentLevel()->GetDoorListRef();
             int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(currentRoom->GetRoomID(), om->objectID);
             auto curDoor = tmpDoorVec.GetDoor(globalDoorId);
 
@@ -288,7 +288,7 @@ void BackTrackOperation(struct OperationParams *operation)
         if (om->type == ObjectMoveParams::DOOR_TYPE)
         {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-            LevelComponents::LevelDoorVector tmpDoorVec = singleton->GetCurrentLevel()->GetDoorList();
+            LevelComponents::LevelDoorVector &tmpDoorVec = singleton->GetCurrentLevel()->GetDoorListRef();
             int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(currentRoom->GetRoomID(), om->objectID);
             auto curDoor = tmpDoorVec.GetDoor(globalDoorId);
 

@@ -134,7 +134,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
         }
         else if (editMode == Ui::DoorEditMode) // select a door
         {
-            auto doorsInRoom = singleton->GetCurrentLevel()->GetDoorList().GetDoorsByRoomID(room->GetRoomID());
+            auto doorsInRoom = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID(room->GetRoomID());
             unsigned int doorCount = doorsInRoom.size();
             if (doorCount)
             {
@@ -219,7 +219,7 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
 
         if (editMode == Ui::DoorEditMode) // select a door
         {
-            auto doorsInRoom = singleton->GetCurrentLevel()->GetDoorList().GetDoorsByRoomID(room->GetRoomID());
+            auto doorsInRoom = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID(room->GetRoomID());
             unsigned int doorCount = doorsInRoom.size();
             if (doorCount)
             {
@@ -385,7 +385,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
         {
             if (holdingEntityOrDoor && SelectedDoorID != -1)
             {
-                auto doorsInRoom = singleton->GetCurrentLevel()->GetDoorList().GetDoorsByRoomID(room->GetRoomID());
+                auto doorsInRoom = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID(room->GetRoomID());
                 auto curDoor = doorsInRoom[SelectedDoorID];
 
                 // The new positions
@@ -399,7 +399,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                 {
                     if (room->IsNewDoorPositionInsideRoom(tileX, tileX + deltaX, tileY, tileY + deltaY))
                     {
-                        int globalDoorId = singleton->GetCurrentLevel()->GetDoorList().GetGlobalIDByLocalID(room->GetRoomID(), SelectedDoorID);
+                        int globalDoorId = singleton->GetCurrentLevel()->GetDoorListRef().GetGlobalIDByLocalID(room->GetRoomID(), SelectedDoorID);
                         singleton->GetCurrentLevel()->GetDoorListRef().SetDoorPlace(globalDoorId, tileX, tileX + deltaX, tileY, tileY + deltaY);
                         singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
                     }

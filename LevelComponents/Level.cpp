@@ -424,15 +424,20 @@ namespace LevelComponents
             rooms[i]->GetSaveChunks(chunks, &roomHeaders, cameraPointerTable, &cameraPointerTableIndex);
         }
 
-        // Create door list chunk and populate door chunk data
-        struct ROMUtils::SaveData doorChunk = { doorTablePtr,
-                                                doorChunkSize,
-                                                doorlist.CreateDataArray(true),
-                                                ROMUtils::SaveDataIndex++,
-                                                true,
-                                                0,
-                                                ROMUtils::PointerFromData(doorTablePtr),
-                                                ROMUtils::SaveDataChunkType::DoorChunkType };
+        // Create door list chunk and populate door chunk data if door change exists
+        struct ROMUtils::SaveData doorChunk;
+        if (doorlist.IsDirty())
+        {
+            doorChunk = { doorTablePtr,
+                          doorChunkSize,
+                          doorlist.CreateDataArray(true),
+                          ROMUtils::SaveDataIndex++,
+                          true,
+                          0,
+                          ROMUtils::PointerFromData(doorTablePtr),
+                          ROMUtils::SaveDataChunkType::DoorChunkType };
+            chunks.append(doorChunk);
+        }
 
         // Create the level names chunk
         // En
@@ -472,7 +477,6 @@ namespace LevelComponents
 
         // Append all the save chunks which have been created
         chunks.append(roomHeaders);
-        chunks.append(doorChunk);
         chunks.append(levelNameChunk);
         chunks.append(levelNameJChunk);
         if (cameraPointerTable)

@@ -82,13 +82,12 @@ namespace LevelComponents
         QString GetLevelName(int levelnameid = 0) { return levelnameid ? LevelNameJ : LevelName; }
         unsigned int GetLevelID() { return LevelID; }
         void SetLevelName(QString newlevelname, int levelnameid = 0) { (levelnameid ? LevelNameJ : LevelName) = newlevelname; }
+        void SetLevelEntitySet();
 
         // Door stuff
         LevelDoorVector GetDoorList() {return LevelDoorVector(doorlist); } // rerurn a copy of doorlist
-        LevelDoorVector &GetDoorListRef() {return doorlist; } // for fast editing
-        QVector<struct DoorEntry> GetDoorVec() {return doorlist.GetDoorVecDeepCopy(); }
+        LevelDoorVector &GetDoorListRef() {return doorlist; } // for fast editing or no-editing data extraction
         void SetDoorVec(LevelDoorVector newdoorlist) { doorlist = LevelDoorVector(newdoorlist); }
-        void SetLevelEntitySet();
         QVector<struct DoorEntry> GetRoomDoorVec(unsigned int roomId) {return doorlist.GetDoorsByRoomID(roomId); }
         bool DeleteDoorByGlobalID(int globalDoorIndex) { return doorlist.DeleteDoor(globalDoorIndex); }
         void AddDoor(unsigned char roomId, unsigned char entitySetId = 1, unsigned char doorTypeId = 2)
