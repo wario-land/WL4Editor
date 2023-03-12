@@ -1,7 +1,7 @@
 #ifndef ROOM_H
 #define ROOM_H
 
-#include "Door.h"
+#include "LevelDoorVector.h"
 #include "Entity.h"
 #include "Layer.h"
 #include "ROMUtils.h"
@@ -99,9 +99,10 @@ namespace LevelComponents
         int tileY = 0;
         unsigned short tileID = 0;
         QVector<Tileinfo> tilechangelist;
-        unsigned int SelectedDoorID = ~0u;
+        unsigned int SelectedDoorID = ~0u; // local door id
         int SelectedEntityID = -1;
         struct Ui::EditModeParams mode = {};
+        QVector<struct DoorEntry> localDoors;
         RenderUpdateParams(enum RenderUpdateType _type) : type(_type) {}
     };
 
@@ -128,7 +129,7 @@ namespace LevelComponents
         std::vector<struct __CameraControlRecord *> CameraControlRecords;
         struct __RoomHeader RoomHeader;
         unsigned int headerAddr; // used to read old layer pointer only, to decide if create invalidation chunks for them or not
-        int CurrentEntitySetID = 0;
+        int CurrentEntitySetID = 37;  // default value so even if the entitysetid cannot be set, the Room can render something
         EntitySet *currentEntitySet = nullptr;
         std::vector<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
         bool EntityListDirty[3];
@@ -136,7 +137,6 @@ namespace LevelComponents
         int currentDifficulty = 1;
         Layer *layers[4];
         Tileset *tileset;
-        std::vector<Door *> doors; // These Doors are deleted in the Level deconstructor
         QGraphicsPixmapItem
             *RenderedLayers[13]; // L0 - 3, E(Entities boxes), D(Door boxes), C(Camera boxes), A (alpha blending, may not exist), E0 - 3, custom hint
         bool IsCopy = false;
@@ -144,7 +144,6 @@ namespace LevelComponents
         // Helper functions
         void FreeDrawLayers();
         void ClearCurrentEntityListSource();
-        void ResetEntitySet(int entitysetId);
 
         // new helper functions
         QVector<int> RenderEffectParamToLayerPriorities(unsigned char render_effect);
@@ -159,7 +158,6 @@ namespace LevelComponents
         ~Room();
 
         // Getters
-        size_t CountDoors() { return doors.size(); }
         unsigned char GetBGScrollParameter() { return RoomHeader.Layer3Scrolling; }
         unsigned char GetLayerGFXEffect01() { return RoomHeader.LayerGFXEffect01; }
         unsigned char GetLayerGFXEffect02() { return RoomHeader.LayerGFXEffect02; }
@@ -182,8 +180,6 @@ namespace LevelComponents
         enum __CameraControlType GetCameraControlType() { return CameraControlType; }
         std::vector<Entity *> GetCurrentEntityListSource() { return currentEntityListSource; }
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
-        LevelComponents::Door *GetDoor(int _localdoorID) { return doors[_localdoorID]; }
-        std::vector<Door *> GetDoors() { return doors; }
         bool GetEntityListDirty(int difficulty) { return EntityListDirty[difficulty]; }
         std::vector<struct EntityRoomAttribute> GetEntityListData(int difficulty) { return EntityList[difficulty]; }
         unsigned int GetHeight() { return Height; }
@@ -207,10 +203,8 @@ namespace LevelComponents
         int GetLayer2MappingParam() { return RoomHeader.Layer2MappingType; }
 
         // Setters
-        void AddDoor(Door *newdoor);
         bool AddEntity(int XPos, int YPos, int localEntityTypeId, int difficulty = -1);
         void DeleteCameraLimitator(int index);
-        void DeleteDoor(int globalDoorIndex);
         void DeleteEntity(int index);
         void DeleteEntity(int difficulty, int index);
         void ClearEntitylist(int difficulty);
@@ -225,24 +219,7 @@ namespace LevelComponents
             CameraControlType = new_control_type;
             RoomHeader.CameraControlType = (unsigned char) new_control_type;
         }
-        void SetCurrentEntitySet(int _currentEntitySetID)
-        {
-            CurrentEntitySetID = _currentEntitySetID;
-            ResetEntitySet(_currentEntitySetID);
-        }
-        void SetDoorsVector(std::vector<Door *> _doors)
-        {
-            if (!IsCopy)
-                return;
-            if (doors.size())
-            {
-                for (auto iter = doors.begin(); iter != doors.end(); ++iter)
-                {
-                    delete *iter; // Delete doors
-                }
-            }
-            doors = _doors;
-        }
+        void SetCurrentEntitySet(int _currentEntitySetID);
         void SetEntityListDirty(int difficulty, bool dirty) { EntityListDirty[difficulty] = dirty; }
         void SetEntityListPtr(int difficulty, unsigned int ptr) { (&RoomHeader.EntityTableHard)[difficulty] = ptr; }
         void SetHeight(int _height) { Height = (unsigned int) _height; }
@@ -267,7 +244,6 @@ namespace LevelComponents
         // Functions
         void AddCameraLimitator();
         int FindEntity(int XPos, int YPos);
-        unsigned int GetLocalDoorID(int globalDoorId);
         void GetSaveChunks(QVector<ROMUtils::SaveData> &chunks, ROMUtils::SaveData *headerChunk,
                            ROMUtils::SaveData *cameraPointerTableChunk, unsigned int *cameraPointerTableIndex);
         QImage AlphaBlend(int eva, int evb, int scrH, int scrW, QImage imgA, QImage imgB);

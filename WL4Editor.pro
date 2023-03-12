@@ -51,6 +51,7 @@ SOURCES += \
     FileIOUtils.cpp \
     AssortedGraphicUtils.cpp \
     LevelComponents/AnimatedTile8x8Group.cpp \
+    LevelComponents/LevelDoorVector.cpp \
     PCG/Graphics/TileUtils.cpp \
     ScriptInterface.cpp \
     main.cpp \
@@ -58,7 +59,6 @@ SOURCES += \
     LevelComponents/Level.cpp \
     LevelComponents/Room.cpp \
     LevelComponents/Layer.cpp \
-    LevelComponents/Door.cpp \
     LevelComponents/Tile.cpp \
     LevelComponents/Tileset.cpp \
     ROMUtils.cpp \
@@ -103,13 +103,13 @@ HEADERS += \
     FileIOUtils.h \
     AssortedGraphicUtils.h \
     LevelComponents/AnimatedTile8x8Group.h \
+    LevelComponents/LevelDoorVector.h \
     PCG/Graphics/TileUtils.h \
     ScriptInterface.h \
     WL4EditorWindow.h \
     LevelComponents/Level.h \
     LevelComponents/Room.h \
     LevelComponents/Layer.h \
-    LevelComponents/Door.h \
     ROMUtils.h \
     WL4Constants.h \
     LevelComponents/Tile.h \

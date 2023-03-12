@@ -17,14 +17,15 @@ static QStringList EntitynameSet;
 /// <param name="parent">
 /// The parent QWidget.
 /// </param>
-DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID,
+DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int localDoorID,
                                    LevelComponents::Level *_level) :
         QDialog(parent),
-        ui(new Ui::DoorConfigDialog), _currentLevel(_level), CurrentRoom(currentroom),
+        ui(new Ui::DoorConfigDialog), _currentLevel(_level),
+        tmpDoorVec(_level->GetDoorList()),
         tmpCurrentRoom(new LevelComponents::Room(currentroom)),
         tmpDestinationRoom(new LevelComponents::Room(
-            _level->GetRooms()[currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()])),
-        DoorID(doorID)
+            _level->GetRooms()[tmpDoorVec.GetDestinationDoor(currentroom->GetRoomID(), localDoorID).RoomID])),
+        LocalDoorID(localDoorID)
 {
     ui->setupUi(this);
 
@@ -49,38 +50,37 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     // set model
     ui->TableView_EntityFilter->setModel(EntityFilterTable);
 
-    // Distribute Doors into the temp CurrentRoom
-    tmpCurrentRoom->SetDoorsVector(_level->GetRoomDoors(currentroom->GetRoomID()));
-    tmpDestinationRoom->SetDoorsVector(
-        _level->GetRoomDoors(currentroom->GetDoor(doorID)->GetDestinationDoor()->GetRoomID()));
-
     // Initialize UI elements
     ui->ComboBox_DoorType->addItems(DoortypeSet);
-    LevelComponents::Door *currentdoor = tmpCurrentRoom->GetDoor(doorID);
-    ui->ComboBox_DoorType->setCurrentIndex(currentdoor->GetDoorTypeNum() - 1);
-    ui->SpinBox_DoorX->setValue(currentdoor->GetX1());
-    ui->SpinBox_DoorY->setValue(currentdoor->GetY1());
-    int doorwidth = currentdoor->GetX2() - currentdoor->GetX1() + 1;
-    int doorheight = currentdoor->GetY2() - currentdoor->GetY1() + 1;
+    LevelComponents::DoorEntry curDoorData = tmpDoorVec.GetDoor(tmpCurrentRoom->GetRoomID(), localDoorID);
+    ui->ComboBox_DoorType->setCurrentIndex(curDoorData.DoorTypeByte - 1);
+    ui->SpinBox_DoorX->setValue(curDoorData.x1);
+    ui->SpinBox_DoorY->setValue(curDoorData.y1);
+    int doorwidth = curDoorData.x2 - curDoorData.x1 + 1;
+    int doorheight = curDoorData.y2 - curDoorData.y1 + 1;
     ui->SpinBox_DoorWidth->setValue(doorwidth);
     ui->SpinBox_DoorHeight->setValue(doorheight);
-    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - currentdoor->GetX1());
-    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - currentdoor->GetY1());
+    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - curDoorData.x1);
+    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - curDoorData.y1);
     ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - doorwidth);
     ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetHeight() - doorheight);
-    ui->SpinBox_WarioX->setValue(currentdoor->GetDeltaX());
-    ui->SpinBox_WarioY->setValue(currentdoor->GetDeltaY());
-    ui->SpinBox_BGM_ID->setValue(currentdoor->GetBGM_ID());
+    ui->SpinBox_WarioX->setValue(curDoorData.HorizontalDeltaWario);
+    ui->SpinBox_WarioY->setValue(curDoorData.VerticalDeltaWario);
+    ui->SpinBox_BGM_ID->setValue(curDoorData.BGM_ID);
 
     // Initialize the selections for destination door combobox
     QStringList doorofLevelSet;
     doorofLevelSet << "Disable destination door";
-    for (unsigned int i = 1; i < _level->GetDoors().size(); ++i)
+    LevelComponents::LevelDoorVector &doorvec = _level->GetDoorListRef();
+    if (int doorsize = doorvec.size(); doorsize > 1)
     {
-        doorofLevelSet << _level->GetDoors()[i]->GetDoorName();
+        for (unsigned int i = 1; i < doorsize; ++i)
+        {
+            doorofLevelSet << doorvec.GetDoorName(i);
+        }
     }
     ui->ComboBox_DoorDestinationPicker->addItems(doorofLevelSet);
-    ui->ComboBox_DoorDestinationPicker->setCurrentIndex(currentdoor->GetDestinationDoor()->GetGlobalDoorID());
+    ui->ComboBox_DoorDestinationPicker->setCurrentIndex(curDoorData.DestinationDoorGlobalID);
     RenderGraphicsView_Preview();
 
     // Initialize the EntitySet ComboBox
@@ -98,8 +98,7 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     UpdateTableView();
 
     // Set the current EntitySet in the ComboBox
-    int entitySetID = currentdoor->GetEntitySetID();
-    ui->ComboBox_EntitySetID->setCurrentIndex(entitySetID);
+    ui->ComboBox_EntitySetID->setCurrentIndex(curDoorData.EntitySetID);
 
     IsInitialized = true;
 }
@@ -116,31 +115,11 @@ DoorConfigDialog::~DoorConfigDialog()
 }
 
 /// <summary>
-/// All the changes in the dialog are made on the temp-created room,
-/// so the current Door needs to get data from the dialog only when user clicks okay,
-/// and this function get called.
+/// return the tmpDoorVec and let the Level instance get it to complete the DoorVector editing
 /// </summary>
-void DoorConfigDialog::UpdateCurrentDoorData()
+LevelComponents::LevelDoorVector &DoorConfigDialog::GetChangedDoorVectorResult()
 {
-    CurrentRoom->GetDoor(DoorID)->SetDoorType(
-        static_cast<LevelComponents::DoorType>(ui->ComboBox_DoorType->currentIndex() + 1));
-    CurrentRoom->GetDoor(DoorID)->SetDelta((signed char) ui->SpinBox_WarioX->value(),
-                                           (signed char) ui->SpinBox_WarioY->value());
-    CurrentRoom->GetDoor(DoorID)->SetDoorPlace(
-        (unsigned char) ui->SpinBox_DoorX->value(),
-        (unsigned char) (ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1),
-        (unsigned char) ui->SpinBox_DoorY->value(),
-        (unsigned char) (ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1));
-    CurrentRoom->GetDoor(DoorID)->SetBGM((unsigned short) ui->SpinBox_BGM_ID->value());
-    int resetEntitysetId = tmpCurrentRoom->GetDoor(DoorID)->GetEntitySetID();
-    if (resetEntitysetId > 0)
-    {
-        CurrentRoom->GetDoor(DoorID)->SetEntitySetID((unsigned char) resetEntitysetId);
-        CurrentRoom->SetCurrentEntitySet(resetEntitysetId);
-    }
-    int index = ui->ComboBox_DoorDestinationPicker->currentIndex();
-    CurrentRoom->GetDoor(DoorID)->SetLinkerDestination(index);
-    CurrentRoom->GetDoor(DoorID)->SetDestinationDoor(_currentLevel->GetDoors()[index]);
+    return tmpDoorVec;
 }
 
 /// <summary>
@@ -173,20 +152,21 @@ void DoorConfigDialog::RenderGraphicsView_Preview()
     }
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::FullRender);
     tparam.tilechangelist.clear();
-    tparam.SelectedDoorID = (unsigned int) DoorID; // ID in Room
+    tparam.SelectedDoorID = (unsigned int) LocalDoorID; // ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
     tparam.mode.ExtraHintsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
     tparam.mode.entitiesboxesDisabled = true;
+    tparam.localDoors = tmpDoorVec.GetDoorsByRoomID(tmpCurrentRoom->GetRoomID());
     QGraphicsScene *scene = tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
     ui->GraphicsView_Preview->setScene(scene);
     ui->GraphicsView_Preview->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
-    // Set scrollbars
-    LevelComponents::Door *tmpdoor = tmpCurrentRoom->GetDoor(DoorID);
-    door_CurX1 = tmpdoor->GetX1();
-    door_CurX2 = tmpdoor->GetX2();
-    door_CurY1 = tmpdoor->GetY1();
-    door_CurY2 = tmpdoor->GetY2();
+    // Set scrollbars magic
+    LevelComponents::DoorEntry curDoorData = tmpDoorVec.GetDoor(tmpCurrentRoom->GetRoomID(), LocalDoorID);
+    int door_CurX1 = curDoorData.x1;
+    int door_CurX2 = curDoorData.x2;
+    int door_CurY1 = curDoorData.y1;
+    int door_CurY2 = curDoorData.y2;
     int X_av = (door_CurX1 + door_CurX2) / 2;
     int Y_av = (door_CurY1 + door_CurY2) / 2;
     float X_av_rate = static_cast<float>(X_av) / static_cast<float>(tmpCurrentRoom->GetWidth());
@@ -226,25 +206,17 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
     tparam.mode.editMode = Ui::DoorEditMode;
     tparam.mode.ExtraHintsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
     tparam.mode.entitiesboxesDisabled = true;
+    tparam.localDoors = tmpDoorVec.GetDoorsByRoomID(tmpDestinationRoom->GetRoomID());
     QGraphicsScene *scene = tmpDestinationRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
     ui->GraphicsView_DestinationDoor->setScene(scene);
     ui->GraphicsView_DestinationDoor->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
-    if(tmpDestinationRoom->GetRoomID() == tmpCurrentRoom->GetRoomID())
-    {
-        tmpDestinationRoom->GetDoor(DoorID)->SetDoorPlace(static_cast<unsigned char>(ui->SpinBox_DoorX->value()),
-                                                          static_cast<unsigned char>((ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1)),
-                                                          static_cast<unsigned char>(ui->SpinBox_DoorY->value()),
-                                                          static_cast<unsigned char>((ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1)));
-        UpdateDoorLayerGraphicsView_DestinationDoor();
-    }
-
     // Set scrollbars
-    LevelComponents::Door *tmpdoor = tmpDestinationRoom->GetDoor(doorIDinRoom);
-    door_DesX1 = tmpdoor->GetX1();
-    door_DesX2 = tmpdoor->GetX2();
-    door_DesY1 = tmpdoor->GetY1();
-    door_DesY2 = tmpdoor->GetY2();
+    LevelComponents::DoorEntry destDoorData = tmpDoorVec.GetDoor(tmpDestinationRoom->GetRoomID(), doorIDinRoom);
+    int door_DesX1 = destDoorData.x1;
+    int door_DesX2 = destDoorData.x2;
+    int door_DesY1 = destDoorData.y1;
+    int door_DesY2 = destDoorData.y2;
     int X_av = (door_DesX1 + door_DesX2) / 2;
     int Y_av = (door_DesY1 + door_DesY2) / 2;
     float X_av_rate = static_cast<float>(X_av) / static_cast<float>(tmpDestinationRoom->GetWidth());
@@ -270,27 +242,24 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
 /// </summary>
 void DoorConfigDialog::ResetDoorRect()
 {
-    LevelComponents::Door *currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
-    currentdoor0->SetDoorPlace(static_cast<unsigned char>(ui->SpinBox_DoorX->value()),
-                               static_cast<unsigned char>((ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1)),
-                               static_cast<unsigned char>(ui->SpinBox_DoorY->value()),
-                               static_cast<unsigned char>((ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1)));
-    int doorwidth = currentdoor0->GetX2() - currentdoor0->GetX1() + 1;
-    int doorheight = currentdoor0->GetY2() - currentdoor0->GetY1() + 1;
+    tmpDoorVec.SetDoorPlace(tmpDoorVec.GetGlobalIDByLocalID(tmpCurrentRoom->GetRoomID(), LocalDoorID),
+                static_cast<unsigned char>(ui->SpinBox_DoorX->value()),
+                static_cast<unsigned char>((ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1)),
+                static_cast<unsigned char>(ui->SpinBox_DoorY->value()),
+                static_cast<unsigned char>((ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1)));
+    LevelComponents::DoorEntry curDoorData = tmpDoorVec.GetDoor(tmpCurrentRoom->GetRoomID(), LocalDoorID);
+    int doorwidth = curDoorData.x2 - curDoorData.x1 + 1;
+    int doorheight = curDoorData.y2 - curDoorData.y1 + 1;
     ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - doorwidth);
     ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetHeight() - doorheight);
-    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - currentdoor0->GetX1());
-    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - currentdoor0->GetY1());
+    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - curDoorData.x1);
+    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - curDoorData.y1);
     UpdateDoorLayerGraphicsView_Preview();
 
-    // when DestinationDoor and currentDoor are in the same Room, the DestinationDoor also needs an update.
+    // when DestinationDoor and currentDoor are in the same Room, the DestinationDoor graphicview also needs an update.
     if (!ui->ComboBox_DoorDestinationPicker->currentIndex()) return;
     if(tmpDestinationRoom->GetRoomID() == tmpCurrentRoom->GetRoomID())
     {
-        tmpDestinationRoom->GetDoor(DoorID)->SetDoorPlace(static_cast<unsigned char>(ui->SpinBox_DoorX->value()),
-                                                          static_cast<unsigned char>((ui->SpinBox_DoorX->value() + ui->SpinBox_DoorWidth->value() - 1)),
-                                                          static_cast<unsigned char>(ui->SpinBox_DoorY->value()),
-                                                          static_cast<unsigned char>((ui->SpinBox_DoorY->value() + ui->SpinBox_DoorHeight->value() - 1)));
         UpdateDoorLayerGraphicsView_DestinationDoor();
     }
 }
@@ -302,10 +271,11 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_Preview()
 {
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::ElementsLayersUpdate);
     tparam.tilechangelist.clear();
-    tparam.SelectedDoorID = (unsigned int) DoorID; // ID in Room
+    tparam.SelectedDoorID = (unsigned int) LocalDoorID; // ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
     tparam.mode.ExtraHintsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
     tparam.mode.entitiesboxesDisabled = true;
+    tparam.localDoors = tmpDoorVec.GetDoorsByRoomID(tmpCurrentRoom->GetRoomID());
     tmpCurrentRoom->RenderGraphicsScene(ui->GraphicsView_Preview->scene(), &tparam);
 }
 
@@ -316,11 +286,12 @@ void DoorConfigDialog::UpdateDoorLayerGraphicsView_DestinationDoor()
 {
     struct LevelComponents::RenderUpdateParams tparam(LevelComponents::ElementsLayersUpdate);
     tparam.tilechangelist.clear();
-    tparam.SelectedDoorID = (unsigned int) tmpDestinationRoom->GetLocalDoorID(
-        ui->ComboBox_DoorDestinationPicker->currentIndex()); // ID in Room
+    int destDoorGlobalId = ui->ComboBox_DoorDestinationPicker->currentIndex();
+    tparam.SelectedDoorID = tmpDoorVec.GetLocalIDByGlobalID(destDoorGlobalId); // ID in Room
     tparam.mode.editMode = Ui::DoorEditMode;
     tparam.mode.ExtraHintsEnabled = tparam.mode.entitiesEnabled = tparam.mode.cameraAreasEnabled = false;
     tparam.mode.entitiesboxesDisabled = true;
+    tparam.localDoors = tmpDoorVec.GetDoorsByRoomID(tmpDestinationRoom->GetRoomID());
     tmpDestinationRoom->RenderGraphicsScene(ui->GraphicsView_DestinationDoor->scene(), &tparam);
 }
 
@@ -455,12 +426,10 @@ void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int
 {
     delete tmpDestinationRoom;
     tmpDestinationRoom =
-        new LevelComponents::Room(_currentLevel->GetRooms()[_currentLevel->GetDoors()[index]->GetRoomID()]);
-    tmpDestinationRoom->SetDoorsVector(
-        _currentLevel->GetRoomDoors((unsigned int) _currentLevel->GetDoors()[index]->GetRoomID()));
+        new LevelComponents::Room(_currentLevel->GetRooms()[tmpDoorVec.GetDoor(index).RoomID]);
     if (index != 0)
     {
-        RenderGraphicsView_DestinationDoor(tmpDestinationRoom->GetLocalDoorID(index));
+        RenderGraphicsView_DestinationDoor(tmpDoorVec.GetLocalIDByGlobalID(index));
     }
     else
     {
@@ -538,10 +507,7 @@ void DoorConfigDialog::on_ComboBox_DoorType_currentIndexChanged(int index)
 {
     if (!IsInitialized)
         return;
-    LevelComponents::Door *currentdoor0 = tmpCurrentRoom->GetDoor(DoorID);
-
-    // TODOs: need more auto-reset to some of the Door attributes when select DoorType 4 or 5.
-    currentdoor0->SetDoorType(static_cast<LevelComponents::DoorType>(index + 1));
+    tmpDoorVec.SetDoorType(tmpDoorVec.GetGlobalIDByLocalID(tmpCurrentRoom->GetRoomID(), LocalDoorID), index + 1);
 }
 
 /// <summary>
@@ -555,8 +521,8 @@ void DoorConfigDialog::on_SpinBox_WarioX_valueChanged(int arg1)
     (void) arg1;
     if (!IsInitialized)
         return;
-    tmpCurrentRoom->GetDoor(DoorID)->SetDelta((signed char) ui->SpinBox_WarioX->value(),
-                                              (signed char) ui->SpinBox_WarioY->value());
+    int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(tmpCurrentRoom->GetRoomID(), LocalDoorID);
+    tmpDoorVec.SetWarioDelta(globalDoorId, (signed char) ui->SpinBox_WarioX->value(), (signed char) ui->SpinBox_WarioY->value());
 }
 
 /// <summary>
@@ -570,8 +536,8 @@ void DoorConfigDialog::on_SpinBox_WarioY_valueChanged(int arg1)
     (void) arg1;
     if (!IsInitialized)
         return;
-    tmpCurrentRoom->GetDoor(DoorID)->SetDelta((signed char) ui->SpinBox_WarioX->value(),
-                                              (signed char) ui->SpinBox_WarioY->value());
+    int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(tmpCurrentRoom->GetRoomID(), LocalDoorID);
+    tmpDoorVec.SetWarioDelta(globalDoorId, (signed char) ui->SpinBox_WarioX->value(), (signed char) ui->SpinBox_WarioY->value());
 }
 
 /// <summary>
@@ -584,7 +550,8 @@ void DoorConfigDialog::on_SpinBox_BGM_ID_valueChanged(int arg1)
 {
     if (!IsInitialized)
         return;
-    tmpCurrentRoom->GetDoor(DoorID)->SetBGM((unsigned char) arg1);
+    int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(tmpCurrentRoom->GetRoomID(), LocalDoorID);
+    tmpDoorVec.SetBGM(globalDoorId, arg1);
 
     // set bgm name for the label
     if (SettingsUtils::projectSettings::bgmNameList.find(arg1) != SettingsUtils::projectSettings::bgmNameList.end())
@@ -607,7 +574,8 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
 {
     if (index == -1)
         return;
-    int currentEntitySetId = tmpCurrentRoom->GetDoor(DoorID)->GetEntitySetID();
+    int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(tmpCurrentRoom->GetRoomID(), LocalDoorID);
+    int currentEntitySetId = tmpDoorVec.GetDoor(globalDoorId).EntitySetID;
     if (IsInitialized == true)
         currentEntitySetId = ui->ComboBox_EntitySetID->currentText().toInt(nullptr, 16);
     ui->TextEdit_AllTheEntities->clear();
@@ -618,7 +586,7 @@ void DoorConfigDialog::on_ComboBox_EntitySetID_currentIndexChanged(int index)
         QString currentname = EntitynameSetData[currentEntityTable[i].Global_EntityID];
         ui->TextEdit_AllTheEntities->append(currentname);
     }
-    tmpCurrentRoom->GetDoor(DoorID)->SetEntitySetID((unsigned char) currentEntitySetId);
+    tmpDoorVec.SetEntitySetID(globalDoorId, currentEntitySetId);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------

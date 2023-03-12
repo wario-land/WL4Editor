@@ -466,14 +466,14 @@ QString ScriptInterface::GetEntityListSource()
 
 QString ScriptInterface::GetCurRoomAllDoorsRangeData()
 {
-    auto doorlist = singleton->GetCurrentRoom()->GetDoors();
+    auto doordata = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID(singleton->GetCurrentRoom()->GetRoomID());
     QString result = "";
-    for (auto &door: doorlist)
+    for (auto &door: doordata)
     {
-        int x1 = door->GetX1();
-        int x2 = door->GetX2();
-        int y1 = door->GetY1();
-        int y2 = door->GetY2();
+        int x1 = door.x1;
+        int x2 = door.x2;
+        int y1 = door.y1;
+        int y2 = door.y2;
         result += QString::number(x1, 10) + "," + QString::number(x2, 10) + "," + QString::number(y1, 10) + "," + QString::number(y2, 10) + ";";
     }
     result.chop(1); // get rid of the last ";"

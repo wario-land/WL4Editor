@@ -55,7 +55,7 @@ namespace LevelComponents
         Height = layers[1]->GetLayerHeight();
 
         // Copy Entityset's and Entities' pointers
-        ResetEntitySet(CurrentEntitySetID);
+        SetCurrentEntitySet(CurrentEntitySetID);
     }
 
     /// <summary>
@@ -185,7 +185,7 @@ namespace LevelComponents
         }
 
         // Copy Entityset's and Entities' pointers
-        ResetEntitySet(CurrentEntitySetID);
+        SetCurrentEntitySet(CurrentEntitySetID);
     }
 
     /// <summary>
@@ -218,10 +218,11 @@ namespace LevelComponents
     /// <param name="entitysetId">
     /// New EntitySet Id.
     /// </param>
-    void Room::ResetEntitySet(int entitysetId)
+    void Room::SetCurrentEntitySet(int _currentEntitySetID)
     {
         ClearCurrentEntityListSource();
-        currentEntitySet = ROMUtils::entitiessets[entitysetId];
+        currentEntitySet = ROMUtils::entitiessets[_currentEntitySetID];
+        CurrentEntitySetID = _currentEntitySetID;
         for (int i = 0; i < 17; ++i)
         {
             currentEntityListSource.push_back(ROMUtils::entities[i]);
@@ -254,32 +255,9 @@ namespace LevelComponents
         {
             delete C;
         }
-        if (IsCopy && doors.size())
-        {
-            for (auto iter = doors.begin(); iter != doors.end(); ++iter)
-            {
-                delete *iter; // Delete doors
-            }
-        }
         for (int i = 0; i < 4; ++i)
         {
             delete layers[i];
-        }
-    }
-
-    /// <summary>
-    /// Get distributed doors' pointers from Room class and Reset EntitySet in this Room by the way if needed.
-    /// </summary>
-    /// <param name="newdoor">
-    /// eExisting Door ptr.
-    /// </param>
-    void Room::AddDoor(Door *newdoor)
-    {
-        doors.push_back(newdoor);
-        if (!CurrentEntitySetID)
-        {
-            CurrentEntitySetID = newdoor->GetEntitySetID();
-            ResetEntitySet(CurrentEntitySetID);
         }
     }
 
@@ -489,12 +467,13 @@ namespace LevelComponents
             QPen DoorPen = QPen(QBrush(SettingsUtils::projectSettings::doorboxcolor), 2);
             DoorPen.setJoinStyle(Qt::MiterJoin);
             doorPainter.setPen(DoorPen);
-            for (unsigned int i = 0; i < doors.size(); i++)
+            for (unsigned int i = 0; i < renderParams->localDoors.size(); i++)
             {
-                int doorX = doors[i]->GetX1() * 16;
-                int doorY = doors[i]->GetY1() * 16;
-                int doorWidth = (qAbs(doors[i]->GetX1() - doors[i]->GetX2()) + 1) * 16;
-                int doorHeight = (qAbs(doors[i]->GetY1() - doors[i]->GetY2()) + 1) * 16;
+                struct DoorEntry &currentDoor = renderParams->localDoors[i];
+                int doorX = currentDoor.x1 * 16;
+                int doorY = currentDoor.y1 * 16;
+                int doorWidth = (qAbs(currentDoor.x1 - currentDoor.x2) + 1) * 16;
+                int doorHeight = (qAbs(currentDoor.y1 - currentDoor.y2) + 1) * 16;
                 if (i == renderParams->SelectedDoorID)
                 {
                     QPen DoorPen2 = QPen(QBrush(SettingsUtils::projectSettings::doorboxcolorselected), 2);
@@ -539,7 +518,7 @@ namespace LevelComponents
                 // Use Wario original position when getting out of a door to figure out the Camera Limitator Y position
                 // CameraY and WarioYPos here are 4 times the real values
                 int CameraY = 0x80 - 32;
-                int WarioYPos = doors[0]->GetWarioOriginalPosition_x4().y(); // Use the first door in the data
+                int WarioYPos = renderParams->localDoors[0].GetWarioOriginalPosition_x4().y(); // Use the first door in the data
                 if (WarioYPos > 0x260)
                 {
                     do
@@ -1139,23 +1118,6 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Convert a level-wide door ID into a room-wide door ID.
-    /// </summary>
-    /// <param name="globalDoorId">
-    /// The level's door ID.
-    /// </param>
-    unsigned int Room::GetLocalDoorID(int globalDoorId)
-    {
-        for (unsigned int i = 0; i < doors.size(); ++i)
-        {
-            if (doors[i]->GetGlobalDoorID() == globalDoorId)
-                return i;
-        }
-        assert(0 /* globalDoorId must match one of the door's global ID */); // TODO: Error handling
-        return 0xFFFFFFFF;
-    }
-
-    /// <summary>
     /// Populate a vector with save data chunks for a level.
     /// </summary>
     /// <param name="chunks">
@@ -1523,27 +1485,6 @@ namespace LevelComponents
         if (difficulty > 2)
             return;
         EntityList[difficulty].clear();
-    }
-
-    /// <summary>
-    /// Delete an Door from the Room.
-    /// </summary>
-    /// <param name="globalDoorIndex">
-    /// The global Door id given by current Level.
-    /// </param>
-    void Room::DeleteDoor(int globalDoorIndex)
-    {
-        for (unsigned int i = 0; i < doors.size(); ++i)
-        {
-            if (doors[i]->GetGlobalDoorID() == globalDoorIndex)
-            {
-                doors.erase(doors.begin() + i);
-                return;
-            }
-        }
-
-        // Reset CurrentEntitySetID
-        CurrentEntitySetID = doors[0]->GetEntitySetID();
     }
 
     /// <summary>

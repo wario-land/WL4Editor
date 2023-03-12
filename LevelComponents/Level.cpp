@@ -200,31 +200,6 @@ namespace LevelComponents
 
         memcpy(&LevelHeader, ROMUtils::ROMFileMetadata->ROMDataPtr + levelHeaderPointer, sizeof(struct __LevelHeader));
 
-        // Load the door data
-        std::vector<int> destinations;
-        int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + LevelID * 4);
-        struct __DoorEntry *doorPtr = (struct __DoorEntry *) (ROMUtils::ROMFileMetadata->ROMDataPtr + doorStartAddress);
-        unsigned char *firstByte;
-        int currentDoornum = 0;
-        while (*(firstByte = (unsigned char *) doorPtr))
-        {
-            Door *newDoor = new Door(*doorPtr, doorPtr->RoomID, currentDoornum);
-            newDoor->SetEntitySetID(doorPtr->EntitySetID);
-            newDoor->SetBGM(doorPtr->BGM_ID);
-            newDoor->SetDelta(doorPtr->HorizontalDelta, doorPtr->VerticalDelta);
-            doors.push_back(newDoor);
-            destinations.push_back(doorPtr->LinkerDestination);
-            ++doorPtr;
-            ++currentDoornum;
-        }
-        // Assign the destinations for the doors
-        for (unsigned int i = 0; i < doors.size(); ++i)
-        {
-            doors[i]->SetDestinationDoor(doors[destinations[i]]);
-        }
-        // Set the first Door be Vortex Door
-        doors[0]->SetAsVortex();
-
         // Load the room data
         int roomTableAddress = ROMUtils::PointerFromData(WL4Constants::RoomDataTable + LevelID * 4);
         int roomCount = ROMUtils::ROMFileMetadata->ROMDataPtr[levelHeaderPointer + 1];
@@ -233,8 +208,10 @@ namespace LevelComponents
             rooms.push_back(new Room(roomTableAddress + i * 0x2C, i, LevelID));
         }
 
-        // Distribute door data to every room
-        RedistributeDoor();
+        // Load the door data then set the entityset for every Room (Ver.2)
+        int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + LevelID * 4);
+        doorlist = LevelDoorVector(doorStartAddress);
+        InitLevelEntitySet();
 
         // Load the level names
         int LevelNameAddress =
@@ -252,10 +229,6 @@ namespace LevelComponents
     /// </summary>
     Level::~Level()
     {
-        for (auto iter = doors.begin(); iter != doors.end(); ++iter)
-        {
-            delete *iter; // Delete doors
-        }
         for (auto iter = rooms.begin(); iter != rooms.end(); ++iter)
         {
             delete *iter; // Delete rooms
@@ -325,73 +298,19 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Distribute door data to every room.
+    /// Distribute Entity set id from door data to every room.
     /// </summary>
-    void Level::RedistributeDoor()
+    void Level::InitLevelEntitySet()
     {
-        // Distribute door data to every room
-        for (unsigned int i = 0; i < doors.size(); ++i)
-        {
-            rooms[doors[i]->GetRoomID()]->AddDoor(doors[i]);
-        }
-
-        // Check if every Room have at least one Door, if not, set the entityset id to skip some problems
-        // the code is only for avoiding crash
+        // Check if every Room have at least one Door, if not, set a default entityset id to avoid some crashes
         for (unsigned int i = 0; i < rooms.size(); ++i)
         {
-            if (rooms[i]->CountDoors() == 0)
+            auto doorDataOfRoom = doorlist.GetDoorsByRoomID(rooms[i]->GetRoomID());
+            if (doorDataOfRoom.size())
             {
-                rooms[i]->SetCurrentEntitySet(37);
+                rooms[i]->SetCurrentEntitySet(doorDataOfRoom[0].EntitySetID);
             }
         }
-    }
-
-    /// <summary>
-    /// Get the Doors data copy.
-    /// </summary>
-    /// <param name="roomId">
-    /// Room id of the Room the temp-Room copied from.
-    /// </param>
-    /// <remark>
-    /// only used to give data to the Room copy.
-    /// </remark>
-    std::vector<Door *> Level::GetRoomDoors(unsigned int roomId)
-    {
-        std::vector<Door *> roomDoors;
-        // Distribute door data
-        for (unsigned int i = 0; i < doors.size(); ++i)
-        {
-            if (doors[i]->GetRoomID() == (int) roomId)
-            {
-                Door *newDoor = new Door(*doors[i]);
-                roomDoors.push_back(newDoor);
-            }
-        }
-        return roomDoors;
-    }
-
-    /// <summary>
-    /// Delete a Door from the Door list and destroy the intance.
-    /// </summary>
-    /// <param name="globalDoorIndex">
-    /// The global Door id given by current Level.
-    /// </param>
-    void Level::DeleteDoor(int globalDoorIndex)
-    {
-        delete (*(doors.begin() + globalDoorIndex));
-        doors.erase(doors.begin() + globalDoorIndex);
-    }
-
-    /// <summary>
-    /// Add a new Door to the Door list and distribute it to the Room.
-    /// </summary>
-    /// <param name="newdoor">
-    /// new Door instance.
-    /// </param>
-    void Level::AddDoor(Door *newdoor)
-    {
-        doors.push_back(newdoor);
-        rooms[newdoor->GetRoomID()]->AddDoor(newdoor);
     }
 
     /// <summary>
@@ -410,7 +329,7 @@ namespace LevelComponents
         unsigned int roomTablePtr = WL4Constants::RoomDataTable + levelIndex * 4;
         unsigned int roomHeaderChunkSize = rooms.size() * sizeof(struct __RoomHeader);
         unsigned int doorTablePtr = WL4Constants::DoorTable + levelIndex * 4;
-        unsigned int doorChunkSize = (doors.size() + 1) * sizeof(struct __DoorEntry);
+        unsigned int doorChunkSize = (doorlist.size() + 1) * sizeof(struct DoorEntry);
         unsigned int LevelNamePtr = WL4Constants::LevelNamePointerTable + passage * 24 + stage * 4;
         unsigned int LevelNameJPtr = WL4Constants::LevelNameJPointerTable + passage * 24 + stage * 4;
         const unsigned int GBAptrSentinel = 0x8000000 | WL4Constants::CameraRecordSentinel;
@@ -501,29 +420,20 @@ namespace LevelComponents
             rooms[i]->GetSaveChunks(chunks, &roomHeaders, cameraPointerTable, &cameraPointerTableIndex);
         }
 
-        // Create door list chunk
-        struct ROMUtils::SaveData doorChunk = { doorTablePtr,
-                                                doorChunkSize,
-                                                (unsigned char *) malloc(doorChunkSize),
-                                                ROMUtils::SaveDataIndex++,
-                                                true,
-                                                0,
-                                                ROMUtils::PointerFromData(doorTablePtr),
-                                                ROMUtils::SaveDataChunkType::DoorChunkType };
-
-        // Populate door chunk data
-        std::map<Door *, int> indexMapping;
-        for (unsigned int i = 0; i < doors.size(); ++i)
+        // Create door list chunk and populate door chunk data if door change exists
+        struct ROMUtils::SaveData doorChunk;
+        if (doorlist.IsDirty())
         {
-            indexMapping[doors[i]] = i;
+            doorChunk = { doorTablePtr,
+                          doorChunkSize,
+                          doorlist.CreateDataArray(true),
+                          ROMUtils::SaveDataIndex++,
+                          true,
+                          0,
+                          ROMUtils::PointerFromData(doorTablePtr),
+                          ROMUtils::SaveDataChunkType::DoorChunkType };
+            chunks.append(doorChunk);
         }
-        for (unsigned int i = 0; i < doors.size(); ++i)
-        {
-            struct __DoorEntry entryStruct = doors[i]->GetEntryStruct();
-            entryStruct.LinkerDestination = indexMapping[doors[i]->GetDestinationDoor()];
-            memcpy(doorChunk.data + i * sizeof(struct __DoorEntry), &entryStruct, sizeof(struct __DoorEntry));
-        }
-        memset(doorChunk.data + doors.size() * sizeof(struct __DoorEntry), 0, sizeof(struct __DoorEntry));
 
         // Create the level names chunk
         // En
@@ -563,7 +473,6 @@ namespace LevelComponents
 
         // Append all the save chunks which have been created
         chunks.append(roomHeaders);
-        chunks.append(doorChunk);
         chunks.append(levelNameChunk);
         chunks.append(levelNameJChunk);
         if (cameraPointerTable)

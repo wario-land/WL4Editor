@@ -652,60 +652,27 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         // TODO: support Undo/Redo on these elements
         // -- Door --
         int nxtRoomWidth = nextroomconfig->RoomWidth, nxtRoomHeight = nextroomconfig->RoomHeight;
-        std::vector<LevelComponents::Door *> doorlist = currentRoom->GetDoors();
-        size_t doornum = currentRoom->CountDoors();
-        size_t k = doornum - 1;
-        size_t vortexdoorId_needResetPos = 0;
-        size_t doorcount = doornum;
-        uint *deleteDoorIdlist = new uint[doornum](); // set them all 0, index the door from 1
-        for (uint i = 0; i < doornum; i++)
+        auto allDoor = CurrentLevel->GetDoorListRef();
+        int doornum = allDoor.size();
+        for (int i = 0; i < doornum; i++)
         {
-            if ((doorlist[i]->GetX2() >= nxtRoomWidth) || (doorlist[i]->GetY2() >= nxtRoomHeight))
+            auto curDoor = allDoor.GetDoor(i);
+            if (curDoor.RoomID == currentRoom->GetRoomID()) // if the door is in the current Room
             {
-                if (doorlist[i]->IsVortex())
+                // if the Door top left Tile is out of bound
+                if (curDoor.x1 > (nxtRoomWidth - 1) || curDoor.y1 > (nxtRoomHeight - 1))
                 {
-                    vortexdoorId_needResetPos = i + 1;
-                    deleteDoorIdlist[k--] = i + 1;
-                }
-                else
-                {
-                    deleteDoorIdlist[k--] = i + 1; // the id list will be something like: 0 0 0 8 4 2
-                }
-            }
-        }
-        for (uint i = 0; i < doornum; i++)
-        {
-            if (deleteDoorIdlist[i] != 0)
-            {
-                if (deleteDoorIdlist[i] != vortexdoorId_needResetPos)
-                {
-                    if (i == doornum - 1 &&
-                        doorcount == 1) // don't delete the last door if there is no vortex door in this Room
+                    if (curDoor.DoorTypeByte == LevelComponents::_Portal)
                     {
-                        currentRoom->GetDoor(deleteDoorIdlist[i] - 1)
-                            ->SetDoorPlace(
-                                qMin(nxtRoomWidth - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX1()),
-                                qMin(nxtRoomWidth - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX2()),
-                                qMin(nxtRoomHeight - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY1()),
-                                qMin(nxtRoomHeight - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY2()));
-                        break;
+                        allDoor.SetDoorPlace(i, 2, 2, 2, 2); // move the portal Door to the top left corner of the Room
                     }
-                    if (DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID()))
-                    {--doorcount;}
-                    // Seems don't need to set Door dirty at least for now
-                }
-                else
-                {
-                    currentRoom->GetDoor(vortexdoorId_needResetPos - 1)
-                        ->SetDoorPlace(qMin(nxtRoomWidth - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX1()),
-                                       qMin(nxtRoomWidth - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX2()),
-                                       qMin(nxtRoomHeight - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY1()),
-                                       qMin(nxtRoomHeight - 1, currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY2()));
-                    // Seems don't need to set Door dirty at least for now
+                    else
+                    {
+                        allDoor.DeleteDoor(i); // delete all the out-of-bound non-portal Door
+                    }
                 }
             }
         }
-        delete[] deleteDoorIdlist;
 
         // -- Entity --
         for (uint i = 0; i < 3; i++)
@@ -726,7 +693,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         std::vector<struct LevelComponents::__CameraControlRecord *> limitatorlist =
             currentRoom->GetCameraControlRecords(false);
         size_t limitatornum = limitatorlist.size();
-        k = limitatornum - 1;
+        size_t k = limitatornum - 1;
         uint *deleteLimitatorIdlist = new uint[limitatornum](); // set them all 0, index the limitator from 1
         for (uint i = 0; i < limitatornum; i++)
         {
@@ -774,56 +741,11 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
 /// </param>
 bool WL4EditorWindow::DeleteDoor(int globalDoorIndex)
 {
-    // You cannot delete the vortex, it is always the first Door.
-    if (globalDoorIndex == 0)
+    if (!CurrentLevel->DeleteDoorByGlobalID(globalDoorIndex))
     {
-        OutputWidget->PrintString(tr("Deleting portal Door not permitted!"));
+        OutputWidget->PrintString(tr("Cannot Delete the current Door!\nYou cannot delete a portal Door or the last Door in a Room!"));
         return false;
     }
-
-    // You cannot delete the last Door in a Room
-    // use the globalDoorIndex to find the Room
-    LevelComponents::Room *tmpRoom = CurrentLevel->GetRooms()[CurrentLevel->GetDoors()[globalDoorIndex]->GetRoomID()];
-    if (tmpRoom->GetDoors().size() == 1)
-    {
-        OutputWidget->PrintString(tr("Deleting the last Door in the Room not permitted! Spriteset is based on Doors."));
-        return false;
-    }
-
-    // Delete the Door from the Room's Door list
-    tmpRoom->DeleteDoor(globalDoorIndex);
-
-    // Disable the destination for all the existing Doors whose DestinationDoor is the Door which is being deleting
-    for (unsigned int i = 0; i < CurrentLevel->GetDoors().size(); ++i)
-    {
-        if (CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID() == globalDoorIndex)
-        {
-            CurrentLevel->GetDoors()[i]->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
-        }
-    }
-
-    // Delete the Door from the Level Door list
-    CurrentLevel->DeleteDoor(globalDoorIndex);
-
-    // Decline the GlobalDoorId for the Doors indexed after the deleted Door
-    if (CurrentLevel->GetDoors().size() - globalDoorIndex)
-    {
-        for (unsigned int i = globalDoorIndex; i < CurrentLevel->GetDoors().size(); ++i)
-        {
-            CurrentLevel->GetDoors()[i]->GlobalDoorIdDec();
-        }
-    }
-
-    // Correct the LinkerDestination in DoorEntry for each Door
-    if (CurrentLevel->GetDoors().size() > 1)
-    {
-        for (unsigned int i = 1; i < CurrentLevel->GetDoors().size(); ++i)
-        {
-            CurrentLevel->GetDoors()[i]->SetLinkerDestination(
-                CurrentLevel->GetDoors()[i]->GetDestinationDoor()->GetGlobalDoorID());
-        }
-    }
-
     return true;
 }
 
@@ -902,8 +824,9 @@ void WL4EditorWindow::RenderScreenFull()
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::FullRender);
     renderParams.mode = EditModeWidget->GetEditModeParams();
     renderParams.SelectedDoorID = (unsigned int) ui->graphicsView->GetSelectedDoorID();
-    QGraphicsScene *scene =
-        CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+    LevelComponents::Room *curRoom = this->GetCurrentRoom();
+    renderParams.localDoors = CurrentLevel->GetRoomDoorVec(curRoom->GetRoomID());
+    QGraphicsScene *scene = curRoom->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
@@ -915,8 +838,9 @@ void WL4EditorWindow::RenderScreenVisibilityChange()
 {
     struct LevelComponents::RenderUpdateParams renderParams(LevelComponents::LayerEnable);
     renderParams.mode = EditModeWidget->GetEditModeParams();
-    QGraphicsScene *scene =
-        CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+    LevelComponents::Room *curRoom = this->GetCurrentRoom();
+    renderParams.localDoors = CurrentLevel->GetRoomDoorVec(curRoom->GetRoomID());
+    QGraphicsScene *scene = curRoom->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
@@ -930,8 +854,9 @@ void WL4EditorWindow::RenderScreenElementsLayersUpdate(unsigned int DoorId, int 
     renderParams.mode = EditModeWidget->GetEditModeParams();
     renderParams.SelectedDoorID = DoorId;
     renderParams.SelectedEntityID = EntityId;
-    QGraphicsScene *scene =
-        CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+    LevelComponents::Room *curRoom = this->GetCurrentRoom();
+    renderParams.localDoors = CurrentLevel->GetRoomDoorVec(curRoom->GetRoomID());
+    QGraphicsScene *scene = curRoom->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
@@ -945,7 +870,9 @@ void WL4EditorWindow::RenderScreenTilesChange(QVector<LevelComponents::Tileinfo>
     renderParams.mode = EditModeWidget->GetEditModeParams();
     renderParams.mode.selectedLayer = LayerID;
     renderParams.tilechangelist = tilelist;
-    CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
+    LevelComponents::Room *curRoom = this->GetCurrentRoom();
+    renderParams.localDoors = CurrentLevel->GetRoomDoorVec(curRoom->GetRoomID());
+    curRoom->RenderGraphicsScene(ui->graphicsView->scene(), &renderParams);
 }
 
 /// <summary>
@@ -1122,8 +1049,9 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
         QMessageBox IfDeleteDoors;
         IfDeleteDoors.setWindowTitle(tr("WL4Editor"));
         IfDeleteDoors.setText(tr(
-            "You just triggered the clear-all shortcut (current room).\nDo you want to delete all the doors, too?\n(One "
-            "door will be kept to render camera boxes correctly.\nCamera settings will be unaffected regardless.)"));
+            "You just triggered the clear-all shortcut (current room).\nDo you want to delete all the doors, too?\n"
+            "(Only one door will be reserved to render camera boxes correctly and keep data association for entityset settings.\n"
+            "Camera settings will be unaffected regardless.)"));
         QPushButton *CancelClearingButton = IfDeleteDoors.addButton(tr("Cancel Clearing"), QMessageBox::RejectRole);
         QPushButton *NoButton = IfDeleteDoors.addButton(tr("No"), QMessageBox::NoRole);
         QPushButton *YesButton = IfDeleteDoors.addButton(tr("Yes"), QMessageBox::ApplyRole);
@@ -1165,54 +1093,22 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
     // Delete most of the Doors
     if (IfDeleteAllDoors)
     {
-        std::vector<LevelComponents::Door *> doorlist = currentRoom->GetDoors();
-        size_t doornum = currentRoom->CountDoors();
-        size_t k = doornum - 1;
-        size_t vortexdoorId_needResetPos = 0;
-        uint *deleteDoorIdlist = new uint[doornum](); // set them all 0, index the door from 1
-        for (uint i = 0; i < doornum; i++)
+        int rw = currentRoom->GetWidth(), rh = currentRoom->GetHeight();
+        auto allDoor = CurrentLevel->GetDoorListRef();
+        int doornum = allDoor.size();
+        int curRoomDoorIdIter = -1;
+        for (int i = 0; i < doornum; i++)
         {
-            if (doorlist[i]->IsVortex())
+            auto curDoor = allDoor.GetDoor(i);
+            if (curDoor.RoomID == currentRoom->GetRoomID()) // if the door is in the current Room
             {
-                vortexdoorId_needResetPos = i + 1;
-                deleteDoorIdlist[k--] = i + 1;
-            }
-            else
-            {
-                deleteDoorIdlist[k--] = i + 1; // the id list will be something like: 0 0 0 8 4 2
-            }
-        }
-        for (uint i = 0; i < doornum; i++)
-        {
-            if (deleteDoorIdlist[i] != 0)
-            {
-                if (deleteDoorIdlist[i] != vortexdoorId_needResetPos)
+                curRoomDoorIdIter++;
+                if (curRoomDoorIdIter > 0) // only reserve the first Door. if there is a portal Door in the Room, it has to be the first Door
                 {
-                    if (i == doornum - 1 && !vortexdoorId_needResetPos) // don't delete the last door if there is no
-                                                                        // vortex door in this Room
-                        break;
-                    if (i == doornum - 1 &&
-                        vortexdoorId_needResetPos) // delete the last door if there is a vortex door in this Room
-                        continue;
-                    DeleteDoor(currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetGlobalDoorID());
-                    // Seems don't need to set Door dirty at least for now
-                }
-                else
-                {
-                    currentRoom->GetDoor(vortexdoorId_needResetPos - 1)
-                        ->SetDoorPlace(qMin(currentRoom->GetWidth() - 1,
-                                            (uint) currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX1()),
-                                       qMin(currentRoom->GetWidth() - 1,
-                                            (uint) currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetX2()),
-                                       qMin(currentRoom->GetHeight() - 1,
-                                            (uint) currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY1()),
-                                       qMin(currentRoom->GetHeight() - 1,
-                                            (uint) currentRoom->GetDoor(deleteDoorIdlist[i] - 1)->GetY2()));
-                    // Seems don't need to set Door dirty at least for now
+                    allDoor.DeleteDoor(i); // delete all the other Doors from the current Room
                 }
             }
         }
-        delete[] deleteDoorIdlist;
     }
 
     // TODO: add history record
@@ -1700,23 +1596,8 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionNew_Door_triggered()
 {
-    // Create a new door struct with blank fields
-    LevelComponents::__DoorEntry newDoorEntry;
-    memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
-
-    // Initialize the fields
-    newDoorEntry.DoorTypeByte = (unsigned char) 2;
-    newDoorEntry.EntitySetID = (unsigned char) 1;
     unsigned int currentroomid = ui->spinBox_RoomID->value();
-    newDoorEntry.RoomID = (unsigned char) currentroomid;
-    newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
-    LevelComponents::Door *newDoor =
-        new LevelComponents::Door(newDoorEntry, (unsigned char) currentroomid, CurrentLevel->GetDoors().size());
-    newDoor->SetEntitySetID((unsigned char) CurrentLevel->GetRooms()[currentroomid]->GetCurrentEntitySetID());
-    newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
-
-    // Add the new door to the Level object and re-render the screen
-    CurrentLevel->AddDoor(newDoor);
+    CurrentLevel->AddDoor(currentroomid, (unsigned char) CurrentLevel->GetRooms()[currentroomid]->GetCurrentEntitySetID());
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
     SetUnsavedChanges(true);
 }
@@ -2258,23 +2139,8 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
                                                     entitysetId));
     LevelComponents::Room *newRoom = CurrentLevel->GetRooms()[newRoomId];
 
-    // Add one Door to the new Room as well as spriteset settings
-    {
-        // Create a new door struct with blank fields
-        LevelComponents::__DoorEntry newDoorEntry;
-        memset(&newDoorEntry, 0, sizeof(LevelComponents::__DoorEntry));
-
-        // Initialize the fields
-        newDoorEntry.EntitySetID = entitysetId;
-        newDoorEntry.RoomID = (unsigned char) newRoomId;
-        newDoorEntry.DoorTypeByte = LevelComponents::DoorType::Instant;
-        LevelComponents::Door *newDoor =
-            new LevelComponents::Door(newDoorEntry, (unsigned char) newRoomId, CurrentLevel->GetDoors().size());
-        newDoor->SetDestinationDoor(CurrentLevel->GetDoors()[0]);
-
-        // Add the new door to the Level object
-        CurrentLevel->AddDoor(newDoor);
-    }
+    // Add one Door to the new Room so spriteset settings can work
+    CurrentLevel->AddDoor(newRoomId, entitysetId);
 
     // Reset LevelHeader param
     CurrentLevel->GetLevelHeader()->NumOfMap++;

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "LevelComponents/Level.h"
+#include "LevelComponents/LevelDoorVector.h"
 
 namespace Ui
 {
@@ -63,13 +64,12 @@ private slots:
 
 private:
     Ui::DoorConfigDialog *ui;
-    LevelComponents::Level *_currentLevel;
-    LevelComponents::Room *CurrentRoom = nullptr;    // Use this to reset current Door
-    LevelComponents::Room *tmpCurrentRoom = nullptr; // Use this to render Door preview
-    LevelComponents::Room *tmpDestinationRoom = nullptr;
-    int DoorID = -1;
-    int door_CurX1 = 0, door_CurY1 = 0, door_CurX2 = 0, door_CurY2 = 0;
-    int door_DesX1 = 0, door_DesY1 = 0, door_DesX2 = 0, door_DesY2 = 0;  // used in scrollbars reset
+    LevelComponents::Level *_currentLevel;           // Use this to reset tmpDestinationRoom
+    LevelComponents::LevelDoorVector tmpDoorVec;     // Use this to save the tmp door vec data and do render job, all the changes should be done here first
+                                                     // only when user confirms the changes, we save the door data back to the Level instance
+    LevelComponents::Room *tmpCurrentRoom = nullptr;      // Use this to render Door preview
+    LevelComponents::Room *tmpDestinationRoom = nullptr;  // Use this to render destination Door view
+    int LocalDoorID = -1;  // local Door id
     bool IsInitialized = false;
     EntityFilterTableModel *EntityFilterTable;
 
@@ -90,10 +90,10 @@ private:
     QList<EntitySetItem> comboboxEntitySet;
 
 public:
-    explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int doorID,
+    explicit DoorConfigDialog(QWidget *parent, LevelComponents::Room *currentroom, int localDoorID,
                               LevelComponents::Level *_level);
     ~DoorConfigDialog();
-    void UpdateCurrentDoorData();
+    LevelComponents::LevelDoorVector &GetChangedDoorVectorResult();
     static void StaticInitialization();
 
     // Enumeration of Door type
