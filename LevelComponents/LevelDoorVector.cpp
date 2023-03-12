@@ -7,6 +7,7 @@
 LevelComponents::LevelDoorVector::LevelDoorVector(unsigned int doorDataStartAddr)
 {
     unsigned char *doorPtr = ROMUtils::ROMFileMetadata->ROMDataPtr + doorDataStartAddr;
+    int currentDoorGlobalId = 0;
 
     while (*doorPtr) // when first byte of the door entry is not 0
     {
@@ -18,6 +19,7 @@ LevelComponents::LevelDoorVector::LevelDoorVector(unsigned int doorDataStartAddr
         memcpy(&tmpDoor, doorPtr, sizeof(DoorEntry));
         this->doorvec.push_back(tmpDoor);
         doorPtr += sizeof(DoorEntry);
+        ++currentDoorGlobalId;
     }
 }
 
