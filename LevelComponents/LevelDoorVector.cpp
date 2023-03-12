@@ -7,10 +7,6 @@
 LevelComponents::LevelDoorVector::LevelDoorVector(unsigned int doorDataStartAddr)
 {
     unsigned char *doorPtr = ROMUtils::ROMFileMetadata->ROMDataPtr + doorDataStartAddr;
-    int currentDoorGlobalId = 0;
-
-    // this build cannot work in your computer
-    assert(sizeof(DoorEntry) == 0xC);
 
     while (*doorPtr) // when first byte of the door entry is not 0
     {
@@ -22,7 +18,6 @@ LevelComponents::LevelDoorVector::LevelDoorVector(unsigned int doorDataStartAddr
         memcpy(&tmpDoor, doorPtr, sizeof(DoorEntry));
         this->doorvec.push_back(tmpDoor);
         doorPtr += sizeof(DoorEntry);
-        ++currentDoorGlobalId;
     }
 }
 
@@ -40,8 +35,8 @@ LevelComponents::LevelDoorVector::LevelDoorVector(QString &str)
 {
     QRegularExpression tmp_regex(",|\\s+"); // split using " " and "," at the same time
     QStringList u8_datalist = str.split(tmp_regex, Qt::SkipEmptyParts);
-    int entry_num = u8_datalist.size() / 0xC;
-    if ((u8_datalist.size() % 0xC) || (entry_num == 1 && (u8_datalist[0].toInt() == _EndOfVector)))
+    int entry_num = u8_datalist.size() / sizeof(DoorEntry);
+    if ((u8_datalist.size() % sizeof(DoorEntry)) || (entry_num == 1 && (u8_datalist[0].toInt() == _EndOfVector)))
     {
         // keep the this->doorvec empty, we should check if the vec is empty when load from QString
         return;
@@ -51,7 +46,7 @@ LevelComponents::LevelDoorVector::LevelDoorVector(QString &str)
         struct DoorEntry tmpDoor;
         for (int j = 0; j < sizeof(DoorEntry); j++)
         {
-            ((unsigned char *)(&tmpDoor))[j] = u8_datalist[j + 0xC * i].toInt() & 0xFF;
+            ((unsigned char *)(&tmpDoor))[j] = u8_datalist[j + sizeof(DoorEntry) * i].toInt() & 0xFF;
         }
         this->doorvec.push_back(tmpDoor);
     }

@@ -82,7 +82,7 @@ namespace LevelComponents
         QString GetLevelName(int levelnameid = 0) { return levelnameid ? LevelNameJ : LevelName; }
         unsigned int GetLevelID() { return LevelID; }
         void SetLevelName(QString newlevelname, int levelnameid = 0) { (levelnameid ? LevelNameJ : LevelName) = newlevelname; }
-        void SetLevelEntitySet();
+        void InitLevelEntitySet();
 
         // Door stuff
         LevelDoorVector GetDoorList() {return LevelDoorVector(doorlist); } // rerurn a copy of doorlist

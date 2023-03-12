@@ -129,7 +129,7 @@ namespace LevelComponents
         std::vector<struct __CameraControlRecord *> CameraControlRecords;
         struct __RoomHeader RoomHeader;
         unsigned int headerAddr; // used to read old layer pointer only, to decide if create invalidation chunks for them or not
-        int CurrentEntitySetID = 0;
+        int CurrentEntitySetID = 37;  // default value so even if the entitysetid cannot be set, the Room can render something
         EntitySet *currentEntitySet = nullptr;
         std::vector<struct EntityRoomAttribute> EntityList[3]; // HMode = 0, NMode = 1, SHMode = 2
         bool EntityListDirty[3];

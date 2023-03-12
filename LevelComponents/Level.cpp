@@ -211,7 +211,7 @@ namespace LevelComponents
         // Load the door data then set the entityset for every Room (Ver.2)
         int doorStartAddress = ROMUtils::PointerFromData(WL4Constants::DoorTable + LevelID * 4);
         doorlist = LevelDoorVector(doorStartAddress);
-        SetLevelEntitySet();
+        InitLevelEntitySet();
 
         // Load the level names
         int LevelNameAddress =
@@ -298,9 +298,9 @@ namespace LevelComponents
     }
 
     /// <summary>
-    /// Distribute door data to every room.
+    /// Distribute Entity set id from door data to every room.
     /// </summary>
-    void Level::SetLevelEntitySet()
+    void Level::InitLevelEntitySet()
     {
         // Check if every Room have at least one Door, if not, set a default entityset id to avoid some crashes
         for (unsigned int i = 0; i < rooms.size(); ++i)
@@ -309,10 +309,6 @@ namespace LevelComponents
             if (doorDataOfRoom.size())
             {
                 rooms[i]->SetCurrentEntitySet(doorDataOfRoom[0].EntitySetID);
-            }
-            else
-            {
-                rooms[i]->SetCurrentEntitySet(37);
             }
         }
     }
