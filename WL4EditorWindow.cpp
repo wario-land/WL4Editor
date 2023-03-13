@@ -1679,6 +1679,7 @@ void WL4EditorWindow::on_actionAbout_triggered()
                                /*"    Dax89 (QHexView)\n"*/ // have not been used in release builds yet
                                "    Hiro_sofT\n"
                                "    interdpth\n"
+                               "    MemeMayhem (icon)\n"
                                "    Spleeeeen\n"
                                "    xTibor\n\n"
                                "Version: ") +
