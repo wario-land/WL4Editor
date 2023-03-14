@@ -3,13 +3,13 @@
 #include "ui_CreditsEditDialog.h"
 #include "WL4Constants.h"
 
-constexpr const short CreditsEditDialog::CreditTileMapData[0x108];
-std::map< std::pair<std::string,std::string>, short> CreditsEditDialog::CreditTileReverseMap;
+constexpr const short CreditsEditDialog::CreditTileMapData[(0x1C + 0x1C + 0x34 + 0x34) * 2];
+std::map<std::string, short> CreditsEditDialog::CreditTileReverseMap;
 std::map<short,char> CreditsEditDialog::CreditTileMap;
 
 /// <summary>
 /// Construct an instance of the credit dialog.
-/// It contains 13 tabs containing one table each.
+/// It contains 14 tabs containing one table each.
 /// Each table allow to modify the corresponding credit screen.
 /// </summary>
 /// <param name="parent">
@@ -45,18 +45,18 @@ CreditsEditDialog::CreditsEditDialog(QWidget *parent, DialogParams::CreditsEditP
                     short mapId=dataToSave[k][j+i*32];
                     newItem->setText(QString(this->CreditTileMap[mapId]));
 
-                    //One-tile high -> blue
                     if (mapId >= 0x4340 && mapId <= 0x435B)
-                    {
+                    {  //One-tile high -> blue
                         newItem->setData(QColor(BLUECOLOR), Qt::BackgroundRole);
-                    //Two-tile high, upper half -> red
+                    } else if (mapId >= 0x5340 && mapId <= 0x535B)
+                    {  //One-tile high -> orange
+                        newItem->setData(QColor(ORANGECOLOR), Qt::BackgroundRole);
                     } else if ((mapId >= 0x0360 && mapId <=0x0379) || (mapId >= 0x03A0 && mapId <= 0x03B9))
-                    {
-                        newItem->setData(QColor(REDCOLOR), Qt::BackgroundRole);
-                    //Two-tile high, lower half -> green
+                    {  //Two-tile high, upper half -> light green
+                        newItem->setData(QColor(GREENCOLOR_U), Qt::BackgroundRole);
                     } else if ((mapId >= 0x0380 && mapId <=0x0399) || (mapId >= 0x03C0 && mapId <= 0x03D9))
-                    {
-                        newItem->setData(QColor(GREENCOLOR), Qt::BackgroundRole);
+                    {  //Two-tile high, lower half -> dark green
+                        newItem->setData(QColor(GREENCOLOR_D), Qt::BackgroundRole);
                     }
                 }
                 model[k]->setItem(i, j, newItem);
@@ -111,13 +111,22 @@ void CreditsEditDialog::StaticInitialization()
         CreditTileMap[CreditTileMapData[i]] = static_cast<char>(CreditTileMapData[i + 1]);
     }
 
-    //One-tile high
+    //One-tile high type 1
     std::string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ.,";
     short creditHexCode=0x4340;
     for(unsigned int i=0;i<alphabet.length();i++)
     {
           std::string oneLetter(1,alphabet.at(i));
-          CreditTileReverseMap[std::make_pair(oneLetter,BLUECOLOR)]=creditHexCode;
+          CreditTileReverseMap[std::string(oneLetter + BLUECOLOR)] = creditHexCode;
+          creditHexCode++;
+    }
+
+    //One-tile high type 2
+    creditHexCode=0x5340;
+    for(unsigned int i=0;i<alphabet.length();i++)
+    {
+          std::string oneLetter(1,alphabet.at(i));
+          CreditTileReverseMap[std::string(oneLetter + ORANGECOLOR)] = creditHexCode;
           creditHexCode++;
     }
 
@@ -127,17 +136,17 @@ void CreditsEditDialog::StaticInitialization()
     for(unsigned int i=0;i<alphabet2.length();i++)
     {
           std::string oneLetter(1,alphabet2.at(i));
-          CreditTileReverseMap[std::make_pair(oneLetter,REDCOLOR)]=creditHexCode2;
+          CreditTileReverseMap[std::string(oneLetter + GREENCOLOR_U)] = creditHexCode2;
           creditHexCode2++;
     }
 
     //Two-tile high, upper half 2
-    std::string alphabet3 = "abcdefghijklmnopqrstuvwxyz";
+    std::string alphabet3 = "abcdefghijklmnopqrstuvwxy";
     short creditHexCode3=0x03A0;
     for(unsigned int i=0;i<alphabet3.length();i++)
     {
           std::string oneLetter(1,alphabet3.at(i));
-          CreditTileReverseMap[std::make_pair(oneLetter,REDCOLOR)]=creditHexCode3;
+          CreditTileReverseMap[std::string(oneLetter + GREENCOLOR_U)] = creditHexCode3;
           creditHexCode3++;
     }
 
@@ -146,17 +155,17 @@ void CreditsEditDialog::StaticInitialization()
     for(unsigned int i=0;i<alphabet2.length();i++)
     {
           std::string oneLetter(1,alphabet2.at(i));
-          CreditTileReverseMap[std::make_pair(oneLetter,GREENCOLOR)]=creditHexCode4;
+          CreditTileReverseMap[std::string(oneLetter + GREENCOLOR_D)] = creditHexCode4;
           creditHexCode4++;
     }
 
     //Two-tile high, lower half 2
-    std::string alphabet4 = "abcdefghijklmnopqrstuvwxyz.";
+    std::string alphabet4 = "abcdefghijklmnopqrstuvwxy.";
     short creditHexCode5=0x03C0;
     for(unsigned int i=0;i<alphabet4.length();i++)
     {
           std::string oneLetter(1,alphabet4.at(i));
-          CreditTileReverseMap[std::make_pair(oneLetter,GREENCOLOR)]=creditHexCode5;
+          CreditTileReverseMap[std::string(oneLetter + GREENCOLOR_D)] = creditHexCode5;
           creditHexCode5++;
     }
 
@@ -183,10 +192,10 @@ void CreditsEditDialog::on_buttonBox_accepted()
                     std::string roleString = role.toUtf8().constData();
                     std::string firstLetterString(1,string.at(0));
 
-                    dataToSave[k][j+i*32]=CreditTileReverseMap[std::make_pair(firstLetterString,roleString)];
+                    dataToSave[k][j+i*32] = CreditTileReverseMap[std::string(firstLetterString + roleString)];
                 } else
                 {
-                    dataToSave[k][j+i*32]=0x0000;
+                    dataToSave[k][j+i*32] = 0x0000;
                 }
             }
         }
