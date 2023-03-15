@@ -117,15 +117,10 @@ namespace LevelComponents
             int index;
         } * drawLayers[4];
 
-        // static
-        static const unsigned int EntityNumberPerRoomPerDifficulty = 64;
-
         // Locals
         int EntityLayerZValue[4];
         enum __CameraControlType CameraControlType;
         unsigned int RoomID;
-        unsigned int LevelID;
-        unsigned int Width, Height;
         std::vector<struct __CameraControlRecord *> CameraControlRecords;
         struct __RoomHeader RoomHeader;
         unsigned int headerAddr; // used to read old layer pointer only, to decide if create invalidation chunks for them or not
@@ -182,14 +177,13 @@ namespace LevelComponents
         int GetCurrentEntitySetID() { return CurrentEntitySetID; }
         bool GetEntityListDirty(int difficulty) { return EntityListDirty[difficulty]; }
         std::vector<struct EntityRoomAttribute> GetEntityListData(int difficulty) { return EntityList[difficulty]; }
-        unsigned int GetHeight() { return Height; }
-        unsigned int GetWidth() { return Width; }
+        unsigned int GetLayer1Height() { return layers[1]->GetLayerHeight(); }
+        unsigned int GetLayer1Width() { return layers[1]->GetLayerWidth(); }
         unsigned int GetLayer0Width() { return layers[0]->GetLayerWidth(); }
         unsigned int GetLayer0Height() { return layers[0]->GetLayerHeight(); }
         Layer *GetLayer(int LayerID) { return layers[LayerID]; }
         int GetLayer0MappingParam() { return RoomHeader.Layer0MappingType; }
         int GetLayerEffectsParam() { return RoomHeader.RenderEffect; }
-        unsigned int GetLevelID() { return LevelID; }
         struct __RoomHeader GetRoomHeader() { return RoomHeader; }
         unsigned int GetRoomHeaderAddr() { return headerAddr; }
         unsigned int GetRoomID() { return RoomID; }
@@ -222,8 +216,6 @@ namespace LevelComponents
         void SetCurrentEntitySet(int _currentEntitySetID);
         void SetEntityListDirty(int difficulty, bool dirty) { EntityListDirty[difficulty] = dirty; }
         void SetEntityListPtr(int difficulty, unsigned int ptr) { (&RoomHeader.EntityTableHard)[difficulty] = ptr; }
-        void SetHeight(int _height) { Height = (unsigned int) _height; }
-        void SetWidth(int _width) { Width = (unsigned int) _width; }
         void SetLayer(int LayerID, Layer *newLayer) { layers[LayerID] = newLayer; }
         void SetLayer0MappingParam(int layer0MappingTypeParam)
         {

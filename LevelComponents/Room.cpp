@@ -14,13 +14,15 @@
 #include "WL4EditorWindow.h"
 extern WL4EditorWindow *singleton;
 
+#define EntityNumberPerRoomPerDifficulty 64
+
 namespace LevelComponents
 {
     /// <summary>
     /// Construct a new empty Room object.
     /// </summary>
     Room::Room(unsigned char _RoomID, unsigned int _LevelID, unsigned char _tilesetId, unsigned char _entitysetId) :
-        RoomID(_RoomID), LevelID(_LevelID), headerAddr(0), CurrentEntitySetID(_entitysetId)
+        RoomID(_RoomID), headerAddr(0), CurrentEntitySetID(_entitysetId)
     {
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
         memset(drawLayers, 0, sizeof(drawLayers));
@@ -51,8 +53,6 @@ namespace LevelComponents
             int layerPtr = *( ((unsigned int *)(&RoomHeader.Layer0Data)) + i) & 0x7FF'FFFF;
             layers[i] = new Layer(layerPtr, mappingType);
         }
-        Width = layers[1]->GetLayerWidth();
-        Height = layers[1]->GetLayerHeight();
 
         // Copy Entityset's and Entities' pointers
         SetCurrentEntitySet(CurrentEntitySetID);
@@ -71,7 +71,7 @@ namespace LevelComponents
     /// <param name="_LevelID">
     /// Level index value from 0x03000023 at run-time.
     /// </param>
-    Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) : RoomID(_RoomID), LevelID(_LevelID), headerAddr(roomDataPtr)
+    Room::Room(int roomDataPtr, unsigned char _RoomID, unsigned int _LevelID) : RoomID(_RoomID), headerAddr(roomDataPtr)
     {
         memset(RenderedLayers, 0, sizeof(RenderedLayers));
         memset(drawLayers, 0, sizeof(drawLayers));
@@ -85,9 +85,6 @@ namespace LevelComponents
         tileset = ROMUtils::singletonTilesets[RoomHeader.TilesetID];
 
         // Set up the layer data
-        int dimensionPointer = ROMUtils::PointerFromData(roomDataPtr + 12);
-        Width = ROMUtils::ROMFileMetadata->ROMDataPtr[dimensionPointer];
-        Height = ROMUtils::ROMFileMetadata->ROMDataPtr[dimensionPointer + 1];
         for (int i = 0; i < 4; ++i)
         {
             enum LayerMappingType mappingType =
@@ -151,8 +148,8 @@ namespace LevelComponents
     /// the new instance should only be used to render Room graphic temporarily, it is unsafe to add it to a Level.
     /// </remarks>
     Room::Room(Room *room) :
-            CameraControlType(room->GetCameraControlType()), RoomID(room->GetRoomID()), LevelID(room->GetLevelID()),
-            Width(room->GetWidth()), Height(room->GetHeight()), RoomHeader(room->GetRoomHeader()), headerAddr(room->GetRoomHeaderAddr()),
+            CameraControlType(room->GetCameraControlType()), RoomID(room->GetRoomID()),
+            RoomHeader(room->GetRoomHeader()), headerAddr(room->GetRoomHeaderAddr()),
             CurrentEntitySetID(room->GetCurrentEntitySetID()), IsCopy(true)
     {
         // Zero out the arrays
@@ -281,12 +278,14 @@ namespace LevelComponents
     QGraphicsScene *Room::RenderGraphicsScene(QGraphicsScene *scene, RenderUpdateParams *renderParams)
     {
         // init scene size
-        int layer0unit = (this->GetLayer(0)->GetMappingType() == LevelComponents::LayerTile8x8) ? 8 : 16;
-        int layer2unit = (this->GetLayer(2)->GetMappingType() == LevelComponents::LayerTile8x8) ? 8 : 16;
-        int sceneWidth = qMax((int)(Width * 16), layer0unit * this->GetLayer(0)->GetLayerWidth());
-        sceneWidth = qMax(sceneWidth, layer2unit * this->GetLayer(2)->GetLayerWidth());
-        int sceneHeight = qMax((int)(Height * 16), layer0unit * this->GetLayer(0)->GetLayerHeight());
-        sceneHeight = qMax(sceneHeight, layer2unit * this->GetLayer(2)->GetLayerHeight());
+        int layer0unit = (layers[0]->GetMappingType() == LevelComponents::LayerTile8x8) ? 8 : 16;
+        int layer2unit = (layers[2]->GetMappingType() == LevelComponents::LayerTile8x8) ? 8 : 16;
+        int layer1width = layers[1]->GetLayerWidth();
+        int layer1height = layers[1]->GetLayerHeight();
+        int sceneWidth = qMax((int)(layer1width * 16), layer0unit * layers[0]->GetLayerWidth());
+        sceneWidth = qMax(sceneWidth, layer2unit * layers[2]->GetLayerWidth());
+        int sceneHeight = qMax(layer1height * 16, layer0unit * layers[0]->GetLayerHeight());
+        sceneHeight = qMax(sceneHeight, layer2unit * layers[2]->GetLayerHeight());
         int Z = 0;
 
         QVector<int> layerpriorities = RenderEffectParamToLayerPriorities(RoomHeader.RenderEffect);
@@ -537,31 +536,31 @@ namespace LevelComponents
                 }
 
                 // Draw Camera Limitation
-                while ((CameraY + 0xA0) < (int) (Height * 16))
+                while ((CameraY + 0xA0) < layer1height * 16)
                 {
-                    CameraLimitationPainter.drawRect(0x20, CameraY, (int) Width * 16 - 0x40, 0xA0);
+                    CameraLimitationPainter.drawRect(0x20, CameraY, layer1width * 16 - 0x40, 0xA0);
                     CameraY += 0x90;
                 }
             }
             else if (CameraControlType == LevelComponents::Vertical_Seperated)
             {
-                if (Height >= 14)
+                if (layer1height >= 14)
                 {
-                    if (Height < 18)
+                    if (layer1height < 18)
                     {
-                        CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0x40);
+                        CameraLimitationPainter.drawRect(0x20, 0x20, layer1width * 16 - 0x40, layer1height * 16 - 0x40);
                     }
                     else
                     {
-                        CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0xE0);
-                        CameraLimitationPainter.drawRect(0x20, (int) Height * 16 - 0x100, (int) Width * 16 - 0x40,
+                        CameraLimitationPainter.drawRect(0x20, 0x20, layer1width * 16 - 0x40, layer1height * 16 - 0xE0);
+                        CameraLimitationPainter.drawRect(0x20, layer1height * 16 - 0x100, layer1width * 16 - 0x40,
                                                          0xE0);
                     }
                 }
             }
             else if (CameraControlType == LevelComponents::NoLimit)
             {
-                CameraLimitationPainter.drawRect(0x20, 0x20, (int) Width * 16 - 0x40, (int) Height * 16 - 0x40);
+                CameraLimitationPainter.drawRect(0x20, 0x20, layer1width * 16 - 0x40, layer1height * 16 - 0x40);
             }
             else if (CameraControlType == LevelComponents::HasControlAttrs)
             {
@@ -569,10 +568,10 @@ namespace LevelComponents
                 {
                     CameraLimitationPainter.drawRect(16 * ((int) CameraControlRecords[i]->x1) + 1,
                                                      16 * ((int) CameraControlRecords[i]->y1) + 1,
-                                                     16 * (qMin((int) CameraControlRecords[i]->x2, (int) Width - 3) -
+                                                     16 * (qMin((int) CameraControlRecords[i]->x2, layer1width - 3) -
                                                            (int) CameraControlRecords[i]->x1 + 1) -
                                                          2,
-                                                     16 * (qMin((int) CameraControlRecords[i]->y2, (int) Height - 3) -
+                                                     16 * (qMin((int) CameraControlRecords[i]->y2, layer1height - 3) -
                                                            (int) CameraControlRecords[i]->y1 + 1) -
                                                          2);
                     if (CameraControlRecords[i]->x3 != (unsigned char) '\xFF')
@@ -589,8 +588,8 @@ namespace LevelComponents
                         int k = (int) CameraControlRecords[i]->ChangeValueOffset;
                         SetNum[k] = (int) CameraControlRecords[i]->ChangedValue;
                         CameraLimitationPainter.drawRect(16 * SetNum[0], 16 * SetNum[2],
-                                                         16 * (qMin(SetNum[1], (int) Width - 3) - SetNum[0] + 1),
-                                                         16 * (qMin(SetNum[3], (int) Height - 3) - SetNum[2] + 1));
+                                                         16 * (qMin(SetNum[1], layer1width - 3) - SetNum[0] + 1),
+                                                         16 * (qMin(SetNum[3], layer1height - 3) - SetNum[2] + 1));
                         CameraLimitationPainter.setPen(CameraLimitationPen);
                     }
                 }
@@ -662,11 +661,11 @@ namespace LevelComponents
             unsigned char *terraintable = tileset->GetTerrainTypeIDTablePtr();
 
             // event id hint
-            for (uint j = 0; j < Height; ++j)
+            for (uint j = 0; j < layer1height; ++j)
             {
-                for (uint i = 0; i < Width; ++i)
+                for (uint i = 0; i < layer1width; ++i)
                 {
-                    int eventID_val = eventtable[Layer1data[j * Width + i]];
+                    int eventID_val = eventtable[Layer1data[j * layer1width + i]];
                     if (auto it = std::find(SettingsUtils::projectSettings::extraEventIDhinteventids.begin(),
                                   SettingsUtils::projectSettings::extraEventIDhinteventids.end(), eventID_val);
                         it != SettingsUtils::projectSettings::extraEventIDhinteventids.end())
@@ -871,8 +870,8 @@ namespace LevelComponents
                     if ((layerqueue[i] != layers[0]) && LayersCurrentVisibilityTemp[drawLayers[i]->index])
                     {
                         for(auto iter: renderParams->tilechangelist) {
-                            if (static_cast<unsigned int>(iter.tileX) >= this->Width ||
-                                    static_cast<unsigned int>(iter.tileY) >= this->Height)
+                            if (static_cast<unsigned int>(iter.tileX) >= layer1width ||
+                                    static_cast<unsigned int>(iter.tileY) >= layer1height)
                             { continue; }
                             QPixmap pm_tmp = RenderedLayers[drawLayers[i]->index]->pixmap().copy(
                                 iter.tileX * units, iter.tileY * units, units, units);
@@ -886,8 +885,8 @@ namespace LevelComponents
                         QImage imageB = alphaPixmapTemp.toImage();
                         for(auto iter: renderParams->tilechangelist) {
                             int substituteEVA = eva_evb[0];
-                            if ((static_cast<unsigned int>(iter.tileX) >= this->Width ||
-                                    static_cast<unsigned int>(iter.tileY) >= this->Height) &&
+                            if ((static_cast<unsigned int>(iter.tileX) >= layer1width ||
+                                    static_cast<unsigned int>(iter.tileY) >= layer1height) &&
                                     eva_evb[0] != 16)
                             {
                                 // No color blending in areas where other layers do not exist
@@ -1578,7 +1577,7 @@ namespace LevelComponents
     /// </returns>
     bool Room::IsNewDoorPositionInsideRoom(int x1, int x2, int y1, int y2)
     {
-        return x1 >= 0 && x2 < this->GetWidth() && y1 >= 0 && y2 < this->GetHeight();
+        return x1 >= 0 && x2 < this->GetLayer1Width() && y1 >= 0 && y2 < this->GetLayer1Height();
     }
 
     /// <summary>
@@ -1595,7 +1594,7 @@ namespace LevelComponents
     /// </returns>
     bool Room::IsNewEntityPositionInsideRoom(int x, int y)
     {
-        return x >= 0 && x < this->GetWidth() && y >= 0 && y < this->GetHeight();
+        return x >= 0 && x < this->GetLayer1Width() && y >= 0 && y < this->GetLayer1Height();
     }
 
     /// <summary>

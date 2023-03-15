@@ -717,8 +717,6 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     }
 
     // reset all the Parameters in Room class, except new layer data pointers, generate them on saving
-    currentRoom->SetHeight(nextroomconfig->RoomHeight);
-    currentRoom->SetWidth(nextroomconfig->RoomWidth);
     currentRoom->SetLayer0MappingParam(nextroomconfig->Layer0MappingTypeParam);
     currentRoom->SetRenderEffectFlag(nextroomconfig->LayerPriorityAndAlphaAttr);
     currentRoom->SetLayer2MappingType(nextroomconfig->Layer2MappingTypeParam);
@@ -1093,7 +1091,7 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
     // Delete most of the Doors
     if (IfDeleteAllDoors)
     {
-        int rw = currentRoom->GetWidth(), rh = currentRoom->GetHeight();
+        int rw = currentRoom->GetLayer1Width(), rh = currentRoom->GetLayer1Height();
         auto allDoor = CurrentLevel->GetDoorListRef();
         int doornum = allDoor.size();
         int curRoomDoorIdIter = -1;
@@ -2003,8 +2001,8 @@ void WL4EditorWindow::on_actionSave_Room_s_graphic_triggered()
     {
         int CR_width, CR_height;
         auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
-        CR_width = currentroom->GetWidth();
-        CR_height = currentroom->GetHeight();
+        CR_width = currentroom->GetLayer1Width();
+        CR_height = currentroom->GetLayer1Height();
         QGraphicsScene *tmpscene = ui->graphicsView->scene();
         QPixmap currentRoompixmap(CR_width * 16, CR_height * 16);
         QPainter tmppainter(&currentRoompixmap);

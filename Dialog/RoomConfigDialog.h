@@ -49,7 +49,7 @@ namespace DialogParams
                 LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
                 Layer0MappingTypeParam(room->GetLayer0MappingParam()),
                 Layer0DataPtr((room->GetLayer0MappingParam() & 0x20) ? room->GetLayer(0)->GetDataPtr() : 0),
-                RoomWidth(room->GetWidth()), RoomHeight(room->GetHeight()), Layer2MappingTypeParam(room->GetLayer2MappingParam()),
+                RoomWidth(room->GetLayer1Width()), RoomHeight(room->GetLayer1Height()), Layer2MappingTypeParam(room->GetLayer2MappingParam()),
                 BackgroundLayerEnable(room->IsBGLayerEnabled()), RasterType(room->GetLayerGFXEffect01()),
                 Water(room->GetLayerGFXEffect02()), BGMVolume(room->GetBgmvolume())
         {

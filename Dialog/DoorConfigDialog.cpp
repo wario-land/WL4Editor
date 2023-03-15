@@ -60,10 +60,10 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
     int doorheight = curDoorData.y2 - curDoorData.y1 + 1;
     ui->SpinBox_DoorWidth->setValue(doorwidth);
     ui->SpinBox_DoorHeight->setValue(doorheight);
-    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - curDoorData.x1);
-    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - curDoorData.y1);
-    ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - doorwidth);
-    ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetHeight() - doorheight);
+    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetLayer1Width() - curDoorData.x1);
+    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetLayer1Height() - curDoorData.y1);
+    ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetLayer1Width() - doorwidth);
+    ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetLayer1Height() - doorheight);
     ui->SpinBox_WarioX->setValue(curDoorData.HorizontalDeltaWario);
     ui->SpinBox_WarioY->setValue(curDoorData.VerticalDeltaWario);
     ui->SpinBox_BGM_ID->setValue(curDoorData.BGM_ID);
@@ -169,10 +169,10 @@ void DoorConfigDialog::RenderGraphicsView_Preview()
     int door_CurY2 = curDoorData.y2;
     int X_av = (door_CurX1 + door_CurX2) / 2;
     int Y_av = (door_CurY1 + door_CurY2) / 2;
-    float X_av_rate = static_cast<float>(X_av) / static_cast<float>(tmpCurrentRoom->GetWidth());
-    float Y_av_rate = static_cast<float>(Y_av) / static_cast<float>(tmpCurrentRoom->GetHeight());
-    float Heightrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpCurrentRoom->GetHeight()) / static_cast<float>(tmpCurrentRoom->GetLayer0Height()));
-    float Widthrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpCurrentRoom->GetWidth()) / static_cast<float>(tmpCurrentRoom->GetLayer0Width()));
+    float X_av_rate = static_cast<float>(X_av) / static_cast<float>(tmpCurrentRoom->GetLayer1Width());
+    float Y_av_rate = static_cast<float>(Y_av) / static_cast<float>(tmpCurrentRoom->GetLayer1Height());
+    float Heightrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpCurrentRoom->GetLayer1Height()) / static_cast<float>(tmpCurrentRoom->GetLayer0Height()));
+    float Widthrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpCurrentRoom->GetLayer1Width()) / static_cast<float>(tmpCurrentRoom->GetLayer0Width()));
     int V_all = Heightrate_L1_over_L0 * (ui->GraphicsView_Preview->verticalScrollBar()->pageStep() +
             ui->GraphicsView_Preview->verticalScrollBar()->maximum());
     int H_all = Widthrate_L1_over_L0 * (ui->GraphicsView_Preview->horizontalScrollBar()->pageStep() +
@@ -219,10 +219,10 @@ void DoorConfigDialog::RenderGraphicsView_DestinationDoor(int doorIDinRoom)
     int door_DesY2 = destDoorData.y2;
     int X_av = (door_DesX1 + door_DesX2) / 2;
     int Y_av = (door_DesY1 + door_DesY2) / 2;
-    float X_av_rate = static_cast<float>(X_av) / static_cast<float>(tmpDestinationRoom->GetWidth());
-    float Y_av_rate = static_cast<float>(Y_av) / static_cast<float>(tmpDestinationRoom->GetHeight());
-    float Heightrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpDestinationRoom->GetHeight()) / static_cast<float>(tmpDestinationRoom->GetLayer0Height()));
-    float Widthrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpDestinationRoom->GetWidth()) / static_cast<float>(tmpDestinationRoom->GetLayer0Width()));
+    float X_av_rate = static_cast<float>(X_av) / static_cast<float>(tmpDestinationRoom->GetLayer1Width());
+    float Y_av_rate = static_cast<float>(Y_av) / static_cast<float>(tmpDestinationRoom->GetLayer1Height());
+    float Heightrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpDestinationRoom->GetLayer1Height()) / static_cast<float>(tmpDestinationRoom->GetLayer0Height()));
+    float Widthrate_L1_over_L0 = qMin(1.0f, static_cast<float>(tmpDestinationRoom->GetLayer1Width()) / static_cast<float>(tmpDestinationRoom->GetLayer0Width()));
     int V_all = Heightrate_L1_over_L0 * (ui->GraphicsView_DestinationDoor->verticalScrollBar()->pageStep() +
             ui->GraphicsView_DestinationDoor->verticalScrollBar()->maximum());
     int H_all = Widthrate_L1_over_L0 * (ui->GraphicsView_DestinationDoor->horizontalScrollBar()->pageStep() +
@@ -250,10 +250,10 @@ void DoorConfigDialog::ResetDoorRect()
     LevelComponents::DoorEntry curDoorData = tmpDoorVec.GetDoor(tmpCurrentRoom->GetRoomID(), LocalDoorID);
     int doorwidth = curDoorData.x2 - curDoorData.x1 + 1;
     int doorheight = curDoorData.y2 - curDoorData.y1 + 1;
-    ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetWidth() - doorwidth);
-    ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetHeight() - doorheight);
-    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetWidth() - curDoorData.x1);
-    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetHeight() - curDoorData.y1);
+    ui->SpinBox_DoorX->setMaximum(tmpCurrentRoom->GetLayer1Width() - doorwidth);
+    ui->SpinBox_DoorY->setMaximum(tmpCurrentRoom->GetLayer1Height() - doorheight);
+    ui->SpinBox_DoorWidth->setMaximum(tmpCurrentRoom->GetLayer1Width() - curDoorData.x1);
+    ui->SpinBox_DoorHeight->setMaximum(tmpCurrentRoom->GetLayer1Height() - curDoorData.y1);
     UpdateDoorLayerGraphicsView_Preview();
 
     // when DestinationDoor and currentDoor are in the same Room, the DestinationDoor graphicview also needs an update.
