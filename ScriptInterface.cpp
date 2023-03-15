@@ -264,8 +264,8 @@ void ScriptInterface::_ExportLayerData(QString filePath, int layerid)
             witdh = room->GetLayer0Width();
             height = room->GetLayer0Height();
         } else {
-            witdh = room->GetWidth();
-            height = room->GetHeight();
+            witdh = room->GetLayer1Width();
+            height = room->GetLayer1Height();
         }
         QFile file(filePath);
         file.open(QIODevice::WriteOnly);
@@ -340,8 +340,8 @@ void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
         witdh = room->GetLayer0Width();
         height = room->GetLayer0Height();
     } else {
-        witdh = room->GetWidth();
-        height = room->GetHeight();
+        witdh = room->GetLayer1Width();
+        height = room->GetLayer1Height();
     }
     if(datasize != 2 * witdh * height)
     {
@@ -549,8 +549,8 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     if(room->GetLayer(layerID)->GetMappingType() != LevelComponents::LayerMap16)
         return;
-    int width = static_cast<int>(room->GetWidth());
-    int height = static_cast<int>(room->GetHeight());
+    int width = static_cast<int>(room->GetLayer1Width());
+    int height = static_cast<int>(room->GetLayer1Height());
     if(x >= width || y >= height) {
         log(QString("Position out of range!\n"));
         return;

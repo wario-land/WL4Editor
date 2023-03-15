@@ -3,8 +3,6 @@
 
 #include <QTableView>
 
-#include "SettingsUtils.h"
-
 class CreditEditor_TableView : public QTableView
 {
     Q_OBJECT
@@ -12,7 +10,8 @@ public:
           CreditEditor_TableView(QWidget *parent = nullptr);
 private:
       QMenu* menu;
-      QAction* actionOneTile;
+      QAction* actionOneTile_type1;
+      QAction* actionOneTile_type2;
       QAction* actionUpperTile;
       QAction* actionLowerTile;
       QAction* actionDelete;

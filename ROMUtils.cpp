@@ -5,6 +5,7 @@
 #include <QTranslator>
 #include "WL4EditorWindow.h"
 #include "PatchUtils.h"
+#include "SettingsUtils.h"
 
 #include <cmath>
 #include <QDateTime>

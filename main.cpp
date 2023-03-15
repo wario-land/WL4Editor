@@ -6,6 +6,7 @@
 #include "Dialog/GraphicManagerDialog.h"
 #include "Dialog/SpritesEditorDialog.h"
 #include "WL4EditorWindow.h"
+#include "SettingsUtils.h"
 
 #include <QApplication>
 

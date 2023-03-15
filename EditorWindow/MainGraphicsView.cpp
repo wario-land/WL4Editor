@@ -32,11 +32,11 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
 
     // Different cases for different editting mode
     LevelComponents::Room *room = singleton->GetCurrentRoom();
-    if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) && tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
+    if (tileX < qMax(room->GetLayer1Width(), room->GetLayer0Width()) && tileY < qMax(room->GetLayer1Height(), room->GetLayer0Height()))
     {
         if (singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer != 0)
         {
-            if (tileX >= room->GetWidth() || tileY >= room->GetHeight())
+            if (tileX >= room->GetLayer1Width() || tileY >= room->GetLayer1Height())
                 return;
         }
         else // singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer == 0
@@ -213,7 +213,7 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
 
     // Different cases for different editting mode
     LevelComponents::Room *room = singleton->GetCurrentRoom();
-    if (tileX < room->GetWidth() && tileY < room->GetHeight())
+    if (tileX < room->GetLayer1Width() && tileY < room->GetLayer1Height())
     {
         enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
 
@@ -299,11 +299,11 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
     // main part
     LevelComponents::Room *room = singleton->GetCurrentRoom();
-    if (tileX < qMax(room->GetWidth(), room->GetLayer0Width()) && tileY < qMax(room->GetHeight(), room->GetLayer0Height()))
+    if (tileX < qMax(room->GetLayer1Width(), room->GetLayer0Width()) && tileY < qMax(room->GetLayer1Height(), room->GetLayer0Height()))
     {
         if (singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer != 0)
         {
-            if (tileX >= room->GetWidth() || tileY >= room->GetHeight())
+            if (tileX >= room->GetLayer1Width() || tileY >= room->GetLayer1Height())
                 return;
         }
         else // singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer == 0
@@ -455,10 +455,10 @@ void MainGraphicsView::SetTiles(int tileX, int tileY)
     int drawlayerwidth = 0;
     if (selectedLayer)
     {
-        drawlayerwidth = room->GetWidth();
+        drawlayerwidth = room->GetLayer1Width();
         selectedTileIndex = tileX + tileY * drawlayerwidth;
         drawwidth = qMin(drawlayerwidth - tileX, drawwidth);
-        drawheight = qMin(static_cast<int>(room->GetHeight()) - tileY, drawheight);
+        drawheight = qMin(static_cast<int>(room->GetLayer1Height()) - tileY, drawheight);
     } else {
         drawlayerwidth = room->GetLayer0Width();
         selectedTileIndex = tileX + tileY * drawlayerwidth;
@@ -499,7 +499,7 @@ void MainGraphicsView::CopyTile(int tileX, int tileY)
     int selectedTileIndex;
     if (selectedLayer)
     {
-        selectedTileIndex = tileX + tileY * room->GetWidth();
+        selectedTileIndex = tileX + tileY * room->GetLayer1Width();
     } else {
         selectedTileIndex = tileX + tileY * room->GetLayer0Width();
     }

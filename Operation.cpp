@@ -43,7 +43,7 @@ void PerformOperation(struct OperationParams *operation)
             }
             else
             {
-                index = tcp->tileX + tcp->tileY * room->GetWidth();
+                index = tcp->tileX + tcp->tileY * room->GetLayer1Width();
             }
             layer->GetLayerData()[index] = tcp->newTile;
 
@@ -233,7 +233,7 @@ void BackTrackOperation(struct OperationParams *operation)
             }
             else
             {
-                index = tcp->tileX + tcp->tileY * room->GetWidth();
+                index = tcp->tileX + tcp->tileY * room->GetLayer1Width();
             }
             layer->GetLayerData()[index] = tcp->oldTile;
 

@@ -35,8 +35,8 @@ CameraControlDockWidget::~CameraControlDockWidget() { delete ui; }
 void CameraControlDockWidget::PopulateCameraControlInfo(LevelComponents::Room *currentroom)
 {
     currentRoom = currentroom;
-    CurrentRoomWidth = (int) currentroom->GetWidth();
-    CurrentRoomHeight = (int) currentroom->GetHeight();
+    CurrentRoomWidth = (int) currentroom->GetLayer1Width();
+    CurrentRoomHeight = (int) currentroom->GetLayer1Height();
     ClearListView();
     if (ListViewItemModel)
     {

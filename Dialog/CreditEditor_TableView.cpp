@@ -1,22 +1,16 @@
 ﻿#include "Dialog/CreditEditor_TableView.h"
-#include "Dialog/CreditsEditDialog.h"
 #include <QTableView>
 #include <QStyledItemDelegate>
 #include <QMenu>
 #include <QPainter>
 #include <QKeyEvent>
 
+#include "SettingsUtils.h"
+#include "Dialog/CreditsEditDialog.h"
+
 #define WHITECOLOR "#ffffff"
 #define BLACKCOLOR "#000000"
 #define DARKBACKGROUNDCOLOR "#353637"
-
-//Used for describing one tile
-#define BLUECOLOR "#8080ff"
-//Used for describing uppertile
-#define REDCOLOR "#ff8080"
-//Used for describing lowertile
-#define GREENCOLOR "#80ff80"
-
 
 /// <summary>
 /// The main view who is also a QTableView, there is one for each tab (so one for each credit screen)
@@ -28,12 +22,14 @@ CreditEditor_TableView::CreditEditor_TableView(QWidget *parent) :
     QTableView(parent)
 {
     menu=new QMenu("Menu", this);
-    actionOneTile = new QAction("One Tile",menu);
+    actionOneTile_type1 = new QAction("One Tile (blue)",menu);
+    actionOneTile_type2 = new QAction("One Tile (orange)",menu);
     actionUpperTile = new QAction("Upper Tile",menu);
     actionLowerTile = new QAction("Lower Tile",menu);
     actionDelete = new QAction("Delete",menu);
 
-    menu->addAction(actionOneTile);
+    menu->addAction(actionOneTile_type1);
+    menu->addAction(actionOneTile_type2);
     menu->addAction(actionUpperTile);
     menu->addAction(actionLowerTile);
     menu->addAction(actionDelete);
@@ -61,18 +57,17 @@ void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QMode
     QString firstLetter=topLeft.data(Qt::DisplayRole).value<QString>();
     QString role=topLeft.data(Qt::BackgroundRole).value<QColor>().name();
 
-    std::string displayStringUppercase = firstLetter.toUpper().toUtf8().constData();
+    std::string displayString = firstLetter.toUtf8().constData();
 
-    if (displayStringUppercase.size() == 1) {
+    if (displayString.size() == 1) {
         std::string roleString = role.toUtf8().constData();
-        std::string firstLetterString(1,displayStringUppercase.at(0));
+        std::string firstLetterString(1,displayString.at(0));
 
         //If the tile is not valid
-        if (CreditsEditDialog::CreditTileReverseMap[std::make_pair(firstLetterString,roleString)] == 0)
+        if (CreditsEditDialog::CreditTileReverseMap[std::string(firstLetterString + roleString)] == 0)
         {
-
-            //If the tile is still not valid with the default background we delete it
-            if (CreditsEditDialog::CreditTileReverseMap[std::make_pair(firstLetterString,BLUECOLOR)] == 0)
+            // exclude the case we only set color
+            if (roleString != WHITECOLOR && roleString != DARKBACKGROUNDCOLOR && roleString != BLACKCOLOR)
             {
                 deleteFunction(topLeft);
             }
@@ -93,7 +88,7 @@ void CreditEditor_TableView::dataChanged(const QModelIndex &topLeft, const QMode
 /// </param>
 void CreditEditor_TableView::showContextMenu(const QPoint &pos)
 {
-    menu->exec(this->mapToGlobal(pos),actionOneTile);
+    menu->exec(this->mapToGlobal(pos),actionOneTile_type1);
 }
 
 /// <summary>
@@ -111,15 +106,18 @@ void CreditEditor_TableView::doAction(QAction * action)
 
          //If we are in the editable zone
          if (column < 30) {
-             if (action == actionOneTile)
+             if (action == actionOneTile_type1)
              {
                  this->model()->setData(modelIndex,QColor(BLUECOLOR), Qt::BackgroundRole);
+             } else if (action == actionOneTile_type2)
+             {
+                 this->model()->setData(modelIndex,QColor(ORANGECOLOR), Qt::BackgroundRole);
              } else if (action == actionUpperTile)
              {
-                 this->model()->setData(modelIndex,QColor(REDCOLOR), Qt::BackgroundRole);
+                 this->model()->setData(modelIndex,QColor(GREENCOLOR_U), Qt::BackgroundRole);
              } else if (action == actionLowerTile)
              {
-                 this->model()->setData(modelIndex,QColor(GREENCOLOR), Qt::BackgroundRole);
+                 this->model()->setData(modelIndex,QColor(GREENCOLOR_D), Qt::BackgroundRole);
              } else if (action == actionDelete)
              {
                 deleteFunction(modelIndex);
@@ -153,7 +151,7 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event)
                 deleteFunction(modelIndex);
             }
         }
-    } else if (keycode >= Qt::Key_A && keycode <=Qt::Key_Z)
+    } else if (keycode >= Qt::Key_A && keycode <= Qt::Key_Z)
     {
         QModelIndexList indexList=this->selectionModel()->selectedIndexes();
         for (int i=0;i<indexList.size();i++)
@@ -169,13 +167,18 @@ void CreditEditor_TableView::keyPressEvent(QKeyEvent *event)
                 QString role=modelIndex.data(Qt::BackgroundRole).value<QColor>().name();
                 std::string roleString = role.toUtf8().constData();
 
-                //Write the letter in the cell
-                this->model()->setData(modelIndex,event->text().toUpper(), Qt::DisplayRole);
-
                 //If there is no backgroud, we take the one tile layout by default
                 if (roleString == WHITECOLOR || roleString == DARKBACKGROUNDCOLOR || roleString == BLACKCOLOR)
                 {
-                    this->model()->setData(modelIndex,QColor(BLUECOLOR), Qt::BackgroundRole);
+                    //Write the letter in the cell
+                    if (event->modifiers() & Qt::ShiftModifier)
+                    {
+                        this->model()->setData(modelIndex, event->text().toUpper(), Qt::DisplayRole);
+                        this->model()->setData(modelIndex,QColor(BLUECOLOR), Qt::BackgroundRole);
+                    } else {
+                        this->model()->setData(modelIndex, event->text(), Qt::DisplayRole);
+                        this->model()->setData(modelIndex,QColor(GREENCOLOR_U), Qt::BackgroundRole);
+                    }
                 }
 
                 //Selecting next index
