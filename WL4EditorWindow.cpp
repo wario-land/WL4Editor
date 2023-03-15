@@ -2463,5 +2463,8 @@ void WL4EditorWindow::on_actionEdit_Wall_Paints_triggered()
 /// </summary>
 void WL4EditorWindow::on_spinBox_RoomID_valueChanged(int arg1)
 {
-    if (firstROMLoaded) SetCurrentRoomId(arg1, true);
+    if (firstROMLoaded)
+    { // avoid render the Room twice when click the button to go to neighbor Room can call this function twice
+        if (sender() != nullptr) SetCurrentRoomId(arg1, true);
+    }
 }
