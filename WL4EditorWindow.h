@@ -45,7 +45,6 @@ private:
     QAction *RecentScripts[5];
     uint recentScriptNum = 0;
 
-    int old_roomid_value = 0; // only use this to set value when illegal input appear in the spinbox_RoomId
     uint graphicViewScalerate = 2;
     bool UnsavedChanges = false; // state check bool only be used when user try loading another ROM, another Level or
                                  // close the editor without saving changes
