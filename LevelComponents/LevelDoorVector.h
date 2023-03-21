@@ -70,7 +70,7 @@ namespace LevelComponents
         struct DoorEntry GetDestinationDoor(unsigned char roomID, unsigned char doorLocalId);
         QString GetDoorName(unsigned char doorGlobalId)
         {
-            return "Room 0x" + QString::number((int) doorvec[doorGlobalId].RoomID, 16) + " Door " + QString::number(doorGlobalId, 10);
+            return "Room 0x" + QString::number((int) doorvec[doorGlobalId].RoomID, 16) + " Door 0x" + QString::number(doorGlobalId, 16);
         }
         QVector<struct DoorEntry> GetDoorsByRoomID(unsigned char roomID);
         unsigned char GetLocalIDByGlobalID(unsigned char doorGlobalId);

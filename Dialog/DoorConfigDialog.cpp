@@ -52,7 +52,9 @@ DoorConfigDialog::DoorConfigDialog(QWidget *parent, LevelComponents::Room *curre
 
     // Initialize UI elements
     ui->ComboBox_DoorType->addItems(DoortypeSet);
-    LevelComponents::DoorEntry curDoorData = tmpDoorVec.GetDoor(tmpCurrentRoom->GetRoomID(), localDoorID);
+    int roomId = tmpCurrentRoom->GetRoomID();
+    LevelComponents::DoorEntry curDoorData = tmpDoorVec.GetDoor(roomId, localDoorID);
+    ui->label_CurrentDoorGlobalID->setText("0x" + QString::number(tmpDoorVec.GetGlobalIDByLocalID(roomId, localDoorID), 16));
     ui->ComboBox_DoorType->setCurrentIndex(curDoorData.DoorTypeByte - 1);
     ui->SpinBox_DoorX->setValue(curDoorData.x1);
     ui->SpinBox_DoorY->setValue(curDoorData.y1);
