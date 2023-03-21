@@ -129,8 +129,8 @@ void Tile16DockWidget::SetSelectedTile(unsigned short tile, bool resetscrollbar)
     int tmpTerrainTypeID = SelectedTileset->GetTerrainTypeIDTablePtr()[tile];
 
     // Print information about the tile to the user
-    QString infoText = tr("Tile ID: %1\nEvent ID (Hex): 0x%2\nTerrain type ID (Hex): 0x%3")
-                .arg(tile).arg(eventIndex, 4, 16, QChar('0'))
+    QString infoText = tr("Tile ID: 0x%1\nEvent ID (Hex): 0x%2\nTerrain type ID (Hex): 0x%3")
+                .arg(tile, 4, 16, QChar('0')).arg(eventIndex, 4, 16, QChar('0'))
                 .arg(tmpTerrainTypeID, 2, 16, QChar('0'));
     SetTileInfoText(infoText);
 
