@@ -242,6 +242,8 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
                                 // Apply changes
                                 // TODO: put the logic to the operation class to support Undo and Redo of Door things
                                 singleton->GetCurrentLevel()->SetDoorVec(_doorconfigdialog.GetChangedDoorVectorResult());
+                                auto doorsInRoom_new = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID(room->GetRoomID());
+                                singleton->GetCurrentRoom()->SetCurrentEntitySet(doorsInRoom_new[i].EntitySetID);
                                 singleton->ResetEntitySetDockWidget();
                                 singleton->SetUnsavedChanges(true);
                             }

@@ -232,7 +232,12 @@ namespace LevelComponents
     /// </param>
     void Tileset::SetAnimatedTile(int tile8x8groupId, int tile8x8group2Id, int SwitchId, int startTile8x8Id)
     {
-        // TODO: Only save graphics from animated tile table 0 for now, need to load tiles from table 1 in the future. --ssp
+        // load the animated tile no. 0 will make the WL4Editor render some jank onto the Layer.
+        // we set the id to 1 to make it looks similar to the game's runetime vram
+        if (!tile8x8groupId) tile8x8groupId = 1;
+        if (!tile8x8group2Id) tile8x8group2Id = 1;
+
+        // Only load graphics from animated tile table 0 for now, we assume all the global switches in game are "off" by default. --ssp
         AnimatedTileData[0][startTile8x8Id >> 2] = tile8x8groupId;
         AnimatedTileData[1][startTile8x8Id >> 2] = tile8x8group2Id;
         AnimatedTileSwitchTable[startTile8x8Id >> 2] = SwitchId;

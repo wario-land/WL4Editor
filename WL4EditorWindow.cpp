@@ -180,6 +180,10 @@ void WL4EditorWindow::LoadRoomUIUpdate()
     ui->roomDecreaseButton->setEnabled(currentroomid);
     ui->roomIncreaseButton->setEnabled(CurrentLevel->GetRooms().size() > currentroomid + 1);
 
+    // Set the max and min for room id spinbox
+    ui->spinBox_RoomID->setMinimum(0);
+    ui->spinBox_RoomID->setMaximum(CurrentLevel->GetRooms().size() - 1);
+
     // Render the screen
     RenderScreenFull();
     SetEditModeDockWidgetLayerEditability();
@@ -412,18 +416,6 @@ void WL4EditorWindow::SetChangeCurrentRoomEnabled(bool state)
 /// </param>
 void WL4EditorWindow::SetCurrentRoomId(int roomid, bool call_from_spinbox_valuechange)
 {
-    bool illegal_input = false;
-    if (roomid == ui->spinBox_RoomID->value() && call_from_spinbox_valuechange == false)
-        illegal_input = true;
-    if(roomid < 0 || roomid >= static_cast<int>(CurrentLevel->GetRooms().size()))
-        illegal_input = true;
-    if (illegal_input && call_from_spinbox_valuechange)
-    {
-        QMessageBox::critical(this, tr("Error"), tr("Illegal Room ID !"));
-        ui->spinBox_RoomID->setValue(old_roomid_value);
-        return;
-    }
-
     // enable or disable those buttons
     if (!roomid)
         ui->roomDecreaseButton->setEnabled(false);
@@ -450,9 +442,6 @@ void WL4EditorWindow::SetCurrentRoomId(int roomid, bool call_from_spinbox_valuec
     Tile16SelecterWidget->SetTileset(tmpTilesetID);
     ResetEntitySetDockWidget();
     ResetCameraControlDockWidget();
-
-    // reserve the legal id
-    old_roomid_value = roomid;
 }
 
 /// <summary>
