@@ -88,25 +88,15 @@ struct OperationParams
     DialogParams::EntitiesAndEntitySetsEditParams *newSpritesAndSetParam = nullptr;
     DialogParams::AnimatedTileGroupsEditParams *lastAnimatedTileEditParam = nullptr;
     DialogParams::AnimatedTileGroupsEditParams *newAnimatedTileEditParam = nullptr;
-    bool tileChange;
-    bool roomConfigChange;
-    bool objectPositionChange;
-    bool TilesetChange;
-    bool CreditChange;
-    bool SpritesSpritesetChange;
-    bool AnimatedTileGroupChange;
+    bool tileChange = false;
+    bool roomConfigChange = false;
+    bool objectPositionChange = false;
+    bool TilesetChange = false;
+    bool CreditChange = false;
+    bool SpritesSpritesetChange = false;
+    bool AnimatedTileGroupChange = false;
 
-    OperationParams() :
-            lastRoomConfigParams(nullptr),
-            newRoomConfigParams(nullptr),
-            tileChange(false),
-            roomConfigChange(false),
-            objectPositionChange(false),
-            TilesetChange(false),
-            CreditChange(false),
-            SpritesSpritesetChange(false),
-            AnimatedTileGroupChange(false)
-    {}
+    OperationParams() {}
 
     // Clean up the struct when it is deconstructed
     ~OperationParams()

@@ -123,7 +123,7 @@ WL4EditorWindow::~WL4EditorWindow()
         delete ROMUtils::entitiessets[i];
         ROMUtils::entitiessets[i] = nullptr;
     }
-    for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entities[0])); i++)
+    for(int i = 0; i < (sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0])); i++)
     {
         delete ROMUtils::entities[i];
         ROMUtils::entities[i] = nullptr;
@@ -264,7 +264,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
             delete ROMUtils::entitiessets[i];
             ROMUtils::entitiessets[i] = nullptr;
         }
-        for(int i = 0; i < (sizeof(ROMUtils::entitiessets) / sizeof(ROMUtils::entities[0])); i++)
+        for(int i = 0; i < (sizeof(ROMUtils::entities) / sizeof(ROMUtils::entities[0])); i++)
         {
             delete ROMUtils::entities[i];
             ROMUtils::entities[i] = nullptr;
