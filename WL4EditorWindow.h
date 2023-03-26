@@ -175,6 +175,7 @@ private slots:
     void on_actionEdit_Animated_Tile_Groups_triggered();
     void on_actionEdit_Wall_Paints_triggered();
     void on_spinBox_RoomID_valueChanged(int arg1);
+    void on_action_swap_Rooms_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

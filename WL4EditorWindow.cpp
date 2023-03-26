@@ -1036,9 +1036,10 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
         QMessageBox IfDeleteDoors;
         IfDeleteDoors.setWindowTitle(tr("WL4Editor"));
         IfDeleteDoors.setText(tr(
-            "You just triggered the clear-all shortcut (current room).\nDo you want to delete all the doors, too?\n"
+            "You just triggered the clear-all shortcut for current Room.\nDo you want to delete all the doors in this Room at the same time?\n"
             "(Only one door will be reserved to render camera boxes correctly and keep data association for entityset settings.\n"
-            "Camera settings will be unaffected regardless.)"));
+            "Camera settings will be unaffected regardless.)\n"
+            "Notice: You CANNOT undo this step !"));
         QPushButton *CancelClearingButton = IfDeleteDoors.addButton(tr("Cancel Clearing"), QMessageBox::RejectRole);
         QPushButton *NoButton = IfDeleteDoors.addButton(tr("No"), QMessageBox::NoRole);
         QPushButton *YesButton = IfDeleteDoors.addButton(tr("Yes"), QMessageBox::ApplyRole);
@@ -1060,7 +1061,8 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
     }
 
     // Clear Layers 0, 1, 2
-    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    int currentRoomID = ui->spinBox_RoomID->value();
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[currentRoomID];
     for (int i = 0; i < 3; ++i)
     {
         LevelComponents::Layer *layer = currentRoom->GetLayer(i);
@@ -1098,7 +1100,8 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
         }
     }
 
-    // TODO: add history record
+    // local Room operations are not allowed for things before this step
+    ResetRoomUndoHistory(currentRoomID);
 
     // UI update
     ResetEntitySetDockWidget();
@@ -2457,3 +2460,25 @@ void WL4EditorWindow::on_spinBox_RoomID_valueChanged(int arg1)
         if (sender() != nullptr) SetCurrentRoomId(arg1, true);
     }
 }
+
+void WL4EditorWindow::on_action_swap_Rooms_triggered()
+{
+    unsigned int currentroomid = ui->spinBox_RoomID->value();
+    bool okay = false;
+    int value = QInputDialog::getInt(this, QApplication::applicationName(),
+                                     tr("input a Room Id to apply the Room swap with the current Room.\n"
+                                        "Notice: You CANNOT undo this step !"), currentroomid,
+                                     0, CurrentLevel->GetRooms().size() - 1, 1, &okay);
+    if (okay && value != currentroomid)
+    {
+        if (CurrentLevel->SwapRooms(currentroomid, value))
+        {
+            // local Room operations are not allowed for things before this step
+            ResetRoomUndoHistory(currentroomid);
+            ResetRoomUndoHistory(value);
+            SetUnsavedChanges(true);
+            SetCurrentRoomId(ui->spinBox_RoomID->value());
+        }
+    }
+}
+

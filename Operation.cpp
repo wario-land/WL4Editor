@@ -610,6 +610,36 @@ void ResetUndoHistory()
 }
 
 /// <summary>
+/// Reset the undo deque of a specified Room in the current Level.
+/// </summary>
+void ResetRoomUndoHistory(int currentRoomId)
+{
+    if (!(operationHistory[currentRoomId].size())) return;
+
+    // Deconstruct the dynamically allocated operation structs within the history queue
+    for (unsigned int j = 0; j < operationHistory[currentRoomId].size(); ++j)
+    {
+        // as long as only tileChange and roomConfigChange in the current Room
+        // we can delete the whole undo deque without dealing with any memory problem
+        struct OperationParams *curParam = operationHistory[currentRoomId][j];
+        if (curParam->objectPositionChange ||
+            curParam->TilesetChange ||
+            curParam->CreditChange ||
+            curParam->SpritesSpritesetChange ||
+            curParam->AnimatedTileGroupChange)
+        {
+            // there is something wrong with the internal logic, we just skip the curParam atm
+            singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("An error occured when reset the Undo history for Room 0x") +
+                                                                     QString::number(currentRoomId, 16));
+            continue;
+        }
+        delete curParam;
+    }
+    operationHistory[currentRoomId].clear();
+    operationIndex[currentRoomId] = 0;
+}
+
+/// <summary>
 /// Clean up the global undo deque.
 /// </summary>
 /// <remarks>

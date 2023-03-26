@@ -139,6 +139,72 @@ bool LevelComponents::LevelDoorVector::DeleteDoor(unsigned char doorGlobalId)
     return true;
 }
 
+/// <summary>
+/// change the data corresponding to the swap of 2 Rooms.
+/// need to update the first Door in the whole vector if the Room 0 get swapped.
+/// </summary>
+bool LevelComponents::LevelDoorVector::SwapRooms(unsigned char first_room_id, unsigned char second_room_id)
+{
+    int roomIdMax = 0;
+    for (auto &door: this->doorvec)
+    {
+        if (door.RoomID > roomIdMax)
+        {
+            roomIdMax = door.RoomID;
+        }
+    }
+    if (first_room_id > roomIdMax || second_room_id > roomIdMax) return false;
+
+    int first_door_id_in_old_R1 = -1;
+    int first_door_id_in_old_R2 = -1;
+    for (int i = 0; i < this->doorvec.size(); i++)
+    {
+        if (this->doorvec[i].RoomID == first_room_id)
+        {
+            if (first_door_id_in_old_R1 == -1)
+            {
+                first_door_id_in_old_R1 = i;
+            }
+            this->doorvec[i].RoomID = second_room_id;
+        }
+        else if (this->doorvec[i].RoomID == second_room_id)
+        {
+            if (first_door_id_in_old_R2 == -1)
+            {
+                first_door_id_in_old_R2 = i;
+            }
+            this->doorvec[i].RoomID = first_room_id;
+        }
+    }
+
+    // we can always swap the first Doors of the 2 Rooms here
+    // then there will always be a Door in the new Room 0 can be used as portal Door
+    if (first_door_id_in_old_R1 != -1 && first_door_id_in_old_R2 != -1)
+    {
+        struct DoorEntry tmpDoor;
+        memcpy(&tmpDoor, &(this->doorvec[first_door_id_in_old_R1]), sizeof(DoorEntry));
+        memcpy(&(this->doorvec[first_door_id_in_old_R1]), &(this->doorvec[first_door_id_in_old_R2]), sizeof(DoorEntry));
+        memcpy(&(this->doorvec[first_door_id_in_old_R2]), &tmpDoor, sizeof(DoorEntry));
+        for (auto &door: this->doorvec)
+        {
+            // if the door's destination points to the first portal door and set disabled, we should keep the value unchanged
+            if (door.DestinationDoorGlobalID == first_door_id_in_old_R1 && door.DestinationDoorGlobalID)
+            {
+                door.DestinationDoorGlobalID = first_door_id_in_old_R2;
+            }
+            else if (door.DestinationDoorGlobalID == first_door_id_in_old_R2 && door.DestinationDoorGlobalID)
+            {
+                door.DestinationDoorGlobalID = first_door_id_in_old_R1;
+            }
+        }
+
+        // the first door in the doorvec should always be the portal door and does not have a destination
+        this->doorvec[0].DestinationDoorGlobalID = 0;
+    }
+    this->Dirty = true;
+    return true;
+}
+
 LevelComponents::DoorEntry LevelComponents::LevelDoorVector::GetDoor(unsigned char doorGlobalId)
 {
     struct DoorEntry tmpDoor;
