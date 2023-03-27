@@ -2469,9 +2469,14 @@ void WL4EditorWindow::on_action_swap_Rooms_triggered()
                                      tr("input a Room Id to apply the Room swap with the current Room.\n"
                                         "Notice: You CANNOT undo this step !"), currentroomid,
                                      0, CurrentLevel->GetRooms().size() - 1, 1, &okay);
-    if (okay && value != currentroomid)
+    if (okay)
     {
-        if (CurrentLevel->SwapRooms(currentroomid, value))
+        if (value == currentroomid)
+        {
+            OutputWidget->PrintString(tr("You cannot swap the room with itself."));
+            return;
+        }
+        else if (CurrentLevel->SwapRooms(currentroomid, value))
         {
             // local Room operations are not allowed for things before this step
             ResetRoomUndoHistory(currentroomid);
