@@ -212,6 +212,7 @@
      </widget>
      <addaction name="menuLayers"/>
      <addaction name="menuEntity_lists"/>
+     <addaction name="action_swap_Rooms"/>
     </widget>
     <widget class="QMenu" name="menuClear">
      <property name="enabled">
@@ -692,6 +693,14 @@
    </property>
    <property name="text">
     <string>Edit Wall Paints</string>
+   </property>
+  </action>
+  <action name="action_swap_Rooms">
+   <property name="text">
+    <string>Rooms</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;swap the current Room with another existing Room in the current Level&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
  </widget>

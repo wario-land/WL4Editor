@@ -181,6 +181,7 @@ void UndoOperationGlobal();
 void RedoOperation();
 void RedoOperationGlobal();
 void ResetUndoHistory();
+void ResetRoomUndoHistory(int currentRoomId);
 void DeleteUndoHistoryGlobal();
 void ResetChangedBoolsThroughHistory();
 void ResetGlobalElementOperationIndexes();

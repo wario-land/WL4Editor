@@ -81,6 +81,7 @@ namespace LevelComponents
         // operations
         int AddDoor(unsigned char roomID, unsigned char entitySetID = 1, unsigned char doorType = 2); // return the added door global id
         bool DeleteDoor(unsigned char doorGlobalId);
+        bool SwapRooms(unsigned char first_room_id, unsigned char second_room_id);
 
         // Setters
         void SetBGM(unsigned char doorGlobalId, unsigned short _BGM_ID)

@@ -314,6 +314,32 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Swap 2 Room instances in the Level, also rearrange the Door data.
+    /// </summary>
+    bool Level::SwapRooms(int first_room_id, int second_room_id)
+    {
+        int roomNum = rooms.size();
+        if (first_room_id < roomNum && second_room_id < roomNum)
+        {
+            auto p1 = rooms[first_room_id];
+            auto p2 = rooms[second_room_id];
+            p1->SetRoomID(second_room_id);
+            p2->SetRoomID(first_room_id);
+            rooms[first_room_id] = p2;
+            rooms[second_room_id] = p1;
+
+            doorlist.SwapRooms(first_room_id, second_room_id);
+
+            // it seems we don't need to set dirty for either the Level or the Rooms atm...
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+    }
+
+    /// <summary>
     /// Populate a vector with save data chunks for a level.
     /// </summary>
     /// <param name="chunks">
