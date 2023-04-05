@@ -1,3 +1,23 @@
+0.16.2:
+(major changes)
+- Port the WL4Editor to Qt 6 so the script feature can use more newer ECMA-262 features
+- Replace "phantomstyle" by the Qt provided GUI style "fusion", since the first one cannot work in Qt6
+- Support swapping the current Room with another Room in the current Level
+
+(minor changes)
+- Fix Layer 0 mappingtype change from 0x2X to 0x1X cannot be applied in Room Config Dialog
+- Now new Room can be created without using existing RoomHeader data from the ROM
+- Add the copyright scene in Credit Editor
+- Support another one-tile height orange English letter input in Credit Editor
+- Support lowercase letter input for 2-tile height case in the Credit Editor
+- Fix Credit Editor cannot render the English point
+- Fix WL4Editor will rendering the Room twice when using buttons to go to neighbor Rooms
+- Show global door id for current Door, and display global door indexes using hex in Door Config Dialog\
+- Fix Entity Selector dockwidget won't update after changes in Door Config Dialog being applied
+- Fix graphical glitch on the first animated Tile group when rendering Tileset and Room
+- Show Tile ID by hex in Tile16 Selector dock widget
+- Fix the room id spinbox cannot synchronize with buttons sometimes
+
 0.16.1:
 (major changes)
 - the WL4ditor will now open the Room where you hit save last time.
