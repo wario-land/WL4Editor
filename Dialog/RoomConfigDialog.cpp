@@ -577,61 +577,43 @@ void RoomConfigDialog::on_spinBox_RasterType_valueChanged(int arg1)
 /// </param>
 void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
 {
-    // if the tileset is using some vanilla bg tile8x8 set
+    // init
     unsigned int bgtiledataAddr = ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr();
     BGLayerdataPtrs.clear();
-    bool find_using_vanilla_bg_tiledata = false;
-    int find_using_vanilla_bg_from_vanilla_tileset_id = -1;
+
+    // go through all the vanilla background tile data pointer and see if the current Tileset is using several of them
+    // push all the available background mapping data pointer into the BGLayerdataPtrsData[] as long as the bg tile data pointer matches
     for ( int i = 0; i < (sizeof(VanillaTilesetBGTilesDataAddr) / sizeof(VanillaTilesetBGTilesDataAddr[0])); i++)
     {
         if (bgtiledataAddr == VanillaTilesetBGTilesDataAddr[i])
         {
-            find_using_vanilla_bg_tiledata = true;
-            find_using_vanilla_bg_from_vanilla_tileset_id = i;
-            break;
-        }
-    }
-    if (find_using_vanilla_bg_tiledata)
-    {
-        // Initialize the selections for the current tileset's available BGs
-        // it is possible that user set a bg tileset from another vanilla tileset
-        // so we need to go thru all the data and find the suitable BG Layer data pointer(s) to push into BGLayerdataPtrs
-        int curTilesetId = 0;
-        int count = 0;
-        int graphicNum = 0;
-        while (curTilesetId != find_using_vanilla_bg_from_vanilla_tileset_id)
-        {
-            graphicNum = BGLayerdataPtrsData[count];
-            count += (graphicNum + 1);
-            curTilesetId++;
-        }
-        graphicNum = BGLayerdataPtrsData[count++];
-        if (graphicNum > 0)
-        {
-            for (int i = 0; i < graphicNum; i++)
+            int curTilesetId = 0;
+            int count = 0;
+            int graphicNum = 0;
+            while (curTilesetId != i)
             {
-                BGLayerdataPtrs.push_back(BGLayerdataPtrsData[count + i]);
+                graphicNum = BGLayerdataPtrsData[count];
+                count += (graphicNum + 1);
+                curTilesetId++;
             }
-        }
-        bool find_default_ptr = false;
-        if (int num = BGLayerdataPtrs.size())
-        {
-            for (int i = 0; i < num; i++)
+            graphicNum = BGLayerdataPtrsData[count++];
+            if (graphicNum > 0)
             {
-                if (BGLayerdataPtrs[i] == WL4Constants::BGLayerDefaultPtr)
+                for (int j = 0; j < graphicNum; j++)
                 {
-                    find_default_ptr = true;
-                    break;
+                    std::vector<int>::iterator it = std::find(BGLayerdataPtrs.begin(), BGLayerdataPtrs.end(), BGLayerdataPtrsData[count + j]);
+                    if(it == BGLayerdataPtrs.end())
+                    {
+                        BGLayerdataPtrs.push_back(BGLayerdataPtrsData[count + j]);
+                    }
                 }
             }
         }
-        if (!find_default_ptr)
-        {
-            BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
-        }
     }
-    else/* if (bgtiledataAddr >= WL4Constants::AvailableSpaceBeginningInROM)*/
-    {   // use custom tile data
+
+    // another case: it is using some custom bg tile data
+    if (bgtiledataAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+    {
         QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> graphicEntries = AssortedGraphicUtils::GetAssortedGraphicsFromROM();
 
         // some bug case should never happen
@@ -648,9 +630,19 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
                     graphicEntries[i].TileDataType == AssortedGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
                     graphicEntries[i].MappingDataCompressType == AssortedGraphicUtils::RLE_mappingtype_0x20)
             {
-                BGLayerdataPtrs.push_back(graphicEntries[i].MappingDataAddress);
+                std::vector<int>::iterator it = std::find(BGLayerdataPtrs.begin(), BGLayerdataPtrs.end(), graphicEntries[i].MappingDataAddress);
+                if(it == BGLayerdataPtrs.end())
+                {
+                    BGLayerdataPtrs.push_back(graphicEntries[i].MappingDataAddress);
+                }
             }
         }
+    }
+
+    // add the default bg mapping data pointer
+    std::vector<int>::iterator it = std::find(BGLayerdataPtrs.begin(), BGLayerdataPtrs.end(), WL4Constants::BGLayerDefaultPtr);
+    if(it == BGLayerdataPtrs.end())
+    {
         BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
     }
 
