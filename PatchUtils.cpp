@@ -450,7 +450,7 @@ static QString CreatePatchListChunkData(QVector<struct PatchEntryItem> &entries)
 }
 
 /// <summary>
-/// Compile a patch entry file to get the binary to save to the ROM.
+/// Compile a patch entry file
 /// </summary>
 /// <param name="entry">
 /// The patch entry to compile.
@@ -478,6 +478,33 @@ static QString CompilePatchEntry(const struct PatchEntryItem &entry)
         {
             return QString(QT_TR_NOOP("Assembler error: ")) + output;
         }
+        break;
+    default:;
+    }
+    return ""; // success
+}
+
+/// <summary>
+/// Link and extract a compiled patch entry to get the binary to save to the ROM.
+/// </summary>
+/// <param name="entry">
+/// The patch entry to compile.
+/// </param>
+/// <returns>
+/// The error string if the link process failed, or empty if successful.
+/// </returns>
+static QString LinkAndExtractEntry(const struct PatchEntryItem &entry)
+{
+    if(entry.PatchType == PatchType::Binary) return "";
+    QString filename = FileIOUtils::RelativeFilePathToAbsoluteFilePath(entry.FileName);
+    if (!filename.size()) return "";
+
+    QString output;
+    switch(entry.PatchType)
+    {
+    case PatchType::C:
+        REPLACE_EXT(filename, ".c", ".s");
+    case PatchType::Assembly:
         REPLACE_EXT(filename, ".s", ".o");
         if((output = CreateLinkerScript(entry)) != "")
         {
@@ -758,7 +785,7 @@ namespace PatchUtils
                     // address to find the required size
                     int alignOffset = ((freeSpace.addr + 3) & ~3) - freeSpace.addr;
                     patchAllocIter->PatchAddress = freeSpace.addr + alignOffset;
-                    if((errorMsg = CompilePatchEntry(*patchAllocIter)) != "")
+                    if((errorMsg = LinkAndExtractEntry(*patchAllocIter)) != "")
                     {
                         return ROMUtils::ChunkAllocationStatus::ProcessingError;
                     }
