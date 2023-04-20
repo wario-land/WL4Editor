@@ -812,11 +812,9 @@ namespace PatchUtils
                         // Allocation success
                         *sd = saveData;
 
-                        // Advance patch iterator to next non-hex-edit patch
+                        // Advance patch iterator to the next C_dependency patch
                         dependencyPatchFileAllocIter++;
-                        while(dependencyPatchFileAllocIter != entries.end() &&
-                               (dependencyPatchFileAllocIter->PatchType != C_dependency) &&
-                               !dependencyPatchFileAllocIter->FileName.length())
+                        while(dependencyPatchFileAllocIter != entries.end() && (dependencyPatchFileAllocIter->PatchType != C_dependency))
                         {
                             dependencyPatchFileAllocIter++;
                         }
@@ -873,11 +871,11 @@ namespace PatchUtils
                         // Allocation success
                         *sd = saveData;
 
-                        // Advance patch iterator to next non-hex-edit patch
+                        // Advance patch iterator to the next non-C_dependency patch
                         regularPatchFileAllocIter++;
                         while(regularPatchFileAllocIter != entries.end() &&
-                               (regularPatchFileAllocIter->PatchType == C_dependency) &&
-                               !regularPatchFileAllocIter->FileName.length())
+                               !regularPatchFileAllocIter->FileName.length() &&
+                               (dependencyPatchFileAllocIter->PatchType != C_dependency))
                         {
                             regularPatchFileAllocIter++;
                         }
