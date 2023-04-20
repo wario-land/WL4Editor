@@ -355,7 +355,7 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
         // ChunkAllocator
 
         [&entries, &currentChunkId, &chunks, &hasDoneListChunk]
-        (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd, bool resetchunkIndex)
+        (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd, bool resetchunkIndex, int *require_size)
         {
             (void) TempFile;
 
@@ -383,6 +383,7 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
                 if(chunks[currentChunkId].size > freeSpace.size - alignOffset - 12)
                 {
                     // This will request a larger free area
+                    *require_size = chunks[currentChunkId].size;
                     return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
                 }
                 else
@@ -428,7 +429,8 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
                     // To see if the data will fit, we must include the text contents, size of the RATS header, and one byte for versioning
                     if((unsigned int)assortedGraphicListChunkContents.length() + 13 > freeSpace.size)
                     {
-                        return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                            *require_size = assortedGraphicListChunkContents.length() + 13;
+                            return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
                     }
 
                     // Create the save chunk data

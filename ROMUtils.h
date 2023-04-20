@@ -120,7 +120,7 @@ namespace ROMUtils
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);
 
     bool SaveFile(QString filePath, QVector<unsigned int> invalidationChunks,
-        std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*, bool)> ChunkAllocator,
+        std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*, bool, int*)> ChunkAllocator,
         std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback);
     bool SaveLevel(QString fileName);
 

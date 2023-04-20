@@ -636,10 +636,13 @@ namespace PatchUtils
             for(int i = 0; i < patchTuples.count(); i += PATCH_FIELD_COUNT)
             {
                 struct PatchEntryItem entry = DeserializePatchMetadata(patchTuples.mid(i, PATCH_FIELD_COUNT));
-                if(!std::find_if(patchChunks.begin(), patchChunks.end(), [entry](unsigned int addr){return addr == entry.PatchAddress;}))
+                if (entry.PatchType != Binary)
                 {
-                    singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Corruption error: Patch chunk list entry refers to an invalid patch address: 0x") + QString::number(entry.PatchAddress, 16).toUpper());
-                    continue;
+                    if(!std::find_if(patchChunks.begin(), patchChunks.end(), [entry](unsigned int addr){return addr == entry.PatchAddress;}))
+                    {
+                        singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Corruption error: Patch chunk list entry refers to an invalid patch address: 0x") + QString::number(entry.PatchAddress, 16).toUpper());
+                        continue;
+                    }
                 }
                 patchEntries.append(entry);
             }
@@ -702,7 +705,6 @@ namespace PatchUtils
         // Start the iterator on the first patch which is not a hex edit
         auto patchAllocIter = std::find_if(entries.begin(), entries.end(), []
             (const struct PatchEntryItem p){return p.FileName.length();});
-        std::map<unsigned int, unsigned int> neededSizeMap; // key: hook address
         QString errorMsg;
         bool plcAllocated = !entries.size(); // patch list chunk status
         bool firstCallback = true;
@@ -713,8 +715,8 @@ namespace PatchUtils
 
             // ChunkAllocator
 
-            [&neededSizeMap, &patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback, &SaveDataList, &removePatches]
-            (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd, bool resetchunkIndex)
+            [&patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback, &SaveDataList, &removePatches]
+            (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd, bool resetchunkIndex, int *require_size)
             {
                 // This part of code will be triggered when rom size needs to be expanded
                 // So all the chunks will be reallocated
@@ -766,20 +768,6 @@ namespace PatchUtils
                 // Create save data for all the patches in the iterator
                 if(patchAllocIter != entries.end())
                 {
-                    // If we have already reported insufficient space for this patch, then
-                    // reject all regions smaller than required space
-                    auto neededSizePair = std::find_if(neededSizeMap.begin(), neededSizeMap.end(), [patchAllocIter]
-                        (std::pair<const unsigned int, const unsigned int> p){return p.first == patchAllocIter->HookAddress;});
-                    if(neededSizePair != neededSizeMap.end())
-                    {
-                        int alignOffset = ((freeSpace.addr + 3) & ~3) - freeSpace.addr;
-                        unsigned int neededSize = (*neededSizePair).second + alignOffset; // we add alignment offset because the alignment offset is different for every free space region
-                        if(freeSpace.size < neededSize)
-                        {
-                            return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
-                        }
-                    }
-
                     // If it is the first time processing this patch or we've been given a
                     // new free space region for this patch, compile and link at proposed
                     // address to find the required size
@@ -799,7 +787,7 @@ namespace PatchUtils
                             delete[] saveData.data;
                             // this prevents re-compiling while the callback iterates over all free space regions smaller than what was needed here
                             // we do not include alignment offset because the alignment offset is different for every free space region
-                            neededSizeMap[patchAllocIter->HookAddress] = saveData.size + 12;
+                            *require_size = saveData.size + 12;
                             return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
                         }
 
@@ -827,6 +815,7 @@ namespace PatchUtils
                         // To see if the data will fit, we must include the text contents, size of the RATS header, and one byte for versioning
                         if((unsigned int)patchListChunkContents.length() + 13 > freeSpace.size)
                         {
+                            *require_size = patchListChunkContents.length() + 13;
                             return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
                         }
 
