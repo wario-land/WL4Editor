@@ -113,7 +113,7 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
     }
 
     // Patch on the first 4 bytes of the rom is not allowed
-    if(newEntry.HookAddress < 4)
+    if(newEntry.HookAddress < 4 && newEntry.PatchType != C_dependency)
     {
         return QT_TR_NOOP("Patch on the first 4 bytes of the rom is not allowed.");
     }
@@ -156,7 +156,7 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
         }
 
         // It does not make sense to add a save chunk with no link to it in the hook
-        if(newEntry.PatchOffsetInHookString == (unsigned int) -1)
+        if(newEntry.PatchOffsetInHookString == (unsigned int) -1 && newEntry.PatchType != C_dependency)
         {
             return QT_TR_NOOP("A file is sepcified, so a save chunk will be created. But, the hook does not specify the P identifier for the patch code address. The save chunk would be useless, so this is not allowed (please use P in the hook).");
         }

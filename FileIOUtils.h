@@ -1,6 +1,7 @@
 ﻿#ifndef FILEIOUTILS_H
 #define FILEIOUTILS_H
 
+#include <map>
 #include <QVector>
 #include <QColor>
 #include <QImage>
@@ -21,6 +22,7 @@ namespace FileIOUtils
 
     // patch parser stuff
     QString GetParamFromSourceFile(QString filePath, QString identifier, QRegularExpression validator);
+    bool GetGlobalSymbolsFromSourceFile(QString txtfilepath, std::map<unsigned int, QString>& gConsts, std::map<unsigned int, QString>& gFunctions);
     unsigned int FindEntryFunctionAddress(QString txtfilePath, QString entryFunctionSymbol = "");
 
     // helper functions

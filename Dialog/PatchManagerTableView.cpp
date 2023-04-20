@@ -65,11 +65,12 @@ void PatchManagerTableView::UpdateTableView()
     // Populate the table items
     for(const struct PatchEntryItem &patchEntry : EntryTableModel.entries)
     {
-        const char *typeStrings[3] =
+        const char *typeStrings[4] =
         {
             "Binary",
             "Assembly",
-            "C"
+            "C",
+            "C_dependency"
         };
         if(patchEntry.PatchType >= sizeof(typeStrings) / sizeof(typeStrings[0]))
         {
@@ -81,12 +82,10 @@ void PatchManagerTableView::UpdateTableView()
         QVector<QStandardItem*> items;
         items.append(new QStandardItem(patchEntry.FileName.length() ? patchEntry.FileName : "(no file)"));
         items.append(new QStandardItem(QString(typeStrings[patchEntry.PatchType])));
-        items.append(new QStandardItem("0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
-        QString PatchAddressString = !patchEntry.PatchAddress ?
-                    "N/A" : "0x" + QString::number(patchEntry.PatchAddress + 12, 16).toUpper();
-        PatchAddressString = (patchEntry.PatchAddress == DummyPatchAddressValue) ?
-                    "TBD" :
-                    PatchAddressString;
+        QString HookAddressString = (!patchEntry.HookAddress ? "N/A" : ("0x" + QString::number(patchEntry.HookAddress, 16).toUpper()));
+        items.append(new QStandardItem(HookAddressString));
+        QString PatchAddressString = !patchEntry.PatchAddress ? "N/A" : "0x" + QString::number(patchEntry.PatchAddress + 12, 16).toUpper();
+        PatchAddressString = (patchEntry.PatchAddress == DummyPatchAddressValue) ? "TBD" : PatchAddressString;
         items.append(new QStandardItem(PatchAddressString));
         QString finalHookStringText = patchEntry.HookString;
         if (patchEntry.PatchOffsetInHookString != (unsigned int) -1)

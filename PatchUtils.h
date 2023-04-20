@@ -5,19 +5,20 @@
 
 enum PatchType
 {
-    Binary   = 0,
-    Assembly = 1,
-    C        = 2
+    Binary       = 0,
+    Assembly     = 1,
+    C            = 2,
+    C_dependency = 3
 };
 
 struct PatchEntryItem
 {
     QString FileName;
     enum PatchType PatchType;
-    unsigned int HookAddress;
+    unsigned int HookAddress;             // where to overwrite hookstring
     QString HookString;
-    unsigned int PatchOffsetInHookString;
-    unsigned int PatchAddress;
+    unsigned int PatchOffsetInHookString; // where the P is in the hookstring
+    unsigned int PatchAddress;            // where the patch we insert into the ROM
     QString SubstitutedBytes;
     QString Description;
 

@@ -657,6 +657,50 @@ QString FileIOUtils::RelativeFilePathToAbsoluteFilePath(QString relativeFilePath
 }
 
 /// <summary>
+/// Get all the global symbols from .elf.txt file
+/// </summary>
+/// <param name="txtfilepath">
+/// .elf.txt filePath.
+/// </param>
+/// <param name="gConsts">
+/// std::map reference from the caller to save global consts <address, symbolName> pair
+/// </param>
+/// <param name="gFunctions">
+/// std::map reference from the caller to save global functions <address, symbolName> pair
+/// </param>
+/// <return>
+/// return true if the file exist.
+/// </return>
+bool FileIOUtils::GetGlobalSymbolsFromSourceFile(QString txtfilepath, std::map<unsigned int, QString> &gConsts, std::map<unsigned int, QString> &gFunctions)
+{
+    QFile file(txtfilepath);
+    file.open(QIODevice::ReadOnly);
+    if (!file.exists()) return false;
+    QTextStream in(&file);
+    QString line;
+    do {
+        line = in.readLine();
+        line.replace(QChar('\t'), QChar(' '));
+        QStringList strlist = line.split(QChar(' '), Qt::SkipEmptyParts);
+
+        if (strlist.size() != 6 || strlist[1] != "g") continue;
+
+        // parse addrs and names for global functions and consts
+        if (strlist[2] == "F" && strlist[3] == ".text")
+        {
+            gFunctions[strlist[0].toUInt(nullptr, 16)] = strlist[5];
+        }
+        else if (strlist[2] == "O" && strlist[3] == ".rodata")
+        {
+            gConsts[strlist[0].toUInt(nullptr, 16)] = strlist[5];
+        }
+
+    } while (!line.isNull());
+    file.close();
+    return true;
+}
+
+/// <summary>
 /// Get the entry function's address when .elf.txt file appear
 /// </summary>
 /// <param name="txtfilePath">
@@ -670,34 +714,19 @@ QString FileIOUtils::RelativeFilePathToAbsoluteFilePath(QString relativeFilePath
 /// </return>
 unsigned int FileIOUtils::FindEntryFunctionAddress(QString txtfilePath, QString entryFunctionSymbol)
 {
-    if (!entryFunctionSymbol.size()) return 0;
-    QFile file(txtfilePath);
-    file.open(QIODevice::ReadOnly);
-    QTextStream in(&file);
-    QString line;
+    std::map<unsigned int, QString> consts;
+    std::map<unsigned int, QString> funcs;
     unsigned int result = 0;
-    bool skiprest = false;
-    do {
-        line = in.readLine();
-        line.replace(QChar('\t'), QChar(' '));
-        QStringList strlist = line.split(QChar(' '), Qt::SkipEmptyParts);
-        for (int i = 0; i < (strlist.size() - 1); i++)
+    if (GetGlobalSymbolsFromSourceFile(txtfilePath, consts, funcs))
+    {
+        for (auto iter = funcs.begin(); iter != funcs.end(); ++iter)
         {
-            if (strlist[i] == "F" && strlist[i + 1] == ".text")
+            if (iter->second == entryFunctionSymbol)
             {
-                if (strlist[i + 3] == entryFunctionSymbol)
-                {
-                    result = strlist[0].toUInt(nullptr, 16);
-                    skiprest = true;
-                    break;
-                }
+                result = iter->first;
+                break;
             }
         }
-        if (skiprest)
-        {
-            break;
-        }
-    } while (!line.isNull());
-    file.close();
+    }
     return result;
 }

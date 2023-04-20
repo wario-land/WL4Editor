@@ -299,7 +299,9 @@ static QString AssembleSFile(QString sfile)
 /// <returns>
 /// An empty string if successful, or an error string if failure.
 /// </returns>
-static QString CreateLinkerScript(const struct PatchEntryItem &entry)
+static QString CreateLinkerScript(const struct PatchEntryItem &entry,
+                                  std::map<unsigned int, QString>& tmp_gConsts,
+                                  std::map<unsigned int, QString>& tmp_gFunctions)
 {
     QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
     QString ofile(romFileDir + QDir::separator() + entry.FileName);
@@ -316,6 +318,20 @@ static QString CreateLinkerScript(const struct PatchEntryItem &entry)
         "    .rodata : { \"" + ofile + "\" (.rodata) }\n" +
         "}\n" +
         "memcpy = 0x80950D9;";
+    if (tmp_gConsts.size())
+    {
+        for (auto iter1 = tmp_gConsts.begin(); iter1 != tmp_gConsts.end(); iter1++)
+        {
+            scriptContents += "\n" + iter1->second + " = 0x" + QString::number(iter1->first, 16) + ";";
+        }
+    }
+    if (tmp_gFunctions.size())
+    {
+        for (auto iter2 = tmp_gFunctions.begin(); iter2 != tmp_gFunctions.end(); iter2++)
+        {
+            scriptContents += "\n" + iter2->second + " = 0x" + QString::number(iter2->first + 1, 16) + ";";
+        }
+    }
 
     QFile file(ldfile);
     file.open(QIODevice::WriteOnly);
@@ -468,6 +484,7 @@ static QString CompilePatchEntry(const struct PatchEntryItem &entry)
     switch(entry.PatchType)
     {
     case PatchType::C:
+    case PatchType::C_dependency:
         if((output = CompileCFile(filename)) != "")
         {
             return QString(QT_TR_NOOP("Compiler error: ")) + output;
@@ -493,7 +510,9 @@ static QString CompilePatchEntry(const struct PatchEntryItem &entry)
 /// <returns>
 /// The error string if the link process failed, or empty if successful.
 /// </returns>
-static QString LinkAndExtractEntry(const struct PatchEntryItem &entry)
+static QString LinkAndExtractEntry(const struct PatchEntryItem &entry,
+                                   std::map<unsigned int, QString>& tmp_gConsts,
+                                   std::map<unsigned int, QString>& tmp_gFunctions)
 {
     if(entry.PatchType == PatchType::Binary) return "";
     QString filename = FileIOUtils::RelativeFilePathToAbsoluteFilePath(entry.FileName);
@@ -503,10 +522,11 @@ static QString LinkAndExtractEntry(const struct PatchEntryItem &entry)
     switch(entry.PatchType)
     {
     case PatchType::C:
+    case PatchType::C_dependency:
         REPLACE_EXT(filename, ".c", ".s");
     case PatchType::Assembly:
         REPLACE_EXT(filename, ".s", ".o");
-        if((output = CreateLinkerScript(entry)) != "")
+        if((output = CreateLinkerScript(entry, tmp_gConsts, tmp_gFunctions)) != "")
         {
             return QString(QT_TR_NOOP("Error creating linker script: ")) + output;
         }
@@ -665,22 +685,9 @@ namespace PatchUtils
         if(compileErrorMsg != "") return compileErrorMsg;
 
         ROMUtils::SaveDataIndex = 1;
-        QVector<struct ROMUtils::SaveData> chunks;
+
         // logic to find changed patches is so complicated, so we just remove all them.
         QVector<struct PatchEntryItem> removePatches = GetPatchesFromROM();
-
-        // Populate the chunk list with patches to add to the ROM
-        for(struct PatchEntryItem &patch : entries)
-        {
-            if(!patch.FileName.length()) continue; // no save chunk to create for hook-only patches
-
-            QString binName(patch.FileName);
-            binName.chop(1);
-            binName += "bin";
-
-            struct ROMUtils::SaveData patchChunk = CreatePatchSaveChunk(patch);
-            chunks.append(patchChunk);
-        }
         
         // Populate the chunk list with invalidation chunks for patches to be removed from the ROM
         QVector<unsigned int> invalidationChunks;
@@ -702,12 +709,17 @@ namespace PatchUtils
             invalidationChunks.append(patchListChunkAddr + 12);
         }
 
-        // Start the iterator on the first patch which is not a hex edit
-        auto patchAllocIter = std::find_if(entries.begin(), entries.end(), []
-            (const struct PatchEntryItem p){return p.FileName.length();});
+        // Start the iterator on the first patch which is not a hex edit also not a C_dependency
+        auto regularPatchFileAllocIter = std::find_if(entries.begin(), entries.end(), []
+            (const struct PatchEntryItem p){return ((p.PatchType != C_dependency) && p.FileName.length());});
+        auto dependencyPatchFileAllocIter = std::find_if(entries.begin(), entries.end(), []
+            (const struct PatchEntryItem p){return ((p.PatchType == C_dependency) && p.FileName.length());});
+        std::map<unsigned int, QString> dependenciesGlobalConsts;
+        std::map<unsigned int, QString> dependenciesGlobalFunctions;
         QString errorMsg;
         bool plcAllocated = !entries.size(); // patch list chunk status
         bool firstCallback = true;
+        bool HasProcessedExtraLinkerScript = false;
         QVector<unsigned char*> SaveDataList;
 
         // Allocate and save the chunks to the ROM
@@ -715,18 +727,24 @@ namespace PatchUtils
 
             // ChunkAllocator
 
-            [&patchAllocIter, &entries, &errorMsg, &plcAllocated, &firstCallback, &SaveDataList, &removePatches]
+            [&regularPatchFileAllocIter, &dependencyPatchFileAllocIter, &dependenciesGlobalConsts, &dependenciesGlobalFunctions,
+             &entries, &errorMsg, &plcAllocated, &firstCallback, &HasProcessedExtraLinkerScript, &SaveDataList, &removePatches]
             (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd, bool resetchunkIndex, int *require_size)
             {
                 // This part of code will be triggered when rom size needs to be expanded
                 // So all the chunks will be reallocated
                 if(resetchunkIndex)
                 {
-                    patchAllocIter = std::find_if(entries.begin(), entries.end(), []
-                    (const struct PatchEntryItem p){return p.FileName.length();});
+                    regularPatchFileAllocIter = std::find_if(entries.begin(), entries.end(), []
+                        (const struct PatchEntryItem p){return ((p.PatchType != C_dependency) && p.FileName.length());});
+                    dependencyPatchFileAllocIter = std::find_if(entries.begin(), entries.end(), []
+                        (const struct PatchEntryItem p){return ((p.PatchType == C_dependency) && p.FileName.length());});
 
                     // Each patchAllocIter->PatchAddress will be overwrite again so we don't need to clear the previous data setting
                     plcAllocated = !entries.size();
+                    HasProcessedExtraLinkerScript = false;
+                    dependenciesGlobalConsts.clear();
+                    dependenciesGlobalFunctions.clear();
 
                     // Clean up old save data chunks
                     for(auto data : SaveDataList)
@@ -766,14 +784,14 @@ namespace PatchUtils
                 }
 
                 // Create save data for all the patches in the iterator
-                if(patchAllocIter != entries.end())
+                if(dependencyPatchFileAllocIter != entries.end())
                 {
                     // If it is the first time processing this patch or we've been given a
                     // new free space region for this patch, compile and link at proposed
                     // address to find the required size
                     int alignOffset = ((freeSpace.addr + 3) & ~3) - freeSpace.addr;
-                    patchAllocIter->PatchAddress = freeSpace.addr + alignOffset;
-                    if((errorMsg = LinkAndExtractEntry(*patchAllocIter)) != "")
+                    dependencyPatchFileAllocIter->PatchAddress = freeSpace.addr + alignOffset;
+                    if((errorMsg = LinkAndExtractEntry(*dependencyPatchFileAllocIter, dependenciesGlobalConsts, dependenciesGlobalFunctions)) != "")
                     {
                         return ROMUtils::ChunkAllocationStatus::ProcessingError;
                     }
@@ -781,7 +799,7 @@ namespace PatchUtils
                     // We must get the size of the compiled binary and check it against the space we were offered
                     // To see if the data will fit, we must include the alignment offset and the size of the RATS header
                     { // use extra brace pair to let compiler construct and deconstruct local instance correctly
-                        struct ROMUtils::SaveData saveData = CreatePatchSaveChunk(*patchAllocIter);
+                        struct ROMUtils::SaveData saveData = CreatePatchSaveChunk(*dependencyPatchFileAllocIter);
                         if(saveData.size + alignOffset + 12 > freeSpace.size)
                         {
                             delete[] saveData.data;
@@ -795,17 +813,81 @@ namespace PatchUtils
                         *sd = saveData;
 
                         // Advance patch iterator to next non-hex-edit patch
-                        patchAllocIter++;
-                        while(patchAllocIter != entries.end() && !patchAllocIter->FileName.length())
+                        dependencyPatchFileAllocIter++;
+                        while(dependencyPatchFileAllocIter != entries.end() &&
+                               (dependencyPatchFileAllocIter->PatchType != C_dependency) &&
+                               !dependencyPatchFileAllocIter->FileName.length())
                         {
-                            patchAllocIter++;
+                            dependencyPatchFileAllocIter++;
                         }
 
                         SaveDataList.push_back(saveData.data);
                         return ROMUtils::ChunkAllocationStatus::Success;
                     }
                 }
-                else
+
+                if (!HasProcessedExtraLinkerScript && dependencyPatchFileAllocIter == entries.end())
+                {
+                    HasProcessedExtraLinkerScript = true;
+                    // Load global symbols from C_dependency patches
+                    for(struct PatchEntryItem &patch : entries)
+                    {
+                        if(patch.PatchType == C_dependency)
+                        {
+                            QString filename = FileIOUtils::RelativeFilePathToAbsoluteFilePath(patch.FileName);
+                            REPLACE_EXT(filename, ".c", ".elf.txt");
+                            if (!FileIOUtils::GetGlobalSymbolsFromSourceFile(filename, dependenciesGlobalConsts, dependenciesGlobalFunctions))
+                            {
+                                // cannot find the ".elf.txt" file
+                                return ROMUtils::ChunkAllocationStatus::ProcessingError;
+                            }
+                        }
+                    }
+                }
+
+                if (regularPatchFileAllocIter != entries.end() && (dependencyPatchFileAllocIter == entries.end()))
+                {
+                    // If it is the first time processing this patch or we've been given a
+                    // new free space region for this patch, compile and link at proposed
+                    // address to find the required size
+                    int alignOffset = ((freeSpace.addr + 3) & ~3) - freeSpace.addr;
+                    regularPatchFileAllocIter->PatchAddress = freeSpace.addr + alignOffset;
+                    if((errorMsg = LinkAndExtractEntry(*regularPatchFileAllocIter, dependenciesGlobalConsts, dependenciesGlobalFunctions)) != "")
+                    {
+                        return ROMUtils::ChunkAllocationStatus::ProcessingError;
+                    }
+
+                    // We must get the size of the compiled binary and check it against the space we were offered
+                    // To see if the data will fit, we must include the alignment offset and the size of the RATS header
+                    { // use extra brace pair to let compiler construct and deconstruct local instance correctly
+                        struct ROMUtils::SaveData saveData = CreatePatchSaveChunk(*regularPatchFileAllocIter);
+                        if(saveData.size + alignOffset + 12 > freeSpace.size)
+                        {
+                            delete[] saveData.data;
+                            // this prevents re-compiling while the callback iterates over all free space regions smaller than what was needed here
+                            // we do not include alignment offset because the alignment offset is different for every free space region
+                            *require_size = saveData.size + 12;
+                            return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                        }
+
+                        // Allocation success
+                        *sd = saveData;
+
+                        // Advance patch iterator to next non-hex-edit patch
+                        regularPatchFileAllocIter++;
+                        while(regularPatchFileAllocIter != entries.end() &&
+                               (regularPatchFileAllocIter->PatchType == C_dependency) &&
+                               !regularPatchFileAllocIter->FileName.length())
+                        {
+                            regularPatchFileAllocIter++;
+                        }
+
+                        SaveDataList.push_back(saveData.data);
+                        return ROMUtils::ChunkAllocationStatus::Success;
+                    }
+                }
+
+                if (regularPatchFileAllocIter == entries.end() && (dependencyPatchFileAllocIter == entries.end()))
                 {
                     // Create patch list chunk after all patches have been processed
                     if(!plcAllocated)
@@ -867,6 +949,7 @@ namespace PatchUtils
                 for(const struct PatchEntryItem &patch : entries)
                 {
                     QString hookString = patch.HookString;
+                    if (hookString.isEmpty()) continue;
 
                     // Splice patch address into hook string
                     if(patch.PatchOffsetInHookString != static_cast<unsigned int>(-1))
