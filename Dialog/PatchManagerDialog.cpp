@@ -73,9 +73,17 @@ static QString GetPathRelativeToROM(const QString &filePath)
 {
     QDir ROMdir(ROMUtils::ROMFileMetadata->FilePath);
     ROMdir.cdUp();
-    if(filePath.startsWith(ROMdir.absolutePath()))
+    QString romfile_folder = ROMdir.absolutePath();
+    if(filePath.startsWith(romfile_folder))
     {
-        return filePath.right(filePath.length() - ROMdir.absolutePath().length() - 1);
+        if (romfile_folder.isEmpty())
+        {
+            return filePath.right(filePath.length());
+        }
+        else
+        {
+            return filePath.right(filePath.length() - romfile_folder.length() - 1);
+        }
     }
     else
     {
@@ -190,7 +198,7 @@ void PatchManagerDialog::on_addPatchButton_clicked()
     // Execute the edit dialog
     PatchEditDialog editDialog(this);
 
-retry:
+retry_add_patch:
     if(editDialog.exec() == QDialog::Accepted)
     {
         entry = editDialog.CreatePatchEntry();
@@ -198,7 +206,7 @@ retry:
         if(result != "")
         {
             QMessageBox::information(this, tr("About"), result);
-            goto retry;
+            goto retry_add_patch;
         }
         PatchTable->AddEntry(entry);
         ui->savePatchButton->setEnabled(true);
@@ -227,7 +235,7 @@ void PatchManagerDialog::on_editPatchButton_clicked()
         // Execute the edit dialog
         PatchEditDialog editDialog(this, selectedEntry);
 
-retry:
+retry_edit_patch:
         if(editDialog.exec() == QDialog::Accepted)
         {
             entry = editDialog.CreatePatchEntry();
@@ -235,7 +243,7 @@ retry:
             if(result != "")
             {
                 QMessageBox::information(this, tr("About"), result);
-                goto retry;
+                goto retry_edit_patch;
             }
             PatchTable->UpdateEntry(selectedIndex, entry);
             ui->savePatchButton->setEnabled(true);
