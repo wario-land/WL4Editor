@@ -118,6 +118,22 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
         return QT_TR_NOOP("Patch on the first 4 bytes of the rom is not allowed.");
     }
 
+    // special cases for "C_dependency" type patches
+    if (newEntry.PatchType == C_dependency)
+    {
+        // not allowed to set HookAddress
+        if(newEntry.HookAddress)
+        {
+            return QT_TR_NOOP("It is not allowed to set HookAddress for C_dependency type patches.");
+        }
+
+        // not allowed to set HookString
+        if(!newEntry.HookString.isEmpty())
+        {
+            return QT_TR_NOOP("It is not allowed to set HookString for C_dependency type patches.");
+        }
+    }
+
     // File name may not contain a semicolon
     if(newEntry.FileName.contains(";"))
     {
