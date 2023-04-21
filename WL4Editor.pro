@@ -35,6 +35,7 @@ QMAKE_CXXFLAGS = -fpermissive
 msvc* {
 QMAKE_CXXFLAGS += /Zc:__cplusplus
 QMAKE_CXXFLAGS += /permissive-
+QMAKE_CXXFLAGS += /MP
 }
 
 SOURCES += \
