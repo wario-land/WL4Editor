@@ -759,7 +759,7 @@ namespace PatchUtils
                 // We don't need to redo this part if rom size expanding happens
                 if(firstCallback)
                 {
-                    // just remove all the old patches from the ROM
+                    // recover the hookstring of all the old patches from the ROM
                     for (struct PatchEntryItem &patch : removePatches)
                     {
                         // write back the original data before modified by hookstring
@@ -927,27 +927,16 @@ namespace PatchUtils
 
             // PostProcessingCallback
 
-            [&removePatches, &entries]
+            [&entries]
             (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
             {
                 (void)indexToChunkPtr;
-
-                // Undo removal patches (if there are patches to remove)
-                // PostProcessingCallback will be called only once, so SubstitutedBytes recovery should be done here
-                // in case rom size expanding failure but TempFile data still got changed
-                for(const struct PatchEntryItem &patch : removePatches)
-                {
-                    // Get patch hex string from removal patch struct, write into TempFile
-                    unsigned char *originalBytes = HexStringToBinary(patch.SubstitutedBytes);
-                    memcpy(TempFile + patch.HookAddress, originalBytes, patch.SubstitutedBytes.length() / 2);
-                    delete[] originalBytes;
-                }
 
                 // Write hooks to ROM
                 for(const struct PatchEntryItem &patch : entries)
                 {
                     QString hookString = patch.HookString;
-                    if (hookString.isEmpty()) continue;
+                    if (patch.PatchType == PatchType::C_dependency) continue;
 
                     // Splice patch address into hook string
                     if(patch.PatchOffsetInHookString != static_cast<unsigned int>(-1))
