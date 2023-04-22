@@ -427,14 +427,16 @@ void DoorConfigDialog::on_TableView_Checkbox_stateChanged(QStandardItem *item)
 void DoorConfigDialog::on_ComboBox_DoorDestinationPicker_currentIndexChanged(int index)
 {
     delete tmpDestinationRoom;
-    tmpDestinationRoom =
-        new LevelComponents::Room(_currentLevel->GetRooms()[tmpDoorVec.GetDoor(index).RoomID]);
+    tmpDestinationRoom = new LevelComponents::Room(_currentLevel->GetRooms()[tmpDoorVec.GetDoor(index).RoomID]);
+    int currentGlobalDoorId = tmpDoorVec.GetGlobalIDByLocalID(tmpCurrentRoom->GetRoomID(), LocalDoorID);
     if (index != 0)
     {
+        tmpDoorVec.SetDestinationDoor(currentGlobalDoorId, index);
         RenderGraphicsView_DestinationDoor(tmpDoorVec.GetLocalIDByGlobalID(index));
     }
     else
     {
+        tmpDoorVec.SetDestinationDoor(currentGlobalDoorId, 0);
         QGraphicsScene *oldScene = ui->GraphicsView_DestinationDoor->scene();
         if (oldScene)
         {
