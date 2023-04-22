@@ -20,7 +20,7 @@ static QRegularExpression  descriptionRegex("^[^;]+$");
 /// </summary>
 void PatchEditDialog::StaticComboBoxesInitialization()
 {
-    PatchTypeNameSet << "Binary" << "Assembly" << "C";
+    PatchTypeNameSet << "Binary" << "Assembly" << "C" << "C_dependency";
 }
 
 /// <summary>

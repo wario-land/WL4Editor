@@ -776,7 +776,11 @@ skip_append_output_2:
     /// </summary>
     static int CHUNK_INDEX;
     static QVector<struct SaveData> CHUNK_ALLOC;
-    static ChunkAllocationStatus AllocateChunksFromList(unsigned char *TempFile, struct FreeSpaceRegion freeSpace, struct SaveData *sd, bool resetchunkIndex)
+    static ChunkAllocationStatus AllocateChunksFromList(unsigned char *TempFile,
+                                                        struct FreeSpaceRegion freeSpace,
+                                                        struct SaveData *sd,
+                                                        bool resetchunkIndex,
+                                                        int *require_size)
     {
         (void) TempFile;
 
@@ -805,6 +809,7 @@ skip_append_output_2:
         if(CHUNK_ALLOC[CHUNK_INDEX].size > freeSpace.size - alignOffset - 12)
         {
             // This will request a larger free area
+            *require_size = CHUNK_ALLOC[CHUNK_INDEX].size;
             return ChunkAllocationStatus::InsufficientSpace;
         }
         else
@@ -843,7 +848,7 @@ skip_append_output_2:
     /// True if the save was successful.
     /// </returns>
     bool SaveFile(QString filePath, QVector<unsigned int> invalidationChunks,
-        std::function<ChunkAllocationStatus (unsigned char*, struct FreeSpaceRegion, struct SaveData*, bool)> ChunkAllocator,
+        std::function<ChunkAllocationStatus (unsigned char *, FreeSpaceRegion, SaveData*, bool, int*)> ChunkAllocator,
         std::function<QString (unsigned char*, std::map<int, int>)> PostProcessingCallback)
     {
         // Finding space for the chunks can be done faster if the chunks are ordered by size
@@ -905,7 +910,8 @@ resized:freeSpaceRegions.clear();
             for(i = 0; i < freeSpaceRegions.size(); ++i)
             {
                 if(freeSpaceRegions[i].size <= lastSize) continue;
-                ChunkAllocationStatus status = ChunkAllocator(TempFile, freeSpaceRegions[i], &sd, resizerom);
+                int required_min_size = lastSize;
+                ChunkAllocationStatus status = ChunkAllocator(TempFile, freeSpaceRegions[i], &sd, resizerom, &required_min_size);
                 resizerom = false;
                 switch(status)
                 {
@@ -917,6 +923,7 @@ resized:freeSpaceRegions.clear();
                     goto error;
                 case InsufficientSpace:
                     lastSize = freeSpaceRegions[i].size;
+                    if (required_min_size > lastSize) lastSize = required_min_size;
                     continue;
                 }
             }

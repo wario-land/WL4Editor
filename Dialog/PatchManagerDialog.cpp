@@ -73,9 +73,17 @@ static QString GetPathRelativeToROM(const QString &filePath)
 {
     QDir ROMdir(ROMUtils::ROMFileMetadata->FilePath);
     ROMdir.cdUp();
-    if(filePath.startsWith(ROMdir.absolutePath()))
+    QString romfile_folder = ROMdir.absolutePath();
+    if(filePath.startsWith(romfile_folder))
     {
-        return filePath.right(filePath.length() - ROMdir.absolutePath().length() - 1);
+        if (romfile_folder.isEmpty())
+        {
+            return filePath.right(filePath.length());
+        }
+        else
+        {
+            return filePath.right(filePath.length() - romfile_folder.length() - 1);
+        }
     }
     else
     {
@@ -105,9 +113,25 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
     }
 
     // Patch on the first 4 bytes of the rom is not allowed
-    if(newEntry.HookAddress < 4)
+    if(newEntry.HookAddress < 4 && newEntry.PatchType != C_dependency)
     {
         return QT_TR_NOOP("Patch on the first 4 bytes of the rom is not allowed.");
+    }
+
+    // special cases for "C_dependency" type patches
+    if (newEntry.PatchType == C_dependency)
+    {
+        // not allowed to set HookAddress
+        if(newEntry.HookAddress)
+        {
+            return QT_TR_NOOP("It is not allowed to set HookAddress for C_dependency type patches.");
+        }
+
+        // not allowed to set HookString
+        if(!newEntry.HookString.isEmpty())
+        {
+            return QT_TR_NOOP("It is not allowed to set HookString for C_dependency type patches.");
+        }
     }
 
     // File name may not contain a semicolon
@@ -148,7 +172,7 @@ static QString ValidateNewEntry(QVector<struct PatchEntryItem> currentEntries, s
         }
 
         // It does not make sense to add a save chunk with no link to it in the hook
-        if(newEntry.PatchOffsetInHookString == (unsigned int) -1)
+        if(newEntry.PatchOffsetInHookString == (unsigned int) -1 && newEntry.PatchType != C_dependency)
         {
             return QT_TR_NOOP("A file is sepcified, so a save chunk will be created. But, the hook does not specify the P identifier for the patch code address. The save chunk would be useless, so this is not allowed (please use P in the hook).");
         }
@@ -190,7 +214,7 @@ void PatchManagerDialog::on_addPatchButton_clicked()
     // Execute the edit dialog
     PatchEditDialog editDialog(this);
 
-retry:
+retry_add_patch:
     if(editDialog.exec() == QDialog::Accepted)
     {
         entry = editDialog.CreatePatchEntry();
@@ -198,7 +222,7 @@ retry:
         if(result != "")
         {
             QMessageBox::information(this, tr("About"), result);
-            goto retry;
+            goto retry_add_patch;
         }
         PatchTable->AddEntry(entry);
         ui->savePatchButton->setEnabled(true);
@@ -227,7 +251,7 @@ void PatchManagerDialog::on_editPatchButton_clicked()
         // Execute the edit dialog
         PatchEditDialog editDialog(this, selectedEntry);
 
-retry:
+retry_edit_patch:
         if(editDialog.exec() == QDialog::Accepted)
         {
             entry = editDialog.CreatePatchEntry();
@@ -235,7 +259,7 @@ retry:
             if(result != "")
             {
                 QMessageBox::information(this, tr("About"), result);
-                goto retry;
+                goto retry_edit_patch;
             }
             PatchTable->UpdateEntry(selectedIndex, entry);
             ui->savePatchButton->setEnabled(true);
