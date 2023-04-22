@@ -7,7 +7,7 @@
 (minor changes)
 - Optimize the asm and C patch compile and save logic to make it faster for Patch Manager, and faster free space offering logic for every type of save process
 - Fix a single one Binary patch entry cannot be loaded after save in the Patch Manager
-- Fix the first letter of the path string of every patch file will be removed from the PatchList data if the rom file is naked on the drive in Patch Manager Dialog
+- Fix the first letter of the path string of every patch file will be removed from the PatchList data if the rom file is at the root in Patch Manager Dialog
 
 0.16.2:
 (major changes)
