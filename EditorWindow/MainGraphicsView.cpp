@@ -404,6 +404,7 @@ void MainGraphicsView::mouseMoveEvent(QMouseEvent *event)
                         int globalDoorId = singleton->GetCurrentLevel()->GetDoorListRef().GetGlobalIDByLocalID(room->GetRoomID(), SelectedDoorID);
                         singleton->GetCurrentLevel()->GetDoorListRef().SetDoorPlace(globalDoorId, tileX, tileX + deltaX, tileY, tileY + deltaY);
                         singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
+                        singleton->SetUnsavedChanges(true);
                     }
                 }
             }
