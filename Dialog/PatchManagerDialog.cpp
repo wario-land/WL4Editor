@@ -76,9 +76,9 @@ static QString GetPathRelativeToROM(const QString &filePath)
     QString romfile_folder = ROMdir.absolutePath();
     if(filePath.startsWith(romfile_folder))
     {
-        if (romfile_folder.isEmpty())
+        if (romfile_folder.isEmpty() || romfile_folder.endsWith("/"))
         {
-            return filePath.right(filePath.length());
+            return filePath.right(filePath.length() - romfile_folder.length());
         }
         else
         {
