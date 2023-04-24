@@ -31,6 +31,7 @@ LevelComponents::LevelDoorVector::LevelDoorVector(LevelDoorVector &levelDoorVec)
         memcpy(&tmpDoor, &door, sizeof(DoorEntry));
         this->doorvec.push_back(tmpDoor);
     }
+    this->Dirty = true;
 }
 
 LevelComponents::LevelDoorVector::LevelDoorVector(QString &str)
@@ -52,6 +53,7 @@ LevelComponents::LevelDoorVector::LevelDoorVector(QString &str)
         }
         this->doorvec.push_back(tmpDoor);
     }
+    this->Dirty = true;
 }
 
 QString LevelComponents::LevelDoorVector::toString(bool endWithFullZeroEntry)

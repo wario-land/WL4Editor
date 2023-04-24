@@ -115,6 +115,7 @@ void PerformOperation(struct OperationParams *operation)
                                                                                 om->nextPositionY,
                                                                                 om->nextPositionY + deltaY);
                     singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
+                    singleton->SetUnsavedChanges(true);
                 }
             }
         }
@@ -309,6 +310,7 @@ void BackTrackOperation(struct OperationParams *operation)
                                                                                 om->previousPositionY,
                                                                                 om->previousPositionY + deltaY);
                     singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
+                    singleton->SetUnsavedChanges(true);
                 }
             }
         } else if (om->type == ObjectMoveParams::ENTITY_TYPE)
@@ -324,6 +326,7 @@ void BackTrackOperation(struct OperationParams *operation)
                     singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
                     int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
                     singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                    singleton->SetUnsavedChanges(true);
                 }
             }
         }
