@@ -1,3 +1,9 @@
+0.16.4:
+(minor changes)
+- Fix the first letter of the path string of every patch file will be removed from the PatchList data if the rom file is on the root of drive in Patch Manager Dialog on Windows.
+- Fix Door changes won't set the UnsavedChanges bool to be true (Issue #210)
+- Fix using deep copy constructor of the LevelDoorVector class won't set the dirty bool for the new instance (Issue #442)
+
 0.16.3:
 (major changes)
 - Support "C_dependency" patch type in Patch Manager Dialog.
