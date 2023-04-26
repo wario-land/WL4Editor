@@ -152,6 +152,13 @@ namespace ROMUtils
     unsigned int PointerFromData(int address)
     {
         unsigned int ret = IntFromData(address) & 0x7FFFFFF;
+        if (ret > WL4Constants::AvailableSpaceBeginningInROM && !ValidRATS(ROMFileMetadata->ROMDataPtr + ret - 12))
+        {
+            singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal or corruption error: Load data from a broken chunk!\n  "
+                                                                    "Data Address:" + QString::number(ret, 16) + "\n"
+                                                                    "Chunk Address:" + QString::number(ret - 12, 16) + "\n"));
+            // we can provide no more information of the chunk here since the chunk header is broken
+        }
         if(ret >= ROMFileMetadata->Length)
         {
             singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size"));
