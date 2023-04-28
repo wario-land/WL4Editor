@@ -699,19 +699,20 @@ namespace PatchUtils
 
         // Double check if there is some orphaned PatchChunks in the ROM
         // the function ROMUtils::FindAllChunksInROM(...) won't find chunks embed inside another chunk as we don't need sanity check here
-        QVector<unsigned int> AddrsVec = ROMUtils::FindAllChunksInROM(
+        QVector<unsigned int> chunkAddrsVec = ROMUtils::FindAllChunksInROM(
             ROMUtils::ROMFileMetadata->ROMDataPtr,
             ROMUtils::ROMFileMetadata->Length,
             WL4Constants::AvailableSpaceBeginningInROM,
             ROMUtils::SaveDataChunkType::PatchChunk,
             false
             );
-        for (unsigned int &addr : AddrsVec)
+        for (unsigned int &addr : chunkAddrsVec)
         {
-            if (invalidationChunks.contains(addr)) continue;
+            unsigned char data_addr = addr + 0xC;
+            if (invalidationChunks.contains(data_addr)) continue;
 
             // Add orphaned PatchChunks into the invalidationChunks
-            invalidationChunks.append(addr);
+            invalidationChunks.append(data_addr);
         }
 
         // We must invalidate the old patch list chunk (if it exists)
