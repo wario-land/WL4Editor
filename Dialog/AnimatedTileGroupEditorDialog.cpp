@@ -179,6 +179,11 @@ void AnimatedTileGroupEditorDialog::on_spinBox_AnimationType_valueChanged(int ar
     case 6: {ui->label_AnimationTypeHint->setText("Reverse Loop"); break; }
     default: ui->label_AnimationTypeHint->setText("");
     }
+    if (ui->spinBox_GlobalID->value() > 0 && arg1 >= 0 && arg1 <= 6)
+    {
+        LevelComponents::AnimatedTile8x8Group *curAnimatedTileGroup = GetAnimatedTileGroupPtr(true);
+        curAnimatedTileGroup->SetAnimationType(ui->spinBox_AnimationType->value());
+    }
 }
 
 /// <summary>
@@ -233,6 +238,16 @@ void AnimatedTileGroupEditorDialog::on_pushButton_ImportAndSetSlot_clicked()
         curAnimatedTileGroup->SetAnimationType(ui->spinBox_AnimationType->value());
         curAnimatedTileGroup->SetCountPerFrame(ui->spinBox_CountPerFrame->value());
         UpdateTileArrayGraphicView(ui->spinBox_paletteId->value());
+    }
+}
+
+
+void AnimatedTileGroupEditorDialog::on_spinBox_CountPerFrame_valueChanged(int arg1)
+{
+    if (ui->spinBox_GlobalID->value() > 0)
+    {
+        LevelComponents::AnimatedTile8x8Group *curAnimatedTileGroup = GetAnimatedTileGroupPtr(true);
+        curAnimatedTileGroup->SetCountPerFrame(arg1);
     }
 }
 
