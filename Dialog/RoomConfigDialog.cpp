@@ -17,7 +17,7 @@ static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet;
 static std::vector<int> BGLayerdataPtrs;
 
 // helper function
-static unsigned short *ChangeLayerDimensions(int newWidth, int newHeight, int oldWidth, int oldHeight, unsigned short *oldData)
+unsigned short *RoomConfigDialog::ChangeLayerDimensions(int newWidth, int newHeight, int oldWidth, int oldHeight, unsigned short *oldData)
 {
     if ((newWidth < 1 || newHeight < 1) || (oldData == nullptr)) return nullptr;
 

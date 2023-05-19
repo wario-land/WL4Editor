@@ -99,6 +99,9 @@ public:
     static void StaticComboBoxesInitialization();
     DialogParams::RoomConfigParams *GetConfigParams(DialogParams::RoomConfigParams *prevRoomParams);
 
+    // helper functions
+    static unsigned short *ChangeLayerDimensions(int newWidth, int newHeight, int oldWidth, int oldHeight, unsigned short *oldData);
+
 private slots:
     void on_CheckBox_Layer0Alpha_stateChanged(int state);
     void on_ComboBox_TilesetID_currentIndexChanged(int index);
