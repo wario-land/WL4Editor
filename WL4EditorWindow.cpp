@@ -641,9 +641,9 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         // TODO: support Undo/Redo on these elements
         // -- Door --
         int nxtRoomWidth = nextroomconfig->RoomWidth, nxtRoomHeight = nextroomconfig->RoomHeight;
-        auto allDoor = CurrentLevel->GetDoorListRef();
+        LevelComponents::LevelDoorVector &allDoor = CurrentLevel->GetDoorListRef();
         int doornum = allDoor.size();
-        for (int i = 0; i < doornum; i++)
+        for (int i = doornum - 1; i > 0; i--)
         {
             auto curDoor = allDoor.GetDoor(i);
             if (curDoor.RoomID == currentRoom->GetRoomID()) // if the door is in the current Room
@@ -657,7 +657,7 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
                     }
                     else
                     {
-                        allDoor.DeleteDoor(i); // delete all the out-of-bound non-portal Door
+                        CurrentLevel->DeleteDoorByGlobalID(i); // delete all the out-of-bound non-portal Door
                     }
                 }
             }
@@ -1082,11 +1082,10 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
     // Delete most of the Doors
     if (IfDeleteAllDoors)
     {
-        int rw = currentRoom->GetLayer1Width(), rh = currentRoom->GetLayer1Height();
-        auto allDoor = CurrentLevel->GetDoorListRef();
+        LevelComponents::LevelDoorVector &allDoor = CurrentLevel->GetDoorListRef();
         int doornum = allDoor.size();
         int curRoomDoorIdIter = -1;
-        for (int i = 0; i < doornum; i++)
+        for (int i = doornum - 1; i > 0; i--)
         {
             auto curDoor = allDoor.GetDoor(i);
             if (curDoor.RoomID == currentRoom->GetRoomID()) // if the door is in the current Room
@@ -1094,7 +1093,7 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
                 curRoomDoorIdIter++;
                 if (curRoomDoorIdIter > 0) // only reserve the first Door. if there is a portal Door in the Room, it has to be the first Door
                 {
-                    allDoor.DeleteDoor(i); // delete all the other Doors from the current Room
+                    CurrentLevel->DeleteDoorByGlobalID(i); // delete all the other Doors from the current Room
                 }
             }
         }

@@ -1,5 +1,6 @@
 ﻿#include "ScriptInterface.h"
 
+#include "Operation.h"
 #include "ROMUtils.h"
 
 #ifndef WINDOW_INSTANCE_SINGLETON
@@ -578,7 +579,35 @@ void ScriptInterface::SetRoomSize(int roomwidth, int roomheight, int layer0width
     _nextRoomConfigParams->Layer0Width = layer0width;
     _nextRoomConfigParams->Layer0Height = layer0height;
 
-    singleton->RoomConfigReset(_currentRoomConfigParams, _nextRoomConfigParams);
+    // Reset Layers, iterate 0, 1, 2, logic from DialogParams::RoomConfigParams *RoomConfigDialog::GetConfigParams(...)
+    if((_nextRoomConfigParams->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16) {
+        _nextRoomConfigParams->LayerData[0] = RoomConfigDialog::ChangeLayerDimensions(layer0width, layer0height,
+                                                                                      _currentRoomConfigParams->Layer0Width,
+                                                                                      _currentRoomConfigParams->Layer0Height,
+                                                                                      _currentRoomConfigParams->LayerData[0]);
+    } else {
+        _nextRoomConfigParams->LayerData[0] = nullptr;
+    }
+    _nextRoomConfigParams->LayerData[1] = RoomConfigDialog::ChangeLayerDimensions(roomwidth, roomheight,
+                                                                                  _currentRoomConfigParams->RoomWidth,
+                                                                                  _currentRoomConfigParams->RoomHeight,
+                                                                                  _currentRoomConfigParams->LayerData[1]);
+    if((_nextRoomConfigParams->Layer2MappingTypeParam & 0x30) == LevelComponents::LayerMap16) {
+        _nextRoomConfigParams->LayerData[2] = RoomConfigDialog::ChangeLayerDimensions(roomwidth, roomheight,
+                                                                                      _currentRoomConfigParams->RoomWidth,
+                                                                                      _currentRoomConfigParams->RoomHeight,
+                                                                                      _currentRoomConfigParams->LayerData[2]);
+    } else {
+        _nextRoomConfigParams->LayerData[2] = nullptr;
+    }
+
+    // Add changes into the operation history
+    OperationParams *operation = new OperationParams;
+    operation->type = ChangeRoomConfigOperation;
+    operation->roomConfigChange = true;
+    operation->lastRoomConfigParams = _currentRoomConfigParams;
+    operation->newRoomConfigParams = _nextRoomConfigParams;
+    ExecuteOperation(operation); // Set UnsavedChanges bool inside
 }
 
 void ScriptInterface::alert(QString message)
