@@ -1,3 +1,12 @@
+0.16.5:
+(minor changes)
+- Do sanity check every time WL4Editor tries to get a pointer from the ROM.
+- Support deleting all the orphaned patch chunks when saving patches.
+- The Animation Type and Count per Frame spinboxes in Animated Tile Group Editor can now instantly save when change values.
+- Fix ScriptInterface::SetRoomSize(...) cannot work.
+- Fix "Clear all" and Room size change cannot modify Doors in the current Room.
+- Fix Wall Paint Editor misses a part of data saving logic which causes incorrect palette loading in mmap scene when replaying a level.
+
 0.16.4:
 (minor changes)
 - Fix the first letter of the path string of every patch file will be removed from the PatchList data if the rom file is on the root of drive in Patch Manager Dialog on Windows.
