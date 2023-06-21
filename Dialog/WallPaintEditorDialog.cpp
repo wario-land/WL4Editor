@@ -69,12 +69,22 @@ void WallPaintEditorDialog::AcceptChanges()
     memcpy(&(ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray]), pal_passage_gray, sizeof(pal_passage_gray));
     for (int passage = 0; passage < 6; passage++)
     {
+        unsigned int addr = ROMUtils::PointerFromData(WL4Constants::WallPaintPalSixInOneMMapColorPtrTable + 4 * passage);
         for (int level = 0; level < 4; level++)
         {
+            // copy MMAP gradient palettes for regular level
             unsigned int startlevel_paladdr = GetGradPalStartAddr(passage, level);
             if (!startlevel_paladdr) continue;
             memcpy(&(ROMUtils::ROMFileMetadata->ROMDataPtr[startlevel_paladdr]), pal_startlevel_color + passage * 4 * (32 * 8) + level * (32 * 8), 32 * 8);
+
+            // copy MMAP palette for regular level
+            memcpy(&(ROMUtils::ROMFileMetadata->ROMDataPtr[addr + 32 * (0xA + level)]),
+                   pal_passage_color + 32 * 5 * passage + 32 * level,
+                   32);
         }
+
+        // copy MMAP palette for boss level
+        memcpy(&(ROMUtils::ROMFileMetadata->ROMDataPtr[addr + 32 * (0xA + 4)]), pal_passage_color + 32 * 5 * passage + 32 * 4, 32);
     }
 }
 
