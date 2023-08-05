@@ -181,7 +181,6 @@ void PatchEditDialog::ParsePatchFile(QString patchfilepath)
         {
             fileType = PatchType::Binary;
         }
-        ui->comboBox_PatchType->setCurrentIndex(fileType);
 
         // Infer fields from file comments
         if(fileType != PatchType::Binary)
@@ -197,6 +196,20 @@ void PatchEditDialog::ParsePatchFile(QString patchfilepath)
             {
                 ui->lineEdit_HookText->setText(hookString);
             }
+            else
+            {
+                if (fileType == PatchType::C)
+                {
+                    QMessageBox::information(
+                        this,
+                        QT_TR_NOOP("WL4Editor Patch Import Info"),
+                        QT_TR_NOOP("Unable to find HookString from the patch file.\nAutomatically set the patch type to C_dependency."),
+                        QMessageBox::Ok,
+                        QMessageBox::Ok
+                        );
+                    fileType = PatchType::C_dependency;
+                }
+            }
 
             QString descString = FileIOUtils::GetParamFromSourceFile(patchfilepath, DESCRIPTION_IDENTIFIER, descriptionRegex);
             if(descString != "")
@@ -204,6 +217,9 @@ void PatchEditDialog::ParsePatchFile(QString patchfilepath)
                 ui->textEdit_Description->setText(descString);
             }
         }
+
+        // Set patch type
+        ui->comboBox_PatchType->setCurrentIndex(fileType);
     }
 }
 
