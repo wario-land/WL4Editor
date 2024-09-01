@@ -40,7 +40,7 @@ jobs:
       - name: Build WL4Editor on Windows
         if: startsWith(matrix.os, 'windows')
         run: |
-          dir %Qt6_Dir%/lib/cmake
+          dir %QT_ROOT_DIR%/lib/cmake
           qmake WL4Editor.pro
           nmake debug
         shell: cmd
@@ -48,7 +48,7 @@ jobs:
       - name: Build WL4Editor on *nix
         if: (!startsWith(matrix.os, 'windows'))
         run: |
-          ls "$Qt6_DIR/lib/cmake"
+          ls "${QT_ROOT_DIR}/lib/cmake"
           qmake WL4Editor.pro
           make
         shell: bash
