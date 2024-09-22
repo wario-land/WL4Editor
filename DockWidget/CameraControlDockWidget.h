@@ -30,6 +30,7 @@ private:
     int CurrentRoomHeight = 0;
     bool IsSavingData = false;
     void SetCurrentLimitator();
+    void UpdateSpinboxesByListviewItemID(int item_id);
     void SetListviewItemText(int row);
     void PaintListView();
     void ClearListView();

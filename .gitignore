@@ -69,3 +69,6 @@ vgcore.*
 .vscode
 *.aps
 *.rc
+
+# Qt 6 build folder
+build/

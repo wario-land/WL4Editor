@@ -237,21 +237,15 @@ void CameraControlDockWidget::ClearListView()
     }
 }
 
+
 /// <summary>
-/// Be called the listview is clicked and a limitator is selected.
+/// Update all those spinboxes values and max/min properties by using the Room size and the limitator properties.
 /// </summary>
-/// <param name="index">
-/// Reference of the selected QModelIndex from the listview.
-/// </param>
-void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelIndex &index)
+void CameraControlDockWidget::UpdateSpinboxesByListviewItemID(int item_id)
 {
-    IsSavingData = false;
-    ui->ExistingLimitators_groupBox->setEnabled(false);
     std::vector<struct LevelComponents::__CameraControlRecord *> currentCameraLimitators =
         currentRoom->GetCameraControlRecords();
-    int linenum = index.row();
-    SelectedLimitator = linenum;
-    LevelComponents::__CameraControlRecord *currentLimitator = currentCameraLimitators[linenum];
+    LevelComponents::__CameraControlRecord *currentLimitator = currentCameraLimitators[item_id];
     int currentLimitatorTypeid =
         (currentLimitator->ChangeValueOffset == 0xFF ? -1 : currentLimitator->ChangeValueOffset);
     ui->CameraLimitatorTypePicker_comboBox->setCurrentIndex(currentLimitatorTypeid + 1);
@@ -290,6 +284,21 @@ void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelI
         ui->TriggerBlockPositionY_spinBox->setEnabled(false);
     }
     SetCurrentLimitator(); // only used to set maximums for all the spinboxes
+}
+
+/// <summary>
+/// Be called the listview is clicked and a limitator is selected.
+/// </summary>
+/// <param name="index">
+/// Reference of the selected QModelIndex from the listview.
+/// </param>
+void CameraControlDockWidget::on_CameraLimitators_listView_clicked(const QModelIndex &index)
+{
+    IsSavingData = false;
+    ui->ExistingLimitators_groupBox->setEnabled(false);
+    int linenum = index.row();
+    SelectedLimitator = linenum;
+    UpdateSpinboxesByListviewItemID(linenum);
     ui->ExistingLimitators_groupBox->setEnabled(true);
     IsSavingData = true;
 }
@@ -513,6 +522,14 @@ void CameraControlDockWidget::on_UseCameraLimitators_radioButton_clicked(bool ch
 
         // Rerender graphicview in MainWindow
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+
+        // Now we select the first item in the listview as default
+        IsSavingData = false;
+        ui->ExistingLimitators_groupBox->setEnabled(false);
+        SelectedLimitator = 0;
+        UpdateSpinboxesByListviewItemID(0);
+        ui->ExistingLimitators_groupBox->setEnabled(true);
+        IsSavingData = true;
     }
 
     singleton->SetUnsavedChanges(true);

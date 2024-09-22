@@ -17,18 +17,19 @@ jobs:
         os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
       - name: Download Submodules
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
           
-      - name: Install Python 3.X version
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          architecture: 'x64'
+      # - name: Install Python 3.X version
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version: '3.10'
+          # architecture: 'x64'
 
+      # they put setup python logic inside install-qt-action
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3
+        uses: jurplel/install-qt-action@v4
         with:
           version: 6.4.2
 
@@ -39,7 +40,7 @@ jobs:
       - name: Build WL4Editor on Windows
         if: startsWith(matrix.os, 'windows')
         run: |
-          dir %Qt6_Dir%/lib/cmake
+          dir %QT_ROOT_DIR%/lib/cmake
           qmake WL4Editor.pro
           nmake debug
         shell: cmd
@@ -47,7 +48,7 @@ jobs:
       - name: Build WL4Editor on *nix
         if: (!startsWith(matrix.os, 'windows'))
         run: |
-          ls "$Qt6_DIR/lib/cmake"
+          ls "${QT_ROOT_DIR}/lib/cmake"
           qmake WL4Editor.pro
           make
         shell: bash
