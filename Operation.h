@@ -23,6 +23,7 @@ enum OperationType
     EntityDeleteOperation,
     DoorVectorChangeOperation,
     LevelConfigChangeOperation,
+    CameraControlChangeOperation,
 };
 
 // The parameters specific to a tile change operation
@@ -135,6 +136,32 @@ struct EntityDeleteParams
     }
 };
 
+// Parameters for camera control box and property changes (idempotent per room)
+struct CameraControlChangeParams
+{
+    int roomID;
+    enum LevelComponents::__CameraControlType oldCameraControlType;
+    enum LevelComponents::__CameraControlType newCameraControlType;
+    std::vector<struct LevelComponents::__CameraControlRecord *> oldCameraControlRecords;
+    std::vector<struct LevelComponents::__CameraControlRecord *> newCameraControlRecords;
+
+    static CameraControlChangeParams *Create(
+        int roomID,
+        enum LevelComponents::__CameraControlType oldType,
+        enum LevelComponents::__CameraControlType newType,
+        std::vector<struct LevelComponents::__CameraControlRecord *> oldRecords,
+        std::vector<struct LevelComponents::__CameraControlRecord *> newRecords)
+    {
+        CameraControlChangeParams *p = new CameraControlChangeParams;
+        p->roomID = roomID;
+        p->oldCameraControlType = oldType;
+        p->newCameraControlType = newType;
+        p->oldCameraControlRecords = oldRecords;
+        p->newCameraControlRecords = newRecords;
+        return p;
+    }
+};
+
 // Parameters for a full door vector swap (global - handles add, delete, and config changes)
 struct DoorVectorChangeParams
 {
@@ -175,6 +202,7 @@ struct OperationParams
     EntityAddParams *entityAddParams = nullptr;
     EntityDeleteParams *entityDeleteParams = nullptr;
     DoorVectorChangeParams *doorVectorChangeParams = nullptr;
+    CameraControlChangeParams *cameraControlChangeParams = nullptr;
     bool tileChange = false;
     bool roomConfigChange = false;
     bool objectPositionChange = false;
@@ -187,6 +215,7 @@ struct OperationParams
     bool entityDelete = false;
     bool doorVectorChange = false;
     bool levelConfigChange = false;
+    bool cameraControlChange = false;
 
     OperationParams() {}
 
@@ -313,6 +342,18 @@ struct OperationParams
                 delete doorVectorChangeParams->newDoorVec;
                 delete doorVectorChangeParams;
                 doorVectorChangeParams = nullptr;
+            }
+        }
+        if (cameraControlChange)
+        {
+            if (cameraControlChangeParams)
+            {
+                for (auto *rec : cameraControlChangeParams->oldCameraControlRecords)
+                    delete rec;
+                for (auto *rec : cameraControlChangeParams->newCameraControlRecords)
+                    delete rec;
+                delete cameraControlChangeParams;
+                cameraControlChangeParams = nullptr;
             }
         }
         if (levelConfigChange)

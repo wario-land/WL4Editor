@@ -103,6 +103,7 @@ public:
     {
         CameraControlWidget->PopulateCameraControlInfo(CurrentLevel->GetRooms()[GetCurrentRoomId()]);
     }
+    void CommitPendingCameraOperation() { CameraControlWidget->CommitCameraOperation(); }
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[GetCurrentRoomId()]->DeleteEntity(EntityIndex); }
     bool DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }

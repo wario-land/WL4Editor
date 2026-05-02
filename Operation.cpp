@@ -263,6 +263,23 @@ void PerformOperation(struct OperationParams *operation)
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Animated Tile Group changes."));
     }
+    if (operation->cameraControlChange)
+    {
+        auto *cp = operation->cameraControlChangeParams;
+        LevelComponents::Room *room = singleton->GetCurrentLevel()->GetRooms()[cp->roomID];
+
+        room->SetCameraControlType(cp->newCameraControlType);
+        room->SetCameraControlRecords(cp->newCameraControlRecords);
+
+        if (singleton->GetCurrentRoom()->GetRoomID() == cp->roomID)
+        {
+            singleton->ResetCameraControlDockWidget();
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        }
+
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Camera Control changes."));
+    }
 }
 
 /// <summary>
@@ -521,6 +538,22 @@ void BackTrackOperation(struct OperationParams *operation)
         CurrentAnimatedTileGroupOperationId = operationIndex;
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Animated Tile Group changes."));
     }
+    if (operation->cameraControlChange)
+    {
+        auto *cp = operation->cameraControlChangeParams;
+        LevelComponents::Room *room = singleton->GetCurrentLevel()->GetRooms()[cp->roomID];
+
+        room->SetCameraControlType(cp->oldCameraControlType);
+        room->SetCameraControlRecords(cp->oldCameraControlRecords);
+
+        if (singleton->GetCurrentRoom()->GetRoomID() == cp->roomID)
+        {
+            singleton->ResetCameraControlDockWidget();
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        }
+
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Camera Control changes."));
+    }
 }
 
 /// <summary>
@@ -537,6 +570,9 @@ void BackTrackOperation(struct OperationParams *operation)
 /// </param>
 void ExecuteOperation(struct OperationParams *operation)
 {
+    // Commit any pending camera control operation to maintain chronological order
+    singleton->CommitPendingCameraOperation();
+
     PerformOperation(operation);
     // If we perform an action after a series of undo, then delete the "undone" operations from history
     while (operationIndex)
