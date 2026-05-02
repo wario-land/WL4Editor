@@ -129,8 +129,6 @@ WL4EditorWindow::~WL4EditorWindow()
         ROMUtils::entities[i] = nullptr;
     }
     ResetUndoHistory();
-    DeleteUndoHistoryGlobal();
-
     if (CurrentLevel)
     {
         delete CurrentLevel;
@@ -270,7 +268,6 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
             ROMUtils::entities[i] = nullptr;
         }
         ResetUndoHistory();
-        DeleteUndoHistoryGlobal();
         ResetGlobalElementOperationIndexes();
     }
 
@@ -467,7 +464,7 @@ void WL4EditorWindow::EditCurrentTileset(DialogParams::TilesetEditParams *_newTi
         operation->TilesetChange = true;
         operation->lastTilesetEditParams = _oldRoomTilesetEditParams;
         operation->newTilesetEditParams = _newTilesetEditParams;
-        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
+        ExecuteOperation(operation); // Set UnsavedChanges bool inside
     }
     else
     {
@@ -496,8 +493,6 @@ void WL4EditorWindow::UIStartUp()
         ui->menuImport_from_ROM->setEnabled(true);
         ui->actionUndo->setEnabled(true);
         ui->actionRedo->setEnabled(true);
-        ui->actionUndo_global->setEnabled(true);
-        ui->actionRedo_global->setEnabled(true);
         ui->actionLevel_Config->setEnabled(true);
         ui->actionRoom_Config->setEnabled(true);
         ui->actionEdit_Animated_Tile_Groups->setEnabled(true);
@@ -1098,9 +1093,7 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
             }
         }
     }
-
-    // local Room operations are not allowed for things before this step
-    ResetRoomUndoHistory(currentRoomID);
+    // TODO: implement the undo/redo for room delete and add
 
     // UI update
     ResetEntitySetDockWidget();
@@ -1468,27 +1461,51 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
 /// </remarks>
 void WL4EditorWindow::on_actionLevel_Config_triggered()
 {
-    // TODO updates to the level config should go through the undo history queue in Operations.cpp
-    // TODO we should probably differentiate between room and level changes
+    // Capture old state before the dialog
+    DialogParams::LevelConfigParams *lastParams = new DialogParams::LevelConfigParams();
+    lastParams->oldLevelName = CurrentLevel->GetLevelName();
+    lastParams->oldLevelNameJ = CurrentLevel->GetLevelName(1);
+    lastParams->oldHModeTimer = CurrentLevel->GetTimeCountdownCounter(LevelComponents::HardDifficulty);
+    lastParams->oldNModeTimer = CurrentLevel->GetTimeCountdownCounter(LevelComponents::NormalDifficulty);
+    lastParams->oldSHModeTimer = CurrentLevel->GetTimeCountdownCounter(LevelComponents::SHardDifficulty);
 
     // Show a level config dialog to the user
     LevelConfigDialog dialog;
     dialog.InitTextBoxes(CurrentLevel->GetLevelName(),
                          CurrentLevel->GetLevelName(1),
-                         CurrentLevel->GetTimeCountdownCounter(LevelComponents::HardDifficulty),
-                         CurrentLevel->GetTimeCountdownCounter(LevelComponents::NormalDifficulty),
-                         CurrentLevel->GetTimeCountdownCounter(LevelComponents::SHardDifficulty));
+                         lastParams->oldHModeTimer,
+                         lastParams->oldNModeTimer,
+                         lastParams->oldSHModeTimer);
 
     // If OK is pressed, then set the level attributes
     auto acc = dialog.exec();
     if (acc == QDialog::Accepted)
     {
-        CurrentLevel->SetLevelName(dialog.GetPaddedLevelName());
-        CurrentLevel->SetLevelName(dialog.GetPaddedLevelName(1), 1);
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int) dialog.GetHModeTimer());
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int) dialog.GetNModeTimer());
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int) dialog.GetSHModeTimer());
-        SetUnsavedChanges(true);
+        // Capture new state
+        DialogParams::LevelConfigParams *newParams = new DialogParams::LevelConfigParams();
+        newParams->newLevelName = dialog.GetPaddedLevelName();
+        newParams->newLevelNameJ = dialog.GetPaddedLevelName(1);
+        newParams->newHModeTimer = dialog.GetHModeTimer();
+        newParams->newNModeTimer = dialog.GetNModeTimer();
+        newParams->newSHModeTimer = dialog.GetSHModeTimer();
+
+        // Apply changes
+        CurrentLevel->SetLevelName(newParams->newLevelName);
+        CurrentLevel->SetLevelName(newParams->newLevelNameJ, 1);
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int) newParams->newHModeTimer);
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int) newParams->newNModeTimer);
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int) newParams->newSHModeTimer);
+
+        // Create and execute operation
+        OperationParams *operation = new OperationParams;
+        operation->levelConfigChange = true;
+        operation->lastLevelConfigParams = lastParams;
+        operation->newLevelConfigParams = newParams;
+        ExecuteOperation(operation);
+    }
+    else
+    {
+        delete lastParams;
     }
 }
 
@@ -1525,22 +1542,6 @@ void WL4EditorWindow::on_actionUndo_triggered()
 void WL4EditorWindow::on_actionRedo_triggered()
 {
     RedoOperation();
-}
-
-/// <summary>
-/// Undo one step of gobal history.
-/// </summary>
-void WL4EditorWindow::on_actionUndo_global_triggered()
-{
-    UndoOperationGlobal();
-}
-
-/// <summary>
-/// Redo one step of gobal history.
-/// </summary>
-void WL4EditorWindow::on_actionRedo_global_triggered()
-{
-    RedoOperationGlobal();
 }
 
 /// <summary>
@@ -1586,9 +1587,19 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
 void WL4EditorWindow::on_actionNew_Door_triggered()
 {
     unsigned int currentroomid = ui->spinBox_RoomID->value();
+
+    LevelComponents::LevelDoorVector *oldDoorVec =
+        new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
     CurrentLevel->AddDoor(currentroomid, (unsigned char) CurrentLevel->GetRooms()[currentroomid]->GetCurrentEntitySetID());
+    LevelComponents::LevelDoorVector *newDoorVec =
+        new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
+
+    struct OperationParams *params = new struct OperationParams();
+    params->doorVectorChange = true;
+    params->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+    ExecuteOperation(params);
+
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
-    SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -2154,13 +2165,35 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionEdit_Credits_triggered()
 {
-    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
-    DialogParams::CreditsEditParams *creditsEditParams =
-        new DialogParams::CreditsEditParams();
+    // Capture old credit data before the dialog opens
+    DialogParams::CreditsEditParams *lastParams = new DialogParams::CreditsEditParams();
+    memcpy(lastParams->oldCreditData,
+           &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
+           NUMBEROFCREDITSSCREEN * 1280);
 
     // Show the dialog
-    CreditsEditDialog dialog(this, creditsEditParams);
-    dialog.exec();
+    DialogParams::CreditsEditParams *unusedParam = new DialogParams::CreditsEditParams();
+    CreditsEditDialog dialog(this, unusedParam);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        // Capture new credit data (dialog already wrote to ROM)
+        DialogParams::CreditsEditParams *newParams = new DialogParams::CreditsEditParams();
+        memcpy(newParams->newCreditData,
+               &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
+               NUMBEROFCREDITSSCREEN * 1280);
+
+        // Create and execute operation
+        OperationParams *operation = new OperationParams;
+        operation->CreditChange = true;
+        operation->lastCreditsEditParams = lastParams;
+        operation->newCreditsEditParams = newParams;
+        ExecuteOperation(operation);
+    }
+    else
+    {
+        delete lastParams;
+    }
+    delete unusedParam;
 }
 
 /// <summary>
@@ -2197,7 +2230,7 @@ void WL4EditorWindow::on_actionEdit_Entity_EntitySet_triggered()
         operation->SpritesSpritesetChange = true;
         operation->lastSpritesAndSetParam = _oldEntitiesAndEntitysetsEditParams;
         operation->newSpritesAndSetParam = _currentEntitiesAndEntitysetsEditParams;
-        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
+        ExecuteOperation(operation); // Set UnsavedChanges bool inside
     }
     else
     {
@@ -2425,7 +2458,7 @@ void WL4EditorWindow::on_actionEdit_Animated_Tile_Groups_triggered()
         operation->AnimatedTileGroupChange = true;
         operation->lastAnimatedTileEditParam = _oldAnimatedTileGroupsEditParams;
         operation->newAnimatedTileEditParam = _currentAnimatedTileGroupsEditParams;
-        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
+        ExecuteOperation(operation); // Set UnsavedChanges bool inside
     }
     else
     {
@@ -2477,9 +2510,6 @@ void WL4EditorWindow::on_action_swap_Rooms_triggered()
         }
         else if (CurrentLevel->SwapRooms(currentroomid, value))
         {
-            // local Room operations are not allowed for things before this step
-            ResetRoomUndoHistory(currentroomid);
-            ResetRoomUndoHistory(value);
             SetUnsavedChanges(true);
             SetCurrentRoomId(ui->spinBox_RoomID->value());
         }

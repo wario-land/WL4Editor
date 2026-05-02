@@ -169,16 +169,14 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
             int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
             if (SelectedEntityID == -1)
             {
-                // Add the new entity
-                bool success =
-                    room->AddEntity(tileX, tileY, singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
-                if(!success)
-                {
-                    singleton->GetOutputWidgetPtr()->PrintString("Cannot add more entity under the current difficulty in this room");
-                    return;
-                }
-                room->SetEntityListDirty(difficulty, true);
-                singleton->SetUnsavedChanges(true);
+                // cannot find existing Entity
+                struct OperationParams *params = new struct OperationParams();
+                params->entityAdd = true;
+                params->entityAddParams = EntityAddParams::Create(difficulty,
+                                                                   (unsigned char) tileX,
+                                                                   (unsigned char) tileY,
+                                                                   (unsigned char) singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
+                ExecuteOperation(params); // AddEntity and SetUnsavedChanges inside
                 SelectedEntityID = room->FindEntity(tileX, tileY); // reset SelectedEntityID
             }
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, SelectedEntityID);
@@ -239,13 +237,21 @@ void MainGraphicsView::mouseDoubleClickEvent(QMouseEvent *event) {
                             DoorConfigDialog _doorconfigdialog(singleton, room, i, singleton->GetCurrentLevel());
                             if (_doorconfigdialog.exec() == QDialog::Accepted)
                             {
-                                // Apply changes
-                                // TODO: put the logic to the operation class to support Undo and Redo of Door things
+                                // Apply changes with undo support
+                                LevelComponents::LevelDoorVector *oldDoorVec =
+                                    new LevelComponents::LevelDoorVector(singleton->GetCurrentLevel()->GetDoorList());
                                 singleton->GetCurrentLevel()->SetDoorVec(_doorconfigdialog.GetChangedDoorVectorResult());
+                                LevelComponents::LevelDoorVector *newDoorVec =
+                                    new LevelComponents::LevelDoorVector(singleton->GetCurrentLevel()->GetDoorList());
+
+                                struct OperationParams *params = new struct OperationParams();
+                                params->doorVectorChange = true;
+                                params->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+                                ExecuteOperation(params);
+
                                 auto doorsInRoom_new = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID(room->GetRoomID());
                                 singleton->GetCurrentRoom()->SetCurrentEntitySet(doorsInRoom_new[i].EntitySetID);
                                 singleton->ResetEntitySetDockWidget();
-                                singleton->SetUnsavedChanges(true);
                             }
                         }
                         else
@@ -570,26 +576,28 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
             tmpLTcornerTileX = rectx; tmpLTcornerTileY = recty;
             Isdraggingrect = false;
         }
-    } else if (editMode == Ui::DoorEditMode) { // Add a move operation for entity (for CTRL-Z)
+    } else if (editMode == Ui::DoorEditMode) { // Add a move operation for door
         if (holdingEntityOrDoor && SelectedDoorID != -1) {
-            struct OperationParams *params = new struct OperationParams();
-            params->type = ObjectMoveOperation;
-            params->objectPositionChange = true;
             auto curDoor = singleton->GetCurrentLevel()->GetDoorListRef().GetDoor(singleton->GetCurrentRoom()->GetRoomID(), SelectedDoorID);
-            params->objectMoveParams = ObjectMoveParams::Create(objectInitialX, objectInitialY, curDoor.x1, curDoor.y1, ObjectMoveParams::DOOR_TYPE, SelectedDoorID);
-
-            // TODO: Only perform and not execute because not support undo redo yet
-            PerformOperation(params);
+            if (!((objectInitialX == curDoor.x1) && (objectInitialY == curDoor.y1)))
+            {
+                struct OperationParams *params = new struct OperationParams();
+                params->doorMoveChange = true;
+                params->doorMoveParams = DoorMoveParams::Create(singleton->GetCurrentRoom()->GetRoomID(), SelectedDoorID,
+                                                                objectInitialX, objectInitialY, curDoor.x1, curDoor.y1);
+                ExecuteOperation(params);
+            }
         }
-    } else if (editMode == Ui::EntityEditMode) { // Add a move operation for entity (for CTRL-Z)
+    } else if (editMode == Ui::EntityEditMode) { // Add a move operation for entity
         if (holdingEntityOrDoor && SelectedEntityID != -1) {
-            struct OperationParams *params = new struct OperationParams();
-            params->type = ObjectMoveOperation;
-            params->objectPositionChange = true;
-            params->objectMoveParams = ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY, ObjectMoveParams::ENTITY_TYPE, SelectedEntityID);
-
-            // TODO: Only perform and not execute because not support undo redo yet
-            PerformOperation(params);
+            if (!((objectInitialX == tileX) && (objectInitialY == tileY)))
+            {
+                struct OperationParams *params = new struct OperationParams();
+                params->type = ObjectMoveOperation;
+                params->objectPositionChange = true;
+                params->objectMoveParams = ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY, SelectedEntityID);
+                ExecuteOperation(params);
+            }
         }
     }
     // We are no longer drawing or holding an object
@@ -624,12 +632,18 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Backspace:
         case Qt::Key_Delete:
         {
-            singleton->DeleteEntity(SelectedEntityID);
+            int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
+            auto entityData = currentRoom->GetEntityListData(difficulty)[SelectedEntityID];
+
+            // Record operation for undo (before deleting)
+            struct OperationParams *params = new struct OperationParams();
+            params->entityDelete = true;
+            params->entityDeleteParams = EntityDeleteParams::Create(difficulty, SelectedEntityID,
+                                                                     entityData.XPos, entityData.YPos, entityData.EntityID);
+            ExecuteOperation(params); // creates history entry and delete entity inside it
             SelectedEntityID = -1;
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
-            int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
             currentRoom->SetEntityListDirty(difficulty, true);
-            singleton->SetUnsavedChanges(true);
         }; break;
 
         // Move selected entity when a direction key is pressed
@@ -668,10 +682,8 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 struct OperationParams *params = new struct OperationParams();
                 params->type = ObjectMoveOperation;
                 params->objectPositionChange = true;
-                params->objectMoveParams=ObjectMoveParams::Create(oldX, oldY, pX, pY,ObjectMoveParams::ENTITY_TYPE,SelectedEntityID);
-
-                // Only perform and not execute because of a bug after deletion and undo
-                PerformOperation(params);
+                params->objectMoveParams=ObjectMoveParams::Create(oldX, oldY, pX, pY, SelectedEntityID);
+                ExecuteOperation(params);
             }
         }; break;
         }
@@ -685,12 +697,25 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Backspace:
         case Qt::Key_Delete:
         {
+            LevelComponents::LevelDoorVector *oldDoorVec =
+                new LevelComponents::LevelDoorVector(singleton->GetCurrentLevel()->GetDoorList());
             if (singleton->DeleteDoor(singleton->GetCurrentLevel()->GetDoorListRef().GetGlobalIDByLocalID(currentRoom->GetRoomID(), SelectedDoorID)))
             {
+                LevelComponents::LevelDoorVector *newDoorVec =
+                    new LevelComponents::LevelDoorVector(singleton->GetCurrentLevel()->GetDoorList());
+
+                struct OperationParams *params = new struct OperationParams();
+                params->doorVectorChange = true;
+                params->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+                ExecuteOperation(params);
+
                 SelectedDoorID = -1;
                 singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
                 singleton->ResetEntitySetDockWidget();
-                singleton->SetUnsavedChanges(true);
+            }
+            else
+            {
+                delete oldDoorVec;
             }
         }; break;
         // Move selected door when a direction key is pressed
@@ -735,12 +760,12 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             if (currentRoom->IsNewDoorPositionInsideRoom(pX1, pX2, pY1, pY2))
             {
                 struct OperationParams *params = new struct OperationParams();
-                params->type = ObjectMoveOperation;
-                params->objectPositionChange = true;
-                params->objectMoveParams = ObjectMoveParams::Create(oldX, oldY, pX1, pY1, ObjectMoveParams::DOOR_TYPE,SelectedDoorID);
+                params->doorMoveChange = true;
+                params->doorMoveParams = DoorMoveParams::Create(currentRoom->GetRoomID(), SelectedDoorID,
+                                                                  oldX, oldY, pX1, pY1);
 
                 // Only perform and not execute because of a bug after deletion and undo
-                PerformOperation(params);
+                ExecuteOperation(params);
             }
         }; break;
         }

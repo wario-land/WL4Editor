@@ -6,10 +6,8 @@
 extern WL4EditorWindow *singleton;
 
 // Globals used by the undo system
-static std::deque<struct OperationParams *> operationHistory[16];
-static unsigned int operationIndex[16]; // For room-specific changes
-static std::deque<struct OperationParams *> operationHistoryGlobal;
-static unsigned int operationIndexGlobal; // For level-wide changes
+static std::deque<struct OperationParams *> operationHistory;
+static unsigned int operationIndex;
 
 static unsigned int CurrentTilesetOperationId = 0;
 static unsigned int CurrentSpritestuffOperationId = 0;
@@ -74,6 +72,7 @@ void PerformOperation(struct OperationParams *operation)
         singleton->RenderScreenTilesChange(tilechangelist, tl1);
         if(tl2 == -1) return;
         singleton->RenderScreenTilesChange(tilechangelist2, tl2);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo tile changes."));
     }
     if (operation->roomConfigChange)
     {
@@ -85,57 +84,114 @@ void PerformOperation(struct OperationParams *operation)
         singleton->ResetEntitySetDockWidget();
         singleton->ResetCameraControlDockWidget();
         singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Room Config changes."));
     }
     if (operation->objectPositionChange)
     {
         struct ObjectMoveParams *om=operation->objectMoveParams;
-        /*om->previousPositionX = pX;
-        om->previousPositionY = pY;*/
-        if (om->type == ObjectMoveParams::DOOR_TYPE)
+        LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+
+        // If the entity exists
+        if (om->objectID != -1)
         {
-            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-            LevelComponents::LevelDoorVector &tmpDoorVec = singleton->GetCurrentLevel()->GetDoorListRef();
-            int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(currentRoom->GetRoomID(), om->objectID);
-            auto curDoor = tmpDoorVec.GetDoor(globalDoorId);
-
-            // Calculating the deltas
-            int px1 = curDoor.x1;
-            int py1 = curDoor.y1;
-            int deltaX = curDoor.x2 - px1;
-            int deltaY = curDoor.y2 - py1;
-
-            // If the door exists and if it is still in the room
-            if (om->objectID != -1 && curDoor.DoorTypeByte)
+            if (currentRoom->IsNewEntityPositionInsideRoom(om->nextPositionX, om->nextPositionY))
             {
-                if (currentRoom->IsNewDoorPositionInsideRoom(om->nextPositionX, om->nextPositionX + deltaX, om->nextPositionY, om->nextPositionY + deltaY))
-                {
-                    singleton->GetCurrentLevel()->GetDoorListRef().SetDoorPlace(globalDoorId,
-                                                                                om->nextPositionX,
-                                                                                om->nextPositionX + deltaX,
-                                                                                om->nextPositionY,
-                                                                                om->nextPositionY + deltaY);
-                    singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
-                    singleton->SetUnsavedChanges(true);
-                }
+                currentRoom->SetEntityPosition(om->nextPositionX, om->nextPositionY, om->objectID);
+                singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
+                int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
+                singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                singleton->SetUnsavedChanges(true);
+                singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Entity move changes."));
             }
         }
-        else if (om->type == ObjectMoveParams::ENTITY_TYPE)
+    }
+    if (operation->doorMoveChange)
+    {
+        struct DoorMoveParams *dm = operation->doorMoveParams;
+        LevelComponents::LevelDoorVector &tmpDoorVec = singleton->GetCurrentLevel()->GetDoorListRef();
+        int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(dm->roomID, dm->objectID);
+        auto curDoor = tmpDoorVec.GetDoor(globalDoorId);
+
+        int deltaX = curDoor.x2 - curDoor.x1;
+        int deltaY = curDoor.y2 - curDoor.y1;
+
+        if (dm->objectID != -1 && curDoor.DoorTypeByte)
         {
             LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-
-            // If the entity exists
-            if (om->objectID != -1)
+            if (currentRoom->IsNewDoorPositionInsideRoom(dm->nextPositionX, dm->nextPositionX + deltaX, dm->nextPositionY, dm->nextPositionY + deltaY))
             {
-                if (currentRoom->IsNewEntityPositionInsideRoom(om->nextPositionX, om->nextPositionY))
-                {
-                    currentRoom->SetEntityPosition(om->nextPositionX, om->nextPositionY, om->objectID);
-                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
-                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
-                    singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
-                    singleton->SetUnsavedChanges(true);
-                }
+                tmpDoorVec.SetDoorPlace(globalDoorId,
+                                         dm->nextPositionX, dm->nextPositionX + deltaX,
+                                         dm->nextPositionY, dm->nextPositionY + deltaY);
+                singleton->RenderScreenElementsLayersUpdate((unsigned int) dm->objectID, -1);
+                singleton->SetUnsavedChanges(true);
             }
         }
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo door move changes."));
+    }
+    if (operation->entityAdd)
+    {
+        auto *ep = operation->entityAddParams;
+        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        bool success = room->AddEntity(ep->XPos, ep->YPos, ep->EntityTypeLocalID, ep->difficulty);
+        if(!success)
+        {
+            singleton->GetOutputWidgetPtr()->PrintString("Cannot add more entity under the current difficulty in this room");
+            return;
+        }
+        singleton->GetCurrentRoom()->SetEntityListDirty(ep->difficulty, true);
+        singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo entity add."));
+    }
+    if (operation->entityDelete)
+    {
+        auto *ep = operation->entityDeleteParams;
+        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        auto list = room->GetEntityListData(ep->difficulty);
+        for (unsigned int i = 0; i < list.size(); ++i)
+        {
+            if (list[i].XPos == ep->XPos && list[i].YPos == ep->YPos && list[i].EntityID == ep->EntityTypeLocalID)
+            {
+                room->DeleteEntity(ep->difficulty, i);
+                break;
+            }
+        }
+        room->SetEntityListDirty(ep->difficulty, true);
+        singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo entity delete."));
+    }
+    if (operation->doorVectorChange)
+    {
+        auto *dv = operation->doorVectorChangeParams;
+        singleton->GetCurrentLevel()->SetDoorVec(*(dv->newDoorVec));
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->ResetEntitySetDockWidget();
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo door changes."));
+    }
+    if (operation->CreditChange)
+    {
+        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
+               operation->newCreditsEditParams->newCreditData,
+               NUMBEROFCREDITSSCREEN * 1280);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo credit changes."));
+    }
+    if (operation->levelConfigChange)
+    {
+        LevelComponents::Level *level = singleton->GetCurrentLevel();
+        level->SetLevelName(operation->newLevelConfigParams->newLevelName);
+        level->SetLevelName(operation->newLevelConfigParams->newLevelNameJ, 1);
+        level->SetTimeCountdownCounter(LevelComponents::HardDifficulty,
+                                        (unsigned int) operation->newLevelConfigParams->newHModeTimer);
+        level->SetTimeCountdownCounter(LevelComponents::NormalDifficulty,
+                                        (unsigned int) operation->newLevelConfigParams->newNModeTimer);
+        level->SetTimeCountdownCounter(LevelComponents::SHardDifficulty,
+                                        (unsigned int) operation->newLevelConfigParams->newSHModeTimer);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo level config changes."));
     }
     if (operation->TilesetChange)
     {
@@ -161,6 +217,7 @@ void PerformOperation(struct OperationParams *operation)
             singleton->RenderScreenFull();
         }
         singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Tileset changes."));
     }
     if (operation->SpritesSpritesetChange)
     {
@@ -185,6 +242,7 @@ void PerformOperation(struct OperationParams *operation)
         singleton->ResetEntitySetDockWidget();
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Sprites and Spritesets changes."));
     }
     if (operation->AnimatedTileGroupChange)
     {
@@ -203,6 +261,7 @@ void PerformOperation(struct OperationParams *operation)
         singleton->GetTile16DockWidgetPtr()->SetTileset(singleton->GetCurrentRoom()->GetTilesetID());
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Animated Tile Group changes."));
     }
 }
 
@@ -284,52 +343,107 @@ void BackTrackOperation(struct OperationParams *operation)
     if (operation->objectPositionChange)
     {
         struct ObjectMoveParams *om = operation->objectMoveParams;
-        /*om->previousPositionX = pX;
-        om->previousPositionY = pY;*/
-        if (om->type == ObjectMoveParams::DOOR_TYPE)
+        LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+
+        // If the entity exists and if it is still in the room
+        if (om->objectID != -1)
         {
-            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-            LevelComponents::LevelDoorVector &tmpDoorVec = singleton->GetCurrentLevel()->GetDoorListRef();
-            int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(currentRoom->GetRoomID(), om->objectID);
-            auto curDoor = tmpDoorVec.GetDoor(globalDoorId);
-
-            // Calculating the deltas
-            int px1 = curDoor.x1;
-            int py1 = curDoor.y1;
-            int deltaX = curDoor.x2 - px1;
-            int deltaY = curDoor.y2 - py1;
-
-            // If the door exists and if it is still in the room
-            if (om->objectID != -1 && curDoor.DoorTypeByte)
+            if (currentRoom->IsNewEntityPositionInsideRoom(om->previousPositionX, om->previousPositionY))
             {
-                if (currentRoom->IsNewDoorPositionInsideRoom(om->previousPositionX, om->previousPositionX+deltaX, om->previousPositionY, om->previousPositionY + deltaY))
-                {
-                    singleton->GetCurrentLevel()->GetDoorListRef().SetDoorPlace(globalDoorId,
-                                                                                om->previousPositionX,
-                                                                                om->previousPositionX + deltaX,
-                                                                                om->previousPositionY,
-                                                                                om->previousPositionY + deltaY);
-                    singleton->RenderScreenElementsLayersUpdate((unsigned int) om->objectID, -1);
-                    singleton->SetUnsavedChanges(true);
-                }
-            }
-        } else if (om->type == ObjectMoveParams::ENTITY_TYPE)
-        {
-            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-
-            // If the entity exists and if it is still in the room
-            if (om->objectID != -1)
-            {
-                if (currentRoom->IsNewEntityPositionInsideRoom(om->previousPositionX, om->previousPositionY))
-                {
-                    currentRoom->SetEntityPosition(om->previousPositionX, om->previousPositionY, om->objectID);
-                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
-                    int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
-                    singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
-                    singleton->SetUnsavedChanges(true);
-                }
+                currentRoom->SetEntityPosition(om->previousPositionX, om->previousPositionY, om->objectID);
+                singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
+                int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
+                singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                singleton->SetUnsavedChanges(true);
             }
         }
+
+
+        // hint to show undo operation
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Entity move changes."));
+    }
+    if (operation->doorMoveChange)
+    {
+        struct DoorMoveParams *dm = operation->doorMoveParams;
+        LevelComponents::LevelDoorVector &tmpDoorVec = singleton->GetCurrentLevel()->GetDoorListRef();
+        int globalDoorId = tmpDoorVec.GetGlobalIDByLocalID(dm->roomID, dm->objectID);
+        auto curDoor = tmpDoorVec.GetDoor(globalDoorId);
+
+        int deltaX = curDoor.x2 - curDoor.x1;
+        int deltaY = curDoor.y2 - curDoor.y1;
+
+        if (dm->objectID != -1 && curDoor.DoorTypeByte)
+        {
+            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+            if (currentRoom->IsNewDoorPositionInsideRoom(dm->previousPositionX, dm->previousPositionX + deltaX, dm->previousPositionY, dm->previousPositionY + deltaY))
+            {
+                tmpDoorVec.SetDoorPlace(globalDoorId,
+                                         dm->previousPositionX, dm->previousPositionX + deltaX,
+                                         dm->previousPositionY, dm->previousPositionY + deltaY);
+                singleton->RenderScreenElementsLayersUpdate((unsigned int) dm->objectID, -1);
+                singleton->SetUnsavedChanges(true);
+            }
+        }
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo door move changes."));
+    }
+    if (operation->entityAdd)
+    {
+        auto *ep = operation->entityAddParams;
+        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        std::vector<struct LevelComponents::EntityRoomAttribute> list = room->GetEntityListData(ep->difficulty);
+        for (int i = (int)list.size() - 1; i >= 0; --i)
+        {
+            if (list[i].XPos == ep->XPos && list[i].YPos == ep->YPos && list[i].EntityID == ep->EntityTypeLocalID)
+            {
+                room->DeleteEntity(ep->difficulty, i);
+                break;
+            }
+        }
+        room->SetEntityListDirty(ep->difficulty, true);
+        singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo entity add."));
+    }
+    if (operation->entityDelete)
+    {
+        auto *ep = operation->entityDeleteParams;
+        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        room->AddEntity(ep->XPos, ep->YPos, ep->EntityTypeLocalID, ep->difficulty);
+        room->SetEntityListDirty(ep->difficulty, true);
+        singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo entity delete."));
+    }
+    if (operation->doorVectorChange)
+    {
+        auto *dv = operation->doorVectorChangeParams;
+        singleton->GetCurrentLevel()->SetDoorVec(*(dv->oldDoorVec));
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->ResetEntitySetDockWidget();
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo door changes."));
+    }
+    if (operation->CreditChange)
+    {
+        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
+               operation->lastCreditsEditParams->oldCreditData,
+               NUMBEROFCREDITSSCREEN * 1280);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo credit changes."));
+    }
+    if (operation->levelConfigChange)
+    {
+        LevelComponents::Level *level = singleton->GetCurrentLevel();
+        level->SetLevelName(operation->lastLevelConfigParams->oldLevelName);
+        level->SetLevelName(operation->lastLevelConfigParams->oldLevelNameJ, 1);
+        level->SetTimeCountdownCounter(LevelComponents::HardDifficulty,
+                                        (unsigned int) operation->lastLevelConfigParams->oldHModeTimer);
+        level->SetTimeCountdownCounter(LevelComponents::NormalDifficulty,
+                                        (unsigned int) operation->lastLevelConfigParams->oldNModeTimer);
+        level->SetTimeCountdownCounter(LevelComponents::SHardDifficulty,
+                                        (unsigned int) operation->lastLevelConfigParams->oldSHModeTimer);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo level config changes."));
     }
     if (operation->TilesetChange)
     {
@@ -354,7 +468,7 @@ void BackTrackOperation(struct OperationParams *operation)
             singleton->GetTile16DockWidgetPtr()->SetTileset(tilesetId);
             singleton->RenderScreenFull();
         }
-        CurrentTilesetOperationId = operationIndexGlobal;
+        CurrentTilesetOperationId = operationIndex;
 
         // hint to show undo operation
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Tileset changes."));
@@ -382,7 +496,7 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->GetEntitySetDockWidgetPtr()->ResetEntitySet(singleton->GetCurrentRoom());
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
-        CurrentSpritestuffOperationId = operationIndexGlobal;
+        CurrentSpritestuffOperationId = operationIndex;
 
         // hint to show undo operation
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Sprites and Spritesets changes."));
@@ -404,7 +518,8 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->GetTile16DockWidgetPtr()->SetTileset(singleton->GetCurrentRoom()->GetTilesetID());
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
-        CurrentAnimatedTileGroupOperationId = operationIndexGlobal;
+        CurrentAnimatedTileGroupOperationId = operationIndex;
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Animated Tile Group changes."));
     }
 }
 
@@ -420,118 +535,40 @@ void BackTrackOperation(struct OperationParams *operation)
 /// <param name="operationIdx">
 /// The operation indexer to modify.
 /// </param>
-static void ExecuteOperationImpl(struct OperationParams *operation, std::deque<struct OperationParams *> &operationHist, unsigned int *operationIdx)
+void ExecuteOperation(struct OperationParams *operation)
 {
     PerformOperation(operation);
     // If we perform an action after a series of undo, then delete the "undone" operations from history
-    while (*operationIdx)
+    while (operationIndex)
     {
-        // Delete the front operation in the queue while decrementing the operation index until the index reaches 0
-        --(*operationIdx);
-        struct OperationParams *frontOP = operationHist[0];
+        --operationIndex;
+        struct OperationParams *frontOP = operationHistory[0];
         delete frontOP;
-        operationHist.pop_front();
+        operationHistory.pop_front();
     }
-    operationHist.push_front(operation);
+    operationHistory.push_front(operation);
     singleton->SetUnsavedChanges(true);
 }
 
-/// <summary>
-/// Perform an operation based on its parameters, and add it to the undo deque.
-/// This is for performing an operation within a Room.
-/// </summary>
-/// <param name="operation">
-/// The operation to perform.
-/// </param>
-void ExecuteOperation(struct OperationParams *operation)
+void UndoOperation()
 {
-    int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
-    ExecuteOperationImpl(operation, operationHistory[currentRoomNumber], operationIndex + currentRoomNumber);
-}
-
-/// <summary>
-/// Perform an operation based on its parameters, and add it to the undo deque.
-/// This is for performing a global operation.
-/// </summary>
-/// <param name="operation">
-/// The operation to perform.
-/// </param>
-void ExecuteOperationGlobal(struct OperationParams *operation)
-{
-    ExecuteOperationImpl(operation, operationHistoryGlobal, &operationIndexGlobal);
-}
-
-/// <summary>
-/// Undo a previously performed operation in the undo deque.
-/// </summary>
-/// <remarks>
-/// This function does not remove the operation from the deque.
-/// Instead, an index is used within the deque to track which operation should be undone next.
-/// That way, an operation can be undone and redone multiple times.
-/// </remarks>
-/// </param>
-/// <param name="operationHist">
-/// The the history deque from which to undo an operation.
-/// </param>
-/// <param name="operationIdx">
-/// The operation indexer to modify.
-/// </param>
-static void UndoOperationImpl(std::deque<struct OperationParams *> &operationHist, unsigned int *operationIdx)
-{
-    // We cannot undo past the end of the deque
-    if (*operationIdx < operationHist.size())
+    if (operationIndex < operationHistory.size())
     {
-        BackTrackOperation(operationHist[(*operationIdx)++]);
-
-        // If the entire operation history is undone for all rooms, then there are no unsaved changes
-        for (unsigned int i = 0; i < sizeof(operationIndex) / sizeof(operationIndex[0]); ++i)
+        BackTrackOperation(operationHistory[(operationIndex)++]);
+        if (operationIndex == operationHistory.size())
         {
-            if (*operationIdx != operationHist.size())
-            {
-                return;
-            }
+            // TODO uncomment this once all operations that change the level go through Operation.cpp
+            // singleton->SetUnsavedChanges(false);
         }
-        // TODO uncomment this once all operations that change the level go through Operation.cpp
-        // singleton->SetUnsavedChanges(false);
     }
     else
     {
-        // hint to show undo operation
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("No more operation to undo."));
     }
 }
 
 /// <summary>
-/// Undo a previously performed operation in the undo deque.
-/// This is for undoing an operation within a Room.
-/// </summary>
-/// <remarks>
-/// This function does not remove the operation from the deque.
-/// Instead, an index is used within the deque to track which operation should be undone next.
-/// That way, an operation can be undone and redone multiple times.
-/// </remarks>
-void UndoOperation()
-{
-    int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
-    UndoOperationImpl(operationHistory[currentRoomNumber], operationIndex + currentRoomNumber);
-}
-
-/// <summary>
-/// Undo a previously performed operation in the undo deque.
-/// This is for undoing a global operation.
-/// </summary>
-/// <remarks>
-/// This function does not remove the operation from the deque.
-/// Instead, an index is used within the deque to track which operation should be undone next.
-/// That way, an operation can be undone and redone multiple times.
-/// </remarks>
-void UndoOperationGlobal()
-{
-    UndoOperationImpl(operationHistoryGlobal, &operationIndexGlobal);
-}
-
-/// <summary>
-/// Redo a previously undone operation from the undo deque.
+/// Redo previously undone operation from the undo deque.
 /// </summary>
 /// <remarks>
 /// This function does not add the operation to the deque.
@@ -544,50 +581,17 @@ void UndoOperationGlobal()
 /// <param name="operationIdx">
 /// The operation indexer to modify.
 /// </param>
-static void RedoOperationImpl(std::deque<struct OperationParams *> &operationHist, unsigned int *operationIdx)
+void RedoOperation()
 {
-    // We cannot redo past the front of the deque
-    if (*operationIdx)
+    if (operationIndex)
     {
-        PerformOperation(operationHist[--(*operationIdx)]);
-
-        // Performing a "redo" will make unsaved changes
+        PerformOperation(operationHistory[--operationIndex]);
         singleton->SetUnsavedChanges(true);
     }
     else
     {
-        // hint to show redo operation
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("No more operation to redo."));
     }
-}
-
-/// <summary>
-/// Redo a previously undone operation from the undo deque.
-/// This is for redoing an operation within a Room.
-/// </summary>
-/// <remarks>
-/// This function does not add the operation to the deque.
-/// Instead, an index is used within the deque to track which operation should be redone next.
-/// That way, an operation can be undone and redone multiple times.
-/// </remarks>
-void RedoOperation()
-{
-    int currentRoomNumber = singleton->GetCurrentRoom()->GetRoomID();
-    RedoOperationImpl(operationHistory[currentRoomNumber], operationIndex + currentRoomNumber);
-}
-
-/// <summary>
-/// Redo a previously undone operation from the undo deque.
-/// This is for redoing a global operation.
-/// </summary>
-/// <remarks>
-/// This function does not add the operation to the deque.
-/// Instead, an index is used within the deque to track which operation should be redone next.
-/// That way, an operation can be undone and redone multiple times.
-/// </remarks>
-void RedoOperationGlobal()
-{
-    RedoOperationImpl(operationHistoryGlobal, &operationIndexGlobal);
 }
 
 /// <summary>
@@ -598,124 +602,68 @@ void RedoOperationGlobal()
 /// </remarks>
 void ResetUndoHistory()
 {
-    for (unsigned int i = 0; i < sizeof(operationHistory) / sizeof(operationHistory[0]); ++i)
+    for (unsigned int j = 0; j < operationHistory.size(); ++j)
     {
-        // Deconstruct the dynamically allocated operation structs within the history queue
-        for (unsigned int j = 0; j < operationHistory[i].size(); ++j)
-        {
-            delete operationHistory[i][j];
-        }
-        operationHistory[i].clear();
-    }
-
-    // Re-initialize all the operation indexes to zero
-    memset(operationIndex, 0, sizeof(operationIndex));
-}
-
-/// <summary>
-/// Reset the undo deque of a specified Room in the current Level.
-/// </summary>
-void ResetRoomUndoHistory(int currentRoomId)
-{
-    if (!(operationHistory[currentRoomId].size())) return;
-
-    // Deconstruct the dynamically allocated operation structs within the history queue
-    for (unsigned int j = 0; j < operationHistory[currentRoomId].size(); ++j)
-    {
-        // as long as only tileChange and roomConfigChange in the current Room
-        // we can delete the whole undo deque without dealing with any memory problem
-        struct OperationParams *curParam = operationHistory[currentRoomId][j];
-        if (curParam->objectPositionChange ||
-            curParam->TilesetChange ||
-            curParam->CreditChange ||
-            curParam->SpritesSpritesetChange ||
-            curParam->AnimatedTileGroupChange)
-        {
-            // there is something wrong with the internal logic, we just skip the curParam atm
-            singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("An error occured when reset the Undo history for Room 0x") +
-                                                                     QString::number(currentRoomId, 16));
-            continue;
-        }
-        delete curParam;
-    }
-    operationHistory[currentRoomId].clear();
-    operationIndex[currentRoomId] = 0;
-}
-
-/// <summary>
-/// Clean up the global undo deque.
-/// </summary>
-/// <remarks>
-/// Only call this when deconstruct the editor, don't use it elsewhere.
-/// </remarks>
-void DeleteUndoHistoryGlobal()
-{
-    // It is different from deleting OperationParams, so cannot use the deconstructor
-    // Deconstruct the global history
-    for (unsigned int j = 0; j < operationHistoryGlobal.size(); ++j) // from old to new
-    {
-        if (operationHistoryGlobal[j]->TilesetChange)
+        if (operationHistory[j]->TilesetChange)
         {
             if (CurrentTilesetOperationId > j)
             {
-                delete operationHistoryGlobal[j]; // call default deconstructor
+                delete operationHistory[j];
             }
             else
             {
-                if (operationHistoryGlobal[j]->newTilesetEditParams)
+                if (operationHistory[j]->newTilesetEditParams)
+                    delete operationHistory[j]->newTilesetEditParams;
+                if (operationHistory[j]->lastTilesetEditParams)
                 {
-                    delete operationHistoryGlobal[j]->newTilesetEditParams;
-                }
-                if (operationHistoryGlobal[j]->lastTilesetEditParams)
-                {
-                    delete operationHistoryGlobal[j]->lastTilesetEditParams->newTileset;
-                    operationHistoryGlobal[j]->lastTilesetEditParams->newTileset = nullptr;
-                    delete operationHistoryGlobal[j]->lastTilesetEditParams;
+                    delete operationHistory[j]->lastTilesetEditParams->newTileset;
+                    operationHistory[j]->lastTilesetEditParams->newTileset = nullptr;
+                    delete operationHistory[j]->lastTilesetEditParams;
                 }
             }
         }
-        else if (operationHistoryGlobal[j]->SpritesSpritesetChange)
+        else if (operationHistory[j]->SpritesSpritesetChange)
         {
             if (CurrentSpritestuffOperationId > j)
             {
-                delete operationHistoryGlobal[j]; // call default deconstructor
+                delete operationHistory[j];
             }
             else
             {
-                if (operationHistoryGlobal[j]->newSpritesAndSetParam)
+                if (operationHistory[j]->newSpritesAndSetParam)
+                    delete operationHistory[j]->newSpritesAndSetParam;
+                if (operationHistory[j]->lastSpritesAndSetParam)
                 {
-                    delete operationHistoryGlobal[j]->newSpritesAndSetParam;
-                }
-                if (operationHistoryGlobal[j]->lastSpritesAndSetParam)
-                {
-                    qDeleteAll(operationHistoryGlobal[j]->lastSpritesAndSetParam->entities);
-                    qDeleteAll(operationHistoryGlobal[j]->lastSpritesAndSetParam->entitySets);
-                    delete operationHistoryGlobal[j]->lastSpritesAndSetParam;
+                    qDeleteAll(operationHistory[j]->lastSpritesAndSetParam->entities);
+                    qDeleteAll(operationHistory[j]->lastSpritesAndSetParam->entitySets);
+                    delete operationHistory[j]->lastSpritesAndSetParam;
                 }
             }
         }
-        else if (operationHistoryGlobal[j]->AnimatedTileGroupChange)
+        else if (operationHistory[j]->AnimatedTileGroupChange)
         {
             if (CurrentAnimatedTileGroupOperationId > j)
             {
-                delete operationHistoryGlobal[j]; // call default deconstructor
+                delete operationHistory[j];
             }
             else
             {
-                if (operationHistoryGlobal[j]->newAnimatedTileEditParam)
+                if (operationHistory[j]->newAnimatedTileEditParam)
+                    delete operationHistory[j]->newAnimatedTileEditParam;
+                if (operationHistory[j]->lastAnimatedTileEditParam)
                 {
-                    delete operationHistoryGlobal[j]->newAnimatedTileEditParam;
-                }
-                if (operationHistoryGlobal[j]->lastAnimatedTileEditParam)
-                {
-                    qDeleteAll(operationHistoryGlobal[j]->lastAnimatedTileEditParam->animatedTileGroups);
-                    delete operationHistoryGlobal[j]->lastAnimatedTileEditParam;
+                    qDeleteAll(operationHistory[j]->lastAnimatedTileEditParam->animatedTileGroups);
+                    delete operationHistory[j]->lastAnimatedTileEditParam;
                 }
             }
         }
+        else
+        {
+            delete operationHistory[j];
+        }
     }
-    operationHistoryGlobal.clear();
-    operationIndexGlobal = 0;
+    operationHistory.clear();
+    operationIndex = 0;
     CurrentTilesetOperationId = 0;
     CurrentSpritestuffOperationId = 0;
     CurrentAnimatedTileGroupOperationId = 0;
@@ -735,47 +683,47 @@ void DeleteUndoHistoryGlobal()
 /// </remarks>
 void ResetChangedBoolsThroughHistory()
 {
-    for (unsigned int j = 0; j < operationHistoryGlobal.size(); ++j) // from old to new
+    for (unsigned int j = 0; j < operationHistory.size(); ++j) // from old to new
     {
         // no need to exclude the current elements, they will be set changed bool to false in the SaveLevel function
         // so call this function before that part
-        if (operationHistoryGlobal[j]->TilesetChange)
+        if (operationHistory[j]->TilesetChange)
         {
-            operationHistoryGlobal[j]->newTilesetEditParams->newTileset->SetChanged(true);
-            operationHistoryGlobal[j]->lastTilesetEditParams->newTileset->SetChanged(true);
+            operationHistory[j]->newTilesetEditParams->newTileset->SetChanged(true);
+            operationHistory[j]->lastTilesetEditParams->newTileset->SetChanged(true);
         }
-        else if (operationHistoryGlobal[j]->SpritesSpritesetChange)
+        else if (operationHistory[j]->SpritesSpritesetChange)
         {
-            if (operationHistoryGlobal[j]->newSpritesAndSetParam)
+            if (operationHistory[j]->newSpritesAndSetParam)
             {
-                for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->newSpritesAndSetParam->entities)
+                for (LevelComponents::Entity *entityIter: operationHistory[j]->newSpritesAndSetParam->entities)
                 {
                     entityIter->SetChanged(true);
                 }
-                for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->newSpritesAndSetParam->entitySets)
+                for (LevelComponents::EntitySet *entitySetIter: operationHistory[j]->newSpritesAndSetParam->entitySets)
                 {
                     entitySetIter->SetChanged(true);
                 }
             }
-            if (operationHistoryGlobal[j]->lastSpritesAndSetParam)
+            if (operationHistory[j]->lastSpritesAndSetParam)
             {
-                for (LevelComponents::Entity *entityIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entities)
+                for (LevelComponents::Entity *entityIter: operationHistory[j]->lastSpritesAndSetParam->entities)
                 {
                     entityIter->SetChanged(true);
                 }
-                for (LevelComponents::EntitySet *entitySetIter: operationHistoryGlobal[j]->lastSpritesAndSetParam->entitySets)
+                for (LevelComponents::EntitySet *entitySetIter: operationHistory[j]->lastSpritesAndSetParam->entitySets)
                 {
                     entitySetIter->SetChanged(true);
                 }
             }
         }
-        else if (operationHistoryGlobal[j]->AnimatedTileGroupChange)
+        else if (operationHistory[j]->AnimatedTileGroupChange)
         {
-            for (LevelComponents::AnimatedTile8x8Group *&animtedTileGroupIter: operationHistoryGlobal[j]->lastAnimatedTileEditParam->animatedTileGroups)
+            for (LevelComponents::AnimatedTile8x8Group *&animtedTileGroupIter: operationHistory[j]->lastAnimatedTileEditParam->animatedTileGroups)
             {
                 animtedTileGroupIter->SetChanged(true);
             }
-            for (LevelComponents::AnimatedTile8x8Group *&animtedTileGroupIter: operationHistoryGlobal[j]->newAnimatedTileEditParam->animatedTileGroups)
+            for (LevelComponents::AnimatedTile8x8Group *&animtedTileGroupIter: operationHistory[j]->newAnimatedTileEditParam->animatedTileGroups)
             {
                 animtedTileGroupIter->SetChanged(true);
             }
@@ -787,7 +735,7 @@ void ResetChangedBoolsThroughHistory()
 /// Reset all the global elements operation indexes
 /// </summary>
 /// <remarks>
-/// the DeleteUndoHistoryGlobal() function won't set global element indexes back to 0,
+/// the ResetUndoHistory() function now resets all global element indexes back to 0,
 /// by using this function, we can reset some global element operation indexes back to 0 when we need to load a new ROM
 /// </remarks>
 void ResetGlobalElementOperationIndexes()

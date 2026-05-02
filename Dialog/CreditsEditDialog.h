@@ -22,9 +22,21 @@ namespace DialogParams
 {
     struct CreditsEditParams
     {
-        // Default constructor
-        CreditsEditParams() { memset(this, 0, sizeof(struct CreditsEditParams)); }
-        ~CreditsEditParams() {}
+        unsigned char *oldCreditData;
+        unsigned char *newCreditData;
+
+        CreditsEditParams()
+        {
+            oldCreditData = new unsigned char[NUMBEROFCREDITSSCREEN * 1280];
+            newCreditData = new unsigned char[NUMBEROFCREDITSSCREEN * 1280];
+            memset(oldCreditData, 0, NUMBEROFCREDITSSCREEN * 1280);
+            memset(newCreditData, 0, NUMBEROFCREDITSSCREEN * 1280);
+        }
+        ~CreditsEditParams()
+        {
+            delete[] oldCreditData;
+            delete[] newCreditData;
+        }
     };
 }
 

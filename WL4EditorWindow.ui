@@ -109,7 +109,7 @@
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -136,7 +136,7 @@
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -270,8 +270,6 @@
     </widget>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
-    <addaction name="actionUndo_global"/>
-    <addaction name="actionRedo_global"/>
     <addaction name="separator"/>
     <addaction name="actionLevel_Config"/>
     <addaction name="actionRoom_Config"/>
@@ -581,28 +579,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Tab</string>
-   </property>
-  </action>
-  <action name="actionUndo_global">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Undo (global)</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+Z</string>
-   </property>
-  </action>
-  <action name="actionRedo_global">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Redo (global)</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+Y</string>
    </property>
   </action>
   <action name="actionNew_Room">

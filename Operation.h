@@ -6,7 +6,8 @@
 #include "Dialog/CreditsEditDialog.h"
 #include "Dialog/SpritesEditorDialog.h"
 #include "Dialog/AnimatedTileGroupEditorDialog.h"
-#include "LevelComponents/Tile.h"
+#include "Dialog/LevelConfigDialog.h"
+#include "LevelComponents/LevelDoorVector.h"
 
 // Enumerate the type of operations that can be performed and undone
 enum OperationType
@@ -17,6 +18,11 @@ enum OperationType
     ChangeTilesetOperation,
     ChangeSpritesAndSpritesetsOperation,
     ChangeAnimatedTileGroupOperation,
+    DoorMoveChangeOperation,
+    EntityAddOperation,
+    EntityDeleteOperation,
+    DoorVectorChangeOperation,
+    LevelConfigChangeOperation,
 };
 
 // The parameters specific to a tile change operation
@@ -42,31 +48,106 @@ struct TileChangeParams
     }
 };
 
-// The parameters specific to an object move operation
+// The parameters specific to an entity move operation
 struct ObjectMoveParams
 {
     int previousPositionX;
     int previousPositionY;
     int nextPositionX;
     int nextPositionY;
-    int type; // DOOR_TYPE or ENTITY_TYPE
     int objectID;
 
-    const static int DOOR_TYPE = 1;
-    const static int ENTITY_TYPE = 2;
-
     // Create an instance of ObjectMoveParams on the heap, which represents a moved obect
-    static ObjectMoveParams *Create(int pX, int pY, int nX, int nY, int type, int objectID)
+    static ObjectMoveParams *Create(int pX, int pY, int nX, int nY, int objectID)
     {
         struct ObjectMoveParams *om = new struct ObjectMoveParams;
         om->previousPositionX = pX;
         om->previousPositionY = pY;
         om->nextPositionX = nX;
         om->nextPositionY = nY;
-        om->type = type;
         om->objectID = objectID;
 
         return om;
+    }
+};
+
+// Parameters for a door position move (global operation)
+struct DoorMoveParams
+{
+    int roomID;
+    int objectID; // local door ID in the room
+    int previousPositionX;
+    int previousPositionY;
+    int nextPositionX;
+    int nextPositionY;
+
+    static DoorMoveParams *Create(int rID, int objID, int pX, int pY, int nX, int nY)
+    {
+        DoorMoveParams *p = new DoorMoveParams;
+        p->roomID = rID;
+        p->objectID = objID;
+        p->previousPositionX = pX;
+        p->previousPositionY = pY;
+        p->nextPositionX = nX;
+        p->nextPositionY = nY;
+        return p;
+    }
+};
+
+// Parameters for entity add (room-specific)
+// cannot merge EntityAddParams and EntityDeleteParams since creating new entity cannot decide its index in EntityList[difficulty] before creation
+struct EntityAddParams
+{
+    int difficulty;
+    unsigned char XPos;
+    unsigned char YPos;
+    unsigned char EntityTypeLocalID;
+
+    static EntityAddParams *Create(int diff, unsigned char x, unsigned char y, unsigned char eid)
+    {
+        EntityAddParams *p = new EntityAddParams;
+        p->difficulty = diff;
+        p->XPos = x;
+        p->YPos = y;
+        p->EntityTypeLocalID = eid;
+        return p;
+    }
+};
+
+// Parameters for entity delete (room-specific)
+struct EntityDeleteParams
+{
+    int difficulty;
+    int originalIndex; // index in EntityList[difficulty] at time of deletion
+    unsigned char XPos;
+    unsigned char YPos;
+    unsigned char EntityTypeLocalID;
+
+    static EntityDeleteParams *Create(int diff, int idx, unsigned char x, unsigned char y, unsigned char eid)
+    {
+        EntityDeleteParams *p = new EntityDeleteParams;
+        p->difficulty = diff;
+        p->originalIndex = idx;
+        p->XPos = x;
+        p->YPos = y;
+        p->EntityTypeLocalID = eid;
+        return p;
+    }
+};
+
+// Parameters for a full door vector swap (global - handles add, delete, and config changes)
+struct DoorVectorChangeParams
+{
+    LevelComponents::LevelDoorVector *oldDoorVec; // deep copy before change
+    LevelComponents::LevelDoorVector *newDoorVec; // deep copy after change
+
+    static DoorVectorChangeParams *Create(LevelComponents::LevelDoorVector *oldVec,
+                                          LevelComponents::LevelDoorVector *newVec)
+    {
+        DoorVectorChangeParams *p = new DoorVectorChangeParams;
+        p->oldDoorVec = oldVec;
+        p->newDoorVec = newVec;
+        return p;
     }
 };
 
@@ -88,6 +169,12 @@ struct OperationParams
     DialogParams::EntitiesAndEntitySetsEditParams *newSpritesAndSetParam = nullptr;
     DialogParams::AnimatedTileGroupsEditParams *lastAnimatedTileEditParam = nullptr;
     DialogParams::AnimatedTileGroupsEditParams *newAnimatedTileEditParam = nullptr;
+    DialogParams::LevelConfigParams *lastLevelConfigParams = nullptr;
+    DialogParams::LevelConfigParams *newLevelConfigParams = nullptr;
+    DoorMoveParams *doorMoveParams = nullptr;
+    EntityAddParams *entityAddParams = nullptr;
+    EntityDeleteParams *entityDeleteParams = nullptr;
+    DoorVectorChangeParams *doorVectorChangeParams = nullptr;
     bool tileChange = false;
     bool roomConfigChange = false;
     bool objectPositionChange = false;
@@ -95,6 +182,11 @@ struct OperationParams
     bool CreditChange = false;
     bool SpritesSpritesetChange = false;
     bool AnimatedTileGroupChange = false;
+    bool doorMoveChange = false;
+    bool entityAdd = false;
+    bool entityDelete = false;
+    bool doorVectorChange = false;
+    bool levelConfigChange = false;
 
     OperationParams() {}
 
@@ -107,6 +199,14 @@ struct OperationParams
             {
                 struct TileChangeParams *p = tileChangeParams[i];
                 delete p;
+            }
+        }
+        if (objectPositionChange)
+        {
+            if (objectMoveParams)
+            {
+                delete objectMoveParams;
+                objectMoveParams = nullptr;
             }
         }
         if (roomConfigChange)
@@ -168,21 +268,76 @@ struct OperationParams
                 newAnimatedTileEditParam = nullptr;
             }
         }
+        if (CreditChange)
+        {
+            if (lastCreditsEditParams)
+            {
+                delete lastCreditsEditParams;
+                lastCreditsEditParams = nullptr;
+            }
+            if (newCreditsEditParams)
+            {
+                delete newCreditsEditParams;
+                newCreditsEditParams = nullptr;
+            }
+        }
+        if (doorMoveChange)
+        {
+            if (doorMoveParams)
+            {
+                delete doorMoveParams;
+                doorMoveParams = nullptr;
+            }
+        }
+        if (entityAdd)
+        {
+            if (entityAddParams)
+            {
+                delete entityAddParams;
+                entityAddParams = nullptr;
+            }
+        }
+        if (entityDelete)
+        {
+            if (entityDeleteParams)
+            {
+                delete entityDeleteParams;
+                entityDeleteParams = nullptr;
+            }
+        }
+        if (doorVectorChange)
+        {
+            if (doorVectorChangeParams)
+            {
+                delete doorVectorChangeParams->oldDoorVec;
+                delete doorVectorChangeParams->newDoorVec;
+                delete doorVectorChangeParams;
+                doorVectorChangeParams = nullptr;
+            }
+        }
+        if (levelConfigChange)
+        {
+            if (lastLevelConfigParams)
+            {
+                delete lastLevelConfigParams;
+                lastLevelConfigParams = nullptr;
+            }
+            if (newLevelConfigParams)
+            {
+                delete newLevelConfigParams;
+                newLevelConfigParams = nullptr;
+            }
+        }
     }
 };
 
 // Operation function prototypes
 void ExecuteOperation(struct OperationParams *operation);
-void ExecuteOperationGlobal(struct OperationParams *operation);
 void PerformOperation(struct OperationParams *operation);
 void BackTrackOperation(struct OperationParams *operation);
 void UndoOperation();
-void UndoOperationGlobal();
 void RedoOperation();
-void RedoOperationGlobal();
 void ResetUndoHistory();
-void ResetRoomUndoHistory(int currentRoomId);
-void DeleteUndoHistoryGlobal();
 void ResetChangedBoolsThroughHistory();
 void ResetGlobalElementOperationIndexes();
 

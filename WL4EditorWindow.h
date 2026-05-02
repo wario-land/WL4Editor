@@ -134,8 +134,6 @@ private slots:
     void on_roomIncreaseButton_clicked();
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
-    void on_actionUndo_global_triggered();
-    void on_actionRedo_global_triggered();
     void on_actionLevel_Config_triggered();
     void on_actionRoom_Config_triggered();
     void on_actionEdit_Tileset_triggered();
