@@ -92,6 +92,7 @@ public:
     void Graphicsview_UnselectDoorAndEntity();
     void RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig,
                          DialogParams::RoomConfigParams *nextroomconfig);
+    void TrimElementsOutOfRoomBounds(LevelComponents::Room *currentRoom, int newWidth, int newHeight);
     void ShowEntitySetDockWidget() { EntitySetWidget->setVisible(true); }
     void ShowTile16DockWidget() { Tile16SelecterWidget->setVisible(true); }
     void ShowCameraControlDockWidget() { CameraControlWidget->setVisible(true); }

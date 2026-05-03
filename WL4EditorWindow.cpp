@@ -460,7 +460,7 @@ void WL4EditorWindow::EditCurrentTileset(DialogParams::TilesetEditParams *_newTi
 
         // Execute Operation and add changes into the operation history
         OperationParams *operation = new OperationParams;
-        operation->type = ChangeTilesetOperation;
+
         operation->TilesetChange = true;
         operation->lastTilesetEditParams = _oldRoomTilesetEditParams;
         operation->newTilesetEditParams = _newTilesetEditParams;
@@ -628,76 +628,11 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         currentRoom->GetLayer(3)->SetDisabled();
     }
 
-    // Need to modify the inside doors, entities, camera boxes when Room size changed
+    // Trim out-of-range Doors, Entities, Camera limitators when Room size changed
     if (nextroomconfig->RoomWidth != currentroomconfig->RoomWidth ||
             nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
     {
-        // Deal with out-of-range Doors, Entities, Camera limitators
-        // TODO: support Undo/Redo on these elements
-        // -- Door --
-        int nxtRoomWidth = nextroomconfig->RoomWidth, nxtRoomHeight = nextroomconfig->RoomHeight;
-        LevelComponents::LevelDoorVector &allDoor = CurrentLevel->GetDoorListRef();
-        int doornum = allDoor.size();
-        for (int i = doornum - 1; i > 0; i--)
-        {
-            auto curDoor = allDoor.GetDoor(i);
-            if (curDoor.RoomID == currentRoom->GetRoomID()) // if the door is in the current Room
-            {
-                // if the Door top left Tile is out of bound
-                if (curDoor.x1 > (nxtRoomWidth - 1) || curDoor.y1 > (nxtRoomHeight - 1))
-                {
-                    if (curDoor.DoorTypeByte == LevelComponents::_Portal)
-                    {
-                        allDoor.SetDoorPlace(i, 2, 2, 2, 2); // move the portal Door to the top left corner of the Room
-                    }
-                    else
-                    {
-                        CurrentLevel->DeleteDoorByGlobalID(i); // delete all the out-of-bound non-portal Door
-                    }
-                }
-            }
-        }
-
-        // -- Entity --
-        for (uint i = 0; i < 3; i++)
-        {
-            std::vector<struct LevelComponents::EntityRoomAttribute> entitylist = currentRoom->GetEntityListData(i);
-            size_t entitynum = entitylist.size();
-            for (uint j = entitynum; j > 0; j--)
-            {
-                if ((entitylist[j - 1].XPos > (nxtRoomWidth - 1)) || (entitylist[j - 1].YPos > (nxtRoomHeight - 1)))
-                {
-                    currentRoom->DeleteEntity(i, j - 1);
-                    currentRoom->SetEntityListDirty(i, true);
-                }
-            }
-        }
-
-        // -- Camera limitator --
-        std::vector<struct LevelComponents::__CameraControlRecord *> limitatorlist =
-            currentRoom->GetCameraControlRecords(false);
-        size_t limitatornum = limitatorlist.size();
-        size_t k = limitatornum - 1;
-        uint *deleteLimitatorIdlist = new uint[limitatornum](); // set them all 0, index the limitator from 1
-        for (uint i = 0; i < limitatornum; i++)
-        {
-            int x2_prime =
-                (limitatorlist[i]->ChangeValueOffset == 1) ? (limitatorlist[i]->ChangedValue) : (limitatorlist[i]->x2);
-            int y2_prime =
-                (limitatorlist[i]->ChangeValueOffset == 3) ? (limitatorlist[i]->ChangedValue) : (limitatorlist[i]->y2);
-            if ((x2_prime >= nxtRoomWidth) || (y2_prime >= nxtRoomHeight))
-            {
-                deleteLimitatorIdlist[k--] = i + 1; // the id list will be something like: 0 0 0 8 4 2
-            }
-        }
-        for (uint i = 0; i < limitatornum; i++)
-        {
-            if (deleteLimitatorIdlist[i] != 0)
-            {
-                currentRoom->DeleteCameraLimitator(deleteLimitatorIdlist[i] - 1);
-            }
-        }
-        delete[] deleteLimitatorIdlist;
+        TrimElementsOutOfRoomBounds(currentRoom, nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
     }
 
     // reset all the Parameters in Room class, except new layer data pointers, generate them on saving
@@ -713,6 +648,111 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     // Mark the layers as dirty
     for (unsigned int i = 0; i < 3; ++i)
         currentRoom->GetLayer(i)->SetDirty(true);
+}
+
+/// <summary>
+/// Trim doors, entities, and camera limitators that fall outside the new room boundaries.
+/// </summary>
+void WL4EditorWindow::TrimElementsOutOfRoomBounds(LevelComponents::Room *currentRoom, int newWidth, int newHeight)
+{
+    // -- Door --
+    LevelComponents::LevelDoorVector &allDoor = CurrentLevel->GetDoorListRef();
+    int doornum = allDoor.size();
+    for (int i = doornum - 1; i > 0; i--)
+    {
+        auto curDoor = allDoor.GetDoor(i);
+        if (curDoor.RoomID == currentRoom->GetRoomID())
+        {
+            if (curDoor.x1 > (newWidth - 1) || curDoor.y1 > (newHeight - 1))
+            {
+                if (curDoor.DoorTypeByte == LevelComponents::_Portal)
+                {
+                    allDoor.SetDoorPlace(i, 2, 2, 2, 2);
+                }
+                else if (allDoor.GetDoorsByRoomID(curDoor.RoomID).size() < 2)
+                {
+                    // Cannot delete the last door in a room — move it to a safe position
+                    allDoor.SetDoorPlace(i, 2, 2, 2, 2);
+                }
+                else
+                {
+                    CurrentLevel->DeleteDoorByGlobalID(i);
+                }
+            }
+        }
+    }
+
+    // -- Entity --
+    for (uint i = 0; i < 3; i++)
+    {
+        std::vector<struct LevelComponents::EntityRoomAttribute> entitylist = currentRoom->GetEntityListData(i);
+        size_t entitynum = entitylist.size();
+        for (uint j = entitynum; j > 0; j--)
+        {
+            if ((entitylist[j - 1].XPos > (newWidth - 1)) || (entitylist[j - 1].YPos > (newHeight - 1)))
+            {
+                currentRoom->DeleteEntity(i, j - 1);
+                currentRoom->SetEntityListDirty(i, true);
+            }
+        }
+    }
+
+    // -- Camera limitator --
+    std::vector<struct LevelComponents::__CameraControlRecord *> limitatorlist =
+        currentRoom->GetCameraControlRecords(false);
+    size_t limitatornum = limitatorlist.size();
+    if (limitatornum > 0)
+    {
+        size_t k = limitatornum - 1;
+        uint *deleteLimitatorIdlist = new uint[limitatornum]();
+        for (uint i = 0; i < limitatornum; i++)
+        {
+            int x2_prime =
+                (limitatorlist[i]->ChangeValueOffset == 1) ? (limitatorlist[i]->ChangedValue) : (limitatorlist[i]->x2);
+            int y2_prime =
+                (limitatorlist[i]->ChangeValueOffset == 3) ? (limitatorlist[i]->ChangedValue) : (limitatorlist[i]->y2);
+            if ((x2_prime >= newWidth) || (y2_prime >= newHeight))
+            {
+                deleteLimitatorIdlist[k--] = i + 1;
+            }
+        }
+
+        // If all limitators would be deleted and the camera type requires them, preserve one
+        bool hasControlAttrs = (currentRoom->GetCameraControlType() == LevelComponents::HasControlAttrs);
+        if (hasControlAttrs)
+        {
+            size_t deleteCount = 0;
+            for (uint i = 0; i < limitatornum; i++)
+                if (deleteLimitatorIdlist[i] != 0) deleteCount++;
+            if (deleteCount == limitatornum)
+            {
+                // Preserve the limitator with the smallest 1-based index (last non-zero entry)
+                for (int i = (int)limitatornum - 1; i >= 0; i--)
+                {
+                    if (deleteLimitatorIdlist[i] != 0)
+                    {
+                        int idx = deleteLimitatorIdlist[i] - 1;
+                        limitatorlist[idx]->TransboundaryControl = limitatorlist[idx]->x1 = limitatorlist[idx]->y1 = 2;
+                        limitatorlist[idx]->x2 = 16;
+                        limitatorlist[idx]->y2 = 11;
+                        limitatorlist[idx]->ChangedValue = limitatorlist[idx]->ChangeValueOffset = 0xFF;
+                        limitatorlist[idx]->x3 = limitatorlist[idx]->y3 = 0xFF;
+                        deleteLimitatorIdlist[i] = 0;
+                        break;
+                    }
+                }
+            }
+        }
+
+        for (uint i = 0; i < limitatornum; i++)
+        {
+            if (deleteLimitatorIdlist[i] != 0)
+            {
+                currentRoom->DeleteCameraLimitator(deleteLimitatorIdlist[i] - 1);
+            }
+        }
+        delete[] deleteLimitatorIdlist;
+    }
 }
 
 /// <summary>
@@ -1032,9 +1072,8 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
         IfDeleteDoors.setWindowTitle(tr("WL4Editor"));
         IfDeleteDoors.setText(tr(
             "You just triggered the clear-all shortcut for current Room.\nDo you want to delete all the doors in this Room at the same time?\n"
-            "(Only one door will be reserved to render camera boxes correctly and keep data association for entityset settings.\n"
-            "Camera settings will be unaffected regardless.)\n"
-            "Notice: You CANNOT undo this step !"));
+            "(Only one door will be reserved to and keep data association for entityset settings.\n"
+            "Camera limitators will also be reset.)"));
         QPushButton *CancelClearingButton = IfDeleteDoors.addButton(tr("Cancel Clearing"), QMessageBox::RejectRole);
         QPushButton *NoButton = IfDeleteDoors.addButton(tr("No"), QMessageBox::NoRole);
         QPushButton *YesButton = IfDeleteDoors.addButton(tr("Yes"), QMessageBox::ApplyRole);
@@ -1055,9 +1094,46 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
         IfDeleteAllDoors = true;
     }
 
-    // Clear Layers 0, 1, 2
     int currentRoomID = ui->spinBox_RoomID->value();
     LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[currentRoomID];
+
+    // Capture old states before clearing
+    struct OperationParams *operation = new struct OperationParams;
+
+    // -- Layers --
+    int w0 = currentRoom->GetLayer0Width(), h0 = currentRoom->GetLayer0Height();
+    unsigned short *oldLayer0 = nullptr;
+    if (currentRoom->GetLayer(0)->GetMappingType() == LevelComponents::LayerMap16)
+        oldLayer0 = currentRoom->GetLayer(0)->CreateLayerDataCopy();
+
+    int w1 = currentRoom->GetLayer1Width(), h1 = currentRoom->GetLayer1Height();
+    unsigned short *oldLayer1 = nullptr;
+    if (currentRoom->GetLayer(1)->GetMappingType() == LevelComponents::LayerMap16)
+        oldLayer1 = currentRoom->GetLayer(1)->CreateLayerDataCopy();
+
+    int w2 = currentRoom->GetLayer(2)->GetLayerWidth(), h2 = currentRoom->GetLayer(2)->GetLayerHeight();
+    unsigned short *oldLayer2 = nullptr;
+    if (currentRoom->GetLayer(2)->GetMappingType() == LevelComponents::LayerMap16)
+        oldLayer2 = currentRoom->GetLayer(2)->CreateLayerDataCopy();
+
+    // -- Entity lists --
+    std::vector<LevelComponents::EntityRoomAttribute> oldNormal = currentRoom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> oldHard = currentRoom->GetEntityListData(0);
+    std::vector<LevelComponents::EntityRoomAttribute> oldSHard = currentRoom->GetEntityListData(2);
+
+    // -- Doors (if deleting) --
+    LevelComponents::LevelDoorVector *oldDoorVec = nullptr;
+    if (IfDeleteAllDoors)
+        oldDoorVec = new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
+
+    // -- Camera control --
+    auto oldCameraType = currentRoom->GetCameraControlType();
+    std::vector<struct LevelComponents::__CameraControlRecord *> oldCameraRecords;
+    bool hasCameraControl = (oldCameraType == LevelComponents::HasControlAttrs);
+    if (hasCameraControl)
+        oldCameraRecords = currentRoom->GetCameraControlRecords(true);
+
+    // Clear Layers 0, 1, 2
     for (int i = 0; i < 3; ++i)
     {
         LevelComponents::Layer *layer = currentRoom->GetLayer(i);
@@ -1083,17 +1159,88 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
         for (int i = doornum - 1; i > 0; i--)
         {
             auto curDoor = allDoor.GetDoor(i);
-            if (curDoor.RoomID == currentRoom->GetRoomID()) // if the door is in the current Room
+            if (curDoor.RoomID == currentRoom->GetRoomID())
             {
                 curRoomDoorIdIter++;
-                if (curRoomDoorIdIter > 0) // only reserve the first Door. if there is a portal Door in the Room, it has to be the first Door
+                if (curRoomDoorIdIter > 0)
                 {
-                    CurrentLevel->DeleteDoorByGlobalID(i); // delete all the other Doors from the current Room
+                    CurrentLevel->DeleteDoorByGlobalID(i);
                 }
             }
         }
     }
-    // TODO: implement the undo/redo for room delete and add
+
+    // Clear camera limitators — reset to a single default limitator
+    if (hasCameraControl)
+    {
+        while (currentRoom->GetCameraControlRecords(false).size() > 0)
+        {
+            currentRoom->DeleteCameraLimitator((int)currentRoom->GetCameraControlRecords(false).size() - 1);
+        }
+        currentRoom->AddCameraLimitator();
+    }
+
+    // Capture new states after clearing
+    unsigned short *newLayer0 = nullptr, *newLayer1 = nullptr, *newLayer2 = nullptr;
+    if (oldLayer0) newLayer0 = currentRoom->GetLayer(0)->CreateLayerDataCopy();
+    if (oldLayer1) newLayer1 = currentRoom->GetLayer(1)->CreateLayerDataCopy();
+    if (oldLayer2) newLayer2 = currentRoom->GetLayer(2)->CreateLayerDataCopy();
+
+    std::vector<LevelComponents::EntityRoomAttribute> newNormal = currentRoom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> newHard = currentRoom->GetEntityListData(0);
+    std::vector<LevelComponents::EntityRoomAttribute> newSHard = currentRoom->GetEntityListData(2);
+
+    // -- Camera control --
+    auto newCameraType = currentRoom->GetCameraControlType();
+    std::vector<struct LevelComponents::__CameraControlRecord *> newCameraRecords;
+    if (hasCameraControl)
+        newCameraRecords = currentRoom->GetCameraControlRecords(true);
+
+    // Build operation params
+    if (oldLayer0)
+    {
+        operation->layer0Change = true;
+        operation->layer0ChangeParams = LayerChangeParams::Create(oldLayer0, newLayer0, w0, h0);
+        delete[] oldLayer0; delete[] newLayer0;
+    }
+    if (oldLayer1)
+    {
+        operation->layer1Change = true;
+        operation->layer1ChangeParams = LayerChangeParams::Create(oldLayer1, newLayer1, w1, h1);
+        delete[] oldLayer1; delete[] newLayer1;
+    }
+    if (oldLayer2)
+    {
+        operation->layer2Change = true;
+        operation->layer2ChangeParams = LayerChangeParams::Create(oldLayer2, newLayer2, w2, h2);
+        delete[] oldLayer2; delete[] newLayer2;
+    }
+
+    operation->entityNormalChange = true;
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal);
+    operation->entityHardChange = true;
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard);
+    operation->entitySHardChange = true;
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard);
+
+    if (IfDeleteAllDoors)
+    {
+        LevelComponents::LevelDoorVector *newDoorVec =
+            new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
+        operation->doorVectorChange = true;
+        operation->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+    }
+
+    if (hasCameraControl)
+    {
+        operation->cameraControlChange = true;
+        operation->cameraControlChangeParams = CameraControlChangeParams::Create(
+            currentRoom->GetRoomID(),
+            oldCameraType, newCameraType,
+            oldCameraRecords, newCameraRecords);
+    }
+
+    ExecuteOperation(operation);
 
     // UI update
     ResetEntitySetDockWidget();
@@ -1558,12 +1705,67 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     RoomConfigDialog dialog(this, _currentRoomConfigParams);
     if (dialog.exec() == QDialog::Accepted)
     {
-        // Add changes into the operation history
+        DialogParams::RoomConfigParams *newRoomConfigParams = dialog.GetConfigParams(_currentRoomConfigParams);
+
         OperationParams *operation = new OperationParams;
-        operation->type = ChangeRoomConfigOperation;
         operation->roomConfigChange = true;
         operation->lastRoomConfigParams = new DialogParams::RoomConfigParams(*_currentRoomConfigParams);
-        operation->newRoomConfigParams = dialog.GetConfigParams(_currentRoomConfigParams);
+        operation->newRoomConfigParams = newRoomConfigParams;
+
+        // Capture door, entity, and camera states when room dimensions change,
+        // since out-of-bounds elements will be trimmed
+        if (newRoomConfigParams->RoomWidth != _currentRoomConfigParams->RoomWidth ||
+            newRoomConfigParams->RoomHeight != _currentRoomConfigParams->RoomHeight)
+        {
+            LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+            // Capture pre-trim states
+            LevelComponents::LevelDoorVector *oldDoorVec =
+                new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
+
+            std::vector<LevelComponents::EntityRoomAttribute> oldNormal = currentRoom->GetEntityListData(1);
+            std::vector<LevelComponents::EntityRoomAttribute> oldHard = currentRoom->GetEntityListData(0);
+            std::vector<LevelComponents::EntityRoomAttribute> oldSHard = currentRoom->GetEntityListData(2);
+
+            auto oldCameraType = currentRoom->GetCameraControlType();
+            auto oldCameraRecords = currentRoom->GetCameraControlRecords(true);
+
+            // Trim out-of-bounds elements
+            TrimElementsOutOfRoomBounds(currentRoom,
+                                        newRoomConfigParams->RoomWidth,
+                                        newRoomConfigParams->RoomHeight);
+
+            // Capture post-trim states
+            LevelComponents::LevelDoorVector *newDoorVec =
+                new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
+
+            std::vector<LevelComponents::EntityRoomAttribute> newNormal = currentRoom->GetEntityListData(1);
+            std::vector<LevelComponents::EntityRoomAttribute> newHard = currentRoom->GetEntityListData(0);
+            std::vector<LevelComponents::EntityRoomAttribute> newSHard = currentRoom->GetEntityListData(2);
+
+            auto newCameraType = currentRoom->GetCameraControlType();
+            auto newCameraRecords = currentRoom->GetCameraControlRecords(true);
+
+            // Add door change to operation
+            operation->doorVectorChange = true;
+            operation->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+
+            // Add entity list changes to operation
+            operation->entityNormalChange = true;
+            operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal);
+            operation->entityHardChange = true;
+            operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard);
+            operation->entitySHardChange = true;
+            operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard);
+
+            // Add camera control change to operation
+            operation->cameraControlChange = true;
+            operation->cameraControlChangeParams = CameraControlChangeParams::Create(
+                currentRoom->GetRoomID(),
+                oldCameraType, newCameraType,
+                oldCameraRecords, newCameraRecords);
+        }
+
         ExecuteOperation(operation); // Set UnsavedChanges bool inside
     }
 }
@@ -1766,7 +1968,7 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
     unsigned short *newData0 = currentroom->GetLayer(0)->CreateLayerDataCopy();
     unsigned short *newData1 = currentroom->GetLayer(1)->CreateLayerDataCopy();
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->layer0Change = true;
     operation->layer1Change = true;
     operation->layer0ChangeParams = LayerChangeParams::Create(oldData0, newData0, w0, h0);
@@ -1824,7 +2026,7 @@ void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
     unsigned short *newData1 = currentroom->GetLayer(1)->CreateLayerDataCopy();
     unsigned short *newData2 = currentroom->GetLayer(2)->CreateLayerDataCopy();
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->layer1Change = true;
     operation->layer2Change = true;
     operation->layer1ChangeParams = LayerChangeParams::Create(oldData1, newData1, w1, h1);
@@ -1888,7 +2090,7 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
     unsigned short *newData0 = currentroom->GetLayer(0)->CreateLayerDataCopy();
     unsigned short *newData2 = currentroom->GetLayer(2)->CreateLayerDataCopy();
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->layer0Change = true;
     operation->layer2Change = true;
     operation->layer0ChangeParams = LayerChangeParams::Create(oldData0, newData0, w0, h0);
@@ -1923,7 +2125,7 @@ void WL4EditorWindow::on_action_swap_Normal_Hard_triggered()
     std::vector<LevelComponents::EntityRoomAttribute> newNormalList = currentroom->GetEntityListData(1);
     std::vector<LevelComponents::EntityRoomAttribute> newHardList = currentroom->GetEntityListData(0);
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->entityNormalChange = true;
     operation->entityHardChange = true;
     operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormalList, newNormalList);
@@ -1957,7 +2159,7 @@ void WL4EditorWindow::on_action_swap_Hard_S_Hard_triggered()
     std::vector<LevelComponents::EntityRoomAttribute> newHardList = currentroom->GetEntityListData(0);
     std::vector<LevelComponents::EntityRoomAttribute> newSHardList = currentroom->GetEntityListData(2);
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->entityHardChange = true;
     operation->entitySHardChange = true;
     operation->entityHardChangeParams = EntityListChangeParams::Create(oldHardList, newHardList);
@@ -1991,7 +2193,7 @@ void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
     std::vector<LevelComponents::EntityRoomAttribute> newNormalList = currentroom->GetEntityListData(1);
     std::vector<LevelComponents::EntityRoomAttribute> newSHardList = currentroom->GetEntityListData(2);
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->entityNormalChange = true;
     operation->entitySHardChange = true;
     operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormalList, newNormalList);
@@ -2026,7 +2228,7 @@ void WL4EditorWindow::on_action_clear_Layer_0_triggered()
         // Capture new layer data after clear and record history
         unsigned short *newData = layer0->CreateLayerDataCopy();
         struct OperationParams *operation = new struct OperationParams;
-        operation->type = ChangeTileOperation;
+    
         operation->layer0Change = true;
         operation->layer0ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
         delete[] oldData; delete[] newData;
@@ -2059,7 +2261,7 @@ void WL4EditorWindow::on_action_clear_Layer_1_triggered()
         // Capture new layer data after clear and record history
         unsigned short *newData = layer1->CreateLayerDataCopy();
         struct OperationParams *operation = new struct OperationParams;
-        operation->type = ChangeTileOperation;
+    
         operation->layer1Change = true;
         operation->layer1ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
         delete[] oldData; delete[] newData;
@@ -2092,7 +2294,7 @@ void WL4EditorWindow::on_action_clear_Layer_2_triggered()
         // Capture new layer data after clear and record history
         unsigned short *newData = layer2->CreateLayerDataCopy();
         struct OperationParams *operation = new struct OperationParams;
-        operation->type = ChangeTileOperation;
+    
         operation->layer2Change = true;
         operation->layer2ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
         delete[] oldData; delete[] newData;
@@ -2122,7 +2324,7 @@ void WL4EditorWindow::on_action_clear_Normal_triggered()
     // Capture new entity list data after clear and record history
     std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(1);
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->entityNormalChange = true;
     operation->entityNormalChangeParams = EntityListChangeParams::Create(oldList, newList);
     ExecuteOperation(operation);
@@ -2151,7 +2353,7 @@ void WL4EditorWindow::on_action_clear_Hard_triggered()
     // Capture new entity list data after clear and record history
     std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(0);
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->entityHardChange = true;
     operation->entityHardChangeParams = EntityListChangeParams::Create(oldList, newList);
     ExecuteOperation(operation);
@@ -2180,7 +2382,7 @@ void WL4EditorWindow::on_action_clear_S_Hard_triggered()
     // Capture new entity list data after clear and record history
     std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(2);
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->entitySHardChange = true;
     operation->entitySHardChangeParams = EntityListChangeParams::Create(oldList, newList);
     ExecuteOperation(operation);
@@ -2427,7 +2629,7 @@ void WL4EditorWindow::on_actionEdit_Entity_EntitySet_triggered()
 
         // Execute Operation
         OperationParams *operation = new OperationParams;
-        operation->type = ChangeSpritesAndSpritesetsOperation;
+
         operation->SpritesSpritesetChange = true;
         operation->lastSpritesAndSetParam = _oldEntitiesAndEntitysetsEditParams;
         operation->newSpritesAndSetParam = _currentEntitiesAndEntitysetsEditParams;
@@ -2462,7 +2664,7 @@ void WL4EditorWindow::on_action_duplicate_Normal_triggered()
     // Capture new entity list data after copy and record history
     std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(1);
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->entityNormalChange = true;
     operation->entityNormalChangeParams = EntityListChangeParams::Create(oldList, newList);
     ExecuteOperation(operation);
@@ -2493,7 +2695,7 @@ void WL4EditorWindow::on_action_duplicate_Hard_triggered()
     // Capture new entity list data after copy and record history
     std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(0);
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->entityHardChange = true;
     operation->entityHardChangeParams = EntityListChangeParams::Create(oldList, newList);
     ExecuteOperation(operation);
@@ -2524,7 +2726,7 @@ void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
     // Capture new entity list data after copy and record history
     std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(2);
     struct OperationParams *operation = new struct OperationParams;
-    operation->type = ChangeTileOperation;
+
     operation->entitySHardChange = true;
     operation->entitySHardChangeParams = EntityListChangeParams::Create(oldList, newList);
     ExecuteOperation(operation);
@@ -2685,7 +2887,7 @@ void WL4EditorWindow::on_actionEdit_Animated_Tile_Groups_triggered()
 
         // Execute Operation
         OperationParams *operation = new OperationParams;
-        operation->type = ChangeAnimatedTileGroupOperation;
+
         operation->AnimatedTileGroupChange = true;
         operation->lastAnimatedTileEditParam = _oldAnimatedTileGroupsEditParams;
         operation->newAnimatedTileEditParam = _currentAnimatedTileGroupsEditParams;

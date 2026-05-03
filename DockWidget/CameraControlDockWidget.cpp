@@ -254,7 +254,7 @@ void CameraControlDockWidget::CreatePendingCameraOperation()
         return;
 
     auto *op = new OperationParams;
-    op->type = CameraControlChangeOperation;
+
     op->cameraControlChange = true;
 
     int roomID = (int) currentRoom->GetRoomID();

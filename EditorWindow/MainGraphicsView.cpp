@@ -82,7 +82,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                             int layerwidth = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerWidth();
                             int layerheight = singleton->GetCurrentRoom()->GetLayer(selectedLayer)->GetLayerHeight();
                             struct OperationParams *params = new struct OperationParams();
-                            params->type = ChangeTileOperation;
+
                             params->tileChange = true;
                             int rectcuttopheight, rectcutleftsidewidth;
                             int rectcutbottomheight, rectcutrightsidewidth;
@@ -477,7 +477,7 @@ void MainGraphicsView::SetTiles(int tileX, int tileY)
     if (layer->GetLayerData()[selectedTileIndex] == selectedTile && drawwidth == 1 && drawheight == 1)
         return;
     struct OperationParams *params = new struct OperationParams();
-    params->type = ChangeTileOperation;
+
     params->tileChange = true;
     for(int j = 0; j < drawheight; ++j)
     {
@@ -593,7 +593,7 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
             if (!((objectInitialX == tileX) && (objectInitialY == tileY)))
             {
                 struct OperationParams *params = new struct OperationParams();
-                params->type = ObjectMoveOperation;
+
                 params->objectPositionChange = true;
                 params->objectMoveParams = ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY, SelectedEntityID);
                 ExecuteOperation(params);
@@ -680,7 +680,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             if (currentRoom->IsNewEntityPositionInsideRoom(pX, pY))
             {
                 struct OperationParams *params = new struct OperationParams();
-                params->type = ObjectMoveOperation;
+
                 params->objectPositionChange = true;
                 params->objectMoveParams=ObjectMoveParams::Create(oldX, oldY, pX, pY, SelectedEntityID);
                 ExecuteOperation(params);
@@ -802,7 +802,7 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                     {
                         int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
                         struct OperationParams *params = new struct OperationParams();
-                        params->type = ChangeTileOperation;
+                    
                         params->tileChange = true;
                         for(int j = 0; j < rectheight; ++j) // delete rect
                         {

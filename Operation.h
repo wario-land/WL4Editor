@@ -9,23 +9,6 @@
 #include "Dialog/LevelConfigDialog.h"
 #include "LevelComponents/LevelDoorVector.h"
 
-// Enumerate the type of operations that can be performed and undone
-enum OperationType
-{
-    ChangeTileOperation,
-    ChangeRoomConfigOperation,
-    ObjectMoveOperation,
-    ChangeTilesetOperation,
-    ChangeSpritesAndSpritesetsOperation,
-    ChangeAnimatedTileGroupOperation,
-    DoorMoveChangeOperation,
-    EntityAddOperation,
-    EntityDeleteOperation,
-    DoorVectorChangeOperation,
-    LevelConfigChangeOperation,
-    CameraControlChangeOperation,
-};
-
 // The parameters specific to a tile change operation
 struct TileChangeParams
 {
@@ -221,7 +204,6 @@ struct OperationParams;
 struct OperationParams
 {
     // Fields
-    enum OperationType type; // TODO: this seems not needed or those following bools are not needed -- ssp
     std::vector<struct TileChangeParams *> tileChangeParams;
     ObjectMoveParams *objectMoveParams = nullptr;
     DialogParams::RoomConfigParams *lastRoomConfigParams = nullptr;
