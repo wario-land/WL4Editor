@@ -1726,7 +1726,7 @@ static const char *layerSwapFailureMsg = "Swapping Layers failed!";
 void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
-    // swap Layerdata pointers if possible
+    // swap Layerdata if possible
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
     if (!(currentroom->GetLayer(0)->IsEnabled()))
     {
@@ -1738,12 +1738,41 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    unsigned short *dataptr1 = currentroom->GetLayer(0)->GetLayerData();
-    unsigned short *dataptr2 = currentroom->GetLayer(1)->GetLayerData();
-    currentroom->GetLayer(0)->SetLayerData(dataptr2);
-    currentroom->GetLayer(1)->SetLayerData(dataptr1);
 
-    // TODO: add history record
+    // Capture old layer data before swap
+    int w0 = currentroom->GetLayer0Width();
+    int h0 = currentroom->GetLayer0Height();
+    unsigned short *oldData0 = currentroom->GetLayer(0)->CreateLayerDataCopy();
+    int w1 = currentroom->GetLayer1Width();
+    int h1 = currentroom->GetLayer1Height();
+    unsigned short *oldData1 = currentroom->GetLayer(1)->CreateLayerDataCopy();
+
+    // Copy data between layer buffers instead of swapping pointers,
+    // so each layer keeps a buffer sized for its own dimensions
+    int size0 = w0 * h0;
+    int size1 = w1 * h1;
+    unsigned short *layer0Data = currentroom->GetLayer(0)->GetLayerData();
+    unsigned short *layer1Data = currentroom->GetLayer(1)->GetLayerData();
+
+    memcpy(layer0Data, oldData1, 2 * std::min(size0, size1));
+    if (size0 > size1)
+        memset(layer0Data + size1, 0, 2 * (size0 - size1));
+
+    memcpy(layer1Data, oldData0, 2 * std::min(size1, size0));
+    if (size1 > size0)
+        memset(layer1Data + size0, 0, 2 * (size1 - size0));
+
+    // Capture new layer data after swap and record history
+    unsigned short *newData0 = currentroom->GetLayer(0)->CreateLayerDataCopy();
+    unsigned short *newData1 = currentroom->GetLayer(1)->CreateLayerDataCopy();
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->layer0Change = true;
+    operation->layer1Change = true;
+    operation->layer0ChangeParams = LayerChangeParams::Create(oldData0, newData0, w0, h0);
+    operation->layer1ChangeParams = LayerChangeParams::Create(oldData1, newData1, w1, h1);
+    delete[] oldData0; delete[] oldData1; delete[] newData0; delete[] newData1;
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenFull();
@@ -1760,19 +1789,48 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
 void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
-    // swap Layerdata pointers if possible
+    // swap Layerdata if possible
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
     if (!(currentroom->GetLayer(2)->IsEnabled()))
     {
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    unsigned short *dataptr1 = currentroom->GetLayer(1)->GetLayerData();
-    unsigned short *dataptr2 = currentroom->GetLayer(2)->GetLayerData();
-    currentroom->GetLayer(1)->SetLayerData(dataptr2);
-    currentroom->GetLayer(2)->SetLayerData(dataptr1);
 
-    // TODO: add history record
+    // Capture old layer data before swap
+    int w1 = currentroom->GetLayer1Width();
+    int h1 = currentroom->GetLayer1Height();
+    unsigned short *oldData1 = currentroom->GetLayer(1)->CreateLayerDataCopy();
+    int w2 = currentroom->GetLayer(2)->GetLayerWidth();
+    int h2 = currentroom->GetLayer(2)->GetLayerHeight();
+    unsigned short *oldData2 = currentroom->GetLayer(2)->CreateLayerDataCopy();
+
+    // Copy data between layer buffers instead of swapping pointers,
+    // so each layer keeps a buffer sized for its own dimensions
+    int size1 = w1 * h1;
+    int size2 = w2 * h2;
+    unsigned short *layer1Data = currentroom->GetLayer(1)->GetLayerData();
+    unsigned short *layer2Data = currentroom->GetLayer(2)->GetLayerData();
+
+    memcpy(layer1Data, oldData2, 2 * std::min(size1, size2));
+    if (size1 > size2)
+        memset(layer1Data + size2, 0, 2 * (size1 - size2));
+
+    memcpy(layer2Data, oldData1, 2 * std::min(size2, size1));
+    if (size2 > size1)
+        memset(layer2Data + size1, 0, 2 * (size2 - size1));
+
+    // Capture new layer data after swap and record history
+    unsigned short *newData1 = currentroom->GetLayer(1)->CreateLayerDataCopy();
+    unsigned short *newData2 = currentroom->GetLayer(2)->CreateLayerDataCopy();
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->layer1Change = true;
+    operation->layer2Change = true;
+    operation->layer1ChangeParams = LayerChangeParams::Create(oldData1, newData1, w1, h1);
+    operation->layer2ChangeParams = LayerChangeParams::Create(oldData2, newData2, w2, h2);
+    delete[] oldData1; delete[] oldData2; delete[] newData1; delete[] newData2;
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenFull();
@@ -1789,7 +1847,7 @@ void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
 void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
-    // swap Layerdata pointers if possible
+    // swap Layerdata if possible
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
     if (!(currentroom->GetLayer(0)->IsEnabled()) ||
         !(currentroom->GetLayer(2)->IsEnabled()))
@@ -1802,12 +1860,41 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    unsigned short *dataptr1 = currentroom->GetLayer(0)->GetLayerData();
-    unsigned short *dataptr2 = currentroom->GetLayer(2)->GetLayerData();
-    currentroom->GetLayer(0)->SetLayerData(dataptr2);
-    currentroom->GetLayer(2)->SetLayerData(dataptr1);
 
-    // TODO: add history record
+    // Capture old layer data before swap
+    int w0 = currentroom->GetLayer0Width();
+    int h0 = currentroom->GetLayer0Height();
+    unsigned short *oldData0 = currentroom->GetLayer(0)->CreateLayerDataCopy();
+    int w2 = currentroom->GetLayer(2)->GetLayerWidth();
+    int h2 = currentroom->GetLayer(2)->GetLayerHeight();
+    unsigned short *oldData2 = currentroom->GetLayer(2)->CreateLayerDataCopy();
+
+    // Copy data between layer buffers instead of swapping pointers,
+    // so each layer keeps a buffer sized for its own dimensions
+    int size0 = w0 * h0;
+    int size2 = w2 * h2;
+    unsigned short *layer0Data = currentroom->GetLayer(0)->GetLayerData();
+    unsigned short *layer2Data = currentroom->GetLayer(2)->GetLayerData();
+
+    memcpy(layer0Data, oldData2, 2 * std::min(size0, size2));
+    if (size0 > size2)
+        memset(layer0Data + size2, 0, 2 * (size0 - size2));
+
+    memcpy(layer2Data, oldData0, 2 * std::min(size2, size0));
+    if (size2 > size0)
+        memset(layer2Data + size0, 0, 2 * (size2 - size0));
+
+    // Capture new layer data after swap and record history
+    unsigned short *newData0 = currentroom->GetLayer(0)->CreateLayerDataCopy();
+    unsigned short *newData2 = currentroom->GetLayer(2)->CreateLayerDataCopy();
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->layer0Change = true;
+    operation->layer2Change = true;
+    operation->layer0ChangeParams = LayerChangeParams::Create(oldData0, newData0, w0, h0);
+    operation->layer2ChangeParams = LayerChangeParams::Create(oldData2, newData2, w2, h2);
+    delete[] oldData0; delete[] oldData2; delete[] newData0; delete[] newData2;
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenFull();
@@ -1825,9 +1912,23 @@ void WL4EditorWindow::on_action_swap_Normal_Hard_triggered()
 {
     // swap Entity lists
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before swap
+    std::vector<LevelComponents::EntityRoomAttribute> oldNormalList = currentroom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> oldHardList = currentroom->GetEntityListData(0);
+
     currentroom->SwapEntityLists(0, 1);
 
-    // TODO: add history record
+    // Capture new entity list data after swap and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newNormalList = currentroom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> newHardList = currentroom->GetEntityListData(0);
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->entityNormalChange = true;
+    operation->entityHardChange = true;
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormalList, newNormalList);
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHardList, newHardList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -1845,9 +1946,23 @@ void WL4EditorWindow::on_action_swap_Hard_S_Hard_triggered()
 {
     // swap Entity lists
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before swap
+    std::vector<LevelComponents::EntityRoomAttribute> oldHardList = currentroom->GetEntityListData(0);
+    std::vector<LevelComponents::EntityRoomAttribute> oldSHardList = currentroom->GetEntityListData(2);
+
     currentroom->SwapEntityLists(0, 2);
 
-    // TODO: add history record
+    // Capture new entity list data after swap and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newHardList = currentroom->GetEntityListData(0);
+    std::vector<LevelComponents::EntityRoomAttribute> newSHardList = currentroom->GetEntityListData(2);
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->entityHardChange = true;
+    operation->entitySHardChange = true;
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHardList, newHardList);
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHardList, newSHardList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -1865,9 +1980,23 @@ void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
 {
     // swap Entity lists
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before swap
+    std::vector<LevelComponents::EntityRoomAttribute> oldNormalList = currentroom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> oldSHardList = currentroom->GetEntityListData(2);
+
     currentroom->SwapEntityLists(1, 2);
 
-    // TODO: add history record
+    // Capture new entity list data after swap and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newNormalList = currentroom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> newSHardList = currentroom->GetEntityListData(2);
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->entityNormalChange = true;
+    operation->entitySHardChange = true;
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormalList, newNormalList);
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHardList, newSHardList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -1883,12 +2012,26 @@ void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_clear_Layer_0_triggered()
 {
-    LevelComponents::Layer *layer0 = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetLayer(0);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    LevelComponents::Layer *layer0 = currentroom->GetLayer(0);
     if (layer0->GetMappingType() == LevelComponents::LayerMap16)
     {
+        // Capture old layer data before clear
+        int w = currentroom->GetLayer0Width();
+        int h = currentroom->GetLayer0Height();
+        unsigned short *oldData = layer0->CreateLayerDataCopy();
+
         layer0->ResetData();
+
+        // Capture new layer data after clear and record history
+        unsigned short *newData = layer0->CreateLayerDataCopy();
+        struct OperationParams *operation = new struct OperationParams;
+        operation->type = ChangeTileOperation;
+        operation->layer0Change = true;
+        operation->layer0ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
+        delete[] oldData; delete[] newData;
+        ExecuteOperation(operation);
     }
-    // TODO: add history record
 
     // UI update
     RenderScreenFull();
@@ -1902,12 +2045,26 @@ void WL4EditorWindow::on_action_clear_Layer_0_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_clear_Layer_1_triggered()
 {
-    LevelComponents::Layer *layer1 = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetLayer(1);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    LevelComponents::Layer *layer1 = currentroom->GetLayer(1);
     if (layer1->GetMappingType() == LevelComponents::LayerMap16)
     {
+        // Capture old layer data before clear
+        int w = currentroom->GetLayer1Width();
+        int h = currentroom->GetLayer1Height();
+        unsigned short *oldData = layer1->CreateLayerDataCopy();
+
         layer1->ResetData();
+
+        // Capture new layer data after clear and record history
+        unsigned short *newData = layer1->CreateLayerDataCopy();
+        struct OperationParams *operation = new struct OperationParams;
+        operation->type = ChangeTileOperation;
+        operation->layer1Change = true;
+        operation->layer1ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
+        delete[] oldData; delete[] newData;
+        ExecuteOperation(operation);
     }
-    // TODO: add history record
 
     // UI update
     RenderScreenFull();
@@ -1921,12 +2078,26 @@ void WL4EditorWindow::on_action_clear_Layer_1_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_clear_Layer_2_triggered()
 {
-    LevelComponents::Layer *layer2 = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetLayer(2);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    LevelComponents::Layer *layer2 = currentroom->GetLayer(2);
     if (layer2->GetMappingType() == LevelComponents::LayerMap16)
     {
+        // Capture old layer data before clear
+        int w = currentroom->GetLayer(2)->GetLayerWidth();
+        int h = currentroom->GetLayer(2)->GetLayerHeight();
+        unsigned short *oldData = layer2->CreateLayerDataCopy();
+
         layer2->ResetData();
+
+        // Capture new layer data after clear and record history
+        unsigned short *newData = layer2->CreateLayerDataCopy();
+        struct OperationParams *operation = new struct OperationParams;
+        operation->type = ChangeTileOperation;
+        operation->layer2Change = true;
+        operation->layer2ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
+        delete[] oldData; delete[] newData;
+        ExecuteOperation(operation);
     }
-    // TODO: add history record
 
     // UI update
     RenderScreenFull();
@@ -1942,9 +2113,19 @@ void WL4EditorWindow::on_action_clear_Normal_triggered()
 {
     // Delete Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before clear
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(1);
+
     currentroom->ClearEntitylist(1);
 
-    // TODO: add history record
+    // Capture new entity list data after clear and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(1);
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->entityNormalChange = true;
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -1961,9 +2142,19 @@ void WL4EditorWindow::on_action_clear_Hard_triggered()
 {
     // Delete Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before clear
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(0);
+
     currentroom->ClearEntitylist(0);
 
-    // TODO: add history record
+    // Capture new entity list data after clear and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(0);
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->entityHardChange = true;
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -1980,9 +2171,19 @@ void WL4EditorWindow::on_action_clear_S_Hard_triggered()
 {
     // Delete Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before clear
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(2);
+
     currentroom->ClearEntitylist(2);
 
-    // TODO: add history record
+    // Capture new entity list data after clear and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(2);
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->entitySHardChange = true;
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -2250,11 +2451,21 @@ void WL4EditorWindow::on_action_duplicate_Normal_triggered()
 {
     int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
-    // copy Hard Entity list into Super Hard Entity list
+    // copy current difficulty Entity list into Normal Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before copy
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(1);
+
     currentroom->CopyEntityLists(selectedDifficulty, 1);
 
-    // TODO: add history record
+    // Capture new entity list data after copy and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(1);
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->entityNormalChange = true;
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -2271,11 +2482,21 @@ void WL4EditorWindow::on_action_duplicate_Hard_triggered()
 {
     int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
-    // copy  Hard Entity list into Super Hard Entity list
+    // copy current difficulty Entity list into Hard Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before copy
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(0);
+
     currentroom->CopyEntityLists(selectedDifficulty, 0);
 
-    // TODO: add history record
+    // Capture new entity list data after copy and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(0);
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->entityHardChange = true;
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -2292,11 +2513,21 @@ void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
 {
     int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
-    // copy  Hard Entity list into Super Hard Entity list
+    // copy current difficulty Entity list into Super Hard Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before copy
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(2);
+
     currentroom->CopyEntityLists(selectedDifficulty, 2);
 
-    // TODO: add history record
+    // Capture new entity list data after copy and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(2);
+    struct OperationParams *operation = new struct OperationParams;
+    operation->type = ChangeTileOperation;
+    operation->entitySHardChange = true;
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);

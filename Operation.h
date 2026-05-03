@@ -115,6 +115,44 @@ struct EntityAddParams
     }
 };
 
+// Parameters for a full layer data change (swap, clear)
+struct LayerChangeParams
+{
+    unsigned short *oldLayerData;
+    unsigned short *newLayerData;
+    int layerWidth;
+    int layerHeight;
+
+    static LayerChangeParams *Create(unsigned short *oldData, unsigned short *newData, int width, int height)
+    {
+        LayerChangeParams *p = new LayerChangeParams;
+        p->layerWidth = width;
+        p->layerHeight = height;
+        int size = width * height;
+        p->oldLayerData = new unsigned short[size];
+        memcpy(p->oldLayerData, oldData, 2 * size);
+        p->newLayerData = new unsigned short[size];
+        memcpy(p->newLayerData, newData, 2 * size);
+        return p;
+    }
+};
+
+// Parameters for a full entity list data change (swap, clear, duplicate)
+struct EntityListChangeParams
+{
+    std::vector<LevelComponents::EntityRoomAttribute> oldEntityList;
+    std::vector<LevelComponents::EntityRoomAttribute> newEntityList;
+
+    static EntityListChangeParams *Create(std::vector<LevelComponents::EntityRoomAttribute> &oldList,
+                                          std::vector<LevelComponents::EntityRoomAttribute> &newList)
+    {
+        EntityListChangeParams *p = new EntityListChangeParams;
+        p->oldEntityList = oldList;
+        p->newEntityList = newList;
+        return p;
+    }
+};
+
 // Parameters for entity delete (room-specific)
 struct EntityDeleteParams
 {
@@ -203,6 +241,12 @@ struct OperationParams
     EntityDeleteParams *entityDeleteParams = nullptr;
     DoorVectorChangeParams *doorVectorChangeParams = nullptr;
     CameraControlChangeParams *cameraControlChangeParams = nullptr;
+    LayerChangeParams *layer0ChangeParams = nullptr;
+    LayerChangeParams *layer1ChangeParams = nullptr;
+    LayerChangeParams *layer2ChangeParams = nullptr;
+    EntityListChangeParams *entityNormalChangeParams = nullptr;
+    EntityListChangeParams *entityHardChangeParams = nullptr;
+    EntityListChangeParams *entitySHardChangeParams = nullptr;
     bool tileChange = false;
     bool roomConfigChange = false;
     bool objectPositionChange = false;
@@ -216,6 +260,12 @@ struct OperationParams
     bool doorVectorChange = false;
     bool levelConfigChange = false;
     bool cameraControlChange = false;
+    bool layer0Change = false;
+    bool layer1Change = false;
+    bool layer2Change = false;
+    bool entityNormalChange = false;
+    bool entityHardChange = false;
+    bool entitySHardChange = false;
 
     OperationParams() {}
 
@@ -367,6 +417,60 @@ struct OperationParams
             {
                 delete newLevelConfigParams;
                 newLevelConfigParams = nullptr;
+            }
+        }
+        if (layer0Change)
+        {
+            if (layer0ChangeParams)
+            {
+                delete[] layer0ChangeParams->oldLayerData;
+                delete[] layer0ChangeParams->newLayerData;
+                delete layer0ChangeParams;
+                layer0ChangeParams = nullptr;
+            }
+        }
+        if (layer1Change)
+        {
+            if (layer1ChangeParams)
+            {
+                delete[] layer1ChangeParams->oldLayerData;
+                delete[] layer1ChangeParams->newLayerData;
+                delete layer1ChangeParams;
+                layer1ChangeParams = nullptr;
+            }
+        }
+        if (layer2Change)
+        {
+            if (layer2ChangeParams)
+            {
+                delete[] layer2ChangeParams->oldLayerData;
+                delete[] layer2ChangeParams->newLayerData;
+                delete layer2ChangeParams;
+                layer2ChangeParams = nullptr;
+            }
+        }
+        if (entityNormalChange)
+        {
+            if (entityNormalChangeParams)
+            {
+                delete entityNormalChangeParams;
+                entityNormalChangeParams = nullptr;
+            }
+        }
+        if (entityHardChange)
+        {
+            if (entityHardChangeParams)
+            {
+                delete entityHardChangeParams;
+                entityHardChangeParams = nullptr;
+            }
+        }
+        if (entitySHardChange)
+        {
+            if (entitySHardChangeParams)
+            {
+                delete entitySHardChangeParams;
+                entitySHardChangeParams = nullptr;
             }
         }
     }

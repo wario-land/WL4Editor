@@ -74,6 +74,48 @@ void PerformOperation(struct OperationParams *operation)
         singleton->RenderScreenTilesChange(tilechangelist2, tl2);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo tile changes."));
     }
+    if (operation->layer0Change)
+    {
+        room = singleton->GetCurrentRoom();
+        auto *layer0 = room->GetLayer(0);
+        auto *p = operation->layer0ChangeParams;
+        if (layer0->GetLayerWidth() == p->layerWidth && layer0->GetLayerHeight() == p->layerHeight)
+        {
+            memcpy(layer0->GetLayerData(), p->newLayerData, 2 * p->layerWidth * p->layerHeight);
+            layer0->SetDirty(true);
+        }
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Layer 0 changes."));
+    }
+    if (operation->layer1Change)
+    {
+        room = singleton->GetCurrentRoom();
+        auto *layer1 = room->GetLayer(1);
+        auto *p = operation->layer1ChangeParams;
+        if (layer1->GetLayerWidth() == p->layerWidth && layer1->GetLayerHeight() == p->layerHeight)
+        {
+            memcpy(layer1->GetLayerData(), p->newLayerData, 2 * p->layerWidth * p->layerHeight);
+            layer1->SetDirty(true);
+        }
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Layer 1 changes."));
+    }
+    if (operation->layer2Change)
+    {
+        room = singleton->GetCurrentRoom();
+        auto *layer2 = room->GetLayer(2);
+        auto *p = operation->layer2ChangeParams;
+        if (layer2->GetLayerWidth() == p->layerWidth && layer2->GetLayerHeight() == p->layerHeight)
+        {
+            memcpy(layer2->GetLayerData(), p->newLayerData, 2 * p->layerWidth * p->layerHeight);
+            layer2->SetDirty(true);
+        }
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Layer 2 changes."));
+    }
     if (operation->roomConfigChange)
     {
         // change the width and height for all layers
@@ -161,6 +203,36 @@ void PerformOperation(struct OperationParams *operation)
         singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo entity delete."));
+    }
+    if (operation->entityNormalChange)
+    {
+        auto *ep = operation->entityNormalChangeParams;
+        room = singleton->GetCurrentRoom();
+        room->SetEntityListData(1, ep->newEntityList);
+        room->SetEntityListDirty(1, true);
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Entity Normal list changes."));
+    }
+    if (operation->entityHardChange)
+    {
+        auto *ep = operation->entityHardChangeParams;
+        room = singleton->GetCurrentRoom();
+        room->SetEntityListData(0, ep->newEntityList);
+        room->SetEntityListDirty(0, true);
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Entity Hard list changes."));
+    }
+    if (operation->entitySHardChange)
+    {
+        auto *ep = operation->entitySHardChangeParams;
+        room = singleton->GetCurrentRoom();
+        room->SetEntityListData(2, ep->newEntityList);
+        room->SetEntityListDirty(2, true);
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Entity S-Hard list changes."));
     }
     if (operation->doorVectorChange)
     {
@@ -345,6 +417,48 @@ void BackTrackOperation(struct OperationParams *operation)
         // hint to show undo operation
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo tile changes."));
     }
+    if (operation->layer0Change)
+    {
+        room = singleton->GetCurrentRoom();
+        auto *layer0 = room->GetLayer(0);
+        auto *p = operation->layer0ChangeParams;
+        if (layer0->GetLayerWidth() == p->layerWidth && layer0->GetLayerHeight() == p->layerHeight)
+        {
+            memcpy(layer0->GetLayerData(), p->oldLayerData, 2 * p->layerWidth * p->layerHeight);
+            layer0->SetDirty(true);
+        }
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Layer 0 changes."));
+    }
+    if (operation->layer1Change)
+    {
+        room = singleton->GetCurrentRoom();
+        auto *layer1 = room->GetLayer(1);
+        auto *p = operation->layer1ChangeParams;
+        if (layer1->GetLayerWidth() == p->layerWidth && layer1->GetLayerHeight() == p->layerHeight)
+        {
+            memcpy(layer1->GetLayerData(), p->oldLayerData, 2 * p->layerWidth * p->layerHeight);
+            layer1->SetDirty(true);
+        }
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Layer 1 changes."));
+    }
+    if (operation->layer2Change)
+    {
+        room = singleton->GetCurrentRoom();
+        auto *layer2 = room->GetLayer(2);
+        auto *p = operation->layer2ChangeParams;
+        if (layer2->GetLayerWidth() == p->layerWidth && layer2->GetLayerHeight() == p->layerHeight)
+        {
+            memcpy(layer2->GetLayerData(), p->oldLayerData, 2 * p->layerWidth * p->layerHeight);
+            layer2->SetDirty(true);
+        }
+        singleton->RenderScreenFull();
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Layer 2 changes."));
+    }
     if (operation->roomConfigChange)
     {
         // new to last
@@ -430,6 +544,36 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo entity delete."));
+    }
+    if (operation->entityNormalChange)
+    {
+        auto *ep = operation->entityNormalChangeParams;
+        room = singleton->GetCurrentRoom();
+        room->SetEntityListData(1, ep->oldEntityList);
+        room->SetEntityListDirty(1, true);
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Entity Normal list changes."));
+    }
+    if (operation->entityHardChange)
+    {
+        auto *ep = operation->entityHardChangeParams;
+        room = singleton->GetCurrentRoom();
+        room->SetEntityListData(0, ep->oldEntityList);
+        room->SetEntityListDirty(0, true);
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Entity Hard list changes."));
+    }
+    if (operation->entitySHardChange)
+    {
+        auto *ep = operation->entitySHardChangeParams;
+        room = singleton->GetCurrentRoom();
+        room->SetEntityListData(2, ep->oldEntityList);
+        room->SetEntityListDirty(2, true);
+        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Entity S-Hard list changes."));
     }
     if (operation->doorVectorChange)
     {
