@@ -1,5 +1,7 @@
 ﻿#include "Operation.h"
 #include "WL4EditorWindow.h"
+#include "WL4Constants.h"
+#include "ROMUtils.h"
 
 #include <deque>
 
@@ -334,6 +336,17 @@ void PerformOperation(struct OperationParams *operation)
         singleton->RenderScreenFull();
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Animated Tile Group changes."));
+    }
+    if (operation->WallPaintChange)
+    {
+        auto *wp = operation->wallPaintChangeParams;
+        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], wp->newGFXData, 1024 * 5 * 6);
+        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], wp->newPassageColor, 32 * 5 * 6);
+        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], wp->newPassageGray, 32 * 5 * 6);
+        for (auto *block : wp->scatteredBlocks)
+            memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[block->romAddr], block->newData, block->size);
+        singleton->SetUnsavedChanges(true);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Wall Paint changes."));
     }
     if (operation->cameraControlChange)
     {
@@ -681,6 +694,16 @@ void BackTrackOperation(struct OperationParams *operation)
         singleton->SetUnsavedChanges(true);
         CurrentAnimatedTileGroupOperationId = operationIndex;
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Animated Tile Group changes."));
+    }
+    if (operation->WallPaintChange)
+    {
+        auto *wp = operation->wallPaintChangeParams;
+        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], wp->oldGFXData, 1024 * 5 * 6);
+        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], wp->oldPassageColor, 32 * 5 * 6);
+        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], wp->oldPassageGray, 32 * 5 * 6);
+        for (auto *block : wp->scatteredBlocks)
+            memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[block->romAddr], block->oldData, block->size);
+        singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Wall Paint changes."));
     }
     if (operation->cameraControlChange)
     {

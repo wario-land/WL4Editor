@@ -2904,14 +2904,93 @@ void WL4EditorWindow::on_actionEdit_Animated_Tile_Groups_triggered()
 
 void WL4EditorWindow::on_actionEdit_Wall_Paints_triggered()
 {
-    WallPaintEditorDialog dialog;
+    // Capture old ROM data at all locations the dialog may modify
+    unsigned char oldGFX[1024 * 5 * 6];
+    unsigned char oldPassageColor[32 * 5 * 6];
+    unsigned char oldPassageGray[32 * 5 * 6];
+    memcpy(oldGFX, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], sizeof(oldGFX));
+    memcpy(oldPassageColor, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], sizeof(oldPassageColor));
+    memcpy(oldPassageGray, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], sizeof(oldPassageGray));
 
-    // If OK is pressed, then save changes to the temp rom data
+    // Collect scattered data addresses and capture old data
+    struct ScatteredCapture {
+        unsigned int addr;
+        unsigned int size;
+        unsigned char *oldData;
+    };
+    std::vector<ScatteredCapture> captures;
+
+    for (int passage = 0; passage < 6; passage++)
+    {
+        unsigned int mmapAddr = ROMUtils::PointerFromData(
+            WL4Constants::WallPaintPalSixInOneMMapColorPtrTable + 4 * passage);
+
+        for (int level = 0; level < 4; level++)
+        {
+            unsigned int gradAddr = ROMUtils::PointerFromData(
+                WL4Constants::WallPaintPalStartLevelPointerTable + passage * 16 + level * 4);
+            if (!gradAddr) continue;
+
+            // Gradient palette data (256 bytes)
+            ScatteredCapture gradCap;
+            gradCap.addr = gradAddr;
+            gradCap.size = 256;
+            gradCap.oldData = new unsigned char[256];
+            memcpy(gradCap.oldData, &ROMUtils::ROMFileMetadata->ROMDataPtr[gradAddr], 256);
+            captures.push_back(gradCap);
+
+            // MMAP palette data (32 bytes per level)
+            ScatteredCapture mmapCap;
+            mmapCap.addr = mmapAddr + 32 * (0xA + level);
+            mmapCap.size = 32;
+            mmapCap.oldData = new unsigned char[32];
+            memcpy(mmapCap.oldData, &ROMUtils::ROMFileMetadata->ROMDataPtr[mmapCap.addr], 32);
+            captures.push_back(mmapCap);
+        }
+
+        // Boss level MMAP palette (always written)
+        ScatteredCapture bossCap;
+        bossCap.addr = mmapAddr + 32 * (0xA + 4);
+        bossCap.size = 32;
+        bossCap.oldData = new unsigned char[32];
+        memcpy(bossCap.oldData, &ROMUtils::ROMFileMetadata->ROMDataPtr[bossCap.addr], 32);
+        captures.push_back(bossCap);
+    }
+
+    WallPaintEditorDialog dialog;
     auto acc = dialog.exec();
     if (acc == QDialog::Accepted)
     {
         dialog.AcceptChanges();
-        SetUnsavedChanges(true);
+
+        // Capture new ROM data
+        unsigned char newGFX[1024 * 5 * 6];
+        unsigned char newPassageColor[32 * 5 * 6];
+        unsigned char newPassageGray[32 * 5 * 6];
+        memcpy(newGFX, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], sizeof(newGFX));
+        memcpy(newPassageColor, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], sizeof(newPassageColor));
+        memcpy(newPassageGray, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], sizeof(newPassageGray));
+
+        // Build operation params
+        WallPaintChangeParams *wp = WallPaintChangeParams::Create(
+            oldGFX, newGFX, oldPassageColor, newPassageColor, oldPassageGray, newPassageGray);
+
+        for (auto &cap : captures)
+        {
+            wp->AddScatteredBlock(cap.addr, cap.size, cap.oldData,
+                                  &ROMUtils::ROMFileMetadata->ROMDataPtr[cap.addr]);
+            delete[] cap.oldData;
+        }
+
+        struct OperationParams *operation = new struct OperationParams;
+        operation->WallPaintChange = true;
+        operation->wallPaintChangeParams = wp;
+        ExecuteOperation(operation);
+    }
+    else
+    {
+        for (auto &cap : captures)
+            delete[] cap.oldData;
     }
 }
 
