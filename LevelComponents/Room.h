@@ -201,7 +201,6 @@ namespace LevelComponents
         int GetLayer2MappingParam() { return RoomHeader.Layer2MappingType; }
 
         // Setters
-        void SetRoomID(int new_room_id) { RoomID = new_room_id; }
         bool AddEntity(int XPos, int YPos, int localEntityTypeId, int difficulty = -1);
         void DeleteCameraLimitator(int index);
         void SetCameraControlRecords(std::vector<struct __CameraControlRecord *> newRecords)

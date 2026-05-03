@@ -2925,27 +2925,3 @@ void WL4EditorWindow::on_spinBox_RoomID_valueChanged(int arg1)
         if (sender() != nullptr) SetCurrentRoomId(arg1, true);
     }
 }
-
-void WL4EditorWindow::on_action_swap_Rooms_triggered()
-{
-    unsigned int currentroomid = ui->spinBox_RoomID->value();
-    bool okay = false;
-    int value = QInputDialog::getInt(this, QApplication::applicationName(),
-                                     tr("input a Room Id to apply the Room swap with the current Room.\n"
-                                        "Notice: You CANNOT undo this step !"), currentroomid,
-                                     0, CurrentLevel->GetRooms().size() - 1, 1, &okay);
-    if (okay)
-    {
-        if (value == currentroomid)
-        {
-            OutputWidget->PrintString(tr("You cannot swap the room with itself."));
-            return;
-        }
-        else if (CurrentLevel->SwapRooms(currentroomid, value))
-        {
-            SetUnsavedChanges(true);
-            SetCurrentRoomId(ui->spinBox_RoomID->value());
-        }
-    }
-}
-
