@@ -92,6 +92,7 @@ public:
     void Graphicsview_UnselectDoorAndEntity();
     void RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig,
                          DialogParams::RoomConfigParams *nextroomconfig);
+    void TrimElementsOutOfRoomBounds(LevelComponents::Room *currentRoom, int newWidth, int newHeight);
     void ShowEntitySetDockWidget() { EntitySetWidget->setVisible(true); }
     void ShowTile16DockWidget() { Tile16SelecterWidget->setVisible(true); }
     void ShowCameraControlDockWidget() { CameraControlWidget->setVisible(true); }
@@ -103,6 +104,7 @@ public:
     {
         CameraControlWidget->PopulateCameraControlInfo(CurrentLevel->GetRooms()[GetCurrentRoomId()]);
     }
+    void CommitPendingCameraOperation() { CameraControlWidget->CommitCameraOperation(); }
     void DeleteEntity(int EntityIndex) { CurrentLevel->GetRooms()[GetCurrentRoomId()]->DeleteEntity(EntityIndex); }
     bool DeleteDoor(int globalDoorIndex);
     void SetEditModeWidgetDifficultyRadioBox(int rd) { EditModeWidget->SetDifficultyRadioBox(rd); }
@@ -134,8 +136,6 @@ private slots:
     void on_roomIncreaseButton_clicked();
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
-    void on_actionUndo_global_triggered();
-    void on_actionRedo_global_triggered();
     void on_actionLevel_Config_triggered();
     void on_actionRoom_Config_triggered();
     void on_actionEdit_Tileset_triggered();
@@ -175,7 +175,6 @@ private slots:
     void on_actionEdit_Animated_Tile_Groups_triggered();
     void on_actionEdit_Wall_Paints_triggered();
     void on_spinBox_RoomID_valueChanged(int arg1);
-    void on_action_swap_Rooms_triggered();
 };
 
 #endif // WL4EDITORWINDOW_H

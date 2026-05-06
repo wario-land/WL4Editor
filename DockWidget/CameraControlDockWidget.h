@@ -11,6 +11,8 @@
 
 #include "LevelComponents/Room.h"
 
+struct OperationParams;
+
 namespace Ui
 {
     class CameraControlDockWidget;
@@ -29,7 +31,9 @@ private:
     int CurrentRoomWidth = 0;
     int CurrentRoomHeight = 0;
     bool IsSavingData = false;
+    OperationParams *pendingCameraOperation = nullptr;
     void SetCurrentLimitator();
+    void CreatePendingCameraOperation();
     void UpdateSpinboxesByListviewItemID(int item_id);
     void SetListviewItemText(int row);
     void PaintListView();
@@ -56,6 +60,7 @@ public:
     explicit CameraControlDockWidget(QWidget *parent = 0);
     ~CameraControlDockWidget();
     void PopulateCameraControlInfo(LevelComponents::Room *currentroom);
+    void CommitCameraOperation();
     static void StaticInitialization();
     static const unsigned int MAX_CAMERA_LIMITATORS = 100;
 

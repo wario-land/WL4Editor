@@ -8,6 +8,26 @@
 #include <QValidator> // include <QRegExp> and <QRegExpValidator>
 #include <string>
 
+namespace DialogParams
+{
+    struct LevelConfigParams
+    {
+        QString oldLevelName;
+        QString oldLevelNameJ;
+        int oldHModeTimer;
+        int oldNModeTimer;
+        int oldSHModeTimer;
+        QString newLevelName;
+        QString newLevelNameJ;
+        int newHModeTimer;
+        int newNModeTimer;
+        int newSHModeTimer;
+
+        LevelConfigParams() {}
+        ~LevelConfigParams() {}
+    };
+}
+
 namespace Ui
 {
     class LevelConfigDialog;

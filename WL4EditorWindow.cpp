@@ -129,8 +129,6 @@ WL4EditorWindow::~WL4EditorWindow()
         ROMUtils::entities[i] = nullptr;
     }
     ResetUndoHistory();
-    DeleteUndoHistoryGlobal();
-
     if (CurrentLevel)
     {
         delete CurrentLevel;
@@ -270,7 +268,6 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
             ROMUtils::entities[i] = nullptr;
         }
         ResetUndoHistory();
-        DeleteUndoHistoryGlobal();
         ResetGlobalElementOperationIndexes();
     }
 
@@ -463,11 +460,11 @@ void WL4EditorWindow::EditCurrentTileset(DialogParams::TilesetEditParams *_newTi
 
         // Execute Operation and add changes into the operation history
         OperationParams *operation = new OperationParams;
-        operation->type = ChangeTilesetOperation;
+
         operation->TilesetChange = true;
         operation->lastTilesetEditParams = _oldRoomTilesetEditParams;
         operation->newTilesetEditParams = _newTilesetEditParams;
-        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
+        ExecuteOperation(operation); // Set UnsavedChanges bool inside
     }
     else
     {
@@ -496,8 +493,6 @@ void WL4EditorWindow::UIStartUp()
         ui->menuImport_from_ROM->setEnabled(true);
         ui->actionUndo->setEnabled(true);
         ui->actionRedo->setEnabled(true);
-        ui->actionUndo_global->setEnabled(true);
-        ui->actionRedo_global->setEnabled(true);
         ui->actionLevel_Config->setEnabled(true);
         ui->actionRoom_Config->setEnabled(true);
         ui->actionEdit_Animated_Tile_Groups->setEnabled(true);
@@ -633,76 +628,11 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
         currentRoom->GetLayer(3)->SetDisabled();
     }
 
-    // Need to modify the inside doors, entities, camera boxes when Room size changed
+    // Trim out-of-range Doors, Entities, Camera limitators when Room size changed
     if (nextroomconfig->RoomWidth != currentroomconfig->RoomWidth ||
             nextroomconfig->RoomHeight != currentroomconfig->RoomHeight)
     {
-        // Deal with out-of-range Doors, Entities, Camera limitators
-        // TODO: support Undo/Redo on these elements
-        // -- Door --
-        int nxtRoomWidth = nextroomconfig->RoomWidth, nxtRoomHeight = nextroomconfig->RoomHeight;
-        LevelComponents::LevelDoorVector &allDoor = CurrentLevel->GetDoorListRef();
-        int doornum = allDoor.size();
-        for (int i = doornum - 1; i > 0; i--)
-        {
-            auto curDoor = allDoor.GetDoor(i);
-            if (curDoor.RoomID == currentRoom->GetRoomID()) // if the door is in the current Room
-            {
-                // if the Door top left Tile is out of bound
-                if (curDoor.x1 > (nxtRoomWidth - 1) || curDoor.y1 > (nxtRoomHeight - 1))
-                {
-                    if (curDoor.DoorTypeByte == LevelComponents::_Portal)
-                    {
-                        allDoor.SetDoorPlace(i, 2, 2, 2, 2); // move the portal Door to the top left corner of the Room
-                    }
-                    else
-                    {
-                        CurrentLevel->DeleteDoorByGlobalID(i); // delete all the out-of-bound non-portal Door
-                    }
-                }
-            }
-        }
-
-        // -- Entity --
-        for (uint i = 0; i < 3; i++)
-        {
-            std::vector<struct LevelComponents::EntityRoomAttribute> entitylist = currentRoom->GetEntityListData(i);
-            size_t entitynum = entitylist.size();
-            for (uint j = entitynum; j > 0; j--)
-            {
-                if ((entitylist[j - 1].XPos > (nxtRoomWidth - 1)) || (entitylist[j - 1].YPos > (nxtRoomHeight - 1)))
-                {
-                    currentRoom->DeleteEntity(i, j - 1);
-                    currentRoom->SetEntityListDirty(i, true);
-                }
-            }
-        }
-
-        // -- Camera limitator --
-        std::vector<struct LevelComponents::__CameraControlRecord *> limitatorlist =
-            currentRoom->GetCameraControlRecords(false);
-        size_t limitatornum = limitatorlist.size();
-        size_t k = limitatornum - 1;
-        uint *deleteLimitatorIdlist = new uint[limitatornum](); // set them all 0, index the limitator from 1
-        for (uint i = 0; i < limitatornum; i++)
-        {
-            int x2_prime =
-                (limitatorlist[i]->ChangeValueOffset == 1) ? (limitatorlist[i]->ChangedValue) : (limitatorlist[i]->x2);
-            int y2_prime =
-                (limitatorlist[i]->ChangeValueOffset == 3) ? (limitatorlist[i]->ChangedValue) : (limitatorlist[i]->y2);
-            if ((x2_prime >= nxtRoomWidth) || (y2_prime >= nxtRoomHeight))
-            {
-                deleteLimitatorIdlist[k--] = i + 1; // the id list will be something like: 0 0 0 8 4 2
-            }
-        }
-        for (uint i = 0; i < limitatornum; i++)
-        {
-            if (deleteLimitatorIdlist[i] != 0)
-            {
-                currentRoom->DeleteCameraLimitator(deleteLimitatorIdlist[i] - 1);
-            }
-        }
-        delete[] deleteLimitatorIdlist;
+        TrimElementsOutOfRoomBounds(currentRoom, nextroomconfig->RoomWidth, nextroomconfig->RoomHeight);
     }
 
     // reset all the Parameters in Room class, except new layer data pointers, generate them on saving
@@ -718,6 +648,111 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     // Mark the layers as dirty
     for (unsigned int i = 0; i < 3; ++i)
         currentRoom->GetLayer(i)->SetDirty(true);
+}
+
+/// <summary>
+/// Trim doors, entities, and camera limitators that fall outside the new room boundaries.
+/// </summary>
+void WL4EditorWindow::TrimElementsOutOfRoomBounds(LevelComponents::Room *currentRoom, int newWidth, int newHeight)
+{
+    // -- Door --
+    LevelComponents::LevelDoorVector &allDoor = CurrentLevel->GetDoorListRef();
+    int doornum = allDoor.size();
+    for (int i = doornum - 1; i > 0; i--)
+    {
+        auto curDoor = allDoor.GetDoor(i);
+        if (curDoor.RoomID == currentRoom->GetRoomID())
+        {
+            if (curDoor.x1 > (newWidth - 1) || curDoor.y1 > (newHeight - 1))
+            {
+                if (curDoor.DoorTypeByte == LevelComponents::_Portal)
+                {
+                    allDoor.SetDoorPlace(i, 2, 2, 2, 2);
+                }
+                else if (allDoor.GetDoorsByRoomID(curDoor.RoomID).size() < 2)
+                {
+                    // Cannot delete the last door in a room — move it to a safe position
+                    allDoor.SetDoorPlace(i, 2, 2, 2, 2);
+                }
+                else
+                {
+                    CurrentLevel->DeleteDoorByGlobalID(i);
+                }
+            }
+        }
+    }
+
+    // -- Entity --
+    for (uint i = 0; i < 3; i++)
+    {
+        std::vector<struct LevelComponents::EntityRoomAttribute> entitylist = currentRoom->GetEntityListData(i);
+        size_t entitynum = entitylist.size();
+        for (uint j = entitynum; j > 0; j--)
+        {
+            if ((entitylist[j - 1].XPos > (newWidth - 1)) || (entitylist[j - 1].YPos > (newHeight - 1)))
+            {
+                currentRoom->DeleteEntity(i, j - 1);
+                currentRoom->SetEntityListDirty(i, true);
+            }
+        }
+    }
+
+    // -- Camera limitator --
+    std::vector<struct LevelComponents::__CameraControlRecord *> limitatorlist =
+        currentRoom->GetCameraControlRecords(false);
+    size_t limitatornum = limitatorlist.size();
+    if (limitatornum > 0)
+    {
+        size_t k = limitatornum - 1;
+        uint *deleteLimitatorIdlist = new uint[limitatornum]();
+        for (uint i = 0; i < limitatornum; i++)
+        {
+            int x2_prime =
+                (limitatorlist[i]->ChangeValueOffset == 1) ? (limitatorlist[i]->ChangedValue) : (limitatorlist[i]->x2);
+            int y2_prime =
+                (limitatorlist[i]->ChangeValueOffset == 3) ? (limitatorlist[i]->ChangedValue) : (limitatorlist[i]->y2);
+            if ((x2_prime >= newWidth) || (y2_prime >= newHeight))
+            {
+                deleteLimitatorIdlist[k--] = i + 1;
+            }
+        }
+
+        // If all limitators would be deleted and the camera type requires them, preserve one
+        bool hasControlAttrs = (currentRoom->GetCameraControlType() == LevelComponents::HasControlAttrs);
+        if (hasControlAttrs)
+        {
+            size_t deleteCount = 0;
+            for (uint i = 0; i < limitatornum; i++)
+                if (deleteLimitatorIdlist[i] != 0) deleteCount++;
+            if (deleteCount == limitatornum)
+            {
+                // Preserve the limitator with the smallest 1-based index (last non-zero entry)
+                for (int i = (int)limitatornum - 1; i >= 0; i--)
+                {
+                    if (deleteLimitatorIdlist[i] != 0)
+                    {
+                        int idx = deleteLimitatorIdlist[i] - 1;
+                        limitatorlist[idx]->TransboundaryControl = limitatorlist[idx]->x1 = limitatorlist[idx]->y1 = 2;
+                        limitatorlist[idx]->x2 = 16;
+                        limitatorlist[idx]->y2 = 11;
+                        limitatorlist[idx]->ChangedValue = limitatorlist[idx]->ChangeValueOffset = 0xFF;
+                        limitatorlist[idx]->x3 = limitatorlist[idx]->y3 = 0xFF;
+                        deleteLimitatorIdlist[i] = 0;
+                        break;
+                    }
+                }
+            }
+        }
+
+        for (uint i = 0; i < limitatornum; i++)
+        {
+            if (deleteLimitatorIdlist[i] != 0)
+            {
+                currentRoom->DeleteCameraLimitator(deleteLimitatorIdlist[i] - 1);
+            }
+        }
+        delete[] deleteLimitatorIdlist;
+    }
 }
 
 /// <summary>
@@ -1037,9 +1072,8 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
         IfDeleteDoors.setWindowTitle(tr("WL4Editor"));
         IfDeleteDoors.setText(tr(
             "You just triggered the clear-all shortcut for current Room.\nDo you want to delete all the doors in this Room at the same time?\n"
-            "(Only one door will be reserved to render camera boxes correctly and keep data association for entityset settings.\n"
-            "Camera settings will be unaffected regardless.)\n"
-            "Notice: You CANNOT undo this step !"));
+            "(Only one door will be reserved to and keep data association for entityset settings.\n"
+            "Camera limitators will also be reset.)"));
         QPushButton *CancelClearingButton = IfDeleteDoors.addButton(tr("Cancel Clearing"), QMessageBox::RejectRole);
         QPushButton *NoButton = IfDeleteDoors.addButton(tr("No"), QMessageBox::NoRole);
         QPushButton *YesButton = IfDeleteDoors.addButton(tr("Yes"), QMessageBox::ApplyRole);
@@ -1060,9 +1094,46 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
         IfDeleteAllDoors = true;
     }
 
-    // Clear Layers 0, 1, 2
     int currentRoomID = ui->spinBox_RoomID->value();
     LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[currentRoomID];
+
+    // Capture old states before clearing
+    struct OperationParams *operation = new struct OperationParams;
+
+    // -- Layers --
+    int w0 = currentRoom->GetLayer0Width(), h0 = currentRoom->GetLayer0Height();
+    unsigned short *oldLayer0 = nullptr;
+    if (currentRoom->GetLayer(0)->GetMappingType() == LevelComponents::LayerMap16)
+        oldLayer0 = currentRoom->GetLayer(0)->CreateLayerDataCopy();
+
+    int w1 = currentRoom->GetLayer1Width(), h1 = currentRoom->GetLayer1Height();
+    unsigned short *oldLayer1 = nullptr;
+    if (currentRoom->GetLayer(1)->GetMappingType() == LevelComponents::LayerMap16)
+        oldLayer1 = currentRoom->GetLayer(1)->CreateLayerDataCopy();
+
+    int w2 = currentRoom->GetLayer(2)->GetLayerWidth(), h2 = currentRoom->GetLayer(2)->GetLayerHeight();
+    unsigned short *oldLayer2 = nullptr;
+    if (currentRoom->GetLayer(2)->GetMappingType() == LevelComponents::LayerMap16)
+        oldLayer2 = currentRoom->GetLayer(2)->CreateLayerDataCopy();
+
+    // -- Entity lists --
+    std::vector<LevelComponents::EntityRoomAttribute> oldNormal = currentRoom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> oldHard = currentRoom->GetEntityListData(0);
+    std::vector<LevelComponents::EntityRoomAttribute> oldSHard = currentRoom->GetEntityListData(2);
+
+    // -- Doors (if deleting) --
+    LevelComponents::LevelDoorVector *oldDoorVec = nullptr;
+    if (IfDeleteAllDoors)
+        oldDoorVec = new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
+
+    // -- Camera control --
+    auto oldCameraType = currentRoom->GetCameraControlType();
+    std::vector<struct LevelComponents::__CameraControlRecord *> oldCameraRecords;
+    bool hasCameraControl = (oldCameraType == LevelComponents::HasControlAttrs);
+    if (hasCameraControl)
+        oldCameraRecords = currentRoom->GetCameraControlRecords(true);
+
+    // Clear Layers 0, 1, 2
     for (int i = 0; i < 3; ++i)
     {
         LevelComponents::Layer *layer = currentRoom->GetLayer(i);
@@ -1088,19 +1159,88 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
         for (int i = doornum - 1; i > 0; i--)
         {
             auto curDoor = allDoor.GetDoor(i);
-            if (curDoor.RoomID == currentRoom->GetRoomID()) // if the door is in the current Room
+            if (curDoor.RoomID == currentRoom->GetRoomID())
             {
                 curRoomDoorIdIter++;
-                if (curRoomDoorIdIter > 0) // only reserve the first Door. if there is a portal Door in the Room, it has to be the first Door
+                if (curRoomDoorIdIter > 0)
                 {
-                    CurrentLevel->DeleteDoorByGlobalID(i); // delete all the other Doors from the current Room
+                    CurrentLevel->DeleteDoorByGlobalID(i);
                 }
             }
         }
     }
 
-    // local Room operations are not allowed for things before this step
-    ResetRoomUndoHistory(currentRoomID);
+    // Clear camera limitators — reset to a single default limitator
+    if (hasCameraControl)
+    {
+        while (currentRoom->GetCameraControlRecords(false).size() > 0)
+        {
+            currentRoom->DeleteCameraLimitator((int)currentRoom->GetCameraControlRecords(false).size() - 1);
+        }
+        currentRoom->AddCameraLimitator();
+    }
+
+    // Capture new states after clearing
+    unsigned short *newLayer0 = nullptr, *newLayer1 = nullptr, *newLayer2 = nullptr;
+    if (oldLayer0) newLayer0 = currentRoom->GetLayer(0)->CreateLayerDataCopy();
+    if (oldLayer1) newLayer1 = currentRoom->GetLayer(1)->CreateLayerDataCopy();
+    if (oldLayer2) newLayer2 = currentRoom->GetLayer(2)->CreateLayerDataCopy();
+
+    std::vector<LevelComponents::EntityRoomAttribute> newNormal = currentRoom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> newHard = currentRoom->GetEntityListData(0);
+    std::vector<LevelComponents::EntityRoomAttribute> newSHard = currentRoom->GetEntityListData(2);
+
+    // -- Camera control --
+    auto newCameraType = currentRoom->GetCameraControlType();
+    std::vector<struct LevelComponents::__CameraControlRecord *> newCameraRecords;
+    if (hasCameraControl)
+        newCameraRecords = currentRoom->GetCameraControlRecords(true);
+
+    // Build operation params
+    if (oldLayer0)
+    {
+        operation->layer0Change = true;
+        operation->layer0ChangeParams = LayerChangeParams::Create(oldLayer0, newLayer0, w0, h0);
+        delete[] oldLayer0; delete[] newLayer0;
+    }
+    if (oldLayer1)
+    {
+        operation->layer1Change = true;
+        operation->layer1ChangeParams = LayerChangeParams::Create(oldLayer1, newLayer1, w1, h1);
+        delete[] oldLayer1; delete[] newLayer1;
+    }
+    if (oldLayer2)
+    {
+        operation->layer2Change = true;
+        operation->layer2ChangeParams = LayerChangeParams::Create(oldLayer2, newLayer2, w2, h2);
+        delete[] oldLayer2; delete[] newLayer2;
+    }
+
+    operation->entityNormalChange = true;
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal);
+    operation->entityHardChange = true;
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard);
+    operation->entitySHardChange = true;
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard);
+
+    if (IfDeleteAllDoors)
+    {
+        LevelComponents::LevelDoorVector *newDoorVec =
+            new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
+        operation->doorVectorChange = true;
+        operation->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+    }
+
+    if (hasCameraControl)
+    {
+        operation->cameraControlChange = true;
+        operation->cameraControlChangeParams = CameraControlChangeParams::Create(
+            currentRoom->GetRoomID(),
+            oldCameraType, newCameraType,
+            oldCameraRecords, newCameraRecords);
+    }
+
+    ExecuteOperation(operation);
 
     // UI update
     ResetEntitySetDockWidget();
@@ -1468,27 +1608,51 @@ void WL4EditorWindow::on_roomIncreaseButton_clicked()
 /// </remarks>
 void WL4EditorWindow::on_actionLevel_Config_triggered()
 {
-    // TODO updates to the level config should go through the undo history queue in Operations.cpp
-    // TODO we should probably differentiate between room and level changes
+    // Capture old state before the dialog
+    DialogParams::LevelConfigParams *lastParams = new DialogParams::LevelConfigParams();
+    lastParams->oldLevelName = CurrentLevel->GetLevelName();
+    lastParams->oldLevelNameJ = CurrentLevel->GetLevelName(1);
+    lastParams->oldHModeTimer = CurrentLevel->GetTimeCountdownCounter(LevelComponents::HardDifficulty);
+    lastParams->oldNModeTimer = CurrentLevel->GetTimeCountdownCounter(LevelComponents::NormalDifficulty);
+    lastParams->oldSHModeTimer = CurrentLevel->GetTimeCountdownCounter(LevelComponents::SHardDifficulty);
 
     // Show a level config dialog to the user
     LevelConfigDialog dialog;
     dialog.InitTextBoxes(CurrentLevel->GetLevelName(),
                          CurrentLevel->GetLevelName(1),
-                         CurrentLevel->GetTimeCountdownCounter(LevelComponents::HardDifficulty),
-                         CurrentLevel->GetTimeCountdownCounter(LevelComponents::NormalDifficulty),
-                         CurrentLevel->GetTimeCountdownCounter(LevelComponents::SHardDifficulty));
+                         lastParams->oldHModeTimer,
+                         lastParams->oldNModeTimer,
+                         lastParams->oldSHModeTimer);
 
     // If OK is pressed, then set the level attributes
     auto acc = dialog.exec();
     if (acc == QDialog::Accepted)
     {
-        CurrentLevel->SetLevelName(dialog.GetPaddedLevelName());
-        CurrentLevel->SetLevelName(dialog.GetPaddedLevelName(1), 1);
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int) dialog.GetHModeTimer());
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int) dialog.GetNModeTimer());
-        CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int) dialog.GetSHModeTimer());
-        SetUnsavedChanges(true);
+        // Capture new state
+        DialogParams::LevelConfigParams *newParams = new DialogParams::LevelConfigParams();
+        newParams->newLevelName = dialog.GetPaddedLevelName();
+        newParams->newLevelNameJ = dialog.GetPaddedLevelName(1);
+        newParams->newHModeTimer = dialog.GetHModeTimer();
+        newParams->newNModeTimer = dialog.GetNModeTimer();
+        newParams->newSHModeTimer = dialog.GetSHModeTimer();
+
+        // Apply changes
+        CurrentLevel->SetLevelName(newParams->newLevelName);
+        CurrentLevel->SetLevelName(newParams->newLevelNameJ, 1);
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::HardDifficulty, (unsigned int) newParams->newHModeTimer);
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::NormalDifficulty, (unsigned int) newParams->newNModeTimer);
+        CurrentLevel->SetTimeCountdownCounter(LevelComponents::SHardDifficulty, (unsigned int) newParams->newSHModeTimer);
+
+        // Create and execute operation
+        OperationParams *operation = new OperationParams;
+        operation->levelConfigChange = true;
+        operation->lastLevelConfigParams = lastParams;
+        operation->newLevelConfigParams = newParams;
+        ExecuteOperation(operation);
+    }
+    else
+    {
+        delete lastParams;
     }
 }
 
@@ -1528,22 +1692,6 @@ void WL4EditorWindow::on_actionRedo_triggered()
 }
 
 /// <summary>
-/// Undo one step of gobal history.
-/// </summary>
-void WL4EditorWindow::on_actionUndo_global_triggered()
-{
-    UndoOperationGlobal();
-}
-
-/// <summary>
-/// Redo one step of gobal history.
-/// </summary>
-void WL4EditorWindow::on_actionRedo_global_triggered()
-{
-    RedoOperationGlobal();
-}
-
-/// <summary>
 /// Show the user a dialog for configuring the current room. If the user clicks OK, apply selected parameters to the
 /// room.
 /// </summary>
@@ -1557,12 +1705,67 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
     RoomConfigDialog dialog(this, _currentRoomConfigParams);
     if (dialog.exec() == QDialog::Accepted)
     {
-        // Add changes into the operation history
+        DialogParams::RoomConfigParams *newRoomConfigParams = dialog.GetConfigParams(_currentRoomConfigParams);
+
         OperationParams *operation = new OperationParams;
-        operation->type = ChangeRoomConfigOperation;
         operation->roomConfigChange = true;
         operation->lastRoomConfigParams = new DialogParams::RoomConfigParams(*_currentRoomConfigParams);
-        operation->newRoomConfigParams = dialog.GetConfigParams(_currentRoomConfigParams);
+        operation->newRoomConfigParams = newRoomConfigParams;
+
+        // Capture door, entity, and camera states when room dimensions change,
+        // since out-of-bounds elements will be trimmed
+        if (newRoomConfigParams->RoomWidth != _currentRoomConfigParams->RoomWidth ||
+            newRoomConfigParams->RoomHeight != _currentRoomConfigParams->RoomHeight)
+        {
+            LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+            // Capture pre-trim states
+            LevelComponents::LevelDoorVector *oldDoorVec =
+                new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
+
+            std::vector<LevelComponents::EntityRoomAttribute> oldNormal = currentRoom->GetEntityListData(1);
+            std::vector<LevelComponents::EntityRoomAttribute> oldHard = currentRoom->GetEntityListData(0);
+            std::vector<LevelComponents::EntityRoomAttribute> oldSHard = currentRoom->GetEntityListData(2);
+
+            auto oldCameraType = currentRoom->GetCameraControlType();
+            auto oldCameraRecords = currentRoom->GetCameraControlRecords(true);
+
+            // Trim out-of-bounds elements
+            TrimElementsOutOfRoomBounds(currentRoom,
+                                        newRoomConfigParams->RoomWidth,
+                                        newRoomConfigParams->RoomHeight);
+
+            // Capture post-trim states
+            LevelComponents::LevelDoorVector *newDoorVec =
+                new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
+
+            std::vector<LevelComponents::EntityRoomAttribute> newNormal = currentRoom->GetEntityListData(1);
+            std::vector<LevelComponents::EntityRoomAttribute> newHard = currentRoom->GetEntityListData(0);
+            std::vector<LevelComponents::EntityRoomAttribute> newSHard = currentRoom->GetEntityListData(2);
+
+            auto newCameraType = currentRoom->GetCameraControlType();
+            auto newCameraRecords = currentRoom->GetCameraControlRecords(true);
+
+            // Add door change to operation
+            operation->doorVectorChange = true;
+            operation->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+
+            // Add entity list changes to operation
+            operation->entityNormalChange = true;
+            operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal);
+            operation->entityHardChange = true;
+            operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard);
+            operation->entitySHardChange = true;
+            operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard);
+
+            // Add camera control change to operation
+            operation->cameraControlChange = true;
+            operation->cameraControlChangeParams = CameraControlChangeParams::Create(
+                currentRoom->GetRoomID(),
+                oldCameraType, newCameraType,
+                oldCameraRecords, newCameraRecords);
+        }
+
         ExecuteOperation(operation); // Set UnsavedChanges bool inside
     }
 }
@@ -1586,9 +1789,19 @@ void WL4EditorWindow::on_actionEdit_Tileset_triggered()
 void WL4EditorWindow::on_actionNew_Door_triggered()
 {
     unsigned int currentroomid = ui->spinBox_RoomID->value();
+
+    LevelComponents::LevelDoorVector *oldDoorVec =
+        new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
     CurrentLevel->AddDoor(currentroomid, (unsigned char) CurrentLevel->GetRooms()[currentroomid]->GetCurrentEntitySetID());
+    LevelComponents::LevelDoorVector *newDoorVec =
+        new LevelComponents::LevelDoorVector(CurrentLevel->GetDoorList());
+
+    struct OperationParams *params = new struct OperationParams();
+    params->doorVectorChange = true;
+    params->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+    ExecuteOperation(params);
+
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
-    SetUnsavedChanges(true);
 }
 
 /// <summary>
@@ -1715,7 +1928,7 @@ static const char *layerSwapFailureMsg = "Swapping Layers failed!";
 void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
-    // swap Layerdata pointers if possible
+    // swap Layerdata if possible
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
     if (!(currentroom->GetLayer(0)->IsEnabled()))
     {
@@ -1727,12 +1940,41 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    unsigned short *dataptr1 = currentroom->GetLayer(0)->GetLayerData();
-    unsigned short *dataptr2 = currentroom->GetLayer(1)->GetLayerData();
-    currentroom->GetLayer(0)->SetLayerData(dataptr2);
-    currentroom->GetLayer(1)->SetLayerData(dataptr1);
 
-    // TODO: add history record
+    // Capture old layer data before swap
+    int w0 = currentroom->GetLayer0Width();
+    int h0 = currentroom->GetLayer0Height();
+    unsigned short *oldData0 = currentroom->GetLayer(0)->CreateLayerDataCopy();
+    int w1 = currentroom->GetLayer1Width();
+    int h1 = currentroom->GetLayer1Height();
+    unsigned short *oldData1 = currentroom->GetLayer(1)->CreateLayerDataCopy();
+
+    // Copy data between layer buffers instead of swapping pointers,
+    // so each layer keeps a buffer sized for its own dimensions
+    int size0 = w0 * h0;
+    int size1 = w1 * h1;
+    unsigned short *layer0Data = currentroom->GetLayer(0)->GetLayerData();
+    unsigned short *layer1Data = currentroom->GetLayer(1)->GetLayerData();
+
+    memcpy(layer0Data, oldData1, 2 * std::min(size0, size1));
+    if (size0 > size1)
+        memset(layer0Data + size1, 0, 2 * (size0 - size1));
+
+    memcpy(layer1Data, oldData0, 2 * std::min(size1, size0));
+    if (size1 > size0)
+        memset(layer1Data + size0, 0, 2 * (size1 - size0));
+
+    // Capture new layer data after swap and record history
+    unsigned short *newData0 = currentroom->GetLayer(0)->CreateLayerDataCopy();
+    unsigned short *newData1 = currentroom->GetLayer(1)->CreateLayerDataCopy();
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->layer0Change = true;
+    operation->layer1Change = true;
+    operation->layer0ChangeParams = LayerChangeParams::Create(oldData0, newData0, w0, h0);
+    operation->layer1ChangeParams = LayerChangeParams::Create(oldData1, newData1, w1, h1);
+    delete[] oldData0; delete[] oldData1; delete[] newData0; delete[] newData1;
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenFull();
@@ -1749,19 +1991,48 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
 void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
-    // swap Layerdata pointers if possible
+    // swap Layerdata if possible
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
     if (!(currentroom->GetLayer(2)->IsEnabled()))
     {
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    unsigned short *dataptr1 = currentroom->GetLayer(1)->GetLayerData();
-    unsigned short *dataptr2 = currentroom->GetLayer(2)->GetLayerData();
-    currentroom->GetLayer(1)->SetLayerData(dataptr2);
-    currentroom->GetLayer(2)->SetLayerData(dataptr1);
 
-    // TODO: add history record
+    // Capture old layer data before swap
+    int w1 = currentroom->GetLayer1Width();
+    int h1 = currentroom->GetLayer1Height();
+    unsigned short *oldData1 = currentroom->GetLayer(1)->CreateLayerDataCopy();
+    int w2 = currentroom->GetLayer(2)->GetLayerWidth();
+    int h2 = currentroom->GetLayer(2)->GetLayerHeight();
+    unsigned short *oldData2 = currentroom->GetLayer(2)->CreateLayerDataCopy();
+
+    // Copy data between layer buffers instead of swapping pointers,
+    // so each layer keeps a buffer sized for its own dimensions
+    int size1 = w1 * h1;
+    int size2 = w2 * h2;
+    unsigned short *layer1Data = currentroom->GetLayer(1)->GetLayerData();
+    unsigned short *layer2Data = currentroom->GetLayer(2)->GetLayerData();
+
+    memcpy(layer1Data, oldData2, 2 * std::min(size1, size2));
+    if (size1 > size2)
+        memset(layer1Data + size2, 0, 2 * (size1 - size2));
+
+    memcpy(layer2Data, oldData1, 2 * std::min(size2, size1));
+    if (size2 > size1)
+        memset(layer2Data + size1, 0, 2 * (size2 - size1));
+
+    // Capture new layer data after swap and record history
+    unsigned short *newData1 = currentroom->GetLayer(1)->CreateLayerDataCopy();
+    unsigned short *newData2 = currentroom->GetLayer(2)->CreateLayerDataCopy();
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->layer1Change = true;
+    operation->layer2Change = true;
+    operation->layer1ChangeParams = LayerChangeParams::Create(oldData1, newData1, w1, h1);
+    operation->layer2ChangeParams = LayerChangeParams::Create(oldData2, newData2, w2, h2);
+    delete[] oldData1; delete[] oldData2; delete[] newData1; delete[] newData2;
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenFull();
@@ -1778,7 +2049,7 @@ void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
 void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
 {
     // TODO: support swap a disabled Layer with a normal Layer
-    // swap Layerdata pointers if possible
+    // swap Layerdata if possible
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
     if (!(currentroom->GetLayer(0)->IsEnabled()) ||
         !(currentroom->GetLayer(2)->IsEnabled()))
@@ -1791,12 +2062,41 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
         OutputWidget->PrintString(tr(layerSwapFailureMsg));
         return;
     }
-    unsigned short *dataptr1 = currentroom->GetLayer(0)->GetLayerData();
-    unsigned short *dataptr2 = currentroom->GetLayer(2)->GetLayerData();
-    currentroom->GetLayer(0)->SetLayerData(dataptr2);
-    currentroom->GetLayer(2)->SetLayerData(dataptr1);
 
-    // TODO: add history record
+    // Capture old layer data before swap
+    int w0 = currentroom->GetLayer0Width();
+    int h0 = currentroom->GetLayer0Height();
+    unsigned short *oldData0 = currentroom->GetLayer(0)->CreateLayerDataCopy();
+    int w2 = currentroom->GetLayer(2)->GetLayerWidth();
+    int h2 = currentroom->GetLayer(2)->GetLayerHeight();
+    unsigned short *oldData2 = currentroom->GetLayer(2)->CreateLayerDataCopy();
+
+    // Copy data between layer buffers instead of swapping pointers,
+    // so each layer keeps a buffer sized for its own dimensions
+    int size0 = w0 * h0;
+    int size2 = w2 * h2;
+    unsigned short *layer0Data = currentroom->GetLayer(0)->GetLayerData();
+    unsigned short *layer2Data = currentroom->GetLayer(2)->GetLayerData();
+
+    memcpy(layer0Data, oldData2, 2 * std::min(size0, size2));
+    if (size0 > size2)
+        memset(layer0Data + size2, 0, 2 * (size0 - size2));
+
+    memcpy(layer2Data, oldData0, 2 * std::min(size2, size0));
+    if (size2 > size0)
+        memset(layer2Data + size0, 0, 2 * (size2 - size0));
+
+    // Capture new layer data after swap and record history
+    unsigned short *newData0 = currentroom->GetLayer(0)->CreateLayerDataCopy();
+    unsigned short *newData2 = currentroom->GetLayer(2)->CreateLayerDataCopy();
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->layer0Change = true;
+    operation->layer2Change = true;
+    operation->layer0ChangeParams = LayerChangeParams::Create(oldData0, newData0, w0, h0);
+    operation->layer2ChangeParams = LayerChangeParams::Create(oldData2, newData2, w2, h2);
+    delete[] oldData0; delete[] oldData2; delete[] newData0; delete[] newData2;
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenFull();
@@ -1814,9 +2114,23 @@ void WL4EditorWindow::on_action_swap_Normal_Hard_triggered()
 {
     // swap Entity lists
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before swap
+    std::vector<LevelComponents::EntityRoomAttribute> oldNormalList = currentroom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> oldHardList = currentroom->GetEntityListData(0);
+
     currentroom->SwapEntityLists(0, 1);
 
-    // TODO: add history record
+    // Capture new entity list data after swap and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newNormalList = currentroom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> newHardList = currentroom->GetEntityListData(0);
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->entityNormalChange = true;
+    operation->entityHardChange = true;
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormalList, newNormalList);
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHardList, newHardList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -1834,9 +2148,23 @@ void WL4EditorWindow::on_action_swap_Hard_S_Hard_triggered()
 {
     // swap Entity lists
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before swap
+    std::vector<LevelComponents::EntityRoomAttribute> oldHardList = currentroom->GetEntityListData(0);
+    std::vector<LevelComponents::EntityRoomAttribute> oldSHardList = currentroom->GetEntityListData(2);
+
     currentroom->SwapEntityLists(0, 2);
 
-    // TODO: add history record
+    // Capture new entity list data after swap and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newHardList = currentroom->GetEntityListData(0);
+    std::vector<LevelComponents::EntityRoomAttribute> newSHardList = currentroom->GetEntityListData(2);
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->entityHardChange = true;
+    operation->entitySHardChange = true;
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHardList, newHardList);
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHardList, newSHardList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -1854,9 +2182,23 @@ void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
 {
     // swap Entity lists
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before swap
+    std::vector<LevelComponents::EntityRoomAttribute> oldNormalList = currentroom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> oldSHardList = currentroom->GetEntityListData(2);
+
     currentroom->SwapEntityLists(1, 2);
 
-    // TODO: add history record
+    // Capture new entity list data after swap and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newNormalList = currentroom->GetEntityListData(1);
+    std::vector<LevelComponents::EntityRoomAttribute> newSHardList = currentroom->GetEntityListData(2);
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->entityNormalChange = true;
+    operation->entitySHardChange = true;
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormalList, newNormalList);
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHardList, newSHardList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -1872,12 +2214,26 @@ void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_clear_Layer_0_triggered()
 {
-    LevelComponents::Layer *layer0 = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetLayer(0);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    LevelComponents::Layer *layer0 = currentroom->GetLayer(0);
     if (layer0->GetMappingType() == LevelComponents::LayerMap16)
     {
+        // Capture old layer data before clear
+        int w = currentroom->GetLayer0Width();
+        int h = currentroom->GetLayer0Height();
+        unsigned short *oldData = layer0->CreateLayerDataCopy();
+
         layer0->ResetData();
+
+        // Capture new layer data after clear and record history
+        unsigned short *newData = layer0->CreateLayerDataCopy();
+        struct OperationParams *operation = new struct OperationParams;
+    
+        operation->layer0Change = true;
+        operation->layer0ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
+        delete[] oldData; delete[] newData;
+        ExecuteOperation(operation);
     }
-    // TODO: add history record
 
     // UI update
     RenderScreenFull();
@@ -1891,12 +2247,26 @@ void WL4EditorWindow::on_action_clear_Layer_0_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_clear_Layer_1_triggered()
 {
-    LevelComponents::Layer *layer1 = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetLayer(1);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    LevelComponents::Layer *layer1 = currentroom->GetLayer(1);
     if (layer1->GetMappingType() == LevelComponents::LayerMap16)
     {
+        // Capture old layer data before clear
+        int w = currentroom->GetLayer1Width();
+        int h = currentroom->GetLayer1Height();
+        unsigned short *oldData = layer1->CreateLayerDataCopy();
+
         layer1->ResetData();
+
+        // Capture new layer data after clear and record history
+        unsigned short *newData = layer1->CreateLayerDataCopy();
+        struct OperationParams *operation = new struct OperationParams;
+    
+        operation->layer1Change = true;
+        operation->layer1ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
+        delete[] oldData; delete[] newData;
+        ExecuteOperation(operation);
     }
-    // TODO: add history record
 
     // UI update
     RenderScreenFull();
@@ -1910,12 +2280,26 @@ void WL4EditorWindow::on_action_clear_Layer_1_triggered()
 /// </summary>
 void WL4EditorWindow::on_action_clear_Layer_2_triggered()
 {
-    LevelComponents::Layer *layer2 = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()]->GetLayer(2);
+    auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    LevelComponents::Layer *layer2 = currentroom->GetLayer(2);
     if (layer2->GetMappingType() == LevelComponents::LayerMap16)
     {
+        // Capture old layer data before clear
+        int w = currentroom->GetLayer(2)->GetLayerWidth();
+        int h = currentroom->GetLayer(2)->GetLayerHeight();
+        unsigned short *oldData = layer2->CreateLayerDataCopy();
+
         layer2->ResetData();
+
+        // Capture new layer data after clear and record history
+        unsigned short *newData = layer2->CreateLayerDataCopy();
+        struct OperationParams *operation = new struct OperationParams;
+    
+        operation->layer2Change = true;
+        operation->layer2ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
+        delete[] oldData; delete[] newData;
+        ExecuteOperation(operation);
     }
-    // TODO: add history record
 
     // UI update
     RenderScreenFull();
@@ -1931,9 +2315,19 @@ void WL4EditorWindow::on_action_clear_Normal_triggered()
 {
     // Delete Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before clear
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(1);
+
     currentroom->ClearEntitylist(1);
 
-    // TODO: add history record
+    // Capture new entity list data after clear and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(1);
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->entityNormalChange = true;
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -1950,9 +2344,19 @@ void WL4EditorWindow::on_action_clear_Hard_triggered()
 {
     // Delete Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before clear
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(0);
+
     currentroom->ClearEntitylist(0);
 
-    // TODO: add history record
+    // Capture new entity list data after clear and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(0);
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->entityHardChange = true;
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -1969,9 +2373,19 @@ void WL4EditorWindow::on_action_clear_S_Hard_triggered()
 {
     // Delete Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before clear
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(2);
+
     currentroom->ClearEntitylist(2);
 
-    // TODO: add history record
+    // Capture new entity list data after clear and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(2);
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->entitySHardChange = true;
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -2154,13 +2568,35 @@ void WL4EditorWindow::on_actionNew_Room_triggered()
 /// </summary>
 void WL4EditorWindow::on_actionEdit_Credits_triggered()
 {
-    // Set up parameters for the currently selected room, for the purpose of initializing the dialog's selections
-    DialogParams::CreditsEditParams *creditsEditParams =
-        new DialogParams::CreditsEditParams();
+    // Capture old credit data before the dialog opens
+    DialogParams::CreditsEditParams *lastParams = new DialogParams::CreditsEditParams();
+    memcpy(lastParams->oldCreditData,
+           &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
+           NUMBEROFCREDITSSCREEN * 1280);
 
     // Show the dialog
-    CreditsEditDialog dialog(this, creditsEditParams);
-    dialog.exec();
+    DialogParams::CreditsEditParams *unusedParam = new DialogParams::CreditsEditParams();
+    CreditsEditDialog dialog(this, unusedParam);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        // Capture new credit data (dialog already wrote to ROM)
+        DialogParams::CreditsEditParams *newParams = new DialogParams::CreditsEditParams();
+        memcpy(newParams->newCreditData,
+               &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
+               NUMBEROFCREDITSSCREEN * 1280);
+
+        // Create and execute operation
+        OperationParams *operation = new OperationParams;
+        operation->CreditChange = true;
+        operation->lastCreditsEditParams = lastParams;
+        operation->newCreditsEditParams = newParams;
+        ExecuteOperation(operation);
+    }
+    else
+    {
+        delete lastParams;
+    }
+    delete unusedParam;
 }
 
 /// <summary>
@@ -2193,11 +2629,11 @@ void WL4EditorWindow::on_actionEdit_Entity_EntitySet_triggered()
 
         // Execute Operation
         OperationParams *operation = new OperationParams;
-        operation->type = ChangeSpritesAndSpritesetsOperation;
+
         operation->SpritesSpritesetChange = true;
         operation->lastSpritesAndSetParam = _oldEntitiesAndEntitysetsEditParams;
         operation->newSpritesAndSetParam = _currentEntitiesAndEntitysetsEditParams;
-        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
+        ExecuteOperation(operation); // Set UnsavedChanges bool inside
     }
     else
     {
@@ -2217,11 +2653,21 @@ void WL4EditorWindow::on_action_duplicate_Normal_triggered()
 {
     int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
-    // copy Hard Entity list into Super Hard Entity list
+    // copy current difficulty Entity list into Normal Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before copy
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(1);
+
     currentroom->CopyEntityLists(selectedDifficulty, 1);
 
-    // TODO: add history record
+    // Capture new entity list data after copy and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(1);
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->entityNormalChange = true;
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -2238,11 +2684,21 @@ void WL4EditorWindow::on_action_duplicate_Hard_triggered()
 {
     int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
-    // copy  Hard Entity list into Super Hard Entity list
+    // copy current difficulty Entity list into Hard Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before copy
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(0);
+
     currentroom->CopyEntityLists(selectedDifficulty, 0);
 
-    // TODO: add history record
+    // Capture new entity list data after copy and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(0);
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->entityHardChange = true;
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -2259,11 +2715,21 @@ void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
 {
     int selectedDifficulty=GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
 
-    // copy  Hard Entity list into Super Hard Entity list
+    // copy current difficulty Entity list into Super Hard Entity list
     auto currentroom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+
+    // Capture old entity list data before copy
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = currentroom->GetEntityListData(2);
+
     currentroom->CopyEntityLists(selectedDifficulty, 2);
 
-    // TODO: add history record
+    // Capture new entity list data after copy and record history
+    std::vector<LevelComponents::EntityRoomAttribute> newList = currentroom->GetEntityListData(2);
+    struct OperationParams *operation = new struct OperationParams;
+
+    operation->entitySHardChange = true;
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    ExecuteOperation(operation);
 
     // UI update
     RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
@@ -2421,11 +2887,11 @@ void WL4EditorWindow::on_actionEdit_Animated_Tile_Groups_triggered()
 
         // Execute Operation
         OperationParams *operation = new OperationParams;
-        operation->type = ChangeAnimatedTileGroupOperation;
+
         operation->AnimatedTileGroupChange = true;
         operation->lastAnimatedTileEditParam = _oldAnimatedTileGroupsEditParams;
         operation->newAnimatedTileEditParam = _currentAnimatedTileGroupsEditParams;
-        ExecuteOperationGlobal(operation); // Set UnsavedChanges bool inside
+        ExecuteOperation(operation); // Set UnsavedChanges bool inside
     }
     else
     {
@@ -2438,14 +2904,93 @@ void WL4EditorWindow::on_actionEdit_Animated_Tile_Groups_triggered()
 
 void WL4EditorWindow::on_actionEdit_Wall_Paints_triggered()
 {
-    WallPaintEditorDialog dialog;
+    // Capture old ROM data at all locations the dialog may modify
+    unsigned char oldGFX[1024 * 5 * 6];
+    unsigned char oldPassageColor[32 * 5 * 6];
+    unsigned char oldPassageGray[32 * 5 * 6];
+    memcpy(oldGFX, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], sizeof(oldGFX));
+    memcpy(oldPassageColor, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], sizeof(oldPassageColor));
+    memcpy(oldPassageGray, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], sizeof(oldPassageGray));
 
-    // If OK is pressed, then save changes to the temp rom data
+    // Collect scattered data addresses and capture old data
+    struct ScatteredCapture {
+        unsigned int addr;
+        unsigned int size;
+        unsigned char *oldData;
+    };
+    std::vector<ScatteredCapture> captures;
+
+    for (int passage = 0; passage < 6; passage++)
+    {
+        unsigned int mmapAddr = ROMUtils::PointerFromData(
+            WL4Constants::WallPaintPalSixInOneMMapColorPtrTable + 4 * passage);
+
+        for (int level = 0; level < 4; level++)
+        {
+            unsigned int gradAddr = ROMUtils::PointerFromData(
+                WL4Constants::WallPaintPalStartLevelPointerTable + passage * 16 + level * 4);
+            if (!gradAddr) continue;
+
+            // Gradient palette data (256 bytes)
+            ScatteredCapture gradCap;
+            gradCap.addr = gradAddr;
+            gradCap.size = 256;
+            gradCap.oldData = new unsigned char[256];
+            memcpy(gradCap.oldData, &ROMUtils::ROMFileMetadata->ROMDataPtr[gradAddr], 256);
+            captures.push_back(gradCap);
+
+            // MMAP palette data (32 bytes per level)
+            ScatteredCapture mmapCap;
+            mmapCap.addr = mmapAddr + 32 * (0xA + level);
+            mmapCap.size = 32;
+            mmapCap.oldData = new unsigned char[32];
+            memcpy(mmapCap.oldData, &ROMUtils::ROMFileMetadata->ROMDataPtr[mmapCap.addr], 32);
+            captures.push_back(mmapCap);
+        }
+
+        // Boss level MMAP palette (always written)
+        ScatteredCapture bossCap;
+        bossCap.addr = mmapAddr + 32 * (0xA + 4);
+        bossCap.size = 32;
+        bossCap.oldData = new unsigned char[32];
+        memcpy(bossCap.oldData, &ROMUtils::ROMFileMetadata->ROMDataPtr[bossCap.addr], 32);
+        captures.push_back(bossCap);
+    }
+
+    WallPaintEditorDialog dialog;
     auto acc = dialog.exec();
     if (acc == QDialog::Accepted)
     {
         dialog.AcceptChanges();
-        SetUnsavedChanges(true);
+
+        // Capture new ROM data
+        unsigned char newGFX[1024 * 5 * 6];
+        unsigned char newPassageColor[32 * 5 * 6];
+        unsigned char newPassageGray[32 * 5 * 6];
+        memcpy(newGFX, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], sizeof(newGFX));
+        memcpy(newPassageColor, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], sizeof(newPassageColor));
+        memcpy(newPassageGray, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], sizeof(newPassageGray));
+
+        // Build operation params
+        WallPaintChangeParams *wp = WallPaintChangeParams::Create(
+            oldGFX, newGFX, oldPassageColor, newPassageColor, oldPassageGray, newPassageGray);
+
+        for (auto &cap : captures)
+        {
+            wp->AddScatteredBlock(cap.addr, cap.size, cap.oldData,
+                                  &ROMUtils::ROMFileMetadata->ROMDataPtr[cap.addr]);
+            delete[] cap.oldData;
+        }
+
+        struct OperationParams *operation = new struct OperationParams;
+        operation->WallPaintChange = true;
+        operation->wallPaintChangeParams = wp;
+        ExecuteOperation(operation);
+    }
+    else
+    {
+        for (auto &cap : captures)
+            delete[] cap.oldData;
     }
 }
 
@@ -2459,30 +3004,3 @@ void WL4EditorWindow::on_spinBox_RoomID_valueChanged(int arg1)
         if (sender() != nullptr) SetCurrentRoomId(arg1, true);
     }
 }
-
-void WL4EditorWindow::on_action_swap_Rooms_triggered()
-{
-    unsigned int currentroomid = ui->spinBox_RoomID->value();
-    bool okay = false;
-    int value = QInputDialog::getInt(this, QApplication::applicationName(),
-                                     tr("input a Room Id to apply the Room swap with the current Room.\n"
-                                        "Notice: You CANNOT undo this step !"), currentroomid,
-                                     0, CurrentLevel->GetRooms().size() - 1, 1, &okay);
-    if (okay)
-    {
-        if (value == currentroomid)
-        {
-            OutputWidget->PrintString(tr("You cannot swap the room with itself."));
-            return;
-        }
-        else if (CurrentLevel->SwapRooms(currentroomid, value))
-        {
-            // local Room operations are not allowed for things before this step
-            ResetRoomUndoHistory(currentroomid);
-            ResetRoomUndoHistory(value);
-            SetUnsavedChanges(true);
-            SetCurrentRoomId(ui->spinBox_RoomID->value());
-        }
-    }
-}
-
