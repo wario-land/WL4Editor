@@ -161,8 +161,8 @@ void PerformOperation(struct OperationParams *operation)
 
         if (dm->objectID != -1 && curDoor.DoorTypeByte)
         {
-            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-            if (currentRoom->IsNewDoorPositionInsideRoom(dm->nextPositionX, dm->nextPositionX + deltaX, dm->nextPositionY, dm->nextPositionY + deltaY))
+            LevelComponents::Room *doorRoom = singleton->GetCurrentLevel()->GetRooms()[dm->roomID];
+            if (doorRoom->IsNewDoorPositionInsideRoom(dm->nextPositionX, dm->nextPositionX + deltaX, dm->nextPositionY, dm->nextPositionY + deltaY))
             {
                 tmpDoorVec.SetDoorPlace(globalDoorId,
                                          dm->nextPositionX, dm->nextPositionX + deltaX,
@@ -518,8 +518,8 @@ void BackTrackOperation(struct OperationParams *operation)
 
         if (dm->objectID != -1 && curDoor.DoorTypeByte)
         {
-            LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
-            if (currentRoom->IsNewDoorPositionInsideRoom(dm->previousPositionX, dm->previousPositionX + deltaX, dm->previousPositionY, dm->previousPositionY + deltaY))
+            LevelComponents::Room *doorRoom = singleton->GetCurrentLevel()->GetRooms()[dm->roomID];
+            if (doorRoom->IsNewDoorPositionInsideRoom(dm->previousPositionX, dm->previousPositionX + deltaX, dm->previousPositionY, dm->previousPositionY + deltaY))
             {
                 tmpDoorVec.SetDoorPlace(globalDoorId,
                                          dm->previousPositionX, dm->previousPositionX + deltaX,

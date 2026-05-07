@@ -147,6 +147,31 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                     bool b4 = doorsInRoom[i].y2 >= (int) tileY;
                     if (b1 && b2 && b3 && b4) {
 
+                        // Ctrl+LeftClick: navigate to the destination door
+                        if ((event->button() == Qt::LeftButton) && (event->modifiers() & Qt::ControlModifier))
+                        {
+                            unsigned char destGlobalID = doorsInRoom[i].DestinationDoorGlobalID;
+                            if (destGlobalID != 0) // not the portal door
+                            {
+                                auto destDoor = singleton->GetCurrentLevel()->GetDoorListRef().GetDoor(destGlobalID);
+                                int destRoomID = destDoor.RoomID;
+                                if (destRoomID != room->GetRoomID()) // not self-pointing
+                                {
+                                    singleton->SetCurrentRoomId(destRoomID, false);
+                                }
+                                unsigned char destLocalID =
+                                    singleton->GetCurrentLevel()->GetDoorListRef().GetLocalIDByGlobalID(destGlobalID);
+                                SelectedDoorID = destLocalID;
+                                singleton->GetCurrentRoom()->SetCurrentEntitySet(destDoor.EntitySetID);
+                                singleton->ResetEntitySetDockWidget();
+                                holdingEntityOrDoor = true;
+                                objectInitialX = destDoor.x1;
+                                objectInitialY = destDoor.y1;
+                                singleton->RenderScreenElementsLayersUpdate((unsigned int) SelectedDoorID, -1);
+                            }
+                            return;
+                        }
+
                         // If the door that was clicked was not already selected, then select it
                         SelectedDoorID = i;
                         // Let the Entityset change with the last selected Door
