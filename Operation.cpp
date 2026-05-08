@@ -29,7 +29,7 @@ void PerformOperation(struct OperationParams *operation)
     LevelComponents::Room *room;
     if (operation->tileChange)
     {
-        room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentLevel()->GetRooms()[operation->tileChangeRoomID];
         int tl1 = -1, tl2 = -1; // there are 2 target layers only when doing cross layer rect-copy
         QVector<LevelComponents::Tileinfo> tilechangelist, tilechangelist2;
         for (auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
@@ -78,9 +78,9 @@ void PerformOperation(struct OperationParams *operation)
     }
     if (operation->layer0Change)
     {
-        room = singleton->GetCurrentRoom();
-        auto *layer0 = room->GetLayer(0);
         auto *p = operation->layer0ChangeParams;
+        room = singleton->GetCurrentLevel()->GetRooms()[p->roomID];
+        auto *layer0 = room->GetLayer(0);
         if (layer0->GetLayerWidth() == p->layerWidth && layer0->GetLayerHeight() == p->layerHeight)
         {
             memcpy(layer0->GetLayerData(), p->newLayerData, 2 * p->layerWidth * p->layerHeight);
@@ -92,9 +92,9 @@ void PerformOperation(struct OperationParams *operation)
     }
     if (operation->layer1Change)
     {
-        room = singleton->GetCurrentRoom();
-        auto *layer1 = room->GetLayer(1);
         auto *p = operation->layer1ChangeParams;
+        room = singleton->GetCurrentLevel()->GetRooms()[p->roomID];
+        auto *layer1 = room->GetLayer(1);
         if (layer1->GetLayerWidth() == p->layerWidth && layer1->GetLayerHeight() == p->layerHeight)
         {
             memcpy(layer1->GetLayerData(), p->newLayerData, 2 * p->layerWidth * p->layerHeight);
@@ -106,9 +106,9 @@ void PerformOperation(struct OperationParams *operation)
     }
     if (operation->layer2Change)
     {
-        room = singleton->GetCurrentRoom();
-        auto *layer2 = room->GetLayer(2);
         auto *p = operation->layer2ChangeParams;
+        room = singleton->GetCurrentLevel()->GetRooms()[p->roomID];
+        auto *layer2 = room->GetLayer(2);
         if (layer2->GetLayerWidth() == p->layerWidth && layer2->GetLayerHeight() == p->layerHeight)
         {
             memcpy(layer2->GetLayerData(), p->newLayerData, 2 * p->layerWidth * p->layerHeight);
@@ -133,7 +133,7 @@ void PerformOperation(struct OperationParams *operation)
     if (operation->objectPositionChange)
     {
         struct ObjectMoveParams *om=operation->objectMoveParams;
-        LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+        LevelComponents::Room *currentRoom = singleton->GetCurrentLevel()->GetRooms()[om->roomID];
 
         // If the entity exists
         if (om->objectID != -1)
@@ -141,9 +141,10 @@ void PerformOperation(struct OperationParams *operation)
             if (currentRoom->IsNewEntityPositionInsideRoom(om->nextPositionX, om->nextPositionY))
             {
                 currentRoom->SetEntityPosition(om->nextPositionX, om->nextPositionY, om->objectID);
-                singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
+                if (singleton->GetCurrentRoom()->GetRoomID() == om->roomID)
+                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
                 int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
-                singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                currentRoom->SetEntityListDirty(difficulty, true);
                 singleton->SetUnsavedChanges(true);
                 singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Entity move changes."));
             }
@@ -167,7 +168,8 @@ void PerformOperation(struct OperationParams *operation)
                 tmpDoorVec.SetDoorPlace(globalDoorId,
                                          dm->nextPositionX, dm->nextPositionX + deltaX,
                                          dm->nextPositionY, dm->nextPositionY + deltaY);
-                singleton->RenderScreenElementsLayersUpdate((unsigned int) dm->objectID, -1);
+                if (singleton->GetCurrentRoom()->GetRoomID() == dm->roomID)
+                    singleton->RenderScreenElementsLayersUpdate((unsigned int) dm->objectID, -1);
                 singleton->SetUnsavedChanges(true);
             }
         }
@@ -176,22 +178,23 @@ void PerformOperation(struct OperationParams *operation)
     if (operation->entityAdd)
     {
         auto *ep = operation->entityAddParams;
-        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        LevelComponents::Room *room = singleton->GetCurrentLevel()->GetRooms()[ep->roomID];
         bool success = room->AddEntity(ep->XPos, ep->YPos, ep->EntityTypeLocalID, ep->difficulty);
         if(!success)
         {
             singleton->GetOutputWidgetPtr()->PrintString("Cannot add more entity under the current difficulty in this room");
             return;
         }
-        singleton->GetCurrentRoom()->SetEntityListDirty(ep->difficulty, true);
-        singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+        room->SetEntityListDirty(ep->difficulty, true);
+        if (singleton->GetCurrentRoom()->GetRoomID() == ep->roomID)
+            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo entity add."));
     }
     if (operation->entityDelete)
     {
         auto *ep = operation->entityDeleteParams;
-        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        LevelComponents::Room *room = singleton->GetCurrentLevel()->GetRooms()[ep->roomID];
         auto list = room->GetEntityListData(ep->difficulty);
         for (unsigned int i = 0; i < list.size(); ++i)
         {
@@ -202,37 +205,41 @@ void PerformOperation(struct OperationParams *operation)
             }
         }
         room->SetEntityListDirty(ep->difficulty, true);
-        singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+        if (singleton->GetCurrentRoom()->GetRoomID() == ep->roomID)
+            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo entity delete."));
     }
     if (operation->entityNormalChange)
     {
         auto *ep = operation->entityNormalChangeParams;
-        room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentLevel()->GetRooms()[ep->roomID];
         room->SetEntityListData(1, ep->newEntityList);
         room->SetEntityListDirty(1, true);
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        if (singleton->GetCurrentRoom()->GetRoomID() == ep->roomID)
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Entity Normal list changes."));
     }
     if (operation->entityHardChange)
     {
         auto *ep = operation->entityHardChangeParams;
-        room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentLevel()->GetRooms()[ep->roomID];
         room->SetEntityListData(0, ep->newEntityList);
         room->SetEntityListDirty(0, true);
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        if (singleton->GetCurrentRoom()->GetRoomID() == ep->roomID)
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Entity Hard list changes."));
     }
     if (operation->entitySHardChange)
     {
         auto *ep = operation->entitySHardChangeParams;
-        room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentLevel()->GetRooms()[ep->roomID];
         room->SetEntityListData(2, ep->newEntityList);
         room->SetEntityListDirty(2, true);
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        if (singleton->GetCurrentRoom()->GetRoomID() == ep->roomID)
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Entity S-Hard list changes."));
     }
@@ -381,7 +388,7 @@ void BackTrackOperation(struct OperationParams *operation)
     LevelComponents::Room *room;
     if (operation->tileChange)
     {
-        room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentLevel()->GetRooms()[operation->tileChangeRoomID];
         int tl1 = -1, tl2 = -1; // there are 2 target layers only when doing cross layer rect-copy
         QVector<LevelComponents::Tileinfo> tilechangelist, tilechangelist2;
         for (auto iter = operation->tileChangeParams.begin(); iter != operation->tileChangeParams.end(); ++iter)
@@ -432,9 +439,9 @@ void BackTrackOperation(struct OperationParams *operation)
     }
     if (operation->layer0Change)
     {
-        room = singleton->GetCurrentRoom();
-        auto *layer0 = room->GetLayer(0);
         auto *p = operation->layer0ChangeParams;
+        room = singleton->GetCurrentLevel()->GetRooms()[p->roomID];
+        auto *layer0 = room->GetLayer(0);
         if (layer0->GetLayerWidth() == p->layerWidth && layer0->GetLayerHeight() == p->layerHeight)
         {
             memcpy(layer0->GetLayerData(), p->oldLayerData, 2 * p->layerWidth * p->layerHeight);
@@ -446,9 +453,9 @@ void BackTrackOperation(struct OperationParams *operation)
     }
     if (operation->layer1Change)
     {
-        room = singleton->GetCurrentRoom();
-        auto *layer1 = room->GetLayer(1);
         auto *p = operation->layer1ChangeParams;
+        room = singleton->GetCurrentLevel()->GetRooms()[p->roomID];
+        auto *layer1 = room->GetLayer(1);
         if (layer1->GetLayerWidth() == p->layerWidth && layer1->GetLayerHeight() == p->layerHeight)
         {
             memcpy(layer1->GetLayerData(), p->oldLayerData, 2 * p->layerWidth * p->layerHeight);
@@ -460,9 +467,9 @@ void BackTrackOperation(struct OperationParams *operation)
     }
     if (operation->layer2Change)
     {
-        room = singleton->GetCurrentRoom();
-        auto *layer2 = room->GetLayer(2);
         auto *p = operation->layer2ChangeParams;
+        room = singleton->GetCurrentLevel()->GetRooms()[p->roomID];
+        auto *layer2 = room->GetLayer(2);
         if (layer2->GetLayerWidth() == p->layerWidth && layer2->GetLayerHeight() == p->layerHeight)
         {
             memcpy(layer2->GetLayerData(), p->oldLayerData, 2 * p->layerWidth * p->layerHeight);
@@ -487,7 +494,7 @@ void BackTrackOperation(struct OperationParams *operation)
     if (operation->objectPositionChange)
     {
         struct ObjectMoveParams *om = operation->objectMoveParams;
-        LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+        LevelComponents::Room *currentRoom = singleton->GetCurrentLevel()->GetRooms()[om->roomID];
 
         // If the entity exists and if it is still in the room
         if (om->objectID != -1)
@@ -495,9 +502,10 @@ void BackTrackOperation(struct OperationParams *operation)
             if (currentRoom->IsNewEntityPositionInsideRoom(om->previousPositionX, om->previousPositionY))
             {
                 currentRoom->SetEntityPosition(om->previousPositionX, om->previousPositionY, om->objectID);
-                singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
+                if (singleton->GetCurrentRoom()->GetRoomID() == om->roomID)
+                    singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, om->objectID);
                 int difficulty = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedDifficulty;
-                singleton->GetCurrentRoom()->SetEntityListDirty(difficulty, true);
+                currentRoom->SetEntityListDirty(difficulty, true);
                 singleton->SetUnsavedChanges(true);
             }
         }
@@ -524,7 +532,8 @@ void BackTrackOperation(struct OperationParams *operation)
                 tmpDoorVec.SetDoorPlace(globalDoorId,
                                          dm->previousPositionX, dm->previousPositionX + deltaX,
                                          dm->previousPositionY, dm->previousPositionY + deltaY);
-                singleton->RenderScreenElementsLayersUpdate((unsigned int) dm->objectID, -1);
+                if (singleton->GetCurrentRoom()->GetRoomID() == dm->roomID)
+                    singleton->RenderScreenElementsLayersUpdate((unsigned int) dm->objectID, -1);
                 singleton->SetUnsavedChanges(true);
             }
         }
@@ -533,7 +542,7 @@ void BackTrackOperation(struct OperationParams *operation)
     if (operation->entityAdd)
     {
         auto *ep = operation->entityAddParams;
-        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        LevelComponents::Room *room = singleton->GetCurrentLevel()->GetRooms()[ep->roomID];
         std::vector<struct LevelComponents::EntityRoomAttribute> list = room->GetEntityListData(ep->difficulty);
         for (int i = (int)list.size() - 1; i >= 0; --i)
         {
@@ -544,47 +553,52 @@ void BackTrackOperation(struct OperationParams *operation)
             }
         }
         room->SetEntityListDirty(ep->difficulty, true);
-        singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+        if (singleton->GetCurrentRoom()->GetRoomID() == ep->roomID)
+            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo entity add."));
     }
     if (operation->entityDelete)
     {
         auto *ep = operation->entityDeleteParams;
-        LevelComponents::Room *room = singleton->GetCurrentRoom();
+        LevelComponents::Room *room = singleton->GetCurrentLevel()->GetRooms()[ep->roomID];
         room->AddEntity(ep->XPos, ep->YPos, ep->EntityTypeLocalID, ep->difficulty);
         room->SetEntityListDirty(ep->difficulty, true);
-        singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
+        if (singleton->GetCurrentRoom()->GetRoomID() == ep->roomID)
+            singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo entity delete."));
     }
     if (operation->entityNormalChange)
     {
         auto *ep = operation->entityNormalChangeParams;
-        room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentLevel()->GetRooms()[ep->roomID];
         room->SetEntityListData(1, ep->oldEntityList);
         room->SetEntityListDirty(1, true);
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        if (singleton->GetCurrentRoom()->GetRoomID() == ep->roomID)
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Entity Normal list changes."));
     }
     if (operation->entityHardChange)
     {
         auto *ep = operation->entityHardChangeParams;
-        room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentLevel()->GetRooms()[ep->roomID];
         room->SetEntityListData(0, ep->oldEntityList);
         room->SetEntityListDirty(0, true);
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        if (singleton->GetCurrentRoom()->GetRoomID() == ep->roomID)
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Entity Hard list changes."));
     }
     if (operation->entitySHardChange)
     {
         auto *ep = operation->entitySHardChangeParams;
-        room = singleton->GetCurrentRoom();
+        room = singleton->GetCurrentLevel()->GetRooms()[ep->roomID];
         room->SetEntityListData(2, ep->oldEntityList);
         room->SetEntityListDirty(2, true);
-        singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
+        if (singleton->GetCurrentRoom()->GetRoomID() == ep->roomID)
+            singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Entity S-Hard list changes."));
     }

@@ -40,9 +40,10 @@ struct ObjectMoveParams
     int nextPositionX;
     int nextPositionY;
     int objectID;
+    int roomID;
 
     // Create an instance of ObjectMoveParams on the heap, which represents a moved obect
-    static ObjectMoveParams *Create(int pX, int pY, int nX, int nY, int objectID)
+    static ObjectMoveParams *Create(int pX, int pY, int nX, int nY, int objectID, int rID)
     {
         struct ObjectMoveParams *om = new struct ObjectMoveParams;
         om->previousPositionX = pX;
@@ -50,6 +51,7 @@ struct ObjectMoveParams
         om->nextPositionX = nX;
         om->nextPositionY = nY;
         om->objectID = objectID;
+        om->roomID = rID;
 
         return om;
     }
@@ -86,14 +88,16 @@ struct EntityAddParams
     unsigned char XPos;
     unsigned char YPos;
     unsigned char EntityTypeLocalID;
+    int roomID;
 
-    static EntityAddParams *Create(int diff, unsigned char x, unsigned char y, unsigned char eid)
+    static EntityAddParams *Create(int diff, unsigned char x, unsigned char y, unsigned char eid, int rID)
     {
         EntityAddParams *p = new EntityAddParams;
         p->difficulty = diff;
         p->XPos = x;
         p->YPos = y;
         p->EntityTypeLocalID = eid;
+        p->roomID = rID;
         return p;
     }
 };
@@ -105,12 +109,14 @@ struct LayerChangeParams
     unsigned short *newLayerData;
     int layerWidth;
     int layerHeight;
+    int roomID;
 
-    static LayerChangeParams *Create(unsigned short *oldData, unsigned short *newData, int width, int height)
+    static LayerChangeParams *Create(unsigned short *oldData, unsigned short *newData, int width, int height, int rID)
     {
         LayerChangeParams *p = new LayerChangeParams;
         p->layerWidth = width;
         p->layerHeight = height;
+        p->roomID = rID;
         int size = width * height;
         p->oldLayerData = new unsigned short[size];
         memcpy(p->oldLayerData, oldData, 2 * size);
@@ -125,13 +131,16 @@ struct EntityListChangeParams
 {
     std::vector<LevelComponents::EntityRoomAttribute> oldEntityList;
     std::vector<LevelComponents::EntityRoomAttribute> newEntityList;
+    int roomID;
 
     static EntityListChangeParams *Create(std::vector<LevelComponents::EntityRoomAttribute> &oldList,
-                                          std::vector<LevelComponents::EntityRoomAttribute> &newList)
+                                          std::vector<LevelComponents::EntityRoomAttribute> &newList,
+                                          int rID)
     {
         EntityListChangeParams *p = new EntityListChangeParams;
         p->oldEntityList = oldList;
         p->newEntityList = newList;
+        p->roomID = rID;
         return p;
     }
 };
@@ -144,8 +153,9 @@ struct EntityDeleteParams
     unsigned char XPos;
     unsigned char YPos;
     unsigned char EntityTypeLocalID;
+    int roomID;
 
-    static EntityDeleteParams *Create(int diff, int idx, unsigned char x, unsigned char y, unsigned char eid)
+    static EntityDeleteParams *Create(int diff, int idx, unsigned char x, unsigned char y, unsigned char eid, int rID)
     {
         EntityDeleteParams *p = new EntityDeleteParams;
         p->difficulty = diff;
@@ -153,6 +163,7 @@ struct EntityDeleteParams
         p->XPos = x;
         p->YPos = y;
         p->EntityTypeLocalID = eid;
+        p->roomID = rID;
         return p;
     }
 };
@@ -290,6 +301,7 @@ struct OperationParams
     EntityListChangeParams *entitySHardChangeParams = nullptr;
     WallPaintChangeParams *wallPaintChangeParams = nullptr;
     bool tileChange = false;
+    int tileChangeRoomID = -1;
     bool roomConfigChange = false;
     bool objectPositionChange = false;
     bool TilesetChange = false;

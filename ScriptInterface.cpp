@@ -641,11 +641,11 @@ void ScriptInterface::SetRoomSize(int roomwidth, int roomheight, int layer0width
         operation->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
 
         operation->entityNormalChange = true;
-        operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal);
+        operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal, currentRoom->GetRoomID());
         operation->entityHardChange = true;
-        operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard);
+        operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard, currentRoom->GetRoomID());
         operation->entitySHardChange = true;
-        operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard);
+        operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard, currentRoom->GetRoomID());
 
         operation->cameraControlChange = true;
         operation->cameraControlChangeParams = CameraControlChangeParams::Create(

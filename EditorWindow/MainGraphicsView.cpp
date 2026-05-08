@@ -84,6 +84,7 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                             struct OperationParams *params = new struct OperationParams();
 
                             params->tileChange = true;
+                            params->tileChangeRoomID = singleton->GetCurrentRoom()->GetRoomID();
                             int rectcuttopheight, rectcutleftsidewidth;
                             int rectcutbottomheight, rectcutrightsidewidth;
                             rectcuttopheight = qMax(-recty, 0);
@@ -200,7 +201,8 @@ void MainGraphicsView::mousePressEvent(QMouseEvent *event)
                 params->entityAddParams = EntityAddParams::Create(difficulty,
                                                                    (unsigned char) tileX,
                                                                    (unsigned char) tileY,
-                                                                   (unsigned char) singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId());
+                                                                   (unsigned char) singleton->GetEntitySetDockWidgetPtr()->GetCurrentEntityLocalId(),
+                                                                   room->GetRoomID());
                 ExecuteOperation(params); // AddEntity and SetUnsavedChanges inside
                 SelectedEntityID = room->FindEntity(tileX, tileY); // reset SelectedEntityID
             }
@@ -504,6 +506,7 @@ void MainGraphicsView::SetTiles(int tileX, int tileY)
     struct OperationParams *params = new struct OperationParams();
 
     params->tileChange = true;
+    params->tileChangeRoomID = room->GetRoomID();
     for(int j = 0; j < drawheight; ++j)
     {
         for(int i = 0; i < drawwidth; ++i)
@@ -620,7 +623,8 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
                 struct OperationParams *params = new struct OperationParams();
 
                 params->objectPositionChange = true;
-                params->objectMoveParams = ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY, SelectedEntityID);
+                params->objectMoveParams = ObjectMoveParams::Create(objectInitialX, objectInitialY, tileX, tileY, SelectedEntityID,
+                                                                     singleton->GetCurrentRoom()->GetRoomID());
                 ExecuteOperation(params);
             }
         }
@@ -664,7 +668,8 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
             struct OperationParams *params = new struct OperationParams();
             params->entityDelete = true;
             params->entityDeleteParams = EntityDeleteParams::Create(difficulty, SelectedEntityID,
-                                                                     entityData.XPos, entityData.YPos, entityData.EntityID);
+                                                                     entityData.XPos, entityData.YPos, entityData.EntityID,
+                                                                     currentRoom->GetRoomID());
             ExecuteOperation(params); // creates history entry and delete entity inside it
             SelectedEntityID = -1;
             singleton->RenderScreenElementsLayersUpdate(0xFFFFFFFFu, -1);
@@ -707,7 +712,8 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                 struct OperationParams *params = new struct OperationParams();
 
                 params->objectPositionChange = true;
-                params->objectMoveParams=ObjectMoveParams::Create(oldX, oldY, pX, pY, SelectedEntityID);
+                params->objectMoveParams=ObjectMoveParams::Create(oldX, oldY, pX, pY, SelectedEntityID,
+                                                                        currentRoom->GetRoomID());
                 ExecuteOperation(params);
             }
         }; break;
@@ -827,8 +833,9 @@ void MainGraphicsView::keyPressEvent(QKeyEvent *event)
                     {
                         int selectedLayer = singleton->GetEditModeWidgetPtr()->GetEditModeParams().selectedLayer;
                         struct OperationParams *params = new struct OperationParams();
-                    
+
                         params->tileChange = true;
+                        params->tileChangeRoomID = singleton->GetCurrentRoom()->GetRoomID();
                         for(int j = 0; j < rectheight; ++j) // delete rect
                         {
                             for(int i = 0; i < rectwidth; ++i)
