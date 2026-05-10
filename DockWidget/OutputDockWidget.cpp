@@ -82,6 +82,8 @@ OutputDockWidget::~OutputDockWidget()
 void OutputDockWidget::PrintString(QString str)
 {
     ui->textEdit_Output->append(str); // append function add a new paragraph to the textedit, no need to add an extra \n
+    QScrollBar *vBar = ui->textEdit_Output->verticalScrollBar();
+    vBar->setValue(vBar->maximum());
 }
 
 /// <summary>

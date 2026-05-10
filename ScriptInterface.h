@@ -147,11 +147,11 @@ public:
     Q_INVOKABLE void ResetRoomEntitySet(int roomId);
     Q_INVOKABLE void PostImportRefresh();
 
-    // Global Import stubs
-    Q_INVOKABLE bool ImportGlobalTilesets(QString jsonString);
-    Q_INVOKABLE bool ImportGlobalEntities(QString jsonString);
-    Q_INVOKABLE bool ImportGlobalEntitySets(QString jsonString);
-    Q_INVOKABLE bool ImportGlobalAnimatedTileGroups(QString jsonString);
+    // Global Import APIs (per-element create ExecuteOperation for Undo/Redo)
+    Q_INVOKABLE bool ImportTileset(int tilesetId, QString jsonString);
+    Q_INVOKABLE bool ImportEntity(int entityId, QString jsonString);
+    Q_INVOKABLE bool ImportEntitySet(int entitySetId, QString jsonString);
+    Q_INVOKABLE bool ImportAnimatedTileGroup(int groupId, QString jsonString);
     Q_INVOKABLE bool ImportGlobalWallPaint(QString jsonString);
     Q_INVOKABLE bool ImportGlobalCredits(QString jsonString);
     Q_INVOKABLE bool ImportLevelConfig(QString jsonString);

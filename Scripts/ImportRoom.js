@@ -2,15 +2,9 @@
 // Uses individual fine-grained import APIs for step-by-step import
 
 (function () {
-    // Helper: convert array of numbers to hex string (each number as 4 hex chars)
-    function arrayToTileHex(arr) {
-        var result = "";
-        for (var i = 0; i < arr.length; i++) {
-            var hex = arr[i].toString(16);
-            while (hex.length < 4) hex = "0" + hex;
-            result += hex;
-        }
-        return result;
+    // Helper: join hex row strings into a single hex string
+    function joinRowHexStrings(rows) {
+        return rows.join("");
     }
 
     // Helper: convert entities array to hex triple string "YPos XPos EntityID ..."
@@ -102,7 +96,7 @@
         if (layer.layerId === 0 && nonOriginalPtrs.layer0 >= 0x78F970) continue;
         if (layer.layerId === 3 && nonOriginalPtrs.layer3 >= 0x78F970) continue;
 
-        var tileDataHex = arrayToTileHex(layer.data);
+        var tileDataHex = joinRowHexStrings(layer.data);
         if (!WL4EditorInterface.ImportLayerTiles(layer.layerId, layer.width, layer.height, tileDataHex)) {
             WL4EditorInterface.alert("ImportLayerTiles failed for layer " + layer.layerId + ".");
             return;

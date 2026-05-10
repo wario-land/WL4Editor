@@ -57,15 +57,23 @@
             if (mappingType >= 0x10) {
                 if (mappingType < 0x20) {
                     for (var y = 0; y < h; y++) {
+                        var rowHex = "";
                         for (var x = 0; x < w; x++) {
-                            data.push(WL4EditorInterface.GetCurRoomTile16(li, x, y));
+                            var hv = WL4EditorInterface.GetCurRoomTile16(li, x, y).toString(16);
+                            while (hv.length < 4) hv = "0" + hv;
+                            rowHex += hv;
                         }
+                        data.push(rowHex);
                     }
                 } else {
                     for (var y = 0; y < h; y++) {
+                        var rowHex = "";
                         for (var x = 0; x < w; x++) {
-                            data.push(WL4EditorInterface.GetCurRoomTile8(li, x, y));
+                            var hv = WL4EditorInterface.GetCurRoomTile8(li, x, y).toString(16);
+                            while (hv.length < 4) hv = "0" + hv;
+                            rowHex += hv;
                         }
+                        data.push(rowHex);
                     }
                 }
             }
@@ -317,19 +325,21 @@
     var scatteredBlocks = [];
 
     for (var sbi = 0; sbi < scatteredBlockCount; sbi++) {
-        scatteredBlocks.push({
-            index: sbi,
-            address: WL4EditorInterface.ExportGetWallPaintScatteredBlockAddr(sbi),
-            size: WL4EditorInterface.ExportGetWallPaintScatteredBlockSize(sbi),
-            dataHex: WL4EditorInterface.ExportGetWallPaintScatteredBlockDataHex(sbi)
-        });
+        var addr = WL4EditorInterface.ExportGetWallPaintScatteredBlockAddr(sbi);
+        // Only include custom blocks (address in expansion ROM area)
+        if (addr >= 0x78F970) {
+            scatteredBlocks.push({
+                address: addr,
+                size: WL4EditorInterface.ExportGetWallPaintScatteredBlockSize(sbi),
+                dataHex: WL4EditorInterface.ExportGetWallPaintScatteredBlockDataHex(sbi)
+            });
+        }
     }
 
     levelObj.changedGlobals.wallPaintData = {
         gfxHex: WL4EditorInterface.ExportGetWallPaintGFXHex(),
         passageColorHex: WL4EditorInterface.ExportGetWallPaintPassageColorHex(),
         passageGrayHex: WL4EditorInterface.ExportGetWallPaintPassageGrayHex(),
-        scatteredBlockCount: scatteredBlockCount,
         scatteredBlocks: scatteredBlocks
     };
 

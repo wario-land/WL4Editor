@@ -39,18 +39,26 @@
 
         if (mappingType >= 0x10) {
             if (mappingType < 0x20) {
-                // Map16 layer
+                // Map16 layer — each row is a compact hex string (4 chars per tile)
                 for (var y = 0; y < height; y++) {
+                    var rowHex = "";
                     for (var x = 0; x < width; x++) {
-                        layerData.push(WL4EditorInterface.GetCurRoomTile16(i, x, y));
+                        var h = WL4EditorInterface.GetCurRoomTile16(i, x, y).toString(16);
+                        while (h.length < 4) h = "0" + h;
+                        rowHex += h;
                     }
+                    layerData.push(rowHex);
                 }
             } else {
-                // Tile8x8 layer (mappingType === 32)
+                // Tile8x8 layer
                 for (var y = 0; y < height; y++) {
+                    var rowHex = "";
                     for (var x = 0; x < width; x++) {
-                        layerData.push(WL4EditorInterface.GetCurRoomTile8(i, x, y));
+                        var h = WL4EditorInterface.GetCurRoomTile8(i, x, y).toString(16);
+                        while (h.length < 4) h = "0" + h;
+                        rowHex += h;
                     }
+                    layerData.push(rowHex);
                 }
             }
         }

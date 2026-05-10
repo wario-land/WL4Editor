@@ -461,16 +461,10 @@ namespace LevelComponents
         if (index < 0 || index >= map16array.size()) return QString();
         TileMap16 *tm16 = map16array[index];
         if (!tm16) return QString();
+        // Raw GBA format: 4 unsigned shorts (GetValue), 4 hex chars each = 16 hex chars
         QString hex;
         for (int corner = 0; corner < 4; ++corner)
-        {
-            Tile8x8 *tile = tm16->GetTile8X8(corner);
-            hex += QString::number(tile->GetIndex(), 16).rightJustified(3, '0') + ",";
-            hex += QString::number(tile->GetPaletteIndex(), 16).rightJustified(2, '0') + ",";
-            hex += (tile->GetFlipX() ? "1" : "0");
-            hex += (tile->GetFlipY() ? "1" : "0");
-            if (corner < 3) hex += ";";
-        }
+            hex += QString::number(tm16->GetTile8X8(corner)->GetValue(), 16).rightJustified(4, '0');
         return hex;
     }
 
@@ -545,17 +539,15 @@ namespace LevelComponents
 
     void Tileset::SetMap16DataHex(int index, QString hex)
     {
-        if (index < 0 || index >= map16array.size()) return;
-        QStringList corners = hex.split(";");
-        if (corners.size() != 4) return;
+        if (index < 0 || index >= map16array.size() || hex.length() < 16) return;
+        // Raw GBA format: 4 unsigned shorts, 4 hex chars each = 16 hex chars
         for (int corner = 0; corner < 4; ++corner)
         {
-            QStringList parts = corners[corner].split(",");
-            if (parts.size() != 4) continue;
-            int tileIdx = parts[0].toInt(nullptr, 16);
-            int palIdx = parts[1].toInt(nullptr, 16);
-            bool flipX = parts[2] == "1";
-            bool flipY = parts[3] == "1";
+            unsigned short value = (unsigned short) hex.mid(corner * 4, 4).toUShort(nullptr, 16);
+            int tileIdx = value & 0x3FF;
+            bool flipX = (value >> 10) & 1;
+            bool flipY = (value >> 11) & 1;
+            int palIdx = (value >> 12) & 0xF;
             Tile8x8 *tileRef = (tileIdx >= 0 && tileIdx < tile8x8array.size()) ? tile8x8array[tileIdx] : blankTile;
             map16array[index]->ResetTile8x8(tileRef, corner, tileIdx, palIdx, flipX, flipY);
         }
