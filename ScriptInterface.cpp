@@ -1010,28 +1010,16 @@ int ScriptInterface::ExportGetTilesetMap16Ptr(int id)
     return ROMUtils::singletonTilesets[id]->GetMap16Ptr();
 }
 
-int ScriptInterface::ExportGetTilesetTile8x8Count(int id)
-{
-    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return 0;
-    return ROMUtils::singletonTilesets[id]->GetTile8x8Count();
-}
-
-QString ScriptInterface::ExportGetTilesetTile8x8DataHex(int id, int index)
+QString ScriptInterface::ExportGetTilesetTile8x8DataHex(int id)
 {
     if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
-    return ROMUtils::singletonTilesets[id]->GetTile8x8DataHex(index);
+    return ROMUtils::singletonTilesets[id]->GetTile8x8DataHex();
 }
 
-int ScriptInterface::ExportGetTilesetMap16Count(int id)
-{
-    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return 0;
-    return ROMUtils::singletonTilesets[id]->GetMap16Count();
-}
-
-QString ScriptInterface::ExportGetTilesetMap16DataHex(int id, int index)
+QString ScriptInterface::ExportGetTilesetMap16DataHex(int id)
 {
     if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
-    return ROMUtils::singletonTilesets[id]->GetMap16DataHex(index);
+    return ROMUtils::singletonTilesets[id]->GetMap16DataHex();
 }
 
 QString ScriptInterface::ExportGetTilesetPalettesHex(int id)
@@ -1058,10 +1046,16 @@ QString ScriptInterface::ExportGetTilesetAnimatedSwitchTableHex(int id)
     return ROMUtils::singletonTilesets[id]->GetAnimatedSwitchTableHex();
 }
 
-QString ScriptInterface::ExportGetTilesetAnimatedTileDataHex(int id, int switchState)
+QString ScriptInterface::ExportGetTilesetAnimatedTileData0Hex(int id)
 {
     if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
-    return ROMUtils::singletonTilesets[id]->GetAnimatedTileDataHex(switchState);
+    return ROMUtils::singletonTilesets[id]->GetAnimatedTileDataHex(0);
+}
+
+QString ScriptInterface::ExportGetTilesetAnimatedTileData1Hex(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
+    return ROMUtils::singletonTilesets[id]->GetAnimatedTileDataHex(1);
 }
 
 // ---- Entity Export Getters ----
@@ -1705,37 +1699,29 @@ bool ScriptInterface::ImportTileset(int tilesetId, QString jsonString)
         newTileset->SetfgGFXlen(obj["fggfxLen"].toInt());
     }
 
-    // Apply tile8x8 data (array of hex strings, one per tile)
-    QJsonArray tile8x8Arr = obj["tile8x8Data"].toArray();
-    for (int i = 0; i < tile8x8Arr.size(); ++i)
-        newTileset->SetTile8x8DataHex(i, tile8x8Arr[i].toString());
+    // Apply tile8x8 data (single hex string for entire FG tile data)
+    if (obj.contains("tile8x8Data"))
+        newTileset->SetTile8x8DataHex(obj["tile8x8Data"].toString());
 
-    // Apply map16 data
-    QJsonArray map16Arr = obj["map16Data"].toArray();
-    for (int i = 0; i < map16Arr.size(); ++i)
-        newTileset->SetMap16DataHex(i, map16Arr[i].toString());
+    // Apply map16 data (single hex string for all 0x300 entries)
+    if (obj.contains("map16Data"))
+        newTileset->SetMap16DataHex(obj["map16Data"].toString());
 
-    // Apply palettes (combine per-palette hex strings into one combined hex blob)
+    // Apply palettes (single hex string for all 16 palettes)
     if (obj.contains("paletteData"))
-    {
-        QJsonArray paletteArr = obj["paletteData"].toArray();
-        QString combinedPaletteHex;
-        for (int i = 0; i < paletteArr.size(); ++i)
-            combinedPaletteHex += paletteArr[i].toString();
-        newTileset->SetAllPalettesHex(combinedPaletteHex);
-    }
+        newTileset->SetAllPalettesHex(obj["paletteData"].toString());
 
-    // Apply event/terrain/animated tables
+    // Apply event/terrain/animated switch tables
     if (obj.contains("eventTable"))
         newTileset->SetEventTableDataHex(obj["eventTable"].toString());
     if (obj.contains("terrainTable"))
         newTileset->SetTerrainTableDataHex(obj["terrainTable"].toString());
     if (obj.contains("animatedSwitchTable"))
         newTileset->SetAnimatedSwitchTableHex(obj["animatedSwitchTable"].toString());
-
-    QJsonArray animatedArr = obj["animatedTileData"].toArray();
-    for (int i = 0; i < animatedArr.size() && i < 2; ++i)
-        newTileset->SetAnimatedTileDataHex(i, animatedArr[i].toString());
+    if (obj.contains("animatedTileData0"))
+        newTileset->SetAnimatedTileDataHex(0, obj["animatedTileData0"].toString());
+    if (obj.contains("animatedTileData1"))
+        newTileset->SetAnimatedTileDataHex(1, obj["animatedTileData1"].toString());
 
     newTileset->SetChanged(true);
 

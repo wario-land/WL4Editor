@@ -198,45 +198,19 @@
 
     for (var ti = 0; ti < changedTilesetIds.length; ti++) {
         var tsId = changedTilesetIds[ti];
-        var tile8x8Count = WL4EditorInterface.ExportGetTilesetTile8x8Count(tsId);
-        var tile8x8Data = [];
-
-        for (var t8 = 0; t8 < tile8x8Count; t8++) {
-            tile8x8Data.push(WL4EditorInterface.ExportGetTilesetTile8x8DataHex(tsId, t8));
-        }
-
-        var map16Count = WL4EditorInterface.ExportGetTilesetMap16Count(tsId);
-        var map16Data = [];
-
-        for (var m16 = 0; m16 < map16Count; m16++) {
-            map16Data.push(WL4EditorInterface.ExportGetTilesetMap16DataHex(tsId, m16));
-        }
-
-        var allPalHex = WL4EditorInterface.ExportGetTilesetPalettesHex(tsId);
-        var paletteData = [];
-        for (var pid = 0; pid < 16; pid++) {
-            paletteData.push(allPalHex.substr(pid * 64, 64)); // 16 colors * 4 hex chars
-        }
-
-        // Animated tile data for switch states 0-1
-        var animatedTileData = [];
-        for (var ss = 0; ss < 2; ss++) {
-            animatedTileData.push(WL4EditorInterface.ExportGetTilesetAnimatedTileDataHex(tsId, ss));
-        }
 
         tilesets.push({
             id: tsId,
             fggfxPtr: WL4EditorInterface.ExportGetTilesetFGGFXPtr(tsId),
             fggfxLen: WL4EditorInterface.ExportGetTilesetFGGFXLen(tsId),
-            tile8x8Count: tile8x8Count,
-            tile8x8Data: tile8x8Data,
-            map16Count: map16Count,
-            map16Data: map16Data,
-            paletteData: paletteData,
+            tile8x8Data: WL4EditorInterface.ExportGetTilesetTile8x8DataHex(tsId),
+            map16Data: WL4EditorInterface.ExportGetTilesetMap16DataHex(tsId),
+            paletteData: WL4EditorInterface.ExportGetTilesetPalettesHex(tsId),
             eventTable: WL4EditorInterface.ExportGetTilesetEventTableHex(tsId),
             terrainTable: WL4EditorInterface.ExportGetTilesetTerrainTableHex(tsId),
             animatedSwitchTable: WL4EditorInterface.ExportGetTilesetAnimatedSwitchTableHex(tsId),
-            animatedTileData: animatedTileData
+            animatedTileData0: WL4EditorInterface.ExportGetTilesetAnimatedTileData0Hex(tsId),
+            animatedTileData1: WL4EditorInterface.ExportGetTilesetAnimatedTileData1Hex(tsId)
         });
     }
 

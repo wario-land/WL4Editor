@@ -96,15 +96,14 @@ public:
     Q_INVOKABLE int ExportGetTilesetBGGFXPtr(int id);
     Q_INVOKABLE int ExportGetTilesetBGGFXLen(int id);
     Q_INVOKABLE int ExportGetTilesetMap16Ptr(int id);
-    Q_INVOKABLE int ExportGetTilesetTile8x8Count(int id);
-    Q_INVOKABLE QString ExportGetTilesetTile8x8DataHex(int id, int index);
-    Q_INVOKABLE int ExportGetTilesetMap16Count(int id);
-    Q_INVOKABLE QString ExportGetTilesetMap16DataHex(int id, int index);
+    Q_INVOKABLE QString ExportGetTilesetTile8x8DataHex(int id);
+    Q_INVOKABLE QString ExportGetTilesetMap16DataHex(int id);
     Q_INVOKABLE QString ExportGetTilesetPalettesHex(int id);
     Q_INVOKABLE QString ExportGetTilesetEventTableHex(int id);
     Q_INVOKABLE QString ExportGetTilesetTerrainTableHex(int id);
     Q_INVOKABLE QString ExportGetTilesetAnimatedSwitchTableHex(int id);
-    Q_INVOKABLE QString ExportGetTilesetAnimatedTileDataHex(int id, int switchState);
+    Q_INVOKABLE QString ExportGetTilesetAnimatedTileData0Hex(int id);
+    Q_INVOKABLE QString ExportGetTilesetAnimatedTileData1Hex(int id);
 
     // Entity Export Getters
     Q_INVOKABLE int ExportGetEntityPaletteCount(int id);
