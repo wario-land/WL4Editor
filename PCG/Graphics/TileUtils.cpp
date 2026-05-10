@@ -42,7 +42,7 @@ bool PCG::GFXUtils::TileUtils::IsBlankTile_CurTilesetTile16(unsigned int tile16_
     auto tile16s = tileset->GetMap16arrayPtr();
     for (int pos = 0; pos < 4; pos++)
     {
-        char *data = tile16s[tile16_id]->GetTile8X8(pos)->CreateGraphicsData().data();
+        char *data = tile16s[tile16_id]->GetTile8X8(pos)->GetRawPixelData().data();
         for (int i = 0; i < 32; i++)
         {
             if (data[i] != 0) return false;

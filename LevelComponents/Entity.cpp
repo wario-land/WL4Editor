@@ -595,4 +595,80 @@ namespace LevelComponents
             palettes[palID_2][i] = colorData;
         }
     }
+    /// <summary>
+    /// Export palette data as hex string.
+    /// </summary>
+    /// <param name="paletteId">
+    /// Palette index to export.
+    /// </param>
+    /// <returns>
+    /// Hex string of 16 colors (16 x 8 hex chars = 128 chars).
+    /// </returns>
+    QString Entity::GetPaletteDataHex(int paletteId)
+    {
+        QString hex;
+        for (int i = 0; i < 16; ++i)
+        {
+            hex += QString::number(palettes[paletteId][i], 16).rightJustified(8, '0');
+        }
+        return hex;
+    }
+
+    /// <summary>
+    /// Export tile pixel data as hex string.
+    /// </summary>
+    /// <param name="index">
+    /// Tile index to export.
+    /// </param>
+    /// <returns>
+    /// Hex string of 32 bytes of 4bpp tile data (64 hex chars).
+    /// </returns>
+    QString Entity::GetTile8x8DataHex(int index)
+    {
+        if (index < 0 || index >= tile8x8data.size()) return QString();
+        Tile8x8 *tile = tile8x8data[index];
+        if (!tile || tile == blankTile) return QString();
+        QByteArray raw = tile->GetRawPixelData();
+        return QString(raw.toHex());
+    }
+
+    /// <summary>
+    /// Import palette data from hex string.
+    /// </summary>
+    /// <param name="paletteId">
+    /// Palette index to set.
+    /// </param>
+    /// <param name="hex">
+    /// Hex string of 16 colors (16 x 8 hex chars = 128 chars).
+    /// </param>
+    void Entity::SetPaletteDataHex(int paletteId, QString hex)
+    {
+        for (int i = 0; i < 16; ++i)
+        {
+            bool ok;
+            QRgb color = hex.mid(i * 8, 8).toUInt(&ok, 16);
+            SetColor(paletteId, i, color);
+        }
+    }
+
+    /// <summary>
+    /// Import tile pixel data from hex string.
+    /// </summary>
+    /// <param name="index">
+    /// Tile index to set.
+    /// </param>
+    /// <param name="hex">
+    /// Hex string of 32 bytes of 4bpp tile data (64 hex chars).
+    /// </param>
+    void Entity::SetTile8x8DataHex(int index, QString hex)
+    {
+        unsigned char data[32];
+        for (int i = 0; i < 32; ++i)
+        {
+            bool ok;
+            data[i] = hex.mid(i * 2, 2).toUInt(&ok, 16);
+        }
+        Tile8x8 *newtile = new Tile8x8(data, palettes);
+        SetTile8x8(newtile, index);
+    }
 } // namespace LevelComponents

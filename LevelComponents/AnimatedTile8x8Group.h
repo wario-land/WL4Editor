@@ -42,18 +42,22 @@ namespace LevelComponents
 
         // getters
         unsigned short GetGlobalID() { return globalId; }
-        unsigned char GetAnimationType() { return animationtype; }
-        unsigned char GetCountPerFrame() { return countPerFrame; }
+        int GetAnimationType() { return animationtype; }
+        int GetCountPerFrame() { return countPerFrame; }
         int GetTotalFrameCount() { return tile8x8Numcount / 4; }
         QVector<Tile8x8 *> GetRenderTile8x8s(bool switchIsOn, QVector<QRgb> *palettes);
         QByteArray GetTileData() {return tileData; }
         bool IsNewAnimatedTile8x8Group() { return Changed; }
+        int GetTile8x8Count() { return tile8x8Numcount; }
+        QString GetTileDataHex(int index);
 
         // setters
-        void SetAnimationType(unsigned int value) { animationtype = static_cast<enum TileAnimationType>(value); }
-        void SetCountPerFrame(unsigned char _countPerFrame) { countPerFrame = _countPerFrame; }
+        void SetAnimationType(int val) { animationtype = static_cast<enum TileAnimationType>(val); }
+        void SetCountPerFrame(int val) { countPerFrame = static_cast<unsigned char>(val); }
         void SetTileData(QByteArray _tiledata) { if (!(_tiledata.size() % (32 * 4))) {tileData = _tiledata; tile8x8Numcount = _tiledata.size() / 32;} }
         void SetChanged(bool change) { Changed = change; }
+        void SetTotalFrameCount(int val) { tile8x8Numcount = val * 4; }
+        void SetTileDataHex(int index, QString hex);
 
     private:
         unsigned short globalId = -1;

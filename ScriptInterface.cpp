@@ -10,6 +10,9 @@ extern WL4EditorWindow *singleton;
 #endif
 
 #include <QApplication>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
 // ---------------------------Helper functions--------------------------------------
 unsigned short *QStringToU16(QString input)
@@ -541,6 +544,31 @@ void ScriptInterface::SetCurrentRoomId(int roomid)
     singleton->SetCurrentRoomId(roomid);
 }
 
+int ScriptInterface::AddNewRoom()
+{
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+    int newRoomId = level->GetRooms().size();
+    if (newRoomId >= 16)
+    {
+        log("Cannot add another Room to the current Level (max 16).");
+        return -1;
+    }
+    LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+    int entitySetId = currentRoom->GetCurrentEntitySetID();
+    int tilesetId = currentRoom->GetTilesetID();
+    level->AddRoom(new LevelComponents::Room(newRoomId, level->GetLevelID(),
+                                              tilesetId, entitySetId));
+    level->AddDoor(newRoomId, entitySetId);
+    level->GetLevelHeader()->NumOfMap++;
+    singleton->SetUnsavedChanges(true);
+    LevelComponents::Room *newRoom = level->GetRooms()[newRoomId];
+    newRoom->SetEntityListDirty(0, true);
+    newRoom->SetEntityListDirty(1, true);
+    newRoom->SetEntityListDirty(2, true);
+    log("Added new room with ID " + QString::number(newRoomId));
+    return newRoomId;
+}
+
 void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
 {
     if(layerID > 2 || layerID < 0) {
@@ -719,6 +747,29 @@ void ScriptInterface::WriteTxtFile(QString filepath, QString test)
     }
 }
 
+void ScriptInterface::WriteJsonFile(QString filepath, QString test)
+{
+    if(!filepath.compare(""))
+        filepath = QFileDialog::getSaveFileName(singleton, tr("Save JSON file"), singleton->GetdDialogInitialPath(), tr("JSON files (*.json)"));
+    if(!filepath.compare(""))
+    {
+        log("Invalid file path!");
+        return;
+    }
+    QFile file(filepath);
+    if(file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QTextStream out(&file);
+        out << test;
+        file.close();
+        log("Writing finished");
+    }
+    else
+    {
+        log("Write file failed !");
+    }
+}
+
 QString ScriptInterface::ReadTxtFile(QString filepath)
 {
     QFile f(filepath);
@@ -731,9 +782,1040 @@ QString ScriptInterface::ReadTxtFile(QString filepath)
     return in.readAll();
 }
 
+QString ScriptInterface::ReadJsonFileDialog()
+{
+    QString filepath = QFileDialog::getOpenFileName(singleton, tr("Open JSON file"),
+        singleton->GetdDialogInitialPath(), tr("JSON files (*.json)"));
+    if (filepath.isEmpty()) return QString();
+    QFile f(filepath);
+    if (!f.open(QFile::ReadOnly | QFile::Text))
+    {
+        log("Read file failed !");
+        return QString();
+    }
+    return QTextStream(&f).readAll();
+}
+
 void ScriptInterface::ShowSaveDataAnalysis()
 {
     log(ROMUtils::SaveDataAnalysis());
+}
+
+// ------------------------------ Export/Import APIs ----------------------------------------
+
+// ---- Room Export Getters ----
+
+int ScriptInterface::ExportGetLayerDataPtr(int layerId)
+{
+    return (int) singleton->GetCurrentRoom()->GetLayerDataPtr(layerId);
+}
+
+int ScriptInterface::ExportGetTilesetId()
+{
+    return singleton->GetCurrentRoom()->GetTilesetID();
+}
+
+int ScriptInterface::ExportGetEntitySetId()
+{
+    return singleton->GetCurrentRoom()->GetCurrentEntitySetID();
+}
+
+int ScriptInterface::ExportGetCameraControlType()
+{
+    return (int) singleton->GetCurrentRoom()->GetCameraControlType();
+}
+
+QString ScriptInterface::ExportGetCameraControlRecords()
+{
+    return singleton->GetCurrentRoom()->GetCameraControlRecordsString();
+}
+
+QString ScriptInterface::ExportGetDoorsFullData()
+{
+    auto doordata = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID(
+        singleton->GetCurrentRoom()->GetRoomID());
+    QString result;
+    for (auto &door : doordata)
+    {
+        result += QString::number(door.DoorTypeByte) + "," +
+                  QString::number(door.RoomID) + "," +
+                  QString::number(door.x1) + "," +
+                  QString::number(door.x2) + "," +
+                  QString::number(door.y1) + "," +
+                  QString::number(door.y2) + "," +
+                  QString::number(door.DestinationDoorGlobalID) + "," +
+                  QString::number(door.HorizontalDeltaWario) + "," +
+                  QString::number(door.VerticalDeltaWario) + "," +
+                  QString::number(door.EntitySetID) + "," +
+                  QString::number(door.BGM_ID) + ";";
+    }
+    if (!result.isEmpty())
+        result.chop(1);
+    return result;
+}
+
+QString ScriptInterface::ExportGetRoomHeaderHex()
+{
+    return singleton->GetCurrentRoom()->GetRoomHeaderHex();
+}
+
+// ---- Level Export Getters ----
+
+QString ScriptInterface::ExportGetLevelName()
+{
+    return singleton->GetCurrentLevel()->GetLevelName();
+}
+
+QString ScriptInterface::ExportGetLevelNameJ()
+{
+    return singleton->GetCurrentLevel()->GetLevelName(1);
+}
+
+int ScriptInterface::ExportGetLevelTimerSeconds(int difficulty)
+{
+    return singleton->GetCurrentLevel()->GetTimeCountdownCounter(
+        static_cast<LevelComponents::__LevelDifficulty>(difficulty));
+}
+
+int ScriptInterface::ExportGetLevelPassage()
+{
+    return (int) singleton->GetCurrentLevel()->GetPassage();
+}
+
+int ScriptInterface::ExportGetLevelStage()
+{
+    return (int) singleton->GetCurrentLevel()->GetStage();
+}
+
+// ---- Changed Globals Detection ----
+
+QString ScriptInterface::ExportGetChangedTilesetIds()
+{
+    QString result;
+    for (int i = 0; i < 92; ++i)
+    {
+        if (ROMUtils::singletonTilesets[i] && ROMUtils::singletonTilesets[i]->IsNewTileset())
+        {
+            if (!result.isEmpty()) result += ",";
+            result += QString::number(i);
+        }
+    }
+    return result;
+}
+
+QString ScriptInterface::ExportGetChangedEntityIds()
+{
+    QString result;
+    for (int i = 0; i < 129; ++i)
+    {
+        if (ROMUtils::entities[i] && ROMUtils::entities[i]->IsNewEntity())
+        {
+            if (!result.isEmpty()) result += ",";
+            result += QString::number(i);
+        }
+    }
+    return result;
+}
+
+QString ScriptInterface::ExportGetChangedEntitySetIds()
+{
+    QString result;
+    for (int i = 0; i < 90; ++i)
+    {
+        if (ROMUtils::entitiessets[i] && ROMUtils::entitiessets[i]->IsNewEntitySet())
+        {
+            if (!result.isEmpty()) result += ",";
+            result += QString::number(i);
+        }
+    }
+    return result;
+}
+
+QString ScriptInterface::ExportGetChangedAnimatedTileGroupIds()
+{
+    QString result;
+    for (int i = 0; i < 270; ++i)
+    {
+        if (ROMUtils::animatedTileGroups[i] && ROMUtils::animatedTileGroups[i]->IsNewAnimatedTile8x8Group())
+        {
+            if (!result.isEmpty()) result += ",";
+            result += QString::number(i);
+        }
+    }
+    return result;
+}
+
+// ---- Tileset Export Getters ----
+
+int ScriptInterface::ExportGetTilesetFGGFXPtr(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return 0;
+    return ROMUtils::singletonTilesets[id]->GetfgGFXptr();
+}
+
+int ScriptInterface::ExportGetTilesetFGGFXLen(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return 0;
+    return ROMUtils::singletonTilesets[id]->GetfgGFXlen();
+}
+
+int ScriptInterface::ExportGetTilesetBGGFXPtr(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return 0;
+    return ROMUtils::singletonTilesets[id]->GetbgGFXptr();
+}
+
+int ScriptInterface::ExportGetTilesetBGGFXLen(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return 0;
+    return ROMUtils::singletonTilesets[id]->GetbgGFXlen();
+}
+
+int ScriptInterface::ExportGetTilesetMap16Ptr(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return 0;
+    return ROMUtils::singletonTilesets[id]->GetMap16Ptr();
+}
+
+int ScriptInterface::ExportGetTilesetTile8x8Count(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return 0;
+    return ROMUtils::singletonTilesets[id]->GetTile8x8Count();
+}
+
+QString ScriptInterface::ExportGetTilesetTile8x8DataHex(int id, int index)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
+    return ROMUtils::singletonTilesets[id]->GetTile8x8DataHex(index);
+}
+
+int ScriptInterface::ExportGetTilesetMap16Count(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return 0;
+    return ROMUtils::singletonTilesets[id]->GetMap16Count();
+}
+
+QString ScriptInterface::ExportGetTilesetMap16DataHex(int id, int index)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
+    return ROMUtils::singletonTilesets[id]->GetMap16DataHex(index);
+}
+
+QString ScriptInterface::ExportGetTilesetPalettesHex(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
+    return ROMUtils::singletonTilesets[id]->GetAllPalettesHex();
+}
+
+QString ScriptInterface::ExportGetTilesetEventTableHex(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
+    return ROMUtils::singletonTilesets[id]->GetEventTableDataHex();
+}
+
+QString ScriptInterface::ExportGetTilesetTerrainTableHex(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
+    return ROMUtils::singletonTilesets[id]->GetTerrainTableDataHex();
+}
+
+QString ScriptInterface::ExportGetTilesetAnimatedSwitchTableHex(int id)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
+    return ROMUtils::singletonTilesets[id]->GetAnimatedSwitchTableHex();
+}
+
+QString ScriptInterface::ExportGetTilesetAnimatedTileDataHex(int id, int switchState)
+{
+    if (id < 0 || id >= 92 || !ROMUtils::singletonTilesets[id]) return "";
+    return ROMUtils::singletonTilesets[id]->GetAnimatedTileDataHex(switchState);
+}
+
+// ---- Entity Export Getters ----
+
+int ScriptInterface::ExportGetEntityPaletteCount(int id)
+{
+    if (id < 0 || id >= 129 || !ROMUtils::entities[id]) return 0;
+    return ROMUtils::entities[id]->GetPalNum();
+}
+
+QString ScriptInterface::ExportGetEntityPaletteDataHex(int id, int paletteId)
+{
+    if (id < 0 || id >= 129 || !ROMUtils::entities[id]) return "";
+    return ROMUtils::entities[id]->GetPaletteDataHex(paletteId);
+}
+
+int ScriptInterface::ExportGetEntityTile8x8Count(int id)
+{
+    if (id < 0 || id >= 129 || !ROMUtils::entities[id]) return 0;
+    return ROMUtils::entities[id]->GetTilesNum();
+}
+
+QString ScriptInterface::ExportGetEntityTile8x8DataHex(int id, int index)
+{
+    if (id < 0 || id >= 129 || !ROMUtils::entities[id]) return "";
+    return ROMUtils::entities[id]->GetTile8x8DataHex(index);
+}
+
+// ---- EntitySet Export Getters ----
+
+int ScriptInterface::ExportGetEntitySetInfoTableSize(int id)
+{
+    if (id < 0 || id >= 90 || !ROMUtils::entitiessets[id]) return 0;
+    return ROMUtils::entitiessets[id]->GetEntityInfoTableSize();
+}
+
+QString ScriptInterface::ExportGetEntitySetInfoEntry(int id, int index)
+{
+    if (id < 0 || id >= 90 || !ROMUtils::entitiessets[id]) return "";
+    return ROMUtils::entitiessets[id]->GetEntityInfoEntry(index);
+}
+
+// ---- AnimatedTile8x8Group Export Getters ----
+
+int ScriptInterface::ExportGetAnimatedTileGroupAnimType(int id)
+{
+    if (id < 0 || id >= 270 || !ROMUtils::animatedTileGroups[id]) return 0;
+    return ROMUtils::animatedTileGroups[id]->GetAnimationType();
+}
+
+int ScriptInterface::ExportGetAnimatedTileGroupCountPerFrame(int id)
+{
+    if (id < 0 || id >= 270 || !ROMUtils::animatedTileGroups[id]) return 0;
+    return ROMUtils::animatedTileGroups[id]->GetCountPerFrame();
+}
+
+int ScriptInterface::ExportGetAnimatedTileGroupTotalFrameCount(int id)
+{
+    if (id < 0 || id >= 270 || !ROMUtils::animatedTileGroups[id]) return 0;
+    return ROMUtils::animatedTileGroups[id]->GetTotalFrameCount();
+}
+
+int ScriptInterface::ExportGetAnimatedTileGroupTileCount(int id)
+{
+    if (id < 0 || id >= 270 || !ROMUtils::animatedTileGroups[id]) return 0;
+    return ROMUtils::animatedTileGroups[id]->GetTile8x8Count();
+}
+
+QString ScriptInterface::ExportGetAnimatedTileGroupTileDataHex(int id, int index)
+{
+    if (id < 0 || id >= 270 || !ROMUtils::animatedTileGroups[id]) return "";
+    return ROMUtils::animatedTileGroups[id]->GetTileDataHex(index);
+}
+
+// ---- WallPaint/Credits Export ----
+
+// ---- Helper: enumerate wall paint scattered blocks from ROM pointer tables ----
+struct WallPaintScatteredBlockEntry
+{
+    unsigned int romAddr;
+    unsigned int size;
+};
+
+static std::vector<WallPaintScatteredBlockEntry> EnumerateWallPaintScatteredBlocks()
+{
+    std::vector<WallPaintScatteredBlockEntry> blocks;
+    for (int passage = 0; passage < 6; passage++)
+    {
+        unsigned int mmapAddr = ROMUtils::PointerFromData(
+            WL4Constants::WallPaintPalSixInOneMMapColorPtrTable + 4 * passage);
+
+        for (int level = 0; level < 4; level++)
+        {
+            unsigned int gradAddr = ROMUtils::PointerFromData(
+                WL4Constants::WallPaintPalStartLevelPointerTable + passage * 16 + level * 4);
+            if (!gradAddr) continue;
+
+            // Gradient palette data (256 bytes = 8 palettes x 32 bytes)
+            blocks.push_back({gradAddr, 256});
+
+            // MMAP palette for each regular level (32 bytes)
+            blocks.push_back({mmapAddr + 32 * (0xA + level), 32});
+        }
+
+        // Boss level MMAP palette (32 bytes)
+        blocks.push_back({mmapAddr + 32 * (0xA + 4), 32});
+    }
+    return blocks;
+}
+
+QString ScriptInterface::ExportGetWallPaintGFXHex()
+{
+    QByteArray bytes(
+        reinterpret_cast<const char *>(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr]),
+        1024 * 5 * 6);
+    return QString::fromLatin1(bytes.toHex());
+}
+
+QString ScriptInterface::ExportGetWallPaintPassageColorHex()
+{
+    QByteArray bytes(
+        reinterpret_cast<const char *>(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor]),
+        32 * 5 * 6);
+    return QString::fromLatin1(bytes.toHex());
+}
+
+QString ScriptInterface::ExportGetWallPaintPassageGrayHex()
+{
+    QByteArray bytes(
+        reinterpret_cast<const char *>(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray]),
+        32 * 5 * 6);
+    return QString::fromLatin1(bytes.toHex());
+}
+
+int ScriptInterface::ExportGetWallPaintScatteredBlockCount()
+{
+    auto blocks = EnumerateWallPaintScatteredBlocks();
+    return static_cast<int>(blocks.size());
+}
+
+int ScriptInterface::ExportGetWallPaintScatteredBlockAddr(int index)
+{
+    auto blocks = EnumerateWallPaintScatteredBlocks();
+    if (index < 0 || index >= static_cast<int>(blocks.size())) return 0;
+    return static_cast<int>(blocks[index].romAddr);
+}
+
+int ScriptInterface::ExportGetWallPaintScatteredBlockSize(int index)
+{
+    auto blocks = EnumerateWallPaintScatteredBlocks();
+    if (index < 0 || index >= static_cast<int>(blocks.size())) return 0;
+    return static_cast<int>(blocks[index].size);
+}
+
+QString ScriptInterface::ExportGetWallPaintScatteredBlockDataHex(int index)
+{
+    auto blocks = EnumerateWallPaintScatteredBlocks();
+    if (index < 0 || index >= static_cast<int>(blocks.size())) return QString();
+    QByteArray bytes(
+        reinterpret_cast<const char *>(&ROMUtils::ROMFileMetadata->ROMDataPtr[blocks[index].romAddr]),
+        blocks[index].size);
+    return QString::fromLatin1(bytes.toHex());
+}
+
+QString ScriptInterface::ExportGetCreditsDataHex()
+{
+    QByteArray bytes(
+        reinterpret_cast<const char *>(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles]),
+        NUMBEROFCREDITSSCREEN * 1280);
+    return QString::fromLatin1(bytes.toHex());
+}
+
+// ---- Import APIs ----
+
+// ---- Room Import APIs ----
+
+bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0Width, int layer0Height,
+                                       QString roomHeaderHex)
+{
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    int roomId = singleton->GetCurrentRoomId();
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+
+    int curRoomWidth = (int) room->GetLayer1Width();
+    int curRoomHeight = (int) room->GetLayer1Height();
+    int curLayer0Width = (int) room->GetLayer0Width();
+    int curLayer0Height = (int) room->GetLayer0Height();
+
+    bool dimsChanged = (roomWidth != curRoomWidth || roomHeight != curRoomHeight ||
+                        layer0Width != curLayer0Width || layer0Height != curLayer0Height);
+
+    DialogParams::RoomConfigParams *currentParams = new DialogParams::RoomConfigParams(room);
+    DialogParams::RoomConfigParams *newParams = new DialogParams::RoomConfigParams(room);
+    newParams->RoomWidth = roomWidth;
+    newParams->RoomHeight = roomHeight;
+    newParams->Layer0Width = layer0Width;
+    newParams->Layer0Height = layer0Height;
+
+    // Parse roomHeaderHex into __RoomHeader struct
+    struct LevelComponents::__RoomHeader header;
+    memset(&header, 0, sizeof(header));
+    unsigned char *raw = (unsigned char *) &header;
+    for (int i = 0; i < (int) sizeof(header) && i * 2 < roomHeaderHex.length(); ++i)
+        raw[i] = (unsigned char) roomHeaderHex.mid(i * 2, 2).toInt(nullptr, 16);
+
+    // Apply header fields
+    newParams->CurrentTilesetIndex = header.TilesetID;
+    newParams->Layer0MappingTypeParam = header.Layer0MappingType; // preserves extra bits
+    newParams->Layer2MappingTypeParam = header.Layer2MappingType; // preserves extra bits
+    newParams->BackgroundLayerEnable = (header.Layer3MappingType != 0);
+    newParams->BGMVolume = header.BGMVolume;
+    newParams->LayerPriorityAndAlphaAttr = header.RenderEffect;
+    newParams->RasterType = header.LayerGFXEffect01;
+    newParams->Water = header.LayerGFXEffect02;
+    newParams->BGLayerScrollFlag = header.Layer3Scrolling;
+
+    // Handle Layer 3 DataPtr preservation
+    if (header.Layer3MappingType != 0)
+    {
+        if (header.Layer3Data < WL4Constants::AvailableSpaceBeginningInROM)
+        {
+            newParams->BackgroundLayerDataPtr = (int) header.Layer3Data;
+        }
+    }
+
+    // Layer data reshaping (matching SetRoomSize pattern)
+    if ((newParams->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
+    {
+        newParams->LayerData[0] = RoomConfigDialog::ChangeLayerDimensions(layer0Width, layer0Height,
+                                                                          currentParams->Layer0Width,
+                                                                          currentParams->Layer0Height,
+                                                                          currentParams->LayerData[0]);
+    }
+    else
+    {
+        newParams->LayerData[0] = nullptr;
+    }
+    newParams->LayerData[1] = RoomConfigDialog::ChangeLayerDimensions(roomWidth, roomHeight,
+                                                                      currentParams->RoomWidth,
+                                                                      currentParams->RoomHeight,
+                                                                      currentParams->LayerData[1]);
+    if ((newParams->Layer2MappingTypeParam & 0x30) == LevelComponents::LayerMap16)
+    {
+        newParams->LayerData[2] = RoomConfigDialog::ChangeLayerDimensions(roomWidth, roomHeight,
+                                                                          currentParams->RoomWidth,
+                                                                          currentParams->RoomHeight,
+                                                                          currentParams->LayerData[2]);
+    }
+    else
+    {
+        newParams->LayerData[2] = nullptr;
+    }
+
+    OperationParams *op = new OperationParams;
+    op->roomConfigChange = true;
+    op->lastRoomConfigParams = currentParams;
+    op->newRoomConfigParams = newParams;
+
+    // Handle trim of doors/entities/camera if room dimensions change
+    if (dimsChanged && (roomWidth != curRoomWidth || roomHeight != curRoomHeight))
+    {
+        LevelComponents::LevelDoorVector *oldDoorVec =
+            new LevelComponents::LevelDoorVector(level->GetDoorList());
+        std::vector<LevelComponents::EntityRoomAttribute> oldNormal = room->GetEntityListData(1);
+        std::vector<LevelComponents::EntityRoomAttribute> oldHard = room->GetEntityListData(0);
+        std::vector<LevelComponents::EntityRoomAttribute> oldSHard = room->GetEntityListData(2);
+        auto oldCameraType = room->GetCameraControlType();
+        auto oldCameraRecords = room->GetCameraControlRecords(true);
+
+        singleton->TrimElementsOutOfRoomBounds(room, roomWidth, roomHeight);
+
+        LevelComponents::LevelDoorVector *newDoorVec =
+            new LevelComponents::LevelDoorVector(level->GetDoorList());
+        std::vector<LevelComponents::EntityRoomAttribute> newNormal = room->GetEntityListData(1);
+        std::vector<LevelComponents::EntityRoomAttribute> newHard = room->GetEntityListData(0);
+        std::vector<LevelComponents::EntityRoomAttribute> newSHard = room->GetEntityListData(2);
+        auto newCameraType = room->GetCameraControlType();
+        auto newCameraRecords = room->GetCameraControlRecords(true);
+
+        op->doorVectorChange = true;
+        op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+        op->entityNormalChange = true;
+        op->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal, roomId);
+        op->entityHardChange = true;
+        op->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard, roomId);
+        op->entitySHardChange = true;
+        op->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard, roomId);
+        op->cameraControlChange = true;
+        op->cameraControlChangeParams = CameraControlChangeParams::Create(roomId, oldCameraType, newCameraType,
+                                                                          oldCameraRecords, newCameraRecords);
+    }
+
+    ExecuteOperation(op);
+    log("ImportRoomConfig: Room config applied.");
+    return true;
+}
+
+bool ScriptInterface::ImportLayerTiles(int layerId, int width, int height, QString tileDataHex)
+{
+    if (layerId < 0 || layerId > 2)
+    {
+        log("ImportLayerTiles: Invalid layer ID " + QString::number(layerId));
+        return false;
+    }
+
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    int roomId = singleton->GetCurrentRoomId();
+    LevelComponents::Layer *layer = room->GetLayer(layerId);
+    unsigned short *oldData = layer->GetLayerData();
+    int expectedSize = width * height;
+
+    // Parse hex string into unsigned short array
+    // The hex string is concatenated 4-char hex values (e.g. "001A00B2...")
+    unsigned short *newData = new unsigned short[expectedSize];
+    int hexLen = tileDataHex.size();
+    for (int i = 0; i < expectedSize; ++i)
+    {
+        if (i * 4 + 4 <= hexLen)
+        {
+            newData[i] = (unsigned short) tileDataHex.mid(i * 4, 4).toUInt(nullptr, 16);
+        }
+        else
+        {
+            newData[i] = 0;
+        }
+    }
+
+    OperationParams *op = new OperationParams;
+    LayerChangeParams *layerChange = LayerChangeParams::Create(oldData, newData, width, height, roomId);
+    delete[] newData;
+
+    switch (layerId)
+    {
+    case 0:
+        op->layer0Change = true;
+        op->layer0ChangeParams = layerChange;
+        break;
+    case 1:
+        op->layer1Change = true;
+        op->layer1ChangeParams = layerChange;
+        break;
+    case 2:
+        op->layer2Change = true;
+        op->layer2ChangeParams = layerChange;
+        break;
+    }
+
+    ExecuteOperation(op);
+    log("ImportLayerTiles: Layer " + QString::number(layerId) + " tiles imported.");
+    return true;
+}
+
+bool ScriptInterface::ImportDoorsDisableDest(QString doorsData)
+{
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+    int roomId = singleton->GetCurrentRoomId();
+
+    LevelComponents::LevelDoorVector *oldDoorVec =
+        new LevelComponents::LevelDoorVector(level->GetDoorList());
+    LevelComponents::LevelDoorVector *newDoorVec =
+        new LevelComponents::LevelDoorVector(level->GetDoorList());
+
+    // Delete all existing doors for this room
+    QVector<struct LevelComponents::DoorEntry> existingDoors =
+        newDoorVec->GetDoorsByRoomID((unsigned char) roomId);
+    for (int i = existingDoors.size() - 1; i >= 0; --i)
+    {
+        unsigned char globalId = newDoorVec->GetGlobalIDByLocalID((unsigned char) roomId, (unsigned char) i);
+        newDoorVec->DeleteDoor(globalId);
+    }
+
+    // Parse semicolon-separated door entries: type,roomID,x1,x2,y1,y2,destID,dx,dy,entitySetID,bgm
+    QStringList doorEntries = doorsData.split(QChar(';'), Qt::SkipEmptyParts);
+    for (const QString &entry : doorEntries)
+    {
+        QStringList fields = entry.split(QChar(','), Qt::SkipEmptyParts);
+        if (fields.size() < 11) continue;
+
+        int type = fields[0].toInt();
+        int doorRoomId = fields[1].toInt();
+        int x1 = fields[2].toInt();
+        int x2 = fields[3].toInt();
+        int y1 = fields[4].toInt();
+        int y2 = fields[5].toInt();
+        // fields[6] = destID (ignored)
+        int deltaX = fields[7].toInt();
+        int deltaY = fields[8].toInt();
+        int entitySetId = fields[9].toInt();
+        int bgm = fields[10].toInt();
+
+        // Room 0 portal (global ID 0) cannot be deleted; update it in-place instead
+        if (roomId == 0 && type == 1)
+        {
+            newDoorVec->SetDoorPlace(0, (unsigned char) x1, (unsigned char) x2,
+                                     (unsigned char) y1, (unsigned char) y2);
+            newDoorVec->SetDestinationDoor(0, 0);
+            newDoorVec->SetWarioDelta(0, (signed char) deltaX, (signed char) deltaY);
+            newDoorVec->SetBGM(0, (unsigned short) bgm);
+            newDoorVec->SetEntitySetID(0, (unsigned char) entitySetId);
+            continue;
+        }
+        unsigned char newId = (unsigned char) newDoorVec->AddDoor(
+            (unsigned char) doorRoomId, (unsigned char) entitySetId, (unsigned char) type);
+        newDoorVec->SetDoorPlace(newId, (unsigned char) x1, (unsigned char) x2,
+                                 (unsigned char) y1, (unsigned char) y2);
+        newDoorVec->SetDestinationDoor(newId, 0);
+        newDoorVec->SetWarioDelta(newId, (signed char) deltaX, (signed char) deltaY);
+        newDoorVec->SetBGM(newId, (unsigned short) bgm);
+    }
+
+    OperationParams *op = new OperationParams;
+    op->doorVectorChange = true;
+    op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+    ExecuteOperation(op);
+
+    log("ImportDoorsDisableDest: Doors imported with destinations disabled.");
+    return true;
+}
+
+bool ScriptInterface::ImportDoors(QString doorsData)
+{
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+    int roomId = singleton->GetCurrentRoomId();
+
+    LevelComponents::LevelDoorVector *oldDoorVec =
+        new LevelComponents::LevelDoorVector(level->GetDoorList());
+    LevelComponents::LevelDoorVector *newDoorVec =
+        new LevelComponents::LevelDoorVector(level->GetDoorList());
+
+    // Delete all existing doors for this room
+    QVector<struct LevelComponents::DoorEntry> existingDoors =
+        newDoorVec->GetDoorsByRoomID((unsigned char) roomId);
+    for (int i = existingDoors.size() - 1; i >= 0; --i)
+    {
+        unsigned char globalId = newDoorVec->GetGlobalIDByLocalID((unsigned char) roomId, (unsigned char) i);
+        newDoorVec->DeleteDoor(globalId);
+    }
+
+    // Parse semicolon-separated door entries: type,roomID,x1,x2,y1,y2,destID,dx,dy,entitySetID,bgm
+    QStringList doorEntries = doorsData.split(QChar(';'), Qt::SkipEmptyParts);
+    for (const QString &entry : doorEntries)
+    {
+        QStringList fields = entry.split(QChar(','), Qt::SkipEmptyParts);
+        if (fields.size() < 11) continue;
+
+        int type = fields[0].toInt();
+        int doorRoomId = fields[1].toInt();
+        int x1 = fields[2].toInt();
+        int x2 = fields[3].toInt();
+        int y1 = fields[4].toInt();
+        int y2 = fields[5].toInt();
+        int destID = fields[6].toInt();
+        int deltaX = fields[7].toInt();
+        int deltaY = fields[8].toInt();
+        int entitySetId = fields[9].toInt();
+        int bgm = fields[10].toInt();
+
+        // Room 0 portal (global ID 0) cannot be deleted; update it in-place instead
+        if (roomId == 0 && type == 1)
+        {
+            newDoorVec->SetDoorPlace(0, (unsigned char) x1, (unsigned char) x2,
+                                     (unsigned char) y1, (unsigned char) y2);
+            newDoorVec->SetDestinationDoor(0, (unsigned char) destID);
+            newDoorVec->SetWarioDelta(0, (signed char) deltaX, (signed char) deltaY);
+            newDoorVec->SetBGM(0, (unsigned short) bgm);
+            newDoorVec->SetEntitySetID(0, (unsigned char) entitySetId);
+            continue;
+        }
+        unsigned char newId = (unsigned char) newDoorVec->AddDoor(
+            (unsigned char) doorRoomId, (unsigned char) entitySetId, (unsigned char) type);
+        newDoorVec->SetDoorPlace(newId, (unsigned char) x1, (unsigned char) x2,
+                                 (unsigned char) y1, (unsigned char) y2);
+        newDoorVec->SetDestinationDoor(newId, (unsigned char) destID);
+        newDoorVec->SetWarioDelta(newId, (signed char) deltaX, (signed char) deltaY);
+        newDoorVec->SetBGM(newId, (unsigned short) bgm);
+    }
+
+    OperationParams *op = new OperationParams;
+    op->doorVectorChange = true;
+    op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+    ExecuteOperation(op);
+
+    log("ImportDoors: Doors imported with destinations preserved.");
+    return true;
+}
+
+bool ScriptInterface::ImportEntityList(int difficulty, QString entityDataHex)
+{
+    if (difficulty < 0 || difficulty > 2)
+    {
+        log("ImportEntityList: Invalid difficulty " + QString::number(difficulty));
+        return false;
+    }
+
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    int roomId = singleton->GetCurrentRoomId();
+
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = room->GetEntityListData(difficulty);
+    std::vector<LevelComponents::EntityRoomAttribute> newList;
+
+    // Parse hex triples: "YPos XPos EntityID ..." space-separated, hex values
+    QStringList tokens = entityDataHex.split(QChar(' '), Qt::SkipEmptyParts);
+    for (int i = 0; i + 2 < tokens.size(); i += 3)
+    {
+        LevelComponents::EntityRoomAttribute attr;
+        attr.YPos = (unsigned char) tokens[i].toUInt(nullptr, 16);
+        attr.XPos = (unsigned char) tokens[i + 1].toUInt(nullptr, 16);
+        attr.EntityID = (unsigned char) tokens[i + 2].toUInt(nullptr, 16);
+        newList.push_back(attr);
+    }
+
+    OperationParams *op = new OperationParams;
+    EntityListChangeParams *entityChange = EntityListChangeParams::Create(oldList, newList, roomId);
+    switch (difficulty)
+    {
+    case 0:
+        op->entityHardChange = true;
+        op->entityHardChangeParams = entityChange;
+        break;
+    case 1:
+        op->entityNormalChange = true;
+        op->entityNormalChangeParams = entityChange;
+        break;
+    case 2:
+        op->entitySHardChange = true;
+        op->entitySHardChangeParams = entityChange;
+        break;
+    }
+
+    ExecuteOperation(op);
+    log("ImportEntityList: Difficulty " + QString::number(difficulty) + " imported.");
+    return true;
+}
+
+bool ScriptInterface::ImportCameraControl(int camType, QString recordsData)
+{
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    int roomId = singleton->GetCurrentRoomId();
+
+    auto oldType = room->GetCameraControlType();
+    auto oldRecords = room->GetCameraControlRecords(true);
+
+    std::vector<struct LevelComponents::__CameraControlRecord *> newRecordsVec;
+
+    // Parse semicolon-separated records: trans,x1,x2,y1,y2,x3,y3,offset,value
+    if (!recordsData.isEmpty())
+    {
+        QStringList recordEntries = recordsData.split(QChar(';'), Qt::SkipEmptyParts);
+        for (const QString &entry : recordEntries)
+        {
+            QStringList fields = entry.split(QChar(','), Qt::SkipEmptyParts);
+            if (fields.size() < 9) continue;
+
+            struct LevelComponents::__CameraControlRecord *rec =
+                new LevelComponents::__CameraControlRecord();
+            rec->TransboundaryControl = (unsigned char) fields[0].toInt();
+            rec->x1 = (unsigned char) fields[1].toInt();
+            rec->x2 = (unsigned char) fields[2].toInt();
+            rec->y1 = (unsigned char) fields[3].toInt();
+            rec->y2 = (unsigned char) fields[4].toInt();
+            rec->x3 = (unsigned char) fields[5].toInt();
+            rec->y3 = (unsigned char) fields[6].toInt();
+            rec->ChangeValueOffset = (unsigned char) fields[7].toInt();
+            rec->ChangedValue = (unsigned char) fields[8].toInt();
+            newRecordsVec.push_back(rec);
+        }
+    }
+
+    OperationParams *op = new OperationParams;
+    op->cameraControlChange = true;
+    op->cameraControlChangeParams = CameraControlChangeParams::Create(
+        roomId, oldType, static_cast<LevelComponents::__CameraControlType>(camType),
+        oldRecords, newRecordsVec);
+    ExecuteOperation(op);
+    log("ImportCameraControl: Camera control imported.");
+    return true;
+}
+
+QString ScriptInterface::GetCurRoomDoorGlobalIds()
+{
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    QVector<struct LevelComponents::DoorEntry> doors =
+        level->GetDoorListRef().GetDoorsByRoomID((unsigned char) room->GetRoomID());
+    QString result;
+    for (int i = 0; i < doors.size(); ++i)
+    {
+        unsigned char globalId = level->GetDoorListRef().GetGlobalIDByLocalID(
+            (unsigned char) room->GetRoomID(), (unsigned char) i);
+        if (i > 0) result += ",";
+        result += QString::number(globalId);
+    }
+    return result;
+}
+
+bool ScriptInterface::DeleteDoorByGlobalId(int globalId)
+{
+    return singleton->GetCurrentLevel()->DeleteDoorByGlobalID(globalId);
+}
+
+void ScriptInterface::ResetRoomEntitySet(int roomId)
+{
+    LevelComponents::Room *room = singleton->GetCurrentLevel()->GetRooms()[roomId];
+    auto doors = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID(
+        (unsigned char) roomId);
+    if (!doors.isEmpty())
+        room->SetCurrentEntitySet(doors[0].EntitySetID);
+}
+
+void ScriptInterface::PostImportRefresh()
+{
+    singleton->RenderScreenFull();
+    singleton->ResetEntitySetDockWidget();
+    singleton->ResetCameraControlDockWidget();
+}
+
+// ---- Global Import Stubs ----
+
+bool ScriptInterface::ImportGlobalTilesets(QString jsonString)
+{
+    log("ImportGlobalTilesets: received " + QString::number(jsonString.size()) + " bytes of JSON data.");
+    return true;
+}
+
+bool ScriptInterface::ImportGlobalEntities(QString jsonString)
+{
+    log("ImportGlobalEntities: received " + QString::number(jsonString.size()) + " bytes of JSON data.");
+    return true;
+}
+
+bool ScriptInterface::ImportGlobalEntitySets(QString jsonString)
+{
+    log("ImportGlobalEntitySets: received " + QString::number(jsonString.size()) + " bytes of JSON data.");
+    return true;
+}
+
+bool ScriptInterface::ImportGlobalAnimatedTileGroups(QString jsonString)
+{
+    log("ImportGlobalAnimatedTileGroups: received " + QString::number(jsonString.size()) + " bytes of JSON data.");
+    return true;
+}
+
+bool ScriptInterface::ImportGlobalWallPaint(QString jsonString)
+{
+    QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
+    if (doc.isNull() || !doc.isObject())
+    {
+        log("ImportGlobalWallPaint: Invalid JSON.");
+        return false;
+    }
+    QJsonObject obj = doc.object();
+
+    QString gfxHex = obj["gfxHex"].toString();
+    QString passageColorHex = obj["passageColorHex"].toString();
+    QString passageGrayHex = obj["passageGrayHex"].toString();
+
+    if (gfxHex.isEmpty() || passageColorHex.isEmpty() || passageGrayHex.isEmpty())
+    {
+        log("ImportGlobalWallPaint: Missing required hex fields (gfxHex, passageColorHex, passageGrayHex).");
+        return false;
+    }
+
+    QByteArray newGFX = QByteArray::fromHex(gfxHex.toLatin1());
+    QByteArray newPassageColor = QByteArray::fromHex(passageColorHex.toLatin1());
+    QByteArray newPassageGray = QByteArray::fromHex(passageGrayHex.toLatin1());
+
+    const int gfxSize = 1024 * 5 * 6;
+    const int palSize = 32 * 5 * 6;
+
+    if (newGFX.size() != gfxSize || newPassageColor.size() != palSize || newPassageGray.size() != palSize)
+    {
+        log("ImportGlobalWallPaint: Data size mismatch. Expected GFX=" +
+            QString::number(gfxSize) + ", Color=" + QString::number(palSize) +
+            ", Gray=" + QString::number(palSize) + " bytes.");
+        return false;
+    }
+
+    // Capture old ROM data for fixed blocks
+    unsigned char oldGFX[1024 * 5 * 6];
+    unsigned char oldPassageColor[32 * 5 * 6];
+    unsigned char oldPassageGray[32 * 5 * 6];
+    memcpy(oldGFX, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], gfxSize);
+    memcpy(oldPassageColor, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], palSize);
+    memcpy(oldPassageGray, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], palSize);
+
+    // Apply new fixed-block data to ROM
+    memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], newGFX.constData(), gfxSize);
+    memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], newPassageColor.constData(), palSize);
+    memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], newPassageGray.constData(), palSize);
+
+    // Create WallPaintChangeParams for fixed blocks
+    WallPaintChangeParams *wp = WallPaintChangeParams::Create(
+        oldGFX, reinterpret_cast<unsigned char *>(newGFX.data()),
+        oldPassageColor, reinterpret_cast<unsigned char *>(newPassageColor.data()),
+        oldPassageGray, reinterpret_cast<unsigned char *>(newPassageGray.data()));
+
+    // Handle scattered blocks
+    QJsonArray scatteredArray = obj["scatteredBlocks"].toArray();
+    for (const QJsonValue &val : scatteredArray)
+    {
+        QJsonObject blockObj = val.toObject();
+        unsigned int addr = static_cast<unsigned int>(blockObj["addr"].toInt());
+        unsigned int size = static_cast<unsigned int>(blockObj["size"].toInt());
+        QString dataHex = blockObj["dataHex"].toString();
+        QByteArray newBlockData = QByteArray::fromHex(dataHex.toLatin1());
+
+        // Capture old data
+        unsigned char *oldBlockData = new unsigned char[size];
+        memcpy(oldBlockData, &ROMUtils::ROMFileMetadata->ROMDataPtr[addr], size);
+
+        // Apply new data to ROM
+        int copySize = qMin(newBlockData.size(), static_cast<int>(size));
+        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[addr], newBlockData.constData(), static_cast<size_t>(copySize));
+
+        // Add to change params (ScatteredBlock constructor copies internally)
+        wp->AddScatteredBlock(addr, size, oldBlockData,
+                              &ROMUtils::ROMFileMetadata->ROMDataPtr[addr]);
+        delete[] oldBlockData;
+    }
+
+    // Execute operation
+    struct OperationParams *operation = new struct OperationParams;
+    operation->WallPaintChange = true;
+    operation->wallPaintChangeParams = wp;
+    ExecuteOperation(operation);
+
+    log("ImportGlobalWallPaint: Wall paint data imported successfully.");
+    return true;
+}
+
+bool ScriptInterface::ImportGlobalCredits(QString jsonString)
+{
+    QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
+    if (doc.isNull() || !doc.isObject())
+    {
+        log("ImportGlobalCredits: Invalid JSON.");
+        return false;
+    }
+    QJsonObject obj = doc.object();
+    QString hexStr = obj["creditsHex"].toString();
+    if (hexStr.isEmpty())
+    {
+        log("ImportGlobalCredits: Missing 'creditsHex' field.");
+        return false;
+    }
+
+    QByteArray newData = QByteArray::fromHex(hexStr.toLatin1());
+    const int expectedSize = NUMBEROFCREDITSSCREEN * 1280;
+    if (newData.size() != expectedSize)
+    {
+        log("ImportGlobalCredits: Data size mismatch. Expected " +
+            QString::number(expectedSize) + " bytes, got " +
+            QString::number(newData.size()) + " bytes.");
+        return false;
+    }
+
+    // Capture old credit data
+    DialogParams::CreditsEditParams *lastParams = new DialogParams::CreditsEditParams();
+    memcpy(lastParams->oldCreditData,
+           &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
+           expectedSize);
+
+    // Apply new data to ROM
+    memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
+           newData.constData(), static_cast<size_t>(expectedSize));
+
+    // Capture new credit data
+    DialogParams::CreditsEditParams *newParams = new DialogParams::CreditsEditParams();
+    memcpy(newParams->newCreditData,
+           &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
+           expectedSize);
+
+    // Create and execute operation
+    OperationParams *operation = new OperationParams;
+    operation->CreditChange = true;
+    operation->lastCreditsEditParams = lastParams;
+    operation->newCreditsEditParams = newParams;
+    ExecuteOperation(operation);
+
+    log("ImportGlobalCredits: Credits imported successfully.");
+    return true;
+}
+
+bool ScriptInterface::ImportLevelConfig(QString jsonString)
+{
+    log("ImportLevelConfig: received " + QString::number(jsonString.size()) + " bytes of JSON data.");
+    return true;
 }
 
 // ---------------------- current Room's hint layer render stuff --------------------------

@@ -32,6 +32,12 @@ namespace LevelComponents
         void SetChanged(bool change) { Changed = change; }
         bool IsNewEntitySet() { return Changed; }
 
+        // Export/Import methods
+        int GetEntityInfoTableSize();
+        QString GetEntityInfoEntry(int index);
+        void ClearEntityInfoTable();
+        void SetEntityInfoEntry(int index, int globalEntityId, int paletteOffset);
+
     private:
         int EntitySetID; // from 0 to 89 inclusive in theory(??), but only from 0 to 82 inclusive are available
         QVector<EntitySetinfoTableElement> EntityinfoTable; // max item number 0x20

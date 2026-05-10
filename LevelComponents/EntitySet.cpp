@@ -275,4 +275,61 @@ namespace LevelComponents
         }
     }
 
+    /// <summary>
+    /// Get the size of the Entity info table.
+    /// </summary>
+    /// <returns>
+    /// Number of entries in the Entity info table.
+    /// </returns>
+    int EntitySet::GetEntityInfoTableSize()
+    {
+        return EntityinfoTable.size();
+    }
+
+    /// <summary>
+    /// Get an entry from the Entity info table as a comma-separated string.
+    /// </summary>
+    /// <param name="index">
+    /// Index of the entry to retrieve.
+    /// </param>
+    /// <returns>
+    /// "globalEntityID,paletteOffset" string.
+    /// </returns>
+    QString EntitySet::GetEntityInfoEntry(int index)
+    {
+        if (index < 0 || index >= EntityinfoTable.size())
+            return QString();
+        return QString::number(EntityinfoTable[index].Global_EntityID) + "," +
+               QString::number(EntityinfoTable[index].paletteOffset);
+    }
+
+    /// <summary>
+    /// Clear the Entity info table.
+    /// </summary>
+    void EntitySet::ClearEntityInfoTable()
+    {
+        EntityinfoTable.clear();
+    }
+
+    /// <summary>
+    /// Set an entry in the Entity info table, resizing if necessary.
+    /// </summary>
+    /// <param name="index">
+    /// Index of the entry to set.
+    /// </param>
+    /// <param name="globalEntityId">
+    /// Global entity ID.
+    /// </param>
+    /// <param name="paletteOffset">
+    /// Palette offset.
+    /// </param>
+    void EntitySet::SetEntityInfoEntry(int index, int globalEntityId, int paletteOffset)
+    {
+        if (index >= EntityinfoTable.size())
+        {
+            EntityinfoTable.resize(index + 1);
+        }
+        EntityinfoTable[index].Global_EntityID = globalEntityId;
+        EntityinfoTable[index].paletteOffset = paletteOffset;
+    }
 } // namespace LevelComponents

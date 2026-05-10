@@ -447,4 +447,163 @@ namespace LevelComponents
             SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
         }
     }
+    QString Tileset::GetTile8x8DataHex(int index)
+    {
+        if (index < 0 || index >= tile8x8array.size()) return QString();
+        Tile8x8 *tile = tile8x8array[index];
+        if (!tile || tile == blankTile) return QString();
+        QByteArray raw = tile->GetRawPixelData();
+        return QString(raw.toHex());
+    }
+
+    QString Tileset::GetMap16DataHex(int index)
+    {
+        if (index < 0 || index >= map16array.size()) return QString();
+        TileMap16 *tm16 = map16array[index];
+        if (!tm16) return QString();
+        QString hex;
+        for (int corner = 0; corner < 4; ++corner)
+        {
+            Tile8x8 *tile = tm16->GetTile8X8(corner);
+            hex += QString::number(tile->GetIndex(), 16).rightJustified(3, '0') + ",";
+            hex += QString::number(tile->GetPaletteIndex(), 16).rightJustified(2, '0') + ",";
+            hex += (tile->GetFlipX() ? "1" : "0");
+            hex += (tile->GetFlipY() ? "1" : "0");
+            if (corner < 3) hex += ";";
+        }
+        return hex;
+    }
+
+    QString Tileset::GetAllPalettesHex()
+    {
+        ReGeneratePaletteData();
+        if (!TilesetPaletteData) return QString();
+        QString hex;
+        for (int i = 0; i < 16 * 16; ++i)
+            hex += QString::number(TilesetPaletteData[i], 16).rightJustified(4, '0');
+        return hex;
+    }
+
+    QString Tileset::GetEventTableDataHex()
+    {
+        if (!Map16EventTable) return QString();
+        QString hex;
+        for (int i = 0; i < Tile16DefaultNum; ++i)
+        {
+            hex += QString::number(Map16EventTable[i], 16).rightJustified(4, '0');
+        }
+        return hex;
+    }
+
+    QString Tileset::GetTerrainTableDataHex()
+    {
+        if (!Map16TerrainTypeIDTable) return QString();
+        QString hex;
+        for (int i = 0; i < Tile16DefaultNum; ++i)
+        {
+            hex += QString::number(Map16TerrainTypeIDTable[i], 16).rightJustified(2, '0');
+        }
+        return hex;
+    }
+
+    QString Tileset::GetAnimatedSwitchTableHex()
+    {
+        if (!AnimatedTileSwitchTable) return QString();
+        QString hex;
+        for (int i = 0; i < 16; ++i)
+        {
+            hex += QString::number(AnimatedTileSwitchTable[i], 16).rightJustified(2, '0');
+        }
+        return hex;
+    }
+
+    QString Tileset::GetAnimatedTileDataHex(int switchState)
+    {
+        if (switchState < 0 || switchState > 1 || !AnimatedTileData[switchState]) return QString();
+        QString hex;
+        for (int i = 0; i < 16; ++i)
+        {
+            hex += QString::number(AnimatedTileData[switchState][i], 16).rightJustified(4, '0');
+        }
+        return hex;
+    }
+
+    void Tileset::SetTile8x8DataHex(int index, QString hex)
+    {
+        if (index < 0 || index >= tile8x8array.size() || hex.length() < 64) return;
+        unsigned char data[32];
+        for (int i = 0; i < 32; ++i)
+        {
+            bool ok;
+            data[i] = (unsigned char) hex.mid(i * 2, 2).toInt(&ok, 16);
+        }
+        Tile8x8 *oldTile = tile8x8array[index];
+        if (oldTile && oldTile != blankTile)
+            delete oldTile;
+        tile8x8array[index] = new Tile8x8(data, palettes);
+    }
+
+    void Tileset::SetMap16DataHex(int index, QString hex)
+    {
+        if (index < 0 || index >= map16array.size()) return;
+        QStringList corners = hex.split(";");
+        if (corners.size() != 4) return;
+        for (int corner = 0; corner < 4; ++corner)
+        {
+            QStringList parts = corners[corner].split(",");
+            if (parts.size() != 4) continue;
+            int tileIdx = parts[0].toInt(nullptr, 16);
+            int palIdx = parts[1].toInt(nullptr, 16);
+            bool flipX = parts[2] == "1";
+            bool flipY = parts[3] == "1";
+            Tile8x8 *tileRef = (tileIdx >= 0 && tileIdx < tile8x8array.size()) ? tile8x8array[tileIdx] : blankTile;
+            map16array[index]->ResetTile8x8(tileRef, corner, tileIdx, palIdx, flipX, flipY);
+        }
+    }
+
+    void Tileset::SetAllPalettesHex(QString hex)
+    {
+        if (!TilesetPaletteData || hex.length() < 16 * 16 * 4) return;
+        for (int i = 0; i < 16 * 16; ++i)
+            TilesetPaletteData[i] = (unsigned short) hex.mid(i * 4, 4).toUShort(nullptr, 16);
+        for (int p = 0; p < 16; ++p)
+        {
+            for (int c = 1; c < 16; ++c)
+            {
+                unsigned short data = TilesetPaletteData[16 * p + c];
+                int r = (data & 0x1F) << 3;
+                int g = ((data >> 5) & 0x1F) << 3;
+                int b = ((data >> 10) & 0x1F) << 3;
+                palettes[p][c] = QColor(r, g, b).rgb();
+            }
+        }
+    }
+
+    void Tileset::SetEventTableDataHex(QString hex)
+    {
+        if (!Map16EventTable || hex.length() < (int)(Tile16DefaultNum * 4)) return;
+        for (int i = 0; i < Tile16DefaultNum; ++i)
+            Map16EventTable[i] = (unsigned short) hex.mid(i * 4, 4).toUShort(nullptr, 16);
+    }
+
+    void Tileset::SetTerrainTableDataHex(QString hex)
+    {
+        if (!Map16TerrainTypeIDTable || hex.length() < (int)(Tile16DefaultNum * 2)) return;
+        for (int i = 0; i < Tile16DefaultNum; ++i)
+            Map16TerrainTypeIDTable[i] = (unsigned char) hex.mid(i * 2, 2).toUShort(nullptr, 16);
+    }
+
+    void Tileset::SetAnimatedSwitchTableHex(QString hex)
+    {
+        if (!AnimatedTileSwitchTable || hex.length() < 32) return;
+        for (int i = 0; i < 16; ++i)
+            AnimatedTileSwitchTable[i] = (unsigned char) hex.mid(i * 2, 2).toUShort(nullptr, 16);
+    }
+
+    void Tileset::SetAnimatedTileDataHex(int switchState, QString hex)
+    {
+        if (switchState < 0 || switchState > 1 || !AnimatedTileData[switchState] || hex.length() < 64) return;
+        for (int i = 0; i < 16; ++i)
+            AnimatedTileData[switchState][i] = (unsigned short) hex.mid(i * 4, 4).toUShort(nullptr, 16);
+    }
 } // namespace LevelComponents

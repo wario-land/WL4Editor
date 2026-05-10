@@ -42,6 +42,7 @@ public:
 
     // Setter
     Q_INVOKABLE void SetCurrentRoomId(int roomid);
+    Q_INVOKABLE int AddNewRoom();
     Q_INVOKABLE void SetCurRoomTile16(int layerID, int TileID, int x, int y);
     Q_INVOKABLE void SetRoomSize(int roomwidth, int roomheight, int layer0width, int layer0height);
     Q_INVOKABLE void SetEntityListData(QString entitylistdata, int entitylistid = -1);
@@ -58,10 +59,102 @@ public:
 
     // File operations
     Q_INVOKABLE void WriteTxtFile(QString filePath = QString(""), QString test = "");
+    Q_INVOKABLE void WriteJsonFile(QString filePath = QString(""), QString test = "");
     Q_INVOKABLE QString ReadTxtFile(QString filepath);
+    Q_INVOKABLE QString ReadJsonFileDialog();
 
     // helper functions
     Q_INVOKABLE void ShowSaveDataAnalysis();
+
+    // Export/Import APIs
+
+    // Room Export Getters
+    Q_INVOKABLE int ExportGetLayerDataPtr(int layerId);
+    Q_INVOKABLE int ExportGetTilesetId();
+    Q_INVOKABLE int ExportGetEntitySetId();
+    Q_INVOKABLE int ExportGetCameraControlType();
+    Q_INVOKABLE QString ExportGetCameraControlRecords();
+    Q_INVOKABLE QString ExportGetDoorsFullData();
+    Q_INVOKABLE QString ExportGetRoomHeaderHex();
+
+    // Level Export Getters
+    Q_INVOKABLE QString ExportGetLevelName();
+    Q_INVOKABLE QString ExportGetLevelNameJ();
+    Q_INVOKABLE int ExportGetLevelTimerSeconds(int difficulty);
+    Q_INVOKABLE int ExportGetLevelPassage();
+    Q_INVOKABLE int ExportGetLevelStage();
+
+    // Changed Globals Detection
+    Q_INVOKABLE QString ExportGetChangedTilesetIds();
+    Q_INVOKABLE QString ExportGetChangedEntityIds();
+    Q_INVOKABLE QString ExportGetChangedEntitySetIds();
+    Q_INVOKABLE QString ExportGetChangedAnimatedTileGroupIds();
+
+    // Tileset Export Getters
+    Q_INVOKABLE int ExportGetTilesetFGGFXPtr(int id);
+    Q_INVOKABLE int ExportGetTilesetFGGFXLen(int id);
+    Q_INVOKABLE int ExportGetTilesetBGGFXPtr(int id);
+    Q_INVOKABLE int ExportGetTilesetBGGFXLen(int id);
+    Q_INVOKABLE int ExportGetTilesetMap16Ptr(int id);
+    Q_INVOKABLE int ExportGetTilesetTile8x8Count(int id);
+    Q_INVOKABLE QString ExportGetTilesetTile8x8DataHex(int id, int index);
+    Q_INVOKABLE int ExportGetTilesetMap16Count(int id);
+    Q_INVOKABLE QString ExportGetTilesetMap16DataHex(int id, int index);
+    Q_INVOKABLE QString ExportGetTilesetPalettesHex(int id);
+    Q_INVOKABLE QString ExportGetTilesetEventTableHex(int id);
+    Q_INVOKABLE QString ExportGetTilesetTerrainTableHex(int id);
+    Q_INVOKABLE QString ExportGetTilesetAnimatedSwitchTableHex(int id);
+    Q_INVOKABLE QString ExportGetTilesetAnimatedTileDataHex(int id, int switchState);
+
+    // Entity Export Getters
+    Q_INVOKABLE int ExportGetEntityPaletteCount(int id);
+    Q_INVOKABLE QString ExportGetEntityPaletteDataHex(int id, int paletteId);
+    Q_INVOKABLE int ExportGetEntityTile8x8Count(int id);
+    Q_INVOKABLE QString ExportGetEntityTile8x8DataHex(int id, int index);
+
+    // EntitySet Export Getters
+    Q_INVOKABLE int ExportGetEntitySetInfoTableSize(int id);
+    Q_INVOKABLE QString ExportGetEntitySetInfoEntry(int id, int index);
+
+    // AnimatedTile8x8Group Export Getters
+    Q_INVOKABLE int ExportGetAnimatedTileGroupAnimType(int id);
+    Q_INVOKABLE int ExportGetAnimatedTileGroupCountPerFrame(int id);
+    Q_INVOKABLE int ExportGetAnimatedTileGroupTotalFrameCount(int id);
+    Q_INVOKABLE int ExportGetAnimatedTileGroupTileCount(int id);
+    Q_INVOKABLE QString ExportGetAnimatedTileGroupTileDataHex(int id, int index);
+
+    // WallPaint/Credits Export
+    Q_INVOKABLE QString ExportGetWallPaintGFXHex();
+    Q_INVOKABLE QString ExportGetWallPaintPassageColorHex();
+    Q_INVOKABLE QString ExportGetWallPaintPassageGrayHex();
+    Q_INVOKABLE int ExportGetWallPaintScatteredBlockCount();
+    Q_INVOKABLE int ExportGetWallPaintScatteredBlockAddr(int index);
+    Q_INVOKABLE int ExportGetWallPaintScatteredBlockSize(int index);
+    Q_INVOKABLE QString ExportGetWallPaintScatteredBlockDataHex(int index);
+    Q_INVOKABLE QString ExportGetCreditsDataHex();
+
+    // Import APIs
+    // Room import APIs (called by JS in order)
+    Q_INVOKABLE bool ImportRoomConfig(int roomWidth, int roomHeight, int layer0Width, int layer0Height,
+                                       QString roomHeaderHex);
+    Q_INVOKABLE bool ImportLayerTiles(int layerId, int width, int height, QString tileDataHex);
+    Q_INVOKABLE bool ImportDoorsDisableDest(QString doorsData);
+    Q_INVOKABLE bool ImportDoors(QString doorsData);
+    Q_INVOKABLE bool ImportEntityList(int difficulty, QString entityDataHex);
+    Q_INVOKABLE bool ImportCameraControl(int camType, QString recordsData);
+    Q_INVOKABLE QString GetCurRoomDoorGlobalIds();
+    Q_INVOKABLE bool DeleteDoorByGlobalId(int globalId);
+    Q_INVOKABLE void ResetRoomEntitySet(int roomId);
+    Q_INVOKABLE void PostImportRefresh();
+
+    // Global Import stubs
+    Q_INVOKABLE bool ImportGlobalTilesets(QString jsonString);
+    Q_INVOKABLE bool ImportGlobalEntities(QString jsonString);
+    Q_INVOKABLE bool ImportGlobalEntitySets(QString jsonString);
+    Q_INVOKABLE bool ImportGlobalAnimatedTileGroups(QString jsonString);
+    Q_INVOKABLE bool ImportGlobalWallPaint(QString jsonString);
+    Q_INVOKABLE bool ImportGlobalCredits(QString jsonString);
+    Q_INVOKABLE bool ImportLevelConfig(QString jsonString);
 };
 
 class HintLayer : public QObject

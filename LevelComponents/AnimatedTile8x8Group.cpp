@@ -109,5 +109,52 @@ namespace LevelComponents
 
         return result;
     }
+
+    /// <summary>
+    /// Export tile data at the given index as a hex string.
+    /// </summary>
+    /// <param name="index">
+    /// Tile index (0-based) within the tile data.
+    /// </param>
+    /// <returns>
+    /// Hex string of 32 bytes (64 hex chars) for one 4bpp Tile8x8.
+    /// </returns>
+    QString AnimatedTile8x8Group::GetTileDataHex(int index)
+    {
+        QString hex;
+        int offset = index * 32;
+        if (offset + 32 > tileData.size())
+            return hex;
+        for (int i = 0; i < 32; ++i)
+        {
+            hex += QString::number((unsigned char) tileData[offset + i], 16).rightJustified(2, '0');
+        }
+        return hex;
+    }
+
+    /// <summary>
+    /// Import tile data from a hex string at the given index.
+    /// </summary>
+    /// <param name="index">
+    /// Tile index (0-based) within the tile data.
+    /// </param>
+    /// <param name="hex">
+    /// Hex string of 32 bytes (64 hex chars) for one 4bpp Tile8x8.
+    /// </param>
+    void AnimatedTile8x8Group::SetTileDataHex(int index, QString hex)
+    {
+        int offset = index * 32;
+        int neededSize = offset + 32;
+        if (neededSize > tileData.size())
+        {
+            tileData.resize(neededSize);
+        }
+        for (int i = 0; i < 32; ++i)
+        {
+            bool ok;
+            tileData[offset + i] = hex.mid(i * 2, 2).toUInt(&ok, 16);
+        }
+        tile8x8Numcount = tileData.size() / 32;
+    }
 }
 

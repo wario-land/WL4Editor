@@ -1214,7 +1214,7 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                                 int startId = this->tmpEntry.TileDataRAMOffsetNum;
                                 for (int j = startId; j < 0x400; j++)
                                 {
-                                    memcpy(&tmp_current_tile8x8_data[(j - startId) * 32], tile8x8array[j]->CreateGraphicsData().data(), 32);
+                                    memcpy(&tmp_current_tile8x8_data[(j - startId) * 32], tile8x8array[j]->GetRawPixelData().data(), 32);
                                 }
 
                                 // Reset optionalgraphicWidth and optionalgraphicHeight if needed
