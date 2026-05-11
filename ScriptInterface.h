@@ -126,10 +126,6 @@ public:
     Q_INVOKABLE QString ExportGetWallPaintGFXHex();
     Q_INVOKABLE QString ExportGetWallPaintPassageColorHex();
     Q_INVOKABLE QString ExportGetWallPaintPassageGrayHex();
-    Q_INVOKABLE int ExportGetWallPaintScatteredBlockCount();
-    Q_INVOKABLE int ExportGetWallPaintScatteredBlockAddr(int index);
-    Q_INVOKABLE int ExportGetWallPaintScatteredBlockSize(int index);
-    Q_INVOKABLE QString ExportGetWallPaintScatteredBlockDataHex(int index);
     Q_INVOKABLE QString ExportGetCreditsDataHex();
 
     // Import APIs
@@ -147,13 +143,20 @@ public:
     Q_INVOKABLE void PostImportRefresh();
 
     // Global Import APIs (per-element create ExecuteOperation for Undo/Redo)
-    Q_INVOKABLE bool ImportTileset(int tilesetId, QString jsonString);
-    Q_INVOKABLE bool ImportEntity(int entityId, QString jsonString);
-    Q_INVOKABLE bool ImportEntitySet(int entitySetId, QString jsonString);
-    Q_INVOKABLE bool ImportAnimatedTileGroup(int groupId, QString jsonString);
-    Q_INVOKABLE bool ImportGlobalWallPaint(QString jsonString);
-    Q_INVOKABLE bool ImportGlobalCredits(QString jsonString);
-    Q_INVOKABLE bool ImportLevelConfig(QString jsonString);
+    Q_INVOKABLE bool ImportTileset(int tilesetId, int fggfxPtr, int fggfxLen,
+                                     QString tile8x8Data, QString map16Data, QString paletteData,
+                                     QString eventTable, QString terrainTable,
+                                     QString animatedSwitchTable,
+                                     QString animatedTileData0, QString animatedTileData1);
+    Q_INVOKABLE bool ImportEntity(int entityId, QString paletteData, QString tile8x8Data);
+    Q_INVOKABLE bool ImportEntitySet(int entitySetId, QString infoTable);
+    Q_INVOKABLE bool ImportAnimatedTileGroup(int groupId, int animType, int countPerFrame,
+                                               int totalFrameCount, QString tileData);
+    Q_INVOKABLE bool ImportGlobalWallPaint(QString gfxHex, QString passageColorHex,
+                                             QString passageGrayHex);
+    Q_INVOKABLE bool ImportGlobalCredits(QString creditsHex);
+    Q_INVOKABLE bool ImportLevelConfig(QString levelName, QString levelNameJ,
+                                         int timerHard, int timerNormal, int timerSHard);
 };
 
 class HintLayer : public QObject

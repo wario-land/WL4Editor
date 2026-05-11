@@ -298,26 +298,10 @@
     levelObj.changedGlobals.animatedTileGroups = animatedTileGroups;
 
     // ---------- Export wall paint data ----------
-    var scatteredBlockCount = WL4EditorInterface.ExportGetWallPaintScatteredBlockCount();
-    var scatteredBlocks = [];
-
-    for (var sbi = 0; sbi < scatteredBlockCount; sbi++) {
-        var addr = WL4EditorInterface.ExportGetWallPaintScatteredBlockAddr(sbi);
-        // Only include custom blocks (address in expansion ROM area)
-        if (addr >= 0x78F970) {
-            scatteredBlocks.push({
-                address: addr,
-                size: WL4EditorInterface.ExportGetWallPaintScatteredBlockSize(sbi),
-                dataHex: WL4EditorInterface.ExportGetWallPaintScatteredBlockDataHex(sbi)
-            });
-        }
-    }
-
     levelObj.changedGlobals.wallPaintData = {
         gfxHex: WL4EditorInterface.ExportGetWallPaintGFXHex(),
         passageColorHex: WL4EditorInterface.ExportGetWallPaintPassageColorHex(),
-        passageGrayHex: WL4EditorInterface.ExportGetWallPaintPassageGrayHex(),
-        scatteredBlocks: scatteredBlocks
+        passageGrayHex: WL4EditorInterface.ExportGetWallPaintPassageGrayHex()
     };
 
     // ---------- Export credits data ----------

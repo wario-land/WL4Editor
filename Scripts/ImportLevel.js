@@ -69,30 +69,63 @@
 
     var tilesets = globals.tilesets || [];
     for (var ti = 0; ti < tilesets.length; ti++) {
-        WL4EditorInterface.ImportTileset(tilesets[ti].id, JSON.stringify(tilesets[ti]));
+        var ts = tilesets[ti];
+        WL4EditorInterface.ImportTileset(
+            ts.id,
+            ts.fggfxPtr,
+            ts.fggfxLen,
+            ts.tile8x8Data,
+            ts.map16Data,
+            ts.paletteData,
+            ts.eventTable,
+            ts.terrainTable,
+            ts.animatedSwitchTable,
+            ts.animatedTileData0,
+            ts.animatedTileData1
+        );
     }
 
     var entities = globals.entities || [];
     for (var ei = 0; ei < entities.length; ei++) {
-        WL4EditorInterface.ImportEntity(entities[ei].id, JSON.stringify(entities[ei]));
+        var ent = entities[ei];
+        WL4EditorInterface.ImportEntity(
+            ent.id,
+            ent.paletteData.join("\n"),
+            ent.tile8x8Data.join("\n")
+        );
     }
 
     var entitySets = globals.entitySets || [];
     for (var esi = 0; esi < entitySets.length; esi++) {
-        WL4EditorInterface.ImportEntitySet(entitySets[esi].id, JSON.stringify(entitySets[esi]));
+        WL4EditorInterface.ImportEntitySet(
+            entitySets[esi].id,
+            entitySets[esi].infoTable.join("\n")
+        );
     }
 
     var animatedTileGroups = globals.animatedTileGroups || [];
     for (var agi = 0; agi < animatedTileGroups.length; agi++) {
-        WL4EditorInterface.ImportAnimatedTileGroup(animatedTileGroups[agi].id, JSON.stringify(animatedTileGroups[agi]));
+        var ag = animatedTileGroups[agi];
+        WL4EditorInterface.ImportAnimatedTileGroup(
+            ag.id,
+            ag.animType,
+            ag.countPerFrame,
+            ag.totalFrameCount,
+            ag.tileData.join("\n")
+        );
     }
 
     if (globals.wallPaintData) {
-        WL4EditorInterface.ImportGlobalWallPaint(JSON.stringify(globals.wallPaintData));
+        var wp = globals.wallPaintData;
+        WL4EditorInterface.ImportGlobalWallPaint(
+            wp.gfxHex,
+            wp.passageColorHex,
+            wp.passageGrayHex
+        );
     }
 
     if (globals.creditsData && globals.creditsData !== "") {
-        WL4EditorInterface.ImportGlobalCredits(JSON.stringify({ creditsHex: globals.creditsData }));
+        WL4EditorInterface.ImportGlobalCredits(globals.creditsData);
     }
 
     // ---------- Import each room ----------
@@ -112,7 +145,6 @@
     for (var i = 0; i < rooms.length; i++) {
         var room = rooms[i];
         WL4EditorInterface.SetCurrentRoomId(room.roomId);
-        WL4EditorInterface.DoEvents();
 
         // Save old door global IDs, delete them after new doors are in place
         var oldDoorIdsStr = WL4EditorInterface.GetCurRoomDoorGlobalIds();
@@ -190,11 +222,14 @@
     }
 
     // ---------- Import level configuration ----------
-    WL4EditorInterface.ImportLevelConfig(JSON.stringify({
-        levelName: levelObj.levelName,
-        levelNameJ: levelObj.levelNameJ,
-        levelHeader: levelObj.levelHeader
-    }));
+    var lh = levelObj.levelHeader || {};
+    WL4EditorInterface.ImportLevelConfig(
+        levelObj.levelName || "",
+        levelObj.levelNameJ || "",
+        lh.timerHard || 0,
+        lh.timerNormal || 0,
+        lh.timerSHard || 0
+    );
 
     // ---------- Finalize ----------
     WL4EditorInterface.PostImportRefresh();

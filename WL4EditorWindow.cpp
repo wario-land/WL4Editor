@@ -269,6 +269,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         }
         ResetUndoHistory();
         ResetGlobalElementOperationIndexes();
+        OutputWidget->ClearTextEdit();
     }
 
     // Load the Project settings
@@ -1009,6 +1010,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         // Set program control changes
         UnsavedChanges = false;
         ResetUndoHistory();
+        OutputWidget->ClearTextEdit();
     }
 }
 

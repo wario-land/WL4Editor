@@ -10,9 +10,6 @@ extern WL4EditorWindow *singleton;
 #endif
 
 #include <QApplication>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
 
 // ---------------------------Helper functions--------------------------------------
 unsigned short *QStringToU16(QString input)
@@ -1173,42 +1170,6 @@ QString ScriptInterface::ExportGetAnimatedTileGroupTileDataHex(int id, int index
 
 // ---- WallPaint/Credits Export ----
 
-// ---- Helper: enumerate wall paint scattered blocks from ROM pointer tables ----
-struct WallPaintScatteredBlockEntry
-{
-    unsigned int romAddr;
-    unsigned int size;
-};
-
-static std::vector<WallPaintScatteredBlockEntry> EnumerateWallPaintScatteredBlocks()
-{
-    int passage = (int) singleton->GetCurrentLevel()->GetPassage();
-    int stage = (int) singleton->GetCurrentLevel()->GetStage();
-    std::vector<WallPaintScatteredBlockEntry> blocks;
-
-    unsigned int mmapAddr = ROMUtils::PointerFromData(
-        WL4Constants::WallPaintPalSixInOneMMapColorPtrTable + 4 * passage);
-
-    if (stage < 4)
-    {
-        // Regular levels 0-3: gradient palette (256 bytes) + MMAP palette (32 bytes)
-        unsigned int gradAddr = ROMUtils::PointerFromData(
-            WL4Constants::WallPaintPalStartLevelPointerTable + passage * 16 + stage * 4);
-        if (gradAddr)
-        {
-            blocks.push_back({gradAddr, 256});
-            blocks.push_back({mmapAddr + 32 * (0xA + stage), 32});
-        }
-    }
-    else
-    {
-        // Boss level (stage 4): only MMAP palette
-        blocks.push_back({mmapAddr + 32 * (0xA + 4), 32});
-    }
-
-    return blocks;
-}
-
 QString ScriptInterface::ExportGetWallPaintGFXHex()
 {
     QByteArray bytes(
@@ -1230,36 +1191,6 @@ QString ScriptInterface::ExportGetWallPaintPassageGrayHex()
     QByteArray bytes(
         reinterpret_cast<const char *>(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray]),
         32 * 5 * 6);
-    return QString::fromLatin1(bytes.toHex());
-}
-
-int ScriptInterface::ExportGetWallPaintScatteredBlockCount()
-{
-    auto blocks = EnumerateWallPaintScatteredBlocks();
-    return static_cast<int>(blocks.size());
-}
-
-int ScriptInterface::ExportGetWallPaintScatteredBlockAddr(int index)
-{
-    auto blocks = EnumerateWallPaintScatteredBlocks();
-    if (index < 0 || index >= static_cast<int>(blocks.size())) return 0;
-    return static_cast<int>(blocks[index].romAddr);
-}
-
-int ScriptInterface::ExportGetWallPaintScatteredBlockSize(int index)
-{
-    auto blocks = EnumerateWallPaintScatteredBlocks();
-    if (index < 0 || index >= static_cast<int>(blocks.size())) return 0;
-    return static_cast<int>(blocks[index].size);
-}
-
-QString ScriptInterface::ExportGetWallPaintScatteredBlockDataHex(int index)
-{
-    auto blocks = EnumerateWallPaintScatteredBlocks();
-    if (index < 0 || index >= static_cast<int>(blocks.size())) return QString();
-    QByteArray bytes(
-        reinterpret_cast<const char *>(&ROMUtils::ROMFileMetadata->ROMDataPtr[blocks[index].romAddr]),
-        blocks[index].size);
     return QString::fromLatin1(bytes.toHex());
 }
 
@@ -1751,13 +1682,14 @@ void ScriptInterface::PostImportRefresh()
 
 // ---- Global Import APIs (per-element with Undo/Redo compatibility) ----
 
-bool ScriptInterface::ImportTileset(int tilesetId, QString jsonString)
+bool ScriptInterface::ImportTileset(int tilesetId, int fggfxPtr, int fggfxLen,
+                                     QString tile8x8Data, QString map16Data, QString paletteData,
+                                     QString eventTable, QString terrainTable,
+                                     QString animatedSwitchTable,
+                                     QString animatedTileData0, QString animatedTileData1)
 {
     if (tilesetId < 0 || tilesetId >= 92 || !ROMUtils::singletonTilesets[tilesetId])
         return false;
-    QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
-    if (doc.isNull() || !doc.isObject()) return false;
-    QJsonObject obj = doc.object();
 
     // Deep copy current tileset as old state
     LevelComponents::Tileset *oldTileset = new LevelComponents::Tileset(
@@ -1768,35 +1700,24 @@ bool ScriptInterface::ImportTileset(int tilesetId, QString jsonString)
         ROMUtils::singletonTilesets[tilesetId], tilesetId);
 
     // Apply FG GFX
-    if (obj.contains("fggfxPtr"))
-    {
-        newTileset->SetfgGFXptr(obj["fggfxPtr"].toInt());
-        newTileset->SetfgGFXlen(obj["fggfxLen"].toInt());
-    }
+    newTileset->SetfgGFXptr(fggfxPtr);
+    newTileset->SetfgGFXlen(fggfxLen);
 
     // Apply tile8x8 data (single hex string for entire FG tile data)
-    if (obj.contains("tile8x8Data"))
-        newTileset->SetTile8x8DataHex(obj["tile8x8Data"].toString());
+    newTileset->SetTile8x8DataHex(tile8x8Data);
 
     // Apply map16 data (single hex string for all 0x300 entries)
-    if (obj.contains("map16Data"))
-        newTileset->SetMap16DataHex(obj["map16Data"].toString());
+    newTileset->SetMap16DataHex(map16Data);
 
     // Apply palettes (single hex string for all 16 palettes)
-    if (obj.contains("paletteData"))
-        newTileset->SetAllPalettesHex(obj["paletteData"].toString());
+    newTileset->SetAllPalettesHex(paletteData);
 
     // Apply event/terrain/animated switch tables
-    if (obj.contains("eventTable"))
-        newTileset->SetEventTableDataHex(obj["eventTable"].toString());
-    if (obj.contains("terrainTable"))
-        newTileset->SetTerrainTableDataHex(obj["terrainTable"].toString());
-    if (obj.contains("animatedSwitchTable"))
-        newTileset->SetAnimatedSwitchTableHex(obj["animatedSwitchTable"].toString());
-    if (obj.contains("animatedTileData0"))
-        newTileset->SetAnimatedTileDataHex(0, obj["animatedTileData0"].toString());
-    if (obj.contains("animatedTileData1"))
-        newTileset->SetAnimatedTileDataHex(1, obj["animatedTileData1"].toString());
+    newTileset->SetEventTableDataHex(eventTable);
+    newTileset->SetTerrainTableDataHex(terrainTable);
+    newTileset->SetAnimatedSwitchTableHex(animatedSwitchTable);
+    newTileset->SetAnimatedTileDataHex(0, animatedTileData0);
+    newTileset->SetAnimatedTileDataHex(1, animatedTileData1);
 
     newTileset->SetChanged(true);
 
@@ -1819,27 +1740,23 @@ bool ScriptInterface::ImportTileset(int tilesetId, QString jsonString)
     return true;
 }
 
-bool ScriptInterface::ImportEntity(int entityId, QString jsonString)
+bool ScriptInterface::ImportEntity(int entityId, QString paletteData, QString tile8x8Data)
 {
     if (entityId < 0 || entityId >= 129 || !ROMUtils::entities[entityId])
         return false;
-
-    QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
-    if (doc.isNull() || !doc.isObject()) return false;
-    QJsonObject obj = doc.object();
 
     // Deep copy the entity with modifications
     LevelComponents::Entity *newEntity = new LevelComponents::Entity(*ROMUtils::entities[entityId]);
 
     // Apply palette data
-    QJsonArray paletteArr = obj["paletteData"].toArray();
-    for (int i = 0; i < paletteArr.size(); ++i)
-        newEntity->SetPaletteDataHex(i, paletteArr[i].toString());
+    QStringList paletteEntries = paletteData.split(QChar('\n'), Qt::SkipEmptyParts);
+    for (int i = 0; i < paletteEntries.size(); ++i)
+        newEntity->SetPaletteDataHex(i, paletteEntries[i]);
 
     // Apply tile8x8 data
-    QJsonArray tile8x8Arr = obj["tile8x8Data"].toArray();
-    for (int i = 0; i < tile8x8Arr.size(); ++i)
-        newEntity->SetTile8x8DataHex(i, tile8x8Arr[i].toString());
+    QStringList tile8x8Entries = tile8x8Data.split(QChar('\n'), Qt::SkipEmptyParts);
+    for (int i = 0; i < tile8x8Entries.size(); ++i)
+        newEntity->SetTile8x8DataHex(i, tile8x8Entries[i]);
 
     newEntity->SetChanged(true);
 
@@ -1860,25 +1777,20 @@ bool ScriptInterface::ImportEntity(int entityId, QString jsonString)
     return true;
 }
 
-bool ScriptInterface::ImportEntitySet(int entitySetId, QString jsonString)
+bool ScriptInterface::ImportEntitySet(int entitySetId, QString infoTable)
 {
     if (entitySetId < 0 || entitySetId >= 90 || !ROMUtils::entitiessets[entitySetId])
         return false;
-
-    QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
-    if (doc.isNull() || !doc.isObject()) return false;
-    QJsonObject obj = doc.object();
 
     // Deep copy the entity set
     LevelComponents::EntitySet *newEntitySet = new LevelComponents::EntitySet(*ROMUtils::entitiessets[entitySetId]);
 
     // Rebuild info table
-    QJsonArray infoTable = obj["infoTable"].toArray();
+    QStringList entries = infoTable.split(QChar('\n'), Qt::SkipEmptyParts);
     newEntitySet->ClearEntityInfoTable();
-    for (int i = 0; i < infoTable.size(); ++i)
+    for (int i = 0; i < entries.size(); ++i)
     {
-        QString entry = infoTable[i].toString();
-        QStringList parts = entry.split(",");
+        QStringList parts = entries[i].split(",");
         if (parts.size() >= 2)
         {
             int globalId = parts[0].toInt();
@@ -1906,31 +1818,25 @@ bool ScriptInterface::ImportEntitySet(int entitySetId, QString jsonString)
     return true;
 }
 
-bool ScriptInterface::ImportAnimatedTileGroup(int groupId, QString jsonString)
+bool ScriptInterface::ImportAnimatedTileGroup(int groupId, int animType, int countPerFrame,
+                                               int totalFrameCount, QString tileData)
 {
     if (groupId < 0 || groupId >= 270 || !ROMUtils::animatedTileGroups[groupId])
         return false;
-
-    QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
-    if (doc.isNull() || !doc.isObject()) return false;
-    QJsonObject obj = doc.object();
 
     // Deep copy the group
     LevelComponents::AnimatedTile8x8Group *newGroup =
         new LevelComponents::AnimatedTile8x8Group(*ROMUtils::animatedTileGroups[groupId]);
 
     // Apply properties
-    if (obj.contains("animType"))
-        newGroup->SetAnimationType(obj["animType"].toInt());
-    if (obj.contains("countPerFrame"))
-        newGroup->SetCountPerFrame(obj["countPerFrame"].toInt());
-    if (obj.contains("totalFrameCount"))
-        newGroup->SetTotalFrameCount(obj["totalFrameCount"].toInt());
+    newGroup->SetAnimationType(animType);
+    newGroup->SetCountPerFrame(countPerFrame);
+    newGroup->SetTotalFrameCount(totalFrameCount);
 
     // Apply tile data
-    QJsonArray tileDataArr = obj["tileData"].toArray();
-    for (int i = 0; i < tileDataArr.size(); ++i)
-        newGroup->SetTileDataHex(i, tileDataArr[i].toString());
+    QStringList tileDataEntries = tileData.split(QChar('\n'), Qt::SkipEmptyParts);
+    for (int i = 0; i < tileDataEntries.size(); ++i)
+        newGroup->SetTileDataHex(i, tileDataEntries[i]);
 
     newGroup->SetChanged(true);
 
@@ -1951,20 +1857,9 @@ bool ScriptInterface::ImportAnimatedTileGroup(int groupId, QString jsonString)
     return true;
 }
 
-bool ScriptInterface::ImportGlobalWallPaint(QString jsonString)
+bool ScriptInterface::ImportGlobalWallPaint(QString gfxHex, QString passageColorHex,
+                                             QString passageGrayHex)
 {
-    QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
-    if (doc.isNull() || !doc.isObject())
-    {
-        log("ImportGlobalWallPaint: Invalid JSON.");
-        return false;
-    }
-    QJsonObject obj = doc.object();
-
-    QString gfxHex = obj["gfxHex"].toString();
-    QString passageColorHex = obj["passageColorHex"].toString();
-    QString passageGrayHex = obj["passageGrayHex"].toString();
-
     if (gfxHex.isEmpty() || passageColorHex.isEmpty() || passageGrayHex.isEmpty())
     {
         log("ImportGlobalWallPaint: Missing required hex fields (gfxHex, passageColorHex, passageGrayHex).");
@@ -2000,26 +1895,6 @@ bool ScriptInterface::ImportGlobalWallPaint(QString jsonString)
         oldPassageColor, reinterpret_cast<unsigned char *>(newPassageColor.data()),
         oldPassageGray, reinterpret_cast<unsigned char *>(newPassageGray.data()));
 
-    // Handle scattered blocks
-    QJsonArray scatteredArray = obj["scatteredBlocks"].toArray();
-    for (const QJsonValue &val : scatteredArray)
-    {
-        QJsonObject blockObj = val.toObject();
-        unsigned int addr = static_cast<unsigned int>(blockObj["addr"].toInt());
-        unsigned int size = static_cast<unsigned int>(blockObj["size"].toInt());
-        QString dataHex = blockObj["dataHex"].toString();
-        QByteArray newBlockData = QByteArray::fromHex(dataHex.toLatin1());
-
-        // Capture old data
-        unsigned char *oldBlockData = new unsigned char[size];
-        memcpy(oldBlockData, &ROMUtils::ROMFileMetadata->ROMDataPtr[addr], size);
-
-        // Add to change params (ScatteredBlock constructor copies internally)
-        wp->AddScatteredBlock(addr, size, oldBlockData,
-                              reinterpret_cast<unsigned char *>(newBlockData.data()));
-        delete[] oldBlockData;
-    }
-
     // Execute operation
     struct OperationParams *operation = new struct OperationParams;
     operation->WallPaintChange = true;
@@ -2030,23 +1905,15 @@ bool ScriptInterface::ImportGlobalWallPaint(QString jsonString)
     return true;
 }
 
-bool ScriptInterface::ImportGlobalCredits(QString jsonString)
+bool ScriptInterface::ImportGlobalCredits(QString creditsHex)
 {
-    QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
-    if (doc.isNull() || !doc.isObject())
-    {
-        log("ImportGlobalCredits: Invalid JSON.");
-        return false;
-    }
-    QJsonObject obj = doc.object();
-    QString hexStr = obj["creditsHex"].toString();
-    if (hexStr.isEmpty())
+    if (creditsHex.isEmpty())
     {
         log("ImportGlobalCredits: Missing 'creditsHex' field.");
         return false;
     }
 
-    QByteArray newData = QByteArray::fromHex(hexStr.toLatin1());
+    QByteArray newData = QByteArray::fromHex(creditsHex.toLatin1());
     const int expectedSize = NUMBEROFCREDITSSCREEN * 1280;
     if (newData.size() != expectedSize)
     {
@@ -2062,7 +1929,7 @@ bool ScriptInterface::ImportGlobalCredits(QString jsonString)
            &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
            expectedSize);
 
-    // Capture new credit data directly from JSON (PerformOperation applies it)
+    // Capture new credit data (PerformOperation applies it)
     DialogParams::CreditsEditParams *newParams = new DialogParams::CreditsEditParams();
     memcpy(newParams->newCreditData,
            newData.constData(), static_cast<size_t>(expectedSize));
@@ -2078,13 +1945,9 @@ bool ScriptInterface::ImportGlobalCredits(QString jsonString)
     return true;
 }
 
-bool ScriptInterface::ImportLevelConfig(QString jsonString)
+bool ScriptInterface::ImportLevelConfig(QString levelName, QString levelNameJ,
+                                         int timerHard, int timerNormal, int timerSHard)
 {
-    QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
-    if (doc.isNull() || !doc.isObject()) return false;
-    QJsonObject obj = doc.object();
-    QJsonObject header = obj["levelHeader"].toObject();
-
     LevelComponents::Level *level = singleton->GetCurrentLevel();
 
     // Capture old state from level
@@ -2095,13 +1958,13 @@ bool ScriptInterface::ImportLevelConfig(QString jsonString)
     lastParams->oldNModeTimer = level->GetTimeCountdownCounter(LevelComponents::NormalDifficulty);
     lastParams->oldSHModeTimer = level->GetTimeCountdownCounter(LevelComponents::SHardDifficulty);
 
-    // Capture new state directly from JSON (PerformOperation applies it)
+    // Capture new state (PerformOperation applies it)
     DialogParams::LevelConfigParams *newParams = new DialogParams::LevelConfigParams();
-    newParams->newLevelName = obj.contains("levelName") ? obj["levelName"].toString() : lastParams->oldLevelName;
-    newParams->newLevelNameJ = obj.contains("levelNameJ") ? obj["levelNameJ"].toString() : lastParams->oldLevelNameJ;
-    newParams->newHModeTimer = header.contains("timerHard") ? (int) header["timerHard"].toInt() : lastParams->oldHModeTimer;
-    newParams->newNModeTimer = header.contains("timerNormal") ? (int) header["timerNormal"].toInt() : lastParams->oldNModeTimer;
-    newParams->newSHModeTimer = header.contains("timerSHard") ? (int) header["timerSHard"].toInt() : lastParams->oldSHModeTimer;
+    newParams->newLevelName = levelName;
+    newParams->newLevelNameJ = levelNameJ;
+    newParams->newHModeTimer = timerHard;
+    newParams->newNModeTimer = timerNormal;
+    newParams->newSHModeTimer = timerSHard;
 
     OperationParams *op = new OperationParams;
     op->levelConfigChange = true;
