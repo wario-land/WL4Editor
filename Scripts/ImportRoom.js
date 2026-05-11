@@ -84,17 +84,13 @@
         return;
     }
 
-    // ---- Step 2: Import layer tiles (layers 0-2 only, Map16 layers) ----
+    // ---- Step 2: Import layer tiles (layers 0-2 only, Map16 layers only) ----
     var layers = roomObj.layers || [];
-    var nonOriginalPtrs = roomObj.nonOriginalLayerPointers || {};
     for (var li = 0; li < layers.length; li++) {
         var layer = layers[li];
         if (layer.layerId < 0 || layer.layerId > 2) continue;
         if (layer.mappingType < 0x10 || layer.mappingType >= 0x20) continue; // Only Map16
         if (!layer.data || layer.data.length === 0) continue;
-        // Skip layer if it used a non-original pointer (data won't exist in target ROM)
-        if (layer.layerId === 0 && nonOriginalPtrs.layer0 >= 0x78F970) continue;
-        if (layer.layerId === 3 && nonOriginalPtrs.layer3 >= 0x78F970) continue;
 
         var tileDataHex = joinRowHexStrings(layer.data);
         if (!WL4EditorInterface.ImportLayerTiles(layer.layerId, layer.width, layer.height, tileDataHex)) {

@@ -8,6 +8,10 @@
     // Get the room header hex string (44 bytes = 88 hex chars, captures all header fields)
     var headerHex = WL4EditorInterface.ExportGetRoomHeaderHex();
 
+    // Compute non-original layer pointers (metadata only, does not affect data export)
+    var layer0Ptr = WL4EditorInterface.ExportGetLayerDataPtr(0);
+    var layer3Ptr = WL4EditorInterface.ExportGetLayerDataPtr(3);
+
     // Build the room JSON object
     var roomObj = {
         version: 1,
@@ -25,8 +29,8 @@
         doors: [],
         cameraControl: {},
         nonOriginalLayerPointers: {
-            layer0: WL4EditorInterface.ExportGetLayerDataPtr(0),
-            layer3: WL4EditorInterface.ExportGetLayerDataPtr(3)
+            layer0: layer0Ptr,
+            layer3: layer3Ptr
         }
     };
 

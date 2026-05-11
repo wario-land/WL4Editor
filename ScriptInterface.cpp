@@ -1919,12 +1919,7 @@ bool ScriptInterface::ImportGlobalWallPaint(QString jsonString)
     memcpy(oldPassageColor, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], palSize);
     memcpy(oldPassageGray, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], palSize);
 
-    // Apply new fixed-block data to ROM
-    memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], newGFX.constData(), gfxSize);
-    memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], newPassageColor.constData(), palSize);
-    memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], newPassageGray.constData(), palSize);
-
-    // Create WallPaintChangeParams for fixed blocks
+    // Create WallPaintChangeParams for fixed blocks (data copied internally)
     WallPaintChangeParams *wp = WallPaintChangeParams::Create(
         oldGFX, reinterpret_cast<unsigned char *>(newGFX.data()),
         oldPassageColor, reinterpret_cast<unsigned char *>(newPassageColor.data()),
@@ -1944,13 +1939,9 @@ bool ScriptInterface::ImportGlobalWallPaint(QString jsonString)
         unsigned char *oldBlockData = new unsigned char[size];
         memcpy(oldBlockData, &ROMUtils::ROMFileMetadata->ROMDataPtr[addr], size);
 
-        // Apply new data to ROM
-        int copySize = qMin(newBlockData.size(), static_cast<int>(size));
-        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[addr], newBlockData.constData(), static_cast<size_t>(copySize));
-
         // Add to change params (ScatteredBlock constructor copies internally)
         wp->AddScatteredBlock(addr, size, oldBlockData,
-                              &ROMUtils::ROMFileMetadata->ROMDataPtr[addr]);
+                              reinterpret_cast<unsigned char *>(newBlockData.data()));
         delete[] oldBlockData;
     }
 
@@ -1996,15 +1987,10 @@ bool ScriptInterface::ImportGlobalCredits(QString jsonString)
            &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
            expectedSize);
 
-    // Apply new data to ROM
-    memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
-           newData.constData(), static_cast<size_t>(expectedSize));
-
-    // Capture new credit data
+    // Capture new credit data directly from JSON (PerformOperation applies it)
     DialogParams::CreditsEditParams *newParams = new DialogParams::CreditsEditParams();
     memcpy(newParams->newCreditData,
-           &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::CreditsTiles],
-           expectedSize);
+           newData.constData(), static_cast<size_t>(expectedSize));
 
     // Create and execute operation
     OperationParams *operation = new OperationParams;
@@ -2034,28 +2020,13 @@ bool ScriptInterface::ImportLevelConfig(QString jsonString)
     lastParams->oldNModeTimer = level->GetTimeCountdownCounter(LevelComponents::NormalDifficulty);
     lastParams->oldSHModeTimer = level->GetTimeCountdownCounter(LevelComponents::SHardDifficulty);
 
-    // Apply new values from JSON
-    if (obj.contains("levelName"))
-        level->SetLevelName(obj["levelName"].toString());
-    if (obj.contains("levelNameJ"))
-        level->SetLevelName(obj["levelNameJ"].toString(), 1);
-    if (header.contains("timerHard"))
-        level->SetTimeCountdownCounter(LevelComponents::HardDifficulty,
-                                        (unsigned int) header["timerHard"].toInt());
-    if (header.contains("timerNormal"))
-        level->SetTimeCountdownCounter(LevelComponents::NormalDifficulty,
-                                        (unsigned int) header["timerNormal"].toInt());
-    if (header.contains("timerSHard"))
-        level->SetTimeCountdownCounter(LevelComponents::SHardDifficulty,
-                                        (unsigned int) header["timerSHard"].toInt());
-
-    // Capture new state
+    // Capture new state directly from JSON (PerformOperation applies it)
     DialogParams::LevelConfigParams *newParams = new DialogParams::LevelConfigParams();
-    newParams->newLevelName = level->GetLevelName();
-    newParams->newLevelNameJ = level->GetLevelName(1);
-    newParams->newHModeTimer = level->GetTimeCountdownCounter(LevelComponents::HardDifficulty);
-    newParams->newNModeTimer = level->GetTimeCountdownCounter(LevelComponents::NormalDifficulty);
-    newParams->newSHModeTimer = level->GetTimeCountdownCounter(LevelComponents::SHardDifficulty);
+    newParams->newLevelName = obj.contains("levelName") ? obj["levelName"].toString() : lastParams->oldLevelName;
+    newParams->newLevelNameJ = obj.contains("levelNameJ") ? obj["levelNameJ"].toString() : lastParams->oldLevelNameJ;
+    newParams->newHModeTimer = header.contains("timerHard") ? (int) header["timerHard"].toInt() : lastParams->oldHModeTimer;
+    newParams->newNModeTimer = header.contains("timerNormal") ? (int) header["timerNormal"].toInt() : lastParams->oldNModeTimer;
+    newParams->newSHModeTimer = header.contains("timerSHard") ? (int) header["timerSHard"].toInt() : lastParams->oldSHModeTimer;
 
     OperationParams *op = new OperationParams;
     op->levelConfigChange = true;

@@ -25,6 +25,8 @@
         var rid = WL4EditorInterface.GetCurRoomId();
 
         var headerHex = WL4EditorInterface.ExportGetRoomHeaderHex();
+        var layer0Ptr = WL4EditorInterface.ExportGetLayerDataPtr(0);
+        var layer3Ptr = WL4EditorInterface.ExportGetLayerDataPtr(3);
 
         var obj = {
             version: 1,
@@ -42,12 +44,13 @@
             doors: [],
             cameraControl: {},
             nonOriginalLayerPointers: {
-                layer0: WL4EditorInterface.ExportGetLayerDataPtr(0),
-                layer3: WL4EditorInterface.ExportGetLayerDataPtr(3)
+                layer0: layer0Ptr,
+                layer3: layer3Ptr
             }
         };
 
-        // Layers
+        // Layers — always export tile data for layers with real content,
+        // regardless of pointer location (ImportLayerTiles writes directly to layer buffer)
         for (var li = 0; li < 4; li++) {
             var mappingType = (parseInt(headerHex.substr((1 + li) * 2, 2), 16) & 0x3F);
             var w = WL4EditorInterface.GetCurRoomLayerWidth(li);
