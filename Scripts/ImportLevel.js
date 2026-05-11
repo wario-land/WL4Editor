@@ -112,6 +112,7 @@
     for (var i = 0; i < rooms.length; i++) {
         var room = rooms[i];
         WL4EditorInterface.SetCurrentRoomId(room.roomId);
+        WL4EditorInterface.DoEvents();
 
         // Save old door global IDs, delete them after new doors are in place
         var oldDoorIdsStr = WL4EditorInterface.GetCurRoomDoorGlobalIds();

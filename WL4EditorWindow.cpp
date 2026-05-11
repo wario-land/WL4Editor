@@ -579,9 +579,9 @@ void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity() { ui->graphicsView->D
 void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig,
                                       DialogParams::RoomConfigParams *nextroomconfig)
 {
-    // Apply the selected parameters to the current room
+    // Apply the selected parameters to the target room identified by the operation params
     // reset the Tileset instance in Room class
-    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[currentroomconfig->roomID];
     if (nextroomconfig->CurrentTilesetIndex != currentroomconfig->CurrentTilesetIndex)
     {
         currentRoom->SetTileset(ROMUtils::singletonTilesets[nextroomconfig->CurrentTilesetIndex], nextroomconfig->CurrentTilesetIndex);
@@ -644,6 +644,10 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetLayerGFXEffect01(nextroomconfig->RasterType);
     currentRoom->SetLayerGFXEffect02(nextroomconfig->Water);
     currentRoom->SetBgmvolume(nextroomconfig->BGMVolume);
+
+    // Restore entity set (normally derived from doors, but saved here for completeness)
+    if (nextroomconfig->CurrentEntitySetID != currentroomconfig->CurrentEntitySetID)
+        currentRoom->SetCurrentEntitySet(nextroomconfig->CurrentEntitySetID);
 
     // Mark the layers as dirty
     for (unsigned int i = 0; i < 3; ++i)

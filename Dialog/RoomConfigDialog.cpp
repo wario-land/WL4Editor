@@ -144,6 +144,7 @@ RoomConfigDialog::~RoomConfigDialog() { delete ui; }
 DialogParams::RoomConfigParams *RoomConfigDialog::GetConfigParams(DialogParams::RoomConfigParams *prevRoomParams)
 {
     DialogParams::RoomConfigParams *configParams = new DialogParams::RoomConfigParams();
+    configParams->roomID = prevRoomParams->roomID;
 
     // Get all the Room Configuration data
     configParams->CurrentTilesetIndex = ui->ComboBox_TilesetID->currentIndex();

@@ -20,7 +20,9 @@ namespace DialogParams
 {
     struct RoomConfigParams
     {
+        int roomID;
         int CurrentTilesetIndex;
+        int CurrentEntitySetID;
         bool Layer0Alpha;
         int LayerPriorityAndAlphaAttr;
         int Layer0MappingTypeParam;
@@ -44,7 +46,9 @@ namespace DialogParams
 
         // Construct this param struct using a Room object
         RoomConfigParams(LevelComponents::Room *room) :
+                roomID(room->GetRoomID()),
                 CurrentTilesetIndex(room->GetTilesetID()),
+                CurrentEntitySetID(room->GetCurrentEntitySetID()),
                 Layer0Alpha(room->IsLayer0ColorBlendingEnabled()),
                 LayerPriorityAndAlphaAttr(room->GetLayerEffectsParam()),
                 Layer0MappingTypeParam(room->GetLayer0MappingParam()),

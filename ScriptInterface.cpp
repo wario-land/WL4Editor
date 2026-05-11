@@ -526,17 +526,37 @@ void ScriptInterface::SetEntityListData(QString entitylistdata, int entitylistid
         return;
     }
     LevelComponents::Room *room = singleton->GetCurrentRoom();
-    room->ClearEntitylist(entitylistid);
+    int roomId = singleton->GetCurrentRoomId();
+
+    std::vector<LevelComponents::EntityRoomAttribute> oldList = room->GetEntityListData(entitylistid);
+    std::vector<LevelComponents::EntityRoomAttribute> newList;
     for(int i = 0; i < (EntitylistStrData.size() / 3); ++i)
     {
-        room->AddEntity(EntitylistStrData[3 * i + 1].toUInt(nullptr, 16),
-                        EntitylistStrData[3 * i].toUInt(nullptr, 16),
-                        EntitylistStrData[3 * i + 2].toUInt(nullptr, 16),
-                        entitylistid);
+        LevelComponents::EntityRoomAttribute attr;
+        attr.YPos = (unsigned char) EntitylistStrData[3 * i].toUInt(nullptr, 16);
+        attr.XPos = (unsigned char) EntitylistStrData[3 * i + 1].toUInt(nullptr, 16);
+        attr.EntityID = (unsigned char) EntitylistStrData[3 * i + 2].toUInt(nullptr, 16);
+        newList.push_back(attr);
     }
-    room->SetEntityListDirty(entitylistid, true);
-    singleton->SetUnsavedChanges(true);
-    singleton->RenderScreenFull();
+
+    OperationParams *op = new OperationParams;
+    EntityListChangeParams *entityChange = EntityListChangeParams::Create(oldList, newList, roomId);
+    switch (entitylistid)
+    {
+    case 0:
+        op->entityHardChange = true;
+        op->entityHardChangeParams = entityChange;
+        break;
+    case 1:
+        op->entityNormalChange = true;
+        op->entityNormalChangeParams = entityChange;
+        break;
+    case 2:
+        op->entitySHardChange = true;
+        op->entitySHardChangeParams = entityChange;
+        break;
+    }
+    ExecuteOperation(op);
 }
 
 void ScriptInterface::SetCurrentRoomId(int roomid)
@@ -578,15 +598,30 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     if(room->GetLayer(layerID)->GetMappingType() != LevelComponents::LayerMap16)
         return;
-    int width = static_cast<int>(room->GetLayer1Width());
-    int height = static_cast<int>(room->GetLayer1Height());
+    int width, height;
+    if (layerID == 0)
+    {
+        width = static_cast<int>(room->GetLayer0Width());
+        height = static_cast<int>(room->GetLayer0Height());
+    }
+    else
+    {
+        width = static_cast<int>(room->GetLayer1Width());
+        height = static_cast<int>(room->GetLayer1Height());
+    }
     if(x >= width || y >= height) {
         log(QString("Position out of range!\n"));
         return;
     }
-    room->GetLayer(layerID)->SetTileData(TileID & 0xFFFF, x, y);
-    room->GetLayer(layerID)->SetDirty(true);
-    singleton->SetUnsavedChanges(true);
+    int roomId = singleton->GetCurrentRoomId();
+    unsigned short oldTile = room->GetLayer(layerID)->GetTileData(x, y);
+    unsigned short newTile = TileID & 0xFFFF;
+
+    OperationParams *op = new OperationParams;
+    op->tileChange = true;
+    op->tileChangeRoomID = roomId;
+    op->tileChangeParams.push_back(TileChangeParams::Create(x, y, layerID, newTile, oldTile));
+    ExecuteOperation(op);
 }
 
 void ScriptInterface::SetRoomSize(int roomwidth, int roomheight, int layer0width, int layer0height)
@@ -629,60 +664,66 @@ void ScriptInterface::SetRoomSize(int roomwidth, int roomheight, int layer0width
         _nextRoomConfigParams->LayerData[2] = nullptr;
     }
 
-    // Add changes into the operation history
-    OperationParams *operation = new OperationParams;
-    operation->roomConfigChange = true;
-    operation->lastRoomConfigParams = _currentRoomConfigParams;
-    operation->newRoomConfigParams = _nextRoomConfigParams;
+    bool roomSizeChanged = (_nextRoomConfigParams->RoomWidth != _currentRoomConfigParams->RoomWidth ||
+                            _nextRoomConfigParams->RoomHeight != _currentRoomConfigParams->RoomHeight);
 
-    // Capture door, entity, and camera states when room dimensions change
-    if (_nextRoomConfigParams->RoomWidth != _currentRoomConfigParams->RoomWidth ||
-        _nextRoomConfigParams->RoomHeight != _currentRoomConfigParams->RoomHeight)
+    // Capture pre-trim state before any modifications
+    LevelComponents::LevelDoorVector *preTrimDoorVec = nullptr;
+    std::vector<LevelComponents::EntityRoomAttribute> preTrimNormal, preTrimHard, preTrimSHard;
+    enum LevelComponents::__CameraControlType preTrimCamType =
+        singleton->GetCurrentRoom()->GetCameraControlType();
+    std::vector<struct LevelComponents::__CameraControlRecord *> preTrimCamRecords;
+
+    if (roomSizeChanged)
     {
-        LevelComponents::Room *currentRoom = singleton->GetCurrentLevel()->GetRooms()[singleton->GetCurrentRoomId()];
+        LevelComponents::Level *level = singleton->GetCurrentLevel();
+        LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
 
-        LevelComponents::LevelDoorVector *oldDoorVec =
-            new LevelComponents::LevelDoorVector(singleton->GetCurrentLevel()->GetDoorList());
-
-        std::vector<LevelComponents::EntityRoomAttribute> oldNormal = currentRoom->GetEntityListData(1);
-        std::vector<LevelComponents::EntityRoomAttribute> oldHard = currentRoom->GetEntityListData(0);
-        std::vector<LevelComponents::EntityRoomAttribute> oldSHard = currentRoom->GetEntityListData(2);
-
-        auto oldCameraType = currentRoom->GetCameraControlType();
-        auto oldCameraRecords = currentRoom->GetCameraControlRecords(true);
-
-        singleton->TrimElementsOutOfRoomBounds(currentRoom,
-                                               _nextRoomConfigParams->RoomWidth,
-                                               _nextRoomConfigParams->RoomHeight);
-
-        LevelComponents::LevelDoorVector *newDoorVec =
-            new LevelComponents::LevelDoorVector(singleton->GetCurrentLevel()->GetDoorList());
-
-        std::vector<LevelComponents::EntityRoomAttribute> newNormal = currentRoom->GetEntityListData(1);
-        std::vector<LevelComponents::EntityRoomAttribute> newHard = currentRoom->GetEntityListData(0);
-        std::vector<LevelComponents::EntityRoomAttribute> newSHard = currentRoom->GetEntityListData(2);
-
-        auto newCameraType = currentRoom->GetCameraControlType();
-        auto newCameraRecords = currentRoom->GetCameraControlRecords(true);
-
-        operation->doorVectorChange = true;
-        operation->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
-
-        operation->entityNormalChange = true;
-        operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal, currentRoom->GetRoomID());
-        operation->entityHardChange = true;
-        operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard, currentRoom->GetRoomID());
-        operation->entitySHardChange = true;
-        operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard, currentRoom->GetRoomID());
-
-        operation->cameraControlChange = true;
-        operation->cameraControlChangeParams = CameraControlChangeParams::Create(
-            currentRoom->GetRoomID(),
-            oldCameraType, newCameraType,
-            oldCameraRecords, newCameraRecords);
+        preTrimDoorVec = new LevelComponents::LevelDoorVector(level->GetDoorList());
+        preTrimNormal = currentRoom->GetEntityListData(1);
+        preTrimHard = currentRoom->GetEntityListData(0);
+        preTrimSHard = currentRoom->GetEntityListData(2);
+        preTrimCamType = currentRoom->GetCameraControlType();
+        preTrimCamRecords = currentRoom->GetCameraControlRecords(true);
     }
 
-    ExecuteOperation(operation); // Set UnsavedChanges bool inside
+    // Create and execute the room config change operation.
+    // RoomConfigReset (called inside PerformOperation) handles the trim.
+    OperationParams *configOp = new OperationParams;
+    configOp->roomConfigChange = true;
+    configOp->lastRoomConfigParams = _currentRoomConfigParams;
+    configOp->newRoomConfigParams = _nextRoomConfigParams;
+    ExecuteOperation(configOp);
+
+    // Create a separate trim-capture operation to preserve trimmed elements for Undo
+    if (roomSizeChanged)
+    {
+        LevelComponents::Level *level = singleton->GetCurrentLevel();
+        LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
+        int roomId = currentRoom->GetRoomID();
+
+        LevelComponents::LevelDoorVector *postTrimDoorVec =
+            new LevelComponents::LevelDoorVector(level->GetDoorList());
+        std::vector<LevelComponents::EntityRoomAttribute> postTrimNormal = currentRoom->GetEntityListData(1);
+        std::vector<LevelComponents::EntityRoomAttribute> postTrimHard = currentRoom->GetEntityListData(0);
+        std::vector<LevelComponents::EntityRoomAttribute> postTrimSHard = currentRoom->GetEntityListData(2);
+        auto postTrimCamType = currentRoom->GetCameraControlType();
+        auto postTrimCamRecords = currentRoom->GetCameraControlRecords(true);
+
+        OperationParams *trimOp = new OperationParams;
+        trimOp->doorVectorChange = true;
+        trimOp->doorVectorChangeParams = DoorVectorChangeParams::Create(preTrimDoorVec, postTrimDoorVec);
+        trimOp->entityNormalChange = true;
+        trimOp->entityNormalChangeParams = EntityListChangeParams::Create(preTrimNormal, postTrimNormal, roomId);
+        trimOp->entityHardChange = true;
+        trimOp->entityHardChangeParams = EntityListChangeParams::Create(preTrimHard, postTrimHard, roomId);
+        trimOp->entitySHardChange = true;
+        trimOp->entitySHardChangeParams = EntityListChangeParams::Create(preTrimSHard, postTrimSHard, roomId);
+        trimOp->cameraControlChange = true;
+        trimOp->cameraControlChangeParams = CameraControlChangeParams::Create(
+            roomId, preTrimCamType, postTrimCamType, preTrimCamRecords, postTrimCamRecords);
+        ExecuteOperation(trimOp);
+    } // Set UnsavedChanges bool inside
 }
 
 void ScriptInterface::alert(QString message)
@@ -1248,6 +1289,7 @@ bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0
 
     bool dimsChanged = (roomWidth != curRoomWidth || roomHeight != curRoomHeight ||
                         layer0Width != curLayer0Width || layer0Height != curLayer0Height);
+    bool roomSizeChanged = (roomWidth != curRoomWidth || roomHeight != curRoomHeight);
 
     DialogParams::RoomConfigParams *currentParams = new DialogParams::RoomConfigParams(room);
     DialogParams::RoomConfigParams *newParams = new DialogParams::RoomConfigParams(room);
@@ -1311,46 +1353,57 @@ bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0
         newParams->LayerData[2] = nullptr;
     }
 
-    OperationParams *op = new OperationParams;
-    op->roomConfigChange = true;
-    op->lastRoomConfigParams = currentParams;
-    op->newRoomConfigParams = newParams;
+    // Capture pre-trim state before any modifications (for undo of trimmed elements)
+    LevelComponents::LevelDoorVector *preTrimDoorVec = nullptr;
+    std::vector<LevelComponents::EntityRoomAttribute> preTrimNormal, preTrimHard, preTrimSHard;
+    enum LevelComponents::__CameraControlType preTrimCamType = room->GetCameraControlType();
+    std::vector<struct LevelComponents::__CameraControlRecord *> preTrimCamRecords;
 
-    // Handle trim of doors/entities/camera if room dimensions change
-    if (dimsChanged && (roomWidth != curRoomWidth || roomHeight != curRoomHeight))
+    if (roomSizeChanged)
     {
-        LevelComponents::LevelDoorVector *oldDoorVec =
-            new LevelComponents::LevelDoorVector(level->GetDoorList());
-        std::vector<LevelComponents::EntityRoomAttribute> oldNormal = room->GetEntityListData(1);
-        std::vector<LevelComponents::EntityRoomAttribute> oldHard = room->GetEntityListData(0);
-        std::vector<LevelComponents::EntityRoomAttribute> oldSHard = room->GetEntityListData(2);
-        auto oldCameraType = room->GetCameraControlType();
-        auto oldCameraRecords = room->GetCameraControlRecords(true);
-
-        singleton->TrimElementsOutOfRoomBounds(room, roomWidth, roomHeight);
-
-        LevelComponents::LevelDoorVector *newDoorVec =
-            new LevelComponents::LevelDoorVector(level->GetDoorList());
-        std::vector<LevelComponents::EntityRoomAttribute> newNormal = room->GetEntityListData(1);
-        std::vector<LevelComponents::EntityRoomAttribute> newHard = room->GetEntityListData(0);
-        std::vector<LevelComponents::EntityRoomAttribute> newSHard = room->GetEntityListData(2);
-        auto newCameraType = room->GetCameraControlType();
-        auto newCameraRecords = room->GetCameraControlRecords(true);
-
-        op->doorVectorChange = true;
-        op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
-        op->entityNormalChange = true;
-        op->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal, roomId);
-        op->entityHardChange = true;
-        op->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard, roomId);
-        op->entitySHardChange = true;
-        op->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard, roomId);
-        op->cameraControlChange = true;
-        op->cameraControlChangeParams = CameraControlChangeParams::Create(roomId, oldCameraType, newCameraType,
-                                                                          oldCameraRecords, newCameraRecords);
+        preTrimDoorVec = new LevelComponents::LevelDoorVector(level->GetDoorList());
+        preTrimNormal = room->GetEntityListData(1);
+        preTrimHard = room->GetEntityListData(0);
+        preTrimSHard = room->GetEntityListData(2);
+        preTrimCamType = room->GetCameraControlType();
+        preTrimCamRecords = room->GetCameraControlRecords(true);
     }
 
-    ExecuteOperation(op);
+    // Create and execute the room config change operation.
+    // RoomConfigReset (called inside PerformOperation) handles the trim.
+    OperationParams *configOp = new OperationParams;
+    configOp->roomConfigChange = true;
+    configOp->lastRoomConfigParams = currentParams;
+    configOp->newRoomConfigParams = newParams;
+    ExecuteOperation(configOp);
+
+    // Create a separate trim-capture operation to preserve elements trimmed
+    // during the dimension change, so Undo can restore them correctly.
+    if (roomSizeChanged)
+    {
+        LevelComponents::LevelDoorVector *postTrimDoorVec =
+            new LevelComponents::LevelDoorVector(level->GetDoorList());
+        std::vector<LevelComponents::EntityRoomAttribute> postTrimNormal = room->GetEntityListData(1);
+        std::vector<LevelComponents::EntityRoomAttribute> postTrimHard = room->GetEntityListData(0);
+        std::vector<LevelComponents::EntityRoomAttribute> postTrimSHard = room->GetEntityListData(2);
+        auto postTrimCamType = room->GetCameraControlType();
+        auto postTrimCamRecords = room->GetCameraControlRecords(true);
+
+        OperationParams *trimOp = new OperationParams;
+        trimOp->doorVectorChange = true;
+        trimOp->doorVectorChangeParams = DoorVectorChangeParams::Create(preTrimDoorVec, postTrimDoorVec);
+        trimOp->entityNormalChange = true;
+        trimOp->entityNormalChangeParams = EntityListChangeParams::Create(preTrimNormal, postTrimNormal, roomId);
+        trimOp->entityHardChange = true;
+        trimOp->entityHardChangeParams = EntityListChangeParams::Create(preTrimHard, postTrimHard, roomId);
+        trimOp->entitySHardChange = true;
+        trimOp->entitySHardChangeParams = EntityListChangeParams::Create(preTrimSHard, postTrimSHard, roomId);
+        trimOp->cameraControlChange = true;
+        trimOp->cameraControlChangeParams = CameraControlChangeParams::Create(
+            roomId, preTrimCamType, postTrimCamType, preTrimCamRecords, postTrimCamRecords);
+        ExecuteOperation(trimOp);
+    }
+
     log("ImportRoomConfig: Room config applied.");
     return true;
 }
@@ -1655,7 +1708,29 @@ QString ScriptInterface::GetCurRoomDoorGlobalIds()
 
 bool ScriptInterface::DeleteDoorByGlobalId(int globalId)
 {
-    return singleton->GetCurrentLevel()->DeleteDoorByGlobalID(globalId);
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+
+    LevelComponents::LevelDoorVector *oldDoorVec =
+        new LevelComponents::LevelDoorVector(level->GetDoorList());
+
+    bool result = level->DeleteDoorByGlobalID(globalId);
+
+    if (result)
+    {
+        LevelComponents::LevelDoorVector *newDoorVec =
+            new LevelComponents::LevelDoorVector(level->GetDoorList());
+
+        OperationParams *op = new OperationParams;
+        op->doorVectorChange = true;
+        op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+        ExecuteOperation(op);
+    }
+    else
+    {
+        delete oldDoorVec;
+    }
+
+    return result;
 }
 
 void ScriptInterface::ResetRoomEntitySet(int roomId)

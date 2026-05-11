@@ -247,6 +247,15 @@ void PerformOperation(struct OperationParams *operation)
     {
         auto *dv = operation->doorVectorChangeParams;
         singleton->GetCurrentLevel()->SetDoorVec(*(dv->newDoorVec));
+        // Sync each room's entity set from its first door
+        int numRooms = singleton->GetCurrentLevel()->GetRooms().size();
+        for (int i = 0; i < numRooms; ++i)
+        {
+            LevelComponents::Room *r = singleton->GetCurrentLevel()->GetRooms()[i];
+            auto rDoors = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID((unsigned char) i);
+            if (!rDoors.isEmpty())
+                r->SetCurrentEntitySet(rDoors[0].EntitySetID);
+        }
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
         singleton->ResetEntitySetDockWidget();
         singleton->SetUnsavedChanges(true);
@@ -606,6 +615,15 @@ void BackTrackOperation(struct OperationParams *operation)
     {
         auto *dv = operation->doorVectorChangeParams;
         singleton->GetCurrentLevel()->SetDoorVec(*(dv->oldDoorVec));
+        // Sync each room's entity set from its first door
+        int numRooms = singleton->GetCurrentLevel()->GetRooms().size();
+        for (int i = 0; i < numRooms; ++i)
+        {
+            LevelComponents::Room *r = singleton->GetCurrentLevel()->GetRooms()[i];
+            auto rDoors = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID((unsigned char) i);
+            if (!rDoors.isEmpty())
+                r->SetCurrentEntitySet(rDoors[0].EntitySetID);
+        }
         singleton->RenderScreenElementsLayersUpdate((unsigned int) -1, -1);
         singleton->ResetEntitySetDockWidget();
         singleton->SetUnsavedChanges(true);
