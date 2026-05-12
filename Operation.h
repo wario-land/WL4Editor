@@ -399,6 +399,7 @@ struct OperationParams
             {
                 for (LevelComponents::AnimatedTile8x8Group *&animtedTileGroupIter: newAnimatedTileEditParam->animatedTileGroups)
                 { delete animtedTileGroupIter; animtedTileGroupIter = nullptr; }
+                delete newAnimatedTileEditParam;
                 newAnimatedTileEditParam = nullptr;
             }
         }

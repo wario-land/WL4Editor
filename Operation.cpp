@@ -843,7 +843,27 @@ void ResetUndoHistory()
         {
             if (CurrentTilesetOperationId > j)
             {
-                delete operationHistory[j];
+                if (operationIndex <= j) // redo happened: new* is current global state, already freed by ~WL4EditorWindow()
+                {
+                    if (operationHistory[j]->newTilesetEditParams)
+                    {
+                        operationHistory[j]->newTilesetEditParams->newTileset = nullptr;
+                        delete operationHistory[j]->newTilesetEditParams;
+                        operationHistory[j]->newTilesetEditParams = nullptr;
+                    }
+                    if (operationHistory[j]->lastTilesetEditParams)
+                    {
+                        delete operationHistory[j]->lastTilesetEditParams->newTileset;
+                        operationHistory[j]->lastTilesetEditParams->newTileset = nullptr;
+                        delete operationHistory[j]->lastTilesetEditParams;
+                        operationHistory[j]->lastTilesetEditParams = nullptr;
+                    }
+                    delete operationHistory[j];
+                }
+                else
+                {
+                    delete operationHistory[j];
+                }
             }
             else
             {
@@ -861,7 +881,28 @@ void ResetUndoHistory()
         {
             if (CurrentSpritestuffOperationId > j)
             {
-                delete operationHistory[j];
+                if (operationIndex <= j) // redo happened: new* is current global state, already freed by ~WL4EditorWindow()
+                {
+                    if (operationHistory[j]->newSpritesAndSetParam)
+                    {
+                        operationHistory[j]->newSpritesAndSetParam->entities.clear();
+                        operationHistory[j]->newSpritesAndSetParam->entitySets.clear();
+                        delete operationHistory[j]->newSpritesAndSetParam;
+                        operationHistory[j]->newSpritesAndSetParam = nullptr;
+                    }
+                    if (operationHistory[j]->lastSpritesAndSetParam)
+                    {
+                        qDeleteAll(operationHistory[j]->lastSpritesAndSetParam->entities);
+                        qDeleteAll(operationHistory[j]->lastSpritesAndSetParam->entitySets);
+                        delete operationHistory[j]->lastSpritesAndSetParam;
+                        operationHistory[j]->lastSpritesAndSetParam = nullptr;
+                    }
+                    delete operationHistory[j];
+                }
+                else
+                {
+                    delete operationHistory[j];
+                }
             }
             else
             {
@@ -879,7 +920,26 @@ void ResetUndoHistory()
         {
             if (CurrentAnimatedTileGroupOperationId > j)
             {
-                delete operationHistory[j];
+                if (operationIndex <= j) // redo happened: new* is current global state, already freed by ~WL4EditorWindow()
+                {
+                    if (operationHistory[j]->newAnimatedTileEditParam)
+                    {
+                        operationHistory[j]->newAnimatedTileEditParam->animatedTileGroups.clear();
+                        delete operationHistory[j]->newAnimatedTileEditParam;
+                        operationHistory[j]->newAnimatedTileEditParam = nullptr;
+                    }
+                    if (operationHistory[j]->lastAnimatedTileEditParam)
+                    {
+                        qDeleteAll(operationHistory[j]->lastAnimatedTileEditParam->animatedTileGroups);
+                        delete operationHistory[j]->lastAnimatedTileEditParam;
+                        operationHistory[j]->lastAnimatedTileEditParam = nullptr;
+                    }
+                    delete operationHistory[j];
+                }
+                else
+                {
+                    delete operationHistory[j];
+                }
             }
             else
             {
