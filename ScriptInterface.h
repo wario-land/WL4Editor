@@ -134,11 +134,12 @@ public:
                                        QString roomHeaderHex);
     Q_INVOKABLE bool ImportLayerTiles(int layerId, int width, int height, QString tileDataHex);
     Q_INVOKABLE bool ImportDoorsDisableDest(QString doorsData);
-    Q_INVOKABLE bool ImportDoors(QString doorsData);
     Q_INVOKABLE bool ImportEntityList(int difficulty, QString entityDataHex);
     Q_INVOKABLE bool ImportCameraControl(int camType, QString recordsData);
     Q_INVOKABLE QString GetCurRoomDoorGlobalIds();
     Q_INVOKABLE bool DeleteDoorByGlobalId(int globalId);
+    Q_INVOKABLE bool SetDoorDestination(int globalId, int destGlobalId);
+    Q_INVOKABLE bool ImportDoorVecString(QString doorVecString);
     Q_INVOKABLE void ResetRoomEntitySet(int roomId);
     Q_INVOKABLE void PostImportRefresh();
 

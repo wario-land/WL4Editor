@@ -870,11 +870,14 @@ QString ScriptInterface::ExportGetCameraControlRecords()
 
 QString ScriptInterface::ExportGetDoorsFullData()
 {
-    auto doordata = singleton->GetCurrentLevel()->GetDoorListRef().GetDoorsByRoomID(
-        singleton->GetCurrentRoom()->GetRoomID());
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+    unsigned char roomId = singleton->GetCurrentRoom()->GetRoomID();
+    auto doordata = level->GetDoorListRef().GetDoorsByRoomID(roomId);
     QString result;
-    for (auto &door : doordata)
+    for (int i = 0; i < doordata.size(); i++)
     {
+        auto &door = doordata[i];
+        unsigned char globalId = level->GetDoorListRef().GetGlobalIDByLocalID(roomId, (unsigned char) i);
         result += QString::number(door.DoorTypeByte) + "," +
                   QString::number(door.RoomID) + "," +
                   QString::number(door.x1) + "," +
@@ -885,7 +888,8 @@ QString ScriptInterface::ExportGetDoorsFullData()
                   QString::number(door.HorizontalDeltaWario) + "," +
                   QString::number(door.VerticalDeltaWario) + "," +
                   QString::number(door.EntitySetID) + "," +
-                  QString::number(door.BGM_ID) + ";";
+                  QString::number(door.BGM_ID) + "," +
+                  QString::number(globalId) + ";";
     }
     if (!result.isEmpty())
         result.chop(1);
@@ -1413,12 +1417,12 @@ bool ScriptInterface::ImportDoorsDisableDest(QString doorsData)
         newDoorVec->DeleteDoor(globalId);
     }
 
-    // Parse semicolon-separated door entries: type,roomID,x1,x2,y1,y2,destID,dx,dy,entitySetID,bgm
+    // Parse semicolon-separated door entries: type,roomID,x1,x2,y1,y2,destID,dx,dy,entitySetID,bgm,globalID
     QStringList doorEntries = doorsData.split(QChar(';'), Qt::SkipEmptyParts);
     for (const QString &entry : doorEntries)
     {
         QStringList fields = entry.split(QChar(','), Qt::SkipEmptyParts);
-        if (fields.size() < 11) continue;
+        if (fields.size() < 12) continue;
 
         int type = fields[0].toInt();
         int doorRoomId = fields[1].toInt();
@@ -1458,73 +1462,6 @@ bool ScriptInterface::ImportDoorsDisableDest(QString doorsData)
     ExecuteOperation(op);
 
     log("ImportDoorsDisableDest: Doors imported with destinations disabled.");
-    return true;
-}
-
-bool ScriptInterface::ImportDoors(QString doorsData)
-{
-    LevelComponents::Level *level = singleton->GetCurrentLevel();
-    int roomId = singleton->GetCurrentRoomId();
-
-    LevelComponents::LevelDoorVector *oldDoorVec =
-        new LevelComponents::LevelDoorVector(level->GetDoorList());
-    LevelComponents::LevelDoorVector *newDoorVec =
-        new LevelComponents::LevelDoorVector(level->GetDoorList());
-
-    // Delete all existing doors for this room
-    QVector<struct LevelComponents::DoorEntry> existingDoors =
-        newDoorVec->GetDoorsByRoomID((unsigned char) roomId);
-    for (int i = existingDoors.size() - 1; i >= 0; --i)
-    {
-        unsigned char globalId = newDoorVec->GetGlobalIDByLocalID((unsigned char) roomId, (unsigned char) i);
-        newDoorVec->DeleteDoor(globalId);
-    }
-
-    // Parse semicolon-separated door entries: type,roomID,x1,x2,y1,y2,destID,dx,dy,entitySetID,bgm
-    QStringList doorEntries = doorsData.split(QChar(';'), Qt::SkipEmptyParts);
-    for (const QString &entry : doorEntries)
-    {
-        QStringList fields = entry.split(QChar(','), Qt::SkipEmptyParts);
-        if (fields.size() < 11) continue;
-
-        int type = fields[0].toInt();
-        int doorRoomId = fields[1].toInt();
-        int x1 = fields[2].toInt();
-        int x2 = fields[3].toInt();
-        int y1 = fields[4].toInt();
-        int y2 = fields[5].toInt();
-        int destID = fields[6].toInt();
-        int deltaX = fields[7].toInt();
-        int deltaY = fields[8].toInt();
-        int entitySetId = fields[9].toInt();
-        int bgm = fields[10].toInt();
-
-        // Room 0 portal (global ID 0) cannot be deleted; update it in-place instead
-        if (roomId == 0 && type == 1)
-        {
-            newDoorVec->SetDoorPlace(0, (unsigned char) x1, (unsigned char) x2,
-                                     (unsigned char) y1, (unsigned char) y2);
-            newDoorVec->SetDestinationDoor(0, (unsigned char) destID);
-            newDoorVec->SetWarioDelta(0, (signed char) deltaX, (signed char) deltaY);
-            newDoorVec->SetBGM(0, (unsigned short) bgm);
-            newDoorVec->SetEntitySetID(0, (unsigned char) entitySetId);
-            continue;
-        }
-        unsigned char newId = (unsigned char) newDoorVec->AddDoor(
-            (unsigned char) doorRoomId, (unsigned char) entitySetId, (unsigned char) type);
-        newDoorVec->SetDoorPlace(newId, (unsigned char) x1, (unsigned char) x2,
-                                 (unsigned char) y1, (unsigned char) y2);
-        newDoorVec->SetDestinationDoor(newId, (unsigned char) destID);
-        newDoorVec->SetWarioDelta(newId, (signed char) deltaX, (signed char) deltaY);
-        newDoorVec->SetBGM(newId, (unsigned short) bgm);
-    }
-
-    OperationParams *op = new OperationParams;
-    op->doorVectorChange = true;
-    op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
-    ExecuteOperation(op);
-
-    log("ImportDoors: Doors imported with destinations preserved.");
     return true;
 }
 
@@ -1644,13 +1581,13 @@ bool ScriptInterface::DeleteDoorByGlobalId(int globalId)
     LevelComponents::LevelDoorVector *oldDoorVec =
         new LevelComponents::LevelDoorVector(level->GetDoorList());
 
-    bool result = level->DeleteDoorByGlobalID(globalId);
+    // Modify a copy so the change is applied only through ExecuteOperation
+    LevelComponents::LevelDoorVector *newDoorVec =
+        new LevelComponents::LevelDoorVector(level->GetDoorList());
+    bool result = newDoorVec->DeleteDoor((unsigned char) globalId);
 
     if (result)
     {
-        LevelComponents::LevelDoorVector *newDoorVec =
-            new LevelComponents::LevelDoorVector(level->GetDoorList());
-
         OperationParams *op = new OperationParams;
         op->doorVectorChange = true;
         op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
@@ -1659,9 +1596,94 @@ bool ScriptInterface::DeleteDoorByGlobalId(int globalId)
     else
     {
         delete oldDoorVec;
+        delete newDoorVec;
     }
 
     return result;
+}
+
+bool ScriptInterface::SetDoorDestination(int globalId, int destGlobalId)
+{
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+
+    LevelComponents::LevelDoorVector *oldDoorVec =
+        new LevelComponents::LevelDoorVector(level->GetDoorList());
+
+    // Modify a copy so the change is applied only through ExecuteOperation
+    LevelComponents::LevelDoorVector *newDoorVec =
+        new LevelComponents::LevelDoorVector(level->GetDoorList());
+    newDoorVec->SetDestinationDoor((unsigned char) globalId,
+                                    (unsigned char) destGlobalId);
+
+    OperationParams *op = new OperationParams;
+    op->doorVectorChange = true;
+    op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
+    ExecuteOperation(op);
+
+    return true;
+}
+
+bool ScriptInterface::ImportDoorVecString(QString doorVecString)
+{
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+
+    // Save old state for undo
+    LevelComponents::LevelDoorVector *oldDoorVec =
+        new LevelComponents::LevelDoorVector(level->GetDoorList());
+
+    // Parse the raw hex string and replace the entire door vector.
+    // Manually tokenize and build via AddDoor+setters to avoid any
+    // regex-split edge cases in LevelDoorVector(QString&) constructor.
+    LevelComponents::LevelDoorVector newDoorVec;
+    QStringList tokens = doorVecString.split(',');
+    for (int t = 0; t + 11 < tokens.size(); t += 12)
+    {
+        int type        = tokens[t +  0].trimmed().toInt(nullptr, 0) & 0xFF;
+        int roomID      = tokens[t +  1].trimmed().toInt(nullptr, 0) & 0xFF;
+        int x1          = tokens[t +  2].trimmed().toInt(nullptr, 0) & 0xFF;
+        int x2          = tokens[t +  3].trimmed().toInt(nullptr, 0) & 0xFF;
+        int y1          = tokens[t +  4].trimmed().toInt(nullptr, 0) & 0xFF;
+        int y2          = tokens[t +  5].trimmed().toInt(nullptr, 0) & 0xFF;
+        int destID      = tokens[t +  6].trimmed().toInt(nullptr, 0) & 0xFF;
+        int dx          = tokens[t +  7].trimmed().toInt(nullptr, 0);
+        int dy          = tokens[t +  8].trimmed().toInt(nullptr, 0);
+        int entitySetID = tokens[t +  9].trimmed().toInt(nullptr, 0) & 0xFF;
+        int bgmLow      = tokens[t + 10].trimmed().toInt(nullptr, 0) & 0xFF;
+        int bgmHigh     = tokens[t + 11].trimmed().toInt(nullptr, 0) & 0xFF;
+        int bgm         = bgmLow | (bgmHigh << 8);
+
+        unsigned char newId = newDoorVec.AddDoor(
+            (unsigned char) roomID, (unsigned char) entitySetID, (unsigned char) type);
+        newDoorVec.SetDoorPlace(newId,
+            (unsigned char) x1, (unsigned char) x2,
+            (unsigned char) y1, (unsigned char) y2);
+        newDoorVec.SetDestinationDoor(newId, (unsigned char) destID);
+        newDoorVec.SetWarioDelta(newId, (signed char) dx, (signed char) dy);
+        newDoorVec.SetBGM(newId, (unsigned short) bgm);
+    }
+    int newSize = newDoorVec.size();
+
+    // Save new state for undo/redo — copy newDoorVec (not level, which is unchanged)
+    LevelComponents::LevelDoorVector *newDoorVecCopy =
+        new LevelComponents::LevelDoorVector(newDoorVec);
+
+    OperationParams *op = new OperationParams;
+    op->doorVectorChange = true;
+    op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVecCopy);
+    // ExecuteOperation calls PerformOperation which does SetDoorVec + entity-set sync
+    ExecuteOperation(op);
+
+    // Log per-room door distribution
+    QString distLog;
+    int numRooms = level->GetRooms().size();
+    for (int r = 0; r < numRooms; ++r)
+    {
+        auto rDoors = level->GetDoorListRef().GetDoorsByRoomID((unsigned char) r);
+        if (!rDoors.isEmpty())
+            distLog += " R" + QString::number(r) + ":" + QString::number(rDoors.size());
+    }
+    log("ImportDoorVecString: " + QString::number(newSize) + " doors imported." + distLog);
+    return true;
 }
 
 void ScriptInterface::ResetRoomEntitySet(int roomId)

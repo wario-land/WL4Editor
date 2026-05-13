@@ -131,7 +131,8 @@
                         dx: parseInt(df[7], 10),
                         dy: parseInt(df[8], 10),
                         entitySetID: parseInt(df[9], 10),
-                        bgm: parseInt(df[10], 10)
+                        bgm: parseInt(df[10], 10),
+                        globalDoorID: parseInt(df[11], 10)
                     });
                 }
             }

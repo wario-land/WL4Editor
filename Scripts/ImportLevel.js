@@ -1,5 +1,6 @@
 // WL4Editor level import script - imports a full level from a JSON file
 // Uses individual fine-grained import APIs for step-by-step import
+// Doors are bulk-imported at the end via raw door vector string
 
 (function () {
     // Helper: join hex row strings into a single hex string
@@ -20,16 +21,31 @@
         return result;
     }
 
-    // Helper: convert door objects array to delimited string "type,roomID,x1,x2,y1,y2,destID,dx,dy,entitySetID,bgm;..."
-    function doorsObjToString(doors) {
-        var result = "";
-        for (var i = 0; i < doors.length; i++) {
-            var d = doors[i];
-            if (result !== "") result += ";";
-            result += d.type + "," + d.roomID + "," + d.x1 + "," + d.x2 + "," + d.y1 + "," + d.y2 + "," +
-                      d.destID + "," + d.dx + "," + d.dy + "," + d.entitySetID + "," + d.bgm;
+    // Helper: serialize all doors into raw hex byte string for LevelDoorVector(QString&) constructor.
+    // Each door becomes 12 hex bytes: DoorTypeByte, RoomID, x1, x2, y1, y2,
+    // DestinationDoorGlobalID, HorizontalDeltaWario, VerticalDeltaWario, EntitySetID, BGM_ID(low), BGM_ID(high)
+    function buildDoorVecRawHex(allDoors) {
+        var parts = [];
+        for (var i = 0; i < allDoors.length; i++) {
+            var d = allDoors[i];
+            var bgmLow = d.bgm & 0xFF;
+            var bgmHigh = (d.bgm >> 8) & 0xFF;
+            parts.push(
+                "0x" + (d.type & 0xFF).toString(16),
+                "0x" + (d.roomID & 0xFF).toString(16),
+                "0x" + (d.x1 & 0xFF).toString(16),
+                "0x" + (d.x2 & 0xFF).toString(16),
+                "0x" + (d.y1 & 0xFF).toString(16),
+                "0x" + (d.y2 & 0xFF).toString(16),
+                "0x" + (d.destID & 0xFF).toString(16),
+                "0x" + (d.dx & 0xFF).toString(16),
+                "0x" + (d.dy & 0xFF).toString(16),
+                "0x" + (d.entitySetID & 0xFF).toString(16),
+                "0x" + bgmLow.toString(16),
+                "0x" + bgmHigh.toString(16)
+            );
         }
-        return result;
+        return parts.join(", ");
     }
 
     // Helper: convert camera records to delimited string "trans,x1,x2,y1,y2,x3,y3,offset,value;..."
@@ -128,7 +144,7 @@
         WL4EditorInterface.ImportGlobalCredits(globals.creditsData);
     }
 
-    // ---------- Import each room ----------
+    // ---------- Import each room (skip doors — handled in bulk at the end) ----------
     var currentRoomCount = WL4EditorInterface.GetRoomNum();
     var rooms = levelObj.rooms || [];
     if (rooms.length > currentRoomCount) {
@@ -145,10 +161,6 @@
     for (var i = 0; i < rooms.length; i++) {
         var room = rooms[i];
         WL4EditorInterface.SetCurrentRoomId(room.roomId);
-
-        // Save old door global IDs, delete them after new doors are in place
-        var oldDoorIdsStr = WL4EditorInterface.GetCurRoomDoorGlobalIds();
-        var oldDoorIds = oldDoorIdsStr ? oldDoorIdsStr.split(",") : [];
 
         // ---- Step 1: Import room config ----
         var rc = room.roomConfig || {};
@@ -178,15 +190,7 @@
             }
         }
 
-        // ---- Step 3: Import doors (preserve destinations for level import) ----
-        var doors = room.doors || [];
-        var doorsStr = doorsObjToString(doors);
-        if (!WL4EditorInterface.ImportDoors(doorsStr)) {
-            WL4EditorInterface.alert("ImportDoors failed for room " + room.roomId + ".");
-            return;
-        }
-
-        // ---- Step 4: Import entity lists ----
+        // ---- Step 3: Import entity lists ----
         var entityLists = room.entityLists || [];
         for (var ei = 0; ei < entityLists.length; ei++) {
             var listObj = entityLists[ei];
@@ -200,7 +204,7 @@
             }
         }
 
-        // ---- Step 5: Import camera control ----
+        // ---- Step 4: Import camera control ----
         var cameraControl = room.cameraControl || {};
         if (cameraControl.type !== undefined) {
             var records = cameraControl.records || [];
@@ -210,15 +214,52 @@
                 return;
             }
         }
+    }
 
-        // ---- Step 6: Delete old doors (now that new doors are in place) ----
-        for (var di = 0; di < oldDoorIds.length; di++) {
-            var gid = parseInt(oldDoorIds[di], 10);
-            if (!isNaN(gid) && gid > 0) {
-                WL4EditorInterface.DeleteDoorByGlobalId(gid);
+    // ---------- Bulk import all doors ----------
+    // Collect all doors sorted by globalDoorID so destIDs naturally match
+    // the new global positions without any remapping.
+    var allDoors = [];
+    var nextGid = 0;
+    while (true) {
+        var found = false;
+        for (var i = 0; i < rooms.length && !found; i++) {
+            var roomDoors = rooms[i].doors || [];
+            for (var j = 0; j < roomDoors.length && !found; j++) {
+                if (roomDoors[j].globalDoorID === nextGid) {
+                    var src = roomDoors[j];
+                    allDoors.push({
+                        type:         src.type,
+                        roomID:       src.roomID,
+                        x1:           src.x1,
+                        x2:           src.x2,
+                        y1:           src.y1,
+                        y2:           src.y2,
+                        destID:       src.destID,
+                        dx:           src.dx,
+                        dy:           src.dy,
+                        entitySetID:  src.entitySetID,
+                        bgm:          src.bgm,
+                        globalDoorID: src.globalDoorID
+                    });
+                    found = true;
+                }
             }
         }
-        WL4EditorInterface.ResetRoomEntitySet(room.roomId);
+        if (!found) break;
+        nextGid++;
+    }
+    if (allDoors.length > 0) {
+        // Serialize and replace the entire door vector.
+        // Sorting by globalDoorID guarantees new position equals old global ID,
+        // so destIDs are already correct (no remapping needed).
+        var doorVecHex = buildDoorVecRawHex(allDoors);
+        WL4EditorInterface.log("ImportLevel: bulk-importing " + allDoors.length +
+                               " doors across " + rooms.length + " rooms");
+        if (!WL4EditorInterface.ImportDoorVecString(doorVecHex)) {
+            WL4EditorInterface.alert("ImportDoorVecString failed.");
+            return;
+        }
     }
 
     // ---------- Import level configuration ----------

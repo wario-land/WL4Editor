@@ -27,7 +27,7 @@
             var d = doors[i];
             if (result !== "") result += ";";
             result += d.type + "," + d.roomID + "," + d.x1 + "," + d.x2 + "," + d.y1 + "," + d.y2 + "," +
-                      d.destID + "," + d.dx + "," + d.dy + "," + d.entitySetID + "," + d.bgm;
+                      d.destID + "," + d.dx + "," + d.dy + "," + d.entitySetID + "," + d.bgm + "," + d.globalDoorID;
         }
         return result;
     }
@@ -65,11 +65,6 @@
     }
 
     var currentRoomId = WL4EditorInterface.GetCurRoomId();
-
-    // Save old door global IDs before import, so we can delete them after
-    // new doors are added (DeleteDoor refuses to delete the last door of a room)
-    var oldDoorIdsStr = WL4EditorInterface.GetCurRoomDoorGlobalIds();
-    var oldDoorIds = oldDoorIdsStr ? oldDoorIdsStr.split(",") : [];
 
     // ---- Step 1: Import room config ----
     var rc = roomObj.roomConfig || {};
@@ -132,13 +127,6 @@
         }
     }
 
-    // ---- Step 6: Delete old doors (now that new doors are in place) ----
-    for (var di = 0; di < oldDoorIds.length; di++) {
-        var gid = parseInt(oldDoorIds[di], 10);
-        if (!isNaN(gid) && gid > 0) {
-            WL4EditorInterface.DeleteDoorByGlobalId(gid);
-        }
-    }
     WL4EditorInterface.ResetRoomEntitySet(currentRoomId);
 
     // ---- Step 7: Finalize ----
