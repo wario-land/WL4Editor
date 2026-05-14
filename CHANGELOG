@@ -2,7 +2,7 @@
 (major changes)
 - Simplified from 2 separate systems (16 room deques + 1 global deque) into a single global Undo/Redo deque.
 - Support Undo/Redo for Door, Camera Control, Entity and EntitySet, Level Config, Credit, WallPaint changes via menu, script, dialog and dock widget.
-- Support Export / Import current Room or current Level via scripts with Undo / Redo compatibility with 64 new js APIs.
+- Support Export / Import current Room or current Level via scripts with Undo / Redo compatibility with 60+ new js APIs.
 - Support ctrl+left click shortcut to go to the destination door of a door in door editing mode (Issue #218).
 
 (minor changes)
