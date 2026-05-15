@@ -73,6 +73,12 @@ namespace LevelComponents
         void SetChanged(bool change) { Changed = change; }
         bool IsNewEntity() { return Changed; }
 
+        // Export/Import methods
+        QString GetPaletteDataHex(int paletteId);
+        QString GetTile8x8DataHex(int index);
+        void SetPaletteDataHex(int paletteId, QString hex);
+        void SetTile8x8DataHex(int index, QString hex);
+
     private:
         QVector<QRgb> palettes[16]; //i don't want to do some memory management here, so i just set it to be 16
         QVector<Tile8x8*> tile8x8data;

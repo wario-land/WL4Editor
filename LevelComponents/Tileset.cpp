@@ -447,4 +447,190 @@ namespace LevelComponents
             SetAnimatedTile(AnimatedTileData[0][v1], AnimatedTileData[1][v1], AnimatedTileSwitchTable[v1], 4 * v1);
         }
     }
+    QString Tileset::GetTile8x8DataHex()
+    {
+        int tileCount = fgGFXlen / 32;
+        QByteArray raw(tileCount * 32, '\0');
+        for (int i = 0; i < tileCount; ++i)
+        {
+            Tile8x8 *tile = tile8x8array[i + 0x41];
+            if (tile && tile != blankTile)
+                memcpy(raw.data() + i * 32, tile->GetRawPixelData().constData(), 32);
+        }
+        return QString(raw.toHex());
+    }
+
+    QString Tileset::GetMap16DataHex()
+    {
+        // Build big-endian hex: each unsigned short as high-byte first
+        QByteArray raw(0x300 * 8, '\0');
+        for (int i = 0; i < 0x300; ++i)
+        {
+            for (int corner = 0; corner < 4; ++corner)
+            {
+                unsigned short val = map16array[i]->GetTile8X8(corner)->GetValue();
+                int idx = (i * 4 + corner) * 2;
+                raw[idx] = (val >> 8) & 0xFF;
+                raw[idx + 1] = val & 0xFF;
+            }
+        }
+        return QString(raw.toHex());
+    }
+
+    QString Tileset::GetAllPalettesHex()
+    {
+        ReGeneratePaletteData();
+        if (!TilesetPaletteData) return QString();
+        // Export colors 1-15 per palette (skip always-transparent color 0)
+        // 16 palettes * 15 colors * 2 bytes = 480 bytes = 960 hex chars
+        QByteArray raw(16 * 15 * 2, '\0');
+        for (int p = 0; p < 16; ++p)
+        {
+            for (int c = 1; c < 16; ++c)
+            {
+                unsigned short val = TilesetPaletteData[16 * p + c];
+                int idx = (p * 15 + (c - 1)) * 2;
+                raw[idx] = (val >> 8) & 0xFF;
+                raw[idx + 1] = val & 0xFF;
+            }
+        }
+        return QString(raw.toHex());
+    }
+
+    QString Tileset::GetEventTableDataHex()
+    {
+        if (!Map16EventTable) return QString();
+        QByteArray raw(Tile16DefaultNum * 2, '\0');
+        for (int i = 0; i < Tile16DefaultNum; ++i)
+        {
+            raw[i * 2] = (Map16EventTable[i] >> 8) & 0xFF;
+            raw[i * 2 + 1] = Map16EventTable[i] & 0xFF;
+        }
+        return QString(raw.toHex());
+    }
+
+    QString Tileset::GetTerrainTableDataHex()
+    {
+        if (!Map16TerrainTypeIDTable) return QString();
+        return QString(QByteArray((const char *) Map16TerrainTypeIDTable, Tile16DefaultNum).toHex());
+    }
+
+    QString Tileset::GetAnimatedSwitchTableHex()
+    {
+        if (!AnimatedTileSwitchTable) return QString();
+        return QString(QByteArray((const char *) AnimatedTileSwitchTable, 16).toHex());
+    }
+
+    void Tileset::SetTile8x8DataHex(QString hex)
+    {
+        QByteArray raw = QByteArray::fromHex(hex.toUtf8());
+        int tileCount = raw.size() / 32;
+        fgGFXlen = raw.size();
+        for (int i = 0; i < tileCount; ++i)
+        {
+            unsigned char tileData[32];
+            memcpy(tileData, raw.constData() + i * 32, 32);
+            Tile8x8 *oldTile = tile8x8array[i + 0x41];
+            if (oldTile && oldTile != blankTile)
+                delete oldTile;
+            tile8x8array[i + 0x41] = new Tile8x8(tileData, palettes);
+        }
+        for (int i = 0; i < Tile16DefaultNum; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
+                Tile8x8 *tile = map16array[i]->GetTile8X8(j);
+                int index = tile->GetIndex();
+                if (index >= 0x41 && index < 0x41 + tileCount)
+                    map16array[i]->ResetTile8x8(tile8x8array[index], j, index,
+                                                 tile->GetPaletteIndex(), tile->GetFlipX(), tile->GetFlipY());
+            }
+        }
+    }
+
+    void Tileset::SetMap16DataHex(QString hex)
+    {
+        QByteArray raw = QByteArray::fromHex(hex.toUtf8());
+        if (raw.size() < 0x300 * 8) return;
+        for (int i = 0; i < 0x300; ++i)
+        {
+            for (int corner = 0; corner < 4; ++corner)
+            {
+                int idx = (i * 4 + corner) * 2;
+                // Parse big-endian: high byte first
+                unsigned short value = ((unsigned char) raw[idx] << 8) | (unsigned char) raw[idx + 1];
+                int tileIdx = value & 0x3FF;
+                bool flipX = (value >> 10) & 1;
+                bool flipY = (value >> 11) & 1;
+                int palIdx = (value >> 12) & 0xF;
+                Tile8x8 *tileRef = (tileIdx >= 0 && tileIdx < tile8x8array.size()) ? tile8x8array[tileIdx] : blankTile;
+                map16array[i]->ResetTile8x8(tileRef, corner, tileIdx, palIdx, flipX, flipY);
+            }
+        }
+    }
+
+    void Tileset::SetAllPalettesHex(QString hex)
+    {
+        // Import colors 1-15 per palette (color 0 is always transparent)
+        // 16 palettes * 15 colors * 2 bytes = 480 bytes = 960 hex chars
+        if (!TilesetPaletteData || hex.length() < 16 * 15 * 4) return;
+        QByteArray raw = QByteArray::fromHex(hex.toUtf8());
+        for (int p = 0; p < 16; ++p)
+        {
+            for (int c = 1; c < 16; ++c)
+            {
+                int idx = (p * 15 + (c - 1)) * 2;
+                unsigned short data = ((unsigned char) raw[idx] << 8) | (unsigned char) raw[idx + 1];
+                TilesetPaletteData[16 * p + c] = data;
+                int r = (data & 0x1F) << 3;
+                int g = ((data >> 5) & 0x1F) << 3;
+                int b = ((data >> 10) & 0x1F) << 3;
+                palettes[p][c] = QColor(r, g, b).rgb();
+            }
+        }
+    }
+
+    void Tileset::SetEventTableDataHex(QString hex)
+    {
+        if (!Map16EventTable || hex.length() < (int)(Tile16DefaultNum * 4)) return;
+        for (int i = 0; i < Tile16DefaultNum; ++i)
+            Map16EventTable[i] = (unsigned short) hex.mid(i * 4, 4).toUShort(nullptr, 16);
+    }
+
+    void Tileset::SetTerrainTableDataHex(QString hex)
+    {
+        if (!Map16TerrainTypeIDTable || hex.length() < (int)(Tile16DefaultNum * 2)) return;
+        for (int i = 0; i < Tile16DefaultNum; ++i)
+            Map16TerrainTypeIDTable[i] = (unsigned char) hex.mid(i * 2, 2).toUShort(nullptr, 16);
+    }
+
+    void Tileset::SetAnimatedSwitchTableHex(QString hex)
+    {
+        if (!AnimatedTileSwitchTable || hex.length() < 32) return;
+        for (int i = 0; i < 16; ++i)
+            AnimatedTileSwitchTable[i] = (unsigned char) hex.mid(i * 2, 2).toUShort(nullptr, 16);
+    }
+
+    QString Tileset::GetAnimatedTileDataHex(int id)
+    {
+        if (!AnimatedTileData[id]) return QString();
+        // 16 unsigned shorts, big-endian: 16 * 2 = 32 bytes = 64 hex chars
+        QByteArray raw(32, '\0');
+        for (int i = 0; i < 16; ++i)
+        {
+            raw[i * 2] = (AnimatedTileData[id][i] >> 8) & 0xFF;
+            raw[i * 2 + 1] = AnimatedTileData[id][i] & 0xFF;
+        }
+        return QString(raw.toHex());
+    }
+
+    void Tileset::SetAnimatedTileDataHex(int id, QString hex)
+    {
+        if (!AnimatedTileData[id] || hex.length() < 64) return;
+        QByteArray raw = QByteArray::fromHex(hex.toUtf8());
+        for (int i = 0; i < 16 && i * 2 + 1 < raw.size(); ++i)
+            AnimatedTileData[id][i] = ((unsigned char) raw[i * 2] << 8) | (unsigned char) raw[i * 2 + 1];
+        UpdateAllAnimatedTileFromGlobalSingletons();
+    }
+
 } // namespace LevelComponents

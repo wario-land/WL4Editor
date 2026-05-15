@@ -567,7 +567,7 @@ skip_append_output_2:
         QVector<LevelComponents::Tile8x8 *> tile8x8array = singletonTilesets[TilesetId]->GetTile8x8arrayPtr();
         for (int j = 0; j < (FGTileGfxDataLen / 32); ++j)
         {
-            memcpy(&FGmap8x8tiledata[32 * j], tile8x8array[j + 0x41]->CreateGraphicsData().data(), 32);
+            memcpy(&FGmap8x8tiledata[32 * j], tile8x8array[j + 0x41]->GetRawPixelData().data(), 32);
         }
         struct ROMUtils::SaveData FGTile8x8GraphicDataChunk = { static_cast<unsigned int>(tilesetPtr),
                                                          static_cast<unsigned int>(FGTileGfxDataLen),
@@ -1469,7 +1469,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         QVector<LevelComponents::Tile8x8 *> tile8x8array = entities[GlobalEntityId]->GetTile8x8array();
         for (int j = 0; j < (TileGfxDataLen / 32); ++j)
         {
-            memcpy(&map8x8tiledata[32 * j], tile8x8array[j]->CreateGraphicsData().data(), 32);
+            memcpy(&map8x8tiledata[32 * j], tile8x8array[j]->GetRawPixelData().data(), 32);
         }
         struct ROMUtils::SaveData Tile8x8GraphicDataChunk = { static_cast<unsigned int>(SpriteTilesetPtrAddr),
                                                          static_cast<unsigned int>(TileGfxDataLen),

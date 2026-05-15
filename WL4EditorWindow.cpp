@@ -269,6 +269,7 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
         }
         ResetUndoHistory();
         ResetGlobalElementOperationIndexes();
+        OutputWidget->ClearTextEdit();
     }
 
     // Load the Project settings
@@ -579,9 +580,9 @@ void WL4EditorWindow::Graphicsview_UnselectDoorAndEntity() { ui->graphicsView->D
 void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroomconfig,
                                       DialogParams::RoomConfigParams *nextroomconfig)
 {
-    // Apply the selected parameters to the current room
+    // Apply the selected parameters to the target room identified by the operation params
     // reset the Tileset instance in Room class
-    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[ui->spinBox_RoomID->value()];
+    LevelComponents::Room *currentRoom = CurrentLevel->GetRooms()[currentroomconfig->roomID];
     if (nextroomconfig->CurrentTilesetIndex != currentroomconfig->CurrentTilesetIndex)
     {
         currentRoom->SetTileset(ROMUtils::singletonTilesets[nextroomconfig->CurrentTilesetIndex], nextroomconfig->CurrentTilesetIndex);
@@ -644,6 +645,10 @@ void WL4EditorWindow::RoomConfigReset(DialogParams::RoomConfigParams *currentroo
     currentRoom->SetLayerGFXEffect01(nextroomconfig->RasterType);
     currentRoom->SetLayerGFXEffect02(nextroomconfig->Water);
     currentRoom->SetBgmvolume(nextroomconfig->BGMVolume);
+
+    // Restore entity set (normally derived from doors, but saved here for completeness)
+    if (nextroomconfig->CurrentEntitySetID != currentroomconfig->CurrentEntitySetID)
+        currentRoom->SetCurrentEntitySet(nextroomconfig->CurrentEntitySetID);
 
     // Mark the layers as dirty
     for (unsigned int i = 0; i < 3; ++i)
@@ -1005,6 +1010,7 @@ void WL4EditorWindow::on_loadLevelButton_clicked()
         // Set program control changes
         UnsavedChanges = false;
         ResetUndoHistory();
+        OutputWidget->ClearTextEdit();
     }
 }
 
@@ -1200,28 +1206,28 @@ void WL4EditorWindow::ClearEverythingInRoom(bool no_warning)
     if (oldLayer0)
     {
         operation->layer0Change = true;
-        operation->layer0ChangeParams = LayerChangeParams::Create(oldLayer0, newLayer0, w0, h0);
+        operation->layer0ChangeParams = LayerChangeParams::Create(oldLayer0, newLayer0, w0, h0, currentRoom->GetRoomID());
         delete[] oldLayer0; delete[] newLayer0;
     }
     if (oldLayer1)
     {
         operation->layer1Change = true;
-        operation->layer1ChangeParams = LayerChangeParams::Create(oldLayer1, newLayer1, w1, h1);
+        operation->layer1ChangeParams = LayerChangeParams::Create(oldLayer1, newLayer1, w1, h1, currentRoom->GetRoomID());
         delete[] oldLayer1; delete[] newLayer1;
     }
     if (oldLayer2)
     {
         operation->layer2Change = true;
-        operation->layer2ChangeParams = LayerChangeParams::Create(oldLayer2, newLayer2, w2, h2);
+        operation->layer2ChangeParams = LayerChangeParams::Create(oldLayer2, newLayer2, w2, h2, currentRoom->GetRoomID());
         delete[] oldLayer2; delete[] newLayer2;
     }
 
     operation->entityNormalChange = true;
-    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal);
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal, currentRoom->GetRoomID());
     operation->entityHardChange = true;
-    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard);
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard, currentRoom->GetRoomID());
     operation->entitySHardChange = true;
-    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard);
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard, currentRoom->GetRoomID());
 
     if (IfDeleteAllDoors)
     {
@@ -1752,11 +1758,11 @@ void WL4EditorWindow::on_actionRoom_Config_triggered()
 
             // Add entity list changes to operation
             operation->entityNormalChange = true;
-            operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal);
+            operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormal, newNormal, currentRoom->GetRoomID());
             operation->entityHardChange = true;
-            operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard);
+            operation->entityHardChangeParams = EntityListChangeParams::Create(oldHard, newHard, currentRoom->GetRoomID());
             operation->entitySHardChange = true;
-            operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard);
+            operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHard, newSHard, currentRoom->GetRoomID());
 
             // Add camera control change to operation
             operation->cameraControlChange = true;
@@ -1868,13 +1874,15 @@ void WL4EditorWindow::on_actionAbout_triggered()
     // Show the about dialog
     QMessageBox infoPrompt;
     infoPrompt.setWindowTitle(tr("About"));
-    infoPrompt.setText(QString("WL4Editor contributors in alphabetical order are:\n"
+    infoPrompt.setText(QString("WL4Editor human contributors in alphabetical order are:\n"
                                "    chanchancl\n"
                                "    Goldensunboy\n"
                                "    IamRifki\n"
                                "    Kleyment\n"
                                "    shinespeciall\n"
                                "    xiazhanjian\n\n"
+                               "AI contributor(s):\n"
+                               "    deepseek-v4\n\n"
                                "Special Thanks:\n"
                                "    becored\n"
                                "    Blanchon\n"
@@ -1971,8 +1979,8 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_1_triggered()
 
     operation->layer0Change = true;
     operation->layer1Change = true;
-    operation->layer0ChangeParams = LayerChangeParams::Create(oldData0, newData0, w0, h0);
-    operation->layer1ChangeParams = LayerChangeParams::Create(oldData1, newData1, w1, h1);
+    operation->layer0ChangeParams = LayerChangeParams::Create(oldData0, newData0, w0, h0, currentroom->GetRoomID());
+    operation->layer1ChangeParams = LayerChangeParams::Create(oldData1, newData1, w1, h1, currentroom->GetRoomID());
     delete[] oldData0; delete[] oldData1; delete[] newData0; delete[] newData1;
     ExecuteOperation(operation);
 
@@ -2029,8 +2037,8 @@ void WL4EditorWindow::on_action_swap_Layer_1_Layer_2_triggered()
 
     operation->layer1Change = true;
     operation->layer2Change = true;
-    operation->layer1ChangeParams = LayerChangeParams::Create(oldData1, newData1, w1, h1);
-    operation->layer2ChangeParams = LayerChangeParams::Create(oldData2, newData2, w2, h2);
+    operation->layer1ChangeParams = LayerChangeParams::Create(oldData1, newData1, w1, h1, currentroom->GetRoomID());
+    operation->layer2ChangeParams = LayerChangeParams::Create(oldData2, newData2, w2, h2, currentroom->GetRoomID());
     delete[] oldData1; delete[] oldData2; delete[] newData1; delete[] newData2;
     ExecuteOperation(operation);
 
@@ -2093,8 +2101,8 @@ void WL4EditorWindow::on_action_swap_Layer_0_Layer_2_triggered()
 
     operation->layer0Change = true;
     operation->layer2Change = true;
-    operation->layer0ChangeParams = LayerChangeParams::Create(oldData0, newData0, w0, h0);
-    operation->layer2ChangeParams = LayerChangeParams::Create(oldData2, newData2, w2, h2);
+    operation->layer0ChangeParams = LayerChangeParams::Create(oldData0, newData0, w0, h0, currentroom->GetRoomID());
+    operation->layer2ChangeParams = LayerChangeParams::Create(oldData2, newData2, w2, h2, currentroom->GetRoomID());
     delete[] oldData0; delete[] oldData2; delete[] newData0; delete[] newData2;
     ExecuteOperation(operation);
 
@@ -2128,8 +2136,8 @@ void WL4EditorWindow::on_action_swap_Normal_Hard_triggered()
 
     operation->entityNormalChange = true;
     operation->entityHardChange = true;
-    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormalList, newNormalList);
-    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHardList, newHardList);
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormalList, newNormalList, currentroom->GetRoomID());
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHardList, newHardList, currentroom->GetRoomID());
     ExecuteOperation(operation);
 
     // UI update
@@ -2162,8 +2170,8 @@ void WL4EditorWindow::on_action_swap_Hard_S_Hard_triggered()
 
     operation->entityHardChange = true;
     operation->entitySHardChange = true;
-    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHardList, newHardList);
-    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHardList, newSHardList);
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldHardList, newHardList, currentroom->GetRoomID());
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHardList, newSHardList, currentroom->GetRoomID());
     ExecuteOperation(operation);
 
     // UI update
@@ -2196,8 +2204,8 @@ void WL4EditorWindow::on_action_swap_Normal_S_Hard_triggered()
 
     operation->entityNormalChange = true;
     operation->entitySHardChange = true;
-    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormalList, newNormalList);
-    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHardList, newSHardList);
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldNormalList, newNormalList, currentroom->GetRoomID());
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldSHardList, newSHardList, currentroom->GetRoomID());
     ExecuteOperation(operation);
 
     // UI update
@@ -2230,7 +2238,7 @@ void WL4EditorWindow::on_action_clear_Layer_0_triggered()
         struct OperationParams *operation = new struct OperationParams;
     
         operation->layer0Change = true;
-        operation->layer0ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
+        operation->layer0ChangeParams = LayerChangeParams::Create(oldData, newData, w, h, currentroom->GetRoomID());
         delete[] oldData; delete[] newData;
         ExecuteOperation(operation);
     }
@@ -2263,7 +2271,7 @@ void WL4EditorWindow::on_action_clear_Layer_1_triggered()
         struct OperationParams *operation = new struct OperationParams;
     
         operation->layer1Change = true;
-        operation->layer1ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
+        operation->layer1ChangeParams = LayerChangeParams::Create(oldData, newData, w, h, currentroom->GetRoomID());
         delete[] oldData; delete[] newData;
         ExecuteOperation(operation);
     }
@@ -2296,7 +2304,7 @@ void WL4EditorWindow::on_action_clear_Layer_2_triggered()
         struct OperationParams *operation = new struct OperationParams;
     
         operation->layer2Change = true;
-        operation->layer2ChangeParams = LayerChangeParams::Create(oldData, newData, w, h);
+        operation->layer2ChangeParams = LayerChangeParams::Create(oldData, newData, w, h, currentroom->GetRoomID());
         delete[] oldData; delete[] newData;
         ExecuteOperation(operation);
     }
@@ -2326,7 +2334,7 @@ void WL4EditorWindow::on_action_clear_Normal_triggered()
     struct OperationParams *operation = new struct OperationParams;
 
     operation->entityNormalChange = true;
-    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldList, newList);
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldList, newList, currentroom->GetRoomID());
     ExecuteOperation(operation);
 
     // UI update
@@ -2355,7 +2363,7 @@ void WL4EditorWindow::on_action_clear_Hard_triggered()
     struct OperationParams *operation = new struct OperationParams;
 
     operation->entityHardChange = true;
-    operation->entityHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldList, newList, currentroom->GetRoomID());
     ExecuteOperation(operation);
 
     // UI update
@@ -2384,7 +2392,7 @@ void WL4EditorWindow::on_action_clear_S_Hard_triggered()
     struct OperationParams *operation = new struct OperationParams;
 
     operation->entitySHardChange = true;
-    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldList, newList, currentroom->GetRoomID());
     ExecuteOperation(operation);
 
     // UI update
@@ -2666,7 +2674,7 @@ void WL4EditorWindow::on_action_duplicate_Normal_triggered()
     struct OperationParams *operation = new struct OperationParams;
 
     operation->entityNormalChange = true;
-    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldList, newList);
+    operation->entityNormalChangeParams = EntityListChangeParams::Create(oldList, newList, currentroom->GetRoomID());
     ExecuteOperation(operation);
 
     // UI update
@@ -2697,7 +2705,7 @@ void WL4EditorWindow::on_action_duplicate_Hard_triggered()
     struct OperationParams *operation = new struct OperationParams;
 
     operation->entityHardChange = true;
-    operation->entityHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    operation->entityHardChangeParams = EntityListChangeParams::Create(oldList, newList, currentroom->GetRoomID());
     ExecuteOperation(operation);
 
     // UI update
@@ -2728,7 +2736,7 @@ void WL4EditorWindow::on_action_duplicate_S_Hard_triggered()
     struct OperationParams *operation = new struct OperationParams;
 
     operation->entitySHardChange = true;
-    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldList, newList);
+    operation->entitySHardChangeParams = EntityListChangeParams::Create(oldList, newList, currentroom->GetRoomID());
     ExecuteOperation(operation);
 
     // UI update

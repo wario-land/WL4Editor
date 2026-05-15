@@ -1000,7 +1000,7 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
             auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
             for (int j = 0x40; j < (0x41 + existingTile8x8Num); j++)
             {
-                memcpy(&tmp_current_tile8x8_data[(j - 0x40) * 32], tile8x8array[j]->CreateGraphicsData().data(), 32);
+                memcpy(&tmp_current_tile8x8_data[(j - 0x40) * 32], tile8x8array[j]->GetRawPixelData().data(), 32);
             }
 
             // ask user how many Tile16 per row, then update Tile16s' data to the Tile16 set
@@ -1147,7 +1147,7 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
     auto tile8x8array = tmp_newTilesetPtr->GetTile8x8arrayPtr();
     for (int j = 0x40; j < (0x41 + existingTile8x8Num); j++)
     {
-        memcpy(&tmp_current_tile8x8_data[(j - 0x40) * 32], tile8x8array[j]->CreateGraphicsData().data(), 32);
+        memcpy(&tmp_current_tile8x8_data[(j - 0x40) * 32], tile8x8array[j]->GetRawPixelData().data(), 32);
     }
 
     // Compare through all the existing foreground Tile8x8s

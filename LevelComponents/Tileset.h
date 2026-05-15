@@ -71,6 +71,27 @@ namespace LevelComponents
 
         void DelTile8x8(int tile8x8Id);
         void UpdateAllAnimatedTileFromGlobalSingletons();
+
+        // Export getters (contiguous data blocks)
+        int GetMap16Ptr() { return map16ptr; }
+        int GetTile8x8Count() { return tile8x8array.size(); }
+        QString GetTile8x8DataHex();
+        int GetMap16Count() { return map16array.size(); }
+        QString GetMap16DataHex();
+        QString GetAllPalettesHex();
+        QString GetEventTableDataHex();
+        QString GetTerrainTableDataHex();
+        QString GetAnimatedSwitchTableHex();
+        QString GetAnimatedTileDataHex(int id);
+
+        // Import setters (contiguous data blocks)
+        void SetTile8x8DataHex(QString hex);
+        void SetMap16DataHex(QString hex);
+        void SetAllPalettesHex(QString hex);
+        void SetEventTableDataHex(QString hex);
+        void SetTerrainTableDataHex(QString hex);
+        void SetAnimatedSwitchTableHex(QString hex);
+        void SetAnimatedTileDataHex(int id, QString hex);
     };
 } // namespace LevelComponents
 

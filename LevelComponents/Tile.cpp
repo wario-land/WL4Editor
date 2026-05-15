@@ -405,7 +405,7 @@ namespace LevelComponents
     /// <returns>
     /// The 32 bytes of graphics data in uncompressed GBA format.
     /// </returns>
-    QByteArray Tile8x8::CreateGraphicsData()
+    QByteArray Tile8x8::GetRawPixelData()
     {
         QByteArray arr(32, 0);
         for(int i = 0; i < 8; ++i)

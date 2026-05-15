@@ -1633,4 +1633,45 @@ namespace LevelComponents
             RenderedLayers[12]->setPixmap(newHintLayerPixmap);
         }
     }
+
+    QString Room::GetCameraControlRecordsString()
+    {
+        QString result;
+        for (unsigned int i = 0; i < CameraControlRecords.size(); ++i)
+        {
+            auto *rec = CameraControlRecords[i];
+            result += QString::number(rec->TransboundaryControl) + "," +
+                      QString::number(rec->x1) + "," + QString::number(rec->x2) + "," +
+                      QString::number(rec->y1) + "," + QString::number(rec->y2) + "," +
+                      QString::number(rec->x3) + "," + QString::number(rec->y3) + "," +
+                      QString::number(rec->ChangeValueOffset) + "," +
+                      QString::number(rec->ChangedValue);
+            if (i < CameraControlRecords.size() - 1)
+                result += ";";
+        }
+        return result;
+    }
+
+    QString Room::GetRoomHeaderHex()
+    {
+        // Sync Layer DataPtrs from live instances (RoomHeader pointers go stale during editing)
+        __RoomHeader header = RoomHeader;
+        header.Layer0Data = layers[0]->GetDataPtr();
+        header.Layer1Data = layers[1]->GetDataPtr();
+        header.Layer2Data = layers[2]->GetDataPtr();
+        header.Layer3Data = layers[3]->GetDataPtr();
+        unsigned char *raw = (unsigned char *) &header;
+        QString hex;
+        for (int i = 0; i < (int) sizeof(__RoomHeader); ++i)
+            hex += QString::number(raw[i], 16).rightJustified(2, '0');
+        return hex;
+    }
+
+    void Room::SetRoomHeaderFromHex(QString hex)
+    {
+        if (hex.length() < (int) sizeof(__RoomHeader) * 2) return;
+        unsigned char *raw = (unsigned char *) &RoomHeader;
+        for (int i = 0; i < (int) sizeof(__RoomHeader); ++i)
+            raw[i] = (unsigned char) hex.mid(i * 2, 2).toInt(nullptr, 16);
+    }
 } // namespace LevelComponents

@@ -199,6 +199,10 @@ namespace LevelComponents
         bool IsBGLayerEnabled() { return RoomHeader.Layer3MappingType; }
         bool IsLayer0ColorBlendingEnabled() { return GetLayer0ColorBlending(RoomHeader.RenderEffect); }
         int GetLayer2MappingParam() { return RoomHeader.Layer2MappingType; }
+        unsigned int GetLayerDataPtr(int layerId) { return layers[layerId]->GetDataPtr(); }
+        QString GetCameraControlRecordsString();
+        QString GetRoomHeaderHex();
+        void SetRoomHeaderFromHex(QString hex);
 
         // Setters
         bool AddEntity(int XPos, int YPos, int localEntityTypeId, int difficulty = -1);
