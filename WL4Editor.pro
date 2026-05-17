@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui
+QT += core gui network
 QT += qml        # Need this to compile QJSEngine
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -88,7 +88,11 @@ SOURCES += \
     Dialog/TilesetEditor_Tile8x8MapGraphicView.cpp \
     Dialog/TilesetEditor_PaletteGraphicView.cpp \
     Dialog/CreditsEditDialog.cpp \
-    Dialog/CreditEditor_TableView.cpp
+    Dialog/CreditEditor_TableView.cpp \
+    MCP/MCPServer.cpp \
+    MCP/MCPStdioTransport.cpp \
+    MCP/MCPTcpTransport.cpp \
+    MCP/MCPTools.cpp
 
 HEADERS += \
     Dialog/AnimatedTileGroupEditorDialog.h \
@@ -142,7 +146,11 @@ HEADERS += \
     Dialog/TilesetEditor_PaletteGraphicView.h \
     Themes.h \
     Dialog/CreditsEditDialog.h \
-    Dialog/CreditEditor_TableView.h
+    Dialog/CreditEditor_TableView.h \
+    MCP/MCPServer.h \
+    MCP/MCPStdioTransport.h \
+    MCP/MCPTcpTransport.h \
+    MCP/MCPTools.h
 
 FORMS += \
     Dialog/AnimatedTileGroupEditorDialog.ui \

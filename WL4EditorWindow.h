@@ -18,6 +18,8 @@
 #include "DockWidget/OutputDockWidget.h"
 #include "LevelComponents/Level.h"
 #include "LevelComponents/Room.h"
+#include "MCP/MCPServer.h"
+#include "MCP/MCPTools.h"
 
 namespace Ui
 {
@@ -40,6 +42,7 @@ private:
     CameraControlDockWidget *CameraControlWidget;
     OutputDockWidget *OutputWidget = nullptr;
     LevelComponents::Level *CurrentLevel = nullptr;
+    MCPServer *mcpServer = nullptr;
     QAction *RecentROMs[5];
     uint recentROMnum = 0;
     QAction *RecentScripts[5];
@@ -79,6 +82,7 @@ public:
     EditModeDockWidget *GetEditModeWidgetPtr() { return EditModeWidget; }
     EntitySetDockWidget *GetEntitySetDockWidgetPtr() { return EntitySetWidget; }
     OutputDockWidget *GetOutputWidgetPtr() { return OutputWidget; }
+    ScriptInterface *GetScriptInterface() { return OutputWidget ? OutputWidget->GetScriptInterface() : nullptr; }
     void InvalidOutputWidgetPtr() { OutputWidget = nullptr; }
     LevelComponents::Room *GetCurrentRoom() { return CurrentLevel->GetRooms()[GetCurrentRoomId()]; }
     int GetCurrentRoomId();
@@ -120,6 +124,10 @@ public:
     void EditCurrentTileset(DialogParams::TilesetEditParams *_newTilesetEditParams);
     QString GetdDialogInitialPath() { return dialogInitialPath; }
     void SetDialogInitialPath(QString newpath) { dialogInitialPath = newpath; }
+    void StartMCPServer();
+    void StartMCPServerTcp(int port = 9876);
+    void StopMCPServer();
+    void StopMCPServerTcp();
 
 private slots:
     // called slots

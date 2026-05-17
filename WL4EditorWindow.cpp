@@ -106,6 +106,7 @@ WL4EditorWindow::~WL4EditorWindow()
     delete statusBarLabel_MousePosition;
     delete statusBarLabel_rectselectMode;
     delete statusBarLabel_Scalerate;
+    if (mcpServer) { mcpServer->stop(); delete mcpServer; }
 
     // Decomstruct all Tileset singletons
     for(int i = 0; i < (sizeof(ROMUtils::animatedTileGroups) / sizeof(ROMUtils::animatedTileGroups[0])); i++)
@@ -3011,4 +3012,113 @@ void WL4EditorWindow::on_spinBox_RoomID_valueChanged(int arg1)
     { // avoid render the Room twice when click the button to go to neighbor Room can call this function twice
         if (sender() != nullptr) SetCurrentRoomId(arg1, true);
     }
+}
+
+/// <summary>
+/// Start the MCP server on stdio for AI agent integration.
+/// Called via ScriptInterface Q_INVOKABLE.
+/// </summary>
+void WL4EditorWindow::StartMCPServer()
+{
+    if (!firstROMLoaded)
+    {
+        if (OutputWidget)
+            OutputWidget->PrintString("MCP Server: Cannot start — no ROM loaded.");
+        return;
+    }
+
+    if (mcpServer)
+    {
+        StartMCPServerTcp(9876);
+        return;
+    }
+
+    mcpServer = new MCPServer(this);
+    MCP_RegisterAllTools(mcpServer);
+    // Start stdio transport (for Claude Code subprocess launch: --mcp flag)
+    mcpServer->start();
+    // Start TCP transport (for URL-based connections: Claude Code SSE, Cursor, etc.)
+    mcpServer->startTcp(9876);
+
+    if (OutputWidget)
+    {
+        OutputWidget->PrintString("MCP Server: Started (stdio + http://localhost:" +
+                                  QString::number(mcpServer->tcpPort()) + "/sse)");
+    }
+}
+
+/// <summary>
+/// Start MCP server on a specific TCP port.
+/// </summary>
+void WL4EditorWindow::StartMCPServerTcp(int port)
+{
+    if (!firstROMLoaded)
+    {
+        if (OutputWidget)
+            OutputWidget->PrintString("MCP Server: Cannot start — no ROM loaded.");
+        return;
+    }
+
+    if (!mcpServer)
+    {
+        mcpServer = new MCPServer(this);
+        MCP_RegisterAllTools(mcpServer);
+    }
+
+    if (mcpServer->tcpPort() > 0)
+    {
+        if (OutputWidget)
+            OutputWidget->PrintString("MCP Server: TCP already running on port " +
+                                      QString::number(mcpServer->tcpPort()));
+        return;
+    }
+
+    if (mcpServer->startTcp(static_cast<quint16>(port)))
+    {
+        if (OutputWidget)
+        {
+            OutputWidget->PrintString("MCP Server: TCP started on http://localhost:" +
+                                      QString::number(mcpServer->tcpPort()) + "/sse");
+        }
+    }
+    else
+    {
+        if (OutputWidget)
+            OutputWidget->PrintString("MCP Server: Failed to start TCP on port " +
+                                      QString::number(port) + " (port may be in use)");
+    }
+}
+
+/// <summary>
+/// Stop only the TCP transport. Keeps the server object alive.
+/// </summary>
+void WL4EditorWindow::StopMCPServerTcp()
+{
+    if (!mcpServer)
+        return;
+
+    mcpServer->stopTcp();
+
+    if (OutputWidget)
+        OutputWidget->PrintString("MCP Server: TCP transport stopped.");
+}
+
+/// <summary>
+/// Stop the MCP server entirely.
+/// </summary>
+void WL4EditorWindow::StopMCPServer()
+{
+    if (!mcpServer)
+    {
+        if (OutputWidget)
+            OutputWidget->PrintString("MCP Server: Not running.");
+        return;
+    }
+
+    mcpServer->stop();
+    delete mcpServer;
+    mcpServer = nullptr;
+
+    if (OutputWidget)
+        OutputWidget->PrintString("MCP Server: Stopped.");
 }

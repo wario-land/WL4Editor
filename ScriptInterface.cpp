@@ -117,6 +117,86 @@ int ScriptInterface::GetCurTilesetTile16TerrainType(unsigned short tile16Id)
     return singleton->GetCurrentRoom()->GetTileset()->GetTerrainTypeIDTablePtr()[(tile16Id > 0x2FF) ? 0 : tile16Id];
 }
 
+QJsonObject ScriptInterface::GetLayerEventMap(int layerId, int startX, int startY, int width, int height)
+{
+    QJsonObject result;
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    auto *layer = room->GetLayer(layerId);
+    int layerW = static_cast<int>(layer->GetLayerWidth());
+    int layerH = static_cast<int>(layer->GetLayerHeight());
+    if (startX >= layerW || startY >= layerH)
+    {
+        result["error"] = QString("startX/startY out of bounds");
+        return result;
+    }
+    int w = (width < 0) ? (layerW - startX) : width;
+    int h = (height < 0) ? (layerH - startY) : height;
+    if (startX + w > layerW) w = layerW - startX;
+    if (startY + h > layerH) h = layerH - startY;
+
+    auto *eventTable = room->GetTileset()->GetEventTablePtr();
+    QJsonArray rows;
+    for (int y = startY; y < startY + h; y++)
+    {
+        QJsonArray row;
+        for (int x = startX; x < startX + w; x++)
+        {
+            unsigned short tileVal = layer->GetTileData(x, y);
+            int tileIdx = tileVal & 0x3FF;
+            if (tileIdx > 0x2FF) tileIdx = 0;
+            row.append(static_cast<int>(eventTable[tileIdx]));
+        }
+        rows.append(row);
+    }
+    result["layerId"] = layerId;
+    result["startX"] = startX;
+    result["startY"] = startY;
+    result["width"] = w;
+    result["height"] = h;
+    result["eventMap"] = rows;
+    return result;
+}
+
+QJsonObject ScriptInterface::GetLayerTerrainMap(int layerId, int startX, int startY, int width, int height)
+{
+    QJsonObject result;
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    auto *layer = room->GetLayer(layerId);
+    int layerW = static_cast<int>(layer->GetLayerWidth());
+    int layerH = static_cast<int>(layer->GetLayerHeight());
+    if (startX >= layerW || startY >= layerH)
+    {
+        result["error"] = QString("startX/startY out of bounds");
+        return result;
+    }
+    int w = (width < 0) ? (layerW - startX) : width;
+    int h = (height < 0) ? (layerH - startY) : height;
+    if (startX + w > layerW) w = layerW - startX;
+    if (startY + h > layerH) h = layerH - startY;
+
+    auto *terrainTable = room->GetTileset()->GetTerrainTypeIDTablePtr();
+    QJsonArray rows;
+    for (int y = startY; y < startY + h; y++)
+    {
+        QJsonArray row;
+        for (int x = startX; x < startX + w; x++)
+        {
+            unsigned short tileVal = layer->GetTileData(x, y);
+            int tileIdx = tileVal & 0x3FF;
+            if (tileIdx > 0x2FF) tileIdx = 0;
+            row.append(static_cast<int>(terrainTable[tileIdx]));
+        }
+        rows.append(row);
+    }
+    result["layerId"] = layerId;
+    result["startX"] = startX;
+    result["startY"] = startY;
+    result["width"] = w;
+    result["height"] = h;
+    result["terrainMap"] = rows;
+    return result;
+}
+
 void ScriptInterface::_UnpackScreen(int address)
 {
     unsigned short *LayerData = ROMUtils::UnPackScreen(address);
@@ -243,11 +323,17 @@ void ScriptInterface::_ExportLayerData(QString filePath, int layerid)
 {
     log("Export Layer Data from current Room.");
     if(!filePath.compare(""))
+    {
+        if (m_headlessMode) { log("_ExportLayerData: file path required in headless mode"); return; }
         filePath = QFileDialog::getSaveFileName(singleton, tr("Save Layer data file"), singleton->GetdDialogInitialPath(), tr("bin files (*.bin)"));
+    }
     if (filePath.compare(""))
     {
         if(layerid == -1)
+        {
+            if (m_headlessMode) { log("_ExportLayerData: layerid required in headless mode"); return; }
             layerid = prompt("Input the Layer Id you want to save data:", "0").toInt();
+        }
         LevelComponents::Room *room = singleton->GetCurrentRoom();
         int witdh = 0, height = 0;
         if(layerid < 0 || layerid > 2)
@@ -291,6 +377,7 @@ void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
     // Load gfx bin file
     if(!fileName.compare(""))
     {
+        if (m_headlessMode) { log("_ImportLayerData: file name required in headless mode"); return; }
         fileName = QFileDialog::getOpenFileName(singleton,
                                                 tr("Load Layer data bin file"),
                                                 singleton->GetdDialogInitialPath(),
@@ -321,7 +408,10 @@ void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
     }
 
     if(layerid == -1)
+    {
+        if (m_headlessMode) { log("_ImportLayerData: layerid required in headless mode"); return; }
         layerid = prompt("Input the Layer Id you choose to replace data:", "0").toInt();
+    }
     if(layerid < 0 || layerid > 2)
     {
         log("Illegal Layer id!");
@@ -430,18 +520,38 @@ void ScriptInterface::_ExtractSpriteOAMPackage(QString address)
 QString ScriptInterface::GetEntityListData(int entitylistid)
 {
     if(entitylistid < 0 || entitylistid > 2)
+    {
+        if (m_headlessMode) { log("GetEntityListData: invalid entitylistid in headless mode"); return ""; }
         entitylistid = prompt(tr("Illegal entitylist id, input it manually/n"
                                  "Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)"),
                               "0").toInt();
+    }
     if(entitylistid < 0 || entitylistid > 2)
     {
         log("Illegal Entity list id!");
         return "";
     }
+
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     std::vector<struct LevelComponents::EntityRoomAttribute> tmpvec = room->GetEntityListData(entitylistid);
     int size = tmpvec.size() * sizeof(struct LevelComponents::EntityRoomAttribute);
     if(!size) return "";
+    QString result;
+    for(auto entity: tmpvec)
+    {
+        result += "0x" + QString::number(entity.YPos, 16).toUpper() + QChar(' ');
+        result += "0x" + QString::number(entity.XPos, 16).toUpper() + QChar(' ');
+        result += "0x" + QString::number(entity.EntityID, 16).toUpper() + QChar(' ');
+    }
+    return result;
+}
+
+QString ScriptInterface::GetEntityListDataSafe(int entitylistid)
+{
+    if(entitylistid < 0 || entitylistid > 2) return "";
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    std::vector<struct LevelComponents::EntityRoomAttribute> tmpvec = room->GetEntityListData(entitylistid);
+    if(!tmpvec.size()) return "";
     QString result;
     for(auto entity: tmpvec)
     {
@@ -499,24 +609,51 @@ void ScriptInterface::PrintEntityDefaultOAMData(int globalEntityId)
     log(result);
 }
 
+QString ScriptInterface::GetCurRoomEntitySetInfo()
+{
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    int esId = room->GetCurrentEntitySetID();
+    auto *entSet = ROMUtils::entitiessets[esId];
+    if (!entSet) return "";
+    const auto &infoTable = entSet->GetEntityTable();
+    QString result;
+    for (int i = 0; i < infoTable.size(); i++)
+    {
+        if (i > 0) result += ";";
+        result += QString::number(i) + "," + QString::number(infoTable[i].Global_EntityID);
+    }
+    return result;
+}
+
+int ScriptInterface::GetCurRoomTilesetId()
+{
+    return singleton->GetCurrentRoom()->GetTilesetID();
+}
+
+int ScriptInterface::GetCurRoomEntitySetId()
+{
+    return singleton->GetCurrentRoom()->GetCurrentEntitySetID();
+}
+
+int ScriptInterface::GetCurRoomCameraControlType()
+{
+    return static_cast<int>(singleton->GetCurrentRoom()->GetCameraControlType());
+}
+
+QString ScriptInterface::GetCurRoomCameraControlRecords()
+{
+    return singleton->GetCurrentRoom()->GetCameraControlRecordsString();
+}
+
 void ScriptInterface::SetEntityListData(QString entitylistdata, int entitylistid)
 {
-    QStringList EntitylistStrData = entitylistdata.split(QChar(' '), Qt::SkipEmptyParts);
-    if(!EntitylistStrData.size())
-    {
-        log("No available data in the String!");
-        return;
-    }
-    if(EntitylistStrData.size() % 3)
-    {
-        log("Illegal string size! the size of the string must be a multiple of 3");
-        return;
-    }
-
     if(entitylistid < 0 || entitylistid > 2)
+    {
+        if (m_headlessMode) { log("SetEntityListData: invalid entitylistid in headless mode"); return; }
         entitylistid = prompt(tr("Illegal entitylist id, input it manually/n"
                                  "Input the Entity list Id you want to save data: 0(Hard) 1(Normal) 2(S Hard)"),
                               "0").toInt();
+    }
     if(entitylistid < 0 || entitylistid > 2)
     {
         log("Illegal Entity list id!");
@@ -527,13 +664,29 @@ void ScriptInterface::SetEntityListData(QString entitylistdata, int entitylistid
 
     std::vector<LevelComponents::EntityRoomAttribute> oldList = room->GetEntityListData(entitylistid);
     std::vector<LevelComponents::EntityRoomAttribute> newList;
-    for(int i = 0; i < (EntitylistStrData.size() / 3); ++i)
+
+    // Empty string = clear the entire entity list for this difficulty
+    QString trimmed = entitylistdata.trimmed();
+    if (trimmed.isEmpty())
     {
-        LevelComponents::EntityRoomAttribute attr;
-        attr.YPos = (unsigned char) EntitylistStrData[3 * i].toUInt(nullptr, 16);
-        attr.XPos = (unsigned char) EntitylistStrData[3 * i + 1].toUInt(nullptr, 16);
-        attr.EntityID = (unsigned char) EntitylistStrData[3 * i + 2].toUInt(nullptr, 16);
-        newList.push_back(attr);
+        // newList stays empty — clears all entities
+    }
+    else
+    {
+        QStringList tokens = trimmed.split(QChar(' '), Qt::SkipEmptyParts);
+        if (tokens.size() % 3)
+        {
+            log("Illegal string size! the size of the string must be a multiple of 3");
+            return;
+        }
+        for (int i = 0; i < (tokens.size() / 3); ++i)
+        {
+            LevelComponents::EntityRoomAttribute attr;
+            attr.YPos = (unsigned char) tokens[3 * i].toUInt(nullptr, 16);
+            attr.XPos = (unsigned char) tokens[3 * i + 1].toUInt(nullptr, 16);
+            attr.EntityID = (unsigned char) tokens[3 * i + 2].toUInt(nullptr, 16);
+            newList.push_back(attr);
+        }
     }
 
     OperationParams *op = new OperationParams;
@@ -554,6 +707,64 @@ void ScriptInterface::SetEntityListData(QString entitylistdata, int entitylistid
         break;
     }
     ExecuteOperation(op);
+}
+
+void ScriptInterface::SetEntityListDataSafe(QString entitylistdata, int entitylistid)
+{
+    if(entitylistid < 0 || entitylistid > 2) return;
+    SetEntityListData(entitylistdata, entitylistid);
+}
+
+int ScriptInterface::AddEntityByGlobalId(int globalEntityId, int x, int y, int difficulty)
+{
+    LevelComponents::Room *room = singleton->GetCurrentRoom();
+    int esId = room->GetCurrentEntitySetID();
+    auto *entSet = ROMUtils::entitiessets[esId];
+    if (!entSet) { log("AddEntityByGlobalId: no entity set"); return -1; }
+    const auto &infoTable = entSet->GetEntityTable();
+    int localIndex = -1;
+    for (int i = 0; i < infoTable.size(); i++)
+    {
+        if (infoTable[i].Global_EntityID == globalEntityId)
+        {
+            localIndex = i;
+            break;
+        }
+    }
+    if (localIndex < 0)
+    {
+        log(QString("AddEntityByGlobalId: global entity ID 0x%1 not in current entity set %2")
+            .arg(globalEntityId, 0, 16).arg(esId));
+        return -1;
+    }
+    int roomW = static_cast<int>(room->GetLayer1Width());
+    int roomH = static_cast<int>(room->GetLayer1Height());
+    if (x < 0 || x >= roomW || y < 0 || y >= roomH)
+    {
+        log(QString("AddEntityByGlobalId: position (%1,%2) out of room bounds (%3x%4)")
+            .arg(x).arg(y).arg(roomW).arg(roomH));
+        return -2;
+    }
+    if (difficulty < 0 || difficulty > 2)
+    {
+        log("AddEntityByGlobalId: invalid difficulty (0-2)");
+        return -3;
+    }
+    auto list = room->GetEntityListData(difficulty);
+    if (list.size() >= 64)
+    {
+        log("AddEntityByGlobalId: max 64 entities per difficulty reached");
+        return -4;
+    }
+    // Build new list with the entity appended
+    QString oldData = GetEntityListDataSafe(difficulty);
+    QString newData = oldData;
+    newData += (newData.isEmpty() ? "" : " ") +
+               QString("0x") + QString::number(y, 16).toUpper() + " " +
+               QString("0x") + QString::number(x, 16).toUpper() + " " +
+               QString("0x") + QString::number(localIndex, 16).toUpper();
+    SetEntityListData(newData, difficulty);
+    return 0;
 }
 
 void ScriptInterface::SetCurrentRoomId(int roomid)
@@ -595,17 +806,8 @@ void ScriptInterface::SetCurRoomTile16(int layerID, int TileID, int x, int y)
     LevelComponents::Room *room = singleton->GetCurrentRoom();
     if(room->GetLayer(layerID)->GetMappingType() != LevelComponents::LayerMap16)
         return;
-    int width, height;
-    if (layerID == 0)
-    {
-        width = static_cast<int>(room->GetLayer0Width());
-        height = static_cast<int>(room->GetLayer0Height());
-    }
-    else
-    {
-        width = static_cast<int>(room->GetLayer1Width());
-        height = static_cast<int>(room->GetLayer1Height());
-    }
+    int width = static_cast<int>(room->GetLayer(layerID)->GetLayerWidth());
+    int height = static_cast<int>(room->GetLayer(layerID)->GetLayerHeight());
     if(x >= width || y >= height) {
         log(QString("Position out of range!\n"));
         return;
@@ -725,6 +927,7 @@ void ScriptInterface::SetRoomSize(int roomwidth, int roomheight, int layer0width
 
 void ScriptInterface::alert(QString message)
 {
+    if (m_headlessMode) { log("alert: " + message); return; }
     QMessageBox::critical(singleton, QString("Error"), message);
 }
 
@@ -735,11 +938,19 @@ void ScriptInterface::clear()
 
 void ScriptInterface::log(QString message)
 {
+    if (m_headlessMode) {
+        m_logBuffer += message + "\n";
+        // Also show in Output Window so human users can monitor MCP operations
+        if (singleton->GetOutputWidgetPtr())
+            singleton->GetOutputWidgetPtr()->PrintString(message);
+        return;
+    }
     singleton->GetOutputWidgetPtr()->PrintString(message);
 }
 
 QString ScriptInterface::prompt(QString message, QString defaultInput)
 {
+    if (m_headlessMode) { log("prompt suppressed: " + message); return defaultInput; }
     bool ok;
     QString text = QInputDialog::getText(nullptr, tr("InputBox"),
                                          message, QLineEdit::Normal,
@@ -763,7 +974,10 @@ void ScriptInterface::DoEvents()
 void ScriptInterface::WriteTxtFile(QString filepath, QString test)
 {
     if(!filepath.compare(""))
+    {
+        if (m_headlessMode) { log("WriteTxtFile: file path required in headless mode"); return; }
         filepath = QFileDialog::getSaveFileName(singleton, tr("Save Entity list data file"), singleton->GetdDialogInitialPath(), tr("bin files (*.bin)"));
+    }
     if(!filepath.compare(""))
     {
         log("Invalid file path!");
@@ -788,7 +1002,10 @@ void ScriptInterface::WriteTxtFile(QString filepath, QString test)
 void ScriptInterface::WriteJsonFile(QString filepath, QString test)
 {
     if(!filepath.compare(""))
+    {
+        if (m_headlessMode) { log("WriteJsonFile: file path required in headless mode"); return; }
         filepath = QFileDialog::getSaveFileName(singleton, tr("Save JSON file"), singleton->GetdDialogInitialPath(), tr("JSON files (*.json)"));
+    }
     if(!filepath.compare(""))
     {
         log("Invalid file path!");
@@ -820,8 +1037,20 @@ QString ScriptInterface::ReadTxtFile(QString filepath)
     return in.readAll();
 }
 
+QString ScriptInterface::ReadJsonFile(QString filepath)
+{
+    QFile f(filepath);
+    if (!f.open(QFile::ReadOnly | QFile::Text))
+    {
+        log("Read JSON file failed: " + filepath);
+        return QString();
+    }
+    return QTextStream(&f).readAll();
+}
+
 QString ScriptInterface::ReadJsonFileDialog()
 {
+    if (m_headlessMode) { log("ReadJsonFileDialog: not available in headless mode"); return QString(); }
     QString filepath = QFileDialog::getOpenFileName(singleton, tr("Open JSON file"),
         singleton->GetdDialogInitialPath(), tr("JSON files (*.json)"));
     if (filepath.isEmpty()) return QString();
@@ -1996,6 +2225,28 @@ bool ScriptInterface::ImportLevelConfig(QString levelName, QString levelNameJ,
 
     log("ImportLevelConfig: Level config imported.");
     return true;
+}
+
+// ---------------------- MCP Server --------------------------
+
+void ScriptInterface::StartMCPServer()
+{
+    singleton->StartMCPServer();
+}
+
+void ScriptInterface::StartMCPServerTcp(int port)
+{
+    singleton->StartMCPServerTcp(port);
+}
+
+void ScriptInterface::StopMCPServer()
+{
+    singleton->StopMCPServer();
+}
+
+void ScriptInterface::StopMCPServerTcp()
+{
+    singleton->StopMCPServerTcp();
 }
 
 // ---------------------- current Room's hint layer render stuff --------------------------

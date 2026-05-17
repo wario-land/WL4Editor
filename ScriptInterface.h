@@ -5,6 +5,8 @@
 #include <QInputDialog>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <string>
 #include <QTextStream>
 
@@ -23,10 +25,17 @@ public:
     Q_INVOKABLE int GetCurRoomId();
     Q_INVOKABLE int GetCurTilesetTile16EventId(unsigned short tile16Id);
     Q_INVOKABLE int GetCurTilesetTile16TerrainType(unsigned short tile16Id);
+    Q_INVOKABLE QJsonObject GetLayerEventMap(int layerId, int startX = 0, int startY = 0, int width = -1, int height = -1);
+    Q_INVOKABLE QJsonObject GetLayerTerrainMap(int layerId, int startX = 0, int startY = 0, int width = -1, int height = -1);
     Q_INVOKABLE QString GetEntityListData(int entitylistid = -1);
     Q_INVOKABLE QString GetEntityListSource();
     Q_INVOKABLE QString GetCurRoomAllDoorsRangeData();
     Q_INVOKABLE void PrintEntityDefaultOAMData(int globalEntityId);
+    Q_INVOKABLE QString GetCurRoomEntitySetInfo();
+    Q_INVOKABLE int GetCurRoomTilesetId();
+    Q_INVOKABLE int GetCurRoomEntitySetId();
+    Q_INVOKABLE int GetCurRoomCameraControlType();
+    Q_INVOKABLE QString GetCurRoomCameraControlRecords();
 
     // Test
     Q_INVOKABLE void _UnpackScreen(int address);
@@ -46,6 +55,7 @@ public:
     Q_INVOKABLE void SetCurRoomTile16(int layerID, int TileID, int x, int y);
     Q_INVOKABLE void SetRoomSize(int roomwidth, int roomheight, int layer0width, int layer0height);
     Q_INVOKABLE void SetEntityListData(QString entitylistdata, int entitylistid = -1);
+    Q_INVOKABLE int AddEntityByGlobalId(int globalEntityId, int x, int y, int difficulty);
 
     // Localize JS function
     Q_INVOKABLE void alert(QString message);
@@ -61,7 +71,27 @@ public:
     Q_INVOKABLE void WriteTxtFile(QString filePath = QString(""), QString test = "");
     Q_INVOKABLE void WriteJsonFile(QString filePath = QString(""), QString test = "");
     Q_INVOKABLE QString ReadTxtFile(QString filepath);
+    Q_INVOKABLE QString ReadJsonFile(QString filepath);
     Q_INVOKABLE QString ReadJsonFileDialog();
+
+    // MCP Server control
+    Q_INVOKABLE void StartMCPServer();
+    Q_INVOKABLE void StartMCPServerTcp(int port = 9876);
+    Q_INVOKABLE void StopMCPServer();
+    Q_INVOKABLE void StopMCPServerTcp();
+
+    // Headless mode — suppresses all modal dialogs (QInputDialog, QMessageBox, QFileDialog)
+    // so MCP tools can call ScriptInterface methods without blocking the main thread.
+    Q_INVOKABLE void SetHeadlessMode(bool on) { m_headlessMode = on; }
+    Q_INVOKABLE bool IsHeadlessMode() { return m_headlessMode; }
+
+    // Log buffer — in headless mode, log() accumulates messages here instead of
+    // writing to the OutputDockWidget. MCP handlers can retrieve and clear.
+    Q_INVOKABLE QString GetAndClearLogBuffer() { QString tmp = m_logBuffer; m_logBuffer.clear(); return tmp; }
+
+    // Safe variants that never show dialogs (for MCP / headless use)
+    Q_INVOKABLE QString GetEntityListDataSafe(int entitylistid);
+    Q_INVOKABLE void SetEntityListDataSafe(QString entitylistdata, int entitylistid);
 
     // helper functions
     Q_INVOKABLE void ShowSaveDataAnalysis();
@@ -158,6 +188,10 @@ public:
     Q_INVOKABLE bool ImportGlobalCredits(QString creditsHex);
     Q_INVOKABLE bool ImportLevelConfig(QString levelName, QString levelNameJ,
                                          int timerHard, int timerNormal, int timerSHard);
+
+private:
+    bool m_headlessMode = false;
+    QString m_logBuffer;
 };
 
 class HintLayer : public QObject

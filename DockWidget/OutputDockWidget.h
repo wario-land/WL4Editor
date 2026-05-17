@@ -20,6 +20,7 @@ public:
     ~OutputDockWidget();
 
     // Functions
+    ScriptInterface *GetScriptInterface() { return interface; }
     void PrintString(QString str);
     void ClearTextEdit();
 

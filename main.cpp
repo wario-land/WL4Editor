@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     SettingsUtils::InitProgramSetupPath(application);
     application.setWindowIcon(QIcon("./images/icon.ico"));
     WL4EditorWindow window;
-    window.show();
+    // window.show();
 
     // Quickly test or debug by automatically loading the ROM without UI used by GSB
     // comment by ssp: a real man will never use this code (doge)
@@ -69,20 +69,60 @@ int main(int argc, char *argv[])
 //    testFile.close();
     //-------------------------------------------------------------------
 
-    // load the ROM file from argv if exists
-    if (argc > 1)
+    // Parse command-line flags
+    bool startMcp = false;
+    QString romPath;
+    for (int i = 1; i < argc; i++)
     {
-        QString filePath(argv[1]);
-        ROMUtils::FormatPathSeperators(filePath);
-        if(QFile::exists(filePath) && filePath.endsWith(".gba", Qt::CaseInsensitive))
+        QString arg(argv[i]);
+        if (arg == "--mcp")
         {
-            window.LoadROMDataFromFile(filePath);
+            startMcp = true;
         }
-        else
+        else if (arg == "--rom" && i + 1 < argc)
+        {
+            romPath = QString::fromLocal8Bit(argv[++i]);
+            ROMUtils::FormatPathSeperators(romPath);
+        }
+        else if (!arg.startsWith('-') && romPath.isEmpty())
+        {
+            // Positional ROM path (backward compatible)
+            romPath = arg;
+            ROMUtils::FormatPathSeperators(romPath);
+        }
+    }
+
+    // In MCP mode, don't show the GUI if not needed
+    if (!startMcp)
+        window.show();
+
+    // Load ROM if specified
+    if (!romPath.isEmpty())
+    {
+        if (QFile::exists(romPath) && romPath.endsWith(".gba", Qt::CaseInsensitive))
+        {
+            window.LoadROMDataFromFile(romPath);
+            // Show window after ROM is loaded unless in headless MCP mode
+            if (!startMcp)
+                window.show();
+            else
+                window.show(); // Still show GUI in MCP mode so user can see the editor
+        }
+        else if (!startMcp)
         {
             QMessageBox::critical(&window, "WL4Editor", QObject::tr("Wrong command line parameter:\n"
                                                                     "it needs to be a valid gba file path."));
         }
+    }
+    else if (!startMcp)
+    {
+        window.show();
+    }
+
+    // Auto-start MCP server if --mcp flag was passed and ROM loaded successfully
+    if (startMcp && window.FirstROMIsLoaded())
+    {
+        window.StartMCPServer();
     }
 
     return application.exec();
