@@ -3,6 +3,7 @@
 
 #include <QMessageBox>
 #include <QModelIndex>
+#include <QSet>
 
 #include "WL4EditorWindow.h"
 #include "WL4Constants.h"
@@ -99,8 +100,8 @@ void GraphicManagerDialog::CreateAndAddDefaultEntry()
     testentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
     testentry.MappingDataName = "Layer 3";
     testentry.PaletteAddress = 0x583C7C;
-    testentry.PaletteNum = 16; // when (optionalPaletteAddress + PaletteNum) > 16, we just discard the latter palettes
-    testentry.PaletteRAMOffsetNum = 0; // unit: per palette, 16 color
+    for (unsigned int i = 0; i < 16; i++)
+        testentry.PaletteSlotIDs.push_back(i); // all 16 palette slots
     testentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
     testentry.optionalGraphicHeight = 0;
 
@@ -223,10 +224,9 @@ QPixmap GraphicManagerDialog::RenderAllTiles(AssortedGraphicUtils::AssortedGraph
 
             // find a palette can be used to draw Tiles
             int paletteId = -1;
-            if (tmpEntry.PaletteNum)
+            if (tmpEntry.PaletteSlotIDs.size())
             {
-                paletteId = tmpEntry.PaletteRAMOffsetNum;
-//                paletteId = 0xF;
+                paletteId = tmpEntry.PaletteSlotIDs[0];
             }
             else
             {
@@ -393,7 +393,6 @@ void GraphicManagerDialog::ClearPalettePanel()
 
     ui->lineEdit_paletteAddress->setText("");
     ui->lineEdit_paletteNum->setText("");
-    ui->lineEdit_paletteRAMOffset->setText("");
 }
 
 /// <summary>
@@ -442,8 +441,16 @@ void GraphicManagerDialog::ClearMappingPanel()
 void GraphicManagerDialog::SetPaletteInfoGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
     ui->lineEdit_paletteAddress->setText(QString::number(entry.PaletteAddress, 16));
-    ui->lineEdit_paletteNum->setText(QString::number(entry.PaletteNum, 16));
-    ui->lineEdit_paletteRAMOffset->setText(QString::number(entry.PaletteRAMOffsetNum, 16));
+
+    // Build comma-separated hex string of palette slot IDs
+    QString slotIDsStr;
+    for (int i = 0; i < entry.PaletteSlotIDs.size(); i++)
+    {
+        if (i > 0) slotIDsStr += ",";
+        slotIDsStr += QString::number(entry.PaletteSlotIDs[i], 16);
+    }
+    if (slotIDsStr.isEmpty()) slotIDsStr = "0";
+    ui->lineEdit_paletteNum->setText(slotIDsStr);
 }
 
 /// <summary>
@@ -681,8 +688,8 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                     newentry.MappingDataName = "Layer 0 found in: " + QString::number(levelid_array[i]) + "-" +
                                                 QString::number(roomid_array[i]) + "-" + QString::number(j);
                     newentry.PaletteAddress = roomtileset->GetPaletteAddr();
-                    newentry.PaletteNum = 16;
-                    newentry.PaletteRAMOffsetNum = 0; // unit: per palette, 16 color
+                    for (unsigned int i = 0; i < 16; i++)
+                        newentry.PaletteSlotIDs.push_back(i); // initially all 16 slots
                     newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
                     newentry.optionalGraphicHeight = 0;
 
@@ -696,9 +703,9 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                         if (tileid != 0x3FF)
                         {
                             usingpal = (newentry.mappingData[m] & 0xF000) >> 12;
-                            newentry.PaletteAddress += usingpal * 32;
-                            newentry.PaletteNum = 1;
-                            newentry.PaletteRAMOffsetNum = usingpal;
+                            // PaletteAddress stays at base; ExtractDataFromEntryInfo_v1 handles vanilla offset
+                            newentry.PaletteSlotIDs.clear();
+                            newentry.PaletteSlotIDs.push_back(usingpal);
                             break;
                         }
                     }
@@ -750,49 +757,41 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                     newentry.MappingDataName = "Layer 3 found in: " + QString::number(levelid_array[i]) + "-" +
                                                 QString::number(roomid_array[i]) + "-" + QString::number(j);
                     newentry.PaletteAddress = roomtileset->GetPaletteAddr();
-                    newentry.PaletteNum = 16;
-                    newentry.PaletteRAMOffsetNum = 0; // unit: per palette, 16 color
+                    for (unsigned int i = 0; i < 16; i++)
+                        newentry.PaletteSlotIDs.push_back(i); // initially all 16 slots
                     newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
                     newentry.optionalGraphicHeight = 0;
 
                     AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(newentry);
 
-                    // reset a part of palette settings for bg graphic entries
-                    int usingpal = 15;
-                    int tmpusingpal = -1;
-                    int palnum = 1;
+                    // Collect all distinct palette IDs actually used by the mapping data
+                    QSet<unsigned int> usedPaletteIDs;
                     for (int m = 0; m < newentry.mappingData.size(); m++)
                     {
                         int tileid = (newentry.mappingData[m] & 0x3FF);
                         if (tileid != 0x3FF)
                         {
-                            usingpal = (newentry.mappingData[m] & 0xF000) >> 12;
-                            if (tmpusingpal == -1)
-                            {
-                                tmpusingpal = usingpal;
-                            }
-                            else if (tmpusingpal != -1)
-                            {
-                                if (tmpusingpal == (usingpal - 1))
-                                {
-                                    palnum = 2;
-                                    usingpal = tmpusingpal;
-                                    break;
-                                }
-                                else if ((tmpusingpal - 1) == usingpal)
-                                {
-                                    palnum = 2;
-                                    break;
-                                }
-                            }
+                            unsigned int palId = (newentry.mappingData[m] & 0xF000) >> 12;
+                            usedPaletteIDs.insert(palId);
                         }
                     }
-                    newentry.PaletteAddress += usingpal * 32;
-                    newentry.PaletteNum = palnum;
-                    newentry.PaletteRAMOffsetNum = usingpal;
+
+                    // Build PaletteSlotIDs from the actually-used palette IDs (sorted)
+                    newentry.PaletteSlotIDs.clear();
+                    for (unsigned int id : usedPaletteIDs)
+                        newentry.PaletteSlotIDs.push_back(id);
+                    std::sort(newentry.PaletteSlotIDs.begin(), newentry.PaletteSlotIDs.end());
+                    if (newentry.PaletteSlotIDs.isEmpty())
+                        newentry.PaletteSlotIDs.push_back(0); // fallback
+
+                    // PaletteAddress stays at the tileset's palette base (palette 0).
+                    // ExtractDataFromEntryInfo_v1 uses tmpPalId*32 offset for vanilla ROM
+                    // addresses, so keeping the base address is correct.
+
+                    // Clear unused palettes
                     for (int i = 0; i < 16; ++i)
                     {
-                        if (palnum == 1 ? (i != usingpal) : ((i != usingpal && (i != (usingpal + 1)))))
+                        if (!usedPaletteIDs.contains(i))
                         {
                             newentry.palettes[i].clear();
                             for (int j = 0; j < 16; ++j) // (re-)initialization
@@ -913,25 +912,33 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
 
         // try to use the settings from the UI to import palette
         int palAddress = ui->lineEdit_paletteAddress->text().toUInt(nullptr, 16);
-        int palnum = ui->lineEdit_paletteNum->text().toUInt(nullptr, 16);
-        int paloffset = ui->lineEdit_paletteRAMOffset->text().toUInt(nullptr, 16);
+
+        // Parse palette slot IDs from the comma-separated hex field
+        QVector<unsigned int> slotIDs;
+        QStringList slotIDStrings = ui->lineEdit_paletteNum->text().split(",", Qt::SkipEmptyParts);
+        for (const QString &s : slotIDStrings)
+        {
+            bool ok;
+            unsigned int id = s.trimmed().toUInt(&ok, 16);
+            if (ok && id < 16)
+                slotIDs.push_back(id);
+        }
 
         // palAddress is not a vanilla rom address, so we need to import palette from file
         if (!palAddress || palAddress >= WL4Constants::AvailableSpaceBeginningInROM)
         {
-            if (palnum == 1) // we only import one 16-color palette
+            if (slotIDs.size() == 1) // we only import one 16-color palette
             {
                 FileIOUtils::ImportPalette(this,
                     [this] (int selectedPalId, int colorId, QRgb newColor)
                     {
                         this->tmpEntry.SetColor(selectedPalId, colorId, newColor);
                     },
-                    paloffset);
+                    slotIDs[0]);
 
                 // set tmpEntry if everything looks correct
                 tmpEntry.PaletteAddress = 0;
-                tmpEntry.PaletteNum = palnum;
-                tmpEntry.PaletteRAMOffsetNum = paloffset;
+                tmpEntry.PaletteSlotIDs = slotIDs;
             }
             else
             {
@@ -948,35 +955,25 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
                 QMessageBox::critical(this, tr("Error"), tr("The address has to be multiple of 4!"));
                 return;
             }
-            if ((palnum + paloffset) > 16)
+            if (slotIDs.isEmpty())
             {
-                QMessageBox::critical(this, tr("Error"), tr("The value of palnum + paloffset goes out of bound!"));
-                return;
-            }
-            if (palnum < 0)
-            {
-                QMessageBox::critical(this, tr("Error"), tr("Illegal palnum!"));
-                return;
-            }
-            if (paloffset < 0)
-            {
-                QMessageBox::critical(this, tr("Error"), tr("Illegal palnum!"));
+                QMessageBox::critical(this, tr("Error"), tr("No valid palette slot IDs specified!"));
                 return;
             }
 
-            // Load palette from the ROM
-            for (int i = 0; i < palnum; ++i)
+            // Load palette(s) from the ROM — one per slot ID, consecutive in ROM
+            for (int i = 0; i < slotIDs.size(); ++i)
             {
-                if (tmpEntry.palettes[i + paloffset].size())
-                    tmpEntry.palettes[i + paloffset].clear();
+                unsigned int slotId = slotIDs[i];
+                if (tmpEntry.palettes[slotId].size())
+                    tmpEntry.palettes[slotId].clear();
                 // First color is transparent
-                ROMUtils::LoadPalette(&(tmpEntry.palettes[i + paloffset]), (unsigned short *) (ROMUtils::ROMFileMetadata->ROMDataPtr + palAddress + i * 32));
+                ROMUtils::LoadPalette(&(tmpEntry.palettes[slotId]), (unsigned short *) (ROMUtils::ROMFileMetadata->ROMDataPtr + palAddress + i * 32));
             }
 
             // set tmpEntry if everything looks correct
             tmpEntry.PaletteAddress = palAddress;
-            tmpEntry.PaletteNum = palnum;
-            tmpEntry.PaletteRAMOffsetNum = paloffset;
+            tmpEntry.PaletteSlotIDs = slotIDs;
         }
 
         // UI reset

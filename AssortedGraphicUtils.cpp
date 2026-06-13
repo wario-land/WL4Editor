@@ -2,8 +2,8 @@
 #include "LevelComponents/Layer.h"
 #include "WL4EditorWindow.h"
 
-#define AssortedGraphic_CHUNK_VERSION 0
-#define AssortedGraphic_FIELD_COUNT 14
+#define AssortedGraphic_CHUNK_VERSION 1
+#define AssortedGraphic_FIELD_COUNT 13
 
 extern WL4EditorWindow *singleton;
 
@@ -11,7 +11,7 @@ extern WL4EditorWindow *singleton;
 /// Upgrade the format of a assorted graphic list chunk by one version.
 /// </summary>
 /// <remarks>
-/// Version 0:
+/// Version 0 (14 fields per entry):
 ///   Semicolon-delimited:
 ///      0: TileDataAddress         (hex string)
 ///      1: TileDataSizeInByte       (hex string)
@@ -27,6 +27,22 @@ extern WL4EditorWindow *singleton;
 ///     11: PaletteRAMOffsetNum     (hex string)
 ///     12: optionalGraphicWidth    (hex string)
 ///     13: optionalGraphicHeight   (hex string)
+///
+/// Version 1 (13 fields per entry):
+///   Semicolon-delimited:
+///      0: TileDataAddress         (hex string)
+///      1: TileDataSizeInByte       (hex string)
+///      2: TileDataRAMOffsetNum    (hex string)
+///      3: TileDataCompressType    (hex string)
+///      4: TileDataName            (ascii string, may not contain a semicolon)
+///      5: MappingDataAddress      (hex string)
+///      6: MappingDataSizeInByte    (hex string)
+///      7: MappingDataCompressType (hex string)
+///      8: MappingDataName         (ascii string, may not contain a semicolon)
+///      9: optionalPaletteAddress  (hex string)
+///     10: PaletteSlotIDs          (comma-separated hex, e.g. "1,3,5")
+///     11: optionalGraphicWidth    (hex string)
+///     12: optionalGraphicHeight   (hex string)
 /// </remarks>
 /// <param name="contents">
 /// The assorted graphic list chunk contents to upgrade.
@@ -42,8 +58,44 @@ static QString UpgradeAssortedGraphicListContents(QString contents, int version)
     switch(version)
     {
         case 0:
-            // TODO implement when there are new versions
-            break;
+        {
+            // Version 0 -> 1: Convert PaletteNum (field 10) + PaletteRAMOffsetNum (field 11)
+            // into PaletteSlotIDs comma-separated hex (new field 10).
+            // Fields 12,13 (optionalGraphicWidth, optionalGraphicHeight) shift to 11,12.
+            // Total fields per entry goes from 14 to 13.
+            QStringList tuples = contents.split(";");
+            if (tuples.count() % 14 != 0) return contents; // corrupted, leave as-is
+
+            QStringList newTuples;
+            for (int i = 0; i < tuples.count(); i += 14)
+            {
+                // Fields 0-9 stay the same
+                for (int j = 0; j < 10; j++)
+                    newTuples.append(tuples[i + j]);
+
+                // Convert field 10 (PaletteNum) and field 11 (PaletteRAMOffsetNum)
+                // into comma-separated hex palette slot IDs
+                bool ok1, ok2;
+                unsigned int palNum = tuples[i + 10].toUInt(&ok1, 16);
+                unsigned int palOffset = tuples[i + 11].toUInt(&ok2, 16);
+                QString slotIDs;
+                if (ok1 && ok2)
+                {
+                    for (unsigned int k = 0; k < palNum && (k + palOffset) < 16; k++)
+                    {
+                        if (k > 0) slotIDs += ",";
+                        slotIDs += QString::number(k + palOffset, 16);
+                    }
+                }
+                if (slotIDs.isEmpty()) slotIDs = "0";
+                newTuples.append(slotIDs);
+
+                // Fields 12,13 become 11,12
+                newTuples.append(tuples[i + 12]); // optionalGraphicWidth
+                newTuples.append(tuples[i + 13]); // optionalGraphicHeight
+            }
+            return newTuples.join(";");
+        }
     }
     return contents;
 }
@@ -60,23 +112,32 @@ static QString UpgradeAssortedGraphicListContents(QString contents, int version)
 /// </returns>
 static struct AssortedGraphicUtils::AssortedGraphicEntryItem DeserializeAssortedGraphicMetadata(QStringList assortedgraphicTuples)
 {
-    struct AssortedGraphicUtils::AssortedGraphicEntryItem entry
+    struct AssortedGraphicUtils::AssortedGraphicEntryItem entry;
+    entry.TileDataAddress = assortedgraphicTuples[0].toUInt(Q_NULLPTR, 16); // TileDataAddress
+    entry.TileDataSizeInByte = assortedgraphicTuples[1].toUInt(Q_NULLPTR, 16); // TileDataSizeInByte
+    entry.TileDataRAMOffsetNum = assortedgraphicTuples[2].toUInt(Q_NULLPTR, 16); // TileDataRAMOffsetNum
+    entry.TileDataType = static_cast<enum AssortedGraphicUtils::AssortedGraphicTileDataType>(assortedgraphicTuples[3].toUInt(Q_NULLPTR, 16)); // TileDataCompressType
+    entry.TileDataName = assortedgraphicTuples[4]; // TileDataName
+    entry.MappingDataAddress = assortedgraphicTuples[5].toUInt(Q_NULLPTR, 16); // MappingDataAddress
+    entry.MappingDataSizeAfterCompressionInByte = assortedgraphicTuples[6].toUInt(Q_NULLPTR, 16); // MappingDataSizeInByte
+    entry.MappingDataCompressType = static_cast<enum AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType>(assortedgraphicTuples[7].toUInt(Q_NULLPTR, 16)); // MappingDataCompressType
+    entry.MappingDataName = assortedgraphicTuples[8]; // MappingDataName
+    entry.PaletteAddress = assortedgraphicTuples[9].toUInt(Q_NULLPTR, 16); // optionalPaletteAddress
+
+    // Parse PaletteSlotIDs (comma-separated hex, e.g. "1,3,5")
+    QStringList slotIDStrings = assortedgraphicTuples[10].split(",", Qt::SkipEmptyParts);
+    for (const QString &s : slotIDStrings)
     {
-        assortedgraphicTuples[0].toUInt(Q_NULLPTR, 16), // TileDataAddress
-        assortedgraphicTuples[1].toUInt(Q_NULLPTR, 16), // TileDataSizeInByte
-        assortedgraphicTuples[2].toUInt(Q_NULLPTR, 16), // TileDataRAMOffsetNum
-        static_cast<enum AssortedGraphicUtils::AssortedGraphicTileDataType>(assortedgraphicTuples[3].toUInt(Q_NULLPTR, 16)), // TileDataCompressType
-        assortedgraphicTuples[4], // TileDataName
-        assortedgraphicTuples[5].toUInt(Q_NULLPTR, 16), // MappingDataAddress
-        assortedgraphicTuples[6].toUInt(Q_NULLPTR, 16), // MappingDataSizeInByte
-        static_cast<enum AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType>(assortedgraphicTuples[7].toUInt(Q_NULLPTR, 16)), // MappingDataCompressType
-        assortedgraphicTuples[8], // MappingDataName
-        assortedgraphicTuples[9].toUInt(Q_NULLPTR, 16), // optionalPaletteAddress
-        assortedgraphicTuples[10].toUInt(Q_NULLPTR, 16), // PaletteNum
-        assortedgraphicTuples[11].toUInt(Q_NULLPTR, 16), // PaletteRAMOffsetNum
-        assortedgraphicTuples[12].toUInt(Q_NULLPTR, 16), // optionalGraphicWidth
-        assortedgraphicTuples[13].toUInt(Q_NULLPTR, 16), // optionalGraphicHeight
-    };
+        bool ok;
+        unsigned int slotId = s.toUInt(&ok, 16);
+        if (ok && slotId < 16)
+            entry.PaletteSlotIDs.push_back(slotId);
+    }
+    if (entry.PaletteSlotIDs.isEmpty())
+        entry.PaletteSlotIDs.push_back(0); // fallback
+
+    entry.optionalGraphicWidth = assortedgraphicTuples[11].toUInt(Q_NULLPTR, 16); // optionalGraphicWidth
+    entry.optionalGraphicHeight = assortedgraphicTuples[12].toUInt(Q_NULLPTR, 16); // optionalGraphicHeight
     return entry;
 }
 
@@ -102,8 +163,17 @@ static QString SerializeAssortedGraphicMetadata(const struct AssortedGraphicUtil
     ret += QString::number(assortedGraphicMetadata.MappingDataCompressType, 16) + ";";
     ret += assortedGraphicMetadata.MappingDataName + ";";
     ret += QString::number(assortedGraphicMetadata.PaletteAddress, 16) + ";";
-    ret += QString::number(assortedGraphicMetadata.PaletteNum, 16) + ";";
-    ret += QString::number(assortedGraphicMetadata.PaletteRAMOffsetNum, 16) + ";";
+
+    // Serialize PaletteSlotIDs as comma-separated hex
+    QString slotIDs;
+    for (int i = 0; i < assortedGraphicMetadata.PaletteSlotIDs.size(); i++)
+    {
+        if (i > 0) slotIDs += ",";
+        slotIDs += QString::number(assortedGraphicMetadata.PaletteSlotIDs[i], 16);
+    }
+    if (slotIDs.isEmpty()) slotIDs = "0";
+    ret += slotIDs + ";";
+
     ret += QString::number(assortedGraphicMetadata.optionalGraphicWidth, 16) + ";";
     ret += QString::number(assortedGraphicMetadata.optionalGraphicHeight, 16);
 
@@ -224,14 +294,22 @@ void AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(AssortedGraphicEntryItem 
         for (int j = 0; j < 16; ++j) // (re-)initialization
             entry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
     }
-    for (int i = 0; ((i < entry.PaletteNum) && ((i + entry.PaletteRAMOffsetNum) < (unsigned int)16)); i++)
+    for (int i = 0; i < entry.PaletteSlotIDs.size(); i++)
     { // set palette(s) by palette data
-        unsigned int tmpPalId = i + entry.PaletteRAMOffsetNum;
+        unsigned int tmpPalId = entry.PaletteSlotIDs[i];
+        if (tmpPalId >= 16) continue;
         if (entry.palettes[tmpPalId].size())
         {
             entry.palettes[tmpPalId].clear();
         }
-        int subPalettePtr = entry.PaletteAddress + i * 32;
+        // For vanilla ROM addresses (not 0, below available space), palettes are
+        // at fixed slot-based offsets. For saved chunks (address 0 or in available
+        // space), palettes are stored contiguously in PaletteSlotIDs order.
+        int subPalettePtr;
+        if (entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM || entry.PaletteAddress == 0)
+            subPalettePtr = entry.PaletteAddress + i * 32;              // saved chunk: contiguous
+        else
+            subPalettePtr = entry.PaletteAddress + tmpPalId * 32;       // vanilla ROM: slot-based offset
         unsigned short *tmpptr = (unsigned short*) (ROMUtils::ROMFileMetadata->ROMDataPtr + subPalettePtr);
         ROMUtils::LoadPalette(&(entry.palettes[tmpPalId]), tmpptr);
     }
@@ -512,15 +590,17 @@ QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphic
     QVector<ROMUtils::SaveData> result;
     if (entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.PaletteAddress))
     {
-        unsigned int datasize = entry.PaletteNum * 16 * 2; // 16 color, 2 bytes per color
+        unsigned int palCount = entry.PaletteSlotIDs.size();
+        unsigned int datasize = palCount * 16 * 2; // 16 color, 2 bytes per color
         unsigned short *data = new unsigned short[datasize];
         memset(data, 0, datasize);
-        for(int i = 0; i < entry.PaletteNum; ++i)
+        for(unsigned int i = 0; i < palCount; ++i)
         {
+            unsigned int slotId = entry.PaletteSlotIDs[i];
             // The first color is transparent
             for(int j = 1; j < 16; ++j)
             {
-                data[16 * i + j] = ROMUtils::QRgbToData(entry.palettes[i + entry.PaletteRAMOffsetNum][j]);
+                data[16 * i + j] = ROMUtils::QRgbToData(entry.palettes[slotId][j]);
             }
         }
 

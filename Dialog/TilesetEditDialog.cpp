@@ -1302,9 +1302,9 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
         // check if the palettes used by bg tiles are occupied by foreground Tile16s
         QVector<int> unusedpal = FindUnusedPalettes();
         bool skipthisentry = false;
-        for (int j = 0; j < graphicEntries[i].PaletteNum; j++)
+        for (int j = 0; j < graphicEntries[i].PaletteSlotIDs.size(); j++)
         {
-            if (!unusedpal.contains(graphicEntries[i].PaletteRAMOffsetNum + j))
+            if (!unusedpal.contains(graphicEntries[i].PaletteSlotIDs[j]))
             {
                 skipthisentry = true;
                 break;
@@ -1358,13 +1358,12 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
         }
 
         // Reset the palette(s) according to the entry
-        int changepalId = graphicEntries[id].PaletteRAMOffsetNum;
-        int palettenum = graphicEntries[id].PaletteNum;
-        for (int n = 0; n < palettenum; n++)
+        for (int n = 0; n < graphicEntries[id].PaletteSlotIDs.size(); n++)
         {
+            int palId = graphicEntries[id].PaletteSlotIDs[n];
             for (int i = 1; i < 16; i++)
             {
-                tmp_newTilesetPtr->SetColor(changepalId + n, i, graphicEntries[id].palettes[changepalId + n][i]);
+                tmp_newTilesetPtr->SetColor(palId, i, graphicEntries[id].palettes[palId][i]);
             }
         }
 
