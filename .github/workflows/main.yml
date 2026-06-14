@@ -17,7 +17,7 @@ jobs:
         os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
       - name: Download Submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: true
           
@@ -31,7 +31,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: 6.4.2
+          version: 6.10.3
 
       - name: Setup MSVC environment
         if: startsWith(matrix.os, 'windows')
