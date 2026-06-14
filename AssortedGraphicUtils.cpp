@@ -268,7 +268,7 @@ QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> AssortedGraphicUt
             // TODO: add validation check logic for each sub chunk
 
             // Extract Data from Infos
-            ExtractDataFromEntryInfo_v1(entry);
+            ExtractDataFromEntryInfo_v2(entry);
 
             assortedGraphicEntries.append(entry);
         }
@@ -282,7 +282,7 @@ QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> AssortedGraphicUt
 /// <param name="entry">
 /// The struct data saves the info of a graphic.
 /// </param>
-void AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(AssortedGraphicEntryItem &entry)
+void AssortedGraphicUtils::ExtractDataFromEntryInfo_v2(AssortedGraphicEntryItem &entry)
 {
     // palettes
     for (int i = 0; i < 16; ++i)

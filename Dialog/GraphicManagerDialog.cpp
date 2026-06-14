@@ -105,7 +105,7 @@ void GraphicManagerDialog::CreateAndAddDefaultEntry()
     testentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
     testentry.optionalGraphicHeight = 0;
 
-    AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(testentry);
+    AssortedGraphicUtils::ExtractDataFromEntryInfo_v2(testentry);
     graphicEntries.append(testentry);
 }
 
@@ -762,7 +762,7 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
                     newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
                     newentry.optionalGraphicHeight = 0;
 
-                    AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(newentry);
+                    AssortedGraphicUtils::ExtractDataFromEntryInfo_v2(newentry);
 
                     // Collect all distinct palette IDs actually used by the mapping data
                     QSet<unsigned int> usedPaletteIDs;

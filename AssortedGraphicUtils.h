@@ -93,7 +93,7 @@ namespace AssortedGraphicUtils
 
     // functions
     QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> GetAssortedGraphicsFromROM();
-    void ExtractDataFromEntryInfo_v1(struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    void ExtractDataFromEntryInfo_v2(struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
     QString SaveAssortedGraphicsToROM(QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> &entries);
 
     // savechunk relative functions
