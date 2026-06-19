@@ -37,10 +37,10 @@
        <item>
         <widget class="QListView" name="listView_RecordGraphicsList">
          <property name="editTriggers">
-          <set>QAbstractItemView::NoEditTriggers</set>
+          <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
          </property>
          <property name="selectionMode">
-          <enum>QAbstractItemView::SingleSelection</enum>
+          <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
          </property>
         </widget>
        </item>
@@ -83,7 +83,7 @@
             <x>0</x>
             <y>0</y>
             <width>354</width>
-            <height>630</height>
+            <height>631</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -92,34 +92,12 @@
              <property name="topMargin">
               <number>0</number>
              </property>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_Tile8x8s">
+             <item row="0" column="2">
+              <widget class="QPushButton" name="pushButton_ClearTile8x8Data">
                <property name="text">
-                <string>Tile8x8s:</string>
+                <string>Clear</string>
                </property>
               </widget>
-             </item>
-             <item row="12" column="2">
-              <widget class="QLineEdit" name="lineEdit_paletteNum"/>
-             </item>
-             <item row="10" column="1" colspan="2">
-              <widget class="QGraphicsView" name="graphicsView_palettes"/>
-             </item>
-             <item row="13" column="1">
-              <widget class="QLabel" name="label_paletteRAMOffset">
-               <property name="text">
-                <string>pal RAM offset (Hex, Palette)</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="QLineEdit" name="lineEdit_tileDataAddress"/>
-             </item>
-             <item row="3" column="2">
-              <widget class="QLineEdit" name="lineEdit_tileDataSizeInByte"/>
-             </item>
-             <item row="5" column="2">
-              <widget class="QComboBox" name="comboBox_tileDataType"/>
              </item>
              <item row="2" column="1">
               <widget class="QLabel" name="label_tileDataAddress">
@@ -131,6 +109,9 @@
                </property>
               </widget>
              </item>
+             <item row="6" column="2">
+              <widget class="QLineEdit" name="lineEdit_tileDataName"/>
+             </item>
              <item row="6" column="1">
               <widget class="QLabel" name="label_tileDataName">
                <property name="text">
@@ -138,84 +119,49 @@
                </property>
               </widget>
              </item>
-             <item row="12" column="1">
-              <widget class="QLabel" name="label_paletteNum">
-               <property name="text">
-                <string>palette number (Hex, Palette):</string>
+             <item row="1" column="1" colspan="2">
+              <widget class="QGraphicsView" name="graphicsView_tile8x8setData"/>
+             </item>
+             <item row="10" column="1" colspan="2">
+              <widget class="QGraphicsView" name="graphicsView_palettes"/>
+             </item>
+             <item row="8" column="1" colspan="2">
+              <widget class="Line" name="line">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
               </widget>
              </item>
              <item row="4" column="2">
               <widget class="QLineEdit" name="lineEdit_tileDataRAMoffset"/>
              </item>
-             <item row="1" column="1" colspan="2">
-              <widget class="QGraphicsView" name="graphicsView_tile8x8setData"/>
+             <item row="13" column="1" colspan="2">
+              <widget class="QPushButton" name="pushButton_ImportPaletteData">
+               <property name="toolTip">
+                <string>Import from ROM or files</string>
+               </property>
+               <property name="text">
+                <string>Load palette</string>
+               </property>
+              </widget>
+             </item>
+             <item row="12" column="1">
+              <widget class="QLabel" name="label_paletteNum">
+               <property name="text">
+                <string>palette slot IDs (Hex, comma-sep):</string>
+               </property>
+              </widget>
              </item>
              <item row="11" column="2">
               <widget class="QLineEdit" name="lineEdit_paletteAddress"/>
              </item>
-             <item row="11" column="1">
-              <widget class="QLabel" name="label_paletteAddress">
-               <property name="toolTip">
-                <string>Assign an address here if you want to use vanilla palette data from the ROM. or just leave it blank.</string>
-               </property>
-               <property name="text">
-                <string>palette address (Hex):</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QLabel" name="label_tileDataSizeInByte">
-               <property name="text">
-                <string>Tile8x8 data size (Hex, Byte):</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="1">
-              <widget class="QLabel" name="label_tile8x8DataRAMOffset">
-               <property name="text">
-                <string>Tile8x8 RAM offset (Hex, Tile):</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="2">
-              <widget class="QLineEdit" name="lineEdit_tileDataName"/>
-             </item>
-             <item row="9" column="1">
-              <widget class="QLabel" name="label_palette">
-               <property name="text">
-                <string>Palette:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="13" column="2">
-              <widget class="QLineEdit" name="lineEdit_paletteRAMOffset"/>
-             </item>
-             <item row="9" column="2">
-              <widget class="QPushButton" name="pushButton_ClearPaletteData">
-               <property name="text">
-                <string>Clear</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <widget class="QPushButton" name="pushButton_ClearTile8x8Data">
-               <property name="text">
-                <string>Clear</string>
-               </property>
-              </widget>
+             <item row="3" column="2">
+              <widget class="QLineEdit" name="lineEdit_tileDataSizeInByte"/>
              </item>
              <item row="5" column="1">
               <widget class="QLabel" name="label_tileDataType">
                <property name="text">
                 <string>Tile8x8 data type:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="8" column="1" colspan="2">
-              <widget class="Line" name="line">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
                </property>
               </widget>
              </item>
@@ -229,15 +175,59 @@
                </property>
               </widget>
              </item>
-             <item row="14" column="1" colspan="2">
-              <widget class="QPushButton" name="pushButton_ImportPaletteData">
-               <property name="toolTip">
-                <string>Import from ROM or files</string>
-               </property>
+             <item row="4" column="1">
+              <widget class="QLabel" name="label_tile8x8DataRAMOffset">
                <property name="text">
-                <string>Load palette</string>
+                <string>Tile8x8 RAM offset (Hex, Tile):</string>
                </property>
               </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_Tile8x8s">
+               <property name="text">
+                <string>Tile8x8s:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="9" column="1">
+              <widget class="QLabel" name="label_palette">
+               <property name="text">
+                <string>Palette:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="2">
+              <widget class="QComboBox" name="comboBox_tileDataType"/>
+             </item>
+             <item row="11" column="1">
+              <widget class="QLabel" name="label_paletteAddress">
+               <property name="toolTip">
+                <string>Assign an address here if you want to use vanilla palette data from the ROM. or just leave it blank.</string>
+               </property>
+               <property name="text">
+                <string>palette address (Hex):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="9" column="2">
+              <widget class="QPushButton" name="pushButton_ClearPaletteData">
+               <property name="text">
+                <string>Clear</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="label_tileDataSizeInByte">
+               <property name="text">
+                <string>Tile8x8 data size (Hex, Byte):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="12" column="2">
+              <widget class="QLineEdit" name="lineEdit_paletteNum"/>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLineEdit" name="lineEdit_tileDataAddress"/>
              </item>
             </layout>
            </item>
@@ -258,7 +248,7 @@
           <x>0</x>
           <y>0</y>
           <width>357</width>
-          <height>632</height>
+          <height>633</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -387,7 +377,7 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>

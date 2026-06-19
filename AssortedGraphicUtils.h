@@ -40,8 +40,7 @@ namespace AssortedGraphicUtils
         enum AssortedGraphicMappingDataCompressionType MappingDataCompressType;
         QString MappingDataName;
         unsigned int PaletteAddress = 0;
-        unsigned int PaletteNum = 1; // when (optionalPaletteAddress + PaletteNum) > 16, we just discard the latter palettes
-        unsigned int PaletteRAMOffsetNum = 0; // unit: per palette, 16 color
+        QVector<unsigned int> PaletteSlotIDs; // individual palette slot IDs, e.g. [1, 3, 5] instead of a start+length pair
         unsigned int optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
         unsigned int optionalGraphicHeight = 0;
 
@@ -62,8 +61,7 @@ namespace AssortedGraphicUtils
             this->MappingDataCompressType = entry.MappingDataCompressType;
             this->MappingDataName = entry.MappingDataName;
             this->PaletteAddress = entry.PaletteAddress;
-            this->PaletteNum = entry.PaletteNum;
-            this->PaletteRAMOffsetNum = entry.PaletteRAMOffsetNum;
+            this->PaletteSlotIDs = entry.PaletteSlotIDs;
             this->optionalGraphicWidth = entry.optionalGraphicWidth;
             this->optionalGraphicHeight = entry.optionalGraphicHeight;
             this->tileData = entry.tileData;
@@ -95,7 +93,7 @@ namespace AssortedGraphicUtils
 
     // functions
     QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> GetAssortedGraphicsFromROM();
-    void ExtractDataFromEntryInfo_v1(struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+    void ExtractDataFromEntryInfo_v2(struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
     QString SaveAssortedGraphicsToROM(QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> &entries);
 
     // savechunk relative functions
