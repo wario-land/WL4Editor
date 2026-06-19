@@ -920,8 +920,20 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
         {
             bool ok;
             unsigned int id = s.trimmed().toUInt(&ok, 16);
-            if (ok && id < 16)
+            if (!ok)
+            {
+                QMessageBox::warning(this, tr("Warning"), tr("A part of text cannot be converted to palette slot ID: ") + s);
+                return;
+            }
+            else if (id >= 16)
+            {
+                QMessageBox::warning(this, tr("Warning"), tr("Palette slot ID must be between 0 and 15: ") + s);
+                return;
+            }
+            else
+            {
                 slotIDs.push_back(id);
+            }
         }
 
         // palAddress is not a vanilla rom address, so we need to import palette from file
