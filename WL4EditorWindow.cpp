@@ -3012,3 +3012,9 @@ void WL4EditorWindow::on_spinBox_RoomID_valueChanged(int arg1)
         if (sender() != nullptr) SetCurrentRoomId(arg1, true);
     }
 }
+
+void WL4EditorWindow::on_actionChunk_Manager_triggered()
+{
+    // TODO
+}
+
