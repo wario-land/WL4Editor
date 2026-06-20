@@ -646,6 +646,9 @@ void MainGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 /// </param>
 void MainGraphicsView::keyPressEvent(QKeyEvent *event)
 {
+    if (!singleton->FirstROMIsLoaded())
+        return;
+
     // If an entity is selected
     enum Ui::EditMode editMode = singleton->GetEditModeWidgetPtr()->GetEditModeParams().editMode;
     LevelComponents::Room *currentRoom = singleton->GetCurrentRoom();
