@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1176</width>
-    <height>663</height>
+    <width>1219</width>
+    <height>695</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -100,6 +100,9 @@
      </item>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_6">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
        <property name="rightMargin">
         <number>0</number>
        </property>
@@ -121,6 +124,33 @@
           <enum>QFrame::Shadow::Raised</enum>
          </property>
         </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_CurrentAddress">
+           <property name="text">
+            <string>Current Addr:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_CurrentAddress"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_GotoAddress">
+           <property name="text">
+            <string>Goto</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>
@@ -199,14 +229,31 @@
     </layout>
    </item>
    <item>
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <property name="leftMargin">
+      <number>0</number>
      </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::StandardButton::Abort|QDialogButtonBox::StandardButton::Ignore|QDialogButtonBox::StandardButton::Save</set>
+     <property name="topMargin">
+      <number>0</number>
      </property>
-    </widget>
+     <item>
+      <widget class="QLabel" name="label_UsedSpaceInfo">
+       <property name="text">
+        <string>Used Space Info (placeholder)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::StandardButton::Abort|QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Save</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

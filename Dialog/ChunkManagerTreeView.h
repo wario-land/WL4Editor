@@ -47,6 +47,11 @@ public:
     unsigned int GetChunkAddress(const QModelIndex &index) const;
 
     /// <summary>
+    /// Get a QModelIndex for a chunk address, or invalid if not found.
+    /// </summary>
+    QModelIndex IndexOfChunk(unsigned int chunkAddr) const;
+
+    /// <summary>
     /// Get the issue flags for a chunk.
     /// </summary>
     int GetChunkIssues(unsigned int chunkAddr) const;

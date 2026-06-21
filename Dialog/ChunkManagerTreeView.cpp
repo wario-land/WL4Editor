@@ -264,6 +264,21 @@ unsigned int ChunkManagerModel::GetChunkAddress(const QModelIndex &index) const
     return 0;
 }
 
+QModelIndex ChunkManagerModel::IndexOfChunk(unsigned int chunkAddr) const
+{
+    for (int i = 0; i < rowCount(); ++i)
+    {
+        QStandardItem *categoryRow = item(i);
+        for (int j = 0; j < categoryRow->rowCount(); ++j)
+        {
+            QStandardItem *addrItem = categoryRow->child(j, 0);
+            if (addrItem && addrItem->text().mid(2).toUInt(nullptr, 16) == chunkAddr)
+                return addrItem->index();
+        }
+    }
+    return QModelIndex();
+}
+
 int ChunkManagerModel::GetChunkIssues(unsigned int chunkAddr) const
 {
     return m_chunkIssues.value(chunkAddr, ChunkUtils::NoIssue);

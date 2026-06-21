@@ -51,6 +51,7 @@ ChunkManagerDialog::ChunkManagerDialog(ChunkManagerMode mode, QWidget *parent)
     m_model = new ChunkManagerModel(this);
     ui->treeView->setModel(m_model);
     ui->treeView->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->treeView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->treeView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     connect(ui->treeView->selectionModel(), &QItemSelectionModel::currentRowChanged,
@@ -71,9 +72,14 @@ ChunkManagerDialog::ChunkManagerDialog(ChunkManagerMode mode, QWidget *parent)
         if (m_hexDocument)
         {
             ui->frame->setDocument(m_hexDocument);
-            ui->frame->setReadOnly(true);
+            ui->frame->setReadOnly(false);
+            ui->frame->setTrackChanges(true);
         }
     }
+
+    // Connect hex cursor position changes → update lineEdit + tree selection
+    connect(ui->frame->hexCursor(), &QHexCursor::positionChanged,
+            this, &ChunkManagerDialog::onHexCursorPositionChanged);
 
     PopulateTreeView();
 }
@@ -114,6 +120,9 @@ void ChunkManagerDialog::PopulateTreeView()
     ui->treeView->resizeColumnToContents(0);
     ui->treeView->setColumnWidth(0, 155);
     ui->treeView->setColumnWidth(3, 60);
+
+    HighlightAllChunks();
+    UpdateSpaceInfo();
 }
 
 // ============================================================================
@@ -172,6 +181,205 @@ unsigned int ChunkManagerDialog::FindFreeSpace(unsigned int size) const
 }
 
 // ============================================================================
+//  HighlightAllChunks — apply background colors to all chunks in hex view
+// ============================================================================
+
+void ChunkManagerDialog::HighlightAllChunks()
+{
+    if (!m_hexDocument) return;
+    ui->frame->clearMetadata();
+
+    int themeId = SettingsUtils::GetKey(SettingsUtils::IniKeys::EditorThemeId).toInt();
+    bool isDark = (themeId == 1);
+
+    QBrush headerBrush(isDark ? QColor(50, 70, 160) : QColor(180, 200, 255));
+    QBrush dataBrush(isDark ? QColor(140, 50, 50) : QColor(255, 200, 200));
+
+    QVector<unsigned int> allAddrs = m_model->GetAllChunkAddresses();
+    for (unsigned int chunkAddr : allAddrs)
+    {
+        unsigned int chunkSize = ROMUtils::GetChunkDataLength(chunkAddr);
+        ui->frame->setBackground(chunkAddr, chunkAddr + 12, headerBrush);
+        ui->frame->setBackground(chunkAddr + 12, chunkAddr + 12 + chunkSize, dataBrush);
+    }
+}
+
+// ============================================================================
+//  SyncHexToTempROM — copy hex document data → m_tempROMData
+// ============================================================================
+
+void ChunkManagerDialog::SyncHexToTempROM()
+{
+    if (!m_hexDocument) return;
+
+    qint64 docLen = m_hexDocument->length();
+    if (docLen != static_cast<qint64>(m_tempROMLength))
+    {
+        delete[] m_tempROMData;
+        m_tempROMData = new unsigned char[docLen];
+        m_tempROMLength = static_cast<unsigned int>(docLen);
+        ROMUtils::TempROMMetadata.Length = m_tempROMLength;
+        ROMUtils::TempROMMetadata.ROMDataPtr = m_tempROMData;
+    }
+
+    QByteArray data = m_hexDocument->read(0, static_cast<int>(docLen));
+    memcpy(m_tempROMData, data.constData(), static_cast<size_t>(docLen));
+}
+
+// ============================================================================
+//  UpdateSpaceInfo — display used %, fragmentation %, ROM size
+// ============================================================================
+
+void ChunkManagerDialog::UpdateSpaceInfo()
+{
+    using namespace ROMUtils;
+    unsigned char *ROMData = ROMFileMetadata->ROMDataPtr;
+    unsigned int ROMLength = ROMFileMetadata->Length;
+    unsigned int chunkAreaStart = WL4Constants::AvailableSpaceBeginningInROM;
+
+    QVector<unsigned int> allChunks = FindAllChunksInROM(
+        ROMData, ROMLength, chunkAreaStart,
+        InvalidationChunk, true);
+
+    // Total used space (chunk headers + data)
+    unsigned int totalUsed = 0;
+    for (unsigned int addr : allChunks)
+        totalUsed += GetChunkDataLength(addr) + 12;
+
+    unsigned int chunkAreaSize = ROMLength - chunkAreaStart;
+
+    // Walk sorted chunks to compute free space fragmentation
+    unsigned int cursor = chunkAreaStart;
+    unsigned int totalFree = 0;
+    unsigned int largestFree = 0;
+
+    for (unsigned int addr : allChunks)
+    {
+        if (addr > cursor)
+        {
+            unsigned int block = addr - cursor;
+            totalFree += block;
+            if (block > largestFree) largestFree = block;
+        }
+        cursor = addr + 12 + GetChunkDataLength(addr);
+    }
+    if (ROMLength > cursor)
+    {
+        unsigned int block = ROMLength - cursor;
+        totalFree += block;
+        if (block > largestFree) largestFree = block;
+    }
+
+    double usedPct = chunkAreaSize > 0
+        ? 100.0 * totalUsed / chunkAreaSize : 0.0;
+    double fragPct = totalFree > 0 && totalFree > largestFree
+        ? 100.0 * (totalFree - largestFree) / totalFree : 0.0;
+    double romSizeMB = ROMLength / (1024.0 * 1024.0);
+
+    ui->label_UsedSpaceInfo->setText(
+        QString("Used: %1% | Fragmented: %2% | ROM Size: %3 MB")
+            .arg(usedPct, 0, 'f', 1)
+            .arg(fragPct, 0, 'f', 1)
+            .arg(romSizeMB, 0, 'f', 2));
+}
+
+// ============================================================================
+//  SyncHexViewFromTempROM — reload hex document from m_tempROMData
+// ============================================================================
+
+void ChunkManagerDialog::SyncHexViewFromTempROM()
+{
+    if (!m_hexDocument) return;
+    QByteArray ba(reinterpret_cast<const char *>(m_tempROMData),
+                  static_cast<int>(m_tempROMLength));
+    m_hexDocument->setData(ba);
+    HighlightAllChunks();
+}
+
+// ============================================================================
+//  FindChunkAtAddress — find which chunk (if any) contains the given address
+// ============================================================================
+
+unsigned int ChunkManagerDialog::FindChunkAtAddress(unsigned int addr) const
+{
+    QVector<unsigned int> allAddrs = m_model->GetAllChunkAddresses();
+    for (unsigned int chunkAddr : allAddrs)
+    {
+        unsigned int chunkSize = ROMUtils::GetChunkDataLength(chunkAddr);
+        if (addr >= chunkAddr && addr < chunkAddr + 12 + chunkSize)
+            return chunkAddr;
+    }
+    return 0;
+}
+
+// ============================================================================
+//  onHexCursorPositionChanged — cursor → lineEdit + tree selection
+// ============================================================================
+
+void ChunkManagerDialog::onHexCursorPositionChanged()
+{
+    if (m_updatingFromHexCursor) return;
+    m_updatingFromHexCursor = true;
+
+    qint64 offset = ui->frame->hexCursor()->offset();
+    unsigned int addr = static_cast<unsigned int>(offset);
+
+    // Update lineEdit with formatted address
+    ui->lineEdit_CurrentAddress->setText(
+        QString("0x%1").arg(addr, 0, 16).toUpper());
+
+    // Find and select the chunk containing this address
+    unsigned int foundChunk = FindChunkAtAddress(addr);
+    if (foundChunk)
+    {
+        QModelIndex idx = m_model->IndexOfChunk(foundChunk);
+        if (idx.isValid())
+        {
+            QItemSelectionModel *selModel = ui->treeView->selectionModel();
+            selModel->blockSignals(true);
+            ui->treeView->setCurrentIndex(idx);
+            selModel->select(idx, QItemSelectionModel::ClearAndSelect
+                                | QItemSelectionModel::Rows);
+            ui->treeView->scrollTo(idx);
+            selModel->blockSignals(false);
+            m_selectedChunkAddr = foundChunk;
+            SyncInfoPanel(foundChunk);
+            EnableContextButtons(foundChunk);
+        }
+    }
+    else
+    {
+        ui->treeView->clearSelection();
+        m_selectedChunkAddr = 0;
+    }
+
+    m_updatingFromHexCursor = false;
+}
+
+// ============================================================================
+//  on_pushButton_GotoAddress_clicked — parse address from lineEdit, move cursor
+// ============================================================================
+
+void ChunkManagerDialog::on_pushButton_GotoAddress_clicked()
+{
+    QString text = ui->lineEdit_CurrentAddress->text().trimmed();
+    if (text.startsWith("0x", Qt::CaseInsensitive))
+        text = text.mid(2);
+
+    bool ok = false;
+    unsigned int addr = text.toUInt(&ok, 16);
+    if (!ok)
+    {
+        QMessageBox::warning(this, tr("Invalid Address"),
+            tr("Please enter a valid hexadecimal address."));
+        return;
+    }
+
+    ui->frame->hexCursor()->move(static_cast<qint64>(addr));
+    // positionChanged signal → onHexCursorPositionChanged handles the rest
+}
+
+// ============================================================================
 //  SyncHexView
 // ============================================================================
 
@@ -182,20 +390,13 @@ void ChunkManagerDialog::SyncHexView(unsigned int chunkAddr,
 {
     if (!m_hexDocument) return;
 
-    ui->frame->clearMetadata();
-
-    int themeId = SettingsUtils::GetKey(SettingsUtils::IniKeys::EditorThemeId).toInt();
-    bool isDark = (themeId == 1);
-
-    unsigned int chunkSize = ROMUtils::GetChunkDataLength(chunkAddr);
-
-    ui->frame->setBackground(chunkAddr, chunkAddr + 12,
-        QBrush(isDark ? QColor(50, 70, 160) : QColor(180, 200, 255)));
-    ui->frame->setBackground(chunkAddr + 12, chunkAddr + 12 + chunkSize,
-        QBrush(isDark ? QColor(140, 50, 50) : QColor(255, 200, 200)));
-
+    // All chunk backgrounds are managed by HighlightAllChunks.
+    // Only handle extra highlights here (e.g. Cycle Corruption Details).
     if (extraHighlightSize > 0 && extraColor.isValid())
     {
+        // Re-apply all chunk backgrounds to clear any previous extra highlight,
+        // then layer the new extra highlight on top.
+        HighlightAllChunks();
         ui->frame->setBackground(extraHighlightAddr,
                                   extraHighlightAddr + extraHighlightSize,
                                   QBrush(extraColor));
@@ -594,6 +795,11 @@ void ChunkManagerDialog::EnableContextButtons(unsigned int chunkAddr)
 
 void ChunkManagerDialog::on_pushButton_Refresh_clicked()
 {
+    // Sync hex document data back to m_tempROMData before re-scanning
+    if (m_hexDocument)
+    {
+        SyncHexToTempROM();
+    }
     PopulateTreeView();
 }
 
@@ -629,6 +835,7 @@ void ChunkManagerDialog::on_pushButton_InvalidateAllOrphans_clicked()
         m_chunkRefs.remove(addr);
     }
     m_hasUnsavedChanges = true;
+    SyncHexViewFromTempROM();
 }
 
 // ============================================================================
@@ -651,6 +858,7 @@ void ChunkManagerDialog::on_pushButton_InvalidateCurrentOrphanedChunk_clicked()
     m_chunkIssues.remove(m_selectedChunkAddr);
     m_chunkRefs.remove(m_selectedChunkAddr);
     m_hasUnsavedChanges = true;
+    SyncHexViewFromTempROM();
     m_selectedChunkAddr = 0;
 }
 
@@ -724,8 +932,9 @@ void ChunkManagerDialog::on_pushButton_FixBrokenHeader_clicked()
         romData[m_selectedChunkAddr + 8] =
             static_cast<unsigned char>(m_chunkRefs[m_selectedChunkAddr].ChunkType);
 
-    PopulateTreeView();
     m_hasUnsavedChanges = true;
+    SyncHexViewFromTempROM();
+    PopulateTreeView();
 }
 
 // ============================================================================
@@ -886,6 +1095,7 @@ void ChunkManagerDialog::on_pushButton_CloneAndRelinkDuplicates_clicked()
     }
 
     m_hasUnsavedChanges = true;
+    SyncHexViewFromTempROM();
     PopulateTreeView();
 
     QStringList addrStrs;
@@ -977,3 +1187,5 @@ void ChunkManagerDialog::on_treeView_clicked(const QModelIndex &index)
         EnableContextButtons(m_selectedChunkAddr);
     }
 }
+
+

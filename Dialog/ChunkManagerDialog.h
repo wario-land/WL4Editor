@@ -48,6 +48,12 @@ private slots:
     void on_buttonBox_clicked(QAbstractButton *button);
     void on_treeView_clicked(const QModelIndex &index);
 
+    // Address bar
+    void on_pushButton_GotoAddress_clicked();
+
+    // Hex cursor tracking
+    void onHexCursorPositionChanged();
+
 private:
     void PopulateTreeView();
     void SyncHexView(unsigned int chunkAddr,
@@ -70,6 +76,13 @@ private:
                                  QString &html) const;
     unsigned int SuggestLength(unsigned int chunkAddr, unsigned char chunkType) const;
 
+    // Hex view helpers
+    void HighlightAllChunks();
+    void SyncHexToTempROM();
+    void SyncHexViewFromTempROM();
+    unsigned int FindChunkAtAddress(unsigned int addr) const;
+    void UpdateSpaceInfo();
+
     Ui::ChunkManagerDialog *ui;
     ChunkManagerModel *m_model = nullptr;
     QHexDocument *m_hexDocument = nullptr;
@@ -87,6 +100,7 @@ private:
     QMap<unsigned int, ChunkUtils::ChunkReference> m_chunkRefs;
 
     unsigned int m_selectedChunkAddr = 0;
+    bool m_updatingFromHexCursor = false;
 
     // Cycle state
     QMap<unsigned int, int> m_cycleIdx_Corruption;  // chunkAddr → substep
