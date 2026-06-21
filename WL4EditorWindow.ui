@@ -295,6 +295,7 @@
     </property>
     <addaction name="actionPatch_Manager"/>
     <addaction name="actionGraphic_Manager"/>
+    <addaction name="actionChunk_Manager"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -668,6 +669,14 @@
    </property>
    <property name="text">
     <string>Edit Wall Paints</string>
+   </property>
+  </action>
+  <action name="actionChunk_Manager">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Chunk Manager</string>
    </property>
   </action>
  </widget>
