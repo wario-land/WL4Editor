@@ -43,6 +43,7 @@ QMAKE_CXXFLAGS += /MP
 SOURCES += \
     Dialog/AnimatedTileGroupEditorDialog.cpp \
     Dialog/ChunkManagerDialog.cpp \
+    Dialog/ChunkManagerTreeView.cpp \
     Dialog/GraphicManagerDialog.cpp \
     Dialog/SelectColorDialog.cpp \
     Dialog/SelectColorDialog_PaletteBar.cpp \
@@ -79,6 +80,7 @@ SOURCES += \
     Dialog/DoorConfigDialog.cpp \
     LevelComponents/Entity.cpp \
     DockWidget/EntitySetDockWidget.cpp \
+    ChunkUtils.cpp \
     Compress.cpp \
     DockWidget/CameraControlDockWidget.cpp \
     Dialog/PatchManagerDialog.cpp \
@@ -96,6 +98,7 @@ SOURCES += \
 HEADERS += \
     Dialog/AnimatedTileGroupEditorDialog.h \
     Dialog/ChunkManagerDialog.h \
+    Dialog/ChunkManagerTreeView.h \
     Dialog/GraphicManagerDialog.h \
     Dialog/SelectColorDialog.h \
     Dialog/SelectColorDialog_PaletteBar.h \
@@ -107,6 +110,7 @@ HEADERS += \
     DockWidget/OutputDockWidget.h \
     FileIOUtils.h \
     AssortedGraphicUtils.h \
+    ChunkUtils.h \
     LevelComponents/AnimatedTile8x8Group.h \
     LevelComponents/LevelDoorVector.h \
     PCG/Graphics/TileUtils.h \

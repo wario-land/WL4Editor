@@ -9,6 +9,7 @@
 #include "Dialog/SpritesEditorDialog.h"
 #include "Dialog/PatchManagerDialog.h"
 #include "Dialog/GraphicManagerDialog.h"
+#include "Dialog/ChunkManagerDialog.h"
 #include "Dialog/AnimatedTileGroupEditorDialog.h"
 #include "Dialog/WallPaintEditorDialog.h"
 #include "ui_WL4EditorWindow.h"
@@ -509,6 +510,7 @@ void WL4EditorWindow::UIStartUp()
         ui->actionClear_all->setEnabled(true);
         ui->actionPatch_Manager->setEnabled(true);
         ui->actionGraphic_Manager->setEnabled(true);
+        ui->actionChunk_Manager->setEnabled(true);
         ui->actionEdit_Entity_EntitySet->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->menuRecent_Script->setEnabled(true);
@@ -3015,6 +3017,7 @@ void WL4EditorWindow::on_spinBox_RoomID_valueChanged(int arg1)
 
 void WL4EditorWindow::on_actionChunk_Manager_triggered()
 {
-    // TODO
+    ChunkManagerDialog dialog(this);
+    dialog.exec();
 }
 

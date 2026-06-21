@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>980</width>
-    <height>596</height>
+    <width>1176</width>
+    <height>663</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,6 +54,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pushButton_InvalidateAllOrphans">
+         <property name="text">
+          <string>Invalidate All Orphans</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox_Legend">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -73,9 +80,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_BrokenHeaderChunkColorLegend">
+           <widget class="QLabel" name="label_CorruptedChunkColorLegend">
             <property name="text">
-             <string>🟡Broken Header Chunk</string>
+             <string>🟠Corrupted Chunk</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_DuplicateRefColorLegend">
+            <property name="text">
+             <string>🔵Chunk with Duplicate Ref</string>
             </property>
            </widget>
           </item>
@@ -128,7 +142,14 @@
            <number>9</number>
           </property>
           <item>
-           <widget class="QTextEdit" name="textEdit"/>
+           <widget class="QTextEdit" name="textEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="pushButton_InvalidateCurrentOrphanedChunk">
@@ -136,7 +157,7 @@
              <bool>false</bool>
             </property>
             <property name="text">
-             <string>Invalidate Current Orphaned Chunk</string>
+             <string>Invalidate This Orphan</string>
             </property>
            </widget>
           </item>
@@ -147,6 +168,26 @@
             </property>
             <property name="text">
              <string>Fix Broken Header</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_CycleCorruptionDetails">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Cycle Corruption Details</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_CloneAndRelinkDuplicates">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Clone and Relink Duplicates</string>
             </property>
            </widget>
           </item>
