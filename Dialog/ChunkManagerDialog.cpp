@@ -19,8 +19,8 @@ extern WL4EditorWindow *singleton;
 //  Constructor / Destructor
 // ============================================================================
 
-ChunkManagerDialog::ChunkManagerDialog(QWidget *parent)
-    : QDialog(parent), ui(new Ui::ChunkManagerDialog)
+ChunkManagerDialog::ChunkManagerDialog(ChunkManagerMode mode, QWidget *parent)
+    : QDialog(parent), ui(new Ui::ChunkManagerDialog), m_mode(mode)
 {
     ui->setupUi(this);
 
@@ -33,8 +33,20 @@ ChunkManagerDialog::ChunkManagerDialog(QWidget *parent)
     ROMUtils::TempROMMetadata.ROMDataPtr = m_tempROMData;
     ROMUtils::ROMFileMetadata = &ROMUtils::TempROMMetadata;
 
-    ui->buttonBox->setStandardButtons(
-        QDialogButtonBox::Save | QDialogButtonBox::Cancel);
+    // Configure button box based on mode
+    switch (m_mode)
+    {
+    case ChunkManagerMode::Standalone:
+    case ChunkManagerMode::LoadGuard:
+        ui->buttonBox->setStandardButtons(
+            QDialogButtonBox::Save | QDialogButtonBox::Cancel);
+        break;
+    case ChunkManagerMode::SaveGuard:
+        ui->buttonBox->setStandardButtons(
+            QDialogButtonBox::Abort | QDialogButtonBox::Save);
+        ui->buttonBox->button(QDialogButtonBox::Save)->setText(tr("Unsafe Save"));
+        break;
+    }
 
     m_model = new ChunkManagerModel(this);
     ui->treeView->setModel(m_model);
@@ -894,32 +906,56 @@ void ChunkManagerDialog::on_buttonBox_clicked(QAbstractButton *button)
     switch (ui->buttonBox->standardButton(button))
     {
     case QDialogButtonBox::Save:
+    {
+        // Common: copy temp data back to CurrentROMMetadata
+        memcpy(ROMUtils::CurrentROMMetadata.ROMDataPtr,
+               ROMUtils::ROMFileMetadata->ROMDataPtr,
+               ROMUtils::ROMFileMetadata->Length);
+        ROMUtils::CurrentROMMetadata.Length = ROMUtils::ROMFileMetadata->Length;
+
         if (m_hasUnsavedChanges)
         {
-            QFile file(ROMUtils::ROMFileMetadata->FilePath);
-            if (file.open(QIODevice::WriteOnly))
+            switch (m_mode)
             {
-                file.write(
-                    reinterpret_cast<const char *>(ROMUtils::ROMFileMetadata->ROMDataPtr),
-                    static_cast<qint64>(ROMUtils::ROMFileMetadata->Length));
-                file.close();
-                memcpy(ROMUtils::CurrentROMMetadata.ROMDataPtr,
-                       ROMUtils::ROMFileMetadata->ROMDataPtr,
-                       ROMUtils::ROMFileMetadata->Length);
-                m_hasUnsavedChanges = false;
-                singleton->GetOutputWidgetPtr()->PrintString(
-                    "Chunk Manager: Changes saved.");
+            case ChunkManagerMode::Standalone:
+            case ChunkManagerMode::LoadGuard:
+            {
+                // Write to disk and accept
+                QFile file(ROMUtils::ROMFileMetadata->FilePath);
+                if (file.open(QIODevice::WriteOnly))
+                {
+                    file.write(
+                        reinterpret_cast<const char *>(ROMUtils::ROMFileMetadata->ROMDataPtr),
+                        static_cast<qint64>(ROMUtils::ROMFileMetadata->Length));
+                    file.close();
+                    m_hasUnsavedChanges = false;
+                    m_wasSaved = true;
+                    singleton->GetOutputWidgetPtr()->PrintString(
+                        "Chunk Manager: Changes saved.");
+                }
+                else
+                {
+                    QMessageBox::warning(this, tr("Save Error"),
+                        tr("Failed to open ROM file for writing."));
+                    return;
+                }
+                break;
             }
-            else
-            {
-                QMessageBox::warning(this, tr("Save Error"),
-                    tr("Failed to open ROM file for writing."));
-                return;
+            case ChunkManagerMode::SaveGuard:
+                // Do NOT write to disk — SaveFile() will do that after PostProcessing.
+                // Just mark as saved and accept, so SaveFile() continues.
+                m_hasUnsavedChanges = false;
+                m_wasSaved = true;
+                singleton->GetOutputWidgetPtr()->PrintString(
+                    "Chunk Manager: Changes applied (Unsafe Save).");
+                break;
             }
         }
         accept();
         break;
+    }
     case QDialogButtonBox::Cancel:
+    case QDialogButtonBox::Abort:
         reject();
         break;
     default:

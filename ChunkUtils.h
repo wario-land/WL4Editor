@@ -85,6 +85,13 @@ namespace ChunkUtils
     // Get the number of unique issue types present across all chunks
     int CountAffectedChunks(const QMap<unsigned int, int> &chunkIssues);
 
+    // Headless chunk health scan — no UI, just data analysis.
+    // Returns true if serious issues (BrokenHeader | Overlap | HasMisalignedPtr) found.
+    // Populates orphanCount, dupRefCount, and seriousIssueCount for caller's logging decisions.
+    // Temporarily swaps ROMFileMetadata to work on the provided romData.
+    bool QuickChunkHealthScan(unsigned char *romData, unsigned int romLength,
+                              int &orphanCount, int &dupRefCount, int &seriousIssueCount);
+
 } // namespace ChunkUtils
 
 #endif // CHUNKUTILS_H

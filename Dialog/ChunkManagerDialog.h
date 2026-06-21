@@ -14,13 +14,24 @@ namespace Ui
 
 class QHexDocument;
 
+enum class ChunkManagerMode
+{
+    Standalone,  // User-initiated: Save | Cancel
+    LoadGuard,   // Auto-invoked during ROM load: Save | Cancel (same buttons, but Save triggers re-scan)
+    SaveGuard    // Auto-invoked during save: Abort | Unsafe Save (Unsafe Save reuses the Save button)
+};
+
 class ChunkManagerDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit ChunkManagerDialog(QWidget *parent = nullptr);
+    explicit ChunkManagerDialog(ChunkManagerMode mode = ChunkManagerMode::Standalone,
+                                QWidget *parent = nullptr);
     ~ChunkManagerDialog();
+
+    bool HasUnsavedChanges() const { return m_hasUnsavedChanges; }
+    bool WasSaved() const { return m_wasSaved; }
 
 private slots:
     // Left panel
@@ -63,6 +74,8 @@ private:
     ChunkManagerModel *m_model = nullptr;
     QHexDocument *m_hexDocument = nullptr;
     bool m_hasUnsavedChanges = false;
+    bool m_wasSaved = false;
+    ChunkManagerMode m_mode = ChunkManagerMode::Standalone;
 
     unsigned char *m_tempROMData = nullptr;
     unsigned int m_tempROMLength = 0;

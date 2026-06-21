@@ -5,6 +5,7 @@
 #include "ROMUtils.h"
 #include "FileIOUtils.h"
 #include "Operation.h"
+#include "ChunkUtils.h"
 
 #include "Dialog/SpritesEditorDialog.h"
 #include "Dialog/PatchManagerDialog.h"
@@ -242,6 +243,70 @@ void WL4EditorWindow::LoadROMDataFromFile(QString qFilePath)
     }
     dialogInitialPath = QFileInfo(qFilePath).dir().path();
     SettingsUtils::SetKey(SettingsUtils::IniKeys::OpenRomInitPath, dialogInitialPath);
+
+    // Headless chunk health scan before constructing singletons
+    // (prevents crashes from corrupted ROM data during singleton construction)
+    {
+        int orphanCount = 0, dupRefCount = 0, seriousCount = 0;
+        ChunkUtils::QuickChunkHealthScan(
+            ROMUtils::ROMFileMetadata->ROMDataPtr,
+            ROMUtils::ROMFileMetadata->Length,
+            orphanCount, dupRefCount, seriousCount);
+
+        if (orphanCount > 0 || dupRefCount > 0)
+        {
+            OutputWidget->PrintString(
+                QString("ROM loaded: %1 orphaned chunk(s), %2 duplicate reference(s) detected.")
+                    .arg(orphanCount).arg(dupRefCount));
+        }
+
+        if (seriousCount > 0)
+        {
+            QString msg = QString(
+                "This ROM contains %1 serious chunk issue(s) "
+                "(corrupted headers, overlaps, or misaligned pointers) "
+                "that may crash the editor.\n\n"
+                "Open Chunk Manager to inspect and repair?")
+                .arg(seriousCount);
+            if (QMessageBox::Yes == QMessageBox::question(
+                    this, tr("ROM Corruption Detected"), msg,
+                    QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes))
+            {
+                // Invoke CM before any singleton construction to avoid crashes
+                ChunkManagerDialog cmDialog(ChunkManagerMode::LoadGuard, this);
+                cmDialog.exec();
+
+                if (cmDialog.WasSaved())
+                {
+                    // Re-scan after CM save
+                    int o2 = 0, d2 = 0, s2 = 0;
+                    ChunkUtils::QuickChunkHealthScan(
+                        ROMUtils::ROMFileMetadata->ROMDataPtr,
+                        ROMUtils::ROMFileMetadata->Length,
+                        o2, d2, s2);
+                    if (s2 > 0)
+                    {
+                        QMessageBox::critical(this, tr("Cannot Load ROM"),
+                            tr("Serious chunk issues remain after repair (%1 issues). "
+                               "Loading aborted to prevent a crash.").arg(s2));
+                        return; // Block loading
+                    }
+                    if (o2 > 0)
+                        OutputWidget->PrintString(
+                            QString("%1 orphaned chunk(s) remain after repair.").arg(o2));
+                    if (d2 > 0)
+                        OutputWidget->PrintString(
+                            QString("%1 duplicate reference(s) remain after repair.").arg(d2));
+                }
+                else
+                {
+                    // User cancelled — abort load
+                    return;
+                }
+            }
+            // else: user chose No — proceed at their own risk
+        }
+    }
 
     // Clean-up
     if (CurrentLevel)
@@ -3017,7 +3082,26 @@ void WL4EditorWindow::on_spinBox_RoomID_valueChanged(int arg1)
 
 void WL4EditorWindow::on_actionChunk_Manager_triggered()
 {
-    ChunkManagerDialog dialog(this);
-    dialog.exec();
+    // Chunk Manager requires a clean ROM state — block if there are unsaved changes
+    if (UnsavedChanges)
+    {
+        QMessageBox::information(this, tr("Unsaved Changes"),
+            tr("Chunk Manager requires a clean ROM state.\n"
+               "Please save or discard your changes before opening Chunk Manager."));
+        return;
+    }
+    if (!ROMUtils::ROMFileMetadata->ROMDataPtr)
+    {
+        QMessageBox::information(this, tr("No ROM Loaded"),
+            tr("Please open a ROM file first."));
+        return;
+    }
+
+    ChunkManagerDialog dialog(ChunkManagerMode::Standalone, this);
+    if (dialog.exec() == QDialog::Accepted && dialog.HasUnsavedChanges())
+    {
+        LoadROMDataFromFile(ROMUtils::ROMFileMetadata->FilePath);
+        OutputWidget->PrintString("ROM reloaded after Chunk Manager changes.");
+    }
 }
 

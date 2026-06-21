@@ -813,4 +813,52 @@ int CountAffectedChunks(const QMap<unsigned int, int> &chunkIssues)
     return chunkIssues.size();
 }
 
+// ============================================================================
+//  QuickChunkHealthScan — headless chunk health analysis
+// ============================================================================
+
+bool QuickChunkHealthScan(unsigned char *romData, unsigned int romLength,
+                          int &orphanCount, int &dupRefCount, int &seriousIssueCount)
+{
+    using namespace ROMUtils;
+
+    // Save current ROMFileMetadata state, then point it to the provided data
+    struct ROMFileMetadata *savedMetadata = ROMFileMetadata;
+    struct ROMFileMetadata savedCopy = *savedMetadata;
+    savedMetadata->ROMDataPtr = romData;
+    savedMetadata->Length = romLength;
+
+    QVector<unsigned int> allChunks = FindAllChunksInROM(
+        romData, romLength,
+        WL4Constants::AvailableSpaceBeginningInROM,
+        InvalidationChunk, true);
+
+    QVector<RawPointerEntry> rawPointers;
+    QMap<unsigned int, ChunkReference> refs = GetAllChunkReferences(&rawPointers);
+    QVector<PointerIssue> pointerIssues;
+    QVector<OverlapIssue> overlapIssues;
+    QMap<unsigned int, int> issues = ScanChunkIssues(
+        allChunks, refs, pointerIssues, overlapIssues);
+
+    orphanCount = 0;
+    dupRefCount = 0;
+    seriousIssueCount = 0;
+    for (auto it = issues.constBegin(); it != issues.constEnd(); ++it)
+    {
+        int flags = it.value();
+        if (flags & Orphan)
+            orphanCount++;
+        if (flags & DuplicateRef)
+            dupRefCount++;
+        if (flags & (BrokenHeader | HasMisalignedPtr | Overlap))
+            seriousIssueCount++;
+    }
+
+    // Restore ROMFileMetadata
+    savedMetadata->ROMDataPtr = savedCopy.ROMDataPtr;
+    savedMetadata->Length = savedCopy.Length;
+
+    return seriousIssueCount > 0;
+}
+
 } // namespace ChunkUtils
