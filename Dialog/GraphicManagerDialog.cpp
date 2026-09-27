@@ -1165,16 +1165,16 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                     if (optionalgraphicWidth != 0x20 && optionalgraphicWidth != 0x40)
                     {
                         QMessageBox::critical(this, tr("Load Error"), tr("Wrong graphic Width to import graphic for RLE_mappingtype_0x20,\n"
-                                                                              "it has to be 0x40 or 0x40!"));
+                                                                              "it has to be 0x20 or 0x40!"));
                         return;
                     }
                     if (optionalgraphicHeight != 0x20 && optionalgraphicHeight != 0x40)
                     {
                         QMessageBox::critical(this, tr("Load Error"), tr("Wrong graphic Height to import graphic for RLE_mappingtype_0x20,\n"
-                                                                              "it has to be 0x40 or 0x40!"));
+                                                                              "it has to be 0x20 or 0x40!"));
                         return;
                     }
-                    if (optionalgraphicWidth == 0x20 && optionalgraphicHeight == 0x40)
+                    if (optionalgraphicWidth == 0x40 && optionalgraphicHeight == 0x40)
                     {
                         QMessageBox::critical(this, tr("Load Error"), tr("vanilla Layer 3 cannot be 0x40 by 0x40 in size!"));
                         return;
