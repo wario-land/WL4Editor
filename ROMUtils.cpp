@@ -6,6 +6,8 @@
 #include "WL4EditorWindow.h"
 #include "PatchUtils.h"
 #include "SettingsUtils.h"
+#include "ChunkUtils.h"
+#include "Dialog/ChunkManagerDialog.h"
 
 #include <cmath>
 #include <QDateTime>
@@ -1079,6 +1081,51 @@ allocationComplete:
             }
         }
 
+        // Pre-write chunk health scan on TempFile
+        // If serious issues found, invoke Chunk Manager in SaveGuard mode
+        // (Abort | Unsafe Save) before committing to disk.
+        {
+            int orphanCount = 0, dupRefCount = 0, seriousCount = 0;
+            ChunkUtils::QuickChunkHealthScan(TempFile, TempLength,
+                                             orphanCount, dupRefCount, seriousCount);
+
+            if (orphanCount > 0 || dupRefCount > 0)
+            {
+                singleton->GetOutputWidgetPtr()->PrintString(
+                    QString("Save: %1 orphaned chunk(s), %2 duplicate reference(s) in output data.")
+                        .arg(orphanCount).arg(dupRefCount));
+            }
+
+            if (seriousCount > 0)
+            {
+                // Temporarily switch CurrentROMMetadata to TempFile so CM Dialog
+                // works on the would-be-saved data
+                unsigned char *savedROMData = CurrentROMMetadata.ROMDataPtr;
+                unsigned int savedROMLen = CurrentROMMetadata.Length;
+                CurrentROMMetadata.ROMDataPtr = TempFile;
+                CurrentROMMetadata.Length = TempLength;
+
+                ChunkManagerDialog cmDialog(ChunkManagerMode::SaveGuard, singleton);
+                int result = cmDialog.exec();
+
+                // Restore CurrentROMMetadata
+                // (TempFile may have been modified by CM via memcpy into CurrentROMMetadata)
+                CurrentROMMetadata.ROMDataPtr = savedROMData;
+                CurrentROMMetadata.Length = savedROMLen;
+
+                if (result == QDialog::Rejected)
+                {
+                    // User chose Abort
+                    singleton->GetOutputWidgetPtr()->PrintString(
+                        QT_TR_NOOP("Save aborted by user due to chunk issues."));
+                    goto error;
+                }
+                // User chose Unsafe Save — continue with save
+                singleton->GetOutputWidgetPtr()->PrintString(
+                    QT_TR_NOOP("Proceeding with save despite chunk issues (user elected Unsafe Save)."));
+            }
+        }
+
         // Perform post-processing before saving the file
         if(PostProcessingCallback)
         {
@@ -1682,7 +1729,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     /// </returns>
     bool WriteChunkSanityCheck(const SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks)
     {
-        if ((chunk_addr > WL4Constants::AvailableSpaceBeginningInROM) || (chunk.ChunkType == SaveDataChunkType::InvalidationChunk))
+        if ((chunk_addr < WL4Constants::AvailableSpaceBeginningInROM) || (chunk.ChunkType == SaveDataChunkType::InvalidationChunk))
         {
             return true;
         }
@@ -1694,7 +1741,7 @@ error:      free(TempFile); // free up temporary file if there was a processing 
         {
             middle = (low + high) / 2;
             unsigned int existChunkAddr_Middle = existChunks[middle];
-            unsigned int existChunkSize_Middle =ROMUtils::GetChunkDataLength(existChunkAddr_Middle + 4);
+            unsigned int existChunkSize_Middle = ROMUtils::GetChunkDataLength(existChunkAddr_Middle);
 
             // exist chunk range: [existChunkAddr_Middle, existChunkAddr_Middle + 12 + existChunkSize_Middle)
             // new chunk range: [chunk_addr, chunk_addr + 12 + chunk_size)
