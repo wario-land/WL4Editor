@@ -1,4 +1,4 @@
-﻿#include "TilesetEditDialog.h"
+#include "TilesetEditDialog.h"
 #include "ui_TilesetEditDialog.h"
 
 #include <QFile>
@@ -1289,6 +1289,12 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
     {
         // incorrect tile data type
         if (graphicEntries[i].TileDataType != AssortedGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg)
+        {
+            continue;
+        }
+
+        // the entry contains no Tile8x8 data, so there is nothing to be used as bg tiles
+        if (!graphicEntries[i].TileDataSizeInByte)
         {
             continue;
         }

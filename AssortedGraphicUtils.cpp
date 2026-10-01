@@ -298,15 +298,21 @@ void AssortedGraphicUtils::ExtractDataFromEntryInfo_v2(AssortedGraphicEntryItem 
     { // set palette(s) by palette data
         unsigned int tmpPalId = entry.PaletteSlotIDs[i];
         if (tmpPalId >= 16) continue;
+        // An address of 0 means the entry has no palette data saved yet, so there is nothing
+        // to load and the palette keeps the transparent colors set above
+        if (!entry.PaletteAddress)
+        {
+            continue;
+        }
         if (entry.palettes[tmpPalId].size())
         {
             entry.palettes[tmpPalId].clear();
         }
-        // For vanilla ROM addresses (not 0, below available space), palettes are
-        // at fixed slot-based offsets. For saved chunks (address 0 or in available
-        // space), palettes are stored contiguously in PaletteSlotIDs order.
+        // For vanilla ROM addresses (below the available space), palettes are at fixed
+        // slot-based offsets. For saved chunks (in the available space), palettes are
+        // stored contiguously in PaletteSlotIDs order.
         int subPalettePtr;
-        if (entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM || entry.PaletteAddress == 0)
+        if (entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM)
             subPalettePtr = entry.PaletteAddress + i * 32;              // saved chunk: contiguous
         else
             subPalettePtr = entry.PaletteAddress + tmpPalId * 32;       // vanilla ROM: slot-based offset
@@ -588,7 +594,9 @@ QVector<unsigned int> AssortedGraphicUtils::GetSaveDataAddresses(AssortedGraphic
 QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphicEntryItem &entry, unsigned int entryId)
 {
     QVector<ROMUtils::SaveData> result;
-    if (entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.PaletteAddress))
+    // Skip the data types which contain no data at all, they need no chunk to be saved
+    if ((entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.PaletteAddress))
+            && entry.PaletteSlotIDs.size())
     {
         unsigned int palCount = entry.PaletteSlotIDs.size();
         unsigned int datasize = palCount * 16 * 2; // 16 color, 2 bytes per color
@@ -615,7 +623,8 @@ QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphic
                        ROMUtils::SaveDataChunkType::AssortedGraphicPaletteChunkType});
         entry_datatype_chunk_tuple.append({entryId, graphicPalette, result.last().index});
     }
-    if (entry.TileDataAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.TileDataAddress))
+    if ((entry.TileDataAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.TileDataAddress))
+            && entry.TileDataSizeInByte)
     {
         switch (entry.TileDataType)
         {
