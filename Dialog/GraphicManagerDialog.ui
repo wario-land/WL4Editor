@@ -68,8 +68,11 @@
          </item>
          <item>
           <widget class="QPushButton" name="pushButton_duplicateCurrentEntry">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Duplicate the selected entry below itself.&lt;/p&gt;&lt;p&gt;The copy does not reference the data addresses of the source entry: its Tile8x8 data, palette data and mapping data are all saved as new chunks owned by the copy, even when the source entry uses vanilla ROM data. So the copy can always be modified later without changing the source entry or the vanilla ROM data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
-            <string>Duplicate</string>
+            <string>Duplicate (i)</string>
            </property>
           </widget>
          </item>

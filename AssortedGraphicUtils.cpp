@@ -8,6 +8,117 @@
 extern WL4EditorWindow *singleton;
 
 /// <summary>
+/// Get the raw background Tile8x8 data of a Tileset.
+/// </summary>
+/// <remarks>
+/// The Tile8x8 id used by the mapping data of a Tile8x8 layer is the index of the Tileset Tile8x8
+/// array offset by 0x200 (see LevelComponents::Layer::RenderLayer), so the returned data is indexed
+/// by the Tile8x8 id itself.
+/// </remarks>
+/// <param name="tileset">
+/// The Tileset which provides the background Tile8x8 data.
+/// </param>
+/// <param name="result">
+/// The raw data of the background Tile8x8 set, in the order of the Tile8x8 ids.
+/// </param>
+/// <returns>
+/// Return true if the Tile8x8 data is obtained.
+/// </returns>
+static bool GetTilesetBGTile8x8RawData(LevelComponents::Tileset *tileset, QByteArray &result)
+{
+    if (result.size())
+    {
+        result.clear();
+    }
+    if (!tileset)
+    {
+        return false;
+    }
+    QVector<LevelComponents::Tile8x8 *> tile8x8array = tileset->GetTile8x8arrayPtr();
+    int tileNum = tileset->GetbgGFXlen() / 32;
+    if ((tileNum <= 0) || ((0x200 + tileNum) > tile8x8array.size()))
+    {
+        return false;
+    }
+    result.reserve(tileNum * 32);
+    for (int i = 0; i < tileNum; ++i)
+    {
+        result.append(tile8x8array[0x200 + i]->GetRawPixelData());
+    }
+    return true;
+}
+
+/// <summary>
+/// Check if a Tile8x8 set uses the same background Tile8x8 data as the one of a Tileset.
+/// </summary>
+/// <remarks>
+/// The background Tile8x8 data of a Tileset is the data the game loads as its background Tile8x8
+/// set, and the mapping data of a Tile8x8 layer only references background Tile8x8 ids, palettes
+/// and flips. Tile8x8 sets sharing the same data are therefore interchangeable, even when their
+/// ROM data pointers differ. Such Tile8x8 sets must not be merged into one ROM data chunk though,
+/// because that would turn the chunk into a duplicated reference (see ChunkUtils::DuplicateRef).
+/// </remarks>
+/// <param name="tileset">
+/// The Tileset which provides the background Tile8x8 set to compare with.
+/// </param>
+/// <param name="tileDataAddr">
+/// The ROM data address of the Tile8x8 set to check. 0 when the set has no address in the ROM.
+/// </param>
+/// <param name="tileDataSizeInByte">
+/// The size of the Tile8x8 set to check, in byte.
+/// </param>
+/// <param name="tileDataRAMOffsetNum">
+/// The Tile8x8 id of the first Tile8x8 of the set to check.
+/// </param>
+/// <param name="tileData">
+/// The Tile8x8 set to check.
+/// </param>
+/// <returns>
+/// Return true if the Tile8x8 set is the one used by the Tileset.
+/// </returns>
+static bool DoesTilesetUseTile8x8Set(LevelComponents::Tileset *tileset, unsigned int tileDataAddr,
+                                     unsigned int tileDataSizeInByte, unsigned int tileDataRAMOffsetNum,
+                                     const QByteArray &tileData, const QByteArray &tilesetTileData)
+{
+    if (!tileDataSizeInByte || (tileDataSizeInByte % 32) || ((unsigned int) tileData.size() != tileDataSizeInByte))
+    {
+        // there is no usable Tile8x8 data to compare with
+        return false;
+    }
+
+    // The Tileset points at the data of this Tile8x8 set, so the Tileset uses the set no matter
+    // what the Tile8x8 data looks like. This also covers the Tile8x8 set which has been detached
+    // from its ROM data address (for example by the Graphic Manager).
+    if (tileDataAddr && (tileDataAddr == (unsigned int) tileset->GetbgGFXptr()))
+    {
+        return true;
+    }
+
+    // Compare the Tile8x8 data, the background Tile8x8 set of a Tileset has a fixed size
+    if ((int) tileDataSizeInByte > tileset->GetbgGFXlen())
+    {
+        return false;
+    }
+    int tileNum = tileDataSizeInByte / 32;
+    for (int i = 0; i < tileNum; ++i)
+    {
+        // The mapping data of a Tile8x8 layer uses the Tile8x8 id straight as the index of the
+        // Tileset Tile8x8 array (see LevelComponents::Layer::RenderLayer), while a Tile8x8 set
+        // stores its data from its own TileDataRAMOffsetNum on, so this is the index to compare
+        int tileId = tileDataRAMOffsetNum + i;
+        if ((tileId >= 0x200) || (((tileId + 1) * 32) > tilesetTileData.size()))
+        {
+            return false;
+        }
+        if (memcmp(tilesetTileData.constData() + tileId * 32, tileData.constData() + i * 32, 32))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+/// <summary>
 /// Upgrade the format of a assorted graphic list chunk by one version.
 /// </summary>
 /// <remarks>
@@ -274,6 +385,61 @@ QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> AssortedGraphicUt
         }
     }
     return assortedGraphicEntries;
+}
+
+/// <summary>
+/// Collect the mapping data addresses which can be used by the background Tile8x8 set of a Tileset.
+/// </summary>
+/// <remarks>
+/// The mapping data of a Tile8x8 layer only references background Tile8x8 ids, palettes and flips,
+/// so any mapping data built on the same background Tile8x8 set can be used by both Layer 0 and
+/// Layer 3 of a room. The options of "Use existing Layer 0" and "Use existing Background Layer"
+/// are therefore generated from this single list.
+/// </remarks>
+/// <param name="tileset">
+/// The Tileset which provides the background Tile8x8 set.
+/// </param>
+/// <returns>
+/// The mapping data addresses in use order, without duplicated addresses.
+/// </returns>
+QVector<unsigned int> AssortedGraphicUtils::FindCompatibleMappingDataAddresses(LevelComponents::Tileset *tileset)
+{
+    QVector<unsigned int> result;
+    if (!tileset)
+    {
+        return result;
+    }
+
+    // the default background mapping data can always be used
+    result.push_back(WL4Constants::BGLayerDefaultPtr);
+
+    // add the mapping data of all the graphic entries built on the same Tile8x8 set
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> graphicEntries = GetAssortedGraphicsFromROM();
+    QByteArray tilesetTileData;
+    bool tilesetTileDataAvailable = GetTilesetBGTile8x8RawData(tileset, tilesetTileData);
+    for (int i = 0; i < graphicEntries.size(); ++i)
+    {
+        if (graphicEntries[i].MappingDataCompressType != RLE_mappingtype_0x20)
+        {
+            continue; // only the RLE compressed mapping data can be used by a layer
+        }
+        if (graphicEntries[i].TileDataType != Tile8x8_4bpp_no_comp_Tileset_text_bg)
+        {
+            continue; // only this Tile8x8 data type can be the background Tile8x8 set of a Tileset
+        }
+        if (!DoesTilesetUseTile8x8Set(tileset, graphicEntries[i].TileDataAddress, graphicEntries[i].TileDataSizeInByte,
+                                      graphicEntries[i].TileDataRAMOffsetNum, graphicEntries[i].tileData,
+                                      tilesetTileDataAvailable ? tilesetTileData : QByteArray()))
+        {
+            continue;
+        }
+        if (!result.contains(graphicEntries[i].MappingDataAddress))
+        {
+            result.push_back(graphicEntries[i].MappingDataAddress);
+        }
+    }
+
+    return result;
 }
 
 /// <summary>

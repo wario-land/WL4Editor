@@ -100,7 +100,7 @@ void GraphicManagerDialog::CreateAndAddDefaultEntry()
     testentry.MappingDataAddress = 0x5FA6D0;
     testentry.MappingDataSizeAfterCompressionInByte = 0xC10; // unit: Byte
     testentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
-    testentry.MappingDataName = "Layer 3";
+    testentry.MappingDataName = "vanilla background mapping data";
     testentry.PaletteAddress = 0x583C7C;
     for (unsigned int i = 0; i < 16; i++)
         testentry.PaletteSlotIDs.push_back(i); // all 16 palette slots
@@ -630,6 +630,28 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
 }
 
 /// <summary>
+/// Check if all the data of an entry is loaded from vanilla ROM addresses.
+/// </summary>
+/// <remarks>
+/// Such an entry only describes vanilla ROM data, none of its data is stored in a chunk generated
+/// by the editor. Removing or modifying it would either lose the only description of that vanilla
+/// data or need a new ROM data chunk for data the editor does not own, so the user is not allowed
+/// to do that. Use the duplicate button to get an editable copy of the entry instead.
+/// </remarks>
+/// <param name="entry">
+/// The entry to check.
+/// </param>
+/// <returns>
+/// Return true if all the data of the entry is loaded from vanilla ROM addresses.
+/// </returns>
+static bool IsVanillaReferencingEntry(const struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
+{
+    return (entry.TileDataAddress < WL4Constants::AvailableSpaceBeginningInROM)
+            && (entry.PaletteAddress < WL4Constants::AvailableSpaceBeginningInROM)
+            && (entry.MappingDataAddress < WL4Constants::AvailableSpaceBeginningInROM);
+}
+
+/// <summary>
 /// Check if an entry can be edited or deleted
 /// </summary>
 /// <param name="entryId">
@@ -640,6 +662,14 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
 /// </returns>
 bool GraphicManagerDialog::CheckEditability(int entryId)
 {
+    if (IsVanillaReferencingEntry(graphicEntries[entryId]))
+    {
+        QMessageBox::critical(this, tr("Error"), tr("Cannot delete or edit entry: ") + QString::number(entryId) + ",\n" +
+                              tr("all of its Tile8x8 data, palette data and mapping data are vanilla ROM data.\n"
+                                 "Duplicate it to get an editable copy of the entry."));
+        return false;
+    }
+
     unsigned int find_level = -1;
     unsigned int find_room = -1;
     unsigned int find_tileset = -1;
@@ -672,6 +702,83 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
         return;
     }
 
+    // Generate a graphic entry from a Room header layer mapping data when it is not in the list yet
+    auto addGraphicEntryFromRoomLayer = [this] (const LevelComponents::__RoomHeader &header,
+                                                unsigned int mappingDataAddr, const QString &layerName,
+                                                unsigned int levelId, unsigned int roomId, int roomIndex)
+    {
+        mappingDataAddr &= 0x7FF'FFFF;
+
+        // don't add an entry twice when multiple Rooms share one mapping data chunk
+        for (int n = 0; n < graphicEntries.size(); ++n)
+        {
+            if (graphicEntries[n].MappingDataAddress == mappingDataAddr)
+            {
+                return;
+            }
+        }
+
+        // not found, so we add a new entry
+        struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
+        LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
+        newentry.TileDataAddress = roomtileset->GetbgGFXptr();
+        newentry.TileDataSizeInByte = roomtileset->GetbgGFXlen();
+        int tilenum = newentry.TileDataSizeInByte / 32;
+        newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
+        newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+        newentry.TileDataName = "vanilla Tileset 0x" + QString::number(header.TilesetID, 16) + " bg tiles";
+        newentry.MappingDataAddress = mappingDataAddr;
+        newentry.MappingDataSizeAfterCompressionInByte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
+        newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
+        newentry.MappingDataName = layerName + " found in: " + QString::number(levelId) + "-" +
+                                   QString::number(roomId) + "-" + QString::number(roomIndex);
+        newentry.PaletteAddress = roomtileset->GetPaletteAddr();
+        for (unsigned int k = 0; k < 16; k++)
+            newentry.PaletteSlotIDs.push_back(k); // initially all 16 slots
+        newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
+        newentry.optionalGraphicHeight = 0;
+
+        AssortedGraphicUtils::ExtractDataFromEntryInfo_v2(newentry);
+
+        // Collect all distinct palette IDs actually used by the mapping data
+        QSet<unsigned int> usedPaletteIDs;
+        for (int m = 0; m < newentry.mappingData.size(); m++)
+        {
+            int tileid = (newentry.mappingData[m] & 0x3FF);
+            if (tileid != 0x3FF)
+            {
+                unsigned int palId = (newentry.mappingData[m] & 0xF000) >> 12;
+                usedPaletteIDs.insert(palId);
+            }
+        }
+
+        // Build PaletteSlotIDs from the actually-used palette IDs (sorted)
+        newentry.PaletteSlotIDs.clear();
+        for (unsigned int id : usedPaletteIDs)
+            newentry.PaletteSlotIDs.push_back(id);
+        std::sort(newentry.PaletteSlotIDs.begin(), newentry.PaletteSlotIDs.end());
+        if (newentry.PaletteSlotIDs.isEmpty())
+            newentry.PaletteSlotIDs.push_back(0); // fallback
+
+        // PaletteAddress stays at the tileset's palette base (palette 0).
+        // ExtractDataFromEntryInfo_v2 uses tmpPalId*32 offset for vanilla ROM
+        // addresses, so keeping the base address is correct.
+
+        // Clear unused palettes
+        for (int i = 0; i < 16; ++i)
+        {
+            if (!usedPaletteIDs.contains(i))
+            {
+                newentry.palettes[i].clear();
+                for (int j = 0; j < 16; ++j) // (re-)initialization
+                {
+                    newentry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+                }
+            }
+        }
+        graphicEntries.append(newentry);
+    };
+
     // loop through all the Rooms
     QVector<unsigned int> levelid_array = {0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5};
     QVector<unsigned int> roomid_array = {0, 2, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 4};
@@ -682,156 +789,19 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
         for (int j = 0; j < tmpLevel->GetRooms().size(); j++)
         {
             LevelComponents::__RoomHeader header = tmpLevel->GetRooms()[j]->GetRoomHeader();
-            // don't generate entry for mappingtype0x20 Layer0 atm, we need a new graphic tile type for them
-/*
+
+            // Layer 0 generated from Tile8x8 data uses the background Tile8x8 set of its Tileset,
+            // so its mapping data is an usable graphic like the Layer 3 mapping data
             if ((header.Layer0MappingType & 0x30) == 0x20)
             {
-                unsigned int cur_entry_num = graphicEntries.size();
-                bool dontadd = false;
-                if (cur_entry_num)
-                {
-                    for (int n = 0; n < cur_entry_num; n++)
-                    {
-                        if (graphicEntries[n].MappingDataAddress == (header.Layer0Data & 0x7FFFFFF))
-                        {
-                            dontadd = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!dontadd)
-                {
-                    // not found, so we add new entry
-                    struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
-                    LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
-                    newentry.TileDataAddress = roomtileset->GetbgGFXptr();
-                    newentry.TileDataSizeInByte = roomtileset->GetbgGFXlen();
-                    int tilenum = newentry.TileDataSizeInByte / 32;
-                    newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
-                    newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
-                    newentry.TileDataName = "vanilla Tileset 0x"+ QString::number(header.TilesetID, 16) +" bg tiles";
-                    newentry.MappingDataAddress = header.Layer0Data & 0x7FF'FFFF;
-                    newentry.MappingDataSizeAfterCompressionInByte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
-                    newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
-                    newentry.MappingDataName = "Layer 0 found in: " + QString::number(levelid_array[i]) + "-" +
-                                                QString::number(roomid_array[i]) + "-" + QString::number(j);
-                    newentry.PaletteAddress = roomtileset->GetPaletteAddr();
-                    for (unsigned int i = 0; i < 16; i++)
-                        newentry.PaletteSlotIDs.push_back(i); // initially all 16 slots
-                    newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
-                    newentry.optionalGraphicHeight = 0;
-
-                    AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(newentry);
-
-                    // reset a part of palette settings for bg graphic entries
-                    int usingpal = 15;
-                    for (int m = 0; m < newentry.mappingData.size(); m++)
-                    {
-                        int tileid = (newentry.mappingData[m] & 0x3FF);
-                        if (tileid != 0x3FF)
-                        {
-                            usingpal = (newentry.mappingData[m] & 0xF000) >> 12;
-                            // PaletteAddress stays at base; ExtractDataFromEntryInfo_v1 handles vanilla offset
-                            newentry.PaletteSlotIDs.clear();
-                            newentry.PaletteSlotIDs.push_back(usingpal);
-                            break;
-                        }
-                    }
-                    for (int i = 0; i < 16; ++i)
-                    {
-                        if (i != usingpal)
-                        {
-                            newentry.palettes[i].clear();
-                            for (int j = 0; j < 16; ++j) // (re-)initialization
-                            {
-                                newentry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
-                            }
-                        }
-                    }
-                    graphicEntries.append(newentry);
-                }
+                addGraphicEntryFromRoomLayer(header, header.Layer0Data, "Layer 0",
+                                             levelid_array[i], roomid_array[i], j);
             }
-*/
+
             if ((header.Layer3MappingType & 0x30) == 0x20)
             {
-                unsigned int cur_entry_num = graphicEntries.size();
-                bool dontadd = false;
-                if (cur_entry_num)
-                {
-                    for (int n = 0; n < cur_entry_num; n++)
-                    {
-                        if (graphicEntries[n].MappingDataAddress == (header.Layer3Data & 0x7FFFFFF))
-                        {
-                            dontadd = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!dontadd)
-                {
-                    // not found, so we add new entry
-                    struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
-                    LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
-                    newentry.TileDataAddress = roomtileset->GetbgGFXptr();
-                    newentry.TileDataSizeInByte = roomtileset->GetbgGFXlen();
-                    int tilenum = newentry.TileDataSizeInByte / 32;
-                    newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
-                    newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
-                    newentry.TileDataName = "vanilla Tileset 0x"+ QString::number(header.TilesetID, 16) +" bg tiles";
-                    newentry.MappingDataAddress = header.Layer3Data & 0x7FF'FFFF;
-                    newentry.MappingDataSizeAfterCompressionInByte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
-                    newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
-                    newentry.MappingDataName = "Layer 3 found in: " + QString::number(levelid_array[i]) + "-" +
-                                                QString::number(roomid_array[i]) + "-" + QString::number(j);
-                    newentry.PaletteAddress = roomtileset->GetPaletteAddr();
-                    for (unsigned int i = 0; i < 16; i++)
-                        newentry.PaletteSlotIDs.push_back(i); // initially all 16 slots
-                    newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
-                    newentry.optionalGraphicHeight = 0;
-
-                    AssortedGraphicUtils::ExtractDataFromEntryInfo_v2(newentry);
-
-                    // Collect all distinct palette IDs actually used by the mapping data
-                    QSet<unsigned int> usedPaletteIDs;
-                    for (int m = 0; m < newentry.mappingData.size(); m++)
-                    {
-                        int tileid = (newentry.mappingData[m] & 0x3FF);
-                        if (tileid != 0x3FF)
-                        {
-                            unsigned int palId = (newentry.mappingData[m] & 0xF000) >> 12;
-                            usedPaletteIDs.insert(palId);
-                        }
-                    }
-
-                    // Build PaletteSlotIDs from the actually-used palette IDs (sorted)
-                    newentry.PaletteSlotIDs.clear();
-                    for (unsigned int id : usedPaletteIDs)
-                        newentry.PaletteSlotIDs.push_back(id);
-                    std::sort(newentry.PaletteSlotIDs.begin(), newentry.PaletteSlotIDs.end());
-                    if (newentry.PaletteSlotIDs.isEmpty())
-                        newentry.PaletteSlotIDs.push_back(0); // fallback
-
-                    // PaletteAddress stays at the tileset's palette base (palette 0).
-                    // ExtractDataFromEntryInfo_v1 uses tmpPalId*32 offset for vanilla ROM
-                    // addresses, so keeping the base address is correct.
-
-                    // Clear unused palettes
-                    for (int i = 0; i < 16; ++i)
-                    {
-                        if (!usedPaletteIDs.contains(i))
-                        {
-                            newentry.palettes[i].clear();
-                            for (int j = 0; j < 16; ++j) // (re-)initialization
-                            {
-                                newentry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
-                            }
-                        }
-                    }
-                    graphicEntries.append(newentry);
-                }
-
+                addGraphicEntryFromRoomLayer(header, header.Layer3Data, "Layer 3",
+                                             levelid_array[i], roomid_array[i], j);
             }
         }
 
@@ -1827,6 +1797,15 @@ void GraphicManagerDialog::on_pushButton_duplicateCurrentEntry_clicked()
 
     // Set a new mapping data name to distinguish the new entry from the source entry
     newEntry.MappingDataName = GenerateUniqueMappingDataName(newEntry.MappingDataName);
+
+    // Detach all the 3 data parts from the ROM addresses they were loaded from, so the saving
+    // logic writes them as new chunks of the duplicated entry. The duplicate then owns its Tile8x8
+    // data, palette data and mapping data, so it can be edited without touching the data of the
+    // source entry (and without modifying the vanilla ROM data the source entry references).
+    newEntry.TileDataAddress = 0;
+    newEntry.PaletteAddress = 0;
+    newEntry.MappingDataAddress = 0;
+    newEntry.MappingDataSizeAfterCompressionInByte = 0; // the save logic should set this
 
     // Insert the new entry right below the source entry, all the entries after the source
     // entry are shifted down by one position

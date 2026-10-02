@@ -1,9 +1,12 @@
-﻿#include "RoomConfigDialog.h"
+#include "RoomConfigDialog.h"
 #include "ui_RoomConfigDialog.h"
 
 #include <cstring>
 #include <QMessageBox>
 #include "AssortedGraphicUtils.h"
+#include "WL4EditorWindow.h"
+
+extern WL4EditorWindow *singleton;
 
 // constexpr declarations for the initializers in the header
 constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
@@ -43,6 +46,20 @@ unsigned short *RoomConfigDialog::ChangeLayerDimensions(int newWidth, int newHei
 }
 
 /// <summary>
+/// Check if a Layer 0 mapping type parameter makes Layer 0 use a Tile8x8 mapping data.
+/// </summary>
+/// <param name="layer0MappingTypeParam">
+/// The Layer 0 mapping type parameter value.
+/// </param>
+/// <returns>
+/// Return true if Layer 0 uses a Tile8x8 mapping data (mapping type 0x20 to 0x2F).
+/// </returns>
+bool RoomConfigDialog::IsLayer0Tile8x8MappingType(int layer0MappingTypeParam)
+{
+    return (layer0MappingTypeParam >= LevelComponents::LayerTile8x8) && (layer0MappingTypeParam <= 0x2F);
+}
+
+/// <summary>
 /// Construct the instance of the RoomConfigDialog.
 /// </summary>
 /// <param name="parent">
@@ -63,7 +80,7 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->ComboBox_LayerPriority->setCurrentIndex(LayerPriorityID);
     ui->ComboBox_AlphaBlendAttribute->setCurrentIndex(qMax((CurrentRoomParams->LayerPriorityAndAlphaAttr - 4), 0) >> 2);  // == (LayerPriorityAndAlphaAttr - 8) >> 2 + 1
     ui->spinBox_Layer0MappingType->setValue(CurrentRoomParams->Layer0MappingTypeParam);
-    ui->ComboBox_Layer0Picker->setEnabled(CurrentRoomParams->Layer0MappingTypeParam >= 0x20);
+    ui->ComboBox_Layer0Picker->setEnabled(false); // enabled again after the picker is filled below
     ui->spinBox_Layer0Width->setValue(CurrentRoomParams->Layer0Width);
     ui->spinBox_Layer0Height->setValue(CurrentRoomParams->Layer0Height);
     ui->SpinBox_RoomWidth->setValue(CurrentRoomParams->RoomWidth);
@@ -75,53 +92,26 @@ RoomConfigDialog::RoomConfigDialog(QWidget *parent, DialogParams::RoomConfigPara
     ui->spinBox_Water->setValue(CurrentRoomParams->Water);
     ui->spinBox_BgmVolume->setValue(CurrentRoomParams->BGMVolume);
 
-    // Initialize the items for the BG selection combobox
-    // The hardcode layer 3 pointers have been added into the combobox when setting Tileset combobox id
-    // Add the current layer 3 pointer if it is not record and hardcode in the editor
+    // Initialize the items for the BG selection combobox and the Layer 0 selection combobox.
+    // Both pickers share one list of the mapping data usable by the background Tile8x8 set of the
+    // current Tileset, because a mapping data built on that Tile8x8 set works for Layer 0 and
+    // Layer 3 alike. The current layer data pointers are kept selectable even when the list does
+    // not contain them.
+    // The data pointer of the live Layer instance is the pointer the Room uses, the Layer0Data and
+    // Layer3Data fields of the room header are only refreshed when the Room is loaded or reset, so
+    // the Layer instance has to be looked up here. A Layer 0 data pointer is only meaningful when
+    // Layer 0 uses a Tile8x8 mapping data, a Map16 data pointer cannot be used by the picker.
+    LevelComponents::Room *currentRoom = singleton->GetCurrentLevel()->GetRooms()[CurrentRoomParams->roomID];
+    CurrentBGLayerPtr = (unsigned int) CurrentRoomParams->BackgroundLayerDataPtr;
+    CurrentLayer0Ptr = (IsLayer0Tile8x8MappingType(CurrentRoomParams->Layer0MappingTypeParam) && currentRoom)
+            ? (unsigned int) currentRoom->GetLayer(0)->GetDataPtr() : 0;
     ResetBGLayerPickerComboBox(CurrentRoomParams->CurrentTilesetIndex);
-    bool CurrentBGSelectionAvailable = false;
-    for (unsigned int i = 0; i < BGLayerdataPtrs.size(); ++i)
-    {
-        if (CurrentRoomParams->BackgroundLayerDataPtr == BGLayerdataPtrs[i])
-        {
-            CurrentBGSelectionAvailable = true;
-            ui->ComboBox_BGLayerPicker->setCurrentIndex(i);
-            break;
-        }
-    }
-    if (!CurrentBGSelectionAvailable)
-    {
-        ui->ComboBox_BGLayerPicker->setCurrentIndex(ui->ComboBox_BGLayerPicker->count() - 1);
-    }
-
-    //  Initialize the items for the Layer 0 selection combobox
-    ui->ComboBox_Layer0Picker->addItem(
-                QString::number(WL4Constants::BGLayerDefaultPtr, 16).toUpper());
-    unsigned int bgtiledataaddr = ROMUtils::singletonTilesets[CurrentRoomParams->CurrentTilesetIndex]->GetbgGFXptr();
-    if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x21)
-    {
-        ui->ComboBox_Layer0Picker->addItem(
-                    QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
-    }
-    else if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x45)
-    {
-        ui->ComboBox_Layer0Picker->addItem(
-            QString::number(WL4Constants::FieryCavernDustyLayer0Ptr, 16).toUpper());
-    }
-    if(CurrentRoomParams->Layer0DataPtr &&
-            CurrentRoomParams->Layer0DataPtr != WL4Constants::ToxicLandfillDustyLayer0Ptr &&
-            CurrentRoomParams->Layer0DataPtr != WL4Constants::FieryCavernDustyLayer0Ptr)
-    {
-        ui->ComboBox_Layer0Picker->addItem(
-            QString::number(CurrentRoomParams->Layer0DataPtr, 16).toUpper());
-    }
-    ui->ComboBox_Layer0Picker->setCurrentIndex(ui->ComboBox_Layer0Picker->count() - 1); // use the last one in the list for now
+    UpdateLayer0PickerAvailability(CurrentRoomParams->CurrentTilesetIndex);
 
     // Initialize the graphic view layers
     ui->graphicsView->infoLabel = ui->graphicViewDetailsLabel;
     currentTileset = ROMUtils::singletonTilesets[CurrentRoomParams->CurrentTilesetIndex];
-    int L0ptr = ((ui->spinBox_Layer0MappingType->value() & 0x30) == LevelComponents::LayerTile8x8) ? CurrentRoomParams->Layer0DataPtr : 0;
-    ;
+    int L0ptr = IsLayer0Tile8x8MappingType(ui->spinBox_Layer0MappingType->value()) ? CurrentRoomParams->Layer0DataPtr : 0;
     ui->graphicsView->UpdateGraphicsItems(currentTileset, CurrentRoomParams->BackgroundLayerDataPtr, L0ptr);
 
     ComboBoxInitialized = true;
@@ -156,13 +146,24 @@ DialogParams::RoomConfigParams *RoomConfigDialog::GetConfigParams(DialogParams::
         configParams->Layer0Height = ui->spinBox_Layer0Height->value();
         configParams->Layer0DataPtr = 0;
     }
-    else if ((configParams->Layer0MappingTypeParam & 0x30) == LevelComponents::LayerTile8x8)
+    else if (IsLayer0Tile8x8MappingType(configParams->Layer0MappingTypeParam))
     {
         configParams->Layer0Width = configParams->Layer0Height = 0;
-        configParams->Layer0DataPtr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+        configParams->Layer0DataPtr = ui->ComboBox_Layer0Picker->currentData().toUInt();
+        if (!configParams->Layer0DataPtr)
+        {
+            // The picker cannot show any layer data, which happens when the current one is
+            // unknown, so keep the data pointer the Room currently uses
+            LevelComponents::Room *currentRoom = singleton->GetCurrentLevel()->GetRooms()[prevRoomParams->roomID];
+            if (currentRoom && (currentRoom->GetLayer(0)->GetMappingType() == LevelComponents::LayerTile8x8))
+            {
+                configParams->Layer0DataPtr = (int) currentRoom->GetLayer(0)->GetDataPtr();
+            }
+        }
     }
     else
     {
+        // Layer 0 mapping types out of the 0x20 to 0x2F range use no mapping data
         configParams->Layer0DataPtr = configParams->Layer0Width = configParams->Layer0Height = 0;
     }
 
@@ -173,7 +174,7 @@ DialogParams::RoomConfigParams *RoomConfigDialog::GetConfigParams(DialogParams::
     configParams->BGLayerScrollFlag = ui->spinBox_BGLayerScrollingFlag->value();
     if (configParams->BackgroundLayerEnable)
     {
-        configParams->BackgroundLayerDataPtr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
+        configParams->BackgroundLayerDataPtr = ui->ComboBox_BGLayerPicker->currentData().toUInt();
     }
     else
     {
@@ -250,38 +251,35 @@ void RoomConfigDialog::on_ComboBox_TilesetID_currentIndexChanged(int index)
         // Update the graphic view
         currentTileset = ROMUtils::singletonTilesets[index];
 
-        // Update the available BG layers to choose from
+        // Update the available BG layers and Layer 0 data to choose from
         ResetBGLayerPickerComboBox(index);
 
         // Update the available FG layers to choose from
-        if(index == 0x21 && ui->spinBox_Layer0MappingType->value() >= 0x20)
-        {
-            ui->ComboBox_Layer0Picker->setEnabled(true);
-        }
-        else
-        {
-            ui->ComboBox_Layer0Picker->setEnabled(false);
-        }
+        UpdateLayer0PickerAvailability(index);
 
-        // Extra UI changes for Toxic Landfill dust Layer0
-        unsigned int bgtiledataaddr = ROMUtils::singletonTilesets[index]->GetbgGFXptr();
-        ui->ComboBox_Layer0Picker->clear();
-        if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x21)
-        {
-            ui->ComboBox_Layer0Picker->addItem(
-                        QString::number(WL4Constants::ToxicLandfillDustyLayer0Ptr, 16).toUpper());
-        }
-        else if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x45)
-        {
-            ui->ComboBox_Layer0Picker->addItem(
-                QString::number(WL4Constants::FieryCavernDustyLayer0Ptr, 16).toUpper());
-        }
-        int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
-        int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+        int BGptr = ui->ComboBox_BGLayerPicker->currentData().toUInt();
+        int L0ptr = ui->ComboBox_Layer0Picker->currentData().toUInt();
         if ((ui->spinBox_Layer0MappingType->value() & 0x20) == 0)
             L0ptr = 0;
         ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
     }
+}
+
+/// <summary>
+/// Set whether "Use existing Layer 0" can be chosen with the current Tileset and Layer 0 mapping type.
+/// </summary>
+/// <param name="tilesetId">
+/// The id of the current Tileset.
+/// </param>
+void RoomConfigDialog::UpdateLayer0PickerAvailability(int tilesetId)
+{
+    (void) tilesetId;
+    // Layer 0 needs a Tile8x8 mapping data, and the picker lists the mapping data of the Tileset
+    // background Tile8x8 set, so any mapping data of the list can be chosen when the current
+    // Layer 0 mapping type is a Tile8x8 one
+    bool usable = IsLayer0Tile8x8MappingType(ui->spinBox_Layer0MappingType->value())
+            && ui->ComboBox_Layer0Picker->count();
+    ui->ComboBox_Layer0Picker->setEnabled(usable);
 }
 
 /// <summary>
@@ -300,8 +298,12 @@ void RoomConfigDialog::on_ComboBox_BGLayerPicker_currentIndexChanged(int index)
     (void) index;
     if (ComboBoxInitialized)
     {
-        int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
-        int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+        if (ui->ComboBox_BGLayerPicker->currentIndex() >= 0)
+        {
+            CurrentBGLayerPtr = ui->ComboBox_BGLayerPicker->currentData().toUInt();
+        }
+        int BGptr = ui->ComboBox_BGLayerPicker->currentData().toUInt();
+        int L0ptr = ui->ComboBox_Layer0Picker->currentData().toUInt();
         if ((ui->spinBox_Layer0MappingType->value() & 0x30) == LevelComponents::LayerMap16)
             L0ptr = 0;
         ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
@@ -316,8 +318,12 @@ void RoomConfigDialog::on_ComboBox_Layer0Picker_currentIndexChanged(int index)
     (void) index;
     if (ComboBoxInitialized)
     {
-        int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
-        int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+        if (ui->ComboBox_Layer0Picker->currentIndex() >= 0)
+        {
+            CurrentLayer0Ptr = ui->ComboBox_Layer0Picker->currentData().toUInt();
+        }
+        int BGptr = ui->ComboBox_BGLayerPicker->currentData().toUInt();
+        int L0ptr = ui->ComboBox_Layer0Picker->currentData().toUInt();
         if ((ui->spinBox_Layer0MappingType->value() & 0x30) == LevelComponents::LayerMap16)
             L0ptr = 0;
         ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
@@ -515,8 +521,8 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
     case 0x22: ui->label_CurLayer0MappingType->setText("Tile8x8 & autoscroll"); break;
     }
 
-    int BGptr = ui->ComboBox_BGLayerPicker->currentText().toUInt(nullptr, 16);
-    int L0ptr = ui->ComboBox_Layer0Picker->currentText().toUInt(nullptr, 16);
+    int BGptr = ui->ComboBox_BGLayerPicker->currentData().toUInt();
+    int L0ptr = ui->ComboBox_Layer0Picker->currentData().toUInt();
     if (arg1 >= LevelComponents::LayerMap16) // Enable L0
     {
         ui->CheckBox_Layer0Alpha->setEnabled(true);
@@ -526,20 +532,26 @@ void RoomConfigDialog::on_spinBox_Layer0MappingType_valueChanged(int arg1)
             ui->spinBox_Layer0Height->setEnabled(true);
             ui->spinBox_Layer0Width->setValue(ui->SpinBox_RoomWidth->value());
             ui->spinBox_Layer0Height->setValue(ui->SpinBox_RoomHeight->value());
-            ui->ComboBox_Layer0Picker->setEnabled(false);
-            ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, 0);
-        } else if (arg1 >= LevelComponents::LayerTile8x8) { //Map8
+        }
+        else if (IsLayer0Tile8x8MappingType(arg1)) // Map8
+        {
             ui->spinBox_Layer0Width->setEnabled(false);
             ui->spinBox_Layer0Height->setEnabled(false);
-            ui->ComboBox_Layer0Picker->setEnabled(true);
-            ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, L0ptr);
         }
+        else
+        {
+            // Layer 0 mapping types out of the 0x20 to 0x2F range cannot use a mapping data
+            ui->spinBox_Layer0Width->setEnabled(false);
+            ui->spinBox_Layer0Height->setEnabled(false);
+        }
+        UpdateLayer0PickerAvailability(ui->ComboBox_TilesetID->currentIndex());
+        ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, IsLayer0Tile8x8MappingType(arg1) ? L0ptr : 0);
     }
     else // Disable L0
     {
         ui->spinBox_Layer0Width->setEnabled(false);
         ui->spinBox_Layer0Height->setEnabled(false);
-        ui->ComboBox_Layer0Picker->setEnabled(false);
+        UpdateLayer0PickerAvailability(ui->ComboBox_TilesetID->currentIndex());
         ui->graphicsView->UpdateGraphicsItems(currentTileset, BGptr, 0);
         ui->CheckBox_Layer0Alpha->setChecked(false);
         ui->CheckBox_Layer0Alpha->setEnabled(false);
@@ -571,16 +583,27 @@ void RoomConfigDialog::on_spinBox_RasterType_valueChanged(int arg1)
 }
 
 /// <summary>
-/// Reset ComboBox_BGLayerPicker with available items.
+/// Collect the mapping data addresses usable by the background Tile8x8 set of a Tileset.
 /// </summary>
+/// <remarks>
+/// A mapping data built on the background Tile8x8 set of the Tileset draws the same tiles for
+/// Layer 0 and Layer 3, so both "Use existing Layer 0" and "Use existing Background Layer" list the
+/// same addresses. Graphic entries sharing one Tile8x8 set (the duplicated entries made by the
+/// Graphic Manager for example) all contribute their own mapping data address, since their Tile8x8
+/// data are several copies in the ROM which must not be merged.
+/// </remarks>
 /// <param name="newTilesetId">
-/// The tileset id to generate items.
+/// The tileset id which provides the background Tile8x8 set.
 /// </param>
-void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
+/// <returns>
+/// The mapping data addresses in use order, the addresses of the vanilla background mapping data
+/// included.
+/// </returns>
+QVector<unsigned int> RoomConfigDialog::FindLayerMappingDataAddresses(int newTilesetId)
 {
-    // init
-    unsigned int bgtiledataAddr = ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr();
     BGLayerdataPtrs.clear();
+
+    unsigned int bgtiledataAddr = ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr();
 
     // go through all the vanilla background tile data pointer and see if the current Tileset is using several of them
     // push all the available background mapping data pointer into the BGLayerdataPtrsData[] as long as the bg tile data pointer matches
@@ -612,31 +635,16 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
         }
     }
 
-    // another case: it is using some custom bg tile data
-    if (bgtiledataAddr >= WL4Constants::AvailableSpaceBeginningInROM)
+    // graphic entries: a Tile8x8 set can be shared by several entries, which have different ROM
+    // data pointers but different mapping data, so all of their mapping data can be listed here
+    QVector<unsigned int> sharedMappingDataPtrs =
+            AssortedGraphicUtils::FindCompatibleMappingDataAddresses(ROMUtils::singletonTilesets[newTilesetId]);
+    for (unsigned int addr : sharedMappingDataPtrs)
     {
-        QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> graphicEntries = AssortedGraphicUtils::GetAssortedGraphicsFromROM();
-
-        // some bug case should never happen
-        if (!graphicEntries.size())
+        std::vector<int>::iterator it = std::find(BGLayerdataPtrs.begin(), BGLayerdataPtrs.end(), (int) addr);
+        if(it == BGLayerdataPtrs.end())
         {
-            QMessageBox::information(this, tr("Error"), tr("Unknown BG tile data pointer!"));
-            return;
-        }
-
-        // search through graphic entries
-        for (int i = 0; i < graphicEntries.size(); i++)
-        {
-            if (bgtiledataAddr == graphicEntries[i].TileDataAddress &&
-                    graphicEntries[i].TileDataType == AssortedGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg &&
-                    graphicEntries[i].MappingDataCompressType == AssortedGraphicUtils::RLE_mappingtype_0x20)
-            {
-                std::vector<int>::iterator it = std::find(BGLayerdataPtrs.begin(), BGLayerdataPtrs.end(), graphicEntries[i].MappingDataAddress);
-                if(it == BGLayerdataPtrs.end())
-                {
-                    BGLayerdataPtrs.push_back(graphicEntries[i].MappingDataAddress);
-                }
-            }
+            BGLayerdataPtrs.push_back((int) addr);
         }
     }
 
@@ -647,22 +655,75 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
         BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
     }
 
-    // update ComboBox_BGLayerPicker
-    ui->ComboBox_BGLayerPicker->clear();
-    QStringList elements;
-    if (BGLayerdataPtrs.size())
+    QVector<unsigned int> result;
+    for (auto item : BGLayerdataPtrs)
     {
-        for (auto item : BGLayerdataPtrs)
-        {
-            elements << QString::number(item, 16).toUpper();
-        }
+        result.push_back((unsigned int) item);
     }
-    ui->ComboBox_BGLayerPicker->clear();
-    ui->ComboBox_BGLayerPicker->addItems(elements);
+    return result;
+}
 
-    // TODO: deal with layer 0 edge cases
-    // when Layer 0 mnapping type is 0x20, it uses the bg tiles too
-    // Initialize the Tileset list which contains map8x8 layer 0
+/// <summary>
+/// Reset a layer data picker with the available mapping data addresses.
+/// </summary>
+/// <param name="picker">
+/// The picker to reset.
+/// </param>
+/// <param name="mappingDataAddresses">
+/// The addresses to list in the picker.
+/// </param>
+/// <param name="currentAddress">
+/// The address the picker has to select, which is added into the list when the list does not
+/// contain it.
+/// </param>
+void RoomConfigDialog::PopulateLayerPickerComboBox(QComboBox *picker, const QVector<unsigned int> &mappingDataAddresses,
+                                                   unsigned int currentAddress)
+{
+    picker->clear();
+    for (unsigned int addr : mappingDataAddresses)
+    {
+        picker->addItem(QString::number(addr, 16).toUpper(), addr);
+    }
+    if (currentAddress && !mappingDataAddresses.contains(currentAddress))
+    {
+        // keep the layer data the Room currently uses selectable
+        picker->addItem(QString::number(currentAddress, 16).toUpper(), currentAddress);
+    }
+
+    int selectionId = picker->findData(currentAddress);
+    if (selectionId < 0)
+    {
+        // there is no layer data of the Room in the list, so select the first usable one
+        selectionId = 0;
+    }
+    picker->setCurrentIndex(selectionId);
+}
+
+/// <summary>
+/// Reset ComboBox_BGLayerPicker and ComboBox_Layer0Picker with available items.
+/// </summary>
+/// <param name="newTilesetId">
+/// The tileset id to generate items.
+/// </param>
+void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
+{
+    QVector<unsigned int> mappingDataAddresses = FindLayerMappingDataAddresses(newTilesetId);
+
+    // update ComboBox_BGLayerPicker
+    PopulateLayerPickerComboBox(ui->ComboBox_BGLayerPicker, mappingDataAddresses, CurrentBGLayerPtr);
+
+    // update ComboBox_Layer0Picker, the vanilla dusty Layer 0 data are usable by Layer 0 only
+    QVector<unsigned int> layer0MappingDataAddresses = mappingDataAddresses;
+    unsigned int bgtiledataaddr = ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr();
+    if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x21)
+    {
+        layer0MappingDataAddresses.push_back(WL4Constants::ToxicLandfillDustyLayer0Ptr);
+    }
+    else if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x45)
+    {
+        layer0MappingDataAddresses.push_back(WL4Constants::FieryCavernDustyLayer0Ptr);
+    }
+    PopulateLayerPickerComboBox(ui->ComboBox_Layer0Picker, layer0MappingDataAddresses, CurrentLayer0Ptr);
 }
 
 void RoomConfigDialog::on_spinBox_Layer2MappingType_valueChanged(int arg1)
