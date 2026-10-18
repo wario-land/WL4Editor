@@ -235,7 +235,9 @@ QPixmap GraphicManagerDialog::RenderAllTiles(AssortedGraphicUtils::AssortedGraph
                 // find a palette has non-black color(s) in it
                 for (int i = 0; i < entry.palettes->size(); i++)
                 {
-                    for(int j = 1; j < entry.palettes[i].size(); j++) // skip the first color
+                    // the color 0 is transparent when a tile is drawn, so only the colors 1-15 can
+                    // make a palette usable for the preview
+                    for(int j = 1; j < entry.palettes[i].size(); j++)
                     {
                         if (entry.palettes[i][j] != QColor(0, 0, 0, 0xFF).rgba())
                         {

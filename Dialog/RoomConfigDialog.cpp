@@ -136,6 +136,12 @@ DialogParams::RoomConfigParams *RoomConfigDialog::GetConfigParams(DialogParams::
     DialogParams::RoomConfigParams *configParams = new DialogParams::RoomConfigParams();
     configParams->roomID = prevRoomParams->roomID;
 
+    // The dialog does not edit the EntitySet of the Room. The EntitySet Id is derived from the doors
+    // of the Room (see Level::InitLevelEntitySet) and the default constructor of RoomConfigParams
+    // clears it, so it has to be carried over here, otherwise applying the parameters would reset
+    // the EntitySet Id of the Room to 0 (RoomConfigReset applies it when the 2 values differ).
+    configParams->CurrentEntitySetID = prevRoomParams->CurrentEntitySetID;
+
     // Get all the Room Configuration data
     configParams->CurrentTilesetIndex = ui->ComboBox_TilesetID->currentIndex();
     configParams->Layer0Alpha = ui->CheckBox_Layer0Alpha->isChecked();

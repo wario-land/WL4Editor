@@ -209,7 +209,7 @@ QPixmap WallPaintEditorDialog::GetWallPaint(int passage_Id, int local_level_id, 
         {
             LevelComponents::Tile8x8 *tmptile = new LevelComponents::Tile8x8(gfxdata + r * 32 + c * 1024 + gfx_offset, palettes);
             tmptile->SetPaletteIndex(palette_id);
-            // The wall paint palettes use the palette color 0 as a real color
+            // Show the raw palette data of the wall paint graphics, the color 0 included
             tmptile->DrawTile(&pixmap, r * 8, c * 8, true);
             delete tmptile;
         }

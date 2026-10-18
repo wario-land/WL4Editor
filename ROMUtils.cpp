@@ -1479,10 +1479,11 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     /// Load a palette, 16 colors, from a pointer.
     /// </summary>
     /// <remarks>
-    /// The palette color 0 is a transparent placeholder for the Tilesets and the graphics which
-    /// treat it as a transparency, so it can be replaced by a transparent color while loading. The
-    /// Tileset palettes and the palettes which use the color 0 as real data (the wall paint palettes
-    /// for example) pass true for notdisablefirstcolor and keep the loaded color.
+    /// The palette color 0 is transparent when the GBA hardware draws a tile pixel, but the stored
+    /// value is still real palette data (the color 0 of BG palette 0 is the backdrop color), so the
+    /// Tileset palettes and the palettes shown as raw color data are loaded with
+    /// notdisablefirstcolor = true and keep the loaded color. The palettes which have no data for the
+    /// color 0 at all (the Entity palettes for example) can replace it by a transparent color.
     /// </remarks>
     /// <param name="palette">
     /// Pointer of palette instance provided for palette loading.

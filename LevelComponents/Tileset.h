@@ -17,9 +17,10 @@ namespace LevelComponents
         int tilesetPtr;
         QVector<Tile8x8 *> tile8x8array;
         QVector<TileMap16 *> map16array;
-        // The palette color 0 keeps the color loaded from the ROM, it is never forced to a specific
-        // value here. Tile8x8::DrawTile decides at draw time whether the color is used, only the
-        // background Tile8x8 layer (layer 3) and the wall paint graphics draw it.
+        // All the 16 colors of the 16 palettes are real data and are loaded, edited and saved as
+        // they are. The GBA hardware draws the color 0 of every BG and OBJ palette as transparent
+        // (see GBATEK, "LCD Color Palettes"), so Tile8x8::DrawTile replaces the color 0 by a
+        // transparent color while drawing unless a caller asks for the stored color.
         QVector<QRgb> palettes[16];
         Tile8x8 *blankTile = nullptr;
         int UniversalSpritesTilesPalettePtr = 0;

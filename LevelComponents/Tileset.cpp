@@ -310,7 +310,7 @@ namespace LevelComponents
     /// The id of the palette used to render the Tile8x8s.
     /// </param>
     /// <param name="color0Opaque">
-    /// Draw the palette color 0 with the color stored in the palette instead of a transparent color.
+    /// Draw the color stored in the palette color 0 instead of a transparent color.
     /// </param>
     QPixmap Tileset::RenderAllTile8x8(int paletteId, bool color0Opaque)
     {
@@ -338,7 +338,7 @@ namespace LevelComponents
     /// The number of columns to divide the graphics into.
     /// </param>
     /// <param name="color0Opaque">
-    /// Draw the palette color 0 with the color stored in the palette instead of a transparent color.
+    /// Draw the color stored in the palette color 0 instead of a transparent color.
     /// </param>
     /// <returns>
     /// The tileset rendered at a pixmap.
@@ -374,7 +374,7 @@ namespace LevelComponents
     /// the id of palette to render Tile8x8.
     /// </param>
     /// <param name="color0Opaque">
-    /// Draw the palette color 0 with the color stored in the palette instead of a transparent color.
+    /// Draw the color stored in the palette color 0 instead of a transparent color.
     /// </param>
     /// <returns>
     /// The Tile8x8 rendered at a pixmap.
@@ -423,7 +423,9 @@ namespace LevelComponents
     /// </summary>
     /// <remarks>
     /// All the 16 colors of a palette are saved, the palette color 0 included, so the color loaded
-    /// from the ROM is never destroyed by an unrelated Tileset edit.
+    /// from the ROM is never destroyed by an unrelated Tileset edit. The color 0 is transparent when
+    /// the hardware draws a tile pixel, but it is still real palette data, and the color 0 of BG
+    /// palette 0 is the backdrop color used where no BG or OBJ dot covers the screen.
     /// </remarks>
     void Tileset::ReGeneratePaletteData()
     {

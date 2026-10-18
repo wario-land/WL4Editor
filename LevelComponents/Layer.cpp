@@ -141,9 +141,10 @@ namespace LevelComponents
     /// The tileset defining the tiles that will be drawn on the layer graphics.
     /// </param>
     /// <param name="color0Opaque">
-    /// Draw the palette color 0 with the color stored in the palette instead of a transparent color.
-    /// Only the background Tile8x8 layer uses this, since the palette color 0 of the background
-    /// graphics is a real color in the game.
+    /// Draw the color stored in the palette color 0 instead of a transparent color. The GBA hardware
+    /// draws the palette color 0 as transparent, so a stored color is only visible as the backdrop
+    /// color where nothing covers the screen; the background Tile8x8 layer (layer 3) is the
+    /// bottom-most layer of a Room, so drawing its color 0 approximates that backdrop color.
     /// </param>
     /// <return>
     /// A QPixmap of the fully rendered layer, including transparency.
