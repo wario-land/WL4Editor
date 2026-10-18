@@ -723,11 +723,13 @@ void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
     unsigned int bgtiledataaddr = ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr();
     if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x21)
     {
-        layer0MappingDataAddresses.push_back(WL4Constants::ToxicLandfillDustyLayer0Ptr);
+        if (!layer0MappingDataAddresses.contains(WL4Constants::ToxicLandfillDustyLayer0Ptr))
+            layer0MappingDataAddresses.push_back(WL4Constants::ToxicLandfillDustyLayer0Ptr);
     }
     else if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x45)
     {
-        layer0MappingDataAddresses.push_back(WL4Constants::FieryCavernDustyLayer0Ptr);
+        if (!layer0MappingDataAddresses.contains(WL4Constants::FieryCavernDustyLayer0Ptr))
+            layer0MappingDataAddresses.push_back(WL4Constants::FieryCavernDustyLayer0Ptr);
     }
     PopulateLayerPickerComboBox(ui->ComboBox_Layer0Picker, layer0MappingDataAddresses, CurrentLayer0Ptr);
 }
