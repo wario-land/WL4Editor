@@ -1,4 +1,4 @@
-﻿#include "ROMUtils.h"
+#include "ROMUtils.h"
 #include "Compress.h"
 #include "Operation.h"
 #include <QFile>
@@ -1478,19 +1478,28 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     /// <summary>
     /// Load a palette, 16 colors, from a pointer.
     /// </summary>
+    /// <remarks>
+    /// The palette color 0 is transparent when the GBA hardware draws a tile pixel, but the stored
+    /// value is still real palette data (the color 0 of BG palette 0 is the backdrop color), so the
+    /// Tileset palettes and the palettes shown as raw color data are loaded with
+    /// notdisablefirstcolor = true and keep the loaded color. The palettes which have no data for the
+    /// color 0 at all (the Entity palettes for example) can replace it by a transparent color.
+    /// </remarks>
     /// <param name="palette">
     /// Pointer of palette instance provided for palette loading.
     /// </param>
     /// <param name="dataptr">
     /// data pointer which keeps RGB55 palette data.
     /// </param>
+    /// <param name="notdisablefirstcolor">
+    /// Load the color 0 from the data instead of using a transparent color.
+    /// </param>
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor)
     {
-        // First color is transparent
         int k = 1;
         if(!notdisablefirstcolor)
         {
-            palette->push_back(0);
+            palette->push_back(0); // transparent placeholder
         } else {
             k = 0;
         }

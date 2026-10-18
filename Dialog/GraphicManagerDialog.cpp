@@ -1,4 +1,4 @@
-﻿#include "GraphicManagerDialog.h"
+#include "GraphicManagerDialog.h"
 #include "ui_GraphicManagerDialog.h"
 
 #include <QMessageBox>
@@ -56,6 +56,8 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
     ui->pushButton_ImportPaletteData->setEnabled(false);
     ui->pushButton_ImportTile8x8Data->setEnabled(false);
     ui->pushButton_ImportGraphic->setEnabled(false);
+    ui->pushButton_duplicateCurrentEntry->setEnabled(false);
+    ui->pushButton_SwapPalettes->setEnabled(false);
 }
 
 /// <summary>
@@ -98,7 +100,7 @@ void GraphicManagerDialog::CreateAndAddDefaultEntry()
     testentry.MappingDataAddress = 0x5FA6D0;
     testentry.MappingDataSizeAfterCompressionInByte = 0xC10; // unit: Byte
     testentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
-    testentry.MappingDataName = "Layer 3";
+    testentry.MappingDataName = "vanilla background mapping data";
     testentry.PaletteAddress = 0x583C7C;
     for (unsigned int i = 0; i < 16; i++)
         testentry.PaletteSlotIDs.push_back(i); // all 16 palette slots
@@ -191,7 +193,7 @@ QPixmap GraphicManagerDialog::RenderAllPalette(AssortedGraphicUtils::AssortedGra
     for (int j = 0; j < 16; ++j)
     {
         QVector<QRgb> palettetable = entry.palettes[j];
-        for (int i = 1; i < 16; ++i) // Ignore the first color
+        for (int i = 0; i < 16; ++i) // draw all the 16 colors, the color 0 is real data as well
         {
             PaletteBarPainter.fillRect(8 * i, 8 * j, 8, 8, palettetable[i]);
         }
@@ -233,7 +235,9 @@ QPixmap GraphicManagerDialog::RenderAllTiles(AssortedGraphicUtils::AssortedGraph
                 // find a palette has non-black color(s) in it
                 for (int i = 0; i < entry.palettes->size(); i++)
                 {
-                    for(int j = 1; j < entry.palettes[i].size(); j++) // skip the first color
+                    // the color 0 is transparent when a tile is drawn, so only the colors 1-15 can
+                    // make a palette usable for the preview
+                    for(int j = 1; j < entry.palettes[i].size(); j++)
                     {
                         if (entry.palettes[i][j] != QColor(0, 0, 0, 0xFF).rgba())
                         {
@@ -331,6 +335,11 @@ QPixmap GraphicManagerDialog::RenderGraphic(AssortedGraphicUtils::AssortedGraphi
 /// </summary>
 void GraphicManagerDialog::UpdatePaletteGraphicView(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
+    if (entry.PaletteSlotIDs.isEmpty())
+    { // the entry uses no palette at all, so there is nothing to render
+        ClearPalettePanel();
+        return;
+    }
     if (ui->graphicsView_palettes->scene())
     {
         delete ui->graphicsView_palettes->scene();
@@ -347,6 +356,11 @@ void GraphicManagerDialog::UpdatePaletteGraphicView(AssortedGraphicUtils::Assort
 /// </summary>
 void GraphicManagerDialog::UpdateTilesGraphicView(AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
 {
+    if (!entry.TileDataSizeInByte)
+    { // the entry contains no Tile8x8 data, so there is nothing to render
+        ClearTilesPanel();
+        return;
+    }
     int linenum = tmpTile8x8array.size() / 16;
     if ((linenum * 16) < tmpTile8x8array.size())
     {
@@ -530,14 +544,31 @@ void GraphicManagerDialog::GenerateBGTile8x8Instances(AssortedGraphicUtils::Asso
 /// </summary>
 void GraphicManagerDialog::ClearAndResettmpEntryPalettes()
 {
+    for (unsigned int i = 0; i < 16; ++i)
+    {
+        ResetPaletteRowInTmpEntry(i);
+    }
+}
+
+/// <summary>
+/// Reset one palette row of tmpEntry into a color table full of transparent black colors.
+/// </summary>
+/// <param name="paletteId">
+/// The palette slot ID of the palette row to reset.
+/// </param>
+void GraphicManagerDialog::ResetPaletteRowInTmpEntry(unsigned int paletteId)
+{
+    if (paletteId >= 16)
+    {
+        return;
+    }
+    if (tmpEntry.palettes[paletteId].size())
+    {
+        tmpEntry.palettes[paletteId].clear();
+    }
     for (int i = 0; i < 16; ++i)
     {
-        if (tmpEntry.palettes[i].size())
-        {
-            tmpEntry.palettes[i].clear();
-        }
-        for (int j = 0; j < 16; ++j)
-            tmpEntry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+        tmpEntry.palettes[paletteId].push_back(QColor(0, 0, 0, 0xFF).rgba());
     }
 }
 
@@ -601,6 +632,28 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
 }
 
 /// <summary>
+/// Check if all the data of an entry is loaded from vanilla ROM addresses.
+/// </summary>
+/// <remarks>
+/// Such an entry only describes vanilla ROM data, none of its data is stored in a chunk generated
+/// by the editor. Removing or modifying it would either lose the only description of that vanilla
+/// data or need a new ROM data chunk for data the editor does not own, so the user is not allowed
+/// to do that. Use the duplicate button to get an editable copy of the entry instead.
+/// </remarks>
+/// <param name="entry">
+/// The entry to check.
+/// </param>
+/// <returns>
+/// Return true if all the data of the entry is loaded from vanilla ROM addresses.
+/// </returns>
+static bool IsVanillaReferencingEntry(const struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
+{
+    return (entry.TileDataAddress < WL4Constants::AvailableSpaceBeginningInROM)
+            && (entry.PaletteAddress < WL4Constants::AvailableSpaceBeginningInROM)
+            && (entry.MappingDataAddress < WL4Constants::AvailableSpaceBeginningInROM);
+}
+
+/// <summary>
 /// Check if an entry can be edited or deleted
 /// </summary>
 /// <param name="entryId">
@@ -611,6 +664,14 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
 /// </returns>
 bool GraphicManagerDialog::CheckEditability(int entryId)
 {
+    if (IsVanillaReferencingEntry(graphicEntries[entryId]))
+    {
+        QMessageBox::critical(this, tr("Error"), tr("Cannot delete or edit entry: ") + QString::number(entryId) + ",\n" +
+                              tr("all of its Tile8x8 data, palette data and mapping data are vanilla ROM data.\n"
+                                 "Duplicate it to get an editable copy of the entry."));
+        return false;
+    }
+
     unsigned int find_level = -1;
     unsigned int find_room = -1;
     unsigned int find_tileset = -1;
@@ -643,6 +704,83 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
         return;
     }
 
+    // Generate a graphic entry from a Room header layer mapping data when it is not in the list yet
+    auto addGraphicEntryFromRoomLayer = [this] (const LevelComponents::__RoomHeader &header,
+                                                unsigned int mappingDataAddr, const QString &layerName,
+                                                unsigned int levelId, unsigned int roomId, int roomIndex)
+    {
+        mappingDataAddr &= 0x7FF'FFFF;
+
+        // don't add an entry twice when multiple Rooms share one mapping data chunk
+        for (int n = 0; n < graphicEntries.size(); ++n)
+        {
+            if (graphicEntries[n].MappingDataAddress == mappingDataAddr)
+            {
+                return;
+            }
+        }
+
+        // not found, so we add a new entry
+        struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
+        LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
+        newentry.TileDataAddress = roomtileset->GetbgGFXptr();
+        newentry.TileDataSizeInByte = roomtileset->GetbgGFXlen();
+        int tilenum = newentry.TileDataSizeInByte / 32;
+        newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
+        newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+        newentry.TileDataName = "vanilla Tileset 0x" + QString::number(header.TilesetID, 16) + " bg tiles";
+        newentry.MappingDataAddress = mappingDataAddr;
+        newentry.MappingDataSizeAfterCompressionInByte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
+        newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
+        newentry.MappingDataName = layerName + " found in: " + QString::number(levelId) + "-" +
+                                   QString::number(roomId) + "-" + QString::number(roomIndex);
+        newentry.PaletteAddress = roomtileset->GetPaletteAddr();
+        for (unsigned int k = 0; k < 16; k++)
+            newentry.PaletteSlotIDs.push_back(k); // initially all 16 slots
+        newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
+        newentry.optionalGraphicHeight = 0;
+
+        AssortedGraphicUtils::ExtractDataFromEntryInfo_v2(newentry);
+
+        // Collect all distinct palette IDs actually used by the mapping data
+        QSet<unsigned int> usedPaletteIDs;
+        for (int m = 0; m < newentry.mappingData.size(); m++)
+        {
+            int tileid = (newentry.mappingData[m] & 0x3FF);
+            if (tileid != 0x3FF)
+            {
+                unsigned int palId = (newentry.mappingData[m] & 0xF000) >> 12;
+                usedPaletteIDs.insert(palId);
+            }
+        }
+
+        // Build PaletteSlotIDs from the actually-used palette IDs (sorted)
+        newentry.PaletteSlotIDs.clear();
+        for (unsigned int id : usedPaletteIDs)
+            newentry.PaletteSlotIDs.push_back(id);
+        std::sort(newentry.PaletteSlotIDs.begin(), newentry.PaletteSlotIDs.end());
+        if (newentry.PaletteSlotIDs.isEmpty())
+            newentry.PaletteSlotIDs.push_back(0); // fallback
+
+        // PaletteAddress stays at the tileset's palette base (palette 0).
+        // ExtractDataFromEntryInfo_v2 uses tmpPalId*32 offset for vanilla ROM
+        // addresses, so keeping the base address is correct.
+
+        // Clear unused palettes
+        for (int i = 0; i < 16; ++i)
+        {
+            if (!usedPaletteIDs.contains(i))
+            {
+                newentry.palettes[i].clear();
+                for (int j = 0; j < 16; ++j) // (re-)initialization
+                {
+                    newentry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
+                }
+            }
+        }
+        graphicEntries.append(newentry);
+    };
+
     // loop through all the Rooms
     QVector<unsigned int> levelid_array = {0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5};
     QVector<unsigned int> roomid_array = {0, 2, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 4};
@@ -653,156 +791,19 @@ void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
         for (int j = 0; j < tmpLevel->GetRooms().size(); j++)
         {
             LevelComponents::__RoomHeader header = tmpLevel->GetRooms()[j]->GetRoomHeader();
-            // don't generate entry for mappingtype0x20 Layer0 atm, we need a new graphic tile type for them
-/*
+
+            // Layer 0 generated from Tile8x8 data uses the background Tile8x8 set of its Tileset,
+            // so its mapping data is an usable graphic like the Layer 3 mapping data
             if ((header.Layer0MappingType & 0x30) == 0x20)
             {
-                unsigned int cur_entry_num = graphicEntries.size();
-                bool dontadd = false;
-                if (cur_entry_num)
-                {
-                    for (int n = 0; n < cur_entry_num; n++)
-                    {
-                        if (graphicEntries[n].MappingDataAddress == (header.Layer0Data & 0x7FFFFFF))
-                        {
-                            dontadd = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!dontadd)
-                {
-                    // not found, so we add new entry
-                    struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
-                    LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
-                    newentry.TileDataAddress = roomtileset->GetbgGFXptr();
-                    newentry.TileDataSizeInByte = roomtileset->GetbgGFXlen();
-                    int tilenum = newentry.TileDataSizeInByte / 32;
-                    newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
-                    newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
-                    newentry.TileDataName = "vanilla Tileset 0x"+ QString::number(header.TilesetID, 16) +" bg tiles";
-                    newentry.MappingDataAddress = header.Layer0Data & 0x7FF'FFFF;
-                    newentry.MappingDataSizeAfterCompressionInByte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
-                    newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
-                    newentry.MappingDataName = "Layer 0 found in: " + QString::number(levelid_array[i]) + "-" +
-                                                QString::number(roomid_array[i]) + "-" + QString::number(j);
-                    newentry.PaletteAddress = roomtileset->GetPaletteAddr();
-                    for (unsigned int i = 0; i < 16; i++)
-                        newentry.PaletteSlotIDs.push_back(i); // initially all 16 slots
-                    newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
-                    newentry.optionalGraphicHeight = 0;
-
-                    AssortedGraphicUtils::ExtractDataFromEntryInfo_v1(newentry);
-
-                    // reset a part of palette settings for bg graphic entries
-                    int usingpal = 15;
-                    for (int m = 0; m < newentry.mappingData.size(); m++)
-                    {
-                        int tileid = (newentry.mappingData[m] & 0x3FF);
-                        if (tileid != 0x3FF)
-                        {
-                            usingpal = (newentry.mappingData[m] & 0xF000) >> 12;
-                            // PaletteAddress stays at base; ExtractDataFromEntryInfo_v1 handles vanilla offset
-                            newentry.PaletteSlotIDs.clear();
-                            newentry.PaletteSlotIDs.push_back(usingpal);
-                            break;
-                        }
-                    }
-                    for (int i = 0; i < 16; ++i)
-                    {
-                        if (i != usingpal)
-                        {
-                            newentry.palettes[i].clear();
-                            for (int j = 0; j < 16; ++j) // (re-)initialization
-                            {
-                                newentry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
-                            }
-                        }
-                    }
-                    graphicEntries.append(newentry);
-                }
+                addGraphicEntryFromRoomLayer(header, header.Layer0Data, "Layer 0",
+                                             levelid_array[i], roomid_array[i], j);
             }
-*/
+
             if ((header.Layer3MappingType & 0x30) == 0x20)
             {
-                unsigned int cur_entry_num = graphicEntries.size();
-                bool dontadd = false;
-                if (cur_entry_num)
-                {
-                    for (int n = 0; n < cur_entry_num; n++)
-                    {
-                        if (graphicEntries[n].MappingDataAddress == (header.Layer3Data & 0x7FFFFFF))
-                        {
-                            dontadd = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!dontadd)
-                {
-                    // not found, so we add new entry
-                    struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
-                    LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
-                    newentry.TileDataAddress = roomtileset->GetbgGFXptr();
-                    newentry.TileDataSizeInByte = roomtileset->GetbgGFXlen();
-                    int tilenum = newentry.TileDataSizeInByte / 32;
-                    newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
-                    newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
-                    newentry.TileDataName = "vanilla Tileset 0x"+ QString::number(header.TilesetID, 16) +" bg tiles";
-                    newentry.MappingDataAddress = header.Layer3Data & 0x7FF'FFFF;
-                    newentry.MappingDataSizeAfterCompressionInByte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
-                    newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
-                    newentry.MappingDataName = "Layer 3 found in: " + QString::number(levelid_array[i]) + "-" +
-                                                QString::number(roomid_array[i]) + "-" + QString::number(j);
-                    newentry.PaletteAddress = roomtileset->GetPaletteAddr();
-                    for (unsigned int i = 0; i < 16; i++)
-                        newentry.PaletteSlotIDs.push_back(i); // initially all 16 slots
-                    newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
-                    newentry.optionalGraphicHeight = 0;
-
-                    AssortedGraphicUtils::ExtractDataFromEntryInfo_v2(newentry);
-
-                    // Collect all distinct palette IDs actually used by the mapping data
-                    QSet<unsigned int> usedPaletteIDs;
-                    for (int m = 0; m < newentry.mappingData.size(); m++)
-                    {
-                        int tileid = (newentry.mappingData[m] & 0x3FF);
-                        if (tileid != 0x3FF)
-                        {
-                            unsigned int palId = (newentry.mappingData[m] & 0xF000) >> 12;
-                            usedPaletteIDs.insert(palId);
-                        }
-                    }
-
-                    // Build PaletteSlotIDs from the actually-used palette IDs (sorted)
-                    newentry.PaletteSlotIDs.clear();
-                    for (unsigned int id : usedPaletteIDs)
-                        newentry.PaletteSlotIDs.push_back(id);
-                    std::sort(newentry.PaletteSlotIDs.begin(), newentry.PaletteSlotIDs.end());
-                    if (newentry.PaletteSlotIDs.isEmpty())
-                        newentry.PaletteSlotIDs.push_back(0); // fallback
-
-                    // PaletteAddress stays at the tileset's palette base (palette 0).
-                    // ExtractDataFromEntryInfo_v1 uses tmpPalId*32 offset for vanilla ROM
-                    // addresses, so keeping the base address is correct.
-
-                    // Clear unused palettes
-                    for (int i = 0; i < 16; ++i)
-                    {
-                        if (!usedPaletteIDs.contains(i))
-                        {
-                            newentry.palettes[i].clear();
-                            for (int j = 0; j < 16; ++j) // (re-)initialization
-                            {
-                                newentry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
-                            }
-                        }
-                    }
-                    graphicEntries.append(newentry);
-                }
-
+                addGraphicEntryFromRoomLayer(header, header.Layer3Data, "Layer 3",
+                                             levelid_array[i], roomid_array[i], j);
             }
         }
 
@@ -858,6 +859,8 @@ void GraphicManagerDialog::on_listView_RecordGraphicsList_clicked(const QModelIn
         ui->pushButton_ImportPaletteData->setEnabled(true);
         ui->pushButton_ImportTile8x8Data->setEnabled(true);
         ui->pushButton_validateAndSetMappingData->setEnabled(true);
+        ui->pushButton_duplicateCurrentEntry->setEnabled(true);
+        ui->pushButton_SwapPalettes->setEnabled(true);
     }
     else
     {
@@ -871,33 +874,76 @@ void GraphicManagerDialog::on_listView_RecordGraphicsList_clicked(const QModelIn
         ui->pushButton_ImportPaletteData->setEnabled(false);
         ui->pushButton_ImportTile8x8Data->setEnabled(false);
         ui->pushButton_validateAndSetMappingData->setEnabled(false);
+        ui->pushButton_duplicateCurrentEntry->setEnabled(false);
+        ui->pushButton_SwapPalettes->setEnabled(false);
     }
 
     ui->listView_RecordGraphicsList->setEnabled(true);
 }
 
 /// <summary>
-/// Click the button to clear Tile panel UI stuff
+/// Click the button to clear Tile panel UI stuff and the tile data in tmpEntry.
+/// The tile data of the entry is not touched until "Validate and Set" is clicked, so
+/// re-selecting the entry discards the clearing.
 /// </summary>
 void GraphicManagerDialog::on_pushButton_ClearTile8x8Data_clicked()
 {
+    // Reset the tile data in tmpEntry
+    tmpEntry.tileData.clear();
+    tmpEntry.TileDataAddress = 0;
+    tmpEntry.TileDataSizeInByte = 0;
+    tmpEntry.TileDataRAMOffsetNum = 0x3FF; // no Tile8x8 is used by the entry yet
+    tmpEntry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
+    tmpEntry.TileDataName.clear();
+
     ClearTilesPanel();
+
+    // Regenerate the Tile8x8 instances for the empty tile data, so that the mapping
+    // graphic can still be rendered (with blank Tile8x8s) without crashing
     CleanTilesInstances();
+    GenerateBGTile8x8Instances(tmpEntry);
+    UpdateTilesGraphicView(tmpEntry);
 }
 
 /// <summary>
-/// Click the button to clear palette panel UI stuff
+/// Click the button to clear palette panel UI stuff and the palette data in tmpEntry.
+/// The palette data of the entry is not touched until "Validate and Set" is clicked, so
+/// re-selecting the entry discards the clearing.
 /// </summary>
 void GraphicManagerDialog::on_pushButton_ClearPaletteData_clicked()
 {
+    // Reset the palette data in tmpEntry.
+    // Note: an entry without any palette slot ID cannot be stored in the chunk data, the
+    // palettes are written with the default slot ID 0 (transparent colors) when such an
+    // entry is saved and loaded again.
+    tmpEntry.PaletteAddress = 0;
+    tmpEntry.PaletteSlotIDs.clear();
+    ClearAndResettmpEntryPalettes();
+
     ClearPalettePanel();
+
+    // The mapping graphic uses palette data too, so it needs to be re-rendered
+    UpdateTilesGraphicView(tmpEntry);
+    UpdateMappingGraphicView(tmpEntry);
 }
 
 /// <summary>
-/// Click the button to clear mapping panel UI stuff
+/// Click the button to clear mapping panel UI stuff and the mapping data in tmpEntry.
+/// The mapping data of the entry is not touched until "Validate and Set" is clicked, so
+/// re-selecting the entry discards the clearing.
 /// </summary>
 void GraphicManagerDialog::on_pushButton_ClearMappingData_clicked()
 {
+    // Reset the mapping data in tmpEntry
+    CleanMappingDataInEntry(tmpEntry);
+    tmpEntry.MappingDataAddress = 0;
+    tmpEntry.MappingDataSizeAfterCompressionInByte = 0;
+    tmpEntry.optionalGraphicWidth = 0;
+    tmpEntry.optionalGraphicHeight = 0;
+    tmpEntry.MappingDataName.clear();
+    // Match the mapping data type combo box, which is reset in ClearMappingPanel()
+    tmpEntry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::No_mapping_data_comp;
+
     ClearMappingPanel();
 }
 
@@ -908,49 +954,43 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
 {
     if (SelectedEntryID != -1)
     {
-        ClearAndResettmpEntryPalettes();
-
         // try to use the settings from the UI to import palette
         int palAddress = ui->lineEdit_paletteAddress->text().toUInt(nullptr, 16);
 
         // Parse palette slot IDs from the comma-separated hex field
         QVector<unsigned int> slotIDs;
-        QStringList slotIDStrings = ui->lineEdit_paletteNum->text().split(",", Qt::SkipEmptyParts);
-        for (const QString &s : slotIDStrings)
+        if (!ParseCommaSeparatedHexValues(ui->lineEdit_paletteNum->text(), slotIDs, 0xF, tr("palette slot ID")))
         {
-            bool ok;
-            unsigned int id = s.trimmed().toUInt(&ok, 16);
-            if (!ok)
-            {
-                QMessageBox::warning(this, tr("Warning"), tr("A part of text cannot be converted to palette slot ID: ") + s);
-                return;
-            }
-            else if (id >= 16)
-            {
-                QMessageBox::warning(this, tr("Warning"), tr("Palette slot ID must be between 0 and 15: ") + s);
-                return;
-            }
-            else
-            {
-                slotIDs.push_back(id);
-            }
+            return;
         }
 
         // palAddress is not a vanilla rom address, so we need to import palette from file
         if (!palAddress || palAddress >= WL4Constants::AvailableSpaceBeginningInROM)
         {
+            if (slotIDs.isEmpty())
+            {
+                QMessageBox::critical(this, tr("Error"), tr("No valid palette slot IDs specified!"));
+                return;
+            }
             if (slotIDs.size() == 1) // we only import one 16-color palette
             {
-                FileIOUtils::ImportPalette(this,
+                // Add the imported palette into the entry, the palettes imported before are kept
+                if (!FileIOUtils::ImportPalette(this,
                     [this] (int selectedPalId, int colorId, QRgb newColor)
                     {
                         this->tmpEntry.SetColor(selectedPalId, colorId, newColor);
                     },
-                    slotIDs[0]);
+                    slotIDs[0]))
+                {
+                    return; // the user cancelled the importing
+                }
 
                 // set tmpEntry if everything looks correct
                 tmpEntry.PaletteAddress = 0;
-                tmpEntry.PaletteSlotIDs = slotIDs;
+                if (!tmpEntry.PaletteSlotIDs.contains(slotIDs[0]))
+                {
+                    tmpEntry.PaletteSlotIDs.push_back(slotIDs[0]);
+                }
             }
             else
             {
@@ -973,14 +1013,17 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
                 return;
             }
 
+            // Clean all the palettes before importing the new palette set from the ROM
+            ClearAndResettmpEntryPalettes();
+
             // Load palette(s) from the ROM — one per slot ID, consecutive in ROM
             for (int i = 0; i < slotIDs.size(); ++i)
             {
                 unsigned int slotId = slotIDs[i];
                 if (tmpEntry.palettes[slotId].size())
                     tmpEntry.palettes[slotId].clear();
-                // First color is transparent
-                ROMUtils::LoadPalette(&(tmpEntry.palettes[slotId]), (unsigned short *) (ROMUtils::ROMFileMetadata->ROMDataPtr + palAddress + i * 32));
+                // All the 16 colors are loaded, the palette color 0 is real data as well
+                ROMUtils::LoadPalette(&(tmpEntry.palettes[slotId]), (unsigned short *) (ROMUtils::ROMFileMetadata->ROMDataPtr + palAddress + i * 32), true);
             }
 
             // set tmpEntry if everything looks correct
@@ -1037,23 +1080,22 @@ void GraphicManagerDialog::on_pushButton_ImportTile8x8Data_clicked()
                         {
                             // Assume the file is fully filled with tiles
                             int newtilenum = finaldata.size() / 32;
-                            if(newtilenum > 0x3FE)
+                            int existingtilenum = this->tmpEntry.tileData.size() / 32;
+                            if((newtilenum + existingtilenum) > 0x3FE)
                             {
                                 QMessageBox::critical(parentPtr, tr("Load Error"), tr("You can only use 0x3FF background tiles at most!"));
                                 return;
                             }
                             else
                             {
-                                this->tmpEntry.tileData.resize(finaldata.size());
-                                for(int i = 0; i < finaldata.size(); ++i)
-                                {
-                                    this->tmpEntry.tileData[i] = finaldata[i];
-                                }
+                                // Stack the new Tile8x8 data in front of the data imported before, so the
+                                // Tile8x8 indexes used by the existing mapping data keep unchanged
+                                this->tmpEntry.tileData = finaldata + this->tmpEntry.tileData;
 
                                 // set tmpEntry if everything looks correct
-                                int startid = 0x3FF - newtilenum;
+                                int startid = 0x3FF - (newtilenum + existingtilenum);
                                 this->tmpEntry.TileDataRAMOffsetNum = startid;
-                                this->tmpEntry.TileDataSizeInByte = finaldata.size();
+                                this->tmpEntry.TileDataSizeInByte = this->tmpEntry.tileData.size();
                                 this->tmpEntry.TileDataAddress = 0;
                                 this->tmpEntry.TileDataType = AssortedGraphicUtils::Tile8x8_4bpp_no_comp_Tileset_text_bg;
                                 this->tmpEntry.TileDataName = tmpname;
@@ -1348,6 +1390,10 @@ void GraphicManagerDialog::on_pushButton_ImportGraphic_clicked()
                 }
                 case AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20:
                 {
+                    // Clean the old mapping data first, otherwise the data imported before will
+                    // be accumulated, which can overflow the buffer in the saving logic
+                    CleanMappingDataInEntry(tmpEntry);
+
                     LevelComponents::Layer BGlayer(mappingdataAddress, LevelComponents::LayerTile8x8);
                     optionalgraphicHeight = BGlayer.GetLayerHeight();
                     optionalgraphicWidth = BGlayer.GetLayerWidth();
@@ -1399,6 +1445,8 @@ void GraphicManagerDialog::on_pushButton_AddGraphicEntry_clicked()
     ui->pushButton_ImportPaletteData->setEnabled(false);
     ui->pushButton_ImportTile8x8Data->setEnabled(false);
     ui->pushButton_validateAndSetMappingData->setEnabled(false);
+    ui->pushButton_duplicateCurrentEntry->setEnabled(false);
+    ui->pushButton_SwapPalettes->setEnabled(false);
     ui->pushButton_RemoveGraphicEntries->setEnabled(false); // should always be false since on selected row any more
 }
 
@@ -1460,6 +1508,8 @@ void GraphicManagerDialog::on_pushButton_RemoveGraphicEntries_clicked()
         ui->pushButton_ImportPaletteData->setEnabled(lastid);
         ui->pushButton_ImportTile8x8Data->setEnabled(lastid);
         ui->pushButton_validateAndSetMappingData->setEnabled(lastid);
+        ui->pushButton_duplicateCurrentEntry->setEnabled(lastid);
+        ui->pushButton_SwapPalettes->setEnabled(lastid);
         ui->pushButton_RemoveGraphicEntries->setEnabled(lastid);
     }
 
@@ -1716,5 +1766,260 @@ void GraphicManagerDialog::on_lineEdit_mappingDataName_textChanged(const QString
     QString tmp = arg1;
     tmp.remove(';');
     ui->lineEdit_mappingDataName->setText(tmp);
+}
+
+
+/// <summary>
+/// Click the button to duplicate the selected graphic entry. The new entry is inserted right
+/// below the source entry, so the source entry is the K-th entry and the new one is the (K+1)-th.
+/// </summary>
+void GraphicManagerDialog::on_pushButton_duplicateCurrentEntry_clicked()
+{
+    QItemSelectionModel *select = ui->listView_RecordGraphicsList->selectionModel();
+    QModelIndexList selectedRows = select->selectedRows();
+    if (selectedRows.size() != 1)
+    {
+        QMessageBox::information(this, tr("Error"), tr("Select one graphic entry before duplicating it."));
+        return;
+    }
+
+    int sourceEntryID = selectedRows[0].row();
+
+    // Use the data in the panels if the selected entry is the entry being edited, so the
+    // not-yet-validated changes can be duplicated as well
+    struct AssortedGraphicUtils::AssortedGraphicEntryItem newEntry;
+    if (sourceEntryID == SelectedEntryID)
+    {
+        newEntry = tmpEntry;
+    }
+    else
+    {
+        newEntry = graphicEntries[sourceEntryID];
+    }
+
+    // Set a new mapping data name to distinguish the new entry from the source entry
+    newEntry.MappingDataName = GenerateUniqueMappingDataName(newEntry.MappingDataName);
+
+    // Detach all the 3 data parts from the ROM addresses they were loaded from, so the saving
+    // logic writes them as new chunks of the duplicated entry. The duplicate then owns its Tile8x8
+    // data, palette data and mapping data, so it can be edited without touching the data of the
+    // source entry (and without modifying the vanilla ROM data the source entry references).
+    newEntry.TileDataAddress = 0;
+    newEntry.PaletteAddress = 0;
+    newEntry.MappingDataAddress = 0;
+    newEntry.MappingDataSizeAfterCompressionInByte = 0; // the save logic should set this
+
+    // Insert the new entry right below the source entry, all the entries after the source
+    // entry are shifted down by one position
+    graphicEntries.insert(sourceEntryID + 1, newEntry);
+
+    // Rebuild the entry list, then select the new entry and load it into the panels
+    UpdateEntryList();
+    SelectedEntryID = sourceEntryID + 1;
+    tmpEntry = graphicEntries[SelectedEntryID];
+    ExtractEntryToGUI(tmpEntry);
+    ui->listView_RecordGraphicsList->setCurrentIndex(ListViewItemModel->index(SelectedEntryID, 0));
+    ui->listView_RecordGraphicsList->scrollTo(ListViewItemModel->index(SelectedEntryID, 0));
+}
+
+/// <summary>
+/// Click the button to swap 2 palette rows of the current entry, or to move one palette row to
+/// another palette slot ID by swapping it with an unused palette row.
+/// </summary>
+void GraphicManagerDialog::on_pushButton_SwapPalettes_clicked()
+{
+    if (SelectedEntryID == -1)
+    {
+        return;
+    }
+
+    // Ask the user for the 2 palette rows to swap
+    bool ok;
+    QString input = QInputDialog::getText(this,
+                                          tr("WL4Editor"),
+                                          tr("Input the indexes of the 2 palette rows to swap:\n"
+                                             "Use hexadecimal palette slot IDs without the \"0x\" prefix,\n"
+                                             "and split the 2 row indexes with an English comma, such as \"3,5\".\n"
+                                             "If only one of the 2 rows has a palette, that palette is moved to the\n"
+                                             "other row, and its palette slot ID is reset to the other row."),
+                                          QLineEdit::Normal, "", &ok);
+    if (!ok)
+    {
+        return;
+    }
+
+    QVector<unsigned int> paletteRows;
+    if (!ParseCommaSeparatedHexValues(input, paletteRows, 0xF, tr("palette row index")))
+    {
+        return;
+    }
+    if (paletteRows.size() != 2)
+    {
+        QMessageBox::warning(this, tr("Warning"), tr("2 palette rows have to be input to perform the swapping!"));
+        return;
+    }
+    if (paletteRows[0] == paletteRows[1])
+    {
+        QMessageBox::warning(this, tr("Warning"), tr("The 2 palette rows to swap cannot be the same one!"));
+        return;
+    }
+
+    unsigned int firstRow = paletteRows[0];
+    unsigned int secondRow = paletteRows[1];
+    bool firstRowUsed = tmpEntry.PaletteSlotIDs.contains(firstRow);
+    bool secondRowUsed = tmpEntry.PaletteSlotIDs.contains(secondRow);
+
+    if (firstRowUsed && secondRowUsed)
+    {
+        // Both of the 2 rows are used by the current entry, so swap their color tables
+        QVector<QRgb> tmpPalette = tmpEntry.palettes[firstRow];
+        tmpEntry.palettes[firstRow] = tmpEntry.palettes[secondRow];
+        tmpEntry.palettes[secondRow] = tmpPalette;
+    }
+    else if (firstRowUsed || secondRowUsed)
+    {
+        // Only one of the 2 rows is used by the current entry, so move the existing palette to
+        // the unused row, which resets the palette slot ID of the existing palette
+        unsigned int usedRow = firstRowUsed ? firstRow : secondRow;
+        unsigned int unusedRow = firstRowUsed ? secondRow : firstRow;
+        tmpEntry.palettes[unusedRow] = tmpEntry.palettes[usedRow];
+        ResetPaletteRowInTmpEntry(usedRow);
+        for (int i = 0; i < tmpEntry.PaletteSlotIDs.size(); ++i)
+        {
+            if (tmpEntry.PaletteSlotIDs[i] == usedRow)
+            {
+                tmpEntry.PaletteSlotIDs[i] = unusedRow;
+            }
+        }
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Warning"), tr("Neither of the 2 palette rows has a palette in the current entry, nothing to swap!"));
+        return;
+    }
+
+    // Swap the palette IDs used by the mapping data as well, so each Tile8x8 keeps using the
+    // same colors and the rendered graphic does not change
+    bool mappingDataChanged = false;
+    for (int i = 0; i < tmpEntry.mappingData.size(); ++i)
+    {
+        unsigned int paletteId = (tmpEntry.mappingData[i] >> 12) & 0xF;
+        if (paletteId == firstRow)
+        {
+            tmpEntry.mappingData[i] = static_cast<unsigned short>((tmpEntry.mappingData[i] & 0x0FFF) | (secondRow << 12));
+            mappingDataChanged = true;
+        }
+        else if (paletteId == secondRow)
+        {
+            tmpEntry.mappingData[i] = static_cast<unsigned short>((tmpEntry.mappingData[i] & 0x0FFF) | (firstRow << 12));
+            mappingDataChanged = true;
+        }
+    }
+
+    // The palettes are not the palette data at the old address any more, so they need to be
+    // saved as the entry's own palette chunk
+    tmpEntry.PaletteAddress = 0;
+
+    // The mapping data of a vanilla ROM address is not saved by the entry, so the swapped
+    // palette IDs would be lost. Detach the mapping data from the vanilla ROM address to keep
+    // the rendered graphic unchanged after saving and loading again.
+    if (mappingDataChanged && tmpEntry.MappingDataAddress
+            && tmpEntry.MappingDataAddress < WL4Constants::AvailableSpaceBeginningInROM)
+    {
+        tmpEntry.MappingDataAddress = 0;
+        tmpEntry.MappingDataSizeAfterCompressionInByte = 0; // the save logic should set this
+    }
+
+    // Keep the palette slot IDs sorted, the palette data is saved and loaded in this order
+    std::sort(tmpEntry.PaletteSlotIDs.begin(), tmpEntry.PaletteSlotIDs.end());
+
+    // UI reset
+    CleanTilesInstances();
+    GenerateBGTile8x8Instances(tmpEntry);
+    UpdatePaletteGraphicView(tmpEntry);
+    SetPaletteInfoGUI(tmpEntry);
+    UpdateTilesGraphicView(tmpEntry);
+    UpdateMappingGraphicView(tmpEntry);
+    SetMappingGraphicInfoGUI(tmpEntry);
+}
+
+/// <summary>
+/// Parse a list of hex numbers separated by English commas.
+/// </summary>
+/// <param name="text">
+/// The text to be parsed.
+/// </param>
+/// <param name="result">
+/// The parsed values.
+/// </param>
+/// <param name="maxValue">
+/// The biggest value allowed.
+/// </param>
+/// <param name="valueName">
+/// The name of the values, which is used in the error messages.
+/// </param>
+/// <returns>
+/// Return true if all the values in the text are parsed successfully.
+/// </returns>
+bool GraphicManagerDialog::ParseCommaSeparatedHexValues(const QString &text, QVector<unsigned int> &result,
+                                                        unsigned int maxValue, const QString &valueName)
+{
+    result.clear();
+    QStringList valueStrings = text.split(",", Qt::SkipEmptyParts);
+    for (const QString &s : valueStrings)
+    {
+        bool ok;
+        unsigned int value = s.trimmed().toUInt(&ok, 16);
+        if (!ok)
+        {
+            QMessageBox::warning(this, tr("Warning"), tr("A part of text cannot be converted to ") + valueName + tr(": ") + s);
+            result.clear();
+            return false;
+        }
+        else if (value > maxValue)
+        {
+            QMessageBox::warning(this, tr("Warning"),
+                                 valueName + tr(" must be between 0 and ") + QString::number(maxValue) + tr(": ") + s);
+            result.clear();
+            return false;
+        }
+        else
+        {
+            result.push_back(value);
+        }
+    }
+    return true;
+}
+
+/// <summary>
+/// Generate a mapping data name which is different from all the mapping data names in use.
+/// </summary>
+/// <param name="baseName">
+/// The original mapping data name.
+/// </param>
+/// <returns>
+/// The new mapping data name.
+/// </returns>
+QString GraphicManagerDialog::GenerateUniqueMappingDataName(const QString &baseName)
+{
+    QString newName = baseName + " (copy)";
+    for (int copyId = 2; ; ++copyId)
+    {
+        bool nameUsed = false;
+        for (const auto &entry : graphicEntries)
+        {
+            if (entry.MappingDataName == newName)
+            {
+                nameUsed = true;
+                break;
+            }
+        }
+        if (!nameUsed)
+        {
+            break;
+        }
+        newName = baseName + " (copy " + QString::number(copyId) + ")";
+    }
+    return newName;
 }
 

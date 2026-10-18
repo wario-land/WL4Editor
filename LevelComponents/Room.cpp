@@ -1,4 +1,4 @@
-﻿#include "Room.h"
+#include "Room.h"
 #include "ROMUtils.h"
 #include "WL4Constants.h"
 #include "SettingsUtils.h"
@@ -329,7 +329,12 @@ namespace LevelComponents
             QVector<bool> LayersCurrentVisibility = singleton->GetLayersVisibilityArray();
             for (int i = 0; i < 4; ++i)
             {
-                QPixmap pixmap = drawLayers[i]->layer->RenderLayer(tileset);
+                // The GBA hardware draws the palette color 0 as transparent: a stored color 0 can
+                // only be seen as the backdrop color where nothing covers the screen. Layer 3 is the
+                // bottom-most layer of a Room, so drawing its color 0 approximates that backdrop
+                // color, while every other layer keeps the color 0 transparent.
+                int layerIndex = drawLayers[i]->index;
+                QPixmap pixmap = drawLayers[i]->layer->RenderLayer(tileset, layerIndex == 3);
                 // If this is a layer composed of 8x8 tiles, then repeat the layer in X and Y to the size of the other
                 // layers
                 if (drawLayers[i]->layer->GetMappingType() == LayerTile8x8)
@@ -838,7 +843,7 @@ namespace LevelComponents
                 int X = iter.tileX * units;
                 int Y = iter.tileY * units;
                 int tileDataIndex = iter.tileX + iter.tileY * lw;
-                layer->GetTiles()[tileDataIndex]->DrawTile(&pm, X, Y);
+                layer->GetTiles()[tileDataIndex]->DrawTile(&pm, X, Y, renderParams->mode.selectedLayer == 3);
             }
 
             // Set the new QPixmap for the graphics item on the QGraphicsScene

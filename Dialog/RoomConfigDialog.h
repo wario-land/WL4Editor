@@ -1,4 +1,4 @@
-﻿#ifndef ROOMCONFIGDIALOG_H
+#ifndef ROOMCONFIGDIALOG_H
 #define ROOMCONFIGDIALOG_H
 
 #include <QDialog>
@@ -15,6 +15,8 @@
 #include "ROMUtils.h"
 #include "RoomPreviewGraphicsView.h"
 #include "WL4Constants.h"
+
+class QComboBox;
 
 namespace DialogParams
 {
@@ -105,6 +107,7 @@ public:
 
     // helper functions
     static unsigned short *ChangeLayerDimensions(int newWidth, int newHeight, int oldWidth, int oldHeight, unsigned short *oldData);
+    static bool IsLayer0Tile8x8MappingType(int layer0MappingTypeParam);
 
 private slots:
     void on_CheckBox_Layer0Alpha_stateChanged(int state);
@@ -129,6 +132,14 @@ private:
     void ShowMappingType20LayerDetails(int _layerdataAddr, LevelComponents::Layer *_tmpLayer);
 
     void ResetBGLayerPickerComboBox(int newTilesetId);
+    void UpdateLayer0PickerAvailability(int tilesetId);
+    QVector<unsigned int> FindLayerMappingDataAddresses(int newTilesetId);
+    void PopulateLayerPickerComboBox(QComboBox *picker, const QVector<unsigned int> &mappingDataAddresses,
+                                     unsigned int currentAddress);
+
+    // The pointer of the layer data the Room currently uses, so the pickers can keep them selected
+    unsigned int CurrentBGLayerPtr = 0;
+    unsigned int CurrentLayer0Ptr = 0;
 
     LevelComponents::Tileset *currentTileset = nullptr;
 

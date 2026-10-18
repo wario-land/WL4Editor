@@ -1,4 +1,4 @@
-﻿#ifndef TILESET_H
+#ifndef TILESET_H
 #define TILESET_H
 
 #define Tile8x8DefaultNum 0x600
@@ -17,6 +17,10 @@ namespace LevelComponents
         int tilesetPtr;
         QVector<Tile8x8 *> tile8x8array;
         QVector<TileMap16 *> map16array;
+        // All the 16 colors of the 16 palettes are real data and are loaded, edited and saved as
+        // they are. The GBA hardware draws the color 0 of every BG and OBJ palette as transparent
+        // (see GBATEK, "LCD Color Palettes"), so Tile8x8::DrawTile replaces the color 0 by a
+        // transparent color while drawing unless a caller asks for the stored color.
         QVector<QRgb> palettes[16];
         Tile8x8 *blankTile = nullptr;
         int UniversalSpritesTilesPalettePtr = 0;
@@ -39,11 +43,12 @@ namespace LevelComponents
         QVector<TileMap16 *> GetMap16arrayPtr() { return map16array; }
         QVector<QRgb> *GetPalettes() { return palettes; }
         void SetColor(int paletteId, int colorId, QRgb newcolor) { palettes[paletteId][colorId] = newcolor; }
+        void SwapPalettes(int paletteId1, int paletteId2);
         void SetTile8x8(Tile8x8 *newtile, int tileId) { tile8x8array[tileId] = newtile; }
         ~Tileset();
-        QPixmap RenderAllTile8x8(int paletteId);
-        QPixmap RenderAllTile16(int columns);
-        QPixmap RenderTile8x8(int tileId, int paletteId);
+        QPixmap RenderAllTile8x8(int paletteId, bool color0Opaque = false);
+        QPixmap RenderAllTile16(int columns, bool color0Opaque = false);
+        QPixmap RenderTile8x8(int tileId, int paletteId, bool color0Opaque = false);
         int GetUniversalSpritesTilesPalettePtr() { return UniversalSpritesTilesPalettePtr; }
 
         unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }

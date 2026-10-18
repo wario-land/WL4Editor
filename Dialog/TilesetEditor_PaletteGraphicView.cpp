@@ -1,4 +1,4 @@
-﻿#include "TilesetEditor_PaletteGraphicView.h"
+#include "TilesetEditor_PaletteGraphicView.h"
 
 /// <summary>
 /// Mouse release event in Palette graphicsview.
@@ -16,7 +16,9 @@ void TilesetEditor_PaletteGraphicView::mouseReleaseEvent(QMouseEvent *event)
     }
     else if(event->button() == Qt::RightButton)
     {
-        if(selectingColorId == 0) return;
+        // Every color of the palette is editable: the palette color 0 is real data as well, even
+        // though the hardware draws it as a transparent tile pixel (and uses the color 0 of BG
+        // palette 0 as the backdrop color)
         TilesetEditor->SetSelectedColorId(selectingColorId);
         TilesetEditor->SetColor(selectingColorId);
     }
