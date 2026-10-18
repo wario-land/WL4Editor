@@ -1085,36 +1085,170 @@ void TilesetEditDialog::on_pushButton_ImportTile16Graphic_clicked()
 }
 
 /// <summary>
-/// A helper fucntion to find palettes which is never used in Tile16 set.
+/// A helper function to find the palette ids which are used by at least one Tile8x8 of the Tile16 set.
+/// </summary>
+/// <remarks>
+/// The Tile16 set stores the palette id of every Tile8x8 corner, so a palette id is used as soon as
+/// one corner of one Tile16 references it.
+/// </remarks>
+/// <return>
+/// An array of the used palette ids in ascending order.
+/// </return>
+QVector<int> TilesetEditDialog::FindUsedPalettes()
+{
+    bool usedPalettes[16] = { false };
+    QVector<LevelComponents::TileMap16*> tile16array = tilesetEditParams->newTileset->GetMap16arrayPtr();
+    for (int i = 0; i < Tile16DefaultNum; i++)
+    {
+        LevelComponents::TileMap16* tile16 = tile16array[i];
+        for (int j = 0; j < 4; ++j)
+        {
+            int pal = tile16->GetTile8X8(j)->GetPaletteIndex() & 0xF;
+            usedPalettes[pal] = true;
+        }
+    }
+    QVector<int> result;
+    for (int i = 0; i < 16; i++)
+    {
+        if (usedPalettes[i])
+        {
+            result.push_back(i);
+        }
+    }
+    return result;
+}
+
+/// <summary>
+/// A helper function to find palettes which is never used in Tile16 set.
 /// </summary>
 /// <return>
 /// An array of palette id which is never used in Tile16 set.
 /// </return>
 QVector<int> TilesetEditDialog::FindUnusedPalettes()
 {
-    QVector<int> tmp = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    QVector<LevelComponents::TileMap16*> tile16array = tilesetEditParams->newTileset->GetMap16arrayPtr();
-    for (int i = 0; i < Tile16DefaultNum; i++)
-    {
-        LevelComponents::TileMap16* tile16 = tile16array[i];
-        for(int j = 0; j < 4; ++j)
-        {
-            int pal = tile16->GetTile8X8(j)->GetPaletteIndex();
-            if (tmp[pal] == pal)
-            {
-                tmp[pal] = -1; // we clean the used one from the tmp array
-            }
-        }
-    }
+    QVector<int> usedPalettes = FindUsedPalettes();
     QVector<int> result;
     for (int i = 0; i < 16; i++)
     {
-        if (tmp[i] == i)
+        if (!usedPalettes.contains(i))
         {
             result.push_back(i);
         }
     }
     return result;
+}
+
+/// <summary>
+/// Count the Tile16s of the Tile16 set which use a specified palette id.
+/// </summary>
+/// <param name="paletteId">
+/// The palette id to check.
+/// </param>
+/// <return>
+/// The number of the Tile16s using the palette, a Tile16 is counted only once.
+/// </return>
+int TilesetEditDialog::CountTile16UsingPalette(int paletteId)
+{
+    int result = 0;
+    QVector<LevelComponents::TileMap16*> tile16array = tilesetEditParams->newTileset->GetMap16arrayPtr();
+    for (int i = 0; i < Tile16DefaultNum; i++)
+    {
+        LevelComponents::TileMap16* tile16 = tile16array[i];
+        for (int j = 0; j < 4; ++j)
+        {
+            if (tile16->GetTile8X8(j)->GetPaletteIndex() == paletteId)
+            {
+                ++result;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+/// <summary>
+/// Swap the 2 palette ids used by the Tile8x8s of the whole Tile16 set.
+/// </summary>
+/// <remarks>
+/// This keeps the rendered Tile16 images unchanged after the color data of the 2 palettes has been
+/// swapped, since each Tile8x8 keeps using the same colors.
+/// </remarks>
+/// <param name="paletteId1">
+/// The first palette id to swap.
+/// </param>
+/// <param name="paletteId2">
+/// The second palette id to swap.
+/// </param>
+void TilesetEditDialog::SwapPaletteIdsInTile16Set(int paletteId1, int paletteId2)
+{
+    QVector<LevelComponents::TileMap16*> tile16array = tilesetEditParams->newTileset->GetMap16arrayPtr();
+    for (int i = 0; i < Tile16DefaultNum; i++)
+    {
+        LevelComponents::TileMap16* tile16 = tile16array[i];
+        for (int j = 0; j < 4; ++j)
+        {
+            LevelComponents::Tile8x8* tile8x8 = tile16->GetTile8X8(j);
+            int pal = tile8x8->GetPaletteIndex();
+            if (pal == paletteId1)
+            {
+                tile8x8->SetPaletteIndex(paletteId2);
+            }
+            else if (pal == paletteId2)
+            {
+                tile8x8->SetPaletteIndex(paletteId1);
+            }
+        }
+    }
+}
+
+/// <summary>
+/// Parse a list of hex numbers separated by English commas.
+/// </summary>
+/// <param name="text">
+/// The text to be parsed.
+/// </param>
+/// <param name="result">
+/// The parsed values.
+/// </param>
+/// <param name="maxValue">
+/// The biggest value allowed.
+/// </param>
+/// <param name="valueName">
+/// The name of the values, which is used in the error messages.
+/// </param>
+/// <returns>
+/// Return true if all the values in the text are parsed successfully.
+/// </returns>
+bool TilesetEditDialog::ParseCommaSeparatedHexValues(const QString &text, QVector<unsigned int> &result,
+                                                     unsigned int maxValue, const QString &valueName)
+{
+    result.clear();
+    QStringList valueStrings = text.split(",", Qt::SkipEmptyParts);
+    for (const QString &s : valueStrings)
+    {
+        bool ok;
+        unsigned int value = s.trimmed().toUInt(&ok, 16);
+        if (!ok)
+        {
+            QMessageBox::warning(this, tr("Warning"),
+                                 tr("A part of text cannot be converted to ") + valueName + tr(": ") + s);
+            result.clear();
+            return false;
+        }
+        else if (value > maxValue)
+        {
+            QMessageBox::warning(this, tr("Warning"),
+                                 valueName + tr(" must be between 0 and ") + QString::number(maxValue)
+                                 + tr(": ") + s);
+            result.clear();
+            return false;
+        }
+        else
+        {
+            result.push_back(value);
+        }
+    }
+    return true;
 }
 
 /// <summary>
@@ -1271,7 +1405,7 @@ void TilesetEditDialog::on_pushButton_CleanUpDuplicatedTile8x8_clicked()
 /// <summary>
 /// Change BG Tile8x8 set and the last palette by searching legal assorted graphic entries.
 /// </summary>
-void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
+void TilesetEditDialog::on_pushButton_ResetBGTile8x8setAndPals_clicked()
 {
     QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> graphicEntries = AssortedGraphicUtils::GetAssortedGraphicsFromROM();
 
@@ -1388,7 +1522,7 @@ void TilesetEditDialog::on_pushButton_changeBGTile8x8set_clicked()
 }
 
 /// <summary>
-/// Change BG Tile8x8 set and the last palette by searching legal assorted graphic entries.
+/// Delete the foreground Tile8x8s which are never used by any Tile16.
 /// </summary>
 void TilesetEditDialog::on_pushButton_CleanUpUnusedTile8x8_clicked()
 {
@@ -1450,5 +1584,239 @@ void TilesetEditDialog::on_pushButton_FindTile16ByItsUsingPaletteId_clicked()
         }
     }
     QMessageBox::information(this, tr("WL4Editor"), tr("Cannot find any Tile16 using the palette id you specified."));
+}
+
+
+/// <summary>
+/// Swap 2 palettes of the Tileset, and let the user decide whether the palette ids saved in the
+/// Tile16 set are swapped as well.
+/// </summary>
+/// <remarks>
+/// Only the color data of the 2 palettes is swapped, the Tile8x8 set is not changed because it
+/// stores color ids only. The Tile16 set stores the palette id of every Tile8x8 corner, so swapping
+/// those ids keeps the rendered Tile16 images unchanged, while keeping the ids makes the rendered
+/// Tile16 images use the swapped colors.
+/// </remarks>
+void TilesetEditDialog::on_pushButton_SwapPalettes_clicked()
+{
+    if (!HasInitialized)
+    {
+        return;
+    }
+
+    // Ask the user for the 2 palette ids to swap
+    bool ok;
+    QString input = QInputDialog::getText(this,
+                                          tr("WL4Editor"),
+                                          tr("Input the ids of the 2 palettes to swap:\n"
+                                             "Use hexadecimal palette ids without the \"0x\" prefix,\n"
+                                             "and split the 2 ids with an English comma, such as \"4,6\"."),
+                                          QLineEdit::Normal, "", &ok);
+    if (!ok)
+    {
+        return;
+    }
+
+    QVector<unsigned int> paletteIds;
+    if (!ParseCommaSeparatedHexValues(input, paletteIds, 0xF, tr("palette id")))
+    {
+        return;
+    }
+    if (paletteIds.size() != 2)
+    {
+        QMessageBox::warning(this, tr("Warning"),
+                             tr("2 palette ids have to be input to perform the swapping!"));
+        return;
+    }
+    if (paletteIds[0] == paletteIds[1])
+    {
+        QMessageBox::warning(this, tr("Warning"),
+                             tr("The 2 palettes to swap cannot be the same one!"));
+        return;
+    }
+
+    int firstPaletteId = static_cast<int>(paletteIds[0]);
+    int secondPaletteId = static_cast<int>(paletteIds[1]);
+
+    // Ask the user whether the palette ids saved in the Tile16 set should be swapped as well
+    QMessageBox messageBox(this);
+    messageBox.setWindowTitle(tr("Swap Palettes"));
+    messageBox.setIcon(QMessageBox::Question);
+    messageBox.setText(tr("Swap palette 0x%1 and palette 0x%2 of the Tileset?")
+                       .arg(firstPaletteId, 1, 16).arg(secondPaletteId, 1, 16));
+    messageBox.setInformativeText(tr("The Tile8x8 set is not affected because it stores color ids only.\n"
+                                     "The Tile16 set stores a palette id for every Tile8x8 corner: swap those "
+                                     "ids as well to keep the rendered Tile16 images unchanged, or keep the ids "
+                                     "to let the Tile16 images use the swapped colors.\n"
+                                     "Room layers which use the background Tile8x8 set of this Tileset are not "
+                                     "changed here, their colors follow the swapped palette data."));
+    QPushButton *keepImagesButton = messageBox.addButton(tr("Keep Tile16 images"), QMessageBox::AcceptRole);
+    QPushButton *keepIdsButton = messageBox.addButton(tr("Keep Tile16 palette ids"), QMessageBox::AcceptRole);
+    QPushButton *cancelButton = messageBox.addButton(QMessageBox::Cancel);
+    messageBox.setDefaultButton(cancelButton);
+    messageBox.exec();
+    QAbstractButton *clickedButton = messageBox.clickedButton();
+    if ((clickedButton != keepImagesButton) && (clickedButton != keepIdsButton))
+    {
+        return;
+    }
+    bool swapTile16PaletteIds = (clickedButton == keepImagesButton);
+
+    // Swap the color data of the 2 palettes
+    tilesetEditParams->newTileset->SwapPalettes(firstPaletteId, secondPaletteId);
+
+    // Swap the palette ids used by the Tile16 set if the user asks for it
+    if (swapTile16PaletteIds)
+    {
+        SwapPaletteIdsInTile16Set(firstPaletteId, secondPaletteId);
+    }
+
+    // Update all the graphicviews
+    int selectedTile16 = SelectedTile16;
+    ResetPaletteBarGraphicView(SelectedPaletteId);
+    SetSelectedColorId(SelectedColorId);
+    ReRenderTile8x8Map(SelectedPaletteId);
+    SetSelectedTile8x8(SelectedTile8x8, false);
+    ReRenderTile16Map();
+    SetSelectedTile16(selectedTile16, true);
+}
+
+/// <summary>
+/// Overwrite 1 or more palettes of the Tileset with the palettes of a chosen graphic manager entry,
+/// without changing any Tile8x8 or Tile16 data.
+/// </summary>
+/// <remarks>
+/// This is used to make the palettes of the Tileset match another graphic entry built on the shared
+/// background Tile8x8 set (for example the Layer 0 / Layer 3 graphics of a room), or to reuse the
+/// palettes of an entry for other customized features. Only entries which carry palette data are
+/// selectable, the destination palette slots come from the PaletteSlotIDs of the entry.
+/// </remarks>
+void TilesetEditDialog::on_pushButton_UseAdditionalBGPals_clicked()
+{
+    if (!HasInitialized)
+    {
+        return;
+    }
+
+    QVector<AssortedGraphicUtils::AssortedGraphicEntryItem> graphicEntries =
+            AssortedGraphicUtils::GetAssortedGraphicsFromROM();
+    if (!graphicEntries.size())
+    {
+        QMessageBox::information(this, tr("Error"), tr("Cannot find graphic entry from the ROM!"));
+        return;
+    }
+
+    // Collect the entries which carry palette data
+    QStringList items;
+    QVector<int> entryIds;
+    for (int i = 0; i < graphicEntries.size(); ++i)
+    {
+        if (!graphicEntries[i].PaletteAddress || !graphicEntries[i].PaletteSlotIDs.size())
+        {
+            continue; // this entry has no palette data which can be used
+        }
+
+        // List all the palette ids which can be provided by this entry
+        QString paletteIdList;
+        for (int j = 0; j < graphicEntries[i].PaletteSlotIDs.size(); ++j)
+        {
+            if (j)
+            {
+                paletteIdList += ", ";
+            }
+            paletteIdList += "0x" + QString::number(graphicEntries[i].PaletteSlotIDs[j], 16);
+        }
+
+        // The numeric prefix also keeps the item texts unique, the entry is found by the list index
+        items << QString::number(i) + "  " + graphicEntries[i].TileDataName + " - " + graphicEntries[i].MappingDataName
+                 + "   " + tr("[palette(s): %1]").arg(paletteIdList);
+        entryIds.push_back(i);
+    }
+    if (!items.size())
+    {
+        QMessageBox::information(this, tr("Error"),
+                                 tr("Cannot find any graphic entry with palette data!\n"
+                                    "Import the palette data of the graphic entry in the Graphic Manager first."));
+        return;
+    }
+
+    // Let the user choose a graphic entry
+    QInputDialog dialog;
+    dialog.setOptions(QInputDialog::UseListViewForComboBoxItems);
+    dialog.setComboBoxItems(items);
+    dialog.setLabelText(tr("Select a graphic entry to use its palette(s)."));
+    dialog.setWindowTitle("WL4Editor");
+    if (dialog.exec() != QDialog::Accepted)
+    {
+        return;
+    }
+    int listIndex = items.indexOf(dialog.textValue());
+    if ((listIndex < 0) || (listIndex >= entryIds.size()))
+    {
+        return;
+    }
+    AssortedGraphicUtils::AssortedGraphicEntryItem &entry = graphicEntries[entryIds[listIndex]];
+
+    // Check if the palettes to overwrite are used by the current Tile16 set
+    QString usedPaletteInfo;
+    bool hasUsedPalette = false;
+    for (int i = 0; i < entry.PaletteSlotIDs.size(); ++i)
+    {
+        int paletteId = static_cast<int>(entry.PaletteSlotIDs[i]);
+        if ((paletteId < 0) || (paletteId >= 16))
+        {
+            continue;
+        }
+        int tile16Count = CountTile16UsingPalette(paletteId);
+        if (tile16Count)
+        {
+            hasUsedPalette = true;
+            usedPaletteInfo += tr("  Palette 0x%1: used by %2 Tile16(s)\n")
+                    .arg(paletteId, 1, 16).arg(tile16Count);
+        }
+    }
+    if (hasUsedPalette)
+    {
+        QMessageBox messageBox(this);
+        messageBox.setWindowTitle(tr("Confirm Overwrite"));
+        messageBox.setIcon(QMessageBox::Warning);
+        messageBox.setText(tr("Some of the palettes to overwrite are used by the Tile16 set of this Tileset:"));
+        messageBox.setInformativeText(usedPaletteInfo + "\n"
+                                      + tr("Overwriting them will change the rendered images of those Tile16s.\n"
+                                           "Do you want to continue?"));
+        messageBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        messageBox.setDefaultButton(QMessageBox::No);
+        if (messageBox.exec() != QMessageBox::Yes)
+        {
+            return;
+        }
+    }
+
+    // Overwrite the palettes, all the 16 colors are copied from the palette data of the entry
+    for (int i = 0; i < entry.PaletteSlotIDs.size(); ++i)
+    {
+        int paletteId = static_cast<int>(entry.PaletteSlotIDs[i]);
+        if ((paletteId < 0) || (paletteId >= 16))
+        {
+            continue;
+        }
+        if (entry.palettes[paletteId].size() < 16)
+        {
+            continue;
+        }
+        for (int colorId = 0; colorId < 16; ++colorId)
+        {
+            tilesetEditParams->newTileset->SetColor(paletteId, colorId, entry.palettes[paletteId][colorId]);
+        }
+    }
+
+    // Update all the graphicviews
+    int selectedTile16 = SelectedTile16;
+    ResetPaletteBarGraphicView(SelectedPaletteId);
+    SetSelectedColorId(SelectedColorId);
+    ReRenderTile8x8Map(SelectedPaletteId);
+    SetSelectedTile8x8(SelectedTile8x8, false);
+    ReRenderTile16Map();
+    SetSelectedTile16(selectedTile16, true);
 }
 

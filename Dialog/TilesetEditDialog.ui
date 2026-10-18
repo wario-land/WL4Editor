@@ -81,7 +81,7 @@
           <number>1</number>
          </property>
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
         </widget>
        </item>
@@ -101,6 +101,16 @@
           <widget class="QPushButton" name="pushButton_ImportPalette">
            <property name="text">
             <string>Import Palette</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_SwapPalettes">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Swap 2 palettes of the Tileset.&lt;/p&gt;&lt;p&gt;Tile8x8 set won't change since only color id saved there. But you need to decide whether the palette IDs used by the Tile16 set need to swap as well, to keep the rendered Tile16 images unchanged or not.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Swap Palettes</string>
            </property>
           </widget>
          </item>
@@ -132,9 +142,9 @@
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-54</y>
             <width>293</width>
-            <height>298</height>
+            <height>320</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -274,16 +284,26 @@
             </layout>
            </item>
            <item>
-            <widget class="QLabel" name="label_backgroundTiles">
+            <widget class="QLabel" name="label_backgroundTilesAndPalettes">
              <property name="text">
-              <string>background Tile8x8:</string>
+              <string>background Tile8x8s and Palettes:</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton_changeBGTile8x8set">
+            <widget class="QPushButton" name="pushButton_ResetBGTile8x8setAndPals">
              <property name="text">
-              <string>Change BG Tile8x8 set</string>
+              <string>Reset BG Tile8x8 set and Palettes</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_UseAdditionalBGPals">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only overwrite Tileset palettes according to another chosen graphic manager entry, on shared BG Tile8x8 set for both Layer 0 and Layer 2, or other customized features.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Use Additional BG palette(s)</string>
              </property>
             </widget>
            </item>
@@ -487,7 +507,7 @@
             <item row="1" column="0">
              <widget class="QLabel" name="label_TopLeft">
               <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
+               <enum>Qt::FocusPolicy::NoFocus</enum>
               </property>
               <property name="text">
                <string>Top Left</string>
@@ -683,7 +703,7 @@
        <item>
         <spacer name="verticalSpacer_2">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -700,10 +720,10 @@
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>

@@ -1,4 +1,4 @@
-﻿#include "Tileset.h"
+#include "Tileset.h"
 #include "ROMUtils.h"
 
 #include <iostream>
@@ -377,6 +377,33 @@ namespace LevelComponents
         tile8x8array[tileId]->DrawTile(&pixmap, 0, 0);
 
         return pixmap;
+    }
+
+    /// <summary>
+    /// Swap the color data of 2 palettes of the Tileset.
+    /// </summary>
+    /// <remarks>
+    /// Every Tile8x8 instance keeps a pointer to the palette array of the Tileset and picks its
+    /// colors up when it is drawn, so the color data is swapped in place and no Tile8x8 or Tile16
+    /// instance needs to be rebuilt. The palette ids saved in the Tile16 set are not touched here,
+    /// the caller has to decide whether they should be swapped as well.
+    /// </remarks>
+    /// <param name="paletteId1">
+    /// The id of the first palette to swap.
+    /// </param>
+    /// <param name="paletteId2">
+    /// The id of the second palette to swap.
+    /// </param>
+    void Tileset::SwapPalettes(int paletteId1, int paletteId2)
+    {
+        if ((paletteId1 < 0) || (paletteId1 >= 16) || (paletteId2 < 0) || (paletteId2 >= 16)
+                || (paletteId1 == paletteId2))
+        {
+            return;
+        }
+        QVector<QRgb> tmpPalette = palettes[paletteId1];
+        palettes[paletteId1] = palettes[paletteId2];
+        palettes[paletteId2] = tmpPalette;
     }
 
     /// <summary>

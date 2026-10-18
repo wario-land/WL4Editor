@@ -1,4 +1,4 @@
-﻿#ifndef TILESETEDITDIALOG_H
+#ifndef TILESETEDITDIALOG_H
 #define TILESETEDITDIALOG_H
 
 #include <QDialog>
@@ -90,9 +90,11 @@ private slots:
     void on_pushButton_ImportPalette_clicked();
     void on_pushButton_ImportTile16Graphic_clicked();
     void on_pushButton_CleanUpDuplicatedTile8x8_clicked();
-    void on_pushButton_changeBGTile8x8set_clicked();
+    void on_pushButton_ResetBGTile8x8setAndPals_clicked();
     void on_pushButton_CleanUpUnusedTile8x8_clicked();
     void on_pushButton_FindTile16ByItsUsingPaletteId_clicked();
+    void on_pushButton_SwapPalettes_clicked();
+    void on_pushButton_UseAdditionalBGPals_clicked();
 
 private:
     Ui::TilesetEditDialog *ui;
@@ -121,6 +123,11 @@ private:
 
     // helper functions
     QVector<int> FindUnusedPalettes();
+    QVector<int> FindUsedPalettes();
+    int CountTile16UsingPalette(int paletteId);
+    void SwapPaletteIdsInTile16Set(int paletteId1, int paletteId2);
+    bool ParseCommaSeparatedHexValues(const QString &text, QVector<unsigned int> &result,
+                                      unsigned int maxValue, const QString &valueName);
 
     // Setters for Selected Tile16
     void TLTile8x8Reset();
