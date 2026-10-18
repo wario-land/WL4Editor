@@ -133,7 +133,8 @@ void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tile
         if ((dataPointers[1] = (void *) BGptr))
         {
             LevelComponents::Layer BGlayer(BGptr, LevelComponents::LayerTile8x8);
-            QPixmap layerPixmap = BGlayer.RenderLayer(tileset);
+            // The background Tile8x8 layer draws the palette color 0 as a real color
+            QPixmap layerPixmap = BGlayer.RenderLayer(tileset, true);
             pixmapItems[1]->setPixmap(layerPixmap);
         }
     }

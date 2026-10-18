@@ -1,4 +1,4 @@
-﻿#ifndef LAYER_H
+#ifndef LAYER_H
 #define LAYER_H
 
 #include "Tile.h"
@@ -31,7 +31,7 @@ namespace LevelComponents
     public:
         Layer(int layerDataPtr, enum LayerMappingType mappingType);
         Layer(Layer &layer);
-        QPixmap RenderLayer(Tileset *tileset);
+        QPixmap RenderLayer(Tileset *tileset, bool color0Opaque = false);
         int GetLayerWidth() { return Width; }
         int GetLayerHeight() { return Height; }
         enum LayerMappingType GetMappingType() { return MappingType; }

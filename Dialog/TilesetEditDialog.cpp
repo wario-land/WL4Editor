@@ -340,7 +340,7 @@ void TilesetEditDialog::RenderInitialization()
     PaletteBarpixmap.fill(Qt::transparent);
     QPainter PaletteBarPainter(&PaletteBarpixmap);
     QVector<QRgb> *palettetable = tilesetEditParams->newTileset->GetPalettes();
-    for(int i = 1; i < 16; ++i)
+    for(int i = 0; i < 16; ++i)
     {
         PaletteBarPainter.fillRect(8 * i, 0, 8, 16, palettetable[0][i]);
     }
@@ -406,7 +406,7 @@ void TilesetEditDialog::ResetPaletteBarGraphicView(int paletteId)
     PaletteBarpixmap.fill(Qt::transparent);
     QPainter PaletteBarPainter(&PaletteBarpixmap);
     QVector<QRgb> *palettetable = tilesetEditParams->newTileset->GetPalettes();
-    for(int i = 1; i < 16; ++i)
+    for(int i = 0; i < 16; ++i)
     {
         PaletteBarPainter.fillRect(8 * i, 0, 8, 16, palettetable[paletteId][i]);
     }
@@ -1497,11 +1497,11 @@ void TilesetEditDialog::on_pushButton_ResetBGTile8x8setAndPals_clicked()
             OverwriteATile8x8InTile8x8MapAndUpdateTile16Map(startId + i, newtmpdata);
         }
 
-        // Reset the palette(s) according to the entry
+        // Reset the palette(s) according to the entry, all the 16 colors are copied
         for (int n = 0; n < graphicEntries[id].PaletteSlotIDs.size(); n++)
         {
             int palId = graphicEntries[id].PaletteSlotIDs[n];
-            for (int i = 1; i < 16; i++)
+            for (int i = 0; i < 16; i++)
             {
                 tmp_newTilesetPtr->SetColor(palId, i, graphicEntries[id].palettes[palId][i]);
             }

@@ -1,4 +1,4 @@
-﻿#include "Layer.h"
+#include "Layer.h"
 #include "ROMUtils.h"
 
 #include <cassert>
@@ -140,10 +140,15 @@ namespace LevelComponents
     /// <param name="tileset">
     /// The tileset defining the tiles that will be drawn on the layer graphics.
     /// </param>
+    /// <param name="color0Opaque">
+    /// Draw the palette color 0 with the color stored in the palette instead of a transparent color.
+    /// Only the background Tile8x8 layer uses this, since the palette color 0 of the background
+    /// graphics is a real color in the game.
+    /// </param>
     /// <return>
     /// A QPixmap of the fully rendered layer, including transparency.
     /// </return>
-    QPixmap Layer::RenderLayer(Tileset *tileset)
+    QPixmap Layer::RenderLayer(Tileset *tileset, bool color0Opaque)
     {
         // Set the units we are drawing in (depending on the Tile type)
         int units = -1;
@@ -207,7 +212,7 @@ namespace LevelComponents
             for (int j = 0; j < Width; ++j)
             {
                 Tile *t = tiles[j + i * Width];
-                t->DrawTile(&layerPixmap, j * units, i * units);
+                t->DrawTile(&layerPixmap, j * units, i * units, color0Opaque);
             }
         }
 

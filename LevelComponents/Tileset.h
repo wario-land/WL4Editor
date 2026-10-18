@@ -17,6 +17,9 @@ namespace LevelComponents
         int tilesetPtr;
         QVector<Tile8x8 *> tile8x8array;
         QVector<TileMap16 *> map16array;
+        // The palette color 0 keeps the color loaded from the ROM, it is never forced to a specific
+        // value here. Tile8x8::DrawTile decides at draw time whether the color is used, only the
+        // background Tile8x8 layer (layer 3) and the wall paint graphics draw it.
         QVector<QRgb> palettes[16];
         Tile8x8 *blankTile = nullptr;
         int UniversalSpritesTilesPalettePtr = 0;
@@ -42,9 +45,9 @@ namespace LevelComponents
         void SwapPalettes(int paletteId1, int paletteId2);
         void SetTile8x8(Tile8x8 *newtile, int tileId) { tile8x8array[tileId] = newtile; }
         ~Tileset();
-        QPixmap RenderAllTile8x8(int paletteId);
-        QPixmap RenderAllTile16(int columns);
-        QPixmap RenderTile8x8(int tileId, int paletteId);
+        QPixmap RenderAllTile8x8(int paletteId, bool color0Opaque = false);
+        QPixmap RenderAllTile16(int columns, bool color0Opaque = false);
+        QPixmap RenderTile8x8(int tileId, int paletteId, bool color0Opaque = false);
         int GetUniversalSpritesTilesPalettePtr() { return UniversalSpritesTilesPalettePtr; }
 
         unsigned char *GetTerrainTypeIDTablePtr() { return Map16TerrainTypeIDTable; }

@@ -1,4 +1,4 @@
-﻿#include "ROMUtils.h"
+#include "ROMUtils.h"
 #include "Compress.h"
 #include "Operation.h"
 #include <QFile>
@@ -1478,19 +1478,27 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     /// <summary>
     /// Load a palette, 16 colors, from a pointer.
     /// </summary>
+    /// <remarks>
+    /// The palette color 0 is a transparent placeholder for the Tilesets and the graphics which
+    /// treat it as a transparency, so it can be replaced by a transparent color while loading. The
+    /// Tileset palettes and the palettes which use the color 0 as real data (the wall paint palettes
+    /// for example) pass true for notdisablefirstcolor and keep the loaded color.
+    /// </remarks>
     /// <param name="palette">
     /// Pointer of palette instance provided for palette loading.
     /// </param>
     /// <param name="dataptr">
     /// data pointer which keeps RGB55 palette data.
     /// </param>
+    /// <param name="notdisablefirstcolor">
+    /// Load the color 0 from the data instead of using a transparent color.
+    /// </param>
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor)
     {
-        // First color is transparent
         int k = 1;
         if(!notdisablefirstcolor)
         {
-            palette->push_back(0);
+            palette->push_back(0); // transparent placeholder
         } else {
             k = 0;
         }

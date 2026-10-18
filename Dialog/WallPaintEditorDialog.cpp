@@ -117,7 +117,7 @@ void WallPaintEditorDialog::RenderCurrentWallPaintAndPalette()
         tmpptr = (unsigned short*) (ptrarray[j] + palette_offset);
         ROMUtils::LoadPalette(&(palettes[j]), tmpptr, true);
         PaletteBarpixmap.fill(Qt::transparent);
-        for (int i = 0; i < 16; ++i) // Ignore the first color
+        for (int i = 0; i < 16; ++i) // all the 16 colors are drawn
         {
             PaletteBarPainter.fillRect(8 * i, 0, 8, 8, palettes[j][i]);
         }
@@ -150,7 +150,7 @@ void WallPaintEditorDialog::RenderCurrentWallPaintAndPalette()
         {
             tmpptr = (unsigned short*) (pal_startlevel_color + grad_palette_offset + j * 32);
             ROMUtils::LoadPalette(&(palettes[j + 2]), tmpptr, true);
-            for (int i = 0; i < 16; ++i) // Ignore the first color
+            for (int i = 0; i < 16; ++i) // all the 16 colors are drawn
             {
                 PalettesPainter.fillRect(8 * i, 8 * j, 8, 8, palettes[j + 2][i]);
             }
@@ -209,7 +209,8 @@ QPixmap WallPaintEditorDialog::GetWallPaint(int passage_Id, int local_level_id, 
         {
             LevelComponents::Tile8x8 *tmptile = new LevelComponents::Tile8x8(gfxdata + r * 32 + c * 1024 + gfx_offset, palettes);
             tmptile->SetPaletteIndex(palette_id);
-            tmptile->DrawTile(&pixmap, r * 8, c * 8);
+            // The wall paint palettes use the palette color 0 as a real color
+            tmptile->DrawTile(&pixmap, r * 8, c * 8, true);
             delete tmptile;
         }
     }

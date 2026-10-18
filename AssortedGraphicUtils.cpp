@@ -483,7 +483,8 @@ void AssortedGraphicUtils::ExtractDataFromEntryInfo_v2(AssortedGraphicEntryItem 
         else
             subPalettePtr = entry.PaletteAddress + tmpPalId * 32;       // vanilla ROM: slot-based offset
         unsigned short *tmpptr = (unsigned short*) (ROMUtils::ROMFileMetadata->ROMDataPtr + subPalettePtr);
-        ROMUtils::LoadPalette(&(entry.palettes[tmpPalId]), tmpptr);
+        // All the 16 colors are loaded, the palette color 0 is real data as well
+        ROMUtils::LoadPalette(&(entry.palettes[tmpPalId]), tmpptr, true);
     }
 
     // tiles data
@@ -771,8 +772,8 @@ QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphic
         for(unsigned int i = 0; i < palCount; ++i)
         {
             unsigned int slotId = entry.PaletteSlotIDs[i];
-            // The first color is transparent
-            for(int j = 1; j < 16; ++j)
+            // All the 16 colors are saved, the palette color 0 is real data as well
+            for(int j = 0; j < 16; ++j)
             {
                 data[16 * i + j] = ROMUtils::QRgbToData(entry.palettes[slotId][j]);
             }

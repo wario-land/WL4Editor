@@ -1,4 +1,4 @@
-﻿#include "Tile.h"
+#include "Tile.h"
 #include "ROMUtils.h"
 
 #include <cassert>
@@ -184,7 +184,11 @@ namespace LevelComponents
     /// Draw a Tile8x8 object onto a pixmap.
     /// </summary>
     /// <remarks>
-    /// The units for X and Y are pixels.
+    /// The palette data of a Tileset keeps the color 0 loaded from the ROM, because it may be real
+    /// data (GBA backdrop color, custom engine usage) that should not be destroyed. The color is
+    /// only meaningful for the background Tile8x8 layer though, every other layer treats the palette
+    /// color 0 as the transparent color, so the color table is adjusted here at draw time instead of
+    /// forcing the value to 0 when the palette is loaded.
     /// </remarks>
     /// <param name="layerPixmap">
     /// The pixmap object onto which the tile will be drawn.
@@ -195,12 +199,24 @@ namespace LevelComponents
     /// <param name="y">
     /// The Y position to draw the tile to.
     /// </param>
-    void Tile8x8::DrawTile(QPixmap *layerPixmap, int x, int y)
+    /// <param name="color0Opaque">
+    /// Draw the palette color 0 with the color stored in the palette instead of a transparent color.
+    /// </param>
+    void Tile8x8::DrawTile(QPixmap *layerPixmap, int x, int y, bool color0Opaque)
     {
+        QImage tileImage = ImageData->mirrored(FlipX, FlipY);
+
+        // Always pick the colors up here, so a palette edited in the Tileset Editor is drawn with
+        // the current colors, and use a local color table to keep the shared cached image untouched
+        QVector<QRgb> colorTable = palettes[paletteIndex];
+        if (!color0Opaque && colorTable.size())
+        {
+            colorTable[0] = 0; // transparent
+        }
+        tileImage.setColorTable(colorTable);
+
         QPainter painter(layerPixmap);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
-        ImageData->setColorTable(palettes[paletteIndex]);
-        QImage tileImage = ImageData->mirrored(FlipX, FlipY);
         QPoint drawDestination(x, y);
         painter.drawImage(drawDestination, tileImage);
     }
@@ -277,12 +293,15 @@ namespace LevelComponents
     /// <param name="y">
     /// The Y position to draw the tile to.
     /// </param>
-    void TileMap16::DrawTile(QPixmap *layerPixmap, int x, int y)
+    /// <param name="color0Opaque">
+    /// Draw the palette color 0 with the color stored in the palette instead of a transparent color.
+    /// </param>
+    void TileMap16::DrawTile(QPixmap *layerPixmap, int x, int y, bool color0Opaque)
     {
-        TileData[0]->DrawTile(layerPixmap, x, y);
-        TileData[1]->DrawTile(layerPixmap, x + 8, y);
-        TileData[2]->DrawTile(layerPixmap, x, y + 8);
-        TileData[3]->DrawTile(layerPixmap, x + 8, y + 8);
+        TileData[0]->DrawTile(layerPixmap, x, y, color0Opaque);
+        TileData[1]->DrawTile(layerPixmap, x + 8, y, color0Opaque);
+        TileData[2]->DrawTile(layerPixmap, x, y + 8, color0Opaque);
+        TileData[3]->DrawTile(layerPixmap, x + 8, y + 8, color0Opaque);
     }
 
     /// <summary>

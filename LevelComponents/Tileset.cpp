@@ -27,13 +27,13 @@ namespace LevelComponents
         this->tilesetPtr = tilesetPtr;
         unsigned char *curFilePtr = ROMUtils::ROMFileMetadata->ROMDataPtr;
 
-        // Create all 16 color palettes
+        // Create all 16 color palettes, the palette color 0 is kept as it is in the ROM
         paletteAddress = ROMUtils::PointerFromData(tilesetPtr + 8);
         for (int i = 0; i < 16; ++i)
         {
             int subPalettePtr = paletteAddress + i * 32;
             unsigned short *tmpptr = (unsigned short*) (curFilePtr + subPalettePtr);
-            ROMUtils::LoadPalette(&palettes[i], tmpptr);
+            ROMUtils::LoadPalette(&palettes[i], tmpptr, true);
         }
 
         // Initialize the 8x8 tiles by setting all the tiles to blank tiles
@@ -306,7 +306,13 @@ namespace LevelComponents
     /// <summary>
     /// Render the tileset by Tile8 as a pixmap.
     /// </summary>
-    QPixmap Tileset::RenderAllTile8x8(int paletteId)
+    /// <param name="paletteId">
+    /// The id of the palette used to render the Tile8x8s.
+    /// </param>
+    /// <param name="color0Opaque">
+    /// Draw the palette color 0 with the color stored in the palette instead of a transparent color.
+    /// </param>
+    QPixmap Tileset::RenderAllTile8x8(int paletteId, bool color0Opaque)
     {
         int lineNum = Tile8x8DefaultNum / 16;
         QPixmap pixmap(8 * 16, 8 * lineNum);
@@ -319,7 +325,7 @@ namespace LevelComponents
             {
                 if (tile8x8array[i * 16 + j] == blankTile) continue;
                 tile8x8array[i * 16 + j]->SetPaletteIndex(paletteId);
-                tile8x8array[i * 16 + j]->DrawTile(&pixmap, j * 8, i * 8);
+                tile8x8array[i * 16 + j]->DrawTile(&pixmap, j * 8, i * 8, color0Opaque);
             }
         }
         return pixmap;
@@ -331,10 +337,13 @@ namespace LevelComponents
     /// <param name="columns">
     /// The number of columns to divide the graphics into.
     /// </param>
+    /// <param name="color0Opaque">
+    /// Draw the palette color 0 with the color stored in the palette instead of a transparent color.
+    /// </param>
     /// <returns>
     /// The tileset rendered at a pixmap.
     /// </returns>
-    QPixmap Tileset::RenderAllTile16(int columns)
+    QPixmap Tileset::RenderAllTile16(int columns, bool color0Opaque)
     {
         // Initialize the pixmap with transparency
         int tileCountY = 96 / columns;
@@ -348,7 +357,7 @@ namespace LevelComponents
             {
                 for (int j = 0; j < 8; ++j)
                 {
-                    map16array[(c * tileCountY + i) * 8 + j]->DrawTile(&pixmap, (c * 8 + j) * 16, i * 16);
+                    map16array[(c * tileCountY + i) * 8 + j]->DrawTile(&pixmap, (c * 8 + j) * 16, i * 16, color0Opaque);
                 }
             }
         }
@@ -364,17 +373,20 @@ namespace LevelComponents
     /// <param name="paletteId">
     /// the id of palette to render Tile8x8.
     /// </param>
+    /// <param name="color0Opaque">
+    /// Draw the palette color 0 with the color stored in the palette instead of a transparent color.
+    /// </param>
     /// <returns>
     /// The Tile8x8 rendered at a pixmap.
     /// </returns>
-    QPixmap Tileset::RenderTile8x8(int tileId, int paletteId)
+    QPixmap Tileset::RenderTile8x8(int tileId, int paletteId, bool color0Opaque)
     {
         QPixmap pixmap(8, 8);
         pixmap.fill(Qt::transparent);
 
         // drawing
         tile8x8array[tileId]->SetPaletteIndex(paletteId);
-        tile8x8array[tileId]->DrawTile(&pixmap, 0, 0);
+        tile8x8array[tileId]->DrawTile(&pixmap, 0, 0, color0Opaque);
 
         return pixmap;
     }
@@ -409,13 +421,16 @@ namespace LevelComponents
     /// <summary>
     /// Regenerate Palette data when saving ROM.
     /// </summary>
+    /// <remarks>
+    /// All the 16 colors of a palette are saved, the palette color 0 included, so the color loaded
+    /// from the ROM is never destroyed by an unrelated Tileset edit.
+    /// </remarks>
     void Tileset::ReGeneratePaletteData()
     {
         memset(TilesetPaletteData, 0, 16 * 16 * 2);
         for(int i = 0; i < 16; ++i)
         {
-            // The first color is transparent
-            for(int j = 1; j < 16; ++j)
+            for(int j = 0; j < 16; ++j)
             {
                 TilesetPaletteData[16 * i + j] = ROMUtils::QRgbToData(palettes[i][j]);
             }
@@ -508,15 +523,15 @@ namespace LevelComponents
     {
         ReGeneratePaletteData();
         if (!TilesetPaletteData) return QString();
-        // Export colors 1-15 per palette (skip always-transparent color 0)
-        // 16 palettes * 15 colors * 2 bytes = 480 bytes = 960 hex chars
-        QByteArray raw(16 * 15 * 2, '\0');
+        // Export all the 16 colors of the 16 palettes, the palette color 0 included
+        // 16 palettes * 16 colors * 2 bytes = 512 bytes = 1024 hex chars
+        QByteArray raw(16 * 16 * 2, '\0');
         for (int p = 0; p < 16; ++p)
         {
-            for (int c = 1; c < 16; ++c)
+            for (int c = 0; c < 16; ++c)
             {
                 unsigned short val = TilesetPaletteData[16 * p + c];
-                int idx = (p * 15 + (c - 1)) * 2;
+                int idx = (p * 16 + c) * 2;
                 raw[idx] = (val >> 8) & 0xFF;
                 raw[idx + 1] = val & 0xFF;
             }
@@ -598,15 +613,19 @@ namespace LevelComponents
 
     void Tileset::SetAllPalettesHex(QString hex)
     {
-        // Import colors 1-15 per palette (color 0 is always transparent)
-        // 16 palettes * 15 colors * 2 bytes = 480 bytes = 960 hex chars
-        if (!TilesetPaletteData || hex.length() < 16 * 15 * 4) return;
+        // Import all the 16 colors of the 16 palettes, the palette color 0 included.
+        // The current format uses 16 colors per palette: 16 * 16 * 2 = 512 bytes = 1024 hex chars.
+        // The older format used 15 colors per palette (color 0 was skipped): 960 hex chars, it is
+        // still accepted so that the level files exported by an older editor can be imported.
+        if (!TilesetPaletteData) return;
         QByteArray raw = QByteArray::fromHex(hex.toUtf8());
+        bool hasColor0 = (raw.size() >= 16 * 16 * 2);
+        if (!hasColor0 && (raw.size() < 16 * 15 * 2)) return;
         for (int p = 0; p < 16; ++p)
         {
-            for (int c = 1; c < 16; ++c)
+            for (int c = hasColor0 ? 0 : 1; c < 16; ++c)
             {
-                int idx = (p * 15 + (c - 1)) * 2;
+                int idx = hasColor0 ? (p * 16 + c) * 2 : (p * 15 + (c - 1)) * 2;
                 unsigned short data = ((unsigned char) raw[idx] << 8) | (unsigned char) raw[idx + 1];
                 TilesetPaletteData[16 * p + c] = data;
                 int r = (data & 0x1F) << 3;

@@ -22,7 +22,7 @@ namespace LevelComponents
         Tile(enum TileType _type) : Type(_type) {}
 
     public:
-        virtual void DrawTile(QPixmap *layerPixmap, int x, int y) = 0;
+        virtual void DrawTile(QPixmap *layerPixmap, int x, int y, bool color0Opaque = false) = 0;
         virtual ~Tile() {}
     };
 
@@ -116,7 +116,7 @@ namespace LevelComponents
         Tile8x8(unsigned char *data, QVector<QRgb> *_palettes);
         Tile8x8(Tile8x8 *other);
         Tile8x8(Tile8x8 *other, QVector<QRgb> *_palettes);
-        void DrawTile(QPixmap *layerPixmap, int x, int y);
+        void DrawTile(QPixmap *layerPixmap, int x, int y, bool color0Opaque = false);
         static Tile8x8 *CreateBlankTile(QVector<QRgb> *_palettes);
         void SetIndex(int _index) {index=_index;}
         int GetIndex() {return index;};
@@ -140,7 +140,7 @@ namespace LevelComponents
     public:
         TileMap16() : Tile(TileTypeMap16) {}
         TileMap16(Tile8x8 *t0, Tile8x8 *t1, Tile8x8 *t2, Tile8x8 *t3);
-        void DrawTile(QPixmap *layerPixmap, int x, int y);
+        void DrawTile(QPixmap *layerPixmap, int x, int y, bool color0Opaque = false);
         Tile8x8* GetTile8X8(int position);
         const static int TILE8_TOPLEFT=0;
         const static int TILE8_TOPRIGHT=1;

@@ -193,7 +193,7 @@ QPixmap GraphicManagerDialog::RenderAllPalette(AssortedGraphicUtils::AssortedGra
     for (int j = 0; j < 16; ++j)
     {
         QVector<QRgb> palettetable = entry.palettes[j];
-        for (int i = 1; i < 16; ++i) // Ignore the first color
+        for (int i = 0; i < 16; ++i) // draw all the 16 colors, the color 0 is real data as well
         {
             PaletteBarPainter.fillRect(8 * i, 8 * j, 8, 8, palettetable[i]);
         }
@@ -1020,8 +1020,8 @@ void GraphicManagerDialog::on_pushButton_ImportPaletteData_clicked()
                 unsigned int slotId = slotIDs[i];
                 if (tmpEntry.palettes[slotId].size())
                     tmpEntry.palettes[slotId].clear();
-                // First color is transparent
-                ROMUtils::LoadPalette(&(tmpEntry.palettes[slotId]), (unsigned short *) (ROMUtils::ROMFileMetadata->ROMDataPtr + palAddress + i * 32));
+                // All the 16 colors are loaded, the palette color 0 is real data as well
+                ROMUtils::LoadPalette(&(tmpEntry.palettes[slotId]), (unsigned short *) (ROMUtils::ROMFileMetadata->ROMDataPtr + palAddress + i * 32), true);
             }
 
             // set tmpEntry if everything looks correct
