@@ -1,4 +1,4 @@
-﻿#ifndef WL4CONSTANTS_H
+#ifndef WL4CONSTANTS_H
 #define WL4CONSTANTS_H
 
 #define WL4EDITOR_VERSION "0.16.6"
@@ -196,6 +196,67 @@ namespace WL4Constants
     const unsigned int Tileset_BGTile_0x59 = 0x4ea9bc;
     const unsigned int Tileset_BGTile_0x5A = 0x54c8fc;
     const unsigned int Tileset_BGTile_0x5B = 0x529c9c;
+
+    // vanilla Tileset palettes address
+    const unsigned int Tileset_Palette_0x583C7C = 0x583C7C;
+    const unsigned int Tileset_Palette_0x583E7C = 0x583E7C;
+    const unsigned int Tileset_Palette_0x58407C = 0x58407C;
+    const unsigned int Tileset_Palette_0x58427C = 0x58427C;
+    const unsigned int Tileset_Palette_0x58447C = 0x58447C;
+    const unsigned int Tileset_Palette_0x58467C = 0x58467C;
+    const unsigned int Tileset_Palette_0x584A7C = 0x584A7C;
+    const unsigned int Tileset_Palette_0x584C7C = 0x584C7C;
+    const unsigned int Tileset_Palette_0x584E7C = 0x584E7C;
+    const unsigned int Tileset_Palette_0x58507C = 0x58507C;
+    const unsigned int Tileset_Palette_0x58527C = 0x58527C;
+    const unsigned int Tileset_Palette_0x58547C = 0x58547C;
+    const unsigned int Tileset_Palette_0x58567C = 0x58567C;
+    const unsigned int Tileset_Palette_0x58587C = 0x58587C;
+    const unsigned int Tileset_Palette_0x585A7C = 0x585A7C;
+    const unsigned int Tileset_Palette_0x585C7C = 0x585C7C;
+    const unsigned int Tileset_Palette_0x58647C = 0x58647C;
+    const unsigned int Tileset_Palette_0x58667C = 0x58667C;
+    const unsigned int Tileset_Palette_0x58687C = 0x58687C;
+    const unsigned int Tileset_Palette_0x586A7C = 0x586A7C;
+    const unsigned int Tileset_Palette_0x586E7C = 0x586E7C;
+    const unsigned int Tileset_Palette_0x58707C = 0x58707C;
+    const unsigned int Tileset_Palette_0x58727C = 0x58727C;
+    const unsigned int Tileset_Palette_0x58767C = 0x58767C;
+    const unsigned int Tileset_Palette_0x587A7C = 0x587A7C;
+    const unsigned int Tileset_Palette_0x587C7C = 0x587C7C;
+    const unsigned int Tileset_Palette_0x587E7C = 0x587E7C;
+    const unsigned int Tileset_Palette_0x58807C = 0x58807C;
+    const unsigned int Tileset_Palette_0x58827C = 0x58827C;
+    const unsigned int Tileset_Palette_0x58847C = 0x58847C;
+    const unsigned int Tileset_Palette_0x58867C = 0x58867C;
+    const unsigned int Tileset_Palette_0x588C7C = 0x588C7C;
+    const unsigned int Tileset_Palette_0x58907C = 0x58907C;
+    const unsigned int Tileset_Palette_0x58927C = 0x58927C;
+    const unsigned int Tileset_Palette_0x58947C = 0x58947C;
+    const unsigned int Tileset_Palette_0x58967C = 0x58967C;
+    const unsigned int Tileset_Palette_0x58987C = 0x58987C;
+    const unsigned int Tileset_Palette_0x589A7C = 0x589A7C;
+    const unsigned int Tileset_Palette_0x589C7C = 0x589C7C;
+    const unsigned int Tileset_Palette_0x589E7C = 0x589E7C;
+    const unsigned int Tileset_Palette_0x58A07C = 0x58A07C;
+    const unsigned int Tileset_Palette_0x58A27C = 0x58A27C;
+    const unsigned int Tileset_Palette_0x58AE7C = 0x58AE7C;
+    const unsigned int Tileset_Palette_0x58B07C = 0x58B07C;
+    const unsigned int Tileset_Palette_0x58B27C = 0x58B27C;
+    const unsigned int Tileset_Palette_0x58B47C = 0x58B47C;
+    const unsigned int Tileset_Palette_0x58BE7C = 0x58BE7C;
+    const unsigned int Tileset_Palette_0x58C07C = 0x58C07C;
+    const unsigned int Tileset_Palette_0x58C27C = 0x58C27C;
+    const unsigned int Tileset_Palette_0x58C47C = 0x58C47C;
+    const unsigned int Tileset_Palette_0x58C67C = 0x58C67C;
+    const unsigned int Tileset_Palette_0x58C87C = 0x58C87C;
+    const unsigned int Tileset_Palette_0x58CA7C = 0x58CA7C;
+    const unsigned int Tileset_Palette_0x58CC7C = 0x58CC7C;
+    const unsigned int Tileset_Palette_0x58CE7C = 0x58CE7C;
+    const unsigned int Tileset_Palette_0x58D07C = 0x58D07C;
+    const unsigned int Tileset_Palette_0x58D27C = 0x58D27C;
+    const unsigned int Tileset_Palette_0x58D47C = 0x58D47C;
+    const unsigned int Tileset_Palette_0x58D67C = 0x58D67C;
 }
 
 #endif // WL4CONSTANTS_H

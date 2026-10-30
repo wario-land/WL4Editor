@@ -52,6 +52,7 @@ private:
     // functions
     void CreateAndAddDefaultEntry();
     bool UpdateEntryList();
+    void UpdateAssortedGraphicEntriesLabel();
     QString GenerateEntryTextFromStruct(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
     void ExtractEntryToGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
     QPixmap RenderAllPalette(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
@@ -77,7 +78,6 @@ private:
 
     // helper functions
     bool CheckEditability(int entryId);
-    void GetVanillaGraphicEntriesFromROM();
     bool ParseCommaSeparatedHexValues(const QString &text, QVector<unsigned int> &result, unsigned int maxValue, const QString &valueName);
     QString GenerateUniqueMappingDataName(const QString &baseName);
 

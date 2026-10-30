@@ -1,9 +1,9 @@
 #include "GraphicManagerDialog.h"
 #include "ui_GraphicManagerDialog.h"
 
+#include <QItemSelectionModel>
 #include <QMessageBox>
 #include <QModelIndex>
-#include <QSet>
 
 #include "WL4EditorWindow.h"
 #include "WL4Constants.h"
@@ -42,12 +42,6 @@ GraphicManagerDialog::GraphicManagerDialog(QWidget *parent) :
         graphicEntries.clear();
     }
     graphicEntries = AssortedGraphicUtils::GetAssortedGraphicsFromROM();
-
-    // if there is no graphicEntry in the ROM, we generate entries from existing Tilesets and Rooms.
-    if (!graphicEntries.size())
-    {
-        GetVanillaGraphicEntriesFromROM();
-    }
     UpdateEntryList();
 
     // init status of some buttons
@@ -142,7 +136,25 @@ bool GraphicManagerDialog::UpdateEntryList()
     }
 
     ui->listView_RecordGraphicsList->setModel(ListViewItemModel);
+
+    // Keep the entry counter in the label above the list up to date. The selection model is
+    // recreated together with the item model, so the connection has to be made again here.
+    connect(ui->listView_RecordGraphicsList->selectionModel(), &QItemSelectionModel::currentChanged,
+            this, [this](const QModelIndex &, const QModelIndex &) { UpdateAssortedGraphicEntriesLabel(); });
+    UpdateAssortedGraphicEntriesLabel();
     return result;
+}
+
+/// <summary>
+/// Update the text of the label above the graphic entry list with the number of the current
+/// entry and the total number of entries.
+/// </summary>
+void GraphicManagerDialog::UpdateAssortedGraphicEntriesLabel()
+{
+    const int totalCount = static_cast<int>(graphicEntries.size());
+    const QModelIndex currentIndex = ui->listView_RecordGraphicsList->currentIndex();
+    const int currentItem = currentIndex.isValid() ? currentIndex.row() + 1 : 0;
+    ui->label_assortedGraphicEntires->setText(tr("graphic entries: selected %1, total %2").arg(currentItem).arg(totalCount));
 }
 
 /// <summary>
@@ -691,124 +703,6 @@ bool GraphicManagerDialog::CheckEditability(int entryId)
                               tr("its Tile data is found used in Tileset: 0x") + QString::number(find_tileset, 16));
     }
     return false;
-}
-
-/// <summary>
-/// Generate entries from the current ROM's Tileset and Rooms data.
-/// </summary>
-void GraphicManagerDialog::GetVanillaGraphicEntriesFromROM()
-{
-    // don't run this function if there is some graphic Entry exist(s).
-    if (graphicEntries.size())
-    {
-        return;
-    }
-
-    // Generate a graphic entry from a Room header layer mapping data when it is not in the list yet
-    auto addGraphicEntryFromRoomLayer = [this] (const LevelComponents::__RoomHeader &header,
-                                                unsigned int mappingDataAddr, const QString &layerName,
-                                                unsigned int levelId, unsigned int roomId, int roomIndex)
-    {
-        mappingDataAddr &= 0x7FF'FFFF;
-
-        // don't add an entry twice when multiple Rooms share one mapping data chunk
-        for (int n = 0; n < graphicEntries.size(); ++n)
-        {
-            if (graphicEntries[n].MappingDataAddress == mappingDataAddr)
-            {
-                return;
-            }
-        }
-
-        // not found, so we add a new entry
-        struct AssortedGraphicUtils::AssortedGraphicEntryItem newentry;
-        LevelComponents::Tileset *roomtileset = ROMUtils::singletonTilesets[header.TilesetID];
-        newentry.TileDataAddress = roomtileset->GetbgGFXptr();
-        newentry.TileDataSizeInByte = roomtileset->GetbgGFXlen();
-        int tilenum = newentry.TileDataSizeInByte / 32;
-        newentry.TileDataRAMOffsetNum = 0x3FF - tilenum;
-        newentry.TileDataType = AssortedGraphicUtils::AssortedGraphicTileDataType::Tile8x8_4bpp_no_comp_Tileset_text_bg;
-        newentry.TileDataName = "vanilla Tileset 0x" + QString::number(header.TilesetID, 16) + " bg tiles";
-        newentry.MappingDataAddress = mappingDataAddr;
-        newentry.MappingDataSizeAfterCompressionInByte = 0x1000; // a big number (0x40 x 0x40), since it won't cause problems for vanilla data
-        newentry.MappingDataCompressType = AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType::RLE_mappingtype_0x20;
-        newentry.MappingDataName = layerName + " found in: " + QString::number(levelId) + "-" +
-                                   QString::number(roomId) + "-" + QString::number(roomIndex);
-        newentry.PaletteAddress = roomtileset->GetPaletteAddr();
-        for (unsigned int k = 0; k < 16; k++)
-            newentry.PaletteSlotIDs.push_back(k); // initially all 16 slots
-        newentry.optionalGraphicWidth = 0; // overwrite size params when the mapping data include size info
-        newentry.optionalGraphicHeight = 0;
-
-        AssortedGraphicUtils::ExtractDataFromEntryInfo_v2(newentry);
-
-        // Collect all distinct palette IDs actually used by the mapping data
-        QSet<unsigned int> usedPaletteIDs;
-        for (int m = 0; m < newentry.mappingData.size(); m++)
-        {
-            int tileid = (newentry.mappingData[m] & 0x3FF);
-            if (tileid != 0x3FF)
-            {
-                unsigned int palId = (newentry.mappingData[m] & 0xF000) >> 12;
-                usedPaletteIDs.insert(palId);
-            }
-        }
-
-        // Build PaletteSlotIDs from the actually-used palette IDs (sorted)
-        newentry.PaletteSlotIDs.clear();
-        for (unsigned int id : usedPaletteIDs)
-            newentry.PaletteSlotIDs.push_back(id);
-        std::sort(newentry.PaletteSlotIDs.begin(), newentry.PaletteSlotIDs.end());
-        if (newentry.PaletteSlotIDs.isEmpty())
-            newentry.PaletteSlotIDs.push_back(0); // fallback
-
-        // PaletteAddress stays at the tileset's palette base (palette 0).
-        // ExtractDataFromEntryInfo_v2 uses tmpPalId*32 offset for vanilla ROM
-        // addresses, so keeping the base address is correct.
-
-        // Clear unused palettes
-        for (int i = 0; i < 16; ++i)
-        {
-            if (!usedPaletteIDs.contains(i))
-            {
-                newentry.palettes[i].clear();
-                for (int j = 0; j < 16; ++j) // (re-)initialization
-                {
-                    newentry.palettes[i].push_back(QColor(0, 0, 0, 0xFF).rgba());
-                }
-            }
-        }
-        graphicEntries.append(newentry);
-    };
-
-    // loop through all the Rooms
-    QVector<unsigned int> levelid_array = {0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5};
-    QVector<unsigned int> roomid_array = {0, 2, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 4};
-    for (int i = 0; i < levelid_array.size(); i++)
-    {
-        LevelComponents::Level *tmpLevel = new LevelComponents::Level(static_cast<LevelComponents::__passage>(levelid_array[i]),
-                                                                      static_cast<LevelComponents::__stage>(roomid_array[i]));
-        for (int j = 0; j < tmpLevel->GetRooms().size(); j++)
-        {
-            LevelComponents::__RoomHeader header = tmpLevel->GetRooms()[j]->GetRoomHeader();
-
-            // Layer 0 generated from Tile8x8 data uses the background Tile8x8 set of its Tileset,
-            // so its mapping data is an usable graphic like the Layer 3 mapping data
-            if ((header.Layer0MappingType & 0x30) == 0x20)
-            {
-                addGraphicEntryFromRoomLayer(header, header.Layer0Data, "Layer 0",
-                                             levelid_array[i], roomid_array[i], j);
-            }
-
-            if ((header.Layer3MappingType & 0x30) == 0x20)
-            {
-                addGraphicEntryFromRoomLayer(header, header.Layer3Data, "Layer 3",
-                                             levelid_array[i], roomid_array[i], j);
-            }
-        }
-
-        delete tmpLevel;
-    }
 }
 
 /// <summary>

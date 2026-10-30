@@ -342,49 +342,197 @@ static QString GetUpgradedAssortedGraphicListChunkData(unsigned int assortedGrap
 }
 
 /// <summary>
-/// Obtain the AssortedGraphic entries from the currently loaded ROM file.
+/// Generate the TileDataName and MappingDataName of a vanilla assorted graphic entry.
 /// </summary>
+/// <remarks>
+/// The TileDataName lists every Tileset which uses the same background Tile8x8 set with the same
+/// palette as the entry, so all the Tileset ids of a graphic shared by several Tilesets are
+/// visible in the entry list. The MappingDataName names the vanilla layer the mapping data is
+/// used by: the two Layer 0 mapping data stored in WL4Constants are "Layer 0", every other vanilla
+/// mapping data is used by Layer 3.
+/// </remarks>
+/// <param name="entry">
+/// The vanilla entry to generate the names for.
+/// </param>
+static void GenerateVanillaAssortedGraphicEntryNames(struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
+{
+    QStringList tilesetIds;
+    for (unsigned int i = 0; i < sizeof(ROMUtils::singletonTilesets) / sizeof(ROMUtils::singletonTilesets[0]); ++i)
+    {
+        LevelComponents::Tileset *tileset = ROMUtils::singletonTilesets[i];
+        if (tileset && ((unsigned int) tileset->GetbgGFXptr() == entry.TileDataAddress)
+            && ((unsigned int) tileset->GetPaletteAddr() == entry.PaletteAddress)
+            && ((unsigned int) tileset->GetbgGFXlen() == entry.TileDataSizeInByte))
+        {
+            tilesetIds.append("0x" + QString::number(i, 16).toUpper().rightJustified(2, QLatin1Char('0')));
+        }
+    }
+
+    entry.TileDataName = tilesetIds.size()
+            ? ("vanilla Tileset " + tilesetIds.join(", ") + " bg tiles")
+            : QString("vanilla bg tiles");
+    entry.MappingDataName = ((entry.MappingDataAddress == WL4Constants::ToxicLandfillDustyLayer0Ptr)
+                             || (entry.MappingDataAddress == WL4Constants::FieryCavernDustyLayer0Ptr))
+            ? "Layer 0"
+            : "Layer 3";
+}
+
+/// <summary>
+/// Obtain the assorted graphic entries from the currently loaded ROM file.
+/// </summary>
+/// <remarks>
+/// The vanilla entries generated from VanillaAssortedGraphicEntryData are the base of the list.
+/// The entries of the assorted graphic list chunk are appended afterwards. A chunk entry which
+/// describes one of the vanilla graphics (the same TileData, mapping data and palette addresses)
+/// is skipped, so the vanilla entry generated from the data table is the one which is kept.
+/// </remarks>
 /// <returns>
-/// A list of all AssortedGraphic entries, which is empty if none exist.
+/// The vanilla and the customized assorted graphic entries of the ROM.
 /// </returns>
 QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> AssortedGraphicUtils::GetAssortedGraphicsFromROM()
 {
+    // Start with the complete set of vanilla graphic entries, so the vanilla data table is the
+    // base of the list and the entries of the assorted graphic list chunk can be merged into it.
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> assortedGraphicEntries =
+            GetVanillaAssortedGraphicsFromROM();
+    const int vanillaEntryCount = static_cast<int>(assortedGraphicEntries.size());
+
     // Obtain the AssortedGraphic list chunk, if it exists
-    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> assortedGraphicEntries;
     unsigned int assortedGraphicListAddr = ROMUtils::FindChunkInROM(
         ROMUtils::ROMFileMetadata->ROMDataPtr,
         ROMUtils::ROMFileMetadata->Length,
         WL4Constants::AvailableSpaceBeginningInROM,
         ROMUtils::SaveDataChunkType::AssortedGraphicListChunkType
     );
-    if(assortedGraphicListAddr)
+    if (!assortedGraphicListAddr)
     {
-        // Obtain the AssortedGraphic list info
-        QString contents = GetUpgradedAssortedGraphicListChunkData(assortedGraphicListAddr);
-        if(!contents.length())
-        {
-            singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("ROM contains an empty AssortedGraphic list chunk (this should not be possible)"));
-            return assortedGraphicEntries;
-        }
-        QStringList assortedGraphicTuples = contents.split(";");
-        if(assortedGraphicTuples.count() % AssortedGraphic_FIELD_COUNT)
-        {
-            singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("ROM contains a corrupted AssortedGraphic list chunk (field count is not a multiple of ") + QString::number(AssortedGraphic_FIELD_COUNT) + ")");
-            return assortedGraphicEntries;
-        }
-        for(int i = 0; i < assortedGraphicTuples.count(); i += AssortedGraphic_FIELD_COUNT)
-        {
-            struct AssortedGraphicUtils::AssortedGraphicEntryItem entry =
-                    DeserializeAssortedGraphicMetadata(assortedGraphicTuples.mid(i, AssortedGraphic_FIELD_COUNT));
-            // TODO: add validation check logic for each sub chunk
+        return assortedGraphicEntries;
+    }
 
-            // Extract Data from Infos
-            ExtractDataFromEntryInfo_v2(entry);
+    // Obtain the AssortedGraphic list info
+    QString contents = GetUpgradedAssortedGraphicListChunkData(assortedGraphicListAddr);
+    if (!contents.length())
+    {
+        singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("ROM contains an empty AssortedGraphic list chunk (this should not be possible)"));
+        return assortedGraphicEntries;
+    }
+    QStringList assortedGraphicTuples = contents.split(";");
+    if (assortedGraphicTuples.count() % AssortedGraphic_FIELD_COUNT)
+    {
+        singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("ROM contains a corrupted AssortedGraphic list chunk (field count is not a multiple of ") + QString::number(AssortedGraphic_FIELD_COUNT) + ")");
+        return assortedGraphicEntries;
+    }
+    for (int i = 0; i < assortedGraphicTuples.count(); i += AssortedGraphic_FIELD_COUNT)
+    {
+        struct AssortedGraphicUtils::AssortedGraphicEntryItem entry =
+                DeserializeAssortedGraphicMetadata(assortedGraphicTuples.mid(i, AssortedGraphic_FIELD_COUNT));
+        // TODO: add validation check logic for each sub chunk
 
-            assortedGraphicEntries.append(entry);
+        // A chunk entry which describes the same graphic as a vanilla entry is skipped, so the
+        // vanilla entry generated from the data table is the one which is kept
+        bool isVanillaEntry = false;
+        for (int j = 0; j < vanillaEntryCount; ++j)
+        {
+            if ((entry.TileDataAddress == assortedGraphicEntries[j].TileDataAddress)
+                && (entry.MappingDataAddress == assortedGraphicEntries[j].MappingDataAddress)
+                && (entry.PaletteAddress == assortedGraphicEntries[j].PaletteAddress))
+            {
+                isVanillaEntry = true;
+                break;
+            }
         }
+        if (isVanillaEntry)
+        {
+            continue;
+        }
+
+        // Extract Data from Infos
+        ExtractDataFromEntryInfo_v2(entry);
+
+        assortedGraphicEntries.append(entry);
     }
     return assortedGraphicEntries;
+}
+
+/// <summary>
+/// Create the vanilla assorted graphic entries from the constant data table.
+/// </summary>
+/// <remarks>
+/// The entries are stored as a flat array of unsigned ints, see the documentation of
+/// VanillaAssortedGraphicEntryData in AssortedGraphicUtils.h for the field layout. Only the info
+/// fields are filled in here, the tile, palette and mapping data are not loaded from the ROM.
+/// </remarks>
+/// <returns>
+/// The vanilla assorted graphic entries, which is empty if the data table is corrupted.
+/// </returns>
+QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> AssortedGraphicUtils::GetVanillaAssortedGraphicEntries()
+{
+    // Number of the fixed fields at the start of every entry, the palette slot ids follow them
+    const unsigned int fixedFieldCount = 9;
+    const unsigned int dataCount = sizeof(VanillaAssortedGraphicEntryData) / sizeof(VanillaAssortedGraphicEntryData[0]);
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> entries;
+    unsigned int offset = 0;
+    while (offset < dataCount)
+    {
+        if ((dataCount - offset) < fixedFieldCount)
+        {
+            // the last entry is truncated, the table is corrupt
+            entries.clear();
+            break;
+        }
+
+        struct AssortedGraphicUtils::AssortedGraphicEntryItem entry;
+        entry.TileDataAddress = VanillaAssortedGraphicEntryData[offset++];
+        entry.TileDataSizeInByte = VanillaAssortedGraphicEntryData[offset++];
+        entry.TileDataRAMOffsetNum = VanillaAssortedGraphicEntryData[offset++];
+        entry.TileDataType = static_cast<enum AssortedGraphicUtils::AssortedGraphicTileDataType>(
+            VanillaAssortedGraphicEntryData[offset++]);
+        entry.MappingDataAddress = VanillaAssortedGraphicEntryData[offset++];
+        entry.MappingDataSizeAfterCompressionInByte =
+            VanillaAssortedGraphicEntryData[offset++];
+        entry.MappingDataCompressType =
+            static_cast<enum AssortedGraphicUtils::AssortedGraphicMappingDataCompressionType>(
+                VanillaAssortedGraphicEntryData[offset++]);
+        entry.PaletteAddress = VanillaAssortedGraphicEntryData[offset++];
+
+        // Load the complete palette slot id array of the entry
+        unsigned int paletteSlotCount = VanillaAssortedGraphicEntryData[offset++];
+        if (paletteSlotCount > (dataCount - offset))
+        {
+            // the palette slot id array runs past the end of the table, the table is corrupt
+            entries.clear();
+            break;
+        }
+        for (unsigned int i = 0; i < paletteSlotCount; ++i)
+        {
+            entry.PaletteSlotIDs.push_back(VanillaAssortedGraphicEntryData[offset++]);
+        }
+        if (entry.PaletteSlotIDs.isEmpty())
+        {
+            entry.PaletteSlotIDs.push_back(0); // fallback, same as the chunk deserialization
+        }
+
+        // Generate the names of the vanilla entry, they are not stored in the data table
+        GenerateVanillaAssortedGraphicEntryNames(entry);
+        entries.push_back(entry);
+    }
+    return entries;
+}
+
+/// <summary>
+/// Create the vanilla assorted graphic entries and load their graphic data from the opened ROM.
+/// </summary>
+/// <returns>
+/// The vanilla assorted graphic entries with all the graphic data loaded.
+/// </returns>
+QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> AssortedGraphicUtils::GetVanillaAssortedGraphicsFromROM()
+{
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> entries = GetVanillaAssortedGraphicEntries();
+    for (int i = 0; i < entries.size(); ++i)
+    {
+        ExtractDataFromEntryInfo_v2(entries[i]);
+    }
+    return entries;
 }
 
 /// <summary>
@@ -426,6 +574,13 @@ QVector<unsigned int> AssortedGraphicUtils::FindCompatibleMappingDataAddresses(L
         if (graphicEntries[i].TileDataType != Tile8x8_4bpp_no_comp_Tileset_text_bg)
         {
             continue; // only this Tile8x8 data type can be the background Tile8x8 set of a Tileset
+        }
+        // The two vanilla Layer 0 mapping data are handled by the Layer 0 picker of the
+        // RoomConfigDialog directly, they must not be offered as a background mapping data.
+        if ((graphicEntries[i].MappingDataAddress == WL4Constants::ToxicLandfillDustyLayer0Ptr)
+            || (graphicEntries[i].MappingDataAddress == WL4Constants::FieryCavernDustyLayer0Ptr))
+        {
+            continue;
         }
         if (!DoesTilesetUseTile8x8Set(tileset, graphicEntries[i].TileDataAddress, graphicEntries[i].TileDataSizeInByte,
                                       graphicEntries[i].TileDataRAMOffsetNum, graphicEntries[i].tileData,
