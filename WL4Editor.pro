@@ -55,6 +55,7 @@ SOURCES += \
     DockWidget/OutputDockWidget.cpp \
     FileIOUtils.cpp \
     AssortedGraphicUtils.cpp \
+    AssortedGraphicIO.cpp \
     LevelComponents/AnimatedTile8x8Group.cpp \
     LevelComponents/LevelDoorVector.cpp \
     PCG/Graphics/TileUtils.cpp \
@@ -110,6 +111,7 @@ HEADERS += \
     DockWidget/OutputDockWidget.h \
     FileIOUtils.h \
     AssortedGraphicUtils.h \
+    AssortedGraphicIO.h \
     ChunkUtils.h \
     LevelComponents/AnimatedTile8x8Group.h \
     LevelComponents/LevelDoorVector.h \

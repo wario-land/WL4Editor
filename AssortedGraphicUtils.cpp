@@ -24,7 +24,7 @@ extern WL4EditorWindow *singleton;
 /// <returns>
 /// Return true if the Tile8x8 data is obtained.
 /// </returns>
-static bool GetTilesetBGTile8x8RawData(LevelComponents::Tileset *tileset, QByteArray &result)
+bool AssortedGraphicUtils::GetTilesetBGTile8x8RawData(LevelComponents::Tileset *tileset, QByteArray &result)
 {
     if (result.size())
     {
@@ -36,14 +36,26 @@ static bool GetTilesetBGTile8x8RawData(LevelComponents::Tileset *tileset, QByteA
     }
     QVector<LevelComponents::Tile8x8 *> tile8x8array = tileset->GetTile8x8arrayPtr();
     int tileNum = tileset->GetbgGFXlen() / 32;
-    if ((tileNum <= 0) || ((0x200 + tileNum) > tile8x8array.size()))
+    if ((tileNum <= 0) || (tileNum > 0x3FF) || (0x600 > tile8x8array.size()))
     {
         return false;
     }
-    result.reserve(tileNum * 32);
+
+    // The result is indexed by the raw Tile8x8 id used by the mapping data. The background
+    // Tile8x8 set occupies the raw ids [0x3FF - tileNum, 0x3FE], which correspond to the
+    // Tile8x8 array indices [0x5FF - tileNum, 0x5FE].
+    const int startId = 0x3FF - tileNum;
+    result = QByteArray(0x400 * 32, 0);
     for (int i = 0; i < tileNum; ++i)
     {
-        result.append(tile8x8array[0x200 + i]->GetRawPixelData());
+        const int tileId = startId + i;
+        const int arrayIndex = 0x200 + tileId;
+        if ((tileId < 0) || (tileId >= 0x400) || (arrayIndex >= tile8x8array.size()))
+        {
+            break;
+        }
+        memcpy(result.data() + tileId * 32,
+               tile8x8array[arrayIndex]->GetRawPixelData().constData(), 32);
     }
     return true;
 }
@@ -106,7 +118,7 @@ static bool DoesTilesetUseTile8x8Set(LevelComponents::Tileset *tileset, unsigned
         // Tileset Tile8x8 array (see LevelComponents::Layer::RenderLayer), while a Tile8x8 set
         // stores its data from its own TileDataRAMOffsetNum on, so this is the index to compare
         int tileId = tileDataRAMOffsetNum + i;
-        if ((tileId >= 0x200) || (((tileId + 1) * 32) > tilesetTileData.size()))
+        if ((tileId >= 0x400) || (((tileId + 1) * 32) > tilesetTileData.size()))
         {
             return false;
         }
@@ -571,6 +583,10 @@ QVector<unsigned int> AssortedGraphicUtils::FindCompatibleMappingDataAddresses(L
         {
             continue; // only the RLE compressed mapping data can be used by a layer
         }
+        if (!graphicEntries[i].MappingDataAddress)
+        {
+            continue; // an entry without a saved mapping data cannot be used by a layer
+        }
         if (graphicEntries[i].TileDataType != Tile8x8_4bpp_no_comp_Tileset_text_bg)
         {
             continue; // only this Tile8x8 data type can be the background Tile8x8 set of a Tileset
@@ -591,6 +607,129 @@ QVector<unsigned int> AssortedGraphicUtils::FindCompatibleMappingDataAddresses(L
         if (!result.contains(graphicEntries[i].MappingDataAddress))
         {
             result.push_back(graphicEntries[i].MappingDataAddress);
+        }
+    }
+
+    return result;
+}
+
+/// <summary>
+/// Check if an address points into the vanilla part of the ROM.
+/// </summary>
+/// <param name="address">
+/// The address to check.
+/// </param>
+/// <returns>
+/// Return true if the address is a non-zero address below the available space of the ROM.
+/// </returns>
+bool AssortedGraphicUtils::IsVanillaAddress(unsigned int address)
+{
+    return (address != 0) && (address < WL4Constants::AvailableSpaceBeginningInROM);
+}
+
+/// <summary>
+/// Check if all the data of an entry is loaded from vanilla ROM addresses.
+/// </summary>
+/// <param name="entry">
+/// The entry to check.
+/// </param>
+/// <returns>
+/// Return true if all three data parts of the entry reference vanilla ROM addresses.
+/// </returns>
+bool AssortedGraphicUtils::IsVanillaReferencingEntry(const AssortedGraphicEntryItem &entry)
+{
+    return IsVanillaAddress(entry.TileDataAddress)
+            && IsVanillaAddress(entry.PaletteAddress)
+            && IsVanillaAddress(entry.MappingDataAddress);
+}
+
+/// <summary>
+/// Collect the graphic entries which can provide a mapping data for the background Tile8x8 set of
+/// a Tileset.
+/// </summary>
+/// <remarks>
+/// The result is the single source of the mapping data options of the RoomConfigDialog. The
+/// default background mapping data is always included. The two vanilla Layer 0 mapping data are
+/// only included when the caller asks for the Layer 0 options.
+/// </remarks>
+/// <param name="tileset">
+/// The Tileset which provides the background Tile8x8 set.
+/// </param>
+/// <param name="forLayer0">
+/// True to include the vanilla Layer 0 mapping data.
+/// </param>
+/// <returns>
+/// The compatible entries, deduplicated by mapping data address.
+/// </returns>
+QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> AssortedGraphicUtils::FindCompatibleGraphicEntries(
+        LevelComponents::Tileset *tileset, bool forLayer0)
+{
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> result;
+    if (!tileset)
+    {
+        return result;
+    }
+
+    // The default background mapping data can always be used. It has no own entry in the vanilla
+    // data table, so a synthetic entry is created for the picker.
+    struct AssortedGraphicUtils::AssortedGraphicEntryItem defaultEntry;
+    defaultEntry.TileDataAddress = static_cast<unsigned int>(tileset->GetbgGFXptr());
+    defaultEntry.TileDataSizeInByte = static_cast<unsigned int>(tileset->GetbgGFXlen());
+    const unsigned int defaultTileCount = defaultEntry.TileDataSizeInByte / 32;
+    defaultEntry.TileDataRAMOffsetNum = (defaultTileCount > 0x3FF) ? 0 : (0x3FF - defaultTileCount);
+    defaultEntry.TileDataType = Tile8x8_4bpp_no_comp_Tileset_text_bg;
+    defaultEntry.TileDataName = "default background tiles";
+    defaultEntry.MappingDataAddress = WL4Constants::BGLayerDefaultPtr;
+    defaultEntry.MappingDataCompressType = RLE_mappingtype_0x20;
+    defaultEntry.MappingDataName = "default background";
+    defaultEntry.PaletteAddress = static_cast<unsigned int>(tileset->GetPaletteAddr());
+    defaultEntry.PaletteSlotIDs.push_back(0);
+    result.push_back(defaultEntry);
+
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> graphicEntries = GetAssortedGraphicsFromROM();
+    QByteArray tilesetTileData;
+    bool tilesetTileDataAvailable = GetTilesetBGTile8x8RawData(tileset, tilesetTileData);
+    for (int i = 0; i < graphicEntries.size(); ++i)
+    {
+        if (graphicEntries[i].MappingDataCompressType != RLE_mappingtype_0x20)
+        {
+            continue; // only the RLE compressed mapping data can be used by a layer
+        }
+        if (!graphicEntries[i].MappingDataAddress)
+        {
+            continue; // an entry without a saved mapping data cannot be used by a layer
+        }
+        if (graphicEntries[i].TileDataType != Tile8x8_4bpp_no_comp_Tileset_text_bg)
+        {
+            continue; // only this Tile8x8 data type can be the background Tile8x8 set of a Tileset
+        }
+        bool isVanillaLayer0Data =
+                (graphicEntries[i].MappingDataAddress == WL4Constants::ToxicLandfillDustyLayer0Ptr)
+                || (graphicEntries[i].MappingDataAddress == WL4Constants::FieryCavernDustyLayer0Ptr);
+        if (isVanillaLayer0Data && !forLayer0)
+        {
+            continue;
+        }
+        if (!DoesTilesetUseTile8x8Set(tileset, graphicEntries[i].TileDataAddress,
+                                      graphicEntries[i].TileDataSizeInByte,
+                                      graphicEntries[i].TileDataRAMOffsetNum, graphicEntries[i].tileData,
+                                      tilesetTileDataAvailable ? tilesetTileData : QByteArray()))
+        {
+            continue;
+        }
+
+        bool alreadyAdded = false;
+        for (const struct AssortedGraphicUtils::AssortedGraphicEntryItem &existing : result)
+        {
+            if (existing.MappingDataAddress == graphicEntries[i].MappingDataAddress)
+            {
+                alreadyAdded = true;
+                break;
+            }
+        }
+        if (!alreadyAdded)
+        {
+            result.push_back(graphicEntries[i]);
         }
     }
 
@@ -713,6 +852,7 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
 
     // Populate the chunk list with invalidation chunks for data to be removed from the ROM
     QVector<unsigned int> invalidationChunks;
+    QVector<unsigned int> protectedChunks;
     if (removeGraphics.size())
     {
         for(int i = 0; i < removeGraphics.size(); i++)
@@ -721,6 +861,16 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
             unsigned int dummy_uint;
             if (!CheckEditability(removeGraphics[i], dummy_uint, dummy_uint, dummy_uint))
             {
+                // The chunks of an entry which is still in use must stay valid even when another
+                // editable entry shares them.
+                QVector<unsigned int> chunkaddrs = GetSaveDataAddresses(removeGraphics[i]);
+                for (unsigned int chunkaddr : chunkaddrs)
+                {
+                    if (!protectedChunks.contains(chunkaddr))
+                    {
+                        protectedChunks.append(chunkaddr);
+                    }
+                }
                 continue;
             }
 
@@ -728,7 +878,7 @@ QString AssortedGraphicUtils::SaveAssortedGraphicsToROM(QVector<AssortedGraphicE
             for (auto &j: chunkaddrs)
             {
                 // since people can use the same chunk in multiple entries
-                if (!invalidationChunks.contains(j))
+                if (!protectedChunks.contains(j) && !invalidationChunks.contains(j))
                 {
                     invalidationChunks.append(j);
                 }
@@ -910,15 +1060,27 @@ QVector<unsigned int> AssortedGraphicUtils::GetSaveDataAddresses(AssortedGraphic
 /// <param name="entry">
 /// The struct data saves the info of the graphic entry.
 /// </param>
+/// <param name="entryId">
+/// The index of the entry in the entry list which owns the created chunks.
+/// </param>
+/// <param name="onlyDetachedData">
+/// True to save only the data parts which have no ROM address yet. This is used when new entries
+/// are appended to the ROM: an address which is already set must be kept as it is, even when it
+/// points into the available space of the ROM.
+/// </param>
 /// <returns>
 /// An array of new SaveData.
 /// </returns>
-QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphicEntryItem &entry, unsigned int entryId)
+QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphicEntryItem &entry, unsigned int entryId,
+                                                                 bool onlyDetachedData)
 {
     QVector<ROMUtils::SaveData> result;
     // Skip the data types which contain no data at all, they need no chunk to be saved
-    if ((entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.PaletteAddress))
-            && entry.PaletteSlotIDs.size())
+    bool paletteNeedsSave = onlyDetachedData
+            ? (!entry.PaletteAddress && entry.PaletteSlotIDs.size())
+            : ((entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM || !entry.PaletteAddress)
+               && entry.PaletteSlotIDs.size());
+    if (paletteNeedsSave)
     {
         unsigned int palCount = entry.PaletteSlotIDs.size();
         unsigned int datasize = palCount * 16 * 2; // 16 color, 2 bytes per color
@@ -945,8 +1107,11 @@ QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphic
                        ROMUtils::SaveDataChunkType::AssortedGraphicPaletteChunkType});
         entry_datatype_chunk_tuple.append({entryId, graphicPalette, result.last().index});
     }
-    if ((entry.TileDataAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.TileDataAddress))
-            && entry.TileDataSizeInByte)
+    bool tileDataNeedsSave = onlyDetachedData
+            ? (!entry.TileDataAddress && entry.TileDataSizeInByte)
+            : ((entry.TileDataAddress >= WL4Constants::AvailableSpaceBeginningInROM || !entry.TileDataAddress)
+               && entry.TileDataSizeInByte);
+    if (tileDataNeedsSave && (entry.tileData.size() >= (int) entry.TileDataSizeInByte))
     {
         switch (entry.TileDataType)
         {
@@ -976,7 +1141,11 @@ QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphic
             }
         }
     }
-    if (entry.MappingDataAddress >= WL4Constants::AvailableSpaceBeginningInROM || !(entry.MappingDataAddress))
+    bool mappingDataNeedsSave = onlyDetachedData
+            ? !entry.MappingDataAddress
+            : (entry.MappingDataAddress >= WL4Constants::AvailableSpaceBeginningInROM || !entry.MappingDataAddress);
+    if (mappingDataNeedsSave && entry.optionalGraphicWidth && entry.optionalGraphicHeight
+            && (entry.mappingData.size() == (int) (entry.optionalGraphicWidth * entry.optionalGraphicHeight)))
     {
         switch (entry.MappingDataCompressType)
         {
@@ -1010,6 +1179,173 @@ QVector<ROMUtils::SaveData> AssortedGraphicUtils::CreateSaveData(AssortedGraphic
         }
     }
     return result;
+}
+
+/// <summary>
+/// Append new entries to the assorted graphic list chunk of the ROM.
+/// </summary>
+/// <remarks>
+/// The chunks of the entries which are already in the ROM are not reallocated and not invalidated.
+/// Only the data parts of the new entries which have no ROM address yet are written as new chunks.
+/// The old list chunk is replaced by a new one which describes both the old and the new entries.
+/// </remarks>
+/// <param name="newEntries">
+/// The entries to append. Their addresses are updated to the resolved ROM addresses.
+/// </param>
+/// <returns>
+/// An error message, or an empty string on success.
+/// </returns>
+QString AssortedGraphicUtils::AppendAssortedGraphicsToROM(
+        QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> &newEntries)
+{
+    if (newEntries.isEmpty())
+    {
+        return QString();
+    }
+
+    // Load the entries which are already described by the ROM. They are kept in the list chunk
+    // without touching their data chunks. When the ROM has no list chunk yet, this returns the
+    // vanilla entries generated from the constant data table.
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> currentEntries =
+            GetAssortedGraphicsFromROM();
+
+    ROMUtils::SaveDataIndex = 1;
+    entry_datatype_chunk_tuple.clear();
+
+    QVector<struct ROMUtils::SaveData> chunks;
+    for (int i = 0; i < newEntries.size(); ++i)
+    {
+        chunks.append(CreateSaveData(newEntries[i], static_cast<unsigned int>(i), true));
+    }
+
+    // Only the old list chunk is invalidated. The data chunks of the entries which are not part of
+    // this import stay valid.
+    QVector<unsigned int> invalidationChunks;
+    unsigned int oldListChunkAddr = ROMUtils::FindChunkInROM(
+        ROMUtils::ROMFileMetadata->ROMDataPtr,
+        ROMUtils::ROMFileMetadata->Length,
+        WL4Constants::AvailableSpaceBeginningInROM,
+        ROMUtils::SaveDataChunkType::AssortedGraphicListChunkType
+    );
+    if (oldListChunkAddr)
+    {
+        invalidationChunks.append(oldListChunkAddr + 12);
+    }
+
+    unsigned int currentChunkId = 0;
+    bool hasDoneListChunk = false;
+
+    bool ret = ROMUtils::SaveFile(ROMUtils::ROMFileMetadata->FilePath, invalidationChunks,
+
+        // ChunkAllocator
+        [&newEntries, &currentEntries, &currentChunkId, &chunks, &hasDoneListChunk]
+        (unsigned char *TempFile, struct ROMUtils::FreeSpaceRegion freeSpace, struct ROMUtils::SaveData *sd,
+         bool resetchunkIndex, int *require_size)
+        {
+            (void) TempFile;
+
+            if (resetchunkIndex)
+            {
+                currentChunkId = 0;
+                hasDoneListChunk = false;
+            }
+
+            if (currentChunkId < static_cast<unsigned int>(chunks.size()))
+            {
+                unsigned int alignOffset = 0;
+                if (chunks[currentChunkId].alignment)
+                {
+                    unsigned int startAddr = (freeSpace.addr + 3) & ~3;
+                    alignOffset = startAddr - freeSpace.addr;
+                }
+
+                if (chunks[currentChunkId].size > freeSpace.size - alignOffset - 12)
+                {
+                    *require_size = chunks[currentChunkId].size;
+                    return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                }
+                else
+                {
+                    *sd = chunks[currentChunkId];
+
+                    unsigned int chunkid = currentChunkId;
+                    unsigned int entryid = entry_datatype_chunk_tuple[chunkid].entryID;
+                    enum chunkSaveDataType type = entry_datatype_chunk_tuple[chunkid].datatype;
+                    unsigned int tmpaddr = freeSpace.addr + alignOffset + 12;
+                    switch (type)
+                    {
+                        case graphicPalette:
+                        {
+                            newEntries[entryid].PaletteAddress = tmpaddr;
+                            break;
+                        }
+                        case graphictiles:
+                        {
+                            newEntries[entryid].TileDataAddress = tmpaddr;
+                            break;
+                        }
+                        case graphicmappingdata:
+                        {
+                            newEntries[entryid].MappingDataAddress = tmpaddr;
+                            break;
+                        }
+                    }
+
+                    currentChunkId++;
+                    return ROMUtils::ChunkAllocationStatus::Success;
+                }
+            }
+            else
+            {
+                if (!hasDoneListChunk)
+                {
+                    // Build the list chunk from the old entries and the new entries with their
+                    // resolved addresses. currentEntries is a private copy and is not modified by
+                    // the save process.
+                    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> allEntries = currentEntries;
+                    allEntries += newEntries;
+                    QString contents = CreateAssortedGraphicListChunkData(allEntries);
+                    if (static_cast<unsigned int>(contents.length()) + 13 > freeSpace.size)
+                    {
+                        *require_size = contents.length() + 13;
+                        return ROMUtils::ChunkAllocationStatus::InsufficientSpace;
+                    }
+
+                    unsigned char *data = (unsigned char *) malloc(contents.length() + 1);
+                    memcpy(data + 1, contents.toLocal8Bit().constData(), contents.length());
+                    data[0] = AssortedGraphic_CHUNK_VERSION;
+                    struct ROMUtils::SaveData listChunk =
+                    {
+                        0,
+                        static_cast<unsigned int>(contents.length() + 1),
+                        data,
+                        ROMUtils::SaveDataIndex++,
+                        false,
+                        0,
+                        0,
+                        ROMUtils::SaveDataChunkType::AssortedGraphicListChunkType
+                    };
+                    *sd = listChunk;
+                    hasDoneListChunk = true;
+
+                    return ROMUtils::ChunkAllocationStatus::Success;
+                }
+
+                return ROMUtils::ChunkAllocationStatus::NoMoreChunks;
+            }
+        },
+
+        // PostProcessingCallback
+        []
+        (unsigned char *TempFile, std::map<int, int> indexToChunkPtr)
+        {
+            (void) TempFile;
+            (void) indexToChunkPtr;
+            return QString("");
+        }
+    );
+
+    return ret ? QString() : QString("Failed to append graphics data to the ROM");
 }
 
 /// <summary>

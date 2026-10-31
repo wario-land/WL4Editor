@@ -4,10 +4,17 @@
 #include <QItemSelectionModel>
 #include <QMessageBox>
 #include <QModelIndex>
+#include <QFile>
+#include <QFileDialog>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
 
 #include "WL4EditorWindow.h"
 #include "WL4Constants.h"
 #include "FileIOUtils.h"
+#include "AssortedGraphicIO.h"
 
 extern WL4EditorWindow *singleton;
 
@@ -644,28 +651,6 @@ void GraphicManagerDialog::DeltmpEntryTile(int tileId)
 }
 
 /// <summary>
-/// Check if all the data of an entry is loaded from vanilla ROM addresses.
-/// </summary>
-/// <remarks>
-/// Such an entry only describes vanilla ROM data, none of its data is stored in a chunk generated
-/// by the editor. Removing or modifying it would either lose the only description of that vanilla
-/// data or need a new ROM data chunk for data the editor does not own, so the user is not allowed
-/// to do that. Use the duplicate button to get an editable copy of the entry instead.
-/// </remarks>
-/// <param name="entry">
-/// The entry to check.
-/// </param>
-/// <returns>
-/// Return true if all the data of the entry is loaded from vanilla ROM addresses.
-/// </returns>
-static bool IsVanillaReferencingEntry(const struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry)
-{
-    return (entry.TileDataAddress < WL4Constants::AvailableSpaceBeginningInROM)
-            && (entry.PaletteAddress < WL4Constants::AvailableSpaceBeginningInROM)
-            && (entry.MappingDataAddress < WL4Constants::AvailableSpaceBeginningInROM);
-}
-
-/// <summary>
 /// Check if an entry can be edited or deleted
 /// </summary>
 /// <param name="entryId">
@@ -676,7 +661,7 @@ static bool IsVanillaReferencingEntry(const struct AssortedGraphicUtils::Assorte
 /// </returns>
 bool GraphicManagerDialog::CheckEditability(int entryId)
 {
-    if (IsVanillaReferencingEntry(graphicEntries[entryId]))
+    if (AssortedGraphicUtils::IsVanillaReferencingEntry(graphicEntries[entryId]))
     {
         QMessageBox::critical(this, tr("Error"), tr("Cannot delete or edit entry: ") + QString::number(entryId) + ",\n" +
                               tr("all of its Tile8x8 data, palette data and mapping data are vanilla ROM data.\n"
@@ -1915,5 +1900,173 @@ QString GraphicManagerDialog::GenerateUniqueMappingDataName(const QString &baseN
         newName = baseName + " (copy " + QString::number(copyId) + ")";
     }
     return newName;
+}
+
+
+void GraphicManagerDialog::on_pushButton_ImportEntries_clicked()
+{
+    const QString filePath = QFileDialog::getOpenFileName(
+                this, tr("Import Graphic Entries"), singleton->GetdDialogInitialPath(),
+                tr("JSON files (*.json)"));
+    if (filePath.isEmpty())
+    {
+        return;
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QMessageBox::critical(this, tr("Import Error"), tr("Cannot open the selected file."));
+        return;
+    }
+    const QByteArray contents = file.readAll();
+    file.close();
+
+    QJsonParseError parseError;
+    const QJsonDocument document = QJsonDocument::fromJson(contents, &parseError);
+    if (parseError.error != QJsonParseError::NoError)
+    {
+        QMessageBox::critical(this, tr("Import Error"),
+                              tr("Failed to parse the JSON file: ") + parseError.errorString());
+        return;
+    }
+
+    QJsonArray entryArray;
+    if (document.isArray())
+    {
+        entryArray = document.array();
+    }
+    else if (document.isObject() && document.object().contains("entries"))
+    {
+        entryArray = document.object().value("entries").toArray();
+    }
+    else if (document.isObject() && document.object().contains("graphics"))
+    {
+        // Accept the wrapper written by ExportGraphicEntries.js as well.
+        entryArray = document.object().value("graphics").toObject().value("entries").toArray();
+    }
+    else
+    {
+        QMessageBox::critical(this, tr("Import Error"),
+                              tr("The file does not contain an entry array."));
+        return;
+    }
+
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> importedEntries;
+    int duplicateCount = 0;
+    int failedCount = 0;
+    for (int i = 0; i < entryArray.size(); ++i)
+    {
+        if (!entryArray.at(i).isObject())
+        {
+            ++failedCount;
+            singleton->GetOutputWidgetPtr()->PrintString(
+                        tr("Graphic entry %1 was skipped: it is not a JSON object.").arg(i));
+            continue;
+        }
+        struct AssortedGraphicUtils::AssortedGraphicEntryItem entry;
+        QString error;
+        if (!AssortedGraphicIO::EntryFromJson(entryArray.at(i).toObject(), entry, error, true))
+        {
+            ++failedCount;
+            singleton->GetOutputWidgetPtr()->PrintString(
+                        tr("Graphic entry %1 was skipped: %2").arg(i).arg(error));
+            continue;
+        }
+
+        const QString fingerprint = AssortedGraphicIO::EntryFingerprint(entry);
+        bool duplicate = false;
+        for (const struct AssortedGraphicUtils::AssortedGraphicEntryItem &existing : graphicEntries)
+        {
+            if (AssortedGraphicIO::EntryFingerprint(existing) == fingerprint)
+            {
+                duplicate = true;
+                break;
+            }
+        }
+        if (!duplicate)
+        {
+            for (const struct AssortedGraphicUtils::AssortedGraphicEntryItem &existing : importedEntries)
+            {
+                if (AssortedGraphicIO::EntryFingerprint(existing) == fingerprint)
+                {
+                    duplicate = true;
+                    break;
+                }
+            }
+        }
+        if (duplicate)
+        {
+            ++duplicateCount;
+            continue;
+        }
+
+        QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> knownEntries = graphicEntries;
+        knownEntries += importedEntries;
+        AssortedGraphicIO::EnsureUniqueEntryNames(entry, knownEntries);
+        importedEntries.push_back(entry);
+    }
+
+    if (importedEntries.isEmpty())
+    {
+        singleton->GetOutputWidgetPtr()->PrintString(
+                    tr("No new graphic entries were imported. %1 duplicate(s), %2 failed entry(s).")
+                    .arg(duplicateCount).arg(failedCount));
+        return;
+    }
+
+    const int firstImportedIndex = static_cast<int>(graphicEntries.size());
+    graphicEntries += importedEntries;
+    UpdateEntryList();
+
+    SelectedEntryID = firstImportedIndex;
+    tmpEntry = graphicEntries[SelectedEntryID];
+    ExtractEntryToGUI(tmpEntry);
+    ui->listView_RecordGraphicsList->setCurrentIndex(ListViewItemModel->index(SelectedEntryID, 0));
+    ui->listView_RecordGraphicsList->scrollTo(ListViewItemModel->index(SelectedEntryID, 0));
+    ui->pushButton_ImportGraphic->setEnabled(true);
+    ui->pushButton_ImportPaletteData->setEnabled(true);
+    ui->pushButton_ImportTile8x8Data->setEnabled(true);
+    ui->pushButton_validateAndSetMappingData->setEnabled(true);
+    ui->pushButton_duplicateCurrentEntry->setEnabled(true);
+    ui->pushButton_SwapPalettes->setEnabled(true);
+
+    singleton->GetOutputWidgetPtr()->PrintString(
+                tr("Imported %1 graphic entries. %2 duplicate(s), %3 failed entry(s). "
+                   "Click Save All to write them to the ROM.")
+                .arg(static_cast<int>(importedEntries.size())).arg(duplicateCount).arg(failedCount));
+}
+
+
+void GraphicManagerDialog::on_pushButton_ExportEntries_clicked()
+{
+    const QString filePath = QFileDialog::getSaveFileName(
+                this, tr("Export Graphic Entries"), singleton->GetdDialogInitialPath(),
+                tr("JSON files (*.json)"));
+    if (filePath.isEmpty())
+    {
+        return;
+    }
+
+    QJsonArray entryArray;
+    for (const struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry : graphicEntries)
+    {
+        entryArray.append(AssortedGraphicIO::EntryToJson(entry, true));
+    }
+    QJsonObject root;
+    root["version"] = 1;
+    root["entries"] = entryArray;
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QMessageBox::critical(this, tr("Export Error"), tr("Cannot create the selected file."));
+        return;
+    }
+    file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    file.close();
+
+    singleton->GetOutputWidgetPtr()->PrintString(
+                tr("Exported %1 graphic entries.").arg(static_cast<int>(entryArray.size())));
 }
 

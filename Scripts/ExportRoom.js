@@ -14,7 +14,7 @@
 
     // Build the room JSON object
     var roomObj = {
-        version: 1,
+        version: 2,
         roomId: roomId,
         roomConfig: {
             roomWidth: WL4EditorInterface.GetCurRoomLayerWidth(1),
@@ -154,6 +154,11 @@
         type: cameraControlType,
         records: cameraRecords
     };
+
+    // Graphic Manager entries used by this room (background tiles, palette and mapping data)
+    roomObj.graphics = JSON.parse(
+        WL4EditorInterface.ExportGetRoomGraphicEntries(roomId)
+    );
 
     // Write to file (empty path triggers save dialog)
     WL4EditorInterface.WriteJsonFile("", JSON.stringify(roomObj, null, 2));

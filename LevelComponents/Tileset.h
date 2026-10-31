@@ -65,6 +65,12 @@ namespace LevelComponents
         void SetbgGFXptr(int new_bgGFXptr) { bgGFXptr = new_bgGFXptr; }
         int GetbgGFXlen() { return bgGFXlen; }
         void SetbgGFXlen(int lenth) { bgGFXlen = lenth; }
+
+        // Replace the background Tile8x8 data of the Tileset and rebuild the Tile8x8 instances.
+        // The old background Tile8x8 range is released first. Foreground, animated and Map16 data
+        // are not touched.
+        void SetBackgroundTileData(int newBgGFXptr, int newBgGFXlen);
+
         void Setmap16ptr(int new_map16ptr) { map16ptr = new_map16ptr; }
 
         int GetPaletteAddr() { return paletteAddress; }

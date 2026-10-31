@@ -39,6 +39,8 @@ private slots:
     void on_lineEdit_mappingDataName_textChanged(const QString &arg1);
     void on_pushButton_duplicateCurrentEntry_clicked();
     void on_pushButton_SwapPalettes_clicked();
+    void on_pushButton_ImportEntries_clicked();
+    void on_pushButton_ExportEntries_clicked();
 
 private:
     Ui::GraphicManagerDialog *ui;

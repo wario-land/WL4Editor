@@ -419,6 +419,61 @@ namespace LevelComponents
     }
 
     /// <summary>
+    /// Replace the background Tile8x8 data of the Tileset and rebuild the Tile8x8 instances.
+    /// </summary>
+    /// <remarks>
+    /// The background Tile8x8 data is loaded from the ROM address the Tileset header points to.
+    /// The background Tile8x8 instances live at the end of the Tile8x8 array, so the old range is
+    /// released first and the new range is created from the new address. Foreground, animated and
+    /// Map16 data are not touched.
+    /// </remarks>
+    /// <param name="newBgGFXptr">
+    /// The new ROM address of the background Tile8x8 data.
+    /// </param>
+    /// <param name="newBgGFXlen">
+    /// The new size of the background Tile8x8 data, in byte.
+    /// </param>
+    void Tileset::SetBackgroundTileData(int newBgGFXptr, int newBgGFXlen)
+    {
+        // Release the old background Tile8x8 instances. The background data always occupies the
+        // last bgGFXlen / 32 entries of the Tile8x8 array.
+        const int oldCount = bgGFXlen / 32;
+        const int oldStart = Tile8x8DefaultNum - 1 - oldCount;
+        for (int i = 0; i < oldCount; ++i)
+        {
+            const int index = oldStart + i;
+            if ((index < 0) || (index >= tile8x8array.size()))
+            {
+                continue;
+            }
+            if (tile8x8array[index] && (tile8x8array[index] != blankTile))
+            {
+                delete tile8x8array[index];
+            }
+            tile8x8array[index] = blankTile;
+        }
+
+        bgGFXptr = newBgGFXptr;
+        bgGFXlen = newBgGFXlen;
+
+        const int newCount = bgGFXlen / 32;
+        const int newStart = Tile8x8DefaultNum - 1 - newCount;
+        if (!bgGFXptr || (newCount <= 0))
+        {
+            return;
+        }
+        for (int i = 0; i < newCount; ++i)
+        {
+            const int index = newStart + i;
+            if ((index < 0) || (index >= tile8x8array.size()))
+            {
+                break;
+            }
+            tile8x8array[index] = new Tile8x8(bgGFXptr + i * 32, palettes);
+        }
+    }
+
+    /// <summary>
     /// Regenerate Palette data when saving ROM.
     /// </summary>
     /// <remarks>

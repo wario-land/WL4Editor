@@ -12,12 +12,9 @@ extern WL4EditorWindow *singleton;
 constexpr const char *RoomConfigDialog::TilesetNamesSetData[0x5C];
 constexpr const char *RoomConfigDialog::LayerPrioritySetData[4];
 constexpr const char *RoomConfigDialog::AlphaBlendAttrsSetData[12];
-constexpr unsigned int RoomConfigDialog::BGLayerdataPtrsData[166];
-constexpr unsigned int RoomConfigDialog::VanillaTilesetBGTilesDataAddr[0x5C];
 
 // static variables used by RoomConfigDialog
 static QStringList TilesetNamesSet, LayerPrioritySet, AlphaBlendAttrsSet;
-static std::vector<int> BGLayerdataPtrs;
 
 // helper function
 unsigned short *RoomConfigDialog::ChangeLayerDimensions(int newWidth, int newHeight, int oldWidth, int oldHeight, unsigned short *oldData)
@@ -589,111 +586,97 @@ void RoomConfigDialog::on_spinBox_RasterType_valueChanged(int arg1)
 }
 
 /// <summary>
-/// Collect the mapping data addresses usable by the background Tile8x8 set of a Tileset.
+/// Collect the mapping data options usable by the background Tile8x8 set of a Tileset.
 /// </summary>
 /// <remarks>
 /// A mapping data built on the background Tile8x8 set of the Tileset draws the same tiles for
 /// Layer 0 and Layer 3, so both "Use existing Layer 0" and "Use existing Background Layer" list the
-/// same addresses. Graphic entries sharing one Tile8x8 set (the duplicated entries made by the
-/// Graphic Manager for example) all contribute their own mapping data address, since their Tile8x8
+/// same options. Graphic entries sharing one Tile8x8 set (the duplicated entries made by the
+/// Graphic Manager for example) all contribute their own mapping data option, since their Tile8x8
 /// data are several copies in the ROM which must not be merged.
 /// </remarks>
 /// <param name="newTilesetId">
 /// The tileset id which provides the background Tile8x8 set.
 /// </param>
+/// <param name="forLayer0">
+/// True to also include the vanilla Layer 0 mapping data.
+/// </param>
 /// <returns>
-/// The mapping data addresses in use order, the addresses of the vanilla background mapping data
-/// included.
+/// The mapping data options in use order, including the default background mapping data.
 /// </returns>
-QVector<unsigned int> RoomConfigDialog::FindLayerMappingDataAddresses(int newTilesetId)
+QVector<RoomConfigDialog::LayerMappingDataOption> RoomConfigDialog::FindLayerMappingDataOptions(
+        int newTilesetId, bool forLayer0)
 {
-    BGLayerdataPtrs.clear();
-
-    unsigned int bgtiledataAddr = ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr();
-
-    // go through all the vanilla background tile data pointer and see if the current Tileset is using several of them
-    // push all the available background mapping data pointer into the BGLayerdataPtrsData[] as long as the bg tile data pointer matches
-    for ( int i = 0; i < (sizeof(VanillaTilesetBGTilesDataAddr) / sizeof(VanillaTilesetBGTilesDataAddr[0])); i++)
+    QVector<LayerMappingDataOption> result;
+    LevelComponents::Tileset *tileset = ROMUtils::singletonTilesets[newTilesetId];
+    if (!tileset)
     {
-        if (bgtiledataAddr == VanillaTilesetBGTilesDataAddr[i])
-        {
-            int curTilesetId = 0;
-            int count = 0;
-            int graphicNum = 0;
-            while (curTilesetId != i)
-            {
-                graphicNum = BGLayerdataPtrsData[count];
-                count += (graphicNum + 1);
-                curTilesetId++;
-            }
-            graphicNum = BGLayerdataPtrsData[count++];
-            if (graphicNum > 0)
-            {
-                for (int j = 0; j < graphicNum; j++)
-                {
-                    std::vector<int>::iterator it = std::find(BGLayerdataPtrs.begin(), BGLayerdataPtrs.end(), BGLayerdataPtrsData[count + j]);
-                    if(it == BGLayerdataPtrs.end())
-                    {
-                        BGLayerdataPtrs.push_back(BGLayerdataPtrsData[count + j]);
-                    }
-                }
-            }
-        }
+        return result;
     }
 
-    // graphic entries: a Tile8x8 set can be shared by several entries, which have different ROM
-    // data pointers but different mapping data, so all of their mapping data can be listed here
-    QVector<unsigned int> sharedMappingDataPtrs =
-            AssortedGraphicUtils::FindCompatibleMappingDataAddresses(ROMUtils::singletonTilesets[newTilesetId]);
-    for (unsigned int addr : sharedMappingDataPtrs)
+    const QVector<AssortedGraphicUtils::AssortedGraphicEntryItem> entries =
+            AssortedGraphicUtils::FindCompatibleGraphicEntries(tileset, forLayer0);
+    for (int i = 0; i < entries.size(); ++i)
     {
-        std::vector<int>::iterator it = std::find(BGLayerdataPtrs.begin(), BGLayerdataPtrs.end(), (int) addr);
-        if(it == BGLayerdataPtrs.end())
-        {
-            BGLayerdataPtrs.push_back((int) addr);
-        }
-    }
-
-    // add the default bg mapping data pointer
-    std::vector<int>::iterator it = std::find(BGLayerdataPtrs.begin(), BGLayerdataPtrs.end(), WL4Constants::BGLayerDefaultPtr);
-    if(it == BGLayerdataPtrs.end())
-    {
-        BGLayerdataPtrs.push_back(WL4Constants::BGLayerDefaultPtr);
-    }
-
-    QVector<unsigned int> result;
-    for (auto item : BGLayerdataPtrs)
-    {
-        result.push_back((unsigned int) item);
+        LayerMappingDataOption option;
+        option.Address = entries[i].MappingDataAddress;
+        option.TileDataName = entries[i].TileDataName;
+        option.MappingDataName = entries[i].MappingDataName;
+        // The picker only selects a mapping data for the Tileset background Tile8x8 set. The
+        // palette is not applied by this dialog, so a custom Tileset palette must not turn a
+        // vanilla tile/mapping data option into "[custom]".
+        option.IsVanilla = AssortedGraphicUtils::IsVanillaAddress(entries[i].TileDataAddress)
+                && AssortedGraphicUtils::IsVanillaAddress(entries[i].MappingDataAddress);
+        option.EntryIndex = i;
+        result.push_back(option);
     }
     return result;
 }
 
 /// <summary>
-/// Reset a layer data picker with the available mapping data addresses.
+/// Reset a layer data picker with the available mapping data options.
 /// </summary>
 /// <param name="picker">
 /// The picker to reset.
 /// </param>
-/// <param name="mappingDataAddresses">
-/// The addresses to list in the picker.
+/// <param name="mappingDataOptions">
+/// The options to list in the picker.
 /// </param>
 /// <param name="currentAddress">
 /// The address the picker has to select, which is added into the list when the list does not
 /// contain it.
 /// </param>
-void RoomConfigDialog::PopulateLayerPickerComboBox(QComboBox *picker, const QVector<unsigned int> &mappingDataAddresses,
-                                                   unsigned int currentAddress)
+void RoomConfigDialog::PopulateLayerPickerComboBox(
+        QComboBox *picker, const QVector<LayerMappingDataOption> &mappingDataOptions,
+        unsigned int currentAddress)
 {
     picker->clear();
-    for (unsigned int addr : mappingDataAddresses)
+    for (const LayerMappingDataOption &option : mappingDataOptions)
     {
-        picker->addItem(QString::number(addr, 16).toUpper(), addr);
+        QString name = option.TileDataName;
+        if (!option.MappingDataName.isEmpty())
+        {
+            if (!name.isEmpty())
+            {
+                name += " - ";
+            }
+            name += option.MappingDataName;
+        }
+        if (name.isEmpty())
+        {
+            name = "background";
+        }
+        const QString label = QString("0x%1  %2%3")
+                .arg(option.Address, 0, 16)
+                .arg(name)
+                .arg(option.IsVanilla ? "  [vanilla]" : "  [custom]");
+        picker->addItem(label, option.Address);
+        picker->setItemData(picker->count() - 1, label, Qt::ToolTipRole);
     }
-    if (currentAddress && !mappingDataAddresses.contains(currentAddress))
+    if (currentAddress && (picker->findData(currentAddress) < 0))
     {
         // keep the layer data the Room currently uses selectable
-        picker->addItem(QString::number(currentAddress, 16).toUpper(), currentAddress);
+        picker->addItem(QString("0x%1  current").arg(currentAddress, 0, 16), currentAddress);
     }
 
     int selectionId = picker->findData(currentAddress);
@@ -713,25 +696,13 @@ void RoomConfigDialog::PopulateLayerPickerComboBox(QComboBox *picker, const QVec
 /// </param>
 void RoomConfigDialog::ResetBGLayerPickerComboBox(int newTilesetId)
 {
-    QVector<unsigned int> mappingDataAddresses = FindLayerMappingDataAddresses(newTilesetId);
+    const QVector<LayerMappingDataOption> bgOptions =
+            FindLayerMappingDataOptions(newTilesetId, false);
+    PopulateLayerPickerComboBox(ui->ComboBox_BGLayerPicker, bgOptions, CurrentBGLayerPtr);
 
-    // update ComboBox_BGLayerPicker
-    PopulateLayerPickerComboBox(ui->ComboBox_BGLayerPicker, mappingDataAddresses, CurrentBGLayerPtr);
-
-    // update ComboBox_Layer0Picker, the vanilla dusty Layer 0 data are usable by Layer 0 only
-    QVector<unsigned int> layer0MappingDataAddresses = mappingDataAddresses;
-    unsigned int bgtiledataaddr = ROMUtils::singletonTilesets[newTilesetId]->GetbgGFXptr();
-    if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x21)
-    {
-        if (!layer0MappingDataAddresses.contains(WL4Constants::ToxicLandfillDustyLayer0Ptr))
-            layer0MappingDataAddresses.push_back(WL4Constants::ToxicLandfillDustyLayer0Ptr);
-    }
-    else if(bgtiledataaddr == WL4Constants::Tileset_BGTile_0x45)
-    {
-        if (!layer0MappingDataAddresses.contains(WL4Constants::FieryCavernDustyLayer0Ptr))
-            layer0MappingDataAddresses.push_back(WL4Constants::FieryCavernDustyLayer0Ptr);
-    }
-    PopulateLayerPickerComboBox(ui->ComboBox_Layer0Picker, layer0MappingDataAddresses, CurrentLayer0Ptr);
+    const QVector<LayerMappingDataOption> layer0Options =
+            FindLayerMappingDataOptions(newTilesetId, true);
+    PopulateLayerPickerComboBox(ui->ComboBox_Layer0Picker, layer0Options, CurrentLayer0Ptr);
 }
 
 void RoomConfigDialog::on_spinBox_Layer2MappingType_valueChanged(int arg1)

@@ -43,6 +43,15 @@
         return result;
     }
 
+    // Helper: read a little-endian 32-bit value from the room header hex string.
+    function readU32LE(hex, byteOffset) {
+        var b0 = parseInt(hex.substr(byteOffset * 2, 2), 16);
+        var b1 = parseInt(hex.substr(byteOffset * 2 + 2, 2), 16);
+        var b2 = parseInt(hex.substr(byteOffset * 2 + 4, 2), 16);
+        var b3 = parseInt(hex.substr(byteOffset * 2 + 6, 2), 16);
+        return ((b0 | (b1 << 8) | (b2 << 16) | (b3 << 24)) >>> 0) & 0x7FFFFFF;
+    }
+
     var fileContents = WL4EditorInterface.ReadJsonFileDialog();
     if (!fileContents || fileContents.trim() === "") {
         WL4EditorInterface.log("Room import cancelled: no file selected or file is empty.");
@@ -65,6 +74,25 @@
     }
 
     var currentRoomId = WL4EditorInterface.GetCurRoomId();
+
+    // Ask the user to save pending changes before the Graphic Manager data is written to the ROM.
+    if (!WL4EditorInterface.EnsureLevelSavedForGraphicImport()) {
+        WL4EditorInterface.log("Room import cancelled: the Level was not saved.");
+        return;
+    }
+
+    // ---- Step 0: Import or reuse the Graphic Manager entries used by this Room ----
+    var resolvedGraphics = null;
+    if (roomObj.graphics && roomObj.graphics.entries && roomObj.graphics.entries.length) {
+        var graphicResult = JSON.parse(
+            WL4EditorInterface.ImportGraphicEntries(JSON.stringify(roomObj.graphics.entries))
+        );
+        if (!graphicResult.success) {
+            WL4EditorInterface.alert("ImportGraphicEntries failed: " + graphicResult.error);
+            return;
+        }
+        resolvedGraphics = graphicResult.entries;
+    }
 
     // ---- Step 1: Import room config ----
     var rc = roomObj.roomConfig || {};
@@ -127,9 +155,36 @@
         }
     }
 
+    // ---- Step 6: Apply the Graphic Manager data to the Tileset and the Room layers ----
+    if (resolvedGraphics) {
+        if (!WL4EditorInterface.ApplyRoomGraphics(currentRoomId, JSON.stringify(roomObj.graphics),
+                                                   JSON.stringify(resolvedGraphics), true)) {
+            WL4EditorInterface.alert("ApplyRoomGraphics failed.");
+            return;
+        }
+    } else if (roomHeaderHex.length >= 88) {
+        // Version 1 fallback: the graphics section is missing, so the layer pointers are taken
+        // from the room header. This only works when the target ROM already contains the data.
+        var layer0Type = parseInt(roomHeaderHex.substr(2, 2), 16) & 0x3F;
+        var layer3Type = parseInt(roomHeaderHex.substr(8, 2), 16) & 0x3F;
+        if (layer3Type !== 0) {
+            var layer3Addr = readU32LE(roomHeaderHex, 20);
+            if (layer3Addr) {
+                WL4EditorInterface.SetRoomLayerMappingDataAddress(currentRoomId, 3, layer3Addr);
+            }
+        }
+        if ((layer0Type & 0x30) === 0x20) {
+            var layer0Addr = readU32LE(roomHeaderHex, 8);
+            if (layer0Addr) {
+                WL4EditorInterface.SetRoomLayerMappingDataAddress(currentRoomId, 0, layer0Addr);
+            }
+        }
+        WL4EditorInterface.log("Room import: no graphics section, used the header layer pointers.");
+    }
+
     WL4EditorInterface.ResetRoomEntitySet(currentRoomId);
 
     // ---- Step 7: Finalize ----
     WL4EditorInterface.PostImportRefresh();
-    WL4EditorInterface.log("Room import completed.");
+    WL4EditorInterface.log("Room import completed. Save the Level to persist the Room/Tileset changes.");
 })();

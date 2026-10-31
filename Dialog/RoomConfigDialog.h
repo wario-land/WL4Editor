@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QPixmap>
 #include <QScrollBar>
+#include <QVector>
 
 #include "LevelComponents/Layer.h"
 #include "LevelComponents/Room.h"
@@ -133,8 +134,20 @@ private:
 
     void ResetBGLayerPickerComboBox(int newTilesetId);
     void UpdateLayer0PickerAvailability(int tilesetId);
-    QVector<unsigned int> FindLayerMappingDataAddresses(int newTilesetId);
-    void PopulateLayerPickerComboBox(QComboBox *picker, const QVector<unsigned int> &mappingDataAddresses,
+
+    // One selectable mapping data of the background Tile8x8 set of the current Tileset.
+    struct LayerMappingDataOption
+    {
+        unsigned int Address = 0;
+        QString TileDataName;
+        QString MappingDataName;
+        bool IsVanilla = false;
+        int EntryIndex = -1;
+    };
+
+    QVector<LayerMappingDataOption> FindLayerMappingDataOptions(int newTilesetId, bool forLayer0);
+    void PopulateLayerPickerComboBox(QComboBox *picker,
+                                     const QVector<LayerMappingDataOption> &mappingDataOptions,
                                      unsigned int currentAddress);
 
     // The pointer of the layer data the Room currently uses, so the pickers can keep them selected
@@ -269,199 +282,6 @@ private:
         "EVA 00%,  EVB 100%"
     };
 
-    // Enumeration of the available BGs per tileset (RLE format)
-    static constexpr const unsigned int BGLayerdataPtrsData[166] =
-    {
-        0,                            // Tileset 0x00
-        1, WL4Constants::BG_0x5FB2CC,
-        1, WL4Constants::BG_0x5FB8DC,
-        1, WL4Constants::BG_0x603064,
-        1, WL4Constants::BG_0x603064, // 0x04
-        1, WL4Constants::BG_0x60368C,
-        2, WL4Constants::BG_0x5FC9A0, WL4Constants::BG_0x5FC2D0,
-        1, WL4Constants::BG_0x6045C4,
-        1, WL4Constants::BG_0x5FFD94, // 0x08
-        0,
-        1, WL4Constants::BG_0x5FD078,
-        1, WL4Constants::BG_0x5FD484,
-        1, WL4Constants::BG_0x603E98, // 0x0C
-        0,
-        1, WL4Constants::BG_0x604ACC,
-        3, WL4Constants::BG_0x605A7C, WL4Constants::BG_0x6063B0, WL4Constants::BG_0x606CF4,
-        1, WL4Constants::BG_0x6074C4, // 0x10
-        1, WL4Constants::BG_0x5FA6D0,
-        1, WL4Constants::BG_0x60A1D8,
-        1, WL4Constants::BG_0x60A1E8,
-        1, WL4Constants::BG_0x60A4B4, // 0x14
-        1, WL4Constants::BG_0x6094F4,
-        0,
-        1, WL4Constants::BG_0x6094F4,
-        1, WL4Constants::BG_0x6094F4, // 0x18
-        1, WL4Constants::BG_0x6094F4,
-        1, WL4Constants::BG_0x607CD0,
-        1, WL4Constants::BG_0x6084DC,
-        1, WL4Constants::BG_0x608CE8, // 0x1C
-        1, WL4Constants::BG_0x600388,
-        1, WL4Constants::BG_0x600EF8,
-        2, WL4Constants::BG_0x5FD680, WL4Constants::BG_0x5FD9BC,
-        1, WL4Constants::BG_0x6006C4, // 0x20
-        1, WL4Constants::BG_0x6013D4,
-        1, WL4Constants::BG_0x601A0C,
-        0,
-        0,                            // 0x24
-        0,
-        2, WL4Constants::BG_0x5FE918, WL4Constants::BG_0x5FEED8,
-        1, WL4Constants::BG_0x60221C,
-        1, WL4Constants::BG_0x5FE540, // 0x28
-        1, WL4Constants::BG_0x60E860,
-        0,
-        0,
-        0,                            // 0x2C
-        0,
-        0,
-        1, WL4Constants::BG_0x60AD10,
-        0,                            // 0x30
-        0,
-        0,
-        0,
-        1, WL4Constants::BG_0x5FB8DC, // 0x34
-        1, WL4Constants::BG_0x5FF264,
-        1, WL4Constants::BG_0x5FF960,
-        2, WL4Constants::BG_0x60BC54, WL4Constants::BG_0x60B29C,
-        1, WL4Constants::BG_0x5FF684, // 0x38
-        1, WL4Constants::BG_0x60ED78,
-        0,
-        0,
-        0,                            // 0x3C
-        0,
-        1, WL4Constants::BG_0x602858,
-        1, WL4Constants::BG_0x5FFD94,
-        1, WL4Constants::BG_0x600EF8, // 0x40
-        1, WL4Constants::BG_0x609A84,
-        1, WL4Constants::BG_0x60E860,
-        1, WL4Constants::BG_0x60E96C,
-        1, WL4Constants::BG_0x60E860, // 0x44
-        2, WL4Constants::BG_0x60CF98, WL4Constants::BG_0x60C5FC,
-        1, WL4Constants::BG_0x60E044,
-        1, WL4Constants::BG_0x5FA6D0,
-        1, WL4Constants::BG_0x60E860, // 0x48
-        1, WL4Constants::BG_0x60E860,
-        1, WL4Constants::BG_0x60E96C,
-        1, WL4Constants::BG_0x60E96C,
-        1, WL4Constants::BG_0x60E96C, // 0x4C
-        1, WL4Constants::BG_0x60E96C,
-        1, WL4Constants::BG_0x60E96C,
-        1, WL4Constants::BG_0x60E870,
-        1, WL4Constants::BG_0x5FA6D0, // 0x50
-        1, WL4Constants::BG_0x5FE008,
-        1, WL4Constants::BG_0x5FD484,
-        1, WL4Constants::BG_0x60A350,
-        1, WL4Constants::BG_0x60A1E8, // 0x54
-        1, WL4Constants::BG_0x60A1E8,
-        1, WL4Constants::BG_0x605270,
-        0,
-        0,                            // 0x58
-        0,
-        0,
-        0
-    };
-
-    // Enumeration of Tileset BG tile8x8 set data address (RLE format)
-    static constexpr const unsigned int VanillaTilesetBGTilesDataAddr[0x5C] =
-    {
-        WL4Constants::Tileset_BGTile_0x00,
-        WL4Constants::Tileset_BGTile_0x01,
-        WL4Constants::Tileset_BGTile_0x02,
-        WL4Constants::Tileset_BGTile_0x03,
-        WL4Constants::Tileset_BGTile_0x04,
-        WL4Constants::Tileset_BGTile_0x05,
-        WL4Constants::Tileset_BGTile_0x06,
-        WL4Constants::Tileset_BGTile_0x07,
-        WL4Constants::Tileset_BGTile_0x08,
-        WL4Constants::Tileset_BGTile_0x09,
-        WL4Constants::Tileset_BGTile_0x0A,
-        WL4Constants::Tileset_BGTile_0x0B,
-        WL4Constants::Tileset_BGTile_0x0C,
-        WL4Constants::Tileset_BGTile_0x0D,
-        WL4Constants::Tileset_BGTile_0x0E,
-        WL4Constants::Tileset_BGTile_0x0F,
-        WL4Constants::Tileset_BGTile_0x10,
-        WL4Constants::Tileset_BGTile_0x11,
-        WL4Constants::Tileset_BGTile_0x12,
-        WL4Constants::Tileset_BGTile_0x13,
-        WL4Constants::Tileset_BGTile_0x14,
-        WL4Constants::Tileset_BGTile_0x15,
-        WL4Constants::Tileset_BGTile_0x16,
-        WL4Constants::Tileset_BGTile_0x17,
-        WL4Constants::Tileset_BGTile_0x18,
-        WL4Constants::Tileset_BGTile_0x19,
-        WL4Constants::Tileset_BGTile_0x1A,
-        WL4Constants::Tileset_BGTile_0x1B,
-        WL4Constants::Tileset_BGTile_0x1C,
-        WL4Constants::Tileset_BGTile_0x1D,
-        WL4Constants::Tileset_BGTile_0x1E,
-        WL4Constants::Tileset_BGTile_0x1F,
-        WL4Constants::Tileset_BGTile_0x20,
-        WL4Constants::Tileset_BGTile_0x21,
-        WL4Constants::Tileset_BGTile_0x22,
-        WL4Constants::Tileset_BGTile_0x23,
-        WL4Constants::Tileset_BGTile_0x24,
-        WL4Constants::Tileset_BGTile_0x25,
-        WL4Constants::Tileset_BGTile_0x26,
-        WL4Constants::Tileset_BGTile_0x27,
-        WL4Constants::Tileset_BGTile_0x28,
-        WL4Constants::Tileset_BGTile_0x29,
-        WL4Constants::Tileset_BGTile_0x2A,
-        WL4Constants::Tileset_BGTile_0x2B,
-        WL4Constants::Tileset_BGTile_0x2C,
-        WL4Constants::Tileset_BGTile_0x2D,
-        WL4Constants::Tileset_BGTile_0x2E,
-        WL4Constants::Tileset_BGTile_0x2F,
-        WL4Constants::Tileset_BGTile_0x30,
-        WL4Constants::Tileset_BGTile_0x31,
-        WL4Constants::Tileset_BGTile_0x32,
-        WL4Constants::Tileset_BGTile_0x33,
-        WL4Constants::Tileset_BGTile_0x34,
-        WL4Constants::Tileset_BGTile_0x35,
-        WL4Constants::Tileset_BGTile_0x36,
-        WL4Constants::Tileset_BGTile_0x37,
-        WL4Constants::Tileset_BGTile_0x38,
-        WL4Constants::Tileset_BGTile_0x39,
-        WL4Constants::Tileset_BGTile_0x3A,
-        WL4Constants::Tileset_BGTile_0x3B,
-        WL4Constants::Tileset_BGTile_0x3C,
-        WL4Constants::Tileset_BGTile_0x3D,
-        WL4Constants::Tileset_BGTile_0x3E,
-        WL4Constants::Tileset_BGTile_0x3F,
-        WL4Constants::Tileset_BGTile_0x40,
-        WL4Constants::Tileset_BGTile_0x41,
-        WL4Constants::Tileset_BGTile_0x42,
-        WL4Constants::Tileset_BGTile_0x43,
-        WL4Constants::Tileset_BGTile_0x44,
-        WL4Constants::Tileset_BGTile_0x45,
-        WL4Constants::Tileset_BGTile_0x46,
-        WL4Constants::Tileset_BGTile_0x47,
-        WL4Constants::Tileset_BGTile_0x48,
-        WL4Constants::Tileset_BGTile_0x49,
-        WL4Constants::Tileset_BGTile_0x4A,
-        WL4Constants::Tileset_BGTile_0x4B,
-        WL4Constants::Tileset_BGTile_0x4C,
-        WL4Constants::Tileset_BGTile_0x4D,
-        WL4Constants::Tileset_BGTile_0x4E,
-        WL4Constants::Tileset_BGTile_0x4F,
-        WL4Constants::Tileset_BGTile_0x50,
-        WL4Constants::Tileset_BGTile_0x51,
-        WL4Constants::Tileset_BGTile_0x52,
-        WL4Constants::Tileset_BGTile_0x53,
-        WL4Constants::Tileset_BGTile_0x54,
-        WL4Constants::Tileset_BGTile_0x55,
-        WL4Constants::Tileset_BGTile_0x56,
-        WL4Constants::Tileset_BGTile_0x57,
-        WL4Constants::Tileset_BGTile_0x58,
-        WL4Constants::Tileset_BGTile_0x59,
-        WL4Constants::Tileset_BGTile_0x5A,
-        WL4Constants::Tileset_BGTile_0x5B
-    };
     // clang-format on
 };
 

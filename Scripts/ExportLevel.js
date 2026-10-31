@@ -174,7 +174,7 @@
 
     // ---------- Build level object ----------
     var levelObj = {
-        version: 1,
+        version: 2,
         levelName: WL4EditorInterface.ExportGetLevelName(),
         levelNameJ: WL4EditorInterface.ExportGetLevelNameJ(),
         levelHeader: {
@@ -207,6 +207,8 @@
             id: tsId,
             fggfxPtr: WL4EditorInterface.ExportGetTilesetFGGFXPtr(tsId),
             fggfxLen: WL4EditorInterface.ExportGetTilesetFGGFXLen(tsId),
+            bggfxPtr: WL4EditorInterface.ExportGetTilesetBGGFXPtr(tsId),
+            bggfxLen: WL4EditorInterface.ExportGetTilesetBGGFXLen(tsId),
             tile8x8Data: WL4EditorInterface.ExportGetTilesetTile8x8DataHex(tsId),
             map16Data: WL4EditorInterface.ExportGetTilesetMap16DataHex(tsId),
             paletteData: WL4EditorInterface.ExportGetTilesetPalettesHex(tsId),
@@ -307,6 +309,9 @@
 
     // ---------- Export credits data ----------
     levelObj.changedGlobals.creditsData = WL4EditorInterface.ExportGetCreditsDataHex();
+
+    // ---------- Export Graphic Manager data used by the Level ----------
+    levelObj.graphics = JSON.parse(WL4EditorInterface.ExportGetLevelGraphicEntries());
 
     // ---------- Restore original room and write file ----------
     WL4EditorInterface.SetCurrentRoomId(originalRoomId);

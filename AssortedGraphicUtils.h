@@ -128,9 +128,9 @@ namespace AssortedGraphicUtils
     // vanilla entries use Tile8x8_4bpp_no_comp_Tileset_text_bg and RLE_mappingtype_0x20.
     //
     // The table is generated from the vanilla ROM: the TileData fields come from the Tileset
-    // table, the MappingData fields come from BGLayerdataPtrsData and the vanilla Layer 0 mapping
-    // data addresses of RoomConfigDialog, and the palette fields come from the Tileset palettes
-    // plus the palette slots actually referenced by the mapping data. Entries are deduplicated by
+    // table, the MappingData fields come from the vanilla background mapping data table and the
+    // vanilla Layer 0 mapping data addresses of RoomConfigDialog, and the palette fields come from
+    // the Tileset palettes plus the palette slots actually referenced by the mapping data. Entries are deduplicated by
     // (TileDataAddress, TileDataSizeInByte, PaletteAddress, MappingDataAddress); the comment of a
     // row names every Tileset which uses that graphic.
     //
@@ -363,6 +363,19 @@ namespace AssortedGraphicUtils
     // functions
     QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> GetAssortedGraphicsFromROM();
 
+    // Return true if the address points into the vanilla part of the ROM, i.e. it is not a chunk
+    // written by the editor. An address of 0 is not a vanilla address.
+    bool IsVanillaAddress(unsigned int address);
+
+    // Return true if all the Tile8x8 data, palette data and mapping data of the entry are loaded
+    // from vanilla ROM addresses. Such an entry only describes vanilla data and must not be edited
+    // or removed by the Graphic Manager.
+    bool IsVanillaReferencingEntry(const struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
+
+    // Get the raw background Tile8x8 data of a Tileset, in the order of the Tile8x8 ids used by
+    // the mapping data (see LevelComponents::Layer::RenderLayer).
+    bool GetTilesetBGTile8x8RawData(LevelComponents::Tileset *tileset, QByteArray &result);
+
     // Create the vanilla assorted graphic entries from VanillaAssortedGraphicEntryData. The entry
     // names are generated from the current Tilesets, the tile, palette and mapping data are not
     // loaded from the ROM.
@@ -383,9 +396,23 @@ namespace AssortedGraphicUtils
     // Layer 3 of a room can use any of those mapping data chunks.
     QVector<unsigned int> FindCompatibleMappingDataAddresses(LevelComponents::Tileset *tileset);
 
+    // Collect the Graphic Manager entries whose background Tile8x8 set is compatible with the
+    // background Tile8x8 set of the given Tileset. This is the single source of the mapping data
+    // options of the RoomConfigDialog. The entries are deduplicated by mapping data address. The
+    // two vanilla Layer 0 mapping data are only added when forLayer0 is true.
+    QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> FindCompatibleGraphicEntries(
+            LevelComponents::Tileset *tileset, bool forLayer0);
+
     // savechunk relative functions
     QVector<unsigned int> GetSaveDataAddresses(AssortedGraphicEntryItem &entry);
-    QVector<struct ROMUtils::SaveData> CreateSaveData(AssortedGraphicEntryItem &entry, unsigned int entryId);
+    QVector<struct ROMUtils::SaveData> CreateSaveData(AssortedGraphicEntryItem &entry, unsigned int entryId,
+                                                      bool onlyDetachedData = false);
+
+    // Append new entries to the assorted graphic list chunk of the ROM without reallocating or
+    // invalidating the chunks of the entries which are already in the ROM. Only the data parts
+    // which are not detached yet (address 0) are written as new chunks. The entry addresses are
+    // updated to the new ROM addresses before this function returns.
+    QString AppendAssortedGraphicsToROM(QVector<struct AssortedGraphicUtils::AssortedGraphicEntryItem> &newEntries);
 
     // helper functions
     bool CheckEditability(struct AssortedGraphicUtils::AssortedGraphicEntryItem &entry, unsigned int &find_l, unsigned int &find_r, unsigned int &find_t);
