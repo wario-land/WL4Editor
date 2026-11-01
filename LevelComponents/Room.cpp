@@ -329,10 +329,10 @@ namespace LevelComponents
             QVector<bool> LayersCurrentVisibility = singleton->GetLayersVisibilityArray();
             for (int i = 0; i < 4; ++i)
             {
-                // The GBA hardware draws the palette color 0 as transparent: a stored color 0 can
-                // only be seen as the backdrop color where nothing covers the screen. Layer 3 is the
-                // bottom-most layer of a Room, so drawing its color 0 approximates that backdrop
-                // color, while every other layer keeps the color 0 transparent.
+                // The GBA hardware draws the palette color 0 as transparent and shows the backdrop
+                // color (the color 0 of BG palette 0) where nothing covers the screen. Layer 3 is
+                // the bottom-most layer of a Room, so drawing the backdrop color in its color 0
+                // pixels reproduces the backdrop, while every other layer keeps color 0 transparent.
                 int layerIndex = drawLayers[i]->index;
                 QPixmap pixmap = drawLayers[i]->layer->RenderLayer(tileset, layerIndex == 3);
                 // If this is a layer composed of 8x8 tiles, then repeat the layer in X and Y to the size of the other
@@ -839,11 +839,25 @@ namespace LevelComponents
             QPixmap pm(item->pixmap());
             int units = layer->GetMappingType() == LayerMap16 ? 16 : 8;
             int lw = layer->GetLayerWidth();
+            // Layer 3 is the bottom-most layer, so its color 0 pixels show the GBA backdrop color.
+            const bool drawBackdrop = (renderParams->mode.selectedLayer == 3);
+            QRgb backdropColor = 0;
+            const QRgb *backdropColorOverride = nullptr;
+            if (drawBackdrop)
+            {
+                const QVector<QRgb> &palette0 = tileset->GetPalettes()[0];
+                if (palette0.size())
+                {
+                    backdropColor = palette0[0];
+                    backdropColorOverride = &backdropColor;
+                }
+            }
             for(auto &iter: renderParams->tilechangelist) {
                 int X = iter.tileX * units;
                 int Y = iter.tileY * units;
                 int tileDataIndex = iter.tileX + iter.tileY * lw;
-                layer->GetTiles()[tileDataIndex]->DrawTile(&pm, X, Y, renderParams->mode.selectedLayer == 3);
+                layer->GetTiles()[tileDataIndex]->DrawTile(&pm, X, Y, drawBackdrop,
+                                                           backdropColorOverride);
             }
 
             // Set the new QPixmap for the graphics item on the QGraphicsScene

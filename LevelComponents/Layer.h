@@ -31,7 +31,7 @@ namespace LevelComponents
     public:
         Layer(int layerDataPtr, enum LayerMappingType mappingType);
         Layer(Layer &layer);
-        QPixmap RenderLayer(Tileset *tileset, bool color0Opaque = false);
+        QPixmap RenderLayer(Tileset *tileset, bool drawBackdrop = false);
         int GetLayerWidth() { return Width; }
         int GetLayerHeight() { return Height; }
         enum LayerMappingType GetMappingType() { return MappingType; }

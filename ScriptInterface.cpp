@@ -11,6 +11,7 @@ extern WL4EditorWindow *singleton;
 #endif
 
 #include <QApplication>
+#include <QColor>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -2062,6 +2063,74 @@ namespace
         return true;
     }
 
+    struct ImportedPalette
+    {
+        int slotId = 0;
+        QVector<QRgb> colors;
+    };
+
+    bool ReadEntryPalettes(const QJsonObject &entryObject, QVector<ImportedPalette> &palettes,
+                           QString &error)
+    {
+        palettes.clear();
+        const QJsonObject paletteObject = entryObject.value("palette").toObject();
+        const QJsonArray slotIDs = paletteObject.value("slotIDs").toArray();
+        if (slotIDs.isEmpty())
+        {
+            return true;
+        }
+
+        const unsigned int paletteAddress = paletteObject.value("address").toVariant().toUInt();
+        if (!paletteAddress)
+        {
+            // A resolved entry points at palette data in the ROM. An entry which still carries raw
+            // palette data has to be imported first, otherwise only its tile data would be applied.
+            if (!paletteObject.value("dataHex").toString().isEmpty())
+            {
+                error = "the palette data is not resolved to a ROM address";
+                return false;
+            }
+            return true;
+        }
+
+        // The vanilla palette blocks hold all 16 rows, while a Graphic Manager palette chunk packs
+        // only the rows listed in PaletteSlotIDs. This is the same layout LoadPaletteDataFromRom uses.
+        const bool vanillaPalette = AssortedGraphicUtils::IsVanillaAddress(paletteAddress);
+        const unsigned int requiredSize = vanillaPalette
+                ? 16 * 32 : static_cast<unsigned int>(slotIDs.size()) * 32;
+        if (paletteAddress + requiredSize > ROMUtils::ROMFileMetadata->Length)
+        {
+            error = "the palette data address is out of the ROM range";
+            return false;
+        }
+
+        for (int i = 0; i < slotIDs.size(); ++i)
+        {
+            const int slotId = slotIDs.at(i).toInt(-1);
+            if ((slotId < 0) || (slotId >= 16))
+            {
+                error = "the palette slot ID is out of range";
+                return false;
+            }
+            const unsigned int colorAddress = paletteAddress
+                    + (vanillaPalette ? static_cast<unsigned int>(slotId) * 32
+                                      : static_cast<unsigned int>(i) * 32);
+            ImportedPalette palette;
+            palette.slotId = slotId;
+            ROMUtils::LoadPalette(&palette.colors,
+                                  reinterpret_cast<unsigned short *>(
+                                      ROMUtils::ROMFileMetadata->ROMDataPtr + colorAddress),
+                                  true);
+            if (palette.colors.size() != 16)
+            {
+                error = "the palette data cannot be loaded";
+                return false;
+            }
+            palettes.push_back(palette);
+        }
+        return true;
+    }
+
     bool ApplyTilesetEntryObject(int tilesetId, const QJsonObject &entryObject, QString &error)
     {
         if ((tilesetId < 0) || (tilesetId >= 92) || !ROMUtils::singletonTilesets[tilesetId])
@@ -2078,8 +2147,45 @@ namespace
         }
 
         LevelComponents::Tileset *currentTileset = ROMUtils::singletonTilesets[tilesetId];
-        if ((currentTileset->GetbgGFXptr() == static_cast<int>(tileDataAddress))
-                && (currentTileset->GetbgGFXlen() == static_cast<int>(tileDataSize)))
+
+        const bool tileDataMatches =
+                (currentTileset->GetbgGFXptr() == static_cast<int>(tileDataAddress))
+                && (currentTileset->GetbgGFXlen() == static_cast<int>(tileDataSize));
+        if (!tileDataMatches)
+        {
+            // The Tileset dialog rejects graphic entries which would overwrite foreground tiles. The
+            // script path has to do the same, otherwise the background tiles are written into the
+            // foreground Tile8x8 range and the foreground data is corrupted on the next save.
+            const int fgTileCount = currentTileset->GetfgGFXlen() / 32;
+            const int firstBgTile = 0x200 + static_cast<int>(0x3FF - tileDataSize / 32);
+            const int lastFgTile = 0x40 + fgTileCount;
+            if (firstBgTile <= lastFgTile)
+            {
+                error = QString("the background Tile8x8 range 0x%1-0x%2 would overwrite the "
+                                "foreground Tile8x8 range 0x41-0x%3 of the destination Tileset")
+                        .arg(QString::number(firstBgTile, 16).toUpper(),
+                             QString::number(0x5FE, 16).toUpper(),
+                             QString::number(lastFgTile, 16).toUpper());
+                return false;
+            }
+        }
+
+        QVector<ImportedPalette> importedPalettes;
+        if (!ReadEntryPalettes(entryObject, importedPalettes, error))
+        {
+            return false;
+        }
+
+        bool paletteMatches = true;
+        for (const ImportedPalette &palette : importedPalettes)
+        {
+            if (currentTileset->GetPalettes()[palette.slotId] != palette.colors)
+            {
+                paletteMatches = false;
+                break;
+            }
+        }
+        if (tileDataMatches && paletteMatches)
         {
             return true;
         }
@@ -2088,8 +2194,18 @@ namespace
                 new LevelComponents::Tileset(currentTileset, tilesetId);
         LevelComponents::Tileset *newTileset =
                 new LevelComponents::Tileset(currentTileset, tilesetId);
-        newTileset->SetBackgroundTileData(static_cast<int>(tileDataAddress),
-                                          static_cast<int>(tileDataSize));
+        if (!tileDataMatches)
+        {
+            newTileset->SetBackgroundTileData(static_cast<int>(tileDataAddress),
+                                              static_cast<int>(tileDataSize));
+        }
+        for (const ImportedPalette &palette : importedPalettes)
+        {
+            for (int colorId = 0; colorId < 16; ++colorId)
+            {
+                newTileset->SetColor(palette.slotId, colorId, palette.colors[colorId]);
+            }
+        }
         newTileset->SetChanged(true);
 
         DialogParams::TilesetEditParams *lastParams = new DialogParams::TilesetEditParams();
@@ -2106,7 +2222,7 @@ namespace
         operation->newTilesetEditParams = newParams;
         ExecuteOperation(operation);
         singleton->GetOutputWidgetPtr()->PrintString(
-                    QString("Tileset 0x%1 background graphics updated. "
+                    QString("Tileset 0x%1 background graphics and palette updated. "
                             "All rooms using this Tileset are affected.")
                     .arg(QString::number(tilesetId, 16).toUpper()));
         return true;

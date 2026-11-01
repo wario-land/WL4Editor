@@ -133,9 +133,9 @@ void RoomPreviewGraphicsView::UpdateGraphicsItems(LevelComponents::Tileset *tile
         if ((dataPointers[1] = (void *) BGptr))
         {
             LevelComponents::Layer BGlayer(BGptr, LevelComponents::LayerTile8x8);
-            // The background layer is the bottom-most layer, so drawing the palette color 0 of its
-            // tiles approximates the backdrop color the GBA hardware shows where nothing covers the
-            // screen (the palette color 0 itself is transparent for every tile pixel)
+            // The background layer is the bottom-most layer, so its color 0 pixels show the GBA
+            // backdrop color, which is always the color 0 of BG palette 0 (not the color 0 of the
+            // palette row selected by each tile).
             QPixmap layerPixmap = BGlayer.RenderLayer(tileset, true);
             pixmapItems[1]->setPixmap(layerPixmap);
         }

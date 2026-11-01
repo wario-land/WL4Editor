@@ -21,6 +21,8 @@
 - Fix loading mapping data from the ROM repeatedly in Graphic Manager accumulates the mapping data, which can overflow the buffer when saving.
 - Fix graphic entries with no palette or no Tile8x8 data can be saved as chunks without data, and their palettes can be loaded from the ROM header.
 - Fix the bg tile data list in Tileset Editor can offer graphic entries which contain no Tile8x8 data.
+- Fix ChooseLevelDialog shows incorrect current Level name in ComboBox on Entry Passage Boss Level.
+- Fix alpha blending checkbox in EditModeDockWidget not selected when enabled.
 
 (minor changes)
 - palettes serialization logic changes in Graphic Manager (you can still load previous ROM project so it's backward compatible).

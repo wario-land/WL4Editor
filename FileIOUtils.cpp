@@ -4,6 +4,8 @@
 #include <QMessageBox>
 #include <QTextStream>
 #include <QColorDialog>
+#include <algorithm>
+#include <iterator>
 #include "ROMUtils.h"
 #include "Dialog/SelectColorDialog.h"
 
@@ -381,8 +383,10 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent,
         {
             // Get the index of the color in the current palette
             QRgb findColor = tmppalette[i];
-            // The palette color 0 is real data, so it is a candidate like every other color
-            auto paletteFound = std::find_if(ref_palette.begin(), ref_palette.end(),
+            // The palette color 0 is real data, but the hardware draws it as transparent for tile
+            // pixels, so a non-transparent source color must only match the opaque entries 1-15.
+            // The user-selected transparent source color is mapped to 0 separately above.
+            auto paletteFound = std::find_if(std::next(ref_palette.begin()), ref_palette.end(),
                 [&findColor](const QRgb& c)
             {
                 QColor ca(c);
