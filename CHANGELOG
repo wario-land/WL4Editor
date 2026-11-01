@@ -1,3 +1,35 @@
+0.17.0:
+(major changes)
+- Support exporting and importing the Graphic Manager data used by the current Room or Level via js scripts.
+- Support exporting and importing all the Graphic Manager data via GUI.
+- Add Chunk Manager Dialog and it supports user wake-up, load protection, save protection modes.
+
+(Noticable GUI changes)
+- Roon Config Dialog Tileset name update.
+- Imporve RoomConfigDialog Layer Picker Comboboxes text info.
+- Add SwapPalettes and UseAdditionalBGPals buttons to TilesetEditDialog to provide more functionalities and options.
+- Add "Duplicate" to Graphic Manager to insert a copy of the selected graphic entry right below it with a different mapping data name, and load the copy into the panels.
+- Add "Swap palettes" to Graphic Manager to swap 2 palette rows (hex palette slot IDs, comma separated), or to move an existing palette to an unused row to reset its palette slot ID.
+- Now loading Tile8x8 data from file(s) in Graphic Manager stacks the new tiles in front of the tiles loaded before, and loading palette data from file(s) adds the palette into the entry, instead of deleting the data loaded before.
+- Now the Clear buttons in Graphic Manager reset the Tile8x8, palette and mapping data of the current entry instead of only clearing the panel, and re-selecting the entry discards the reset.
+- Support Color 0 Read / Write / Render to follow the GBA's Backdrop Color rule.
+
+(Fixes)
+- Fix key pressing crash the WL4Editor before ROM loading.
+- Fix Applying Room Config changes set EntitySet ID to 0 in MainWIndow.
+- Fix incorrect Graphic Manager mapping data import limits and info dialog typo.
+- Fix loading mapping data from the ROM repeatedly in Graphic Manager accumulates the mapping data, which can overflow the buffer when saving.
+- Fix graphic entries with no palette or no Tile8x8 data can be saved as chunks without data, and their palettes can be loaded from the ROM header.
+- Fix the bg tile data list in Tileset Editor can offer graphic entries which contain no Tile8x8 data.
+
+(minor changes)
+- palettes serialization logic changes in Graphic Manager (you can still load previous ROM project so it's backward compatible).
+- Now graphic manager will load more missing entries from the ROM (thanks AI brute-force search) and we hardcode all the entry info into the code.
+- Now vanilla entries will always be parsed first in graphic manager, then previously saved custom entries will be filtered and append below.
+- Now graphic manager will show selected entry id and total entry number.
+- Keep the palette slot IDs sorted after swapping palettes, and swap the palette IDs in the mapping data along with the palettes, so the rendered graphic stays unchanged.
+- Update QHexView submodule.
+
 0.16.6:
 (major changes)
 - Simplified from 2 separate systems (16 room deques + 1 global deque) into a single global Undo/Redo deque.
