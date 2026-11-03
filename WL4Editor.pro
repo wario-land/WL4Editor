@@ -56,6 +56,7 @@ SOURCES += \
     FileIOUtils.cpp \
     AssortedGraphicUtils.cpp \
     AssortedGraphicIO.cpp \
+    PatchIO.cpp \
     LevelComponents/AnimatedTile8x8Group.cpp \
     LevelComponents/LevelDoorVector.cpp \
     PCG/Graphics/TileUtils.cpp \
@@ -112,6 +113,7 @@ HEADERS += \
     FileIOUtils.h \
     AssortedGraphicUtils.h \
     AssortedGraphicIO.h \
+    PatchIO.h \
     ChunkUtils.h \
     LevelComponents/AnimatedTile8x8Group.h \
     LevelComponents/LevelDoorVector.h \

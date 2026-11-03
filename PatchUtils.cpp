@@ -4,6 +4,8 @@
 #include <QVector>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
+#include <QRegularExpression>
 #include <SettingsUtils.h>
 #include <QProcess>
 #include <cstring>
@@ -41,6 +43,14 @@ extern WL4EditorWindow *singleton;
 
 static QRegularExpression entryFunctionSymbolRegex("^\\s*[a-zA-Z\\_]{1}[0-9a-zA-Z\\_]*\\s*$");
 #define ENTRY_FUNCTION_SYMBOL "@EntryFunctionSymbol"
+
+static QRegularExpression  hookAddressRegex("^ *(0x)?[a-fA-F0-9]{1,6} *$");
+static QRegularExpression  hookStringRegex("^( *[a-fA-F0-9] *[a-fA-F0-9])*( *[pP])?( *[a-fA-F0-9] *[a-fA-F0-9])* *$");
+static QRegularExpression  descriptionRegex("^[^;]+$");
+
+#define HOOK_ADDR_IDENTIFIER "@HookAddress"
+#define HOOK_STRING_IDENTIFIER "@HookString"
+#define DESCRIPTION_IDENTIFIER "@Description"
 
 /// <summary>
 /// Convert a region of binary into a hex string.
@@ -303,8 +313,13 @@ static QString CreateLinkerScript(const struct PatchEntryItem &entry,
                                   std::map<unsigned int, QString>& tmp_gConsts,
                                   std::map<unsigned int, QString>& tmp_gFunctions)
 {
-    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
-    QString ofile(romFileDir + QDir::separator() + entry.FileName);
+    QString ofile = FileIOUtils::RelativeFilePathToAbsoluteFilePath(entry.FileName);
+    if(ofile.isEmpty())
+    {
+        QString msg = QString(QT_TR_NOOP("Could not resolve patch file path: ")) + entry.FileName;
+        singleton->GetOutputWidgetPtr()->PrintString(msg);
+        return msg;
+    }
     QString ldfile(ofile);
     REPLACE_EXT(ofile, ".c", ".o"); // works for .s files too
     REPLACE_EXT(ldfile, ".c", ".ld");
@@ -587,8 +602,7 @@ static struct ROMUtils::SaveData CreatePatchSaveChunk(const struct PatchEntryIte
     binName += "bin";
 
     // Get data from bin file
-    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
-    QFile binFile(romFileDir + QDir::separator() + binName);
+    QFile binFile(FileIOUtils::RelativeFilePathToAbsoluteFilePath(binName));
     binFile.open(QIODevice::ReadOnly);
     QByteArray binContents = binFile.readAll();
     int fileSize = binFile.size();
@@ -612,6 +626,154 @@ static struct ROMUtils::SaveData CreatePatchSaveChunk(const struct PatchEntryIte
 namespace PatchUtils
 {
     QString EABI_INSTALLATION;
+
+    const QRegularExpression &HookAddressRegex()
+    {
+        return hookAddressRegex;
+    }
+
+    const QRegularExpression &HookStringRegex()
+    {
+        return hookStringRegex;
+    }
+
+    /// <summary>
+    /// Normalize hook text to the format stored in PatchEntryItem::HookString.
+    /// </summary>
+    /// <param name="str">
+    /// The hook text to normalize.
+    /// </param>
+    /// <returns>
+    /// The hook text without whitespace or the "P" placeholder, in uppercase.
+    /// </returns>
+    QString NormalizeHookText(const QString &str)
+    {
+        QString ret(str);
+        ret = ret.replace(" ", "");
+        ret = ret.toUpper();
+        ret = ret.replace("P", "");
+        return ret;
+    }
+
+    /// <summary>
+    /// Find the index of the patch address placeholder in hook text.
+    /// </summary>
+    /// <param name="str">
+    /// The hook text to analyze.
+    /// </param>
+    /// <returns>
+    /// The byte offset of the "P" placeholder, or (unsigned int)-1 when there is none.
+    /// </returns>
+    unsigned int GetPatchOffset(const QString &str)
+    {
+        QString normalized(str);
+        normalized = normalized.replace(" ", "").toUpper();
+        int index = normalized.indexOf("P");
+        return index >= 0 ? static_cast<unsigned int>(index / 2) : static_cast<unsigned int>(-1);
+    }
+
+    /// <summary>
+    /// Parse the metadata comments of a patch source file into a patch entry.
+    /// </summary>
+    /// <remarks>
+    /// The patch type is inferred from the file extension. The caller is responsible for
+    /// initializing the hook fields it wants to preserve when an annotation is absent; a
+    /// value-initialized PatchEntryItem with PatchOffsetInHookString set to (unsigned int)-1
+    /// gives file-authoritative results.
+    /// </remarks>
+    /// <param name="absoluteFilePath">
+    /// The absolute path of the C/ASM/BIN patch source file.
+    /// </param>
+    /// <param name="entry">
+    /// The patch entry to update.
+    /// </param>
+    /// <param name="error">
+    /// Receives an error message when the file cannot be read.
+    /// </param>
+    /// <param name="hookStringMissing">
+    /// Set to true when a C file has no @HookString and was changed to C_dependency.
+    /// </param>
+    /// <returns>
+    /// True if the file could be read and parsed.
+    /// </returns>
+    bool ParsePatchSourceFile(const QString &absoluteFilePath,
+                              struct PatchEntryItem &entry,
+                              QString *error,
+                              bool *hookStringMissing)
+    {
+        if(error) error->clear();
+        if(hookStringMissing) *hookStringMissing = false;
+
+        QFileInfo fileInfo(absoluteFilePath);
+        if(absoluteFilePath.isEmpty() || !fileInfo.exists() || !fileInfo.isFile())
+        {
+            if(error) *error = QString(QT_TR_NOOP("Patch source file does not exist: ")) + absoluteFilePath;
+            return false;
+        }
+
+        QFile file(absoluteFilePath);
+        if(!file.open(QIODevice::ReadOnly))
+        {
+            if(error) *error = QString(QT_TR_NOOP("Cannot open patch source file: ")) + absoluteFilePath;
+            return false;
+        }
+        file.close();
+
+        // Infer the patch type from the extension, matching PatchEditDialog's behavior.
+        enum PatchType fileType;
+        if(absoluteFilePath.endsWith(".c", Qt::CaseInsensitive))
+        {
+            fileType = PatchType::C;
+        }
+        else if(absoluteFilePath.endsWith(".s", Qt::CaseInsensitive))
+        {
+            fileType = PatchType::Assembly;
+        }
+        else
+        {
+            fileType = PatchType::Binary;
+        }
+        entry.PatchType = fileType;
+
+        if(fileType == PatchType::Binary)
+        {
+            return true;
+        }
+
+        // Parse the hook address.
+        QString hookAddress = FileIOUtils::GetParamFromSourceFile(absoluteFilePath, HOOK_ADDR_IDENTIFIER, hookAddressRegex);
+        if(hookAddress != "")
+        {
+            if(hookAddress.startsWith("0x")) hookAddress = hookAddress.mid(2);
+            entry.HookAddress = hookAddress.toUInt(Q_NULLPTR, 16);
+        }
+
+        // Parse the hook string and the placeholder position.
+        QString hookString = FileIOUtils::GetParamFromSourceFile(absoluteFilePath, HOOK_STRING_IDENTIFIER, hookStringRegex);
+        if(hookString != "")
+        {
+            entry.HookString = NormalizeHookText(hookString);
+            entry.PatchOffsetInHookString = GetPatchOffset(hookString);
+        }
+        else if(fileType == PatchType::C)
+        {
+            // A C file without a hook string is a dependency-only patch.
+            if(hookStringMissing) *hookStringMissing = true;
+            entry.PatchType = PatchType::C_dependency;
+            entry.HookAddress = 0;
+            entry.HookString.clear();
+            entry.PatchOffsetInHookString = static_cast<unsigned int>(-1);
+        }
+
+        // Parse the description.
+        QString description = FileIOUtils::GetParamFromSourceFile(absoluteFilePath, DESCRIPTION_IDENTIFIER, descriptionRegex);
+        if(description != "")
+        {
+            entry.Description = description;
+        }
+
+        return true;
+    }
 
     /// <summary>
     /// Obtain the patch entries from the currently loaded ROM file.

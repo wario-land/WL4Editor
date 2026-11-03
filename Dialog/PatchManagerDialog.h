@@ -23,6 +23,8 @@ private slots:
     void on_editPatchButton_clicked();
     void on_removePatchButton_clicked();
     void on_savePatchButton_clicked();
+    void on_ImportPatchButton_clicked();
+    void on_ExportPatchButton_clicked();
 
 private:
     PatchManagerTableView *PatchTable;

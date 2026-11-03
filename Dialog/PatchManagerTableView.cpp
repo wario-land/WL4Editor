@@ -1,5 +1,6 @@
 #include "PatchManagerTableView.h"
 #include "WL4EditorWindow.h"
+#include <algorithm>
 #include <cassert>
 #include <QModelIndex>
 
@@ -143,6 +144,33 @@ struct PatchEntryItem PatchManagerTableView::GetSelectedEntry()
 }
 
 /// <summary>
+/// Get all selected patch entries, in table row order.
+/// </summary>
+/// <returns>
+/// The selected patch entries; empty when no row is selected.
+/// </returns>
+QVector<struct PatchEntryItem> PatchManagerTableView::GetSelectedEntries()
+{
+    QVector<struct PatchEntryItem> selectedEntries;
+    QItemSelectionModel *select = selectionModel();
+    if(!select) return selectedEntries;
+
+    QModelIndexList selectedRows = select->selectedRows();
+    std::sort(selectedRows.begin(), selectedRows.end(),
+              [](const QModelIndex &a, const QModelIndex &b) { return a.row() < b.row(); });
+    const int entryCount = static_cast<int>(EntryTableModel.entries.size());
+    for(const QModelIndex &index : selectedRows)
+    {
+        const int row = index.row();
+        if(row >= 0 && row < entryCount)
+        {
+            selectedEntries.append(EntryTableModel.entries[row]);
+        }
+    }
+    return selectedEntries;
+}
+
+/// <summary>
 /// Add an entry to the table.
 /// </summary>
 /// <param name="entry">
@@ -151,6 +179,22 @@ struct PatchEntryItem PatchManagerTableView::GetSelectedEntry()
 void PatchManagerTableView::AddEntry(struct PatchEntryItem entry)
 {
     EntryTableModel.AddEntry(entry);
+    UpdateTableView();
+}
+
+/// <summary>
+/// Add several entries to the table and refresh it once.
+/// </summary>
+/// <param name="entries">
+/// The entries to append.
+/// </param>
+void PatchManagerTableView::AddEntries(const QVector<struct PatchEntryItem> &entries)
+{
+    if(entries.isEmpty()) return;
+    for(const struct PatchEntryItem &entry : entries)
+    {
+        EntryTableModel.AddEntry(entry);
+    }
     UpdateTableView();
 }
 

@@ -4,6 +4,8 @@
 #include <QMessageBox>
 #include <QTextStream>
 #include <QColorDialog>
+#include <QDir>
+#include <QFileInfo>
 #include <algorithm>
 #include <iterator>
 #include "ROMUtils.h"
@@ -655,8 +657,122 @@ QString FileIOUtils::RelativeFilePathToAbsoluteFilePath(QString relativeFilePath
 {
     if(!relativeFilePath.length()) return "";
 
-    QDir ROMdir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir();
-    return QString(ROMdir.absolutePath() + QDir::separator() + relativeFilePath);
+    QString normalized = NormalizeRelativePath(relativeFilePath);
+    if(normalized.isEmpty()) return "";
+
+    QDir ROMdir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).absoluteDir();
+    return QDir::cleanPath(ROMdir.absoluteFilePath(normalized));
+}
+
+/// <summary>
+/// Normalize a ROM-relative path.
+/// </summary>
+/// <param name="path">
+/// The path to normalize.
+/// </param>
+/// <returns>
+/// The normalized relative path, or an empty string when the input is absolute or escapes
+/// the root.
+/// </returns>
+QString FileIOUtils::NormalizeRelativePath(const QString &path)
+{
+    QString normalized = QDir::fromNativeSeparators(path.trimmed());
+    while(normalized.startsWith("./"))
+    {
+        normalized = normalized.mid(2);
+    }
+    if(normalized.isEmpty() || normalized == ".") return "";
+    if(QDir::isAbsolutePath(normalized)) return "";
+
+#ifdef Q_OS_WIN
+    // Reject drive-relative paths such as "C:foo".
+    if(normalized.length() >= 2 && normalized.at(1) == ':') return "";
+#endif
+
+    normalized = QDir::cleanPath(normalized);
+    if(normalized.isEmpty() || normalized == "." || normalized == ".." ||
+       normalized.startsWith("../") || QDir::isAbsolutePath(normalized))
+    {
+        return "";
+    }
+    return normalized;
+}
+
+/// <summary>
+/// Check whether a path is inside a directory.
+/// </summary>
+/// <param name="filePath">
+/// The path to check.
+/// </param>
+/// <param name="directory">
+/// The directory that should contain filePath.
+/// </param>
+/// <returns>
+/// True if filePath is strictly inside directory.
+/// </returns>
+bool FileIOUtils::IsPathInsideDirectory(const QString &filePath, const QString &directory)
+{
+    if(filePath.isEmpty() || directory.isEmpty()) return false;
+
+    QString dir = QFileInfo(directory).absoluteFilePath();
+    QString file = QFileInfo(filePath).absoluteFilePath();
+
+    QString canonicalDir = QFileInfo(dir).canonicalFilePath();
+    QString canonicalFile = QFileInfo(file).canonicalFilePath();
+    if(!canonicalDir.isEmpty()) dir = canonicalDir;
+    if(!canonicalFile.isEmpty()) file = canonicalFile;
+
+    dir = QDir::cleanPath(QDir::fromNativeSeparators(dir));
+    file = QDir::cleanPath(QDir::fromNativeSeparators(file));
+
+    if(!dir.endsWith('/')) dir += '/';
+
+#ifdef Q_OS_WIN
+    return file.startsWith(dir, Qt::CaseInsensitive);
+#else
+    return file.startsWith(dir, Qt::CaseSensitive);
+#endif
+}
+
+/// <summary>
+/// Convert an absolute path inside a directory to a relative path.
+/// </summary>
+/// <param name="filePath">
+/// The absolute file path.
+/// </param>
+/// <param name="directory">
+/// The directory that should contain filePath.
+/// </param>
+/// <param name="ok">
+/// Receives whether the conversion was possible.
+/// </param>
+/// <returns>
+/// The relative path, or an empty string when the path is outside the directory.
+/// </returns>
+QString FileIOUtils::PathRelativeToDirectory(const QString &filePath, const QString &directory, bool *ok)
+{
+    if(ok) *ok = false;
+    if(filePath.isEmpty() || directory.isEmpty()) return "";
+    if(!IsPathInsideDirectory(filePath, directory)) return "";
+
+    QString dir = QFileInfo(directory).canonicalFilePath();
+    if(dir.isEmpty()) dir = QFileInfo(directory).absoluteFilePath();
+    QString file = QFileInfo(filePath).canonicalFilePath();
+    if(file.isEmpty()) file = QFileInfo(filePath).absoluteFilePath();
+
+    dir = QDir::cleanPath(QDir::fromNativeSeparators(dir));
+    file = QDir::cleanPath(QDir::fromNativeSeparators(file));
+
+    QString relative = QDir(dir).relativeFilePath(file);
+    relative = QDir::fromNativeSeparators(relative);
+    if(relative.isEmpty() || relative == "." || relative == ".." ||
+       relative.startsWith("../") || QDir::isAbsolutePath(relative))
+    {
+        return "";
+    }
+
+    if(ok) *ok = true;
+    return relative;
 }
 
 /// <summary>
