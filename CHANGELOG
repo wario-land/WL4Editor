@@ -4,6 +4,7 @@
 - Support exporting and importing the Graphic Manager data used by the current Room or Level via js scripts.
 - Support exporting and importing all the Graphic Manager data via GUI.
 - Add Chunk Manager Dialog and it supports user wake-up, load protection, save protection modes.
+- Support Patch list Export and Import.
 
 (Noticable GUI changes)
 - Roon Config Dialog Tileset name update.
