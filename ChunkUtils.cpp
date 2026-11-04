@@ -507,6 +507,14 @@ static void AddAssortedGraphicReferences(
 {
     using namespace ROMUtils;
 
+    // AssortedGraphicListChunkType — the list metadata itself. Find it first, so it can be used as
+    // the parent of the palette/Tile8x8/mapping chunks it references.
+    unsigned int listChunkAddr = ROMUtils::FindChunkInROM(
+        ROMFileMetadata->ROMDataPtr,
+        ROMFileMetadata->Length,
+        WL4Constants::AvailableSpaceBeginningInROM,
+        AssortedGraphicListChunkType);
+
     // Assorted graphic entries
     QVector<AssortedGraphicUtils::AssortedGraphicEntryItem> entries =
         AssortedGraphicUtils::GetAssortedGraphicsFromROM();
@@ -514,12 +522,16 @@ static void AddAssortedGraphicReferences(
     int entryIdx = 0;
     for (const auto &entry : entries)
     {
+        // The addresses stored in the assorted graphic list are data addresses (RATS tag + 12),
+        // like the other pointers in the ROM. ChunkReference::ChunkAddress must be the RATS tag
+        // address, otherwise the chunk is reported as orphaned.
         // Palette chunk
         if (entry.PaletteAddress >= WL4Constants::AvailableSpaceBeginningInROM)
         {
-            unsigned int chunkAddr = entry.PaletteAddress;
+            unsigned int chunkAddr = entry.PaletteAddress - 12;
             ChunkReference ref;
             ref.ChunkType = AssortedGraphicPaletteChunkType;
+            ref.ParentChunkAddress = listChunkAddr;
             ref.ChunkAddress = chunkAddr;
             ref.SourceDescription = QString("Assorted Graphic %1 — Palette").arg(entryIdx);
             refs[chunkAddr] = ref;
@@ -531,9 +543,10 @@ static void AddAssortedGraphicReferences(
         // Tile8x8 data chunk
         if (entry.TileDataAddress >= WL4Constants::AvailableSpaceBeginningInROM)
         {
-            unsigned int chunkAddr = entry.TileDataAddress;
+            unsigned int chunkAddr = entry.TileDataAddress - 12;
             ChunkReference ref;
             ref.ChunkType = AssortedGraphicTile8x8DataChunkType;
+            ref.ParentChunkAddress = listChunkAddr;
             ref.ChunkAddress = chunkAddr;
             ref.SourceDescription = QString("Assorted Graphic %1 — Tile Data").arg(entryIdx);
             refs[chunkAddr] = ref;
@@ -545,9 +558,10 @@ static void AddAssortedGraphicReferences(
         // Mapping data chunk
         if (entry.MappingDataAddress >= WL4Constants::AvailableSpaceBeginningInROM)
         {
-            unsigned int chunkAddr = entry.MappingDataAddress;
+            unsigned int chunkAddr = entry.MappingDataAddress - 12;
             ChunkReference ref;
             ref.ChunkType = AssortedGraphicmappingChunkType;
+            ref.ParentChunkAddress = listChunkAddr;
             ref.ChunkAddress = chunkAddr;
             ref.SourceDescription = QString("Assorted Graphic %1 — Mapping Data").arg(entryIdx);
             refs[chunkAddr] = ref;
@@ -558,12 +572,6 @@ static void AddAssortedGraphicReferences(
         ++entryIdx;
     }
 
-    // AssortedGraphicListChunkType — the list metadata itself
-    unsigned int listChunkAddr = ROMUtils::FindChunkInROM(
-        ROMFileMetadata->ROMDataPtr,
-        ROMFileMetadata->Length,
-        WL4Constants::AvailableSpaceBeginningInROM,
-        AssortedGraphicListChunkType);
     if (listChunkAddr)
     {
         ChunkReference listRef;

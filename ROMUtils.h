@@ -115,7 +115,11 @@ namespace ROMUtils
     unsigned int LayerRLECompress(unsigned int _layersize, unsigned short *LayerData, unsigned char **OutputCompressedData);
 
     bool GetChunkType(unsigned int DataAddr, enum SaveDataChunkType &chunkType);
+    // Chunk length helpers. The first overload reads the currently loaded ROM, which is what most
+    // UI and analysis code works on. The second one is for buffers which are not the loaded ROM
+    // (for example TempFile while SaveFile is writing chunks).
     unsigned int GetChunkDataLength(unsigned int chunkheaderAddr);
+    unsigned int GetChunkDataLength(const unsigned char *ROMData, unsigned int chunkheaderAddr);
     unsigned int FindChunkInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);
     QVector<unsigned int> FindAllChunksInROM(unsigned char *ROMData, unsigned int ROMLength, unsigned int startAddr, enum SaveDataChunkType chunkType, bool anyChunk = false);
 
@@ -135,7 +139,8 @@ namespace ROMUtils
 
     QString SaveDataAnalysis();
     void StaticInitialization();
-    bool WriteChunkSanityCheck(const struct SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks);
+    bool WriteChunkSanityCheck(const struct SaveData &chunk, const unsigned int chunk_addr,
+                               const QVector<unsigned int> &existChunks, const unsigned char *ROMData);
 
 } // namespace ROMUtils
 

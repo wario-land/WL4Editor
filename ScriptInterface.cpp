@@ -20,6 +20,8 @@ extern WL4EditorWindow *singleton;
 #include <QMap>
 #include <QSet>
 
+#include <cstring>
+
 // ---------------------------Helper functions--------------------------------------
 unsigned short *QStringToU16(QString input)
 {
@@ -356,6 +358,11 @@ void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
     if(datasize != 2 * witdh * height)
     {
         log("File size not match (expected width: 0x" + QString::number(witdh, 16) + ", height: 0x" + QString::number(height, 16) + ")!");
+        return;
+    }
+    if (memcmp(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.constData(), datasize) == 0)
+    {
+        log("Layer data is unchanged, skipped.");
         return;
     }
     memcpy(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.data(), 2 * witdh * height);
@@ -1217,6 +1224,162 @@ QString ScriptInterface::ExportGetCreditsDataHex()
 
 // ---- Import APIs ----
 
+namespace
+{
+    // Compare helpers used by the Import APIs. When the imported data is already identical to the
+    // data of the current ROM, the import APIs skip creating an Operation: this avoids useless
+    // Undo entries, IsDirty flags and chunk writes on the next save.
+    bool EntityListsAreEqual(const std::vector<LevelComponents::EntityRoomAttribute> &first,
+                             const std::vector<LevelComponents::EntityRoomAttribute> &second)
+    {
+        if (first.size() != second.size())
+        {
+            return false;
+        }
+        for (size_t i = 0; i < first.size(); ++i)
+        {
+            if ((first[i].YPos != second[i].YPos) || (first[i].XPos != second[i].XPos)
+                    || (first[i].EntityID != second[i].EntityID))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool DoorVectorsAreEqual(LevelComponents::LevelDoorVector &first,
+                             LevelComponents::LevelDoorVector &second)
+    {
+        if (first.size() != second.size())
+        {
+            return false;
+        }
+        for (int i = 0; i < first.size(); ++i)
+        {
+            const LevelComponents::DoorEntry firstDoor = first.GetDoor(static_cast<unsigned char>(i));
+            const LevelComponents::DoorEntry secondDoor = second.GetDoor(static_cast<unsigned char>(i));
+            if ((firstDoor.DoorTypeByte != secondDoor.DoorTypeByte)
+                    || (firstDoor.RoomID != secondDoor.RoomID)
+                    || (firstDoor.x1 != secondDoor.x1) || (firstDoor.x2 != secondDoor.x2)
+                    || (firstDoor.y1 != secondDoor.y1) || (firstDoor.y2 != secondDoor.y2)
+                    || (firstDoor.DestinationDoorGlobalID != secondDoor.DestinationDoorGlobalID)
+                    || (firstDoor.HorizontalDeltaWario != secondDoor.HorizontalDeltaWario)
+                    || (firstDoor.VerticalDeltaWario != secondDoor.VerticalDeltaWario)
+                    || (firstDoor.EntitySetID != secondDoor.EntitySetID)
+                    || (firstDoor.BGM_ID != secondDoor.BGM_ID))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool CameraRecordsAreEqual(
+            const std::vector<struct LevelComponents::__CameraControlRecord *> &first,
+            const std::vector<struct LevelComponents::__CameraControlRecord *> &second)
+    {
+        if (first.size() != second.size())
+        {
+            return false;
+        }
+        for (size_t i = 0; i < first.size(); ++i)
+        {
+            if (memcmp(first[i], second[i], sizeof(struct LevelComponents::__CameraControlRecord)) != 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool RoomConfigParamsAreEqual(const DialogParams::RoomConfigParams *first,
+                                  const DialogParams::RoomConfigParams *second)
+    {
+        return (first->roomID == second->roomID)
+                && (first->CurrentTilesetIndex == second->CurrentTilesetIndex)
+                && (first->CurrentEntitySetID == second->CurrentEntitySetID)
+                && (first->Layer0Alpha == second->Layer0Alpha)
+                && (first->LayerPriorityAndAlphaAttr == second->LayerPriorityAndAlphaAttr)
+                && (first->Layer0MappingTypeParam == second->Layer0MappingTypeParam)
+                && (first->Layer0DataPtr == second->Layer0DataPtr)
+                && (first->Layer0Width == second->Layer0Width)
+                && (first->Layer0Height == second->Layer0Height)
+                && (first->RoomWidth == second->RoomWidth)
+                && (first->RoomHeight == second->RoomHeight)
+                && (first->Layer2MappingTypeParam == second->Layer2MappingTypeParam)
+                && (first->BackgroundLayerEnable == second->BackgroundLayerEnable)
+                && (first->BGLayerScrollFlag == second->BGLayerScrollFlag)
+                && (first->BackgroundLayerDataPtr == second->BackgroundLayerDataPtr)
+                && (first->RasterType == second->RasterType)
+                && (first->Water == second->Water)
+                && (first->BGMVolume == second->BGMVolume);
+    }
+
+    bool TilesetDataAreEqual(LevelComponents::Tileset *first, LevelComponents::Tileset *second)
+    {
+        return (first->GetfgGFXptr() == second->GetfgGFXptr())
+                && (first->GetfgGFXlen() == second->GetfgGFXlen())
+                && (first->GetTile8x8DataHex() == second->GetTile8x8DataHex())
+                && (first->GetMap16DataHex() == second->GetMap16DataHex())
+                && (first->GetAllPalettesHex() == second->GetAllPalettesHex())
+                && (first->GetEventTableDataHex() == second->GetEventTableDataHex())
+                && (first->GetTerrainTableDataHex() == second->GetTerrainTableDataHex())
+                && (first->GetAnimatedSwitchTableHex() == second->GetAnimatedSwitchTableHex())
+                && (first->GetAnimatedTileDataHex(0) == second->GetAnimatedTileDataHex(0))
+                && (first->GetAnimatedTileDataHex(1) == second->GetAnimatedTileDataHex(1));
+    }
+
+    bool EntityDataAreEqual(LevelComponents::Entity *first, LevelComponents::Entity *second)
+    {
+        if ((first->GetPalNum() != second->GetPalNum())
+                || (first->GetTilesNum() != second->GetTilesNum()))
+        {
+            return false;
+        }
+        for (int i = 0; i < first->GetPalNum(); ++i)
+        {
+            if (first->GetPaletteDataHex(i) != second->GetPaletteDataHex(i))
+            {
+                return false;
+            }
+        }
+        for (int i = 0; i < first->GetTilesNum(); ++i)
+        {
+            if (first->GetTile8x8DataHex(i) != second->GetTile8x8DataHex(i))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool EntitySetDataAreEqual(LevelComponents::EntitySet *first, LevelComponents::EntitySet *second)
+    {
+        if (first->GetEntityInfoTableSize() != second->GetEntityInfoTableSize())
+        {
+            return false;
+        }
+        for (int i = 0; i < first->GetEntityInfoTableSize(); ++i)
+        {
+            if (first->GetEntityInfoEntry(i) != second->GetEntityInfoEntry(i))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool AnimatedTileGroupDataAreEqual(LevelComponents::AnimatedTile8x8Group *first,
+                                       LevelComponents::AnimatedTile8x8Group *second)
+    {
+        return (first->GetAnimationType() == second->GetAnimationType())
+                && (first->GetCountPerFrame() == second->GetCountPerFrame())
+                && (first->GetTotalFrameCount() == second->GetTotalFrameCount())
+                && (first->GetTile8x8Count() == second->GetTile8x8Count())
+                && (first->GetTileData() == second->GetTileData());
+    }
+}
+
 // ---- Room Import APIs ----
 
 bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0Width, int layer0Height,
@@ -1295,6 +1458,14 @@ bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0
     else
     {
         newParams->LayerData[2] = nullptr;
+    }
+
+    if (RoomConfigParamsAreEqual(currentParams, newParams))
+    {
+        delete currentParams;
+        delete newParams;
+        log("ImportRoomConfig: Room config is unchanged, skipped.");
+        return true;
     }
 
     // Capture pre-trim state before any modifications (for undo of trimmed elements)
@@ -1382,6 +1553,14 @@ bool ScriptInterface::ImportLayerTiles(int layerId, int width, int height, QStri
         }
     }
 
+    if (oldData && (layer->GetLayerWidth() == width) && (layer->GetLayerHeight() == height)
+            && (memcmp(oldData, newData, expectedSize * sizeof(unsigned short)) == 0))
+    {
+        delete[] newData;
+        log("ImportLayerTiles: Layer " + QString::number(layerId) + " is unchanged, skipped.");
+        return true;
+    }
+
     OperationParams *op = new OperationParams;
     LayerChangeParams *layerChange = LayerChangeParams::Create(oldData, newData, width, height, roomId);
     delete[] newData;
@@ -1465,6 +1644,14 @@ bool ScriptInterface::ImportDoorsDisableDest(QString doorsData)
         newDoorVec->SetBGM(newId, (unsigned short) bgm);
     }
 
+    if (DoorVectorsAreEqual(*oldDoorVec, *newDoorVec))
+    {
+        delete oldDoorVec;
+        delete newDoorVec;
+        log("ImportDoorsDisableDest: Doors are unchanged, skipped.");
+        return true;
+    }
+
     OperationParams *op = new OperationParams;
     op->doorVectorChange = true;
     op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
@@ -1497,6 +1684,12 @@ bool ScriptInterface::ImportEntityList(int difficulty, QString entityDataHex)
         attr.XPos = (unsigned char) tokens[i + 1].toUInt(nullptr, 16);
         attr.EntityID = (unsigned char) tokens[i + 2].toUInt(nullptr, 16);
         newList.push_back(attr);
+    }
+
+    if (EntityListsAreEqual(oldList, newList))
+    {
+        log("ImportEntityList: Difficulty " + QString::number(difficulty) + " is unchanged, skipped.");
+        return true;
     }
 
     OperationParams *op = new OperationParams;
@@ -1554,6 +1747,21 @@ bool ScriptInterface::ImportCameraControl(int camType, QString recordsData)
             rec->ChangedValue = (unsigned char) fields[8].toInt();
             newRecordsVec.push_back(rec);
         }
+    }
+
+    if ((oldType == static_cast<LevelComponents::__CameraControlType>(camType))
+            && CameraRecordsAreEqual(oldRecords, newRecordsVec))
+    {
+        for (struct LevelComponents::__CameraControlRecord *record : oldRecords)
+        {
+            delete record;
+        }
+        for (struct LevelComponents::__CameraControlRecord *record : newRecordsVec)
+        {
+            delete record;
+        }
+        log("ImportCameraControl: Camera control is unchanged, skipped.");
+        return true;
     }
 
     OperationParams *op = new OperationParams;
@@ -1672,6 +1880,12 @@ bool ScriptInterface::ImportDoorVecString(QString doorVecString)
     }
     int newSize = newDoorVec.size();
 
+    if (DoorVectorsAreEqual(level->GetDoorListRef(), newDoorVec))
+    {
+        log("ImportDoorVecString: Doors are unchanged, skipped.");
+        return true;
+    }
+
     // Save new state for undo/redo — copy newDoorVec (not level, which is unchanged)
     LevelComponents::LevelDoorVector *newDoorVecCopy =
         new LevelComponents::LevelDoorVector(newDoorVec);
@@ -1750,6 +1964,14 @@ bool ScriptInterface::ImportTileset(int tilesetId, int fggfxPtr, int fggfxLen,
     newTileset->SetAnimatedTileDataHex(0, animatedTileData0);
     newTileset->SetAnimatedTileDataHex(1, animatedTileData1);
 
+    if (TilesetDataAreEqual(oldTileset, newTileset))
+    {
+        delete oldTileset;
+        delete newTileset;
+        log("ImportTileset: Tileset " + QString::number(tilesetId) + " is unchanged, skipped.");
+        return true;
+    }
+
     newTileset->SetChanged(true);
 
     // Create operation
@@ -1788,6 +2010,13 @@ bool ScriptInterface::ImportEntity(int entityId, QString paletteData, QString ti
     QStringList tile8x8Entries = tile8x8Data.split(QChar('\n'), Qt::SkipEmptyParts);
     for (int i = 0; i < tile8x8Entries.size(); ++i)
         newEntity->SetTile8x8DataHex(i, tile8x8Entries[i]);
+
+    if (EntityDataAreEqual(ROMUtils::entities[entityId], newEntity))
+    {
+        delete newEntity;
+        log("ImportEntity: Entity " + QString::number(entityId) + " is unchanged, skipped.");
+        return true;
+    }
 
     newEntity->SetChanged(true);
 
@@ -1830,6 +2059,13 @@ bool ScriptInterface::ImportEntitySet(int entitySetId, QString infoTable)
         }
     }
 
+    if (EntitySetDataAreEqual(ROMUtils::entitiessets[entitySetId], newEntitySet))
+    {
+        delete newEntitySet;
+        log("ImportEntitySet: EntitySet " + QString::number(entitySetId) + " is unchanged, skipped.");
+        return true;
+    }
+
     newEntitySet->SetChanged(true);
 
     // Create operation params
@@ -1868,6 +2104,14 @@ bool ScriptInterface::ImportAnimatedTileGroup(int groupId, int animType, int cou
     QStringList tileDataEntries = tileData.split(QChar('\n'), Qt::SkipEmptyParts);
     for (int i = 0; i < tileDataEntries.size(); ++i)
         newGroup->SetTileDataHex(i, tileDataEntries[i]);
+
+    if (AnimatedTileGroupDataAreEqual(ROMUtils::animatedTileGroups[groupId], newGroup))
+    {
+        delete newGroup;
+        log("ImportAnimatedTileGroup: AnimatedTileGroup " + QString::number(groupId)
+            + " is unchanged, skipped.");
+        return true;
+    }
 
     newGroup->SetChanged(true);
 
@@ -1912,6 +2156,18 @@ bool ScriptInterface::ImportGlobalWallPaint(QString gfxHex, QString passageColor
         return false;
     }
 
+    const unsigned char *wallPaintROMData = ROMUtils::ROMFileMetadata->ROMDataPtr;
+    if ((memcmp(wallPaintROMData + WL4Constants::WallPaintGFXAddr,
+                newGFX.constData(), gfxSize) == 0)
+            && (memcmp(wallPaintROMData + WL4Constants::WallPaintPalPassageColor,
+                       newPassageColor.constData(), palSize) == 0)
+            && (memcmp(wallPaintROMData + WL4Constants::WallPaintPalPassageGray,
+                       newPassageGray.constData(), palSize) == 0))
+    {
+        log("ImportGlobalWallPaint: Wall paint data is unchanged, skipped.");
+        return true;
+    }
+
     // Capture old ROM data for fixed blocks
     unsigned char oldGFX[1024 * 5 * 6];
     unsigned char oldPassageColor[32 * 5 * 6];
@@ -1954,6 +2210,13 @@ bool ScriptInterface::ImportGlobalCredits(QString creditsHex)
         return false;
     }
 
+    if (memcmp(ROMUtils::ROMFileMetadata->ROMDataPtr + WL4Constants::CreditsTiles,
+               newData.constData(), expectedSize) == 0)
+    {
+        log("ImportGlobalCredits: Credits data is unchanged, skipped.");
+        return true;
+    }
+
     // Capture old credit data
     DialogParams::CreditsEditParams *lastParams = new DialogParams::CreditsEditParams();
     memcpy(lastParams->oldCreditData,
@@ -1980,6 +2243,16 @@ bool ScriptInterface::ImportLevelConfig(QString levelName, QString levelNameJ,
                                          int timerHard, int timerNormal, int timerSHard)
 {
     LevelComponents::Level *level = singleton->GetCurrentLevel();
+
+    if ((level->GetLevelName() == levelName)
+            && (level->GetLevelName(1) == levelNameJ)
+            && (level->GetTimeCountdownCounter(LevelComponents::HardDifficulty) == timerHard)
+            && (level->GetTimeCountdownCounter(LevelComponents::NormalDifficulty) == timerNormal)
+            && (level->GetTimeCountdownCounter(LevelComponents::SHardDifficulty) == timerSHard))
+    {
+        log("ImportLevelConfig: Level config is unchanged, skipped.");
+        return true;
+    }
 
     // Capture old state from level
     DialogParams::LevelConfigParams *lastParams = new DialogParams::LevelConfigParams();
@@ -2429,9 +2702,13 @@ QString ScriptInterface::ImportGraphicEntries(QString entriesJson)
     const QJsonObject result = AssortedGraphicIO::ImportEntries(entries);
     if (result.value("success").toBool())
     {
-        singleton->SetUnsavedChanges(true);
+        const int createdCount = result.value("createdCount").toInt();
+        if (createdCount > 0)
+        {
+            singleton->SetUnsavedChanges(true);
+        }
         log(QString("ImportGraphicEntries: %1 entries created, %2 entries reused.")
-            .arg(result.value("createdCount").toInt())
+            .arg(createdCount)
             .arg(result.value("reusedCount").toInt()));
     }
     else
