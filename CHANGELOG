@@ -26,6 +26,7 @@
 - Fix the bg tile data list in Tileset Editor can offer graphic entries which contain no Tile8x8 data.
 - Fix ChooseLevelDialog shows incorrect current Level name in ComboBox on Entry Passage Boss Level.
 - Fix alpha blending checkbox in EditModeDockWidget not selected when enabled.
+- Fix 2 bugs in SavePatchesToROM(..) which keep growing orphan chunks after more saves.
 
 (minor changes)
 - palettes serialization logic changes in Graphic Manager (you can still load previous ROM project so it's backward compatible).
