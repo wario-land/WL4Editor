@@ -870,7 +870,7 @@ namespace PatchUtils
             );
         for (unsigned int &addr : chunkAddrsVec)
         {
-            unsigned char data_addr = addr + 0xC;
+            unsigned int data_addr = addr + 0xC;
             if (invalidationChunks.contains(data_addr)) continue;
 
             // Add orphaned PatchChunks into the invalidationChunks
@@ -1051,11 +1051,11 @@ namespace PatchUtils
                         // Allocation success
                         *sd = saveData;
 
-                        // Advance patch iterator to the next non-C_dependency patch
+                        // Advance patch iterator to the next non-C_dependency patch.
                         regularPatchFileAllocIter++;
                         while(regularPatchFileAllocIter != entries.end() &&
-                               !regularPatchFileAllocIter->FileName.length() &&
-                               (dependencyPatchFileAllocIter->PatchType != C_dependency))
+                               ((regularPatchFileAllocIter->PatchType == C_dependency) ||
+                                !regularPatchFileAllocIter->FileName.length()))
                         {
                             regularPatchFileAllocIter++;
                         }
