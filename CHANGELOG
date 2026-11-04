@@ -3,6 +3,7 @@
 - Support exporting and importing the Graphic Manager data used by the current Room or Level via js scripts.
 - Support exporting and importing all the Graphic Manager data via GUI.
 - Add Chunk Manager Dialog and it supports user wake-up, load protection, save protection modes.
+- Import scripts now compare the imported data with the current ROM before applying it: unchanged Rooms, Layers, entity lists, doors, camera data, Tilesets, Entities, EntitySets, Animated Tile Groups, Wall Paint and Credits no longer create Undo entries, dirty flags or unnecessary save chunks.
 
 (Noticable GUI changes)
 - Roon Config Dialog Tileset name update.
@@ -30,6 +31,7 @@
 - Now vanilla entries will always be parsed first in graphic manager, then previously saved custom entries will be filtered and append below.
 - Now graphic manager will show selected entry id and total entry number.
 - Keep the palette slot IDs sorted after swapping palettes, and swap the palette IDs in the mapping data along with the palettes, so the rendered graphic stays unchanged.
+- Fix sanity check logic.
 - Update QHexView submodule.
 
 0.16.6:
