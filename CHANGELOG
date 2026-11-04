@@ -1,9 +1,9 @@
 0.17.0:
 (major changes)
+- Import scripts now compare the imported data with the current ROM before applying it: unchanged Rooms, Layers, entity lists, doors, camera data, Tilesets, Entities, EntitySets, Animated Tile Groups, Wall Paint and Credits no longer create Undo entries, dirty flags or unnecessary save chunks.
 - Support exporting and importing the Graphic Manager data used by the current Room or Level via js scripts.
 - Support exporting and importing all the Graphic Manager data via GUI.
 - Add Chunk Manager Dialog and it supports user wake-up, load protection, save protection modes.
-- Import scripts now compare the imported data with the current ROM before applying it: unchanged Rooms, Layers, entity lists, doors, camera data, Tilesets, Entities, EntitySets, Animated Tile Groups, Wall Paint and Credits no longer create Undo entries, dirty flags or unnecessary save chunks.
 
 (Noticable GUI changes)
 - Roon Config Dialog Tileset name update.
