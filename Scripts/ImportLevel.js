@@ -103,6 +103,56 @@
         return;
     }
 
+    // Helper: extract one Level's slice from the legacy global wall paint data.
+    // Legacy level files stored the wall paint of all passages and local levels
+    // in one global block. The source Level indices from the file select the
+    // slice, which is then written to the current Level by ImportLevelWallPaint.
+    function importLegacyWallPaint(legacy) {
+        var lh = levelObj.levelHeader || {};
+        var passage = lh.passage;
+        var level = lh.stage;
+        if (passage === undefined || level === undefined) {
+            // Older files without a level header fall back to the current Level.
+            passage = WL4EditorInterface.ExportGetLevelPassage();
+            level = WL4EditorInterface.ExportGetLevelStage();
+        }
+        if (passage < 0 || passage > 5 || level < 0 || level > 4) {
+            WL4EditorInterface.log("ImportLevel: legacy wall paint data has no valid Level indices, skipped.");
+            return true;
+        }
+
+        var gfxHex = legacy.gfxHex || "";
+        var colorHex = legacy.passageColorHex || "";
+        var gfxSize = 1024 * 5 * 6;
+        var palSize = 32 * 5 * 6;
+        if (gfxHex.length !== gfxSize * 2 ||
+            colorHex.length !== palSize * 2) {
+            WL4EditorInterface.log("ImportLevel: legacy wall paint data has an unexpected size, skipped.");
+            return true;
+        }
+
+        function sliceHex(hex, byteOffset, byteLength) {
+            return hex.substr(byteOffset * 2, byteLength * 2);
+        }
+
+        var gfxParts = "";
+        for (var c = 0; c < 5; c++) {
+            gfxParts += sliceHex(
+                gfxHex,
+                (1024 * 5) * passage + (5 * 32) * level + c * 1024,
+                5 * 32
+            );
+        }
+
+        var paletteOffset = 32 * 5 * passage + 32 * level;
+        WL4EditorInterface.log("ImportLevel: importing legacy wall paint data for Level " +
+                               passage + "-" + level + ".");
+        return WL4EditorInterface.ImportLevelWallPaint(
+            gfxParts,
+            sliceHex(colorHex, paletteOffset, 32)
+        );
+    }
+
     // Ask the user to save pending changes before the Graphic Manager data is written to the ROM.
     if (!WL4EditorInterface.EnsureLevelSavedForGraphicImport()) {
         WL4EditorInterface.log("Level import cancelled: the Level was not saved.");
@@ -173,13 +223,24 @@
         );
     }
 
-    if (globals.wallPaintData) {
-        var wp = globals.wallPaintData;
-        WL4EditorInterface.ImportGlobalWallPaint(
-            wp.gfxHex,
-            wp.passageColorHex,
-            wp.passageGrayHex
-        );
+    // ---------- Import the current Level's wall paint ----------
+    // Only the GFX and the colored passage palette are stored. The gray,
+    // start-level gradient and MMAP palettes are generated from the colored
+    // palette by ImportLevelWallPaint, following the Wall Paint editor logic.
+    if (levelObj.wallPaintData) {
+        var wp = levelObj.wallPaintData;
+        if (!WL4EditorInterface.ImportLevelWallPaint(
+                wp.gfxHex || "",
+                wp.passageColorHex || "")) {
+            WL4EditorInterface.alert("ImportLevelWallPaint failed.");
+            return;
+        }
+    } else if (globals.wallPaintData) {
+        // Legacy files stored all Levels' wall paint in one global block.
+        if (!importLegacyWallPaint(globals.wallPaintData)) {
+            WL4EditorInterface.alert("ImportLevelWallPaint (legacy) failed.");
+            return;
+        }
     }
 
     if (globals.creditsData && globals.creditsData !== "") {

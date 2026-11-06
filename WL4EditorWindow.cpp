@@ -6,6 +6,7 @@
 #include "FileIOUtils.h"
 #include "Operation.h"
 #include "ChunkUtils.h"
+#include "WallPaintUtils.h"
 
 #include "Dialog/SpritesEditorDialog.h"
 #include "Dialog/PatchManagerDialog.h"
@@ -2979,94 +2980,70 @@ void WL4EditorWindow::on_actionEdit_Animated_Tile_Groups_triggered()
 
 void WL4EditorWindow::on_actionEdit_Wall_Paints_triggered()
 {
-    // Capture old ROM data at all locations the dialog may modify
-    unsigned char oldGFX[1024 * 5 * 6];
-    unsigned char oldPassageColor[32 * 5 * 6];
-    unsigned char oldPassageGray[32 * 5 * 6];
-    memcpy(oldGFX, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], sizeof(oldGFX));
-    memcpy(oldPassageColor, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], sizeof(oldPassageColor));
-    memcpy(oldPassageGray, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], sizeof(oldPassageGray));
-
-    // Collect scattered data addresses and capture old data
-    struct ScatteredCapture {
-        unsigned int addr;
-        unsigned int size;
-        unsigned char *oldData;
-    };
-    std::vector<ScatteredCapture> captures;
-
-    for (int passage = 0; passage < 6; passage++)
+    // Wall paint is stored per Level. Capture every passage/local-level slot
+    // before the dialog writes to the ROM, then record only the slots whose data
+    // actually changed. Each recorded slot keeps its own passage/level index, so
+    // Undo/Redo never touches unused or future Level slots.
+    WallPaintUtils::LevelData oldData[WallPaintUtils::PassageCount][WallPaintUtils::LevelCount];
+    for (int passageIndex = 0; passageIndex < WallPaintUtils::PassageCount; ++passageIndex)
     {
-        unsigned int mmapAddr = ROMUtils::PointerFromData(
-            WL4Constants::WallPaintPalSixInOneMMapColorPtrTable + 4 * passage);
-
-        for (int level = 0; level < 4; level++)
+        for (int levelIndex = 0; levelIndex < WallPaintUtils::LevelCount; ++levelIndex)
         {
-            unsigned int gradAddr = ROMUtils::PointerFromData(
-                WL4Constants::WallPaintPalStartLevelPointerTable + passage * 16 + level * 4);
-            if (!gradAddr) continue;
-
-            // Gradient palette data (256 bytes)
-            ScatteredCapture gradCap;
-            gradCap.addr = gradAddr;
-            gradCap.size = 256;
-            gradCap.oldData = new unsigned char[256];
-            memcpy(gradCap.oldData, &ROMUtils::ROMFileMetadata->ROMDataPtr[gradAddr], 256);
-            captures.push_back(gradCap);
-
-            // MMAP palette data (32 bytes per level)
-            ScatteredCapture mmapCap;
-            mmapCap.addr = mmapAddr + 32 * (0xA + level);
-            mmapCap.size = 32;
-            mmapCap.oldData = new unsigned char[32];
-            memcpy(mmapCap.oldData, &ROMUtils::ROMFileMetadata->ROMDataPtr[mmapCap.addr], 32);
-            captures.push_back(mmapCap);
+            if (!WallPaintUtils::ReadLevelData(passageIndex, levelIndex,
+                                               oldData[passageIndex][levelIndex]))
+            {
+                QMessageBox::critical(this, tr("Wall Paint Error"),
+                    tr("Failed to read the wall paint data of Level %1-%2.")
+                        .arg(passageIndex).arg(levelIndex));
+                return;
+            }
         }
-
-        // Boss level MMAP palette (always written)
-        ScatteredCapture bossCap;
-        bossCap.addr = mmapAddr + 32 * (0xA + 4);
-        bossCap.size = 32;
-        bossCap.oldData = new unsigned char[32];
-        memcpy(bossCap.oldData, &ROMUtils::ROMFileMetadata->ROMDataPtr[bossCap.addr], 32);
-        captures.push_back(bossCap);
     }
 
     WallPaintEditorDialog dialog;
-    auto acc = dialog.exec();
-    if (acc == QDialog::Accepted)
+    if (dialog.exec() != QDialog::Accepted)
     {
-        dialog.AcceptChanges();
+        return;
+    }
 
-        // Capture new ROM data
-        unsigned char newGFX[1024 * 5 * 6];
-        unsigned char newPassageColor[32 * 5 * 6];
-        unsigned char newPassageGray[32 * 5 * 6];
-        memcpy(newGFX, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], sizeof(newGFX));
-        memcpy(newPassageColor, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], sizeof(newPassageColor));
-        memcpy(newPassageGray, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], sizeof(newPassageGray));
+    dialog.AcceptChanges();
 
-        // Build operation params
-        WallPaintChangeParams *wp = WallPaintChangeParams::Create(
-            oldGFX, newGFX, oldPassageColor, newPassageColor, oldPassageGray, newPassageGray);
+    OperationParams *operation = new OperationParams;
+    operation->WallPaintChange = true;
 
-        for (auto &cap : captures)
+    for (int passageIndex = 0; passageIndex < WallPaintUtils::PassageCount; ++passageIndex)
+    {
+        for (int levelIndex = 0; levelIndex < WallPaintUtils::LevelCount; ++levelIndex)
         {
-            wp->AddScatteredBlock(cap.addr, cap.size, cap.oldData,
-                                  &ROMUtils::ROMFileMetadata->ROMDataPtr[cap.addr]);
-            delete[] cap.oldData;
-        }
+            WallPaintUtils::LevelData newData;
+            if (!WallPaintUtils::ReadLevelData(passageIndex, levelIndex, newData))
+            {
+                OutputWidget->PrintString(
+                    tr("Wall Paint: failed to read Level %1-%2 after editing.")
+                        .arg(passageIndex).arg(levelIndex));
+                continue;
+            }
 
-        struct OperationParams *operation = new struct OperationParams;
-        operation->WallPaintChange = true;
-        operation->wallPaintChangeParams = wp;
-        ExecuteOperation(operation);
+            if (WallPaintUtils::LevelDataEquals(newData, oldData[passageIndex][levelIndex]))
+            {
+                continue;
+            }
+
+            WallPaintChangeParams *wallPaintChange =
+                WallPaintChangeParams::Create(passageIndex, levelIndex,
+                                              oldData[passageIndex][levelIndex], newData);
+            operation->wallPaintChangeParams.push_back(wallPaintChange);
+        }
     }
-    else
+
+    if (operation->wallPaintChangeParams.empty())
     {
-        for (auto &cap : captures)
-            delete[] cap.oldData;
+        delete operation;
+        OutputWidget->PrintString(tr("Wall Paint: no data changed, operation skipped."));
+        return;
     }
+
+    ExecuteOperation(operation);
 }
 
 /// <summary>

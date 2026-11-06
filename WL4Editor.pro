@@ -68,6 +68,7 @@ SOURCES += \
     LevelComponents/Tile.cpp \
     LevelComponents/Tileset.cpp \
     ROMUtils.cpp \
+    WallPaintUtils.cpp \
     Operation.cpp \
     Dialog/ChooseLevelDialog.cpp \
     DockWidget/Tile16DockWidget.cpp \
@@ -123,6 +124,7 @@ HEADERS += \
     LevelComponents/Layer.h \
     ROMUtils.h \
     WL4Constants.h \
+    WallPaintUtils.h \
     LevelComponents/Tile.h \
     LevelComponents/Tileset.h \
     Dialog/ChooseLevelDialog.h \

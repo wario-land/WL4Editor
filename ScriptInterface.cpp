@@ -3,6 +3,7 @@
 #include "AssortedGraphicIO.h"
 #include "Operation.h"
 #include "ROMUtils.h"
+#include "WallPaintUtils.h"
 
 #ifndef WINDOW_INSTANCE_SINGLETON
 #define WINDOW_INSTANCE_SINGLETON
@@ -1188,31 +1189,44 @@ QString ScriptInterface::ExportGetAnimatedTileGroupTileDataHex(int id, int index
     return ROMUtils::animatedTileGroups[id]->GetTileDataHex(index);
 }
 
-// ---- WallPaint/Credits Export ----
+// ---- WallPaint Export ----
 
-QString ScriptInterface::ExportGetWallPaintGFXHex()
+namespace
 {
-    QByteArray bytes(
-        reinterpret_cast<const char *>(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr]),
-        1024 * 5 * 6);
-    return QString::fromLatin1(bytes.toHex());
+    bool ReadCurrentLevelWallPaint(WallPaintUtils::LevelData &data)
+    {
+        LevelComponents::Level *level = singleton->GetCurrentLevel();
+        return WallPaintUtils::ReadLevelData(static_cast<int>(level->GetPassage()), static_cast<int>(level->GetStage()), data);
+    }
+
+    QString WallPaintBytesToHex(const unsigned char *data, int size)
+    {
+        return QString::fromLatin1(
+            QByteArray(reinterpret_cast<const char *>(data), size).toHex());
+    }
 }
 
-QString ScriptInterface::ExportGetWallPaintPassageColorHex()
+QString ScriptInterface::ExportGetLevelWallPaintGFXHex()
 {
-    QByteArray bytes(
-        reinterpret_cast<const char *>(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor]),
-        32 * 5 * 6);
-    return QString::fromLatin1(bytes.toHex());
+    WallPaintUtils::LevelData data;
+    if (!ReadCurrentLevelWallPaint(data))
+    {
+        return "";
+    }
+    return WallPaintBytesToHex(data.gfx, WallPaintUtils::GFXSize);
 }
 
-QString ScriptInterface::ExportGetWallPaintPassageGrayHex()
+QString ScriptInterface::ExportGetLevelWallPaintPassageColorHex()
 {
-    QByteArray bytes(
-        reinterpret_cast<const char *>(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray]),
-        32 * 5 * 6);
-    return QString::fromLatin1(bytes.toHex());
+    WallPaintUtils::LevelData data;
+    if (!ReadCurrentLevelWallPaint(data))
+    {
+        return "";
+    }
+    return WallPaintBytesToHex(data.passageColor, WallPaintUtils::PaletteSize);
 }
+
+// ---- Credits Export ----
 
 QString ScriptInterface::ExportGetCreditsDataHex()
 {
@@ -2132,63 +2146,66 @@ bool ScriptInterface::ImportAnimatedTileGroup(int groupId, int animType, int cou
     return true;
 }
 
-bool ScriptInterface::ImportGlobalWallPaint(QString gfxHex, QString passageColorHex,
-                                             QString passageGrayHex)
+bool ScriptInterface::ImportLevelWallPaint(QString gfxHex, QString passageColorHex)
 {
-    if (gfxHex.isEmpty() || passageColorHex.isEmpty() || passageGrayHex.isEmpty())
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+    int passageIndex = static_cast<int>(level->GetPassage());
+    int levelIndex = static_cast<int>(level->GetStage());
+
+    const int gfxSize = WallPaintUtils::GFXSize;
+    const int paletteSize = WallPaintUtils::PaletteSize;
+
+    const QByteArray newGFX = QByteArray::fromHex(gfxHex.toLatin1());
+    const QByteArray newPassageColor = QByteArray::fromHex(passageColorHex.toLatin1());
+
+    if ((newGFX.size() != gfxSize) || (newPassageColor.size() != paletteSize))
     {
-        log("ImportGlobalWallPaint: Missing required hex fields (gfxHex, passageColorHex, passageGrayHex).");
+        log("ImportLevelWallPaint: Data size mismatch. Expected GFX="
+            + QString::number(gfxSize) + ", Color=" + QString::number(paletteSize)
+            + " bytes.");
         return false;
     }
 
-    QByteArray newGFX = QByteArray::fromHex(gfxHex.toLatin1());
-    QByteArray newPassageColor = QByteArray::fromHex(passageColorHex.toLatin1());
-    QByteArray newPassageGray = QByteArray::fromHex(passageGrayHex.toLatin1());
-
-    const int gfxSize = 1024 * 5 * 6;
-    const int palSize = 32 * 5 * 6;
-
-    if (newGFX.size() != gfxSize || newPassageColor.size() != palSize || newPassageGray.size() != palSize)
+    WallPaintUtils::LevelData oldData;
+    if (!WallPaintUtils::ReadLevelData(passageIndex, levelIndex, oldData))
     {
-        log("ImportGlobalWallPaint: Data size mismatch. Expected GFX=" +
-            QString::number(gfxSize) + ", Color=" + QString::number(palSize) +
-            ", Gray=" + QString::number(palSize) + " bytes.");
+        log("ImportLevelWallPaint: Failed to read the current wall paint data for Level "
+            + QString::number(passageIndex) + "-" + QString::number(levelIndex) + ".");
         return false;
     }
 
-    const unsigned char *wallPaintROMData = ROMUtils::ROMFileMetadata->ROMDataPtr;
-    if ((memcmp(wallPaintROMData + WL4Constants::WallPaintGFXAddr,
-                newGFX.constData(), gfxSize) == 0)
-            && (memcmp(wallPaintROMData + WL4Constants::WallPaintPalPassageColor,
-                       newPassageColor.constData(), palSize) == 0)
-            && (memcmp(wallPaintROMData + WL4Constants::WallPaintPalPassageGray,
-                       newPassageGray.constData(), palSize) == 0))
+    WallPaintUtils::LevelData newData = oldData;
+    memcpy(newData.gfx, newGFX.constData(), gfxSize);
+    memcpy(newData.passageColor, newPassageColor.constData(), paletteSize);
+
+    // The gray, start-level gradient and MMAP palettes are derived from the
+    // passage color palette in the same way as the Wall Paint editor.
+    WallPaintUtils::GenerateDerivedPalettes(newData, oldData);
+
+    if (WallPaintUtils::LevelDataEquals(newData, oldData))
     {
-        log("ImportGlobalWallPaint: Wall paint data is unchanged, skipped.");
+        log("ImportLevelWallPaint: Wall paint data is unchanged, skipped.");
         return true;
     }
 
-    // Capture old ROM data for fixed blocks
-    unsigned char oldGFX[1024 * 5 * 6];
-    unsigned char oldPassageColor[32 * 5 * 6];
-    unsigned char oldPassageGray[32 * 5 * 6];
-    memcpy(oldGFX, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], gfxSize);
-    memcpy(oldPassageColor, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], palSize);
-    memcpy(oldPassageGray, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], palSize);
+    const std::vector<WallPaintUtils::BlockContent> blocks =
+        WallPaintUtils::BuildBlocks(passageIndex, levelIndex, oldData, newData);
+    if (blocks.empty())
+    {
+        log("ImportLevelWallPaint: No writable wall paint blocks were found, skipped.");
+        return true;
+    }
 
-    // Create WallPaintChangeParams for fixed blocks (data copied internally)
-    WallPaintChangeParams *wp = WallPaintChangeParams::Create(
-        oldGFX, reinterpret_cast<unsigned char *>(newGFX.data()),
-        oldPassageColor, reinterpret_cast<unsigned char *>(newPassageColor.data()),
-        oldPassageGray, reinterpret_cast<unsigned char *>(newPassageGray.data()));
+    WallPaintChangeParams *wallPaintChange =
+        WallPaintChangeParams::Create(passageIndex, levelIndex, oldData, newData);
 
-    // Execute operation
-    struct OperationParams *operation = new struct OperationParams;
+    OperationParams *operation = new OperationParams;
     operation->WallPaintChange = true;
-    operation->wallPaintChangeParams = wp;
+    operation->wallPaintChangeParams.push_back(wallPaintChange);
     ExecuteOperation(operation);
 
-    log("ImportGlobalWallPaint: Wall paint data imported successfully.");
+    log("ImportLevelWallPaint: Wall paint data imported for Level "
+        + QString::number(passageIndex) + "-" + QString::number(levelIndex) + ".");
     return true;
 }
 
