@@ -2178,9 +2178,17 @@ bool ScriptInterface::ImportLevelWallPaint(QString gfxHex, QString passageColorH
     memcpy(newData.gfx, newGFX.constData(), gfxSize);
     memcpy(newData.passageColor, newPassageColor.constData(), paletteSize);
 
-    // The gray, start-level gradient and MMAP palettes are derived from the
-    // passage color palette in the same way as the Wall Paint editor.
-    WallPaintUtils::GenerateDerivedPalettes(newData, oldData);
+    // Keep existing derived palettes when editable colors are unchanged;
+    // regenerating them from RGB555 data can introduce quantization drift.
+    const int editablePaletteOffset = 6 * sizeof(unsigned short);
+    if (memcmp(newData.passageColor + editablePaletteOffset,
+               oldData.passageColor + editablePaletteOffset,
+               paletteSize - editablePaletteOffset) != 0)
+    {
+        // The gray, start-level gradient and MMAP palettes are derived from the
+        // passage color palette in the same way as the Wall Paint editor.
+        WallPaintUtils::GenerateDerivedPalettes(newData, oldData);
+    }
 
     if (WallPaintUtils::LevelDataEquals(newData, oldData))
     {
