@@ -1,7 +1,9 @@
 #ifndef PATCHUTILS_H
 #define PATCHUTILS_H
 
+#include <QRegularExpression>
 #include <QString>
+#include <QVector>
 
 enum PatchType
 {
@@ -37,6 +39,27 @@ namespace PatchUtils
     QVector<struct PatchEntryItem> GetPatchesFromROM();
     QString SavePatchesToROM(QVector<PatchEntryItem> entries);
     bool VerifyEABI(QString *missing);
+
+    // Regexes shared by the patch source parser and the PatchEditDialog input validators.
+    const QRegularExpression &HookAddressRegex();
+    const QRegularExpression &HookStringRegex();
+
+    // Convert hook text to the normalized form stored in PatchEntryItem::HookString:
+    // no whitespace, uppercase hex digits, and no "P" placeholder.
+    QString NormalizeHookText(const QString &str);
+
+    // Return the byte offset of the "P" placeholder in the hook text, or (unsigned int)-1
+    // when the hook text does not contain a placeholder.
+    unsigned int GetPatchOffset(const QString &str);
+
+    // Parse the metadata comments of a C/ASM patch source file into the given entry.
+    // The PatchType is inferred from the file extension. FileName, PatchAddress and
+    // SubstitutedBytes are not modified. When a C file has no @HookString, the type is
+    // changed to C_dependency (same behavior as PatchEditDialog).
+    bool ParsePatchSourceFile(const QString &absoluteFilePath,
+                              struct PatchEntryItem &entry,
+                              QString *error = nullptr,
+                              bool *hookStringMissing = nullptr);
 }
 
 #endif // PATCHUTILS_H

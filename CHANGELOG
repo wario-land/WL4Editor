@@ -4,6 +4,7 @@
 - Support exporting and importing the Graphic Manager data used by the current Room or Level via js scripts.
 - Support exporting and importing all the Graphic Manager data via GUI.
 - Add Chunk Manager Dialog and it supports user wake-up, load protection, save protection modes.
+- Support Patch list Export and Import.
 
 (Noticable GUI changes)
 - Roon Config Dialog Tileset name update.
@@ -25,6 +26,7 @@
 - Fix the bg tile data list in Tileset Editor can offer graphic entries which contain no Tile8x8 data.
 - Fix ChooseLevelDialog shows incorrect current Level name in ComboBox on Entry Passage Boss Level.
 - Fix alpha blending checkbox in EditModeDockWidget not selected when enabled.
+- Fix 2 bugs in SavePatchesToROM(..) which keep growing orphan chunks after more saves.
 
 (minor changes)
 - Wall Paint undo/redo logic optimized, Meanwhile, Level export/import js scripts now only port the Wall Paint for one Level.

@@ -37,7 +37,9 @@ public:
     void RemoveSelected();
     struct PatchEntryItem GetSelectedEntry();
     QVector<struct PatchEntryItem> GetAllEntries() { return EntryTableModel.entries; }
+    QVector<struct PatchEntryItem> GetSelectedEntries();
     void AddEntry(struct PatchEntryItem entry);
+    void AddEntries(const QVector<struct PatchEntryItem> &entries);
     void UpdateEntry(int index, struct PatchEntryItem entry);
 };
 

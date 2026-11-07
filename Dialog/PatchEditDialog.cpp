@@ -7,13 +7,6 @@
 #include "FileIOUtils.h"
 
 static QStringList PatchTypeNameSet;
-static QRegularExpression  hookAddressRegex("^ *(0x)?[a-fA-F0-9]{1,6} *$");
-static QRegularExpression  hookStringRegex("^( *[a-fA-F0-9] *[a-fA-F0-9])*( *[pP])?( *[a-fA-F0-9] *[a-fA-F0-9])* *$");
-static QRegularExpression  descriptionRegex("^[^;]+$");
-
-#define HOOK_ADDR_IDENTIFIER "@HookAddress"
-#define HOOK_STRING_IDENTIFIER "@HookString"
-#define DESCRIPTION_IDENTIFIER "@Description"
 
 /// <summary>
 /// Perform static initializtion of constant data structures for the dialog.
@@ -42,49 +35,13 @@ PatchEditDialog::PatchEditDialog(QWidget *parent, struct PatchEntryItem patchEnt
     ui->comboBox_PatchType->addItems(PatchTypeNameSet);
 
     // Set Validator for lineEdit_HookAddress
-    ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegularExpressionValidator(hookAddressRegex, this));
+    ui->lineEdit_HookAddress->setValidator(addressvalidator = new QRegularExpressionValidator(PatchUtils::HookAddressRegex(), this));
 
     // Set Validator for lineEdit_HookText
-    ui->lineEdit_HookText->setValidator(addressvalidator = new QRegularExpressionValidator(hookStringRegex, this));
+    ui->lineEdit_HookText->setValidator(addressvalidator = new QRegularExpressionValidator(PatchUtils::HookStringRegex(), this));
 
     // Initialize the components with the patch entry item
     InitializeComponents(patchEntry);
-}
-
-/// <summary>
-/// Normalize the hook text to a standard format for the patch saving.
-/// </summary>
-/// <remarks>
-/// Spaces and "P" identifier are removed, all hex digits are made uppercase.
-/// </remarks>
-/// <param name="str">
-/// The string whose contents to normalize.
-/// </param>
-/// <returns>
-/// The string in a format like: 8F69B144A08956BC
-/// </returns>
-static QString NormalizeHookText(QString str)
-{
-    str = str.replace(" ", ""); // remove whitespace
-    str = str.toUpper();        // uppercase
-    str = str.replace("P", ""); // placeholder bytes for patch address
-    return str;
-}
-
-/// <summary>
-/// Find the index of the patch address identifier in hook text.
-/// </summary>
-/// <param name="str">
-/// The string whose contents to analyze.
-/// </param>
-/// <returns>
-/// The index (in bytes, not characters) of the patch address identifier.
-/// </returns>
-static unsigned int GetPatchOffset(QString str)
-{
-    str = str.replace(" ", "").toUpper();
-    int index = str.indexOf("P");
-    return index >= 0 ? index / 2 : -1;
 }
 
 /// <summary>
@@ -128,8 +85,7 @@ PatchEditDialog::~PatchEditDialog()
 /// </param>
 void PatchEditDialog::InitializeComponents(struct PatchEntryItem patchEntry)
 {
-    QString romFileDir = QFileInfo(ROMUtils::ROMFileMetadata->FilePath).dir().path();
-    QString displayPath = patchEntry.FileName.isEmpty() ? "" : romFileDir + QDir::separator() + patchEntry.FileName;
+    QString displayPath = FileIOUtils::RelativeFilePathToAbsoluteFilePath(patchEntry.FileName);
     ui->lineEdit_FilePath->setText(displayPath);
     ui->comboBox_PatchType->setCurrentIndex(patchEntry.PatchType);
     QString hookAddressText = patchEntry.HookAddress ? QString::number(patchEntry.HookAddress, 16).toUpper() : "";
@@ -153,8 +109,8 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
         ui->lineEdit_FilePath->text(),
         static_cast<enum PatchType>(ui->comboBox_PatchType->currentIndex()),
         hookAddressText.toUInt(Q_NULLPTR, 16),
-        NormalizeHookText(ui->lineEdit_HookText->text()),
-        GetPatchOffset(ui->lineEdit_HookText->text()),
+        PatchUtils::NormalizeHookText(ui->lineEdit_HookText->text()),
+        PatchUtils::GetPatchOffset(ui->lineEdit_HookText->text()),
         ui->lineEdit_FilePath->text().isEmpty() ? 0 : PatchManagerTableView::DummyPatchAddressValue,
         "",
         ui->textEdit_Description->toPlainText()
@@ -163,63 +119,40 @@ struct PatchEntryItem PatchEditDialog::CreatePatchEntry()
 
 void PatchEditDialog::ParsePatchFile(QString patchfilepath)
 {
-    if(!patchfilepath.isEmpty())
+    if(patchfilepath.isEmpty()) return;
+
+    ui->lineEdit_FilePath->setText(patchfilepath);
+
+    // Start from the current UI values so that annotations which are absent from the file
+    // keep their previous values, matching the behavior of the old parsing code.
+    struct PatchEntryItem parsed = CreatePatchEntry();
+    parsed.FileName = patchfilepath;
+
+    QString error;
+    bool hookStringMissing = false;
+    if(!PatchUtils::ParsePatchSourceFile(patchfilepath, parsed, &error, &hookStringMissing))
     {
-        ui->lineEdit_FilePath->setText(patchfilepath);
+        QMessageBox::information(this, QT_TR_NOOP("WL4Editor Patch Import Info"), error);
+        return;
+    }
 
-        // Infer the type based on the extension
-        enum PatchType fileType;
-        if(patchfilepath.endsWith(".c", Qt::CaseInsensitive))
-        {
-            fileType = PatchType::C;
-        }
-        else if(patchfilepath.endsWith(".s", Qt::CaseInsensitive))
-        {
-            fileType = PatchType::Assembly;
-        }
-        else
-        {
-            fileType = PatchType::Binary;
-        }
+    ui->comboBox_PatchType->setCurrentIndex(parsed.PatchType);
+    ui->lineEdit_HookAddress->setText(parsed.HookAddress ? "0x" + QString::number(parsed.HookAddress, 16).toUpper() : "");
 
-        // Infer fields from file comments
-        if(fileType != PatchType::Binary)
-        {
-            QString hookAddress = FileIOUtils::GetParamFromSourceFile(patchfilepath, HOOK_ADDR_IDENTIFIER, hookAddressRegex);
-            if(hookAddress != "")
-            {
-                ui->lineEdit_HookAddress->setText(hookAddress);
-            }
+    int patchOffset = parsed.PatchOffsetInHookString == static_cast<unsigned int>(-1)
+            ? -1 : static_cast<int>(parsed.PatchOffsetInHookString);
+    ui->lineEdit_HookText->setText(FormatHookText(parsed.HookString, patchOffset));
+    ui->textEdit_Description->setText(parsed.Description);
 
-            QString hookString = FileIOUtils::GetParamFromSourceFile(patchfilepath, HOOK_STRING_IDENTIFIER, hookStringRegex);
-            if(hookString != "")
-            {
-                ui->lineEdit_HookText->setText(hookString);
-            }
-            else
-            {
-                if (fileType == PatchType::C)
-                {
-                    QMessageBox::information(
-                        this,
-                        QT_TR_NOOP("WL4Editor Patch Import Info"),
-                        QT_TR_NOOP("Unable to find HookString from the patch file.\nAutomatically set the patch type to C_dependency."),
-                        QMessageBox::Ok,
-                        QMessageBox::Ok
-                        );
-                    fileType = PatchType::C_dependency;
-                }
-            }
-
-            QString descString = FileIOUtils::GetParamFromSourceFile(patchfilepath, DESCRIPTION_IDENTIFIER, descriptionRegex);
-            if(descString != "")
-            {
-                ui->textEdit_Description->setText(descString);
-            }
-        }
-
-        // Set patch type
-        ui->comboBox_PatchType->setCurrentIndex(fileType);
+    if(hookStringMissing)
+    {
+        QMessageBox::information(
+            this,
+            QT_TR_NOOP("WL4Editor Patch Import Info"),
+            QT_TR_NOOP("Unable to find HookString from the patch file.\nAutomatically set the patch type to C_dependency."),
+            QMessageBox::Ok,
+            QMessageBox::Ok
+            );
     }
 }
 
