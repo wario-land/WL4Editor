@@ -2,6 +2,7 @@
 #include "WL4EditorWindow.h"
 #include "WL4Constants.h"
 #include "ROMUtils.h"
+#include "WallPaintUtils.h"
 
 #include <deque>
 
@@ -355,12 +356,17 @@ void PerformOperation(struct OperationParams *operation)
     }
     if (operation->WallPaintChange)
     {
-        auto *wp = operation->wallPaintChangeParams;
-        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], wp->newGFXData, 1024 * 5 * 6);
-        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], wp->newPassageColor, 32 * 5 * 6);
-        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], wp->newPassageGray, 32 * 5 * 6);
-        for (auto *block : wp->scatteredBlocks)
-            memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[block->romAddr], block->newData, block->size);
+        for (auto *wp : operation->wallPaintChangeParams)
+        {
+            const std::vector<WallPaintUtils::BlockContent> blocks =
+                WallPaintUtils::BuildBlocks(wp->passageIndex, wp->levelIndex,
+                                            wp->oldData, wp->newData);
+            for (const WallPaintUtils::BlockContent &block : blocks)
+            {
+                memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[block.address],
+                       block.newData, block.size);
+            }
+        }
         singleton->SetUnsavedChanges(true);
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Perform/Redo Wall Paint changes."));
     }
@@ -729,12 +735,17 @@ void BackTrackOperation(struct OperationParams *operation)
     }
     if (operation->WallPaintChange)
     {
-        auto *wp = operation->wallPaintChangeParams;
-        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], wp->oldGFXData, 1024 * 5 * 6);
-        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], wp->oldPassageColor, 32 * 5 * 6);
-        memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], wp->oldPassageGray, 32 * 5 * 6);
-        for (auto *block : wp->scatteredBlocks)
-            memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[block->romAddr], block->oldData, block->size);
+        for (auto *wp : operation->wallPaintChangeParams)
+        {
+            const std::vector<WallPaintUtils::BlockContent> blocks =
+                WallPaintUtils::BuildBlocks(wp->passageIndex, wp->levelIndex,
+                                            wp->oldData, wp->newData);
+            for (const WallPaintUtils::BlockContent &block : blocks)
+            {
+                memcpy(&ROMUtils::ROMFileMetadata->ROMDataPtr[block.address],
+                       block.oldData, block.size);
+            }
+        }
         singleton->GetOutputWidgetPtr()->PrintString(QObject::tr("Undo Wall Paint changes."));
     }
     if (operation->cameraControlChange)

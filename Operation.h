@@ -8,6 +8,10 @@
 #include "Dialog/AnimatedTileGroupEditorDialog.h"
 #include "Dialog/LevelConfigDialog.h"
 #include "LevelComponents/LevelDoorVector.h"
+#include "WallPaintUtils.h"
+
+#include <cstring>
+#include <vector>
 
 // The parameters specific to a tile change operation
 struct TileChangeParams
@@ -210,62 +214,27 @@ struct DoorVectorChangeParams
     }
 };
 
-// Parameters for wall paint changes (global ROM data at fixed addresses)
+// Parameters for a wall paint change of one Level. Wall paint data is stored per
+// Level, so the passage/local-level pair is the index used by Undo/Redo. Only
+// the blocks of this Level are read back, which keeps unused or future Level
+// slots untouched.
 struct WallPaintChangeParams
 {
-    // Fixed-location blocks (sizes match WallPaintEditorDialog buffers)
-    unsigned char *oldGFXData;       // 1024*5*6 bytes
-    unsigned char *oldPassageColor;  // 32*5*6 bytes
-    unsigned char *oldPassageGray;   // 32*5*6 bytes
-    unsigned char *newGFXData;
-    unsigned char *newPassageColor;
-    unsigned char *newPassageGray;
+    int passageIndex = -1;
+    int levelIndex = -1;
+    WallPaintUtils::LevelData oldData;
+    WallPaintUtils::LevelData newData;
 
-    // Scattered blocks (gradient and MMAP palettes at variable ROM addresses)
-    struct ScatteredBlock
-    {
-        unsigned int romAddr;
-        unsigned int size;
-        unsigned char *oldData;
-        unsigned char *newData;
-
-        ScatteredBlock(unsigned int addr, unsigned int sz, unsigned char *oldD, unsigned char *newD)
-            : romAddr(addr), size(sz)
-        {
-            oldData = new unsigned char[sz];
-            newData = new unsigned char[sz];
-            memcpy(oldData, oldD, sz);
-            memcpy(newData, newD, sz);
-        }
-        ~ScatteredBlock() { delete[] oldData; delete[] newData; }
-    };
-    std::vector<ScatteredBlock *> scatteredBlocks;
-
-    static WallPaintChangeParams *Create(unsigned char *oldGFX, unsigned char *newGFX,
-                                         unsigned char *oldColor, unsigned char *newColor,
-                                         unsigned char *oldGray, unsigned char *newGray)
+    static WallPaintChangeParams *Create(int passageIndex, int levelIndex,
+                                         const WallPaintUtils::LevelData &oldData,
+                                         const WallPaintUtils::LevelData &newData)
     {
         WallPaintChangeParams *p = new WallPaintChangeParams;
-        int gfxSize = 1024 * 5 * 6;
-        int palSize = 32 * 5 * 6;
-        p->oldGFXData = new unsigned char[gfxSize];
-        p->newGFXData = new unsigned char[gfxSize];
-        p->oldPassageColor = new unsigned char[palSize];
-        p->newPassageColor = new unsigned char[palSize];
-        p->oldPassageGray = new unsigned char[palSize];
-        p->newPassageGray = new unsigned char[palSize];
-        memcpy(p->oldGFXData, oldGFX, gfxSize);
-        memcpy(p->newGFXData, newGFX, gfxSize);
-        memcpy(p->oldPassageColor, oldColor, palSize);
-        memcpy(p->newPassageColor, newColor, palSize);
-        memcpy(p->oldPassageGray, oldGray, palSize);
-        memcpy(p->newPassageGray, newGray, palSize);
+        p->passageIndex = passageIndex;
+        p->levelIndex = levelIndex;
+        p->oldData = oldData;
+        p->newData = newData;
         return p;
-    }
-
-    void AddScatteredBlock(unsigned int addr, unsigned int size, unsigned char *oldData, unsigned char *newData)
-    {
-        scatteredBlocks.push_back(new ScatteredBlock(addr, size, oldData, newData));
     }
 };
 
@@ -299,7 +268,7 @@ struct OperationParams
     EntityListChangeParams *entityNormalChangeParams = nullptr;
     EntityListChangeParams *entityHardChangeParams = nullptr;
     EntityListChangeParams *entitySHardChangeParams = nullptr;
-    WallPaintChangeParams *wallPaintChangeParams = nullptr;
+    std::vector<WallPaintChangeParams *> wallPaintChangeParams;
     bool tileChange = false;
     int tileChangeRoomID = -1;
     bool roomConfigChange = false;
@@ -529,23 +498,11 @@ struct OperationParams
                 entitySHardChangeParams = nullptr;
             }
         }
-        if (WallPaintChange)
+        for (auto *wallPaintChange : wallPaintChangeParams)
         {
-            if (wallPaintChangeParams)
-            {
-                delete[] wallPaintChangeParams->oldGFXData;
-                delete[] wallPaintChangeParams->newGFXData;
-                delete[] wallPaintChangeParams->oldPassageColor;
-                delete[] wallPaintChangeParams->newPassageColor;
-                delete[] wallPaintChangeParams->oldPassageGray;
-                delete[] wallPaintChangeParams->newPassageGray;
-                for (auto *block : wallPaintChangeParams->scatteredBlocks)
-                    delete block;
-                wallPaintChangeParams->scatteredBlocks.clear();
-                delete wallPaintChangeParams;
-                wallPaintChangeParams = nullptr;
-            }
+            delete wallPaintChange;
         }
+        wallPaintChangeParams.clear();
     }
 };
 

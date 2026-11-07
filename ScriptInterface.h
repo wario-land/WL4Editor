@@ -122,10 +122,9 @@ public:
     Q_INVOKABLE int ExportGetAnimatedTileGroupTileCount(int id);
     Q_INVOKABLE QString ExportGetAnimatedTileGroupTileDataHex(int id, int index);
 
-    // WallPaint/Credits Export
-    Q_INVOKABLE QString ExportGetWallPaintGFXHex();
-    Q_INVOKABLE QString ExportGetWallPaintPassageColorHex();
-    Q_INVOKABLE QString ExportGetWallPaintPassageGrayHex();
+    // Level WallPaint / Credits Export
+    Q_INVOKABLE QString ExportGetLevelWallPaintGFXHex();
+    Q_INVOKABLE QString ExportGetLevelWallPaintPassageColorHex();
     Q_INVOKABLE QString ExportGetCreditsDataHex();
 
     // Import APIs
@@ -153,11 +152,12 @@ public:
     Q_INVOKABLE bool ImportEntitySet(int entitySetId, QString infoTable);
     Q_INVOKABLE bool ImportAnimatedTileGroup(int groupId, int animType, int countPerFrame,
                                                int totalFrameCount, QString tileData);
-    Q_INVOKABLE bool ImportGlobalWallPaint(QString gfxHex, QString passageColorHex,
-                                             QString passageGrayHex);
     Q_INVOKABLE bool ImportGlobalCredits(QString creditsHex);
     Q_INVOKABLE bool ImportLevelConfig(QString levelName, QString levelNameJ,
                                          int timerHard, int timerNormal, int timerSHard);
+
+    // Level-scoped import APIs
+    Q_INVOKABLE bool ImportLevelWallPaint(QString gfxHex, QString passageColorHex);
 
     // Graphic Manager data APIs
     // Export the Graphic Manager entries used by the current Room or Level. The returned JSON is

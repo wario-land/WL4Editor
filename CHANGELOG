@@ -27,6 +27,7 @@
 - Fix alpha blending checkbox in EditModeDockWidget not selected when enabled.
 
 (minor changes)
+- Wall Paint undo/redo logic optimized, Meanwhile, Level export/import js scripts now only port the Wall Paint for one Level.
 - palettes serialization logic changes in Graphic Manager (you can still load previous ROM project so it's backward compatible).
 - Now graphic manager will load more missing entries from the ROM (thanks AI brute-force search) and we hardcode all the entry info into the code.
 - Now vanilla entries will always be parsed first in graphic manager, then previously saved custom entries will be filtered and append below.
