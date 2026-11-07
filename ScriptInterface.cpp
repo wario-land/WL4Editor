@@ -1391,11 +1391,7 @@ bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0
 
     int curRoomWidth = (int) room->GetLayer1Width();
     int curRoomHeight = (int) room->GetLayer1Height();
-    int curLayer0Width = (int) room->GetLayer0Width();
-    int curLayer0Height = (int) room->GetLayer0Height();
 
-    bool dimsChanged = (roomWidth != curRoomWidth || roomHeight != curRoomHeight ||
-                        layer0Width != curLayer0Width || layer0Height != curLayer0Height);
     bool roomSizeChanged = (roomWidth != curRoomWidth || roomHeight != curRoomHeight);
 
     DialogParams::RoomConfigParams *currentParams = new DialogParams::RoomConfigParams(room);
@@ -1422,6 +1418,16 @@ bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0
     newParams->RasterType = header.LayerGFXEffect01;
     newParams->Water = header.LayerGFXEffect02;
     newParams->BGLayerScrollFlag = header.Layer3Scrolling;
+
+    // Layer0Width/Layer0Height only describe a Map16 Layer 0. RoomConfigParams(room) stores 0 for
+    // a Tile8x8 or disabled Layer 0, while the export scripts forward the exported mapping
+    // dimensions (or their nonzero fallback). Normalize the values here, otherwise an unchanged
+    // non-Map16 Layer 0 makes RoomConfigParamsAreEqual fail and the import still resets the Room.
+    if ((newParams->Layer0MappingTypeParam & 0x10) != LevelComponents::LayerMap16)
+    {
+        newParams->Layer0Width = 0;
+        newParams->Layer0Height = 0;
+    }
 
     // Handle Layer 3 DataPtr preservation
     if (header.Layer3MappingType != 0)
