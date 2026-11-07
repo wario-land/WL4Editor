@@ -16,6 +16,7 @@
 - Support Color 0 Read / Write / Render to follow the GBA's Backdrop Color rule.
 
 (Fixes)
+- Fix unchanged Rooms with a Tile8x8 or disabled Layer 0 still executing RoomConfigReset during Room import.
 - Fix key pressing crash the WL4Editor before ROM loading.
 - Fix Applying Room Config changes set EntitySet ID to 0 in MainWIndow.
 - Fix incorrect Graphic Manager mapping data import limits and info dialog typo.

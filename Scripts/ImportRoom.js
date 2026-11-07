@@ -98,8 +98,8 @@
     var rc = roomObj.roomConfig || {};
     var roomWidth = rc.roomWidth || 32;
     var roomHeight = rc.roomHeight || 20;
-    var layer0Width = rc.layer0Width || 32;
-    var layer0Height = rc.layer0Height || 20;
+    var layer0Width = (rc.layer0Width === undefined || rc.layer0Width === null) ? 32 : rc.layer0Width;
+    var layer0Height = (rc.layer0Height === undefined || rc.layer0Height === null) ? 20 : rc.layer0Height;
     var roomHeaderHex = roomObj.roomHeaderHex || "";
 
     if (!WL4EditorInterface.ImportRoomConfig(roomWidth, roomHeight, layer0Width, layer0Height, roomHeaderHex)) {
