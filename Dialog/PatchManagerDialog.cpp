@@ -451,6 +451,21 @@ void PatchManagerDialog::on_ExportPatchButton_clicked()
 }
 
 /// <summary>
+/// Name of a patch type, used by the hook information diagnostics of the import.
+/// </summary>
+static QString PatchTypeName(enum PatchType type)
+{
+    switch(type)
+    {
+        case PatchType::Binary: return "Binary";
+        case PatchType::Assembly: return "Assembly";
+        case PatchType::C: return "C";
+        case PatchType::C_dependency: return "C_dependency";
+    }
+    return QString();
+}
+
+/// <summary>
 /// Import patch entries from a JSON file into the patch table.
 /// </summary>
 void PatchManagerDialog::on_ImportPatchButton_clicked()
@@ -540,29 +555,6 @@ void PatchManagerDialog::on_ImportPatchButton_clicked()
         return;
     }
 
-    // Hook conflicts and structural problems cancel the whole import.
-    PatchIO::ImportValidation validation =
-            PatchIO::ValidateForImport(currentEntries, importDocument.Entries, romDirectory);
-    if(!validation.Errors.isEmpty() || !validation.HookConflicts.isEmpty())
-    {
-        QStringList lines;
-        if(!validation.Errors.isEmpty())
-        {
-            lines.append(tr("Entry errors:"));
-            lines += validation.Errors;
-        }
-        if(!validation.HookConflicts.isEmpty())
-        {
-            if(!lines.isEmpty()) lines.append(QString());
-            lines.append(tr("Hook conflicts:"));
-            lines += validation.HookConflicts;
-        }
-        ShowIssueDialog(this, tr("Patch list import canceled"),
-                        tr("The patch list was not imported because of the following problems."),
-                        lines, QString(), tr("Close"));
-        return;
-    }
-
     if(!softIssueLines.isEmpty())
     {
         const bool importAnyway = ShowIssueDialog(
@@ -572,7 +564,11 @@ void PatchManagerDialog::on_ImportPatchButton_clicked()
         if(!importAnyway) return;
     }
 
-    // When a code file changed, check whether its hook string still matches the JSON entry.
+    // When a code file changed, check whether its declared hook information still matches the
+    // JSON entry. The comparison must cover the patch type and HookAddress as well as the hook
+    // bytes and the P offset: SavePatchesToROM writes the hook to the entry's HookAddress, so
+    // keeping a stale address while compiling the updated source would overwrite unrelated ROM
+    // instructions.
     QVector<int> inconsistentEntryIndices;
     QStringList inconsistentLines;
     const int importedCount = static_cast<int>(importDocument.Entries.size());
@@ -583,7 +579,10 @@ void PatchManagerDialog::on_ImportPatchButton_clicked()
         if(index < 0 || index >= importedCount) continue;
 
         const struct PatchEntryItem &entry = importDocument.Entries.at(index);
-        if(entry.PatchType != PatchType::C && entry.PatchType != PatchType::Assembly) continue;
+        // Binary files carry no metadata comments, so there is nothing to compare for them.
+        // C_dependency files are included on purpose: a dependency which gained @HookString and
+        // @HookAddress must be offered a re-parse instead of silently staying dependency-only.
+        if(entry.PatchType == PatchType::Binary) continue;
         if(entry.FileName.isEmpty()) continue;
 
         const QString absolutePath = QDir(romDirectory).absoluteFilePath(entry.FileName);
@@ -601,9 +600,11 @@ void PatchManagerDialog::on_ImportPatchButton_clicked()
                 entry.PatchOffsetInHookString != static_cast<unsigned int>(-1);
         const bool fileHasHook = !probe.HookString.isEmpty() ||
                 probe.PatchOffsetInHookString != static_cast<unsigned int>(-1);
-        const bool differs = (entryHasHook != fileHasHook) ||
+        const bool differs = (entry.PatchType != probe.PatchType) ||
+                (entryHasHook != fileHasHook) ||
                 (entryHasHook && fileHasHook &&
-                 (entry.HookString.compare(probe.HookString, Qt::CaseInsensitive) != 0 ||
+                 (entry.HookAddress != probe.HookAddress ||
+                  entry.HookString.compare(probe.HookString, Qt::CaseInsensitive) != 0 ||
                   entry.PatchOffsetInHookString != probe.PatchOffsetInHookString));
         if(!differs) continue;
 
@@ -614,12 +615,19 @@ void PatchManagerDialog::on_ImportPatchButton_clicked()
 
         inconsistentEntryIndices.append(index);
         inconsistentLines.append(
-            tr("entry %1 (%2): JSON hook %3 (P offset %4), code hook %5 (P offset %6)")
+            tr("entry %1 (%2): JSON declares %3, hook address 0x%4, hook %5 (P offset %6)")
                     .arg(index)
                     .arg(entry.FileName)
+                    .arg(PatchTypeName(entry.PatchType))
+                    .arg(QString::number(entry.HookAddress, 16).toUpper())
                     .arg(entryHookText)
                     .arg(entry.PatchOffsetInHookString == static_cast<unsigned int>(-1)
-                         ? QString("-1") : QString::number(entry.PatchOffsetInHookString))
+                         ? QString("-1") : QString::number(entry.PatchOffsetInHookString)));
+        inconsistentLines.append(
+            QStringLiteral("    ") +
+            tr("code file declares %1, hook address 0x%2, hook %3 (P offset %4)")
+                    .arg(PatchTypeName(probe.PatchType))
+                    .arg(QString::number(probe.HookAddress, 16).toUpper())
                     .arg(fileHookText)
                     .arg(probe.PatchOffsetInHookString == static_cast<unsigned int>(-1)
                          ? QString("-1") : QString::number(probe.PatchOffsetInHookString)));
@@ -655,28 +663,35 @@ void PatchManagerDialog::on_ImportPatchButton_clicked()
             singleton->GetOutputWidgetPtr()->PrintString(
                         tr("Re-parsed patch entry %1 from %2.").arg(index).arg(entry.FileName));
         }
+    }
 
-        // Re-parsing may change hook ranges, so validate the updated entries again.
-        validation = PatchIO::ValidateForImport(currentEntries, importDocument.Entries, romDirectory);
-        if(!validation.Errors.isEmpty() || !validation.HookConflicts.isEmpty())
+    // Validate the final metadata. This must happen after the hook information has been
+    // synchronized with the code files: re-parsing can change the patch type, HookAddress,
+    // HookString and the P offset, and validating the stale JSON metadata instead would reject
+    // the import with hook ranges that no longer apply, before the user is even offered the
+    // re-parse. Hook conflicts and structural problems cancel the whole import.
+    const PatchIO::ImportValidation validation =
+            PatchIO::ValidateForImport(currentEntries, importDocument.Entries, romDirectory);
+    if(!validation.Errors.isEmpty() || !validation.HookConflicts.isEmpty())
+    {
+        QStringList lines;
+        if(!validation.Errors.isEmpty())
         {
-            QStringList lines;
-            if(!validation.Errors.isEmpty())
-            {
-                lines.append(tr("Entry errors:"));
-                lines += validation.Errors;
-            }
-            if(!validation.HookConflicts.isEmpty())
-            {
-                if(!lines.isEmpty()) lines.append(QString());
-                lines.append(tr("Hook conflicts:"));
-                lines += validation.HookConflicts;
-            }
-            ShowIssueDialog(this, tr("Patch list import canceled"),
-                            tr("The patch list was not imported because of the following problems after re-parsing the code files."),
-                            lines, QString(), tr("Close"));
-            return;
+            lines.append(tr("Entry errors:"));
+            lines += validation.Errors;
         }
+        if(!validation.HookConflicts.isEmpty())
+        {
+            if(!lines.isEmpty()) lines.append(QString());
+            lines.append(tr("Hook conflicts:"));
+            lines += validation.HookConflicts;
+        }
+        const QString summary = inconsistentEntryIndices.isEmpty()
+                ? tr("The patch list was not imported because of the following problems.")
+                : tr("The patch list was not imported because of the following problems after re-parsing the code files.");
+        ShowIssueDialog(this, tr("Patch list import canceled"), summary,
+                        lines, QString(), tr("Close"));
+        return;
     }
 
     // All checks passed: append every entry at once.
