@@ -2208,26 +2208,6 @@ bool ScriptInterface::ImportLevelWallPaint(QString gfxHex, QString passageColorH
         return true;
     }
 
-    const unsigned char *wallPaintROMData = ROMUtils::ROMFileMetadata->ROMDataPtr;
-    if ((memcmp(wallPaintROMData + WL4Constants::WallPaintGFXAddr,
-                newGFX.constData(), gfxSize) == 0)
-            && (memcmp(wallPaintROMData + WL4Constants::WallPaintPalPassageColor,
-                       newPassageColor.constData(), palSize) == 0)
-            && (memcmp(wallPaintROMData + WL4Constants::WallPaintPalPassageGray,
-                       newPassageGray.constData(), palSize) == 0))
-    {
-        log("ImportGlobalWallPaint: Wall paint data is unchanged, skipped.");
-        return true;
-    }
-
-    // Capture old ROM data for fixed blocks
-    unsigned char oldGFX[1024 * 5 * 6];
-    unsigned char oldPassageColor[32 * 5 * 6];
-    unsigned char oldPassageGray[32 * 5 * 6];
-    memcpy(oldGFX, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintGFXAddr], gfxSize);
-    memcpy(oldPassageColor, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageColor], palSize);
-    memcpy(oldPassageGray, &ROMUtils::ROMFileMetadata->ROMDataPtr[WL4Constants::WallPaintPalPassageGray], palSize);
-
     const std::vector<WallPaintUtils::BlockContent> blocks =
         WallPaintUtils::BuildBlocks(passageIndex, levelIndex, oldData, newData);
     if (blocks.empty())
