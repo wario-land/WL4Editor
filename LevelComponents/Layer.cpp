@@ -1,4 +1,4 @@
-﻿#include "Layer.h"
+#include "Layer.h"
 #include "ROMUtils.h"
 
 #include <cassert>
@@ -140,10 +140,15 @@ namespace LevelComponents
     /// <param name="tileset">
     /// The tileset defining the tiles that will be drawn on the layer graphics.
     /// </param>
+    /// <param name="drawBackdrop">
+    /// Draw the GBA backdrop color in the color 0 pixels instead of a transparent color. The
+    /// hardware uses the color 0 of BG palette 0 as the backdrop color, regardless of the palette
+    /// a tile uses, so this color is taken from the Tileset instead of the tile's own palette.
+    /// </param>
     /// <return>
     /// A QPixmap of the fully rendered layer, including transparency.
     /// </return>
-    QPixmap Layer::RenderLayer(Tileset *tileset)
+    QPixmap Layer::RenderLayer(Tileset *tileset, bool drawBackdrop)
     {
         // Set the units we are drawing in (depending on the Tile type)
         int units = -1;
@@ -201,13 +206,27 @@ namespace LevelComponents
         QPixmap layerPixmap(Width * units, Height * units);
         layerPixmap.fill(Qt::transparent);
 
+        // The GBA backdrop color is the color 0 of BG palette 0, not the color 0 of the palette
+        // row which a tile uses. Pass it as the color 0 override when the caller draws the backdrop.
+        QRgb backdropColor = 0;
+        const QRgb *backdropColorOverride = nullptr;
+        if (drawBackdrop)
+        {
+            const QVector<QRgb> &palette0 = tileset->GetPalettes()[0];
+            if (palette0.size())
+            {
+                backdropColor = palette0[0];
+                backdropColorOverride = &backdropColor;
+            }
+        }
+
         // Draw the tiles to the QPixmap
         for (int i = 0; i < Height; ++i)
         {
             for (int j = 0; j < Width; ++j)
             {
                 Tile *t = tiles[j + i * Width];
-                t->DrawTile(&layerPixmap, j * units, i * units);
+                t->DrawTile(&layerPixmap, j * units, i * units, drawBackdrop, backdropColorOverride);
             }
         }
 

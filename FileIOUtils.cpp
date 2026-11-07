@@ -1,9 +1,11 @@
-﻿#include "FileIOUtils.h"
+#include "FileIOUtils.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTextStream>
 #include <QColorDialog>
+#include <algorithm>
+#include <iterator>
 #include "ROMUtils.h"
 #include "Dialog/SelectColorDialog.h"
 
@@ -204,7 +206,6 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
                 QStringList fields = line.split(" ");
                 for(int i = 0; i < 4; ++i)
                 {
-                    if(i == 0 && j == 0) continue; // Skip the first color
                     // BGR888(usenti pal file) -> RGB888(QRgb)
                     int fileformatcolor = fields[i].toInt(nullptr, 16);
                     int color = ((fileformatcolor & 0xFF0000) >> 16) |
@@ -234,7 +235,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
         unsigned char *paldata = new unsigned char[length];
         file.read((char *) paldata, length);
         file.close();
-        for(int j = 1; j < 16; ++j) // Skip the first color
+        for(int j = 0; j < 16; ++j) // all the 16 colors are imported
         {
             int color = (paldata[3 * j] << 16) |
                     (paldata[3 * j + 1] << 8) |
@@ -270,7 +271,7 @@ bool FileIOUtils::ImportPalette(QWidget *parent, std::function<void (int, int, Q
          memset(tmppaldata, 0, 32);
          memcpy(tmppaldata, tmppalettedata.data(), qMin(32, tmppalettedata.size()));
          ROMUtils::LoadPalette(&tmppalette, tmppaldata, true);
-         for (int i = 1; i < 16; i++) // Skip the first color
+         for (int i = 0; i < 16; i++) // all the 16 colors are imported
          {
              SetColorFunction(selectedPalId, i, tmppalette[i]);
          }
@@ -382,7 +383,9 @@ bool FileIOUtils::ImportTile8x8GfxData(QWidget *parent,
         {
             // Get the index of the color in the current palette
             QRgb findColor = tmppalette[i];
-            // since ref pal comes from the rom, its first color is transparent, so we skip it
+            // The palette color 0 is real data, but the hardware draws it as transparent for tile
+            // pixels, so a non-transparent source color must only match the opaque entries 1-15.
+            // The user-selected transparent source color is mapped to 0 separately above.
             auto paletteFound = std::find_if(std::next(ref_palette.begin()), ref_palette.end(),
                 [&findColor](const QRgb& c)
             {

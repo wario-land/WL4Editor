@@ -37,6 +37,10 @@ private slots:
     void on_pushButton_ReduceTiles_clicked();
     void on_lineEdit_tileDataName_textChanged(const QString &arg1);
     void on_lineEdit_mappingDataName_textChanged(const QString &arg1);
+    void on_pushButton_duplicateCurrentEntry_clicked();
+    void on_pushButton_SwapPalettes_clicked();
+    void on_pushButton_ImportEntries_clicked();
+    void on_pushButton_ExportEntries_clicked();
 
 private:
     Ui::GraphicManagerDialog *ui;
@@ -50,6 +54,7 @@ private:
     // functions
     void CreateAndAddDefaultEntry();
     bool UpdateEntryList();
+    void UpdateAssortedGraphicEntriesLabel();
     QString GenerateEntryTextFromStruct(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
     void ExtractEntryToGUI(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
     QPixmap RenderAllPalette(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
@@ -69,12 +74,14 @@ private:
     void GenerateBGTile8x8Instances(AssortedGraphicUtils::AssortedGraphicEntryItem &entry);
     void CleanMappingDataInEntry(AssortedGraphicUtils::AssortedGraphicEntryItem &entry) { entry.mappingData.clear(); }
     void ClearAndResettmpEntryPalettes();
+    void ResetPaletteRowInTmpEntry(unsigned int paletteId);
 
     void DeltmpEntryTile(int tileId);
 
     // helper functions
     bool CheckEditability(int entryId);
-    void GetVanillaGraphicEntriesFromROM();
+    bool ParseCommaSeparatedHexValues(const QString &text, QVector<unsigned int> &result, unsigned int maxValue, const QString &valueName);
+    QString GenerateUniqueMappingDataName(const QString &baseName);
 
 public:
     // clang-format off

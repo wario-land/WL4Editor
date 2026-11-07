@@ -1,4 +1,4 @@
-﻿#ifndef WL4EDITORWINDOW_H
+#ifndef WL4EDITORWINDOW_H
 #define WL4EDITORWINDOW_H
 
 #include <QButtonGroup>
@@ -57,6 +57,9 @@ private:
     bool SaveCurrentFileAs();
     bool UnsavedChangesPrompt(QString str);
     void ClearEverythingInRoom(bool no_warning = false);
+
+    // The script interface needs the unsaved-changes prompt for the Graphic Manager import.
+    friend class ScriptInterface;
 
     // recent file manager functions
     void InitRecentFileMenuEntries(const bool manageRecentScripts = false);

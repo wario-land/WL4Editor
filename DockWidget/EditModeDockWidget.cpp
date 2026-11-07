@@ -73,6 +73,7 @@ void EditModeDockWidget::SetLayersCheckBoxEnabled(int index, bool usable)
         break;
     case 7:
         ui->CheckBox_AlphaView->setEnabled(usable);
+        ui->CheckBox_AlphaView->setChecked(usable);
         break;
     }
     ui->RadioButton_EditOnLayer1->setChecked(true);

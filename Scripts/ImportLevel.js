@@ -59,6 +59,29 @@
         return result;
     }
 
+    // Helper: read a little-endian 32-bit value from the room header hex string.
+    function readU32LE(hex, byteOffset) {
+        var b0 = parseInt(hex.substr(byteOffset * 2, 2), 16);
+        var b1 = parseInt(hex.substr(byteOffset * 2 + 2, 2), 16);
+        var b2 = parseInt(hex.substr(byteOffset * 2 + 4, 2), 16);
+        var b3 = parseInt(hex.substr(byteOffset * 2 + 6, 2), 16);
+        return ((b0 | (b1 << 8) | (b2 << 16) | (b3 << 24)) >>> 0) & 0x7FFFFFF;
+    }
+
+    function applyHeaderLayerPointers(roomId, headerHex) {
+        if (!headerHex || headerHex.length < 88) return;
+        var layer0Type = parseInt(headerHex.substr(2, 2), 16) & 0x3F;
+        var layer3Type = parseInt(headerHex.substr(8, 2), 16) & 0x3F;
+        if (layer3Type !== 0) {
+            var layer3Addr = readU32LE(headerHex, 20);
+            if (layer3Addr) WL4EditorInterface.SetRoomLayerMappingDataAddress(roomId, 3, layer3Addr);
+        }
+        if ((layer0Type & 0x30) === 0x20) {
+            var layer0Addr = readU32LE(headerHex, 8);
+            if (layer0Addr) WL4EditorInterface.SetRoomLayerMappingDataAddress(roomId, 0, layer0Addr);
+        }
+    }
+
     var fileContents = WL4EditorInterface.ReadJsonFileDialog();
     if (!fileContents || fileContents.trim() === "") {
         WL4EditorInterface.log("Level import cancelled: no file selected or file is empty.");
@@ -78,6 +101,25 @@
     if (!levelObj.version || levelObj.levelName === undefined) {
         WL4EditorInterface.alert("Invalid level JSON: missing required fields.");
         return;
+    }
+
+    // Ask the user to save pending changes before the Graphic Manager data is written to the ROM.
+    if (!WL4EditorInterface.EnsureLevelSavedForGraphicImport()) {
+        WL4EditorInterface.log("Level import cancelled: the Level was not saved.");
+        return;
+    }
+
+    // ---------- Import or reuse the Graphic Manager entries used by the Level ----------
+    var resolvedGraphics = null;
+    if (levelObj.graphics && levelObj.graphics.entries && levelObj.graphics.entries.length) {
+        var graphicResult = JSON.parse(
+            WL4EditorInterface.ImportGraphicEntries(JSON.stringify(levelObj.graphics.entries))
+        );
+        if (!graphicResult.success) {
+            WL4EditorInterface.alert("ImportGraphicEntries failed: " + graphicResult.error);
+            return;
+        }
+        resolvedGraphics = graphicResult.entries;
     }
 
     // ---------- Import global data (per-element with Undo/Redo compatibility) ----------
@@ -166,8 +208,8 @@
         var rc = room.roomConfig || {};
         var roomWidth = rc.roomWidth || 32;
         var roomHeight = rc.roomHeight || 20;
-        var layer0Width = rc.layer0Width || 32;
-        var layer0Height = rc.layer0Height || 20;
+        var layer0Width = (rc.layer0Width === undefined || rc.layer0Width === null) ? 32 : rc.layer0Width;
+        var layer0Height = (rc.layer0Height === undefined || rc.layer0Height === null) ? 20 : rc.layer0Height;
         var roomHeaderHex = room.roomHeaderHex || "";
 
         if (!WL4EditorInterface.ImportRoomConfig(roomWidth, roomHeight, layer0Width, layer0Height, roomHeaderHex)) {
@@ -214,6 +256,23 @@
                 return;
             }
         }
+
+        // Version 1 fallback: the graphics section is missing, so the layer pointers are taken
+        // from the room header. This only works when the target ROM already contains the data.
+        if (!resolvedGraphics && room.roomHeaderHex) {
+            applyHeaderLayerPointers(room.roomId, room.roomHeaderHex);
+        }
+    }
+
+    // ---------- Apply the Graphic Manager data to the Tilesets and the Room layers ----------
+    if (resolvedGraphics) {
+        if (!WL4EditorInterface.ApplyLevelGraphics(JSON.stringify(levelObj.graphics),
+                                                    JSON.stringify(resolvedGraphics), true)) {
+            WL4EditorInterface.alert("ApplyLevelGraphics failed.");
+            return;
+        }
+    } else {
+        WL4EditorInterface.log("Level import: no graphics section, used the header layer pointers.");
     }
 
     // ---------- Bulk import all doors ----------
@@ -274,5 +333,5 @@
 
     // ---------- Finalize ----------
     WL4EditorInterface.PostImportRefresh();
-    WL4EditorInterface.log("Level import completed.");
+    WL4EditorInterface.log("Level import completed. Save the Level to persist the Room/Tileset changes.");
 })();

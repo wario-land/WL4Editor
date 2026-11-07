@@ -1,4 +1,4 @@
-﻿#include "Tile.h"
+#include "Tile.h"
 #include "ROMUtils.h"
 
 #include <cassert>
@@ -184,7 +184,17 @@ namespace LevelComponents
     /// Draw a Tile8x8 object onto a pixmap.
     /// </summary>
     /// <remarks>
-    /// The units for X and Y are pixels.
+    /// The GBA hardware treats the color 0 of every BG and OBJ palette as transparent, so only the
+    /// colors 1-15 of a 16 color palette are ever displayed as tile pixels (see GBATEK, "LCD Color
+    /// Palettes": "Color 0 of all BG and OBJ palettes is transparent"). The stored value of the color
+    /// 0 is nevertheless real data: all the 16 colors are kept when a palette is loaded, edited and
+    /// saved, and the color 0 of BG palette 0 additionally defines the backdrop color, the color the
+    /// hardware shows where no non-transparent BG or OBJ dot covers the screen (see GBATEK,
+    /// "Backdrop Color").
+    /// The transparency is therefore handled here at draw time instead of forcing the loaded color
+    /// value to 0: the color table of the drawn image replaces the palette color 0 by a transparent
+    /// color unless the caller wants the stored color to be drawn (which approximates the backdrop
+    /// color of the bottom-most background layer, or shows raw palette data such as wall paint).
     /// </remarks>
     /// <param name="layerPixmap">
     /// The pixmap object onto which the tile will be drawn.
@@ -195,12 +205,40 @@ namespace LevelComponents
     /// <param name="y">
     /// The Y position to draw the tile to.
     /// </param>
-    void Tile8x8::DrawTile(QPixmap *layerPixmap, int x, int y)
+    /// <param name="color0Opaque">
+    /// Draw the color stored in the palette color 0 instead of a transparent color.
+    /// </param>
+    /// <param name="color0Override">
+    /// When color0Opaque is true, draw this color in the color 0 pixels instead of the color stored
+    /// in the tile's own palette. Room rendering uses it to draw the GBA backdrop color, which is
+    /// the color 0 of BG palette 0, regardless of the palette the tile uses.
+    /// </param>
+    void Tile8x8::DrawTile(QPixmap *layerPixmap, int x, int y, bool color0Opaque,
+                           const QRgb *color0Override)
     {
+        QImage tileImage = ImageData->mirrored(FlipX, FlipY);
+
+        // Always pick the colors up here, so a palette edited in the Tileset Editor is drawn with
+        // the current colors, and use a local color table to keep the shared cached image untouched.
+        // The color 0 is transparent for the hardware, it is only drawn when the caller asks for it.
+        QVector<QRgb> colorTable = palettes[paletteIndex];
+        if (colorTable.size())
+        {
+            if (color0Opaque && color0Override)
+            {
+                // The GBA backdrop color is always the color 0 of BG palette 0, not the color 0
+                // of the palette row selected by the tile.
+                colorTable[0] = *color0Override;
+            }
+            else if (!color0Opaque)
+            {
+                colorTable[0] = 0; // transparent
+            }
+        }
+        tileImage.setColorTable(colorTable);
+
         QPainter painter(layerPixmap);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
-        ImageData->setColorTable(palettes[paletteIndex]);
-        QImage tileImage = ImageData->mirrored(FlipX, FlipY);
         QPoint drawDestination(x, y);
         painter.drawImage(drawDestination, tileImage);
     }
@@ -277,12 +315,19 @@ namespace LevelComponents
     /// <param name="y">
     /// The Y position to draw the tile to.
     /// </param>
-    void TileMap16::DrawTile(QPixmap *layerPixmap, int x, int y)
+    /// <param name="color0Opaque">
+    /// Draw the color stored in the palette color 0 instead of a transparent color.
+    /// </param>
+    /// <param name="color0Override">
+    /// When color0Opaque is true, draw this color in the color 0 pixels instead of the stored one.
+    /// </param>
+    void TileMap16::DrawTile(QPixmap *layerPixmap, int x, int y, bool color0Opaque,
+                             const QRgb *color0Override)
     {
-        TileData[0]->DrawTile(layerPixmap, x, y);
-        TileData[1]->DrawTile(layerPixmap, x + 8, y);
-        TileData[2]->DrawTile(layerPixmap, x, y + 8);
-        TileData[3]->DrawTile(layerPixmap, x + 8, y + 8);
+        TileData[0]->DrawTile(layerPixmap, x, y, color0Opaque, color0Override);
+        TileData[1]->DrawTile(layerPixmap, x + 8, y, color0Opaque, color0Override);
+        TileData[2]->DrawTile(layerPixmap, x, y + 8, color0Opaque, color0Override);
+        TileData[3]->DrawTile(layerPixmap, x + 8, y + 8, color0Opaque, color0Override);
     }
 
     /// <summary>

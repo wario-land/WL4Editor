@@ -1,4 +1,4 @@
-﻿#ifndef SCRIPTINTERFACE_H
+#ifndef SCRIPTINTERFACE_H
 #define SCRIPTINTERFACE_H
 
 #include <QObject>
@@ -158,6 +158,33 @@ public:
     Q_INVOKABLE bool ImportGlobalCredits(QString creditsHex);
     Q_INVOKABLE bool ImportLevelConfig(QString levelName, QString levelNameJ,
                                          int timerHard, int timerNormal, int timerSHard);
+
+    // Graphic Manager data APIs
+    // Export the Graphic Manager entries used by the current Room or Level. The returned JSON is
+    // the "graphics" section which the Room/Level export scripts embed in their files.
+    Q_INVOKABLE QString ExportGetRoomGraphicEntries(int roomId);
+    Q_INVOKABLE QString ExportGetLevelGraphicEntries();
+    Q_INVOKABLE QString ExportGetAllGraphicEntries();
+
+    // Ask the user to save the pending changes before a Graphic Manager import writes to the ROM.
+    // Returns false when the user cancels or when saving fails.
+    Q_INVOKABLE bool EnsureLevelSavedForGraphicImport();
+
+    // Import the entries of a "graphics" object (or a bare entry array). The result object contains
+    // success, error, createdCount, reusedCount and the resolved entries.
+    Q_INVOKABLE QString ImportGraphicEntries(QString entriesJson);
+
+    // Apply a resolved entry to the Tileset background graphics or to a Room layer.
+    // layerId must be 3 (background) or 0 (layer 0).
+    Q_INVOKABLE bool ApplyGraphicEntryToTileset(int tilesetId, QString resolvedEntryJson);
+    Q_INVOKABLE bool ApplyGraphicEntryToRoomLayer(int roomId, int layerId, QString resolvedEntryJson);
+    Q_INVOKABLE bool SetRoomLayerMappingDataAddress(int roomId, int layerId, int mappingDataAddress);
+
+    // Convenience functions which apply a whole exported Room/Level graphics section.
+    Q_INVOKABLE bool ApplyRoomGraphics(int roomId, QString roomGraphicsJson,
+                                       QString resolvedEntriesJson, bool updateTilesetGraphics);
+    Q_INVOKABLE bool ApplyLevelGraphics(QString levelGraphicsJson, QString resolvedEntriesJson,
+                                        bool updateTilesetGraphics);
 };
 
 class HintLayer : public QObject

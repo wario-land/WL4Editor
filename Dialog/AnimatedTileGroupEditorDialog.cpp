@@ -104,7 +104,7 @@ void AnimatedTileGroupEditorDialog::UpdatePaletteGraphicView()
     for (int j = 0; j < 16; ++j)
     {
         QVector<QRgb> palettetable = currentTileset->GetPalettes()[j];
-        for (int i = 1; i < 16; ++i) // Ignore the first color
+        for (int i = 0; i < 16; ++i) // draw all the 16 colors, the color 0 is real data as well
         {
             PaletteBarPainter.fillRect(8 * i, 8 * j, 8, 8, palettetable[i]);
         }

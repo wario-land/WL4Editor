@@ -1,4 +1,4 @@
-﻿#include "ROMUtils.h"
+#include "ROMUtils.h"
 #include "Compress.h"
 #include "Operation.h"
 #include <QFile>
@@ -1060,8 +1060,11 @@ allocationComplete:
                         true
                         );
 
-            // Write the chunk metadata with RATS format and the chunk data
-            if (WriteChunkSanityCheck(chunk, indexToChunkPtr[chunk.index], existChunks))
+            // Write the chunk metadata with RATS format and the chunk data.
+            // The sanity check has to read the chunk lengths from TempFile as well: chunks which
+            // were already written in this loop only exist in TempFile, and the original ROM still
+            // contains the free space filler (0xFF) at their addresses.
+            if (WriteChunkSanityCheck(chunk, indexToChunkPtr[chunk.index], existChunks, TempFile))
             {
                 unsigned char *destPtr = TempFile + indexToChunkPtr[chunk.index];
                 strncpy(reinterpret_cast<char*>(destPtr), "STAR", 4);
@@ -1478,19 +1481,28 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     /// <summary>
     /// Load a palette, 16 colors, from a pointer.
     /// </summary>
+    /// <remarks>
+    /// The palette color 0 is transparent when the GBA hardware draws a tile pixel, but the stored
+    /// value is still real palette data (the color 0 of BG palette 0 is the backdrop color), so the
+    /// Tileset palettes and the palettes shown as raw color data are loaded with
+    /// notdisablefirstcolor = true and keep the loaded color. The palettes which have no data for the
+    /// color 0 at all (the Entity palettes for example) can replace it by a transparent color.
+    /// </remarks>
     /// <param name="palette">
     /// Pointer of palette instance provided for palette loading.
     /// </param>
     /// <param name="dataptr">
     /// data pointer which keeps RGB55 palette data.
     /// </param>
+    /// <param name="notdisablefirstcolor">
+    /// Load the color 0 from the data instead of using a transparent color.
+    /// </param>
     void LoadPalette(QVector<QRgb> *palette, unsigned short *dataptr, bool notdisablefirstcolor)
     {
-        // First color is transparent
         int k = 1;
         if(!notdisablefirstcolor)
         {
-            palette->push_back(0);
+            palette->push_back(0); // transparent placeholder
         } else {
             k = 0;
         }
@@ -1724,38 +1736,56 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     /// make this as a parameter so we can modify the chunks list then push it into this function
     /// Also generate the data outside of the function can make the code execute potentially faster
     /// </param>
+    /// <param name="ROMData">
+    /// The ROM image the chunks were written into. This is TempFile while saving, because chunks
+    /// written earlier in the same save only exist in that working copy. Reading their lengths from
+    /// the original ROM would interpret the free space filler (0xFF bytes) as a bogus, almost
+    /// ROM-sized chunk length and reject every following write.
+    /// </param>
     /// <returns>
     /// True if the writing is legal.
     /// </returns>
-    bool WriteChunkSanityCheck(const SaveData &chunk, const unsigned int chunk_addr, const QVector<unsigned int> &existChunks)
+    bool WriteChunkSanityCheck(const SaveData &chunk, const unsigned int chunk_addr,
+                               const QVector<unsigned int> &existChunks, const unsigned char *ROMData)
     {
         if ((chunk_addr < WL4Constants::AvailableSpaceBeginningInROM) || (chunk.ChunkType == SaveDataChunkType::InvalidationChunk))
         {
             return true;
         }
 
-        unsigned int chunk_size = chunk.size;
-        unsigned int chunkNum = existChunks.size();
-        unsigned low = 0, high = chunkNum, middle = 0;
+        // exist chunk range: [existChunkAddr, existChunkAddr + 12 + existChunkSize)
+        // new chunk range: [chunk_addr, chunk_addr + 12 + chunk_size)
+        const unsigned int newChunkRangeL = chunk_addr;
+        const unsigned int newChunkRangeR = chunk_addr + 12 + chunk.size;
+
+        // existChunks is sorted by address. Find the first existing chunk which starts at or after
+        // the new chunk, then only that chunk and its predecessor can intersect the new chunk.
+        int low = 0, high = existChunks.size();
         while (low < high)
         {
-            middle = (low + high) / 2;
-            unsigned int existChunkAddr_Middle = existChunks[middle];
-            unsigned int existChunkSize_Middle = ROMUtils::GetChunkDataLength(existChunkAddr_Middle);
-
-            // exist chunk range: [existChunkAddr_Middle, existChunkAddr_Middle + 12 + existChunkSize_Middle)
-            // new chunk range: [chunk_addr, chunk_addr + 12 + chunk_size)
-            unsigned int existChunkRangeL_middle = existChunkAddr_Middle;
-            unsigned int existChunkRangeR_middle = existChunkAddr_Middle + 12 + existChunkSize_Middle;
-            unsigned int newChunkRangeL = chunk_addr;
-            unsigned int newChunkRangeR = chunk_addr + 12 + chunk_size;
-            if((newChunkRangeL < existChunkRangeR_middle && newChunkRangeL >= existChunkRangeL_middle) ||
-                    (newChunkRangeR > existChunkRangeL_middle && newChunkRangeR <= existChunkRangeR_middle)) {
-                return false;
-            } else if(newChunkRangeR <= existChunkRangeL_middle) {
-                high = middle;
-            } else if(newChunkRangeL >= existChunkRangeR_middle) {
+            const int middle = (low + high) / 2;
+            if (existChunks[middle] < newChunkRangeL)
+            {
                 low = middle + 1;
+            }
+            else
+            {
+                high = middle;
+            }
+        }
+
+        for (int i = low - 1; i <= low; ++i)
+        {
+            if ((i < 0) || (i >= existChunks.size()))
+            {
+                continue;
+            }
+            const unsigned int existChunkRangeL = existChunks[i];
+            const unsigned int existChunkRangeR =
+                    existChunkRangeL + 12 + GetChunkDataLength(ROMData, existChunkRangeL);
+            if ((newChunkRangeL < existChunkRangeR) && (newChunkRangeR > existChunkRangeL))
+            {
+                return false;
             }
         }
         return true;
@@ -1794,8 +1824,13 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     /// </returns>
     unsigned int GetChunkDataLength(unsigned int chunkheaderAddr)
     {
-        unsigned int chunkLen = *reinterpret_cast<unsigned short*>(ROMFileMetadata->ROMDataPtr + chunkheaderAddr + 4);
-        unsigned int extLen = (unsigned int) *reinterpret_cast<unsigned char*>(ROMFileMetadata->ROMDataPtr + chunkheaderAddr + 9) << 16;
+        return GetChunkDataLength(ROMFileMetadata->ROMDataPtr, chunkheaderAddr);
+    }
+
+    unsigned int GetChunkDataLength(const unsigned char *ROMData, unsigned int chunkheaderAddr)
+    {
+        unsigned int chunkLen = *reinterpret_cast<const unsigned short*>(ROMData + chunkheaderAddr + 4);
+        unsigned int extLen = (unsigned int) *reinterpret_cast<const unsigned char*>(ROMData + chunkheaderAddr + 9) << 16;
         return chunkLen + extLen;
     }
 

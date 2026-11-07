@@ -1949,7 +1949,7 @@ void WL4EditorWindow::on_actionAbout_triggered()
                                "    shinespeciall\n"
                                "    xiazhanjian\n\n"
                                "AI contributor(s):\n"
-                               "    deepseek-v4\n\n"
+                               "    deepseek v4 and v4.1f\n\n"
                                "Special Thanks:\n"
                                "    becored\n"
                                "    Blanchon\n"

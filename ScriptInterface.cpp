@@ -1,5 +1,6 @@
-﻿#include "ScriptInterface.h"
+#include "ScriptInterface.h"
 
+#include "AssortedGraphicIO.h"
 #include "Operation.h"
 #include "ROMUtils.h"
 
@@ -10,6 +11,16 @@ extern WL4EditorWindow *singleton;
 #endif
 
 #include <QApplication>
+#include <QColor>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
+#include <QJsonValue>
+#include <QMap>
+#include <QSet>
+
+#include <cstring>
 
 // ---------------------------Helper functions--------------------------------------
 unsigned short *QStringToU16(QString input)
@@ -347,6 +358,11 @@ void ScriptInterface::_ImportLayerData(QString fileName, int layerid)
     if(datasize != 2 * witdh * height)
     {
         log("File size not match (expected width: 0x" + QString::number(witdh, 16) + ", height: 0x" + QString::number(height, 16) + ")!");
+        return;
+    }
+    if (memcmp(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.constData(), datasize) == 0)
+    {
+        log("Layer data is unchanged, skipped.");
         return;
     }
     memcpy(room->GetLayer(layerid)->GetLayerData(), tmptile8x8data.data(), 2 * witdh * height);
@@ -1208,6 +1224,162 @@ QString ScriptInterface::ExportGetCreditsDataHex()
 
 // ---- Import APIs ----
 
+namespace
+{
+    // Compare helpers used by the Import APIs. When the imported data is already identical to the
+    // data of the current ROM, the import APIs skip creating an Operation: this avoids useless
+    // Undo entries, IsDirty flags and chunk writes on the next save.
+    bool EntityListsAreEqual(const std::vector<LevelComponents::EntityRoomAttribute> &first,
+                             const std::vector<LevelComponents::EntityRoomAttribute> &second)
+    {
+        if (first.size() != second.size())
+        {
+            return false;
+        }
+        for (size_t i = 0; i < first.size(); ++i)
+        {
+            if ((first[i].YPos != second[i].YPos) || (first[i].XPos != second[i].XPos)
+                    || (first[i].EntityID != second[i].EntityID))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool DoorVectorsAreEqual(LevelComponents::LevelDoorVector &first,
+                             LevelComponents::LevelDoorVector &second)
+    {
+        if (first.size() != second.size())
+        {
+            return false;
+        }
+        for (int i = 0; i < first.size(); ++i)
+        {
+            const LevelComponents::DoorEntry firstDoor = first.GetDoor(static_cast<unsigned char>(i));
+            const LevelComponents::DoorEntry secondDoor = second.GetDoor(static_cast<unsigned char>(i));
+            if ((firstDoor.DoorTypeByte != secondDoor.DoorTypeByte)
+                    || (firstDoor.RoomID != secondDoor.RoomID)
+                    || (firstDoor.x1 != secondDoor.x1) || (firstDoor.x2 != secondDoor.x2)
+                    || (firstDoor.y1 != secondDoor.y1) || (firstDoor.y2 != secondDoor.y2)
+                    || (firstDoor.DestinationDoorGlobalID != secondDoor.DestinationDoorGlobalID)
+                    || (firstDoor.HorizontalDeltaWario != secondDoor.HorizontalDeltaWario)
+                    || (firstDoor.VerticalDeltaWario != secondDoor.VerticalDeltaWario)
+                    || (firstDoor.EntitySetID != secondDoor.EntitySetID)
+                    || (firstDoor.BGM_ID != secondDoor.BGM_ID))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool CameraRecordsAreEqual(
+            const std::vector<struct LevelComponents::__CameraControlRecord *> &first,
+            const std::vector<struct LevelComponents::__CameraControlRecord *> &second)
+    {
+        if (first.size() != second.size())
+        {
+            return false;
+        }
+        for (size_t i = 0; i < first.size(); ++i)
+        {
+            if (memcmp(first[i], second[i], sizeof(struct LevelComponents::__CameraControlRecord)) != 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool RoomConfigParamsAreEqual(const DialogParams::RoomConfigParams *first,
+                                  const DialogParams::RoomConfigParams *second)
+    {
+        return (first->roomID == second->roomID)
+                && (first->CurrentTilesetIndex == second->CurrentTilesetIndex)
+                && (first->CurrentEntitySetID == second->CurrentEntitySetID)
+                && (first->Layer0Alpha == second->Layer0Alpha)
+                && (first->LayerPriorityAndAlphaAttr == second->LayerPriorityAndAlphaAttr)
+                && (first->Layer0MappingTypeParam == second->Layer0MappingTypeParam)
+                && (first->Layer0DataPtr == second->Layer0DataPtr)
+                && (first->Layer0Width == second->Layer0Width)
+                && (first->Layer0Height == second->Layer0Height)
+                && (first->RoomWidth == second->RoomWidth)
+                && (first->RoomHeight == second->RoomHeight)
+                && (first->Layer2MappingTypeParam == second->Layer2MappingTypeParam)
+                && (first->BackgroundLayerEnable == second->BackgroundLayerEnable)
+                && (first->BGLayerScrollFlag == second->BGLayerScrollFlag)
+                && (first->BackgroundLayerDataPtr == second->BackgroundLayerDataPtr)
+                && (first->RasterType == second->RasterType)
+                && (first->Water == second->Water)
+                && (first->BGMVolume == second->BGMVolume);
+    }
+
+    bool TilesetDataAreEqual(LevelComponents::Tileset *first, LevelComponents::Tileset *second)
+    {
+        return (first->GetfgGFXptr() == second->GetfgGFXptr())
+                && (first->GetfgGFXlen() == second->GetfgGFXlen())
+                && (first->GetTile8x8DataHex() == second->GetTile8x8DataHex())
+                && (first->GetMap16DataHex() == second->GetMap16DataHex())
+                && (first->GetAllPalettesHex() == second->GetAllPalettesHex())
+                && (first->GetEventTableDataHex() == second->GetEventTableDataHex())
+                && (first->GetTerrainTableDataHex() == second->GetTerrainTableDataHex())
+                && (first->GetAnimatedSwitchTableHex() == second->GetAnimatedSwitchTableHex())
+                && (first->GetAnimatedTileDataHex(0) == second->GetAnimatedTileDataHex(0))
+                && (first->GetAnimatedTileDataHex(1) == second->GetAnimatedTileDataHex(1));
+    }
+
+    bool EntityDataAreEqual(LevelComponents::Entity *first, LevelComponents::Entity *second)
+    {
+        if ((first->GetPalNum() != second->GetPalNum())
+                || (first->GetTilesNum() != second->GetTilesNum()))
+        {
+            return false;
+        }
+        for (int i = 0; i < first->GetPalNum(); ++i)
+        {
+            if (first->GetPaletteDataHex(i) != second->GetPaletteDataHex(i))
+            {
+                return false;
+            }
+        }
+        for (int i = 0; i < first->GetTilesNum(); ++i)
+        {
+            if (first->GetTile8x8DataHex(i) != second->GetTile8x8DataHex(i))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool EntitySetDataAreEqual(LevelComponents::EntitySet *first, LevelComponents::EntitySet *second)
+    {
+        if (first->GetEntityInfoTableSize() != second->GetEntityInfoTableSize())
+        {
+            return false;
+        }
+        for (int i = 0; i < first->GetEntityInfoTableSize(); ++i)
+        {
+            if (first->GetEntityInfoEntry(i) != second->GetEntityInfoEntry(i))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool AnimatedTileGroupDataAreEqual(LevelComponents::AnimatedTile8x8Group *first,
+                                       LevelComponents::AnimatedTile8x8Group *second)
+    {
+        return (first->GetAnimationType() == second->GetAnimationType())
+                && (first->GetCountPerFrame() == second->GetCountPerFrame())
+                && (first->GetTotalFrameCount() == second->GetTotalFrameCount())
+                && (first->GetTile8x8Count() == second->GetTile8x8Count())
+                && (first->GetTileData() == second->GetTileData());
+    }
+}
+
 // ---- Room Import APIs ----
 
 bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0Width, int layer0Height,
@@ -1219,11 +1391,7 @@ bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0
 
     int curRoomWidth = (int) room->GetLayer1Width();
     int curRoomHeight = (int) room->GetLayer1Height();
-    int curLayer0Width = (int) room->GetLayer0Width();
-    int curLayer0Height = (int) room->GetLayer0Height();
 
-    bool dimsChanged = (roomWidth != curRoomWidth || roomHeight != curRoomHeight ||
-                        layer0Width != curLayer0Width || layer0Height != curLayer0Height);
     bool roomSizeChanged = (roomWidth != curRoomWidth || roomHeight != curRoomHeight);
 
     DialogParams::RoomConfigParams *currentParams = new DialogParams::RoomConfigParams(room);
@@ -1250,6 +1418,16 @@ bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0
     newParams->RasterType = header.LayerGFXEffect01;
     newParams->Water = header.LayerGFXEffect02;
     newParams->BGLayerScrollFlag = header.Layer3Scrolling;
+
+    // Layer0Width/Layer0Height only describe a Map16 Layer 0. RoomConfigParams(room) stores 0 for
+    // a Tile8x8 or disabled Layer 0, while the export scripts forward the exported mapping
+    // dimensions (or their nonzero fallback). Normalize the values here, otherwise an unchanged
+    // non-Map16 Layer 0 makes RoomConfigParamsAreEqual fail and the import still resets the Room.
+    if ((newParams->Layer0MappingTypeParam & 0x10) != LevelComponents::LayerMap16)
+    {
+        newParams->Layer0Width = 0;
+        newParams->Layer0Height = 0;
+    }
 
     // Handle Layer 3 DataPtr preservation
     if (header.Layer3MappingType != 0)
@@ -1286,6 +1464,14 @@ bool ScriptInterface::ImportRoomConfig(int roomWidth, int roomHeight, int layer0
     else
     {
         newParams->LayerData[2] = nullptr;
+    }
+
+    if (RoomConfigParamsAreEqual(currentParams, newParams))
+    {
+        delete currentParams;
+        delete newParams;
+        log("ImportRoomConfig: Room config is unchanged, skipped.");
+        return true;
     }
 
     // Capture pre-trim state before any modifications (for undo of trimmed elements)
@@ -1373,6 +1559,14 @@ bool ScriptInterface::ImportLayerTiles(int layerId, int width, int height, QStri
         }
     }
 
+    if (oldData && (layer->GetLayerWidth() == width) && (layer->GetLayerHeight() == height)
+            && (memcmp(oldData, newData, expectedSize * sizeof(unsigned short)) == 0))
+    {
+        delete[] newData;
+        log("ImportLayerTiles: Layer " + QString::number(layerId) + " is unchanged, skipped.");
+        return true;
+    }
+
     OperationParams *op = new OperationParams;
     LayerChangeParams *layerChange = LayerChangeParams::Create(oldData, newData, width, height, roomId);
     delete[] newData;
@@ -1456,6 +1650,14 @@ bool ScriptInterface::ImportDoorsDisableDest(QString doorsData)
         newDoorVec->SetBGM(newId, (unsigned short) bgm);
     }
 
+    if (DoorVectorsAreEqual(*oldDoorVec, *newDoorVec))
+    {
+        delete oldDoorVec;
+        delete newDoorVec;
+        log("ImportDoorsDisableDest: Doors are unchanged, skipped.");
+        return true;
+    }
+
     OperationParams *op = new OperationParams;
     op->doorVectorChange = true;
     op->doorVectorChangeParams = DoorVectorChangeParams::Create(oldDoorVec, newDoorVec);
@@ -1488,6 +1690,12 @@ bool ScriptInterface::ImportEntityList(int difficulty, QString entityDataHex)
         attr.XPos = (unsigned char) tokens[i + 1].toUInt(nullptr, 16);
         attr.EntityID = (unsigned char) tokens[i + 2].toUInt(nullptr, 16);
         newList.push_back(attr);
+    }
+
+    if (EntityListsAreEqual(oldList, newList))
+    {
+        log("ImportEntityList: Difficulty " + QString::number(difficulty) + " is unchanged, skipped.");
+        return true;
     }
 
     OperationParams *op = new OperationParams;
@@ -1545,6 +1753,21 @@ bool ScriptInterface::ImportCameraControl(int camType, QString recordsData)
             rec->ChangedValue = (unsigned char) fields[8].toInt();
             newRecordsVec.push_back(rec);
         }
+    }
+
+    if ((oldType == static_cast<LevelComponents::__CameraControlType>(camType))
+            && CameraRecordsAreEqual(oldRecords, newRecordsVec))
+    {
+        for (struct LevelComponents::__CameraControlRecord *record : oldRecords)
+        {
+            delete record;
+        }
+        for (struct LevelComponents::__CameraControlRecord *record : newRecordsVec)
+        {
+            delete record;
+        }
+        log("ImportCameraControl: Camera control is unchanged, skipped.");
+        return true;
     }
 
     OperationParams *op = new OperationParams;
@@ -1663,6 +1886,12 @@ bool ScriptInterface::ImportDoorVecString(QString doorVecString)
     }
     int newSize = newDoorVec.size();
 
+    if (DoorVectorsAreEqual(level->GetDoorListRef(), newDoorVec))
+    {
+        log("ImportDoorVecString: Doors are unchanged, skipped.");
+        return true;
+    }
+
     // Save new state for undo/redo — copy newDoorVec (not level, which is unchanged)
     LevelComponents::LevelDoorVector *newDoorVecCopy =
         new LevelComponents::LevelDoorVector(newDoorVec);
@@ -1741,6 +1970,14 @@ bool ScriptInterface::ImportTileset(int tilesetId, int fggfxPtr, int fggfxLen,
     newTileset->SetAnimatedTileDataHex(0, animatedTileData0);
     newTileset->SetAnimatedTileDataHex(1, animatedTileData1);
 
+    if (TilesetDataAreEqual(oldTileset, newTileset))
+    {
+        delete oldTileset;
+        delete newTileset;
+        log("ImportTileset: Tileset " + QString::number(tilesetId) + " is unchanged, skipped.");
+        return true;
+    }
+
     newTileset->SetChanged(true);
 
     // Create operation
@@ -1779,6 +2016,13 @@ bool ScriptInterface::ImportEntity(int entityId, QString paletteData, QString ti
     QStringList tile8x8Entries = tile8x8Data.split(QChar('\n'), Qt::SkipEmptyParts);
     for (int i = 0; i < tile8x8Entries.size(); ++i)
         newEntity->SetTile8x8DataHex(i, tile8x8Entries[i]);
+
+    if (EntityDataAreEqual(ROMUtils::entities[entityId], newEntity))
+    {
+        delete newEntity;
+        log("ImportEntity: Entity " + QString::number(entityId) + " is unchanged, skipped.");
+        return true;
+    }
 
     newEntity->SetChanged(true);
 
@@ -1821,6 +2065,13 @@ bool ScriptInterface::ImportEntitySet(int entitySetId, QString infoTable)
         }
     }
 
+    if (EntitySetDataAreEqual(ROMUtils::entitiessets[entitySetId], newEntitySet))
+    {
+        delete newEntitySet;
+        log("ImportEntitySet: EntitySet " + QString::number(entitySetId) + " is unchanged, skipped.");
+        return true;
+    }
+
     newEntitySet->SetChanged(true);
 
     // Create operation params
@@ -1859,6 +2110,14 @@ bool ScriptInterface::ImportAnimatedTileGroup(int groupId, int animType, int cou
     QStringList tileDataEntries = tileData.split(QChar('\n'), Qt::SkipEmptyParts);
     for (int i = 0; i < tileDataEntries.size(); ++i)
         newGroup->SetTileDataHex(i, tileDataEntries[i]);
+
+    if (AnimatedTileGroupDataAreEqual(ROMUtils::animatedTileGroups[groupId], newGroup))
+    {
+        delete newGroup;
+        log("ImportAnimatedTileGroup: AnimatedTileGroup " + QString::number(groupId)
+            + " is unchanged, skipped.");
+        return true;
+    }
 
     newGroup->SetChanged(true);
 
@@ -1903,6 +2162,18 @@ bool ScriptInterface::ImportGlobalWallPaint(QString gfxHex, QString passageColor
         return false;
     }
 
+    const unsigned char *wallPaintROMData = ROMUtils::ROMFileMetadata->ROMDataPtr;
+    if ((memcmp(wallPaintROMData + WL4Constants::WallPaintGFXAddr,
+                newGFX.constData(), gfxSize) == 0)
+            && (memcmp(wallPaintROMData + WL4Constants::WallPaintPalPassageColor,
+                       newPassageColor.constData(), palSize) == 0)
+            && (memcmp(wallPaintROMData + WL4Constants::WallPaintPalPassageGray,
+                       newPassageGray.constData(), palSize) == 0))
+    {
+        log("ImportGlobalWallPaint: Wall paint data is unchanged, skipped.");
+        return true;
+    }
+
     // Capture old ROM data for fixed blocks
     unsigned char oldGFX[1024 * 5 * 6];
     unsigned char oldPassageColor[32 * 5 * 6];
@@ -1945,6 +2216,13 @@ bool ScriptInterface::ImportGlobalCredits(QString creditsHex)
         return false;
     }
 
+    if (memcmp(ROMUtils::ROMFileMetadata->ROMDataPtr + WL4Constants::CreditsTiles,
+               newData.constData(), expectedSize) == 0)
+    {
+        log("ImportGlobalCredits: Credits data is unchanged, skipped.");
+        return true;
+    }
+
     // Capture old credit data
     DialogParams::CreditsEditParams *lastParams = new DialogParams::CreditsEditParams();
     memcpy(lastParams->oldCreditData,
@@ -1972,6 +2250,16 @@ bool ScriptInterface::ImportLevelConfig(QString levelName, QString levelNameJ,
 {
     LevelComponents::Level *level = singleton->GetCurrentLevel();
 
+    if ((level->GetLevelName() == levelName)
+            && (level->GetLevelName(1) == levelNameJ)
+            && (level->GetTimeCountdownCounter(LevelComponents::HardDifficulty) == timerHard)
+            && (level->GetTimeCountdownCounter(LevelComponents::NormalDifficulty) == timerNormal)
+            && (level->GetTimeCountdownCounter(LevelComponents::SHardDifficulty) == timerSHard))
+    {
+        log("ImportLevelConfig: Level config is unchanged, skipped.");
+        return true;
+    }
+
     // Capture old state from level
     DialogParams::LevelConfigParams *lastParams = new DialogParams::LevelConfigParams();
     lastParams->oldLevelName = level->GetLevelName();
@@ -1995,6 +2283,683 @@ bool ScriptInterface::ImportLevelConfig(QString levelName, QString levelNameJ,
     ExecuteOperation(op);
 
     log("ImportLevelConfig: Level config imported.");
+    return true;
+}
+
+// ------------------------------ Graphic Manager data APIs ------------------------------
+
+namespace
+{
+    bool GetEntryTileData(const QJsonObject &entryObject, unsigned int &address, unsigned int &size,
+                          QString &error)
+    {
+        const QJsonObject tileData = entryObject.value("tileData").toObject();
+        address = tileData.value("address").toVariant().toUInt();
+        size = static_cast<unsigned int>(tileData.value("sizeInByte").toInt());
+        const unsigned int ramOffset = tileData.value("ramOffsetNum").toVariant().toUInt();
+        if (!address || !size)
+        {
+            error = "the entry has no background Tile8x8 data";
+            return false;
+        }
+        if (size % 32)
+        {
+            error = "the background Tile8x8 data size is not a multiple of 32";
+            return false;
+        }
+        if ((ramOffset + size / 32) > 0x3FF)
+        {
+            error = "the background Tile8x8 RAM offset is out of range";
+            return false;
+        }
+        if (ramOffset != (0x3FF - size / 32))
+        {
+            error = "the background Tile8x8 RAM offset does not match the Tileset background layout";
+            return false;
+        }
+        if (address + size > ROMUtils::ROMFileMetadata->Length)
+        {
+            error = "the background Tile8x8 data address is out of the ROM range";
+            return false;
+        }
+        return true;
+    }
+
+    bool GetEntryMappingDataAddress(const QJsonObject &entryObject, unsigned int &address, QString &error)
+    {
+        const QJsonObject mappingData = entryObject.value("mappingData").toObject();
+        address = mappingData.value("address").toVariant().toUInt();
+        if (!address)
+        {
+            error = "the entry has no mapping data address";
+            return false;
+        }
+        if (address + 1 >= ROMUtils::ROMFileMetadata->Length)
+        {
+            error = "the mapping data address is out of the ROM range";
+            return false;
+        }
+        return true;
+    }
+
+    struct ImportedPalette
+    {
+        int slotId = 0;
+        QVector<QRgb> colors;
+    };
+
+    bool ReadEntryPalettes(const QJsonObject &entryObject, QVector<ImportedPalette> &palettes,
+                           QString &error)
+    {
+        palettes.clear();
+        const QJsonObject paletteObject = entryObject.value("palette").toObject();
+        const QJsonArray slotIDs = paletteObject.value("slotIDs").toArray();
+        if (slotIDs.isEmpty())
+        {
+            return true;
+        }
+
+        const unsigned int paletteAddress = paletteObject.value("address").toVariant().toUInt();
+        if (!paletteAddress)
+        {
+            // A resolved entry points at palette data in the ROM. An entry which still carries raw
+            // palette data has to be imported first, otherwise only its tile data would be applied.
+            if (!paletteObject.value("dataHex").toString().isEmpty())
+            {
+                error = "the palette data is not resolved to a ROM address";
+                return false;
+            }
+            return true;
+        }
+
+        // The vanilla palette blocks hold all 16 rows, while a Graphic Manager palette chunk packs
+        // only the rows listed in PaletteSlotIDs. This is the same layout LoadPaletteDataFromRom uses.
+        const bool vanillaPalette = AssortedGraphicUtils::IsVanillaAddress(paletteAddress);
+        const unsigned int requiredSize = vanillaPalette
+                ? 16 * 32 : static_cast<unsigned int>(slotIDs.size()) * 32;
+        if (paletteAddress + requiredSize > ROMUtils::ROMFileMetadata->Length)
+        {
+            error = "the palette data address is out of the ROM range";
+            return false;
+        }
+
+        for (int i = 0; i < slotIDs.size(); ++i)
+        {
+            const int slotId = slotIDs.at(i).toInt(-1);
+            if ((slotId < 0) || (slotId >= 16))
+            {
+                error = "the palette slot ID is out of range";
+                return false;
+            }
+            const unsigned int colorAddress = paletteAddress
+                    + (vanillaPalette ? static_cast<unsigned int>(slotId) * 32
+                                      : static_cast<unsigned int>(i) * 32);
+            ImportedPalette palette;
+            palette.slotId = slotId;
+            ROMUtils::LoadPalette(&palette.colors,
+                                  reinterpret_cast<unsigned short *>(
+                                      ROMUtils::ROMFileMetadata->ROMDataPtr + colorAddress),
+                                  true);
+            if (palette.colors.size() != 16)
+            {
+                error = "the palette data cannot be loaded";
+                return false;
+            }
+            palettes.push_back(palette);
+        }
+        return true;
+    }
+
+    bool ApplyTilesetEntryObject(int tilesetId, const QJsonObject &entryObject, QString &error)
+    {
+        if ((tilesetId < 0) || (tilesetId >= 92) || !ROMUtils::singletonTilesets[tilesetId])
+        {
+            error = "invalid Tileset ID";
+            return false;
+        }
+
+        unsigned int tileDataAddress = 0;
+        unsigned int tileDataSize = 0;
+        if (!GetEntryTileData(entryObject, tileDataAddress, tileDataSize, error))
+        {
+            return false;
+        }
+
+        LevelComponents::Tileset *currentTileset = ROMUtils::singletonTilesets[tilesetId];
+
+        const bool tileDataMatches =
+                (currentTileset->GetbgGFXptr() == static_cast<int>(tileDataAddress))
+                && (currentTileset->GetbgGFXlen() == static_cast<int>(tileDataSize));
+        if (!tileDataMatches)
+        {
+            // The Tileset dialog rejects graphic entries which would overwrite foreground tiles. The
+            // script path has to do the same, otherwise the background tiles are written into the
+            // foreground Tile8x8 range and the foreground data is corrupted on the next save.
+            const int fgTileCount = currentTileset->GetfgGFXlen() / 32;
+            const int firstBgTile = 0x200 + static_cast<int>(0x3FF - tileDataSize / 32);
+            const int lastFgTile = 0x40 + fgTileCount;
+            if (firstBgTile <= lastFgTile)
+            {
+                error = QString("the background Tile8x8 range 0x%1-0x%2 would overwrite the "
+                                "foreground Tile8x8 range 0x41-0x%3 of the destination Tileset")
+                        .arg(QString::number(firstBgTile, 16).toUpper(),
+                             QString::number(0x5FE, 16).toUpper(),
+                             QString::number(lastFgTile, 16).toUpper());
+                return false;
+            }
+        }
+
+        QVector<ImportedPalette> importedPalettes;
+        if (!ReadEntryPalettes(entryObject, importedPalettes, error))
+        {
+            return false;
+        }
+
+        bool paletteMatches = true;
+        for (const ImportedPalette &palette : importedPalettes)
+        {
+            if (currentTileset->GetPalettes()[palette.slotId] != palette.colors)
+            {
+                paletteMatches = false;
+                break;
+            }
+        }
+        if (tileDataMatches && paletteMatches)
+        {
+            return true;
+        }
+
+        LevelComponents::Tileset *oldTileset =
+                new LevelComponents::Tileset(currentTileset, tilesetId);
+        LevelComponents::Tileset *newTileset =
+                new LevelComponents::Tileset(currentTileset, tilesetId);
+        if (!tileDataMatches)
+        {
+            newTileset->SetBackgroundTileData(static_cast<int>(tileDataAddress),
+                                              static_cast<int>(tileDataSize));
+        }
+        for (const ImportedPalette &palette : importedPalettes)
+        {
+            for (int colorId = 0; colorId < 16; ++colorId)
+            {
+                newTileset->SetColor(palette.slotId, colorId, palette.colors[colorId]);
+            }
+        }
+        newTileset->SetChanged(true);
+
+        DialogParams::TilesetEditParams *lastParams = new DialogParams::TilesetEditParams();
+        lastParams->currentTilesetIndex = tilesetId;
+        lastParams->newTileset = oldTileset;
+
+        DialogParams::TilesetEditParams *newParams = new DialogParams::TilesetEditParams();
+        newParams->currentTilesetIndex = tilesetId;
+        newParams->newTileset = newTileset;
+
+        OperationParams *operation = new OperationParams;
+        operation->TilesetChange = true;
+        operation->lastTilesetEditParams = lastParams;
+        operation->newTilesetEditParams = newParams;
+        ExecuteOperation(operation);
+        singleton->GetOutputWidgetPtr()->PrintString(
+                    QString("Tileset 0x%1 background graphics and palette updated. "
+                            "All rooms using this Tileset are affected.")
+                    .arg(QString::number(tilesetId, 16).toUpper()));
+        return true;
+    }
+
+    bool ApplyRoomLayerAddress(int roomId, int layerId, unsigned int mappingDataAddress, QString &error)
+    {
+        if ((layerId != 3) && (layerId != 0))
+        {
+            error = "layerId must be 3 (background) or 0 (layer 0)";
+            return false;
+        }
+        LevelComponents::Level *level = singleton ? singleton->GetCurrentLevel() : nullptr;
+        if (!level)
+        {
+            error = "no level is loaded";
+            return false;
+        }
+        if ((roomId < 0) || (roomId >= static_cast<int>(level->GetRooms().size())))
+        {
+            error = "Room ID is out of range";
+            return false;
+        }
+        if (!mappingDataAddress || (mappingDataAddress + 1 >= ROMUtils::ROMFileMetadata->Length))
+        {
+            error = "the mapping data address is out of the ROM range";
+            return false;
+        }
+
+        // Validate the mapping data before it is handed to RoomConfigReset.
+        LevelComponents::Layer testLayer(static_cast<int>(mappingDataAddress),
+                                         LevelComponents::LayerTile8x8);
+        if (!testLayer.GetLayerData())
+        {
+            error = "the mapping data cannot be decompressed";
+            return false;
+        }
+
+        LevelComponents::Room *room = level->GetRooms()[roomId];
+        LevelComponents::Layer *currentLayer = room->GetLayer(layerId);
+        if ((currentLayer->GetMappingType() == LevelComponents::LayerTile8x8)
+                && (currentLayer->GetDataPtr() == static_cast<int>(mappingDataAddress)))
+        {
+            return true;
+        }
+
+        DialogParams::RoomConfigParams *currentParams =
+                new DialogParams::RoomConfigParams(room);
+        DialogParams::RoomConfigParams *newParams =
+                new DialogParams::RoomConfigParams(room);
+
+        if (layerId == 3)
+        {
+            newParams->BackgroundLayerEnable = true;
+            newParams->BackgroundLayerDataPtr = static_cast<int>(mappingDataAddress);
+        }
+        else
+        {
+            const int oldMappingType = currentParams->Layer0MappingTypeParam;
+            newParams->Layer0MappingTypeParam =
+                    ((oldMappingType >= 0x20) && (oldMappingType <= 0x2F)) ? oldMappingType : 0x20;
+            newParams->Layer0Width = 0;
+            newParams->Layer0Height = 0;
+            newParams->Layer0DataPtr = static_cast<int>(mappingDataAddress);
+            if (newParams->LayerData[0])
+            {
+                delete[] newParams->LayerData[0];
+                newParams->LayerData[0] = nullptr;
+            }
+        }
+
+        OperationParams *operation = new OperationParams;
+        operation->roomConfigChange = true;
+        operation->lastRoomConfigParams = currentParams;
+        operation->newRoomConfigParams = newParams;
+        ExecuteOperation(operation);
+        return true;
+    }
+
+    bool ApplyRoomLayerEntryObject(int roomId, int layerId, const QJsonObject &entryObject, QString &error)
+    {
+        unsigned int mappingDataAddress = 0;
+        if (!GetEntryMappingDataAddress(entryObject, mappingDataAddress, error))
+        {
+            return false;
+        }
+        return ApplyRoomLayerAddress(roomId, layerId, mappingDataAddress, error);
+    }
+
+    bool ParseJsonObject(const QString &json, QJsonObject &object, QString &error)
+    {
+        QJsonParseError parseError;
+        const QJsonDocument document = QJsonDocument::fromJson(json.toUtf8(), &parseError);
+        if (parseError.error != QJsonParseError::NoError)
+        {
+            error = parseError.errorString();
+            return false;
+        }
+        if (!document.isObject())
+        {
+            error = "the JSON value is not an object";
+            return false;
+        }
+        object = document.object();
+        return true;
+    }
+
+    bool ParseJsonArray(const QString &json, QJsonArray &array, QString &error)
+    {
+        QJsonParseError parseError;
+        const QJsonDocument document = QJsonDocument::fromJson(json.toUtf8(), &parseError);
+        if (parseError.error != QJsonParseError::NoError)
+        {
+            error = parseError.errorString();
+            return false;
+        }
+        if (!document.isArray())
+        {
+            error = "the JSON value is not an array";
+            return false;
+        }
+        array = document.array();
+        return true;
+    }
+
+    QJsonObject GraphicErrorResult(const QString &error)
+    {
+        QJsonObject result;
+        result["success"] = false;
+        result["error"] = error;
+        result["createdCount"] = 0;
+        result["reusedCount"] = 0;
+        result["entries"] = QJsonArray();
+        return result;
+    }
+}
+
+QString ScriptInterface::ExportGetRoomGraphicEntries(int roomId)
+{
+    const QJsonObject graphics = AssortedGraphicIO::BuildRoomGraphics(roomId);
+    return QString::fromUtf8(QJsonDocument(graphics).toJson(QJsonDocument::Compact));
+}
+
+QString ScriptInterface::ExportGetLevelGraphicEntries()
+{
+    const QJsonObject graphics = AssortedGraphicIO::BuildLevelGraphics();
+    return QString::fromUtf8(QJsonDocument(graphics).toJson(QJsonDocument::Compact));
+}
+
+QString ScriptInterface::ExportGetAllGraphicEntries()
+{
+    const QJsonObject graphics = AssortedGraphicIO::BuildAllEntries();
+    return QString::fromUtf8(QJsonDocument(graphics).toJson(QJsonDocument::Compact));
+}
+
+bool ScriptInterface::EnsureLevelSavedForGraphicImport()
+{
+    return singleton->UnsavedChangesPrompt(
+                tr("There are unsaved changes.\n"
+                   "Importing Graphic Manager data writes directly to the ROM file.\n"
+                   "Save the current Level first?"));
+}
+
+QString ScriptInterface::ImportGraphicEntries(QString entriesJson)
+{
+    if (!EnsureLevelSavedForGraphicImport())
+    {
+        const QJsonObject result = GraphicErrorResult(
+                    "Import cancelled: the Level was not saved.");
+        return QString::fromUtf8(QJsonDocument(result).toJson(QJsonDocument::Compact));
+    }
+
+    QJsonParseError parseError;
+    const QJsonDocument document = QJsonDocument::fromJson(entriesJson.toUtf8(), &parseError);
+    if (parseError.error != QJsonParseError::NoError)
+    {
+        const QJsonObject result = GraphicErrorResult(parseError.errorString());
+        return QString::fromUtf8(QJsonDocument(result).toJson(QJsonDocument::Compact));
+    }
+
+    QJsonArray entries;
+    if (document.isArray())
+    {
+        entries = document.array();
+    }
+    else if (document.isObject())
+    {
+        const QJsonObject object = document.object();
+        if (!object.contains("entries"))
+        {
+            const QJsonObject result = GraphicErrorResult(
+                        "the JSON object has no 'entries' array");
+            return QString::fromUtf8(QJsonDocument(result).toJson(QJsonDocument::Compact));
+        }
+        entries = object.value("entries").toArray();
+    }
+    else
+    {
+        const QJsonObject result = GraphicErrorResult(
+                    "the JSON value is neither an array nor an object");
+        return QString::fromUtf8(QJsonDocument(result).toJson(QJsonDocument::Compact));
+    }
+
+    const QJsonObject result = AssortedGraphicIO::ImportEntries(entries);
+    if (result.value("success").toBool())
+    {
+        const int createdCount = result.value("createdCount").toInt();
+        if (createdCount > 0)
+        {
+            singleton->SetUnsavedChanges(true);
+        }
+        log(QString("ImportGraphicEntries: %1 entries created, %2 entries reused.")
+            .arg(createdCount)
+            .arg(result.value("reusedCount").toInt()));
+    }
+    else
+    {
+        log(QString("ImportGraphicEntries failed: %1").arg(result.value("error").toString()));
+    }
+    return QString::fromUtf8(QJsonDocument(result).toJson(QJsonDocument::Compact));
+}
+
+bool ScriptInterface::ApplyGraphicEntryToTileset(int tilesetId, QString resolvedEntryJson)
+{
+    QJsonObject entryObject;
+    QString error;
+    if (!ParseJsonObject(resolvedEntryJson, entryObject, error))
+    {
+        log(QString("ApplyGraphicEntryToTileset: %1").arg(error));
+        return false;
+    }
+    if (!ApplyTilesetEntryObject(tilesetId, entryObject, error))
+    {
+        log(QString("ApplyGraphicEntryToTileset: %1").arg(error));
+        return false;
+    }
+    log(QString("ApplyGraphicEntryToTileset: Tileset 0x%1 background graphics applied.")
+        .arg(QString::number(tilesetId, 16).toUpper()));
+    return true;
+}
+
+bool ScriptInterface::ApplyGraphicEntryToRoomLayer(int roomId, int layerId,
+                                                   QString resolvedEntryJson)
+{
+    QJsonObject entryObject;
+    QString error;
+    if (!ParseJsonObject(resolvedEntryJson, entryObject, error))
+    {
+        log(QString("ApplyGraphicEntryToRoomLayer: %1").arg(error));
+        return false;
+    }
+    if (!ApplyRoomLayerEntryObject(roomId, layerId, entryObject, error))
+    {
+        log(QString("ApplyGraphicEntryToRoomLayer: %1").arg(error));
+        return false;
+    }
+    log(QString("ApplyGraphicEntryToRoomLayer: Room %1 layer %2 mapping data applied.")
+        .arg(roomId).arg(layerId));
+    return true;
+}
+
+bool ScriptInterface::SetRoomLayerMappingDataAddress(int roomId, int layerId,
+                                                     int mappingDataAddress)
+{
+    QString error;
+    if (!ApplyRoomLayerAddress(roomId, layerId, static_cast<unsigned int>(mappingDataAddress), error))
+    {
+        log(QString("SetRoomLayerMappingDataAddress: %1").arg(error));
+        return false;
+    }
+    log(QString("SetRoomLayerMappingDataAddress: Room %1 layer %2 set to 0x%3.")
+        .arg(roomId).arg(layerId)
+        .arg(QString::number(static_cast<unsigned int>(mappingDataAddress), 16).toUpper()));
+    return true;
+}
+
+bool ScriptInterface::ApplyRoomGraphics(int roomId, QString roomGraphicsJson,
+                                        QString resolvedEntriesJson, bool updateTilesetGraphics)
+{
+    QJsonObject graphics;
+    QJsonArray resolvedEntries;
+    QString error;
+    if (!ParseJsonObject(roomGraphicsJson, graphics, error))
+    {
+        log(QString("ApplyRoomGraphics: %1").arg(error));
+        return false;
+    }
+    if (!ParseJsonArray(resolvedEntriesJson, resolvedEntries, error))
+    {
+        log(QString("ApplyRoomGraphics: %1").arg(error));
+        return false;
+    }
+
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+    if (!level || (roomId < 0) || (roomId >= static_cast<int>(level->GetRooms().size())))
+    {
+        log("ApplyRoomGraphics: invalid Room ID");
+        return false;
+    }
+    LevelComponents::Room *room = level->GetRooms()[roomId];
+    const int tilesetId = room->GetTilesetID();
+
+    if (updateTilesetGraphics)
+    {
+        const QJsonObject tilesetObject = graphics.value("tileset").toObject();
+        const int entryIndex = tilesetObject.value("bgEntryIndex").toInt(-1);
+        if ((entryIndex >= 0) && (entryIndex < resolvedEntries.size()))
+        {
+            if (!ApplyTilesetEntryObject(tilesetId, resolvedEntries.at(entryIndex).toObject(), error))
+            {
+                log(QString("ApplyRoomGraphics: %1").arg(error));
+                return false;
+            }
+        }
+    }
+
+    const QJsonObject roomObject = graphics.value("room").toObject();
+    const bool bgEnabled = roomObject.value("bgEnabled").toBool();
+    const int bgEntryIndex = roomObject.value("bgEntryIndex").toInt(-1);
+    const bool layer0Enabled = roomObject.value("layer0Enabled").toBool();
+    const int layer0EntryIndex = roomObject.value("layer0EntryIndex").toInt(-1);
+
+    if (bgEnabled && (bgEntryIndex >= 0) && (bgEntryIndex < resolvedEntries.size()))
+    {
+        if (!ApplyRoomLayerEntryObject(roomId, 3, resolvedEntries.at(bgEntryIndex).toObject(), error))
+        {
+            log(QString("ApplyRoomGraphics: %1").arg(error));
+            return false;
+        }
+    }
+    if (layer0Enabled && (layer0EntryIndex >= 0) && (layer0EntryIndex < resolvedEntries.size()))
+    {
+        if (!ApplyRoomLayerEntryObject(roomId, 0, resolvedEntries.at(layer0EntryIndex).toObject(), error))
+        {
+            log(QString("ApplyRoomGraphics: %1").arg(error));
+            return false;
+        }
+    }
+
+    log(QString("ApplyRoomGraphics: Room %1 graphics applied.").arg(roomId));
+    return true;
+}
+
+bool ScriptInterface::ApplyLevelGraphics(QString levelGraphicsJson, QString resolvedEntriesJson,
+                                         bool updateTilesetGraphics)
+{
+    QJsonObject graphics;
+    QJsonArray resolvedEntries;
+    QString error;
+    if (!ParseJsonObject(levelGraphicsJson, graphics, error))
+    {
+        log(QString("ApplyLevelGraphics: %1").arg(error));
+        return false;
+    }
+    if (!ParseJsonArray(resolvedEntriesJson, resolvedEntries, error))
+    {
+        log(QString("ApplyLevelGraphics: %1").arg(error));
+        return false;
+    }
+
+    LevelComponents::Level *level = singleton->GetCurrentLevel();
+    if (!level)
+    {
+        log("ApplyLevelGraphics: no level is loaded");
+        return false;
+    }
+
+    QSet<int> appliedTilesets;
+    QMap<int, unsigned int> tilesetTileDataAddress;
+    if (updateTilesetGraphics)
+    {
+        const QJsonArray tilesets = graphics.value("tilesets").toArray();
+        for (int ti = 0; ti < tilesets.size(); ++ti)
+        {
+            const QJsonObject tilesetObject = tilesets.at(ti).toObject();
+            const int tilesetId = tilesetObject.value("tilesetId").toInt(-1);
+            const int entryIndex = tilesetObject.value("bgEntryIndex").toInt(-1);
+            if ((tilesetId < 0) || (entryIndex < 0) || (entryIndex >= resolvedEntries.size()))
+            {
+                continue;
+            }
+            const QJsonObject entryObject = resolvedEntries.at(entryIndex).toObject();
+            const unsigned int tileDataAddress =
+                    entryObject.value("tileData").toObject().value("address").toVariant().toUInt();
+            if (appliedTilesets.contains(tilesetId))
+            {
+                if (tilesetTileDataAddress.value(tilesetId) != tileDataAddress)
+                {
+                    log(QString("ApplyLevelGraphics: Tileset 0x%1 is used with different background "
+                                "Tile8x8 data sets, keeping the first one.")
+                        .arg(QString::number(tilesetId, 16).toUpper()));
+                }
+                continue;
+            }
+            if (!ApplyTilesetEntryObject(tilesetId, entryObject, error))
+            {
+                log(QString("ApplyLevelGraphics: %1").arg(error));
+                return false;
+            }
+            appliedTilesets.insert(tilesetId);
+            tilesetTileDataAddress.insert(tilesetId, tileDataAddress);
+        }
+    }
+
+    const QJsonArray rooms = graphics.value("rooms").toArray();
+    for (int ri = 0; ri < rooms.size(); ++ri)
+    {
+        const QJsonObject roomObject = rooms.at(ri).toObject();
+        const int roomId = roomObject.value("roomId").toInt(-1);
+        if ((roomId < 0) || (roomId >= static_cast<int>(level->GetRooms().size())))
+        {
+            log(QString("ApplyLevelGraphics: skipping invalid Room ID %1").arg(roomId));
+            continue;
+        }
+        const int tilesetId = level->GetRooms()[roomId]->GetTilesetID();
+
+        const bool bgEnabled = roomObject.value("bgEnabled").toBool();
+        const int bgEntryIndex = roomObject.value("bgEntryIndex").toInt(-1);
+        const bool layer0Enabled = roomObject.value("layer0Enabled").toBool();
+        const int layer0EntryIndex = roomObject.value("layer0EntryIndex").toInt(-1);
+
+        if (updateTilesetGraphics && !appliedTilesets.contains(tilesetId))
+        {
+            const int candidateIndex = (bgEntryIndex >= 0) ? bgEntryIndex : layer0EntryIndex;
+            if ((candidateIndex >= 0) && (candidateIndex < resolvedEntries.size()))
+            {
+                const QJsonObject entryObject = resolvedEntries.at(candidateIndex).toObject();
+                const unsigned int tileDataAddress =
+                        entryObject.value("tileData").toObject().value("address").toVariant().toUInt();
+                if (!ApplyTilesetEntryObject(tilesetId, entryObject, error))
+                {
+                    log(QString("ApplyLevelGraphics: %1").arg(error));
+                    return false;
+                }
+                appliedTilesets.insert(tilesetId);
+                tilesetTileDataAddress.insert(tilesetId, tileDataAddress);
+            }
+        }
+
+        if (bgEnabled && (bgEntryIndex >= 0) && (bgEntryIndex < resolvedEntries.size()))
+        {
+            if (!ApplyRoomLayerEntryObject(roomId, 3, resolvedEntries.at(bgEntryIndex).toObject(), error))
+            {
+                log(QString("ApplyLevelGraphics: %1").arg(error));
+                return false;
+            }
+        }
+        if (layer0Enabled && (layer0EntryIndex >= 0) && (layer0EntryIndex < resolvedEntries.size()))
+        {
+            if (!ApplyRoomLayerEntryObject(roomId, 0, resolvedEntries.at(layer0EntryIndex).toObject(), error))
+            {
+                log(QString("ApplyLevelGraphics: %1").arg(error));
+                return false;
+            }
+        }
+    }
+
+    log("ApplyLevelGraphics: Level graphics applied.");
     return true;
 }
 
