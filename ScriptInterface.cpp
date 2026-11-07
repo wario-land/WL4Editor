@@ -2176,11 +2176,17 @@ bool ScriptInterface::ImportLevelWallPaint(QString gfxHex, QString passageColorH
 
     WallPaintUtils::LevelData newData = oldData;
     memcpy(newData.gfx, newGFX.constData(), gfxSize);
-    memcpy(newData.passageColor, newPassageColor.constData(), paletteSize);
+
+    // The first six palette colors are fixed and belong to the destination
+    // Level, so only the editable colors are imported. This matches the Wall
+    // Paint editor, which never changes those colors.
+    const int editablePaletteOffset = 6 * sizeof(unsigned short);
+    memcpy(newData.passageColor + editablePaletteOffset,
+           newPassageColor.constData() + editablePaletteOffset,
+           paletteSize - editablePaletteOffset);
 
     // Keep existing derived palettes when editable colors are unchanged;
     // regenerating them from RGB555 data can introduce quantization drift.
-    const int editablePaletteOffset = 6 * sizeof(unsigned short);
     if (memcmp(newData.passageColor + editablePaletteOffset,
                oldData.passageColor + editablePaletteOffset,
                paletteSize - editablePaletteOffset) != 0)
