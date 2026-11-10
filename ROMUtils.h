@@ -1,4 +1,4 @@
-﻿#ifndef ROMUTILS_H
+#ifndef ROMUTILS_H
 #define ROMUTILS_H
 
 #include <QString>
@@ -15,7 +15,7 @@
 #include "LevelComponents/Entity.h"
 #include "LevelComponents/Layer.h"
 
-#define CHUNK_TYPE_COUNT 0x17
+#define CHUNK_TYPE_COUNT 0x1A
 
 namespace ROMUtils
 {
@@ -67,6 +67,9 @@ namespace ROMUtils
         AssortedGraphicmappingChunkType       = '\x14',
         AssortedGraphicPaletteChunkType       = '\x15',
         AnimatedTileGroupTile8x8DataChunkType = '\x16',
+        SoundBankChunk                        = '\x17',
+        SoundSongChunk                        = '\x18',
+        SoundSampleChunk                      = '\x19',
     };
 
     enum ChunkAllocationStatus

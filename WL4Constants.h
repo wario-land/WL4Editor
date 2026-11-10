@@ -23,6 +23,34 @@ namespace WL4Constants
     const unsigned int AnimatedTileSwitchInfoTable   = 0x3F8C18;
     const unsigned int AnimatedTileHeaderTable       = 0x3F7828; // 270 slots, i.e. 0x10E slots
 
+    // Sound data (vanilla US ROM, game code AWAE). All values are ROM file
+    // offsets, like the other tables in this header; the GBA 0x08000000 base is
+    // only applied to pointers read from the ROM.
+    const unsigned int SongTable                   = 0x98028;
+    const unsigned int PlayerTable                 = 0x97FC8;
+    const unsigned int VoicePoolStart              = 0x956E4;
+    const unsigned int SampleRegionStart           = 0x999C4;
+    const unsigned int SongRegionStart             = 0x232E0;
+    const unsigned int SoundBankCount              = 11;
+    const int          SongCount                   = 819;
+    const int          PlayerCount                 = 8;
+
+    // Logical Bank Slot -> vanilla voicegroup base. Index 4 has no vanilla slot.
+    static const unsigned int SoundBankBase[SoundBankCount] =
+    {
+        0x956E4, // 0  KeySplitBank (sub-bank)
+        0x957EC, // 1  SoundEffects (music bank)
+        0x95DEC, // 2  SunnySideUp (music bank)
+        0x963E0, // 3  GeneralMusic (music bank)
+        0x00000, // 4  no vanilla slot
+        0x969E0, // 5  RhythmSet (sub-bank)
+        0x96CBC, // 6  SfxSet (sub-bank)
+        0x96F98, // 7  VoiceSet (sub-bank)
+        0x97274, // 8  SfxCdSet (sub-bank)
+        0x97520, // 9  WarioVoiceSet (sub-bank)
+        0x977F0  // 10 ReverseWind (music bank)
+    };
+
     // Miscellaneous definitions
     const unsigned int CameraRecordSentinel        = 0x3F9D58;
     const unsigned int SpritesBasicElementTiles    = 0x400AE8; // 0x3000 bytes in length

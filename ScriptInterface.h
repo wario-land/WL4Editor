@@ -68,6 +68,10 @@ public:
 
     // Export/Import APIs
 
+    // Sound project
+    Q_INVOKABLE QString ExportSoundProject(QString folder = QString(""));
+    Q_INVOKABLE QString ImportSoundProject(QString folder = QString(""), bool saveToROM = true);
+
     // Room Export Getters
     Q_INVOKABLE int ExportGetLayerDataPtr(int layerId);
     Q_INVOKABLE int ExportGetTilesetId();

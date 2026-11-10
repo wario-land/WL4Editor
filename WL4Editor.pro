@@ -15,6 +15,8 @@ include(./ThirdParty/QHexView/QHexView.pri)
 
 RC_ICONS = images/icon.ico
 
+RESOURCES += WL4Editor.qrc
+
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -47,6 +49,7 @@ SOURCES += \
     Dialog/GraphicManagerDialog.cpp \
     Dialog/SelectColorDialog.cpp \
     Dialog/SelectColorDialog_PaletteBar.cpp \
+    Dialog/SoundManagerDialog.cpp \
     Dialog/SpritesEditorDialog.cpp \
     Dialog/SpritesEditorDialog_PaletteGraphicView.cpp \
     Dialog/SpritesEditorDialog_SpriteTileMapGraphicView.cpp \
@@ -61,6 +64,20 @@ SOURCES += \
     LevelComponents/LevelDoorVector.cpp \
     PCG/Graphics/TileUtils.cpp \
     ScriptInterface.cpp \
+    Sound/SoundDatabase.cpp \
+    Sound/SoundEnvelope.cpp \
+    Sound/SoundExport.cpp \
+    Sound/SoundFontReader.cpp \
+    Sound/SoundFontWriter.cpp \
+    Sound/SoundImporter.cpp \
+    Sound/SoundMidiExporter.cpp \
+    Sound/SoundParser.cpp \
+    Sound/SoundPsgIO.cpp \
+    Sound/SoundSAssembler.cpp \
+    Sound/SoundSExporter.cpp \
+    Sound/SoundSave.cpp \
+    Sound/SoundTypes.cpp \
+    Sound/SoundWavIO.cpp \
     main.cpp \
     WL4EditorWindow.cpp \
     LevelComponents/Level.cpp \
@@ -105,6 +122,7 @@ HEADERS += \
     Dialog/GraphicManagerDialog.h \
     Dialog/SelectColorDialog.h \
     Dialog/SelectColorDialog_PaletteBar.h \
+    Dialog/SoundManagerDialog.h \
     Dialog/SpritesEditorDialog.h \
     Dialog/SpritesEditorDialog_PaletteGraphicView.h \
     Dialog/SpritesEditorDialog_SpriteTileMapGraphicView.h \
@@ -120,6 +138,20 @@ HEADERS += \
     LevelComponents/LevelDoorVector.h \
     PCG/Graphics/TileUtils.h \
     ScriptInterface.h \
+    Sound/SoundDatabase.h \
+    Sound/SoundEnvelope.h \
+    Sound/SoundExport.h \
+    Sound/SoundFontReader.h \
+    Sound/SoundFontWriter.h \
+    Sound/SoundImporter.h \
+    Sound/SoundMidiExporter.h \
+    Sound/SoundParser.h \
+    Sound/SoundPsgIO.h \
+    Sound/SoundSAssembler.h \
+    Sound/SoundSExporter.h \
+    Sound/SoundSave.h \
+    Sound/SoundTypes.h \
+    Sound/SoundWavIO.h \
     WL4EditorWindow.h \
     LevelComponents/Level.h \
     LevelComponents/Room.h \
@@ -163,6 +195,7 @@ FORMS += \
     Dialog/ChunkManagerDialog.ui \
     Dialog/GraphicManagerDialog.ui \
     Dialog/SelectColorDialog.ui \
+    Dialog/SoundManagerDialog.ui \
     Dialog/SpritesEditorDialog.ui \
     Dialog/WallPaintEditorDialog.ui \
     DockWidget/OutputDockWidget.ui \

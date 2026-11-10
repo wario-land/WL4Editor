@@ -19,6 +19,14 @@
 
 extern WL4EditorWindow *singleton;
 
+// SaveFile can run headlessly (CLI export/save checks), where the main
+// window and its output dock do not exist.
+#define PRINT_STRING_SAFE(text) \
+    do { \
+        if (singleton && singleton->GetOutputWidgetPtr()) \
+            singleton->GetOutputWidgetPtr()->PrintString(text); \
+    } while (0)
+
 // Helper function to find the number of characters matched in ptr to a pattern
 static inline int StrMatch(unsigned char *ptr, const char *pattern)
 {
@@ -85,6 +93,9 @@ namespace ROMUtils
         "AssortedGraphicmappingChunkType",
         "AssortedGraphicPaletteChunkType",
         "AnimatedTileGroupTile8x8DataChunkType",
+        "SoundBankChunk",
+        "SoundSongChunk",
+        "SoundSampleChunk",
     };
 
     bool ChunkTypeAlignment[CHUNK_TYPE_COUNT] = {
@@ -111,6 +122,9 @@ namespace ROMUtils
         false, // AssortedGraphicmappingChunkType       = '\x14',
         true,  // AssortedGraphicPaletteChunkType       = '\x15',
         true,  // AnimatedTileGroupTile8x8DataChunkType = '\x16',
+        true,  // SoundBankChunk                        = '\x17',
+        true,  // SoundSongChunk                        = '\x18',
+        true,  // SoundSampleChunk                      = '\x19',
     };
 
     void StaticInitialization()
@@ -156,14 +170,14 @@ namespace ROMUtils
         unsigned int ret = IntFromData(address) & 0x7FFFFFF;
         if (ret > WL4Constants::AvailableSpaceBeginningInROM && !ValidRATS(ROMFileMetadata->ROMDataPtr + ret - 12))
         {
-            singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal or corruption error: Load data from a broken chunk!\n  "
+            PRINT_STRING_SAFE(QT_TR_NOOP("Internal or corruption error: Load data from a broken chunk!\n  "
                                                                     "Data Address:" + QString::number(ret, 16) + "\n"
                                                                     "Chunk Address:" + QString::number(ret - 12, 16) + "\n"));
             // we can provide no more information of the chunk here since the chunk header is broken
         }
         if(ret >= ROMFileMetadata->Length)
         {
-            singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size"));
+            PRINT_STRING_SAFE(QT_TR_NOOP("Internal or corruption error: Attempted to read a pointer which is larger than the ROM's file size"));
         }
         return ret;
     }
@@ -335,7 +349,7 @@ skip_append_output_2:
         // check if address is an odd number
         if (address & 1)
         {
-            singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Error in ROMUtils::UnPackScreen(int address): input parameter 'address' should be an odd number."));
+            PRINT_STRING_SAFE(QT_TR_NOOP("Error in ROMUtils::UnPackScreen(int address): input parameter 'address' should be an odd number."));
             return dst;
         }
         v2 = src = (unsigned short *)(ROMFileMetadata->ROMDataPtr + address);
@@ -872,7 +886,7 @@ skip_append_output_2:
             // Sanity check
             if(invalidationChunk > ROMFileMetadata->Length)
             {
-                singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk out of range of entire ROM. Address: %1"))
+                PRINT_STRING_SAFE(QString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk out of range of entire ROM. Address: %1"))
                         .arg("0x" + QString::number(invalidationChunk - 12, 16).toUpper()));
             }
 
@@ -886,7 +900,7 @@ skip_append_output_2:
                 }
                 else
                 {
-                    singleton->GetOutputWidgetPtr()->PrintString(QString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk references an invalid RATS identifier for existing chunk. Address: %1. Changes not saved."))
+                    PRINT_STRING_SAFE(QString(QT_TR_NOOP("Internal error while saving changes to ROM: Invalidation chunk references an invalid RATS identifier for existing chunk. Address: %1. Changes not saved."))
                         .arg("0x" + QString::number(invalidationChunk - 12, 16).toUpper()));
                     return false;
                 }
@@ -1021,13 +1035,16 @@ allocationComplete:
             switch(chunk.ChunkType)
             {
             case SaveDataChunkType::InvalidationChunk:
-                singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal error: Chunk allocator created an invalidation chunk"));
+                PRINT_STRING_SAFE(QT_TR_NOOP("Internal error: Chunk allocator created an invalidation chunk"));
             case SaveDataChunkType::PatchListChunk:
             case SaveDataChunkType::PatchChunk:
             case SaveDataChunkType::AssortedGraphicListChunkType:
             case SaveDataChunkType::AssortedGraphicPaletteChunkType:
             case SaveDataChunkType::AssortedGraphicmappingChunkType:
             case SaveDataChunkType::AssortedGraphicTile8x8DataChunkType:
+            case SaveDataChunkType::SoundBankChunk:
+            case SaveDataChunkType::SoundSongChunk:
+            case SaveDataChunkType::SoundSampleChunk:
                 continue; // the above chunk types are not associated with a modified pointer in main ROM
             default:;
             }
@@ -1079,7 +1096,18 @@ allocationComplete:
             }
             else
             {
-                singleton->GetOutputWidgetPtr()->PrintString(QT_TR_NOOP("Internal error: Write chunk into an occupied chunk"));
+                PRINT_STRING_SAFE(QT_TR_NOOP("Internal error: Write chunk into an occupied chunk"));
+                goto error;
+            }
+        }
+
+        // Perform post-processing before saving the file
+        if(PostProcessingCallback)
+        {
+            QString ret(PostProcessingCallback(TempFile, indexToChunkPtr));
+            if(ret != "")
+            {
+                success = false;
                 goto error;
             }
         }
@@ -1094,13 +1122,19 @@ allocationComplete:
 
             if (orphanCount > 0 || dupRefCount > 0)
             {
-                singleton->GetOutputWidgetPtr()->PrintString(
+                PRINT_STRING_SAFE(
                     QString("Save: %1 orphaned chunk(s), %2 duplicate reference(s) in output data.")
                         .arg(orphanCount).arg(dupRefCount));
             }
 
             if (seriousCount > 0)
             {
+                if (!singleton)
+                {
+                    PRINT_STRING_SAFE(QT_TR_NOOP("Save aborted: serious chunk issues found in headless mode."));
+                    goto error;
+                }
+
                 // Temporarily switch CurrentROMMetadata to TempFile so CM Dialog
                 // works on the would-be-saved data
                 unsigned char *savedROMData = CurrentROMMetadata.ROMDataPtr;
@@ -1119,24 +1153,13 @@ allocationComplete:
                 if (result == QDialog::Rejected)
                 {
                     // User chose Abort
-                    singleton->GetOutputWidgetPtr()->PrintString(
+                    PRINT_STRING_SAFE(
                         QT_TR_NOOP("Save aborted by user due to chunk issues."));
                     goto error;
                 }
                 // User chose Unsafe Save — continue with save
-                singleton->GetOutputWidgetPtr()->PrintString(
+                PRINT_STRING_SAFE(
                     QT_TR_NOOP("Proceeding with save despite chunk issues (user elected Unsafe Save)."));
-            }
-        }
-
-        // Perform post-processing before saving the file
-        if(PostProcessingCallback)
-        {
-            QString ret(PostProcessingCallback(TempFile, indexToChunkPtr));
-            if(ret != "")
-            {
-                success = false;
-                goto error;
             }
         }
 
@@ -1156,11 +1179,11 @@ allocationComplete:
                         QDir dir;
                         if (!dir.exists(dirstr))
                         {
-                            singleton->GetOutputWidgetPtr()->PrintString("auto_backups folder does not exist, try to mkdir.");
+                            PRINT_STRING_SAFE("auto_backups folder does not exist, try to mkdir.");
                             dir.setPath(QFileInfo(filePath).dir().path());
                             if (dir.mkdir("auto_backups"))
                             {
-                                singleton->GetOutputWidgetPtr()->PrintString("mkdir success!");
+                                PRINT_STRING_SAFE("mkdir success!");
                             }
                         }
 
@@ -1182,7 +1205,7 @@ allocationComplete:
                                     if (count >= maxTmpFileNum)
                                     {
                                         QString delete_file_path = fileInfoList[matchedfileId[count - maxTmpFileNum]].filePath();
-                                        singleton->GetOutputWidgetPtr()->PrintString("Remove file: " + delete_file_path);
+                                        PRINT_STRING_SAFE("Remove file: " + delete_file_path);
                                         QFile::remove(delete_file_path);
                                     }
                                 }
@@ -1203,7 +1226,7 @@ allocationComplete:
                                 QDateTime::currentDateTime().toString("yyyyMMddhhmmsszzz") +
                                 ".gba";
                         FormatPathSeperators(tmpFilePath);
-                        singleton->GetOutputWidgetPtr()->PrintString("Create backup file: " + tmpFilePath);
+                        PRINT_STRING_SAFE("Create backup file: " + tmpFilePath);
                     }
                     else
                     {
@@ -1235,7 +1258,8 @@ allocationComplete:
         }
 
         // Set that there are no changes to the ROM now (so no save prompt is given)
-        singleton->SetUnsavedChanges(false);
+        if (singleton)
+            singleton->SetUnsavedChanges(false);
 
         // Clean up heap data and return
         success = true;
@@ -1894,7 +1918,8 @@ error:      free(TempFile); // free up temporary file if there was a processing 
     /// </returns>
     bool GetChunkType(unsigned int DataAddr, SaveDataChunkType &chunkType)
     {
-        if (DataAddr > WL4Constants::AvailableSpaceBeginningInROM)
+        if (DataAddr > WL4Constants::AvailableSpaceBeginningInROM &&
+                DataAddr >= 12 && DataAddr < ROMFileMetadata->Length)
         {
             if (ValidRATS(ROMFileMetadata->ROMDataPtr + DataAddr - 12))
             {

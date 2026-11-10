@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>SoundData/WL4SoundDatabase.json</file>
+    </qresource>
+</RCC>

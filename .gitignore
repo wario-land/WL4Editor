@@ -47,7 +47,6 @@ ui_*
 *.swp
 *.autosave
 WL4Editor
-TEST/LoadROMFileTEST.cpp
 WL4Editor.pro.user*
 .DS_Store
 

@@ -4,6 +4,9 @@
 #include "WL4Constants.h"
 #include "LevelComponents/AnimatedTile8x8Group.h"
 #include "LevelComponents/Room.h"
+#include "Sound/SoundTypes.h"
+
+#include <QSet>
 
 #include <cstring>
 #include <algorithm>
@@ -611,6 +614,177 @@ static void AddAnimatedTileGroupReferences(
     }
 }
 
+static void AddSoundReferences(
+    QMap<unsigned int, ChunkUtils::ChunkReference> &refs,
+    QVector<ChunkUtils::RawPointerEntry> *rawPointers)
+{
+    using namespace ROMUtils;
+
+    for (int i = 0; i < WL4Constants::SongCount; ++i)
+    {
+        const unsigned int entryAddr = WL4Constants::SongTable + i * 8;
+        const unsigned int songPtr = ROMUtils::PointerFromData(entryAddr);
+        if (songPtr < 12 || songPtr + 8 > ROMFileMetadata->Length)
+            continue;
+
+        SaveDataChunkType type;
+        const bool customSong = GetChunkType(songPtr, type) && type == SoundSongChunk;
+        unsigned int parentChunk = 0;
+        if (customSong)
+        {
+            parentChunk = songPtr - 12;
+            ChunkReference ref;
+            ref.ChunkType = SoundSongChunk;
+            ref.ChunkAddress = parentChunk;
+            ref.SourceDescription = QString("Song %1").arg(i);
+            ref.ReferenceCount++;
+            refs[parentChunk] = ref;
+            if (rawPointers)
+                rawPointers->append(RawPointerEntry{entryAddr, songPtr, SoundSongChunk});
+        }
+
+        const unsigned int bankPtr = ROMUtils::PointerFromData(songPtr + 4);
+        if (bankPtr < WL4Constants::AvailableSpaceBeginningInROM)
+            continue;
+        SaveDataChunkType bankType;
+        if (!GetChunkType(bankPtr, bankType) || bankType != SoundBankChunk)
+            continue;
+
+        const unsigned int bankChunkAddr = bankPtr - 12;
+        ChunkReference bankRef;
+        bankRef.ChunkType = SoundBankChunk;
+        bankRef.ChunkAddress = bankChunkAddr;
+        bankRef.ParentChunkAddress = parentChunk;
+        bankRef.SourceDescription = QString("Song %1 — Bank").arg(i);
+        bankRef.ReferenceCount++;
+        refs[bankChunkAddr] = bankRef;
+        if (customSong)
+            refs[parentChunk].ChildrenChunkLocalOffset.append(4);
+        if (rawPointers)
+            rawPointers->append(RawPointerEntry{songPtr + 4, bankPtr, SoundBankChunk});
+    }
+}
+
+static void AddSoundSampleReferences(
+    QMap<unsigned int, ChunkUtils::ChunkReference> &refs,
+    QVector<ChunkUtils::RawPointerEntry> *rawPointers)
+{
+    using namespace ROMUtils;
+
+    auto addSamplePointer = [&](unsigned int pointerAddress, int bankId, int programIndex)
+    {
+        if (pointerAddress + 4 > ROMFileMetadata->Length)
+            return;
+        const unsigned int pointer = ROMUtils::PointerFromData(pointerAddress);
+        if (pointer < WL4Constants::AvailableSpaceBeginningInROM)
+            return;
+        SaveDataChunkType type;
+        if (!GetChunkType(pointer, type) || type != SoundSampleChunk)
+            return;
+
+        const unsigned int chunkAddr = pointer - 12;
+        ChunkReference ref;
+        ref.ChunkType = SoundSampleChunk;
+        ref.ChunkAddress = chunkAddr;
+        ref.SourceDescription = QString("Bank %1 Program %2 Sample").arg(bankId).arg(programIndex);
+        ref.ReferenceCount++;
+        refs[chunkAddr] = ref;
+        if (rawPointers)
+            rawPointers->append(RawPointerEntry{pointerAddress, pointer, SoundSampleChunk});
+    };
+
+    auto parseBank = [&](unsigned int base, int bankId, unsigned int bankSize)
+    {
+        if (!base || bankSize < 12)
+            return;
+        const unsigned int bankEnd = base + bankSize;
+        for (int programIndex = 0; programIndex < 128; ++programIndex)
+        {
+            const unsigned int entry = base + static_cast<unsigned int>(programIndex) * 12;
+            if (entry + 12 > bankEnd || entry + 12 > ROMFileMetadata->Length)
+                break;
+            const unsigned char type = ROMFileMetadata->ROMDataPtr[entry];
+            if (type == static_cast<unsigned char>(Sound::VoiceType::Sample) ||
+                    type == static_cast<unsigned char>(Sound::VoiceType::SampleFixed))
+            {
+                addSamplePointer(entry + 4, bankId, programIndex);
+            }
+            else if (type == static_cast<unsigned char>(Sound::VoiceType::KeySplit))
+            {
+                const unsigned int subBase = ROMUtils::PointerFromData(entry + 4);
+                const unsigned int table = ROMUtils::PointerFromData(entry + 8);
+                if (table < 12 || table + 128 > ROMFileMetadata->Length)
+                    continue;
+                for (int key = 0; key < 128; ++key)
+                {
+                    const unsigned char subIndex = ROMFileMetadata->ROMDataPtr[table + key];
+                    const unsigned int sub = subBase + static_cast<unsigned int>(subIndex) * 12;
+                    if (sub + 12 <= bankEnd && sub + 12 <= ROMFileMetadata->Length)
+                        addSamplePointer(sub + 4, bankId, programIndex);
+                }
+            }
+            else if (type == static_cast<unsigned char>(Sound::VoiceType::DrumKit))
+            {
+                const unsigned int subBase = ROMUtils::PointerFromData(entry + 4);
+                for (int key = 0; key < 128; ++key)
+                {
+                    const unsigned int sub = subBase + static_cast<unsigned int>(key) * 12;
+                    if (sub + 12 <= bankEnd && sub + 12 <= ROMFileMetadata->Length)
+                        addSamplePointer(sub + 4, bankId, programIndex);
+                }
+            }
+        }
+    };
+
+    for (int bankId = 0; bankId < WL4Constants::SoundBankCount; ++bankId)
+    {
+        const unsigned int base = WL4Constants::SoundBankBase[bankId];
+        if (!base)
+            continue;
+        unsigned int end = WL4Constants::SampleRegionStart;
+        for (int other = 0; other < WL4Constants::SoundBankCount; ++other)
+        {
+            const unsigned int candidate = WL4Constants::SoundBankBase[other];
+            if (candidate > base && candidate < end)
+                end = candidate;
+        }
+        parseBank(base, bankId, end - base);
+    }
+
+    QSet<unsigned int> customBanks;
+    for (int i = 0; i < WL4Constants::SongCount; ++i)
+    {
+        const unsigned int songPtr = ROMUtils::PointerFromData(
+                    WL4Constants::SongTable + static_cast<unsigned int>(i) * 8);
+        if (songPtr < 12 || songPtr + 8 > ROMFileMetadata->Length)
+            continue;
+        const unsigned int bankPtr = ROMUtils::PointerFromData(songPtr + 4);
+        SaveDataChunkType bankType;
+        if (bankPtr >= WL4Constants::AvailableSpaceBeginningInROM &&
+                GetChunkType(bankPtr, bankType) && bankType == SoundBankChunk)
+        {
+            customBanks.insert(bankPtr);
+        }
+    }
+
+    for (unsigned int bankData : customBanks)
+    {
+        if (bankData < 12 || bankData > ROMFileMetadata->Length)
+            continue;
+        const unsigned int chunkLen = GetChunkDataLength(bankData - 12);
+        if (chunkLen <= 8 || bankData + chunkLen > ROMFileMetadata->Length)
+            continue;
+        const unsigned int bankSize = chunkLen - 8;
+        const unsigned int trailer = bankData + bankSize;
+        if (trailer + 8 > ROMFileMetadata->Length ||
+                std::memcmp(ROMFileMetadata->ROMDataPtr + trailer, "W4BK", 4) != 0)
+        {
+            continue;
+        }
+        parseBank(bankData, ROMFileMetadata->ROMDataPtr[trailer + 4], bankSize);
+    }
+}
+
 // ============================================================================
 //  GetAllChunkReferences
 // ============================================================================
@@ -629,6 +803,8 @@ QMap<unsigned int, ChunkReference> GetAllChunkReferences(
     AddLevelReferences(refs, rawPointersOut);
     AddAssortedGraphicReferences(refs, rawPointersOut);
     AddAnimatedTileGroupReferences(refs, rawPointersOut);
+    AddSoundReferences(refs, rawPointersOut);
+    AddSoundSampleReferences(refs, rawPointersOut);
 
     // Post-process: remove vanilla ROM references, validate headers
     for (auto key : refs.keys())

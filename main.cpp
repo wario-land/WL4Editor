@@ -7,8 +7,10 @@
 #include "Dialog/SpritesEditorDialog.h"
 #include "WL4EditorWindow.h"
 #include "SettingsUtils.h"
+#include "ROMUtils.h"
 
 #include <QApplication>
+#include <QFile>
 
 /// <summary>
 /// Perform all static class initializations.
@@ -44,30 +46,11 @@ int main(int argc, char *argv[])
 
     QApplication application(argc, argv);
     SettingsUtils::InitProgramSetupPath(application);
+
     application.setWindowIcon(QIcon("./images/icon.ico"));
     WL4EditorWindow window;
     window.show();
 
-    // Quickly test or debug by automatically loading the ROM without UI used by GSB
-    // comment by ssp: a real man will never use this code (doge)
-    //-------------------------------------------------------------------
-//#ifdef _WIN32 // Windows
-//    QString restoreFilePath = "C:\\Users\\Andrew\\Desktop\\WL4 PW 2.gba";
-//    QString filePath = "C:\\Users\\Andrew\\Desktop\\WL4 PW.gba";
-//#else // Linux
-//    QString restoreFilePath = "/home/andrew/Desktop/WL4 2.gba";
-//    QString filePath = "/home/andrew/Desktop/WL4.gba";
-//#endif
-//    QFile restoreFile(restoreFilePath);
-//    QFile testFile(filePath);
-//    testFile.remove();
-//    restoreFile.copy(filePath);
-//    if(testFile.exists())
-//    {
-//        window.LoadROMDataFromFile(filePath);
-//    }
-//    testFile.close();
-    //-------------------------------------------------------------------
 
     // load the ROM file from argv if exists
     if (argc > 1)

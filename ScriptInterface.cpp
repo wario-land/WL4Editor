@@ -4,6 +4,10 @@
 #include "Operation.h"
 #include "ROMUtils.h"
 #include "WallPaintUtils.h"
+#include "Sound/SoundExport.h"
+#include "Sound/SoundImporter.h"
+#include "Sound/SoundParser.h"
+#include "Sound/SoundSave.h"
 
 #ifndef WINDOW_INSTANCE_SINGLETON
 #define WINDOW_INSTANCE_SINGLETON
@@ -859,6 +863,65 @@ void ScriptInterface::ShowSaveDataAnalysis()
 // ------------------------------ Export/Import APIs ----------------------------------------
 
 // ---- Room Export Getters ----
+
+QString ScriptInterface::ExportSoundProject(QString folder)
+{
+    if (!ROMUtils::ROMFileMetadata->ROMDataPtr)
+        return QStringLiteral("No ROM is loaded.");
+    if (folder.isEmpty())
+        folder = Sound::SoundExport::defaultFolder(ROMUtils::ROMFileMetadata->FilePath);
+
+    const Sound::ParseResult data = Sound::SoundParser::parse(
+                ROMUtils::ROMFileMetadata->ROMDataPtr, ROMUtils::ROMFileMetadata->Length);
+    if (!data.error.isEmpty())
+        return data.error;
+
+    const QString error = Sound::SoundExport::exportAll(
+                data, ROMUtils::ROMFileMetadata->ROMDataPtr,
+                ROMUtils::ROMFileMetadata->Length, folder);
+    return error.isEmpty() ? folder : error;
+}
+
+QString ScriptInterface::ImportSoundProject(QString folder, bool saveToROM)
+{
+    if (!ROMUtils::ROMFileMetadata->ROMDataPtr)
+        return QStringLiteral("No ROM is loaded.");
+    if (folder.isEmpty())
+        folder = Sound::SoundExport::defaultFolder(ROMUtils::ROMFileMetadata->FilePath);
+
+    Sound::ParseResult data = Sound::SoundParser::parse(
+                ROMUtils::ROMFileMetadata->ROMDataPtr, ROMUtils::ROMFileMetadata->Length);
+    if (!data.error.isEmpty())
+        return data.error;
+
+    const Sound::ImportResult imported = Sound::SoundImporter::importAll(
+                folder, data, ROMUtils::ROMFileMetadata->ROMDataPtr,
+                ROMUtils::ROMFileMetadata->Length);
+    if (!imported.error.isEmpty())
+        return imported.error;
+    if (imported.changedSongIds.isEmpty() && imported.changedSampleIds.isEmpty() &&
+            imported.changedProgramCount == 0)
+    {
+        return QStringLiteral("No changes.");
+    }
+    if (!saveToROM)
+    {
+        return QStringLiteral("Staged %1 song(s), %2 sample(s), %3 program(s).")
+                .arg(imported.changedSongIds.size())
+                .arg(imported.changedSampleIds.size())
+                .arg(imported.changedProgramCount);
+    }
+
+    const QString saveError = Sound::SoundSave::saveToROM(data, folder);
+    if (!saveError.isEmpty())
+        return saveError;
+
+    singleton->LoadROMDataFromFile(ROMUtils::ROMFileMetadata->FilePath);
+    return QStringLiteral("Imported %1 song(s), %2 sample(s), %3 program(s).")
+            .arg(imported.changedSongIds.size())
+            .arg(imported.changedSampleIds.size())
+            .arg(imported.changedProgramCount);
+}
 
 int ScriptInterface::ExportGetLayerDataPtr(int layerId)
 {

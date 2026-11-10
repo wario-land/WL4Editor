@@ -296,6 +296,7 @@
     <addaction name="actionPatch_Manager"/>
     <addaction name="actionGraphic_Manager"/>
     <addaction name="actionChunk_Manager"/>
+    <addaction name="actionSound_Manager"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -677,6 +678,14 @@
    </property>
    <property name="text">
     <string>Chunk Manager</string>
+   </property>
+  </action>
+  <action name="actionSound_Manager">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Sound Manager</string>
    </property>
   </action>
  </widget>

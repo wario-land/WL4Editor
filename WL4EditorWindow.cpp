@@ -12,6 +12,7 @@
 #include "Dialog/PatchManagerDialog.h"
 #include "Dialog/GraphicManagerDialog.h"
 #include "Dialog/ChunkManagerDialog.h"
+#include "Dialog/SoundManagerDialog.h"
 #include "Dialog/AnimatedTileGroupEditorDialog.h"
 #include "Dialog/WallPaintEditorDialog.h"
 #include "ui_WL4EditorWindow.h"
@@ -577,6 +578,7 @@ void WL4EditorWindow::UIStartUp()
         ui->actionPatch_Manager->setEnabled(true);
         ui->actionGraphic_Manager->setEnabled(true);
         ui->actionChunk_Manager->setEnabled(true);
+        ui->actionSound_Manager->setEnabled(true);
         ui->actionEdit_Entity_EntitySet->setEnabled(true);
         ui->actionRun_from_file->setEnabled(true);
         ui->menuRecent_Script->setEnabled(true);
@@ -3079,6 +3081,32 @@ void WL4EditorWindow::on_actionChunk_Manager_triggered()
     {
         LoadROMDataFromFile(ROMUtils::ROMFileMetadata->FilePath);
         OutputWidget->PrintString("ROM reloaded after Chunk Manager changes.");
+    }
+}
+
+/// <summary>
+/// Open the Sound Manager. The manager is read-only in the first phase, so
+/// there is no ROM reload after the dialog closes yet.
+/// </summary>
+void WL4EditorWindow::on_actionSound_Manager_triggered()
+{
+    if (!ROMUtils::ROMFileMetadata->ROMDataPtr)
+        return;
+
+    if (UnsavedChanges)
+    {
+        if (!UnsavedChangesPrompt(tr("There are unsaved changes.\n"
+                                     "WL4Editor wants to save the Level and reload the ROM before using Sound Manager.")))
+            return;
+        LoadROMDataFromFile(ROMUtils::ROMFileMetadata->FilePath);
+    }
+
+    SoundManagerDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        // SoundSave wrote new chunks and patched the Song Table. Reload so the
+        // editor and level components see the updated ROM.
+        LoadROMDataFromFile(ROMUtils::ROMFileMetadata->FilePath);
     }
 }
 
