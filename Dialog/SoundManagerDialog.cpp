@@ -6,6 +6,7 @@
 #include "Sound/SoundParser.h"
 #include "Sound/SoundSave.h"
 #include "ROMUtils.h"
+#include "WL4EditorWindow.h"
 
 #include <QAbstractItemView>
 #include <QApplication>
@@ -30,6 +31,8 @@
 #include <QVBoxLayout>
 
 #include <functional>
+
+extern WL4EditorWindow *singleton;
 
 namespace
 {
@@ -223,9 +226,7 @@ void SoundManagerDialog::PopulateTree()
         if (song.changed)
             stateText = QStringLiteral("Changed");
 
-        QString displayName = song.name;
-        if (!song.symbol.isEmpty() && song.symbol != song.name)
-            displayName += QStringLiteral("  (") + song.symbol + QLatin1Char(')');
+        const QString displayName = song.name;
         category->appendRow(CreateEntryRow(displayName, song.id, EntryType::Song,
                                            tr("Song"), stateText));
     }
@@ -415,10 +416,40 @@ void SoundManagerDialog::ReloadModelFromROM()
 
 void SoundManagerDialog::accept()
 {
+    auto printOutput = [](const QString &text)
+    {
+        if (singleton && singleton->GetOutputWidgetPtr())
+            singleton->GetOutputWidgetPtr()->PrintString(text);
+    };
+
+    saveSummary.clear();
     if (!HasStagedChanges())
     {
+        saveSummary = tr("Sound Manager: No changes to save.");
         QDialog::accept();
         return;
+    }
+
+    int changedSongs = 0;
+    int changedSamples = 0;
+    int changedPrograms = 0;
+    for (const Sound::Song &song : soundData.songs)
+    {
+        if (song.changed)
+            ++changedSongs;
+    }
+    for (const Sound::Sample &sample : soundData.samples)
+    {
+        if (sample.changed)
+            ++changedSamples;
+    }
+    for (const Sound::Bank &bank : soundData.banks)
+    {
+        for (const Sound::Program &program : bank.programs)
+        {
+            if (program.changed)
+                ++changedPrograms;
+        }
     }
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -440,10 +471,13 @@ void SoundManagerDialog::accept()
 
     if (!error.isEmpty())
     {
+        printOutput(tr("Sound Manager: Save failed: %1").arg(error));
         QMessageBox::critical(this, tr("Save sound data"), error);
         return;
     }
 
+    saveSummary = tr("Sound Manager: Saved %1 song(s), %2 sample(s) and %3 program(s) to ROM.")
+            .arg(changedSongs).arg(changedSamples).arg(changedPrograms);
     QDialog::accept();
 }
 
@@ -496,7 +530,6 @@ void SoundManagerDialog::BuildSongDetail(const Sound::Song &song)
     QGroupBox *general = CreateGroup(tr("General"));
     AddReadOnlyRow(general, tr("ID"), QString::number(song.id));
     AddReadOnlyRow(general, tr("Name"), song.name);
-    AddReadOnlyRow(general, tr("Symbol"), song.symbol);
 
     QString stateText = tr("Vanilla");
     if (song.state == Sound::SongState::Empty)

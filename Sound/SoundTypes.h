@@ -165,7 +165,6 @@ namespace Sound
         quint32 romAddress = 0;            // ROM file offset
         QVector<quint32> trackAddresses;   // ROM file offsets
         QString name;
-        QString symbol;
         QString description;
         SongCategory category = SongCategory::Other;
         bool changed = false;

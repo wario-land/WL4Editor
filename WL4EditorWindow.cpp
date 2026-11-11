@@ -3104,9 +3104,15 @@ void WL4EditorWindow::on_actionSound_Manager_triggered()
     SoundManagerDialog dialog(this);
     if (dialog.exec() == QDialog::Accepted)
     {
+        // LoadROMDataFromFile() clears the Output dock, so capture the
+        // summary first and print it after the reload.
+        const QString summary = dialog.SaveSummary();
+
         // SoundSave wrote new chunks and patched the Song Table. Reload so the
         // editor and level components see the updated ROM.
         LoadROMDataFromFile(ROMUtils::ROMFileMetadata->FilePath);
+        if (!summary.isEmpty())
+            OutputWidget->PrintString(summary);
     }
 }
 

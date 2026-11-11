@@ -31,6 +31,10 @@ public slots:
     void accept() override;
     void reject() override;
 
+    // Summary is logged after WL4EditorWindow reloads the ROM, because the
+    // reload clears the Output dock.
+    QString SaveSummary() const { return saveSummary; }
+
 private slots:
     void on_lineEditSearch_textChanged(const QString &arg1);
     void on_checkBoxShowEmpty_checkStateChanged(const Qt::CheckState &arg1);
@@ -57,6 +61,7 @@ private:
     Sound::ParseResult soundData;
     QStandardItemModel *entryModel = nullptr;
     bool populatingTree = false;
+    QString saveSummary;
 
     void ParseSoundData();
     void PopulateTree();

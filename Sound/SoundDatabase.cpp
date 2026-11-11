@@ -82,11 +82,8 @@ namespace Sound
             const QJsonObject entry = it.value().toObject();
             SongInfo info;
             info.name = entry.value(QStringLiteral("name")).toString();
-            info.symbol = entry.value(QStringLiteral("symbol")).toString();
             info.description = entry.value(QStringLiteral("description")).toString();
             info.category = categoryFromString(entry.value(QStringLiteral("category")).toString());
-            if (info.name.isEmpty())
-                info.name = info.symbol;
             if (info.name.isEmpty())
                 info.name = QStringLiteral("Song%1").arg(id, 4, 10, QLatin1Char('0'));
             songs.insert(id, info);
@@ -141,14 +138,6 @@ namespace Sound
         const auto it = songs.constFind(id);
         if (it != songs.constEnd() && !it->name.isEmpty())
             return it->name;
-        return fallback;
-    }
-
-    QString SoundDatabase::songSymbol(int id, const QString &fallback) const
-    {
-        const auto it = songs.constFind(id);
-        if (it != songs.constEnd() && !it->symbol.isEmpty())
-            return it->symbol;
         return fallback;
     }
 

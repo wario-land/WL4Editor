@@ -108,9 +108,15 @@ namespace Sound
 
         QString script;
         {
+            // Assembly labels and .word track pointers must be GBA pointers,
+            // not file offsets. The chunk data is copied back at dataAddress,
+            // but the values inside the song header still need the 0x08000000
+            // address space.
+            constexpr quint32 RomBase = 0x08000000;
             QTextStream out(&script);
             out << "SECTIONS\n{\n";
-            out << "    .text 0x" << QString::number(dataAddress, 16) << " : { *(.text) }\n";
+            out << "    .text 0x" << QString::number(dataAddress + RomBase, 16)
+                << " : { *(.text) }\n";
             out << "    .rodata : { *(.rodata) }\n";
             out << "    .data : { *(.data) }\n";
             out << "}\n";

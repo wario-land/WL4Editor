@@ -210,24 +210,9 @@ namespace Sound
                 }
             }
 
-            SongCategory categoryForSong(int id, const QString &symbol) const
+            SongCategory categoryForSong(int id) const
             {
-                const SongCategory dbCategory = SoundDatabase::instance().songCategory(id);
-                if (dbCategory != SongCategory::Other)
-                    return dbCategory;
-
-                const QString upper = symbol.toUpper();
-                if (upper.startsWith(QStringLiteral("S_V")) || upper.startsWith(QStringLiteral("V_")))
-                    return SongCategory::Voice;
-                if (upper.startsWith(QStringLiteral("S_")))
-                    return SongCategory::Sfx;
-                if (upper.startsWith(QStringLiteral("M_ENDING")))
-                    return SongCategory::Ending;
-                if (upper.startsWith(QStringLiteral("M_BGM")) || upper.startsWith(QStringLiteral("M_")))
-                    return SongCategory::Bgm;
-                if (upper.startsWith(QStringLiteral("F_")))
-                    return SongCategory::Fanfare;
-                return SongCategory::Other;
+                return SoundDatabase::instance().songCategory(id);
             }
 
             bool isUnused(const quint8 *raw) const
@@ -273,9 +258,8 @@ namespace Sound
 
                     const QString fallbackName = QStringLiteral("Song%1").arg(id, 4, 10, QLatin1Char('0'));
                     song.name = SoundDatabase::instance().songName(id, fallbackName);
-                    song.symbol = SoundDatabase::instance().songSymbol(id, fallbackName);
                     song.description = SoundDatabase::instance().songDescription(id);
-                    song.category = categoryForSong(id, song.symbol);
+                    song.category = categoryForSong(id);
 
                     const quint32 header = pointerToOffset(readU32(entry));
                     song.romAddress = header;
