@@ -23,9 +23,7 @@ namespace WL4Constants
     const unsigned int AnimatedTileSwitchInfoTable   = 0x3F8C18;
     const unsigned int AnimatedTileHeaderTable       = 0x3F7828; // 270 slots, i.e. 0x10E slots
 
-    // Sound data (vanilla US ROM, game code AWAE). All values are ROM file
-    // offsets, like the other tables in this header; the GBA 0x08000000 base is
-    // only applied to pointers read from the ROM.
+    // Sound data offsets and consts.
     const unsigned int SongTable                   = 0x98028;
     const unsigned int PlayerTable                 = 0x97FC8;
     const unsigned int VoicePoolStart              = 0x956E4;

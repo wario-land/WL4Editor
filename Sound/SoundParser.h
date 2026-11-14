@@ -5,15 +5,16 @@
 
 namespace Sound
 {
-    // Read-only parser for the vanilla US (AWAE) Wario Land 4 sound data.
+    // Read-only parser for the supported Wario Land 4 sound data.
     //
     // The layout is fixed and lives in WL4Constants.h; this parser never scans
     // for tables or guesses addresses. Unsupported ROMs return an error instead
-    // of producing a partially valid model.
+    // of producing a partially valid model. ROM identity/version validation is
+    // handled by FileIOUtils::LoadROMFile() before this parser is called.
     class SoundParser
     {
     public:
-        static Layout retailUSLayout();
+        static Layout vanillaLayout();
         static ParseResult parse(const unsigned char *rom, quint32 romSize);
     };
 } // namespace Sound

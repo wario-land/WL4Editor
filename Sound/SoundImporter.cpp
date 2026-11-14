@@ -124,7 +124,7 @@ namespace Sound
         {
             // Other managers can modify the ROM after the sound project was
             // exported. The sound table layout is still assumed to be the
-            // vanilla US layout, so warn instead of blocking the import.
+            // supported layout, so warn instead of blocking the import.
             result.warnings.append(QStringLiteral(
                         "The ROM SHA-1 differs from the sound project export "
                         "(manifest %1, current %2). The fixed sound table layout is assumed unchanged.")

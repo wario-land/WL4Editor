@@ -62,17 +62,11 @@ namespace Sound
                     result.error = QStringLiteral("The ROM is too small to contain WL4 sound data.");
                     return result;
                 }
-                if (std::memcmp(rom + 0xAC, "AWAE", 4) != 0)
-                {
-                    result.error = QStringLiteral("Unsupported sound layout: expected the US version (game code AWAE).");
-                    return result;
-                }
-
                 const quint32 songTable = WL4Constants::SongTable;
                 if (!inRom(songTable, 8) ||
                         !inRom(pointerToOffset(readU32(songTable)), 8))
                 {
-                    result.error = QStringLiteral("The sound tables do not match the known US layout.");
+                    result.error = QStringLiteral("The sound tables do not match the supported layout.");
                     return result;
                 }
 
@@ -618,7 +612,7 @@ namespace Sound
         };
     } // namespace
 
-    Layout SoundParser::retailUSLayout()
+    Layout SoundParser::vanillaLayout()
     {
         Layout layout;
         layout.songTable = WL4Constants::SongTable;

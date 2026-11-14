@@ -245,8 +245,6 @@ namespace Sound
             progress(current, total);
 
         QJsonObject romObject;
-        romObject.insert(QStringLiteral("gameCode"),
-                         QString::fromLatin1(reinterpret_cast<const char *>(rom + 0xAC), 4));
         romObject.insert(QStringLiteral("sha1"),
                          QString::fromLatin1(QCryptographicHash::hash(
                                                  QByteArray(reinterpret_cast<const char *>(rom),
