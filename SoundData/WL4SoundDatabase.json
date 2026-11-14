@@ -3,2640 +3,1981 @@
  "gameCode": "AWAE",
  "songs": {
   "1": {
-   "name": "SoundWarioWalk",
-   "category": "SFX"
+   "name": "SoundWarioWalk"
   },
   "2": {
-   "name": "SoundWarioWalkDown",
-   "category": "SFX"
+   "name": "SoundWarioWalkDown"
   },
   "3": {
-   "name": "SoundWarioWalkFat",
-   "category": "SFX"
+   "name": "SoundWarioWalkFat"
   },
   "4": {
-   "name": "SoundWarioWalkZonbi",
-   "category": "SFX"
+   "name": "SoundWarioWalkZonbi"
   },
   "5": {
-   "name": "SoundWarioLadder",
-   "category": "SFX"
+   "name": "SoundWarioLadder"
   },
   "6": {
-   "name": "SoundWarioLadderFalldown",
-   "category": "SFX"
+   "name": "SoundWarioLadderFalldown"
   },
   "7": {
-   "name": "SoundWarioSquat",
-   "category": "SFX"
+   "name": "SoundWarioSquat"
   },
   "8": {
-   "name": "SoundWarioTurn",
-   "category": "SFX"
+   "name": "SoundWarioTurn"
   },
   "9": {
-   "name": "SoundWarioSlide",
-   "category": "SFX"
+   "name": "SoundWarioSlide"
   },
   "10": {
-   "name": "SoundWarioSlideDown",
-   "category": "SFX"
+   "name": "SoundWarioSlideDown"
   },
   "11": {
-   "name": "SoundWarioSlideIce",
-   "category": "SFX"
+   "name": "SoundWarioSlideIce"
   },
   "12": {
-   "name": "SoundWarioLand",
-   "category": "SFX"
+   "name": "SoundWarioLand"
   },
   "13": {
-   "name": "SoundWarioJump1",
-   "category": "SFX"
+   "name": "SoundWarioJump1"
   },
   "14": {
-   "name": "SoundWarioWaterIn",
-   "category": "SFX"
+   "name": "SoundWarioWaterIn"
   },
   "15": {
-   "name": "SoundWarioWaterOut",
-   "category": "SFX"
+   "name": "SoundWarioWaterOut"
   },
   "16": {
-   "name": "SoundWarioSwimA",
-   "category": "SFX"
+   "name": "SoundWarioSwimA"
   },
   "17": {
-   "name": "SoundWarioSwimStand",
-   "category": "SFX"
+   "name": "SoundWarioSwimStand"
   },
   "18": {
-   "name": "SoundWarioWaterDrown",
-   "category": "SFX"
+   "name": "SoundWarioWaterDrown"
   },
   "19": {
-   "name": "SoundWarioDamage1",
-   "category": "SFX"
+   "name": "SoundWarioDamage1"
   },
   "20": {
-   "name": "SoundWarioPipeIn",
-   "category": "SFX"
+   "name": "SoundWarioPipeIn"
   },
   "21": {
-   "name": "SoundWarioPipeOut",
-   "category": "SFX"
+   "name": "SoundWarioPipeOut"
   },
   "22": {
-   "name": "SoundWarioDie",
-   "category": "SFX"
+   "name": "SoundWarioDie"
   },
   "23": {
-   "name": "SoundWarioDieBump",
-   "category": "SFX"
+   "name": "SoundWarioDieBump"
   },
   "24": {
-   "name": "SoundWarioBump",
-   "category": "SFX"
+   "name": "SoundWarioBump"
   },
   "25": {
-   "name": "SoundWarioWarp",
-   "category": "SFX"
+   "name": "SoundWarioWarp"
   },
   "26": {
-   "name": "SoundHakaseShout1",
-   "category": "SFX"
+   "name": "SoundHakaseShout1"
   },
   "27": {
-   "name": "SoundCatWalk",
-   "category": "SFX"
+   "name": "SoundCatWalk"
   },
   "30": {
-   "name": "SoundWarioBAttack",
-   "category": "SFX"
+   "name": "SoundWarioBAttack"
   },
   "31": {
-   "name": "SoundWarioBAttackStp",
-   "category": "SFX"
+   "name": "SoundWarioBAttackStp"
   },
   "32": {
-   "name": "SoundWarioBAttackStpBump",
-   "category": "SFX"
+   "name": "SoundWarioBAttackStpBump"
   },
   "33": {
-   "name": "SoundWarioHipAttackPre",
-   "category": "SFX"
+   "name": "SoundWarioHipAttackPre"
   },
   "34": {
-   "name": "SoundWarioHipAttack",
-   "category": "SFX"
+   "name": "SoundWarioHipAttack"
   },
   "35": {
-   "name": "SoundWarioHipAttackSuperpre",
-   "category": "SFX"
+   "name": "SoundWarioHipAttackSuperpre"
   },
   "36": {
-   "name": "SoundWarioHipAttackSuper",
-   "category": "SFX"
+   "name": "SoundWarioHipAttackSuper"
   },
   "37": {
-   "name": "SoundWarioThrow1",
-   "category": "SFX"
+   "name": "SoundWarioThrow1"
   },
   "38": {
-   "name": "SoundWarioThrow2",
-   "category": "SFX"
+   "name": "SoundWarioThrow2"
   },
   "39": {
-   "name": "SoundWarioThrow2Heap",
-   "category": "SFX"
+   "name": "SoundWarioThrow2Heap"
   },
   "40": {
-   "name": "SoundWarioThrow2HeapStp",
-   "category": "SFX"
+   "name": "SoundWarioThrow2HeapStp"
   },
   "41": {
-   "name": "SoundWarioDushRainbow",
-   "category": "SFX"
+   "name": "SoundWarioDushRainbow"
   },
   "42": {
-   "name": "SoundWarioDushRainbowStp",
-   "category": "SFX"
+   "name": "SoundWarioDushRainbowStp"
   },
   "43": {
-   "name": "SoundWarioDushRainbowStp2",
-   "category": "SFX"
+   "name": "SoundWarioDushRainbowStp2"
   },
   "44": {
-   "name": "SoundWarioDushRainbowStp3",
-   "category": "SFX"
+   "name": "SoundWarioDushRainbowStp3"
   },
   "45": {
-   "name": "SoundWarioAKorogari",
-   "category": "SFX"
+   "name": "SoundWarioAKorogari"
   },
   "46": {
-   "name": "SoundWarioRollStop",
-   "category": "SFX"
+   "name": "SoundWarioRollStop"
   },
   "48": {
-   "name": "SoundBossYokiLaughtV2",
-   "category": "SFX"
+   "name": "SoundBossYokiLaughtV2"
   },
   "49": {
-   "name": "SoundBossYokiFaceBreak",
-   "category": "SFX"
+   "name": "SoundBossYokiFaceBreak"
   },
   "50": {
-   "name": "SoundWarioCatch1",
-   "category": "SFX"
+   "name": "SoundWarioCatch1"
   },
   "51": {
-   "name": "SoundWarioDrop",
-   "category": "SFX"
+   "name": "SoundWarioDrop"
   },
   "52": {
-   "name": "SoundTekiPushSide",
-   "category": "SFX"
+   "name": "SoundTekiPushSide"
   },
   "53": {
-   "name": "SoundTekiPushUplow",
-   "category": "SFX"
+   "name": "SoundTekiPushUplow"
   },
   "54": {
-   "name": "SoundTekiRollFloor",
-   "category": "SFX"
+   "name": "SoundTekiRollFloor"
   },
   "55": {
-   "name": "SoundTekiRollWall",
-   "category": "SFX"
+   "name": "SoundTekiRollWall"
   },
   "56": {
-   "name": "SoundTekiDieFly",
-   "category": "SFX"
+   "name": "SoundTekiDieFly"
   },
   "57": {
-   "name": "SoundTekiDieBurst",
-   "category": "SFX"
+   "name": "SoundTekiDieBurst"
   },
   "58": {
-   "name": "SoundTekiDieStar",
-   "category": "SFX"
+   "name": "SoundTekiDieStar"
   },
   "59": {
-   "name": "SoundTekiDieOnTeki",
-   "category": "SFX"
+   "name": "SoundTekiDieOnTeki"
   },
   "60": {
-   "name": "SoundTekiDieWater",
-   "category": "SFX"
+   "name": "SoundTekiDieWater"
   },
   "61": {
-   "name": "SoundTekiWaterIn",
-   "category": "SFX"
+   "name": "SoundTekiWaterIn"
   },
   "62": {
-   "name": "SoundTekiEarthquake",
-   "category": "SFX"
+   "name": "SoundTekiEarthquake"
   },
   "63": {
-   "name": "SoundTekiChandelierQuake",
-   "category": "SFX"
+   "name": "SoundTekiChandelierQuake"
   },
   "64": {
-   "name": "SoundTekiChandelierFall",
-   "category": "SFX"
+   "name": "SoundTekiChandelierFall"
   },
   "65": {
-   "name": "SoundTekiChandelierBroken",
-   "category": "SFX"
+   "name": "SoundTekiChandelierBroken"
   },
   "66": {
-   "name": "SoundTekiGlassPulupulu",
-   "category": "SFX"
+   "name": "SoundTekiGlassPulupulu"
   },
   "67": {
-   "name": "SoundTekiGlassBroken",
-   "category": "SFX"
+   "name": "SoundTekiGlassBroken"
   },
   "70": {
-   "name": "SoundTekiLingosukiThrow",
-   "category": "SFX"
+   "name": "SoundTekiLingosukiThrow"
   },
   "71": {
-   "name": "SoundTekiShellDush",
-   "category": "SFX"
+   "name": "SoundTekiShellDush"
   },
   "72": {
-   "name": "SoundTekiGugyoDush",
-   "category": "SFX"
+   "name": "SoundTekiGugyoDush"
   },
   "73": {
-   "name": "SoundTekiTogeroboSmash",
-   "category": "SFX"
+   "name": "SoundTekiTogeroboSmash"
   },
   "74": {
-   "name": "SoundTekiTogeroboRoll",
-   "category": "SFX"
+   "name": "SoundTekiTogeroboRoll"
   },
   "75": {
-   "name": "SoundTekiTogeroboDel",
-   "category": "SFX"
+   "name": "SoundTekiTogeroboDel"
   },
   "76": {
-   "name": "SoundTekiMenonoDush",
-   "category": "SFX"
+   "name": "SoundTekiMenonoDush"
   },
   "77": {
-   "name": "SoundTekiMenonoSmash",
-   "category": "SFX"
+   "name": "SoundTekiMenonoSmash"
   },
   "78": {
-   "name": "SoundTekiMenhammerJump",
-   "category": "SFX"
+   "name": "SoundTekiMenhammerJump"
   },
   "79": {
-   "name": "SoundTekiBeeTurn",
-   "category": "SFX"
+   "name": "SoundTekiBeeTurn"
   },
   "80": {
-   "name": "SoundTekiBeeAttack",
-   "category": "SFX"
+   "name": "SoundTekiBeeAttack"
   },
   "81": {
-   "name": "SoundTekiBeePerchFlower",
-   "category": "SFX"
+   "name": "SoundTekiBeePerchFlower"
   },
   "82": {
-   "name": "SoundTekiPistonFall",
-   "category": "SFX"
+   "name": "SoundTekiPistonFall"
   },
   "83": {
-   "name": "SoundTekiPiston01",
-   "category": "SFX"
+   "name": "SoundTekiPiston01"
   },
   "84": {
-   "name": "SoundTekiFirepotFire",
-   "category": "SFX"
+   "name": "SoundTekiFirepotFire"
   },
   "85": {
-   "name": "SoundTekiSbirdVomit",
-   "category": "SFX"
+   "name": "SoundTekiSbirdVomit"
   },
   "86": {
-   "name": "SoundTekiSbirdBroken",
-   "category": "SFX"
+   "name": "SoundTekiSbirdBroken"
   },
   "87": {
-   "name": "SoundTekiTotumenDush",
-   "category": "SFX"
+   "name": "SoundTekiTotumenDush"
   },
   "88": {
-   "name": "SoundTekiTotumenBump",
-   "category": "SFX"
+   "name": "SoundTekiTotumenBump"
   },
   "89": {
-   "name": "SoundTekiTotumenBound",
-   "category": "SFX"
+   "name": "SoundTekiTotumenBound"
   },
   "90": {
-   "name": "SoundTekiBowballoonLetArrow",
-   "category": "SFX"
+   "name": "SoundTekiBowballoonLetArrow"
   },
   "91": {
-   "name": "SoundTekiSparkGenerate",
-   "category": "SFX"
+   "name": "SoundTekiSparkGenerate"
   },
   "92": {
-   "name": "SoundTekiSparkRun",
-   "category": "SFX"
+   "name": "SoundTekiSparkRun"
   },
   "93": {
-   "name": "SoundTekiGhostFly",
-   "category": "SFX"
+   "name": "SoundTekiGhostFly"
   },
   "94": {
-   "name": "SoundTekiGhostCoinGet",
-   "category": "SFX"
+   "name": "SoundTekiGhostCoinGet"
   },
   "95": {
-   "name": "SoundTekiGhostKeyGet",
-   "category": "SFX"
+   "name": "SoundTekiGhostKeyGet"
   },
   "96": {
-   "name": "SoundTekiGhostKeyLeave",
-   "category": "SFX"
+   "name": "SoundTekiGhostKeyLeave"
   },
   "97": {
-   "name": "SoundTekiGhostKeyWarning",
-   "category": "SFX"
+   "name": "SoundTekiGhostKeyWarning"
   },
   "98": {
-   "name": "SoundTekiMarumenChange",
-   "category": "SFX"
+   "name": "SoundTekiMarumenChange"
   },
   "99": {
-   "name": "SoundTekiTogeFiring",
-   "category": "SFX"
+   "name": "SoundTekiTogeFiring"
   },
   "100": {
-   "name": "SoundTekiUtuboDush",
-   "category": "SFX"
+   "name": "SoundTekiUtuboDush"
   },
   "101": {
-   "name": "SoundTekiChestnutFalldown",
-   "category": "SFX"
+   "name": "SoundTekiChestnutFalldown"
   },
   "102": {
-   "name": "SoundTekiChestnutBump",
-   "category": "SFX"
+   "name": "SoundTekiChestnutBump"
   },
   "103": {
-   "name": "SoundTekiRockmanLiftup",
-   "category": "SFX"
+   "name": "SoundTekiRockmanLiftup"
   },
   "104": {
-   "name": "SoundTekiRockmanThrow",
-   "category": "SFX"
+   "name": "SoundTekiRockmanThrow"
   },
   "105": {
-   "name": "SoundTekiKiyobutaWrite",
-   "category": "SFX"
+   "name": "SoundTekiKiyobutaWrite"
   },
   "106": {
-   "name": "SoundTekiKiyobutaNotice",
-   "category": "SFX"
+   "name": "SoundTekiKiyobutaNotice"
   },
   "107": {
-   "name": "SoundTekiKiyobutaDenden",
-   "category": "SFX"
+   "name": "SoundTekiKiyobutaDenden"
   },
   "108": {
-   "name": "SoundTekiKiyobutaButatabi",
-   "category": "SFX"
+   "name": "SoundTekiKiyobutaButatabi"
   },
   "109": {
-   "name": "SoundTekiButatabiTurn",
-   "category": "SFX"
+   "name": "SoundTekiButatabiTurn"
   },
   "110": {
-   "name": "SoundTekiDebulinaIn",
-   "category": "SFX"
+   "name": "SoundTekiDebulinaIn"
   },
   "111": {
-   "name": "SoundTekiDebulinaSpin",
-   "category": "SFX"
+   "name": "SoundTekiDebulinaSpin"
   },
   "112": {
-   "name": "SoundTekiRobobirdDush",
-   "category": "SFX"
+   "name": "SoundTekiRobobirdDush"
   },
   "113": {
-   "name": "SoundTekiMoguramenRun",
-   "category": "SFX"
+   "name": "SoundTekiMoguramenRun"
   },
   "114": {
-   "name": "SoundTekiMoguramenThrow",
-   "category": "SFX"
+   "name": "SoundTekiMoguramenThrow"
   },
   "115": {
-   "name": "SoundTekiIciclePre",
-   "category": "SFX"
+   "name": "SoundTekiIciclePre"
   },
   "116": {
-   "name": "SoundTekiIcicleFalldown",
-   "category": "SFX"
+   "name": "SoundTekiIcicleFalldown"
   },
   "117": {
-   "name": "SoundTekiTogenobi",
-   "category": "SFX"
+   "name": "SoundTekiTogenobi"
   },
   "118": {
-   "name": "SoundTekiTakifireFire",
-   "category": "SFX"
+   "name": "SoundTekiTakifireFire"
   },
   "119": {
-   "name": "SoundBossYokiCatErase",
-   "category": "SFX"
+   "name": "SoundBossYokiCatErase"
   },
   "120": {
-   "name": "SoundBossYokiLaughtV1",
-   "category": "SFX"
+   "name": "SoundBossYokiLaughtV1"
   },
   "121": {
-   "name": "SoundBossYokiShoutV1",
-   "category": "SFX"
+   "name": "SoundBossYokiShoutV1"
   },
   "122": {
-   "name": "SoundBossLifeScale",
-   "category": "SFX"
+   "name": "SoundBossLifeScale"
   },
   "123": {
-   "name": "SoundBossYokiSide",
-   "category": "SFX"
+   "name": "SoundBossYokiSide"
   },
   "124": {
-   "name": "SoundBossYokiStartMuc",
-   "category": "SFX"
+   "name": "SoundBossYokiStartMuc"
   },
   "125": {
-   "name": "SoundBossYokiTekiIn1",
-   "category": "SFX"
+   "name": "SoundBossYokiTekiIn1"
   },
   "126": {
-   "name": "SoundBossYokiTekiIn2",
-   "category": "SFX"
+   "name": "SoundBossYokiTekiIn2"
   },
   "127": {
-   "name": "SoundBossYokiTekiIn3",
-   "category": "SFX"
+   "name": "SoundBossYokiTekiIn3"
   },
   "128": {
-   "name": "SoundBossYokiTekiIn4",
-   "category": "SFX"
+   "name": "SoundBossYokiTekiIn4"
   },
   "129": {
-   "name": "SoundBossYokiBallBomb",
-   "category": "SFX"
+   "name": "SoundBossYokiBallBomb"
   },
   "130": {
-   "name": "SoundBossYokiFanOpen",
-   "category": "SFX"
+   "name": "SoundBossYokiFanOpen"
   },
   "131": {
-   "name": "SoundBossYokiFaceRotate1",
-   "category": "SFX"
+   "name": "SoundBossYokiFaceRotate1"
   },
   "132": {
-   "name": "SoundBossYokiFaceRotate2",
-   "category": "SFX"
+   "name": "SoundBossYokiFaceRotate2"
   },
   "133": {
-   "name": "SoundBossBearMouseHit2",
-   "category": "SFX"
+   "name": "SoundBossBearMouseHit2"
   },
   "134": {
-   "name": "SoundBossBearMouseHit3",
-   "category": "SFX"
+   "name": "SoundBossBearMouseHit3"
   },
   "135": {
-   "name": "SoundBossCondokeHitV2",
-   "category": "SFX"
+   "name": "SoundBossCondokeHitV2"
   },
   "136": {
-   "name": "SoundBossDoramoriHitV21",
-   "category": "SFX"
+   "name": "SoundBossDoramoriHitV21"
   },
   "138": {
-   "name": "SoundBossPinkyHitV21",
-   "category": "SFX"
+   "name": "SoundBossPinkyHitV21"
   },
   "139": {
-   "name": "SoundBossYokiHitV12",
-   "category": "SFX"
+   "name": "SoundBossYokiHitV12"
   },
   "140": {
-   "name": "SoundBossBearDead",
-   "category": "SFX"
+   "name": "SoundBossBearDead"
   },
   "141": {
-   "name": "SoundBossBearAirOn",
-   "category": "SFX"
+   "name": "SoundBossBearAirOn"
   },
   "142": {
-   "name": "SoundBossBearAirOff",
-   "category": "SFX"
+   "name": "SoundBossBearAirOff"
   },
   "143": {
-   "name": "SoundBossBearPinFall",
-   "category": "SFX"
+   "name": "SoundBossBearPinFall"
   },
   "144": {
-   "name": "SoundBossBearFireFall",
-   "category": "SFX"
+   "name": "SoundBossBearFireFall"
   },
   "145": {
-   "name": "SoundBossBearBumpHit",
-   "category": "SFX"
+   "name": "SoundBossBearBumpHit"
   },
   "146": {
-   "name": "SoundBossBearBumpNohit",
-   "category": "SFX"
+   "name": "SoundBossBearBumpNohit"
   },
   "147": {
-   "name": "SoundBossBearMouseHit",
-   "category": "SFX"
+   "name": "SoundBossBearMouseHit"
   },
   "148": {
-   "name": "SoundBossFlowernaDead",
-   "category": "SFX"
+   "name": "SoundBossFlowernaDead"
   },
   "149": {
-   "name": "SoundBossFlowernaFalldown",
-   "category": "SFX"
+   "name": "SoundBossFlowernaFalldown"
   },
   "150": {
-   "name": "SoundBossFlowernaSide",
-   "category": "SFX"
+   "name": "SoundBossFlowernaSide"
   },
   "151": {
-   "name": "SoundBossFlowernaUp",
-   "category": "SFX"
+   "name": "SoundBossFlowernaUp"
   },
   "152": {
-   "name": "SoundBossFlowernaHand",
-   "category": "SFX"
+   "name": "SoundBossFlowernaHand"
   },
   "153": {
-   "name": "SoundBossFlowernaHitV1",
-   "category": "SFX"
+   "name": "SoundBossFlowernaHitV1"
   },
   "154": {
-   "name": "SoundBossFlowernaFly",
-   "category": "SFX"
+   "name": "SoundBossFlowernaFly"
   },
   "155": {
-   "name": "SoundBossPinkyDead",
-   "category": "SFX"
+   "name": "SoundBossPinkyDead"
   },
   "156": {
-   "name": "SoundBossPinkyWalk",
-   "category": "SFX"
+   "name": "SoundBossPinkyWalk"
   },
   "157": {
-   "name": "SoundBossPinkySIn",
-   "category": "SFX"
+   "name": "SoundBossPinkySIn"
   },
   "158": {
-   "name": "SoundBossPinkyHitV1",
-   "category": "SFX"
+   "name": "SoundBossPinkyHitV1"
   },
   "159": {
-   "name": "SoundBossPinkyHitV2",
-   "category": "SFX"
+   "name": "SoundBossPinkyHitV2"
   },
   "160": {
-   "name": "SoundBossPinkyHitV3",
-   "category": "SFX"
+   "name": "SoundBossPinkyHitV3"
   },
   "161": {
-   "name": "SoundBossCondokeDead",
-   "category": "SFX"
+   "name": "SoundBossCondokeDead"
   },
   "162": {
-   "name": "SoundBossCondokePendOpen",
-   "category": "SFX"
+   "name": "SoundBossCondokePendOpen"
   },
   "163": {
-   "name": "SoundBossCondokePendRotate",
-   "category": "SFX"
+   "name": "SoundBossCondokePendRotate"
   },
   "164": {
-   "name": "SoundBossCondokePendDown",
-   "category": "SFX"
+   "name": "SoundBossCondokePendDown"
   },
   "165": {
-   "name": "SoundBossCondokeFalldown",
-   "category": "SFX"
+   "name": "SoundBossCondokeFalldown"
   },
   "166": {
-   "name": "SoundBossCondokePendHit",
-   "category": "SFX"
+   "name": "SoundBossCondokePendHit"
   },
   "167": {
-   "name": "SoundBossCondokeSide",
-   "category": "SFX"
+   "name": "SoundBossCondokeSide"
   },
   "168": {
-   "name": "SoundBossCondokeWeapon",
-   "category": "SFX"
+   "name": "SoundBossCondokeWeapon"
   },
   "169": {
-   "name": "SoundBossCondokeSawRun",
-   "category": "SFX"
+   "name": "SoundBossCondokeSawRun"
   },
   "170": {
-   "name": "SoundBossCondokeFundoBreak",
-   "category": "SFX"
+   "name": "SoundBossCondokeFundoBreak"
   },
   "171": {
-   "name": "SoundBossCondokeThrow",
-   "category": "SFX"
+   "name": "SoundBossCondokeThrow"
   },
   "172": {
-   "name": "SoundBossCondokeHitV1",
-   "category": "SFX"
+   "name": "SoundBossCondokeHitV1"
   },
   "173": {
-   "name": "SoundBossDoramoriDead",
-   "category": "SFX"
+   "name": "SoundBossDoramoriDead"
   },
   "174": {
-   "name": "SoundBossDoramoriWaveX",
-   "category": "SFX"
+   "name": "SoundBossDoramoriWaveX"
   },
   "175": {
-   "name": "SoundBossDoramoriWave0",
-   "category": "SFX"
+   "name": "SoundBossDoramoriWave0"
   },
   "176": {
-   "name": "SoundBossDoramoriWave1",
-   "category": "SFX"
+   "name": "SoundBossDoramoriWave1"
   },
   "177": {
-   "name": "SoundBossDoramoriWave2",
-   "category": "SFX"
+   "name": "SoundBossDoramoriWave2"
   },
   "178": {
-   "name": "SoundBossDoramoriHitV1",
-   "category": "SFX"
+   "name": "SoundBossDoramoriHitV1"
   },
   "179": {
-   "name": "SoundBossDoramoriHitV2",
-   "category": "SFX"
+   "name": "SoundBossDoramoriHitV2"
   },
   "180": {
-   "name": "SoundBossDoramoriIce",
-   "category": "SFX"
+   "name": "SoundBossDoramoriIce"
   },
   "181": {
-   "name": "SoundBossYokiDead",
-   "category": "SFX"
+   "name": "SoundBossYokiDead"
   },
   "182": {
-   "name": "SoundBossYokiItemRotate",
-   "category": "SFX"
+   "name": "SoundBossYokiItemRotate"
   },
   "183": {
-   "name": "SoundBossYokiIn",
-   "category": "SFX"
+   "name": "SoundBossYokiIn"
   },
   "184": {
-   "name": "SoundBossYokiItemFly1",
-   "category": "SFX"
+   "name": "SoundBossYokiItemFly1"
   },
   "185": {
-   "name": "SoundBossYokiItemFly2",
-   "category": "SFX"
+   "name": "SoundBossYokiItemFly2"
   },
   "186": {
-   "name": "SoundBossYokiItemFly3",
-   "category": "SFX"
+   "name": "SoundBossYokiItemFly3"
   },
   "187": {
-   "name": "SoundBossYokiItemFly4",
-   "category": "SFX"
+   "name": "SoundBossYokiItemFly4"
   },
   "188": {
-   "name": "SoundBossYokiV1",
-   "category": "SFX"
+   "name": "SoundBossYokiV1"
   },
   "189": {
-   "name": "SoundBossYokiV2",
-   "category": "SFX"
+   "name": "SoundBossYokiV2"
   },
   "190": {
-   "name": "SoundBossYokiNoDamage",
-   "category": "SFX"
+   "name": "SoundBossYokiNoDamage"
   },
   "191": {
-   "name": "SoundBossYokiCatDash",
-   "category": "SFX"
+   "name": "SoundBossYokiCatDash"
   },
   "192": {
-   "name": "SoundBossYokiCatBump",
-   "category": "SFX"
+   "name": "SoundBossYokiCatBump"
   },
   "193": {
-   "name": "SoundBossYokiFallSpot",
-   "category": "SFX"
+   "name": "SoundBossYokiFallSpot"
   },
   "194": {
-   "name": "SoundBossYokiEyeFlash",
-   "category": "SFX"
+   "name": "SoundBossYokiEyeFlash"
   },
   "195": {
-   "name": "SoundBossYokiFlash",
-   "category": "SFX"
+   "name": "SoundBossYokiFlash"
   },
   "196": {
-   "name": "SoundBossYokiShop2cat",
-   "category": "SFX"
+   "name": "SoundBossYokiShop2cat"
   },
   "197": {
-   "name": "SoundBossYokiCatAttack",
-   "category": "SFX"
+   "name": "SoundBossYokiCatAttack"
   },
   "198": {
-   "name": "SoundBossYokiEyeBeam",
-   "category": "SFX"
+   "name": "SoundBossYokiEyeBeam"
   },
   "199": {
-   "name": "SoundBossYokiBallKick",
-   "category": "SFX"
+   "name": "SoundBossYokiBallKick"
   },
   "200": {
-   "name": "SoundBossYokiHitV1",
-   "category": "SFX"
+   "name": "SoundBossYokiHitV1"
   },
   "201": {
-   "name": "SoundBossYokiDossun",
-   "category": "SFX"
+   "name": "SoundBossYokiDossun"
   },
   "202": {
-   "name": "SoundBossYokiMouseSide",
-   "category": "SFX"
+   "name": "SoundBossYokiMouseSide"
   },
   "203": {
-   "name": "SoundBossFlowernaV1",
-   "category": "SFX"
+   "name": "SoundBossFlowernaV1"
   },
   "204": {
-   "name": "SoundBossFlowernaCup",
-   "category": "SFX"
+   "name": "SoundBossFlowernaCup"
   },
   "205": {
-   "name": "SoundBossFlowernaSnore",
-   "category": "SFX"
+   "name": "SoundBossFlowernaSnore"
   },
   "206": {
-   "name": "SoundBossFlowernaSide2",
-   "category": "SFX"
+   "name": "SoundBossFlowernaSide2"
   },
   "207": {
-   "name": "SoundBossBearMouseOn",
-   "category": "SFX"
+   "name": "SoundBossBearMouseOn"
   },
   "208": {
-   "name": "SoundBossCondokeWeaponEle",
-   "category": "SFX"
+   "name": "SoundBossCondokeWeaponEle"
   },
   "209": {
-   "name": "SoundBossCondokeEleRun",
-   "category": "SFX"
+   "name": "SoundBossCondokeEleRun"
   },
   "210": {
-   "name": "SoundBossCondokeEggOpen",
-   "category": "SFX"
+   "name": "SoundBossCondokeEggOpen"
   },
   "211": {
-   "name": "SoundBossCondokeBirdBomb",
-   "category": "SFX"
+   "name": "SoundBossCondokeBirdBomb"
   },
   "212": {
-   "name": "SoundBossDoramoriBatIn",
-   "category": "SFX"
+   "name": "SoundBossDoramoriBatIn"
   },
   "213": {
-   "name": "SoundBossDoramoriBatDead",
-   "category": "SFX"
+   "name": "SoundBossDoramoriBatDead"
   },
   "214": {
-   "name": "SoundDominoStart",
-   "category": "SFX"
+   "name": "SoundDominoStart"
   },
   "215": {
-   "name": "SoundSwitch1On",
-   "category": "SFX"
+   "name": "SoundSwitch1On"
   },
   "216": {
-   "name": "SoundSwitch1Off",
-   "category": "SFX"
+   "name": "SoundSwitch1Off"
   },
   "217": {
-   "name": "SoundSwitchOn",
-   "category": "SFX"
+   "name": "SoundSwitchOn"
   },
   "218": {
-   "name": "SoundSwitchOnMap",
-   "category": "SFX"
+   "name": "SoundSwitchOnMap"
   },
   "219": {
-   "name": "SoundPencilMove",
-   "category": "SFX"
+   "name": "SoundPencilMove"
   },
   "220": {
-   "name": "SoundTreasureOpen",
-   "category": "SFX"
+   "name": "SoundTreasureOpen"
   },
   "221": {
-   "name": "SoundDoorIn",
-   "category": "SFX"
+   "name": "SoundDoorIn"
   },
   "222": {
-   "name": "SoundDoorOut",
-   "category": "SFX"
+   "name": "SoundDoorOut"
   },
   "223": {
-   "name": "SoundRouletteStart",
-   "category": "SFX"
+   "name": "SoundRouletteStart"
   },
   "224": {
-   "name": "SoundRoulettePieceRun",
-   "category": "SFX"
+   "name": "SoundRoulettePieceRun"
   },
   "225": {
-   "name": "SoundRoulettePieceStop",
-   "category": "SFX"
+   "name": "SoundRoulettePieceStop"
   },
   "226": {
-   "name": "SoundRouletteMapOn",
-   "category": "SFX"
+   "name": "SoundRouletteMapOn"
   },
   "227": {
-   "name": "SoundRouletteMapOff",
-   "category": "SFX"
+   "name": "SoundRouletteMapOff"
   },
   "228": {
-   "name": "SoundRoulettePanelCoin1",
-   "category": "SFX"
+   "name": "SoundRoulettePanelCoin1"
   },
   "229": {
-   "name": "SoundRoulettePanelCoin2",
-   "category": "SFX"
+   "name": "SoundRoulettePanelCoin2"
   },
   "230": {
-   "name": "SoundRoulettePanelBlock",
-   "category": "SFX"
+   "name": "SoundRoulettePanelBlock"
   },
   "231": {
-   "name": "SoundRoulettePanelDamage",
-   "category": "SFX"
+   "name": "SoundRoulettePanelDamage"
   },
   "232": {
-   "name": "SoundRoulettePanelReaction",
-   "category": "SFX"
+   "name": "SoundRoulettePanelReaction"
   },
   "233": {
-   "name": "SoundRoulettePanelTeki",
-   "category": "SFX"
+   "name": "SoundRoulettePanelTeki"
   },
   "234": {
-   "name": "SoundRoulettePanelGoal",
-   "category": "SFX"
+   "name": "SoundRoulettePanelGoal"
   },
   "235": {
-   "name": "SoundDominoSwitchGoal",
-   "category": "SFX"
+   "name": "SoundDominoSwitchGoal"
   },
   "236": {
-   "name": "SoundDominoSwitchLose",
-   "category": "SFX"
+   "name": "SoundDominoSwitchLose"
   },
   "237": {
-   "name": "SoundDominoFall",
-   "category": "SFX"
+   "name": "SoundDominoFall"
   },
   "238": {
-   "name": "SoundDominoSwitchRotate",
-   "category": "SFX"
+   "name": "SoundDominoSwitchRotate"
   },
   "239": {
-   "name": "SoundFlowerOpen",
-   "category": "SFX"
+   "name": "SoundFlowerOpen"
   },
   "240": {
-   "name": "SoundFlowerGrowup1",
-   "category": "SFX"
+   "name": "SoundFlowerGrowup1"
   },
   "241": {
-   "name": "SoundFlowerGrowup2",
-   "category": "SFX"
+   "name": "SoundFlowerGrowup2"
   },
   "242": {
-   "name": "SoundFlowerGrowup3",
-   "category": "SFX"
+   "name": "SoundFlowerGrowup3"
   },
   "244": {
-   "name": "SoundEraseFloorErase",
-   "category": "SFX"
+   "name": "SoundEraseFloorErase"
   },
   "245": {
-   "name": "SoundWindmillSpinLo",
-   "category": "SFX"
+   "name": "SoundWindmillSpinLo"
   },
   "246": {
-   "name": "SoundWindmillSpinHi",
-   "category": "SFX"
+   "name": "SoundWindmillSpinHi"
   },
   "247": {
-   "name": "SoundWheelRotate",
-   "category": "SFX"
+   "name": "SoundWheelRotate"
   },
   "248": {
-   "name": "SoundWheelRotateS",
-   "category": "SFX"
+   "name": "SoundWheelRotateS"
   },
   "249": {
-   "name": "SoundBlockBound",
-   "category": "SFX"
+   "name": "SoundBlockBound"
   },
   "250": {
-   "name": "SoundBlockFit",
-   "category": "SFX"
+   "name": "SoundBlockFit"
   },
   "251": {
-   "name": "SoundBlockBreakDice",
-   "category": "SFX"
+   "name": "SoundBlockBreakDice"
   },
   "252": {
-   "name": "SoundBlockBreakRock1",
-   "category": "SFX"
+   "name": "SoundBlockBreakRock1"
   },
   "253": {
-   "name": "SoundBlockBreakRock2",
-   "category": "SFX"
+   "name": "SoundBlockBreakRock2"
   },
   "254": {
-   "name": "SoundBlockBreakGrass1",
-   "category": "SFX"
+   "name": "SoundBlockBreakGrass1"
   },
   "255": {
-   "name": "SoundBlockBreakGrass2",
-   "category": "SFX"
+   "name": "SoundBlockBreakGrass2"
   },
   "256": {
-   "name": "SoundBlockBreakMetal1",
-   "category": "SFX"
+   "name": "SoundBlockBreakMetal1"
   },
   "257": {
-   "name": "SoundBlockBreakMetal2",
-   "category": "SFX"
+   "name": "SoundBlockBreakMetal2"
   },
   "258": {
-   "name": "SoundBlockBreakWood1",
-   "category": "SFX"
+   "name": "SoundBlockBreakWood1"
   },
   "259": {
-   "name": "SoundBlockBreakWood2",
-   "category": "SFX"
+   "name": "SoundBlockBreakWood2"
   },
   "260": {
-   "name": "SoundBlockBreakRock1e",
-   "category": "SFX"
+   "name": "SoundBlockBreakRock1e"
   },
   "261": {
-   "name": "SoundBlockBreakRock2e",
-   "category": "SFX"
+   "name": "SoundBlockBreakRock2e"
   },
   "262": {
-   "name": "SoundBlockBreakGrass1e",
-   "category": "SFX"
+   "name": "SoundBlockBreakGrass1e"
   },
   "263": {
-   "name": "SoundBlockBreakGrass2e",
-   "category": "SFX"
+   "name": "SoundBlockBreakGrass2e"
   },
   "264": {
-   "name": "SoundBlockBreakMetal1e",
-   "category": "SFX"
+   "name": "SoundBlockBreakMetal1e"
   },
   "265": {
-   "name": "SoundBlockBreakMetal2e",
-   "category": "SFX"
+   "name": "SoundBlockBreakMetal2e"
   },
   "266": {
-   "name": "SoundBlockBreakWood1e",
-   "category": "SFX"
+   "name": "SoundBlockBreakWood1e"
   },
   "267": {
-   "name": "SoundBlockBreakWood2e",
-   "category": "SFX"
+   "name": "SoundBlockBreakWood2e"
   },
   "268": {
-   "name": "SoundBlockBreakHard",
-   "category": "SFX"
+   "name": "SoundBlockBreakHard"
   },
   "269": {
-   "name": "SoundBlockBreakHardE",
-   "category": "SFX"
+   "name": "SoundBlockBreakHardE"
   },
   "270": {
-   "name": "SoundFirepillarUp",
-   "category": "SFX"
+   "name": "SoundFirepillarUp"
   },
   "271": {
-   "name": "SoundFirepillarDown",
-   "category": "SFX"
+   "name": "SoundFirepillarDown"
   },
   "272": {
-   "name": "SoundPinballDigitalCounter0",
-   "category": "SFX"
+   "name": "SoundPinballDigitalCounter0"
   },
   "273": {
-   "name": "SoundPinballTulipOpen",
-   "category": "SFX"
+   "name": "SoundPinballTulipOpen"
   },
   "274": {
-   "name": "SoundPinballTulipClose",
-   "category": "SFX"
+   "name": "SoundPinballTulipClose"
   },
   "275": {
-   "name": "SoundPinballTulipIn",
-   "category": "SFX"
+   "name": "SoundPinballTulipIn"
   },
   "276": {
-   "name": "SoundPinballTulipErase",
-   "category": "SFX"
+   "name": "SoundPinballTulipErase"
   },
   "277": {
-   "name": "SoundRouletteThunder",
-   "category": "SFX"
+   "name": "SoundRouletteThunder"
   },
   "278": {
-   "name": "SoundBlockBreakAuto",
-   "category": "SFX"
+   "name": "SoundBlockBreakAuto"
   },
   "279": {
-   "name": "SoundBlockBreakAutoRebirth",
-   "category": "SFX"
+   "name": "SoundBlockBreakAutoRebirth"
   },
   "285": {
-   "name": "SoundCdVocalSwitch",
-   "category": "SFX"
+   "name": "SoundCdVocalSwitch"
   },
   "286": {
-   "name": "SoundSaveDataTrouble",
-   "category": "SFX"
+   "name": "SoundSaveDataTrouble"
   },
   "287": {
-   "name": "SoundSavePaperOut",
-   "category": "SFX"
+   "name": "SoundSavePaperOut"
   },
   "288": {
-   "name": "SoundButtonCdOn",
-   "category": "SFX"
+   "name": "SoundButtonCdOn"
   },
   "289": {
-   "name": "SoundButtonCdOff",
-   "category": "SFX"
+   "name": "SoundButtonCdOff"
   },
   "290": {
-   "name": "SoundPauseOn",
-   "category": "SFX"
+   "name": "SoundPauseOn"
   },
   "291": {
-   "name": "SoundPauseOff",
-   "category": "SFX"
+   "name": "SoundPauseOff"
   },
   "292": {
-   "name": "SoundCursol1",
-   "category": "SFX"
+   "name": "SoundCursol1"
   },
   "293": {
-   "name": "SoundButtonA",
-   "category": "SFX"
+   "name": "SoundButtonA"
   },
   "294": {
-   "name": "SoundButtonA1",
-   "category": "SFX"
+   "name": "SoundButtonA1"
   },
   "295": {
-   "name": "SoundButtonA2",
-   "category": "SFX"
+   "name": "SoundButtonA2"
   },
   "296": {
-   "name": "SoundButtonAErase",
-   "category": "SFX"
+   "name": "SoundButtonAErase"
   },
   "297": {
-   "name": "SoundButtonB",
-   "category": "SFX"
+   "name": "SoundButtonB"
   },
   "298": {
-   "name": "SoundButtonStartTitle",
-   "category": "SFX"
+   "name": "SoundButtonStartTitle"
   },
   "299": {
-   "name": "SoundButtonTitleIn",
-   "category": "SFX"
+   "name": "SoundButtonTitleIn"
   },
   "309": {
-   "name": "SoundGetKey1",
-   "category": "SFX"
+   "name": "SoundGetKey1"
   },
   "310": {
-   "name": "SoundGetCoin1",
-   "category": "SFX"
+   "name": "SoundGetCoin1"
   },
   "311": {
-   "name": "SoundGetCoin2",
-   "category": "SFX"
+   "name": "SoundGetCoin2"
   },
   "312": {
-   "name": "SoundGetCoin3",
-   "category": "SFX"
+   "name": "SoundGetCoin3"
   },
   "313": {
-   "name": "SoundGetCoin4",
-   "category": "SFX"
+   "name": "SoundGetCoin4"
   },
   "314": {
-   "name": "SoundGetCoin5",
-   "category": "SFX"
+   "name": "SoundGetCoin5"
   },
   "315": {
-   "name": "SoundGetCd1",
-   "category": "SFX"
+   "name": "SoundGetCd1"
   },
   "316": {
-   "name": "SoundGetCard1",
-   "category": "SFX"
+   "name": "SoundGetCard1"
   },
   "317": {
-   "name": "SoundGetX2nuts1",
-   "category": "SFX"
+   "name": "SoundGetX2nuts1"
   },
   "318": {
-   "name": "SoundGetCrystalBlue",
-   "category": "SFX"
+   "name": "SoundGetCrystalBlue"
   },
   "319": {
-   "name": "SoundGetCrystalRed",
-   "category": "SFX"
+   "name": "SoundGetCrystalRed"
   },
   "320": {
-   "name": "SoundGetHart1",
-   "category": "SFX"
+   "name": "SoundGetHart1"
   },
   "321": {
-   "name": "SoundGetHart2",
-   "category": "SFX"
+   "name": "SoundGetHart2"
   },
   "322": {
-   "name": "SoundGetHart3",
-   "category": "SFX"
+   "name": "SoundGetHart3"
   },
   "323": {
-   "name": "SoundGetHartAll",
-   "category": "SFX"
+   "name": "SoundGetHartAll"
   },
   "324": {
-   "name": "SoundGetGarlic1",
-   "category": "SFX"
+   "name": "SoundGetGarlic1"
   },
   "330": {
-   "name": "SoundGetKey1e",
-   "category": "SFX"
+   "name": "SoundGetKey1e"
   },
   "331": {
-   "name": "SoundGetCoin1e",
-   "category": "SFX"
+   "name": "SoundGetCoin1e"
   },
   "332": {
-   "name": "SoundGetCoin2e",
-   "category": "SFX"
+   "name": "SoundGetCoin2e"
   },
   "333": {
-   "name": "SoundGetCoin3e",
-   "category": "SFX"
+   "name": "SoundGetCoin3e"
   },
   "334": {
-   "name": "SoundGetCoin4e",
-   "category": "SFX"
+   "name": "SoundGetCoin4e"
   },
   "335": {
-   "name": "SoundGetCoin5e",
-   "category": "SFX"
+   "name": "SoundGetCoin5e"
   },
   "336": {
-   "name": "SoundGetCrystalBlueE",
-   "category": "SFX"
+   "name": "SoundGetCrystalBlueE"
   },
   "337": {
-   "name": "SoundGetCrystalRedE",
-   "category": "SFX"
+   "name": "SoundGetCrystalRedE"
   },
   "338": {
-   "name": "SoundGetHart1E",
-   "category": "SFX"
+   "name": "SoundGetHart1E"
   },
   "339": {
-   "name": "SoundGetHart2E",
-   "category": "SFX"
+   "name": "SoundGetHart2E"
   },
   "340": {
-   "name": "SoundGetHart3E",
-   "category": "SFX"
+   "name": "SoundGetHart3E"
   },
   "341": {
-   "name": "SoundGetGarlic1E",
-   "category": "SFX"
+   "name": "SoundGetGarlic1E"
   },
   "342": {
-   "name": "SoundGetCdAll",
-   "category": "SFX"
+   "name": "SoundGetCdAll"
   },
   "350": {
-   "name": "SoundWarioReactTransform",
-   "category": "SFX"
+   "name": "SoundWarioReactTransform"
   },
   "351": {
-   "name": "SoundWarioReactReturn",
-   "category": "SFX"
+   "name": "SoundWarioReactReturn"
   },
   "352": {
-   "name": "SoundWarioReactTurn",
-   "category": "SFX"
+   "name": "SoundWarioReactTurn"
   },
   "353": {
-   "name": "SoundWarioReactFatEat",
-   "category": "SFX"
+   "name": "SoundWarioReactFatEat"
   },
   "354": {
-   "name": "SoundWarioReactFatLand",
-   "category": "SFX"
+   "name": "SoundWarioReactFatLand"
   },
   "355": {
-   "name": "SoundWarioReactFireReburn",
-   "category": "SFX"
+   "name": "SoundWarioReactFireReburn"
   },
   "356": {
-   "name": "SoundWarioReactFireChacoal",
-   "category": "SFX"
+   "name": "SoundWarioReactFireChacoal"
   },
   "357": {
-   "name": "SoundWarioReactPressFly",
-   "category": "SFX"
+   "name": "SoundWarioReactPressFly"
   },
   "358": {
-   "name": "SoundWarioReactZonbiCrash",
-   "category": "SFX"
+   "name": "SoundWarioReactZonbiCrash"
   },
   "359": {
-   "name": "SoundWarioReactZonbiWake",
-   "category": "SFX"
+   "name": "SoundWarioReactZonbiWake"
   },
   "360": {
-   "name": "SoundWarioReactBalloonSwel",
-   "category": "SFX"
+   "name": "SoundWarioReactBalloonSwel"
   },
   "361": {
-   "name": "SoundWarioReactBalloonTurn",
-   "category": "SFX"
+   "name": "SoundWarioReactBalloonTurn"
   },
   "362": {
-   "name": "SoundWarioReactBalloonUp",
-   "category": "SFX"
+   "name": "SoundWarioReactBalloonUp"
   },
   "363": {
-   "name": "SoundWarioReactBalloonWilt",
-   "category": "SFX"
+   "name": "SoundWarioReactBalloonWilt"
   },
   "364": {
-   "name": "SoundWarioReactBubbleBurst",
-   "category": "SFX"
+   "name": "SoundWarioReactBubbleBurst"
   },
   "365": {
-   "name": "SoundWarioReactBubbleTurn",
-   "category": "SFX"
+   "name": "SoundWarioReactBubbleTurn"
   },
   "366": {
-   "name": "SoundWarioReactBubblePack",
-   "category": "SFX"
+   "name": "SoundWarioReactBubblePack"
   },
   "367": {
-   "name": "SoundWarioReactIceFreeze",
-   "category": "SFX"
+   "name": "SoundWarioReactIceFreeze"
   },
   "368": {
-   "name": "SoundWarioReactSpringJump1",
-   "category": "SFX"
+   "name": "SoundWarioReactSpringJump1"
   },
   "369": {
-   "name": "SoundWarioReactSpringJump2",
-   "category": "SFX"
+   "name": "SoundWarioReactSpringJump2"
   },
   "370": {
-   "name": "SoundWarioReactSpringHit",
-   "category": "SFX"
+   "name": "SoundWarioReactSpringHit"
   },
   "371": {
-   "name": "SoundWarioReactBatFlap",
-   "category": "SFX"
+   "name": "SoundWarioReactBatFlap"
   },
   "372": {
-   "name": "SoundWarioReactZonbiBump",
-   "category": "SFX"
+   "name": "SoundWarioReactZonbiBump"
   },
   "420": {
-   "name": "SoundEndingEarthquakePyramid",
-   "category": "SFX"
+   "name": "SoundEndingEarthquakePyramid"
   },
   "421": {
-   "name": "SoundEndingWarioStand",
-   "category": "SFX"
+   "name": "SoundEndingWarioStand"
   },
   "422": {
-   "name": "SoundEndingWarioTurn",
-   "category": "SFX"
+   "name": "SoundEndingWarioTurn"
   },
   "423": {
-   "name": "SoundDemoMapEarthquakeEnd",
-   "category": "SFX"
+   "name": "SoundDemoMapEarthquakeEnd"
   },
   "424": {
-   "name": "SoundDemoDoorFitDia",
-   "category": "SFX"
+   "name": "SoundDemoDoorFitDia"
   },
   "425": {
-   "name": "SoundDemoDoorFitDiaMuc",
-   "category": "SFX"
+   "name": "SoundDemoDoorFitDiaMuc"
   },
   "426": {
-   "name": "SoundDemoMapEarthquake1",
-   "category": "SFX"
+   "name": "SoundDemoMapEarthquake1"
   },
   "427": {
-   "name": "SoundDemoMapEarthquake2",
-   "category": "SFX"
+   "name": "SoundDemoMapEarthquake2"
   },
   "428": {
-   "name": "SoundDemoMapPyramidShine",
-   "category": "SFX"
+   "name": "SoundDemoMapPyramidShine"
   },
   "429": {
-   "name": "SoundDemoMapItemFly1",
-   "category": "SFX"
+   "name": "SoundDemoMapItemFly1"
   },
   "430": {
-   "name": "SoundDemoMapItemFly2",
-   "category": "SFX"
+   "name": "SoundDemoMapItemFly2"
   },
   "431": {
-   "name": "SoundDemoMapPyramidCorner",
-   "category": "SFX"
+   "name": "SoundDemoMapPyramidCorner"
   },
   "432": {
-   "name": "SoundDemoCongratulations1",
-   "category": "SFX"
+   "name": "SoundDemoCongratulations1"
   },
   "433": {
-   "name": "SoundDemoCongratulationsStar",
-   "category": "SFX"
+   "name": "SoundDemoCongratulationsStar"
   },
   "434": {
-   "name": "SoundDemoMapSlider",
-   "category": "SFX"
+   "name": "SoundDemoMapSlider"
   },
   "435": {
-   "name": "SoundDemoMapWarioSlide",
-   "category": "SFX"
+   "name": "SoundDemoMapWarioSlide"
   },
   "436": {
-   "name": "SoundDemoMapWarioBump",
-   "category": "SFX"
+   "name": "SoundDemoMapWarioBump"
   },
   "437": {
-   "name": "SoundDemoTitleWarioDown",
-   "category": "SFX"
+   "name": "SoundDemoTitleWarioDown"
   },
   "438": {
-   "name": "SoundDemoTitleCatDown",
-   "category": "SFX"
+   "name": "SoundDemoTitleCatDown"
   },
   "439": {
-   "name": "SoundDemoTitleCat1",
-   "category": "SFX"
+   "name": "SoundDemoTitleCat1"
   },
   "440": {
-   "name": "SoundDemoTitleWind",
-   "category": "SFX"
+   "name": "SoundDemoTitleWind"
   },
   "441": {
-   "name": "SoundDemoTitleAccelOn",
-   "category": "SFX"
+   "name": "SoundDemoTitleAccelOn"
   },
   "442": {
-   "name": "SoundDemoTitleNewspaper",
-   "category": "SFX"
+   "name": "SoundDemoTitleNewspaper"
   },
   "443": {
-   "name": "SoundDemoBossDoorOpen",
-   "category": "SFX"
+   "name": "SoundDemoBossDoorOpen"
   },
   "444": {
-   "name": "SoundDemoBossBattleStart",
-   "category": "SFX"
+   "name": "SoundDemoBossBattleStart"
   },
   "445": {
-   "name": "SoundWarioComebackHoo",
-   "category": "SFX"
+   "name": "SoundWarioComebackHoo"
   },
   "446": {
-   "name": "SoundDemoWarioOutBump",
-   "category": "SFX"
+   "name": "SoundDemoWarioOutBump"
   },
   "447": {
-   "name": "SoundDemoWarioV1",
-   "category": "SFX"
+   "name": "SoundDemoWarioV1"
   },
   "448": {
-   "name": "SoundDemoKeyOpen",
-   "category": "SFX"
+   "name": "SoundDemoKeyOpen"
   },
   "449": {
-   "name": "SoundDemoScreenClose",
-   "category": "SFX"
+   "name": "SoundDemoScreenClose"
   },
   "450": {
-   "name": "SoundTimeCountdown2zero",
-   "category": "SFX"
+   "name": "SoundTimeCountdown2zero"
   },
   "451": {
-   "name": "SoundTime00",
-   "category": "SFX"
+   "name": "SoundTime00"
   },
   "452": {
-   "name": "SoundTimeWarning",
-   "category": "SFX"
+   "name": "SoundTimeWarning"
   },
   "453": {
-   "name": "SoundTimeup",
-   "category": "SFX"
+   "name": "SoundTimeup"
   },
   "454": {
-   "name": "SoundTimeupWarioBump",
-   "category": "SFX"
+   "name": "SoundTimeupWarioBump"
   },
   "455": {
-   "name": "SoundTimeupBackMapBell",
-   "category": "SFX"
+   "name": "SoundTimeupBackMapBell"
   },
   "456": {
-   "name": "SoundHartWarning",
-   "category": "SFX"
+   "name": "SoundHartWarning"
   },
   "457": {
-   "name": "SoundDemoStageDoorOpen",
-   "category": "SFX"
+   "name": "SoundDemoStageDoorOpen"
   },
   "458": {
-   "name": "SoundStartIn",
-   "category": "SFX"
+   "name": "SoundStartIn"
   },
   "459": {
-   "name": "SoundStartInCircle",
-   "category": "SFX"
+   "name": "SoundStartInCircle"
   },
   "460": {
-   "name": "SoundStartInCircleS",
-   "category": "SFX"
+   "name": "SoundStartInCircleS"
   },
   "461": {
-   "name": "SoundStartOutCircleS",
-   "category": "SFX"
+   "name": "SoundStartOutCircleS"
   },
   "462": {
-   "name": "SoundStartOutCircle",
-   "category": "SFX"
+   "name": "SoundStartOutCircle"
   },
   "463": {
-   "name": "SoundResultItemFlyCd",
-   "category": "SFX"
+   "name": "SoundResultItemFlyCd"
   },
   "464": {
-   "name": "SoundResultItemFly",
-   "category": "SFX"
+   "name": "SoundResultItemFly"
   },
   "465": {
-   "name": "SoundResultItemFitCd",
-   "category": "SFX"
+   "name": "SoundResultItemFitCd"
   },
   "466": {
-   "name": "SoundResultItemFit",
-   "category": "SFX"
+   "name": "SoundResultItemFit"
   },
   "467": {
-   "name": "SoundResultCountHart",
-   "category": "SFX"
+   "name": "SoundResultCountHart"
   },
   "470": {
-   "name": "SoundDemoBossItemPop",
-   "category": "SFX"
+   "name": "SoundDemoBossItemPop"
   },
   "471": {
-   "name": "SoundDemoBossItemErase",
-   "category": "SFX"
+   "name": "SoundDemoBossItemErase"
   },
   "472": {
-   "name": "SoundBossDoorEnterYes",
-   "category": "SFX"
+   "name": "SoundBossDoorEnterYes"
   },
   "473": {
-   "name": "SoundBossDoorEnterNext",
-   "category": "SFX"
+   "name": "SoundBossDoorEnterNext"
   },
   "474": {
-   "name": "SoundBossDoorEnterNo",
-   "category": "SFX"
+   "name": "SoundBossDoorEnterNo"
   },
   "475": {
-   "name": "SoundBossDoorEnterEnd",
-   "category": "SFX"
+   "name": "SoundBossDoorEnterEnd"
   },
   "476": {
-   "name": "SoundBossDoorOpenStage",
-   "category": "SFX"
+   "name": "SoundBossDoorOpenStage"
   },
   "477": {
-   "name": "SoundDemoBossItemUp1",
-   "category": "SFX"
+   "name": "SoundDemoBossItemUp1"
   },
   "478": {
-   "name": "SoundDemoBossItemUp12",
-   "category": "SFX"
+   "name": "SoundDemoBossItemUp12"
   },
   "479": {
-   "name": "SoundDemoBossItemUp13",
-   "category": "SFX"
+   "name": "SoundDemoBossItemUp13"
   },
   "480": {
-   "name": "SoundDemoBossItemUp2",
-   "category": "SFX"
+   "name": "SoundDemoBossItemUp2"
   },
   "481": {
-   "name": "SoundDemoBossItemUp22",
-   "category": "SFX"
+   "name": "SoundDemoBossItemUp22"
   },
   "482": {
-   "name": "SoundDemoBossItemUp23",
-   "category": "SFX"
+   "name": "SoundDemoBossItemUp23"
   },
   "483": {
-   "name": "SoundBossDoorEnterIn",
-   "category": "SFX"
+   "name": "SoundBossDoorEnterIn"
   },
   "484": {
-   "name": "SoundDemoBossItemPop2",
-   "category": "SFX"
+   "name": "SoundDemoBossItemPop2"
   },
   "485": {
-   "name": "SoundDemoBossItemPop3",
-   "category": "SFX"
+   "name": "SoundDemoBossItemPop3"
   },
   "486": {
-   "name": "SoundDemoBossItemBump1",
-   "category": "SFX"
+   "name": "SoundDemoBossItemBump1"
   },
   "487": {
-   "name": "SoundDemoBossItemBump2",
-   "category": "SFX"
+   "name": "SoundDemoBossItemBump2"
   },
   "488": {
-   "name": "SoundDemoBossItemBump3",
-   "category": "SFX"
+   "name": "SoundDemoBossItemBump3"
   },
   "489": {
-   "name": "SoundDemoBossClearBackMuc",
-   "category": "SFX"
+   "name": "SoundDemoBossClearBackMuc"
   },
   "490": {
-   "name": "SoundDemoType1",
-   "category": "SFX"
+   "name": "SoundDemoType1"
   },
   "491": {
-   "name": "SoundDemoCat1",
-   "category": "SFX"
+   "name": "SoundDemoCat1"
   },
   "492": {
-   "name": "SoundDemoCat2",
-   "category": "SFX"
+   "name": "SoundDemoCat2"
   },
   "493": {
-   "name": "SoundBossDoorEnterInDemo",
-   "category": "SFX"
+   "name": "SoundBossDoorEnterInDemo"
   },
   "500": {
-   "name": "SoundShopmanWalk",
-   "category": "SFX"
+   "name": "SoundShopmanWalk"
   },
   "501": {
-   "name": "SoundShopmanSnap",
-   "category": "SFX"
+   "name": "SoundShopmanSnap"
   },
   "502": {
-   "name": "SoundShopmanAppleOpen",
-   "category": "SFX"
+   "name": "SoundShopmanAppleOpen"
   },
   "503": {
-   "name": "SoundShopmanAppleThrow",
-   "category": "SFX"
+   "name": "SoundShopmanAppleThrow"
   },
   "504": {
-   "name": "SoundShopmanAppleBang",
-   "category": "SFX"
+   "name": "SoundShopmanAppleBang"
   },
   "505": {
-   "name": "SoundShopmanCannonFire",
-   "category": "SFX"
+   "name": "SoundShopmanCannonFire"
   },
   "506": {
-   "name": "SoundShopmanWhitemanBeam",
-   "category": "SFX"
+   "name": "SoundShopmanWhitemanBeam"
   },
   "507": {
-   "name": "SoundShopmanWhitemanBang",
-   "category": "SFX"
+   "name": "SoundShopmanWhitemanBang"
   },
   "508": {
-   "name": "SoundShopmanPetSing",
-   "category": "SFX"
+   "name": "SoundShopmanPetSing"
   },
   "509": {
-   "name": "SoundShopmanDogChange",
-   "category": "SFX"
+   "name": "SoundShopmanDogChange"
   },
   "510": {
-   "name": "SoundShopmanDogBite",
-   "category": "SFX"
+   "name": "SoundShopmanDogBite"
   },
   "511": {
-   "name": "SoundShopmanKissChange",
-   "category": "SFX"
+   "name": "SoundShopmanKissChange"
   },
   "512": {
-   "name": "SoundShopmanKissBgm",
-   "category": "SFX"
+   "name": "SoundShopmanKissBgm"
   },
   "513": {
-   "name": "SoundShopmanKiss",
-   "category": "SFX"
+   "name": "SoundShopmanKiss"
   },
   "514": {
-   "name": "SoundShopmanFistChange",
-   "category": "SFX"
+   "name": "SoundShopmanFistChange"
   },
   "515": {
-   "name": "SoundShopmanFistDush",
-   "category": "SFX"
+   "name": "SoundShopmanFistDush"
   },
   "516": {
-   "name": "SoundShopmanFistBang",
-   "category": "SFX"
+   "name": "SoundShopmanFistBang"
   },
   "517": {
-   "name": "SoundShopmanDragonChange",
-   "category": "SFX"
+   "name": "SoundShopmanDragonChange"
   },
   "518": {
-   "name": "SoundShopmanDragonFlap",
-   "category": "SFX"
+   "name": "SoundShopmanDragonFlap"
   },
   "519": {
-   "name": "SoundShopmanDragonFire",
-   "category": "SFX"
+   "name": "SoundShopmanDragonFire"
   },
   "520": {
-   "name": "SoundShopmanSmile01",
-   "category": "SFX"
+   "name": "SoundShopmanSmile01"
   },
   "521": {
-   "name": "SoundShopmanSmile02",
-   "category": "SFX"
+   "name": "SoundShopmanSmile02"
   },
   "522": {
-   "name": "SoundShopmanSmile03",
-   "category": "SFX"
+   "name": "SoundShopmanSmile03"
   },
   "523": {
-   "name": "SoundShopmanSmile04",
-   "category": "SFX"
+   "name": "SoundShopmanSmile04"
   },
   "524": {
-   "name": "SoundShopmanSmile05",
-   "category": "SFX"
+   "name": "SoundShopmanSmile05"
   },
   "525": {
-   "name": "SoundShopmanSmile06",
-   "category": "SFX"
+   "name": "SoundShopmanSmile06"
   },
   "526": {
-   "name": "SoundShopmanSmile07",
-   "category": "SFX"
+   "name": "SoundShopmanSmile07"
   },
   "527": {
-   "name": "SoundShopmanSmile08",
-   "category": "SFX"
+   "name": "SoundShopmanSmile08"
   },
   "528": {
-   "name": "SoundShopmanSmile09",
-   "category": "SFX"
+   "name": "SoundShopmanSmile09"
   },
   "529": {
-   "name": "SoundShopmanSmile10",
-   "category": "SFX"
+   "name": "SoundShopmanSmile10"
   },
   "530": {
-   "name": "SoundShopmanSmile11",
-   "category": "SFX"
+   "name": "SoundShopmanSmile11"
   },
   "531": {
-   "name": "SoundShopmanSmile12",
-   "category": "SFX"
+   "name": "SoundShopmanSmile12"
   },
   "532": {
-   "name": "SoundShopmanSmile13",
-   "category": "SFX"
+   "name": "SoundShopmanSmile13"
   },
   "533": {
-   "name": "SoundShopmanSmile14",
-   "category": "SFX"
+   "name": "SoundShopmanSmile14"
   },
   "534": {
-   "name": "SoundShopmanSmile15",
-   "category": "SFX"
+   "name": "SoundShopmanSmile15"
   },
   "535": {
-   "name": "SoundShopmanSmile16",
-   "category": "SFX"
+   "name": "SoundShopmanSmile16"
   },
   "536": {
-   "name": "SoundShopmanSmile17",
-   "category": "SFX"
+   "name": "SoundShopmanSmile17"
   },
   "537": {
-   "name": "SoundShopmanSmile18",
-   "category": "SFX"
+   "name": "SoundShopmanSmile18"
   },
   "538": {
-   "name": "SoundShopmanSmile19",
-   "category": "SFX"
+   "name": "SoundShopmanSmile19"
   },
   "540": {
-   "name": "SoundGameGb1Up",
-   "category": "SFX"
+   "name": "SoundGameGb1Up"
   },
   "541": {
-   "name": "SoundGameGb1Down",
-   "category": "SFX"
+   "name": "SoundGameGb1Down"
   },
   "542": {
-   "name": "SoundGameGb2Up",
-   "category": "SFX"
+   "name": "SoundGameGb2Up"
   },
   "543": {
-   "name": "SoundGameGb2Down",
-   "category": "SFX"
+   "name": "SoundGameGb2Down"
   },
   "544": {
-   "name": "SoundGameGb3Up",
-   "category": "SFX"
+   "name": "SoundGameGb3Up"
   },
   "545": {
-   "name": "SoundGameGb3Down",
-   "category": "SFX"
+   "name": "SoundGameGb3Down"
   },
   "546": {
-   "name": "SoundGameSlotCoin1",
-   "category": "SFX"
+   "name": "SoundGameSlotCoin1"
   },
   "547": {
-   "name": "SoundGameMedal1",
-   "category": "SFX"
+   "name": "SoundGameMedal1"
   },
   "548": {
-   "name": "SoundGamePoint1",
-   "category": "SFX"
+   "name": "SoundGamePoint1"
   },
   "549": {
-   "name": "SoundDame1",
-   "category": "SFX"
+   "name": "SoundDame1"
   },
   "550": {
-   "name": "SoundGameBbNeck1",
-   "category": "SFX"
+   "name": "SoundGameBbNeck1"
   },
   "551": {
-   "name": "SoundGameBbNeck2",
-   "category": "SFX"
+   "name": "SoundGameBbNeck2"
   },
   "552": {
-   "name": "SoundGameBbStep1",
-   "category": "SFX"
+   "name": "SoundGameBbStep1"
   },
   "553": {
-   "name": "SoundGameBbStep2",
-   "category": "SFX"
+   "name": "SoundGameBbStep2"
   },
   "554": {
-   "name": "SoundGameBbStep3",
-   "category": "SFX"
+   "name": "SoundGameBbStep3"
   },
   "555": {
-   "name": "SoundGameBbStep4",
-   "category": "SFX"
+   "name": "SoundGameBbStep4"
   },
   "556": {
-   "name": "SoundGameBbTStraight",
-   "category": "SFX"
+   "name": "SoundGameBbTStraight"
   },
   "557": {
-   "name": "SoundGameBbTSlow",
-   "category": "SFX"
+   "name": "SoundGameBbTSlow"
   },
   "558": {
-   "name": "SoundGameBbTCurve",
-   "category": "SFX"
+   "name": "SoundGameBbTCurve"
   },
   "559": {
-   "name": "SoundGameBbTErase",
-   "category": "SFX"
+   "name": "SoundGameBbTErase"
   },
   "560": {
-   "name": "SoundGameBbTStop",
-   "category": "SFX"
+   "name": "SoundGameBbTStop"
   },
   "561": {
-   "name": "SoundGameBbTSpeedup",
-   "category": "SFX"
+   "name": "SoundGameBbTSpeedup"
   },
   "562": {
-   "name": "SoundGameBbSwing",
-   "category": "SFX"
+   "name": "SoundGameBbSwing"
   },
   "563": {
-   "name": "SoundGameBbHitSlow",
-   "category": "SFX"
+   "name": "SoundGameBbHitSlow"
   },
   "564": {
-   "name": "SoundGameBbHitFast",
-   "category": "SFX"
+   "name": "SoundGameBbHitFast"
   },
   "565": {
-   "name": "SoundGameBbGlassBroken",
-   "category": "SFX"
+   "name": "SoundGameBbGlassBroken"
   },
   "566": {
-   "name": "SoundGameBbGameStart",
-   "category": "SFX"
+   "name": "SoundGameBbGameStart"
   },
   "567": {
-   "name": "SoundGameBbCheer1",
-   "category": "SFX"
+   "name": "SoundGameBbCheer1"
   },
   "568": {
-   "name": "SoundGameBbCheer2",
-   "category": "SFX"
+   "name": "SoundGameBbCheer2"
   },
   "569": {
-   "name": "SoundGameCarJump07",
-   "category": "SFX"
+   "name": "SoundGameCarJump07"
   },
   "570": {
-   "name": "SoundGameCarStart",
-   "category": "SFX"
+   "name": "SoundGameCarStart"
   },
   "571": {
-   "name": "SoundGameCarClear",
-   "category": "SFX"
+   "name": "SoundGameCarClear"
   },
   "572": {
-   "name": "SoundGameCarBump",
-   "category": "SFX"
+   "name": "SoundGameCarBump"
   },
   "573": {
-   "name": "SoundGameCarJump00",
-   "category": "SFX"
+   "name": "SoundGameCarJump00"
   },
   "574": {
-   "name": "SoundGameCarJump01",
-   "category": "SFX"
+   "name": "SoundGameCarJump01"
   },
   "575": {
-   "name": "SoundGameCarJump02",
-   "category": "SFX"
+   "name": "SoundGameCarJump02"
   },
   "576": {
-   "name": "SoundGameCarJump03",
-   "category": "SFX"
+   "name": "SoundGameCarJump03"
   },
   "577": {
-   "name": "SoundGameCarJump04",
-   "category": "SFX"
+   "name": "SoundGameCarJump04"
   },
   "578": {
-   "name": "SoundGameCarJump05",
-   "category": "SFX"
+   "name": "SoundGameCarJump05"
   },
   "579": {
-   "name": "SoundGameCarJump06",
-   "category": "SFX"
+   "name": "SoundGameCarJump06"
   },
   "580": {
-   "name": "SoundGameBarberPushOk",
-   "category": "SFX"
+   "name": "SoundGameBarberPushOk"
   },
   "581": {
-   "name": "SoundGameBarberPushBad",
-   "category": "SFX"
+   "name": "SoundGameBarberPushBad"
   },
   "582": {
-   "name": "SoundGameBarberOk1",
-   "category": "SFX"
+   "name": "SoundGameBarberOk1"
   },
   "583": {
-   "name": "SoundGameBarberOut1",
-   "category": "SFX"
+   "name": "SoundGameBarberOut1"
   },
   "584": {
-   "name": "SoundGameBarberRing1",
-   "category": "SFX"
+   "name": "SoundGameBarberRing1"
   },
   "585": {
-   "name": "SoundGameBarberRing2",
-   "category": "SFX"
+   "name": "SoundGameBarberRing2"
   },
   "586": {
-   "name": "SoundGameBarberRing3",
-   "category": "SFX"
+   "name": "SoundGameBarberRing3"
   },
   "587": {
-   "name": "SoundGameBarberPush1",
-   "category": "SFX"
+   "name": "SoundGameBarberPush1"
   },
   "588": {
-   "name": "SoundGameBarberPush2",
-   "category": "SFX"
+   "name": "SoundGameBarberPush2"
   },
   "589": {
-   "name": "SoundGameBarberPush3",
-   "category": "SFX"
+   "name": "SoundGameBarberPush3"
   },
   "590": {
-   "name": "SoundGameBarberFaceOut",
-   "category": "SFX"
+   "name": "SoundGameBarberFaceOut"
   },
   "591": {
-   "name": "SoundGameBarberCount1",
-   "category": "SFX"
+   "name": "SoundGameBarberCount1"
   },
   "592": {
-   "name": "SoundGameBarberCount0",
-   "category": "SFX"
+   "name": "SoundGameBarberCount0"
   },
   "593": {
-   "name": "SoundGameNewData",
-   "category": "SFX"
+   "name": "SoundGameNewData"
   },
   "594": {
-   "name": "FanfareGame1",
-   "category": "Fanfare"
+   "name": "FanfareGame1"
   },
   "617": {
-   "name": "MusicBgmCd00",
-   "category": "BGM"
+   "name": "MusicBgmCd00"
   },
   "618": {
-   "name": "MusicBgmCd",
-   "category": "BGM"
+   "name": "MusicBgmCd"
   },
   "619": {
-   "name": "MusicBgmCd11",
-   "category": "BGM"
+   "name": "MusicBgmCd11"
   },
   "620": {
-   "name": "MusicBgmCd12",
-   "category": "BGM"
+   "name": "MusicBgmCd12"
   },
   "621": {
-   "name": "MusicBgmCd13",
-   "category": "BGM"
+   "name": "MusicBgmCd13"
   },
   "622": {
-   "name": "MusicBgmCd14",
-   "category": "BGM"
+   "name": "MusicBgmCd14"
   },
   "623": {
-   "name": "MusicBgmCd21",
-   "category": "BGM"
+   "name": "MusicBgmCd21"
   },
   "624": {
-   "name": "MusicBgmCd22",
-   "category": "BGM"
+   "name": "MusicBgmCd22"
   },
   "625": {
-   "name": "MusicBgmCd23",
-   "category": "BGM"
+   "name": "MusicBgmCd23"
   },
   "626": {
-   "name": "MusicBgmCd24",
-   "category": "BGM"
+   "name": "MusicBgmCd24"
   },
   "627": {
-   "name": "MusicBgmCd31",
-   "category": "BGM"
+   "name": "MusicBgmCd31"
   },
   "628": {
-   "name": "MusicBgmCd32",
-   "category": "BGM"
+   "name": "MusicBgmCd32"
   },
   "629": {
-   "name": "MusicBgmCd33",
-   "category": "BGM"
+   "name": "MusicBgmCd33"
   },
   "630": {
-   "name": "MusicBgmCd34",
-   "category": "BGM"
+   "name": "MusicBgmCd34"
   },
   "631": {
-   "name": "MusicBgmCd41",
-   "category": "BGM"
+   "name": "MusicBgmCd41"
   },
   "632": {
-   "name": "MusicBgmCd42",
-   "category": "BGM"
+   "name": "MusicBgmCd42"
   },
   "633": {
-   "name": "MusicBgmCd43",
-   "category": "BGM"
+   "name": "MusicBgmCd43"
   },
   "634": {
-   "name": "MusicBgmCd44",
-   "category": "BGM"
+   "name": "MusicBgmCd44"
   },
   "635": {
-   "name": "MusicBgmTitleIntro",
-   "category": "BGM"
+   "name": "MusicBgmTitleIntro"
   },
   "636": {
-   "name": "MusicBgmTitle",
-   "category": "BGM"
+   "name": "MusicBgmTitle"
   },
   "637": {
-   "name": "MusicBgmTitlePyramid",
-   "category": "BGM"
+   "name": "MusicBgmTitlePyramid"
   },
   "638": {
-   "name": "MusicBgmTitlePyramidIn",
-   "category": "BGM"
+   "name": "MusicBgmTitlePyramidIn"
   },
   "639": {
-   "name": "MusicBgmMap",
-   "category": "BGM"
+   "name": "MusicBgmMap"
   },
   "640": {
-   "name": "MusicBgmMapBoss",
-   "category": "BGM"
+   "name": "MusicBgmMapBoss"
   },
   "641": {
-   "name": "MusicBgmPause",
-   "category": "BGM"
+   "name": "MusicBgmPause"
   },
   "642": {
-   "name": "MusicBgmResult",
-   "category": "BGM"
+   "name": "MusicBgmResult"
   },
   "651": {
-   "name": "MusicBgmN10CocoA",
-   "category": "BGM"
+   "name": "MusicBgmN10CocoA"
   },
   "652": {
-   "name": "MusicBgmN10CocoAb",
-   "category": "BGM"
+   "name": "MusicBgmN10CocoAb"
   },
   "653": {
-   "name": "MusicBgmN10CocoBa",
-   "category": "BGM"
+   "name": "MusicBgmN10CocoBa"
   },
   "654": {
-   "name": "MusicBgmN11Flower",
-   "category": "BGM"
+   "name": "MusicBgmN11Flower"
   },
   "655": {
-   "name": "MusicBgmN12WaterA",
-   "category": "BGM"
+   "name": "MusicBgmN12WaterA"
   },
   "656": {
-   "name": "MusicBgmN12WaterAb",
-   "category": "BGM"
+   "name": "MusicBgmN12WaterAb"
   },
   "657": {
-   "name": "MusicBgmN12WaterBa",
-   "category": "BGM"
+   "name": "MusicBgmN12WaterBa"
   },
   "658": {
-   "name": "MusicBgmN13Jungle",
-   "category": "BGM"
+   "name": "MusicBgmN13Jungle"
   },
   "659": {
-   "name": "MusicBgmN20Factory",
-   "category": "BGM"
+   "name": "MusicBgmN20Factory"
   },
   "660": {
-   "name": "MusicBgmN21Scrap",
-   "category": "BGM"
+   "name": "MusicBgmN21Scrap"
   },
   "661": {
-   "name": "MusicBgmN22Pinball",
-   "category": "BGM"
+   "name": "MusicBgmN22Pinball"
   },
   "662": {
-   "name": "MusicBgmN23Freezer",
-   "category": "BGM"
+   "name": "MusicBgmN23Freezer"
   },
   "663": {
-   "name": "MusicBgmN30Block",
-   "category": "BGM"
+   "name": "MusicBgmN30Block"
   },
   "664": {
-   "name": "MusicBgmN31Sugoroku",
-   "category": "BGM"
+   "name": "MusicBgmN31Sugoroku"
   },
   "665": {
-   "name": "MusicBgmN32Graffiti",
-   "category": "BGM"
+   "name": "MusicBgmN32Graffiti"
   },
   "666": {
-   "name": "MusicBgmN33Domino",
-   "category": "BGM"
+   "name": "MusicBgmN33Domino"
   },
   "667": {
-   "name": "MusicBgmN40Town",
-   "category": "BGM"
+   "name": "MusicBgmN40Town"
   },
   "668": {
-   "name": "MusicBgmN41Arab",
-   "category": "BGM"
+   "name": "MusicBgmN41Arab"
   },
   "669": {
-   "name": "MusicBgmN42Apartment",
-   "category": "BGM"
+   "name": "MusicBgmN42Apartment"
   },
   "670": {
-   "name": "MusicBgmN43Fire",
-   "category": "BGM"
+   "name": "MusicBgmN43Fire"
   },
   "671": {
-   "name": "MusicBgmN50Remains",
-   "category": "BGM"
+   "name": "MusicBgmN50Remains"
   },
   "672": {
-   "name": "MusicBgmN00Tutorial",
-   "category": "BGM"
+   "name": "MusicBgmN00Tutorial"
   },
   "673": {
-   "name": "MusicBgmBehindGame0",
-   "category": "BGM"
+   "name": "MusicBgmBehindGame0"
   },
   "674": {
-   "name": "MusicBgmBehindGame1",
-   "category": "BGM"
+   "name": "MusicBgmBehindGame1"
   },
   "681": {
-   "name": "MusicBgmHurryup00",
-   "category": "BGM"
+   "name": "MusicBgmHurryup00"
   },
   "682": {
-   "name": "MusicBgmShop",
-   "category": "BGM"
+   "name": "MusicBgmShop"
   },
   "683": {
-   "name": "MusicBgmShopmanDanceIn",
-   "category": "BGM"
+   "name": "MusicBgmShopmanDanceIn"
   },
   "684": {
-   "name": "MusicBgmShopmanDanceIn2",
-   "category": "BGM"
+   "name": "MusicBgmShopmanDanceIn2"
   },
   "685": {
-   "name": "MusicBgmShopmanDanceOut",
-   "category": "BGM"
+   "name": "MusicBgmShopmanDanceOut"
   },
   "686": {
-   "name": "MusicBgmXxx",
-   "category": "BGM"
+   "name": "MusicBgmXxx"
   },
   "687": {
-   "name": "MusicBgmBoss01",
-   "category": "BGM"
+   "name": "MusicBgmBoss01"
   },
   "688": {
-   "name": "MusicBgmBossBig",
-   "category": "BGM"
+   "name": "MusicBgmBossBig"
   },
   "689": {
-   "name": "MusicBgmBossBig2",
-   "category": "BGM"
+   "name": "MusicBgmBossBig2"
   },
   "701": {
-   "name": "MusicBgmMinigame",
-   "category": "BGM"
+   "name": "MusicBgmMinigame"
   },
   "702": {
-   "name": "MusicBgmMinigameCar0",
-   "category": "BGM"
+   "name": "MusicBgmMinigameCar0"
   },
   "703": {
-   "name": "MusicBgmMinigameCar1",
-   "category": "BGM"
+   "name": "MusicBgmMinigameCar1"
   },
   "704": {
-   "name": "MusicBgmMinigameCar12",
-   "category": "BGM"
+   "name": "MusicBgmMinigameCar12"
   },
   "705": {
-   "name": "MusicBgmMinigameCar2",
-   "category": "BGM"
+   "name": "MusicBgmMinigameCar2"
   },
   "706": {
-   "name": "MusicBgmMinigameCar3",
-   "category": "BGM"
+   "name": "MusicBgmMinigameCar3"
   },
   "707": {
-   "name": "MusicBgmMinigameCarBrak",
-   "category": "BGM"
+   "name": "MusicBgmMinigameCarBrak"
   },
   "708": {
-   "name": "MusicBgmMinigameFacemake",
-   "category": "BGM"
+   "name": "MusicBgmMinigameFacemake"
   },
   "709": {
-   "name": "MusicBgmMinigameBaseball",
-   "category": "BGM"
+   "name": "MusicBgmMinigameBaseball"
   },
   "710": {
-   "name": "MusicBgmMinigameBbHomer",
-   "category": "BGM"
+   "name": "MusicBgmMinigameBbHomer"
   },
   "711": {
-   "name": "MusicBgmMinigameBbOut",
-   "category": "BGM"
+   "name": "MusicBgmMinigameBbOut"
   },
   "712": {
-   "name": "MusicBgmMinigameBbOut2",
-   "category": "BGM"
+   "name": "MusicBgmMinigameBbOut2"
   },
   "713": {
-   "name": "MusicBgmMinigameBbStrike",
-   "category": "BGM"
+   "name": "MusicBgmMinigameBbStrike"
   },
   "714": {
-   "name": "MusicBgmMinigameBbFoul",
-   "category": "BGM"
+   "name": "MusicBgmMinigameBbFoul"
   },
   "715": {
-   "name": "MusicBgmMinigameBbCheerIn",
-   "category": "BGM"
+   "name": "MusicBgmMinigameBbCheerIn"
   },
   "716": {
-   "name": "MusicBgmMinigameBbCheerOut",
-   "category": "BGM"
+   "name": "MusicBgmMinigameBbCheerOut"
   },
   "727": {
-   "name": "SoundKaraokeSunnyOffRoman",
-   "category": "SFX"
+   "name": "SoundKaraokeSunnyOffRoman"
   },
   "728": {
-   "name": "SoundKaraokeSunnyOff",
-   "category": "SFX"
+   "name": "SoundKaraokeSunnyOff"
   },
   "729": {
-   "name": "SoundKaraokeSunnyVoice",
-   "category": "SFX"
+   "name": "SoundKaraokeSunnyVoice"
   },
   "730": {
-   "name": "VoiceWarioHurryup1",
-   "category": "Voice"
+   "name": "VoiceWarioHurryup1"
   },
   "731": {
-   "name": "VoiceWarioHurryup2",
-   "category": "Voice"
+   "name": "VoiceWarioHurryup2"
   },
   "732": {
-   "name": "VoiceWarioHurryup3",
-   "category": "Voice"
+   "name": "VoiceWarioHurryup3"
   },
   "733": {
-   "name": "VoiceWarioHurryup4",
-   "category": "Voice"
+   "name": "VoiceWarioHurryup4"
   },
   "734": {
-   "name": "VoiceWarioHurryup5",
-   "category": "Voice"
+   "name": "VoiceWarioHurryup5"
   },
   "735": {
-   "name": "VoiceWarioYahoo1",
-   "category": "Voice"
+   "name": "VoiceWarioYahoo1"
   },
   "736": {
-   "name": "VoiceWarioYahoo2",
-   "category": "Voice"
+   "name": "VoiceWarioYahoo2"
   },
   "737": {
-   "name": "VoiceWarioYahoo3",
-   "category": "Voice"
+   "name": "VoiceWarioYahoo3"
   },
   "738": {
-   "name": "VoiceWarioYahoo4",
-   "category": "Voice"
+   "name": "VoiceWarioYahoo4"
   },
   "739": {
-   "name": "VoiceWarioYahoo5",
-   "category": "Voice"
+   "name": "VoiceWarioYahoo5"
   },
   "740": {
-   "name": "VoiceWarioExcellent1",
-   "category": "Voice"
+   "name": "VoiceWarioExcellent1"
   },
   "741": {
-   "name": "VoiceWarioExcellent2",
-   "category": "Voice"
+   "name": "VoiceWarioExcellent2"
   },
   "742": {
-   "name": "VoiceWarioExcellent3",
-   "category": "Voice"
+   "name": "VoiceWarioExcellent3"
   },
   "743": {
-   "name": "VoiceWarioHereIGo1",
-   "category": "Voice"
+   "name": "VoiceWarioHereIGo1"
   },
   "744": {
-   "name": "VoiceWarioHereIGo2",
-   "category": "Voice"
+   "name": "VoiceWarioHereIGo2"
   },
   "745": {
-   "name": "VoiceWarioHereIGo3",
-   "category": "Voice"
+   "name": "VoiceWarioHereIGo3"
   },
   "746": {
-   "name": "VoiceWarioMamamiya1",
-   "category": "Voice"
+   "name": "VoiceWarioMamamiya1"
   },
   "747": {
-   "name": "VoiceWarioMamamiya2",
-   "category": "Voice"
+   "name": "VoiceWarioMamamiya2"
   },
   "748": {
-   "name": "VoiceWarioOhBoy1",
-   "category": "Voice"
+   "name": "VoiceWarioOhBoy1"
   },
   "749": {
-   "name": "VoiceWarioOhBoy2",
-   "category": "Voice"
+   "name": "VoiceWarioOhBoy2"
   },
   "750": {
-   "name": "VoiceWarioOhRight1",
-   "category": "Voice"
+   "name": "VoiceWarioOhRight1"
   },
   "751": {
-   "name": "VoiceWarioOhRight2",
-   "category": "Voice"
+   "name": "VoiceWarioOhRight2"
   },
   "752": {
-   "name": "VoiceWarioSorry1",
-   "category": "Voice"
+   "name": "VoiceWarioSorry1"
   },
   "753": {
-   "name": "VoiceWarioSorry2",
-   "category": "Voice"
+   "name": "VoiceWarioSorry2"
   },
   "754": {
-   "name": "VoiceWarioSorry3",
-   "category": "Voice"
+   "name": "VoiceWarioSorry3"
   },
   "755": {
-   "name": "VoiceWarioGoodluck1",
-   "category": "Voice"
+   "name": "VoiceWarioGoodluck1"
   },
   "756": {
-   "name": "VoiceWarioGoodluck2",
-   "category": "Voice"
+   "name": "VoiceWarioGoodluck2"
   },
   "757": {
-   "name": "VoiceWarioBye1",
-   "category": "Voice"
+   "name": "VoiceWarioBye1"
   },
   "758": {
-   "name": "VoiceWarioBye2",
-   "category": "Voice"
+   "name": "VoiceWarioBye2"
   },
   "759": {
-   "name": "VoiceWarioBye3",
-   "category": "Voice"
+   "name": "VoiceWarioBye3"
   },
   "760": {
-   "name": "VoiceWarioHey1",
-   "category": "Voice"
+   "name": "VoiceWarioHey1"
   },
   "761": {
-   "name": "VoiceWarioHeyhey1",
-   "category": "Voice"
+   "name": "VoiceWarioHeyhey1"
   },
   "762": {
-   "name": "VoiceWarioLaughHa11",
-   "category": "Voice"
+   "name": "VoiceWarioLaughHa11"
   },
   "763": {
-   "name": "VoiceWarioLaughHa12",
-   "category": "Voice"
+   "name": "VoiceWarioLaughHa12"
   },
   "764": {
-   "name": "VoiceWarioLaughHa21",
-   "category": "Voice"
+   "name": "VoiceWarioLaughHa21"
   },
   "765": {
-   "name": "VoiceWarioLaughHi1",
-   "category": "Voice"
+   "name": "VoiceWarioLaughHi1"
   },
   "766": {
-   "name": "VoiceWarioOk1",
-   "category": "Voice"
+   "name": "VoiceWarioOk1"
   },
   "767": {
-   "name": "VoiceWarioOk2",
-   "category": "Voice"
+   "name": "VoiceWarioOk2"
   },
   "768": {
-   "name": "VoiceWarioOk3",
-   "category": "Voice"
+   "name": "VoiceWarioOk3"
   },
   "769": {
-   "name": "VoiceWarioYeah1",
-   "category": "Voice"
+   "name": "VoiceWarioYeah1"
   },
   "770": {
-   "name": "VoiceWarioGoHey1",
-   "category": "Voice"
+   "name": "VoiceWarioGoHey1"
   },
   "771": {
-   "name": "VoiceWarioGo1",
-   "category": "Voice"
+   "name": "VoiceWarioGo1"
   },
   "772": {
-   "name": "VoiceWarioGo2",
-   "category": "Voice"
+   "name": "VoiceWarioGo2"
   },
   "773": {
-   "name": "VoiceWarioNo1",
-   "category": "Voice"
+   "name": "VoiceWarioNo1"
   },
   "774": {
-   "name": "VoiceWarioNo2",
-   "category": "Voice"
+   "name": "VoiceWarioNo2"
   },
   "775": {
-   "name": "VoiceWarioNo3",
-   "category": "Voice"
+   "name": "VoiceWarioNo3"
   },
   "776": {
-   "name": "VoiceWarioAhh1",
-   "category": "Voice"
+   "name": "VoiceWarioAhh1"
   },
   "777": {
-   "name": "VoiceWarioAhh2",
-   "category": "Voice"
+   "name": "VoiceWarioAhh2"
   },
   "778": {
-   "name": "VoiceWarioAhh3",
-   "category": "Voice"
+   "name": "VoiceWarioAhh3"
   },
   "779": {
-   "name": "VoiceWarioAhhEyeah1",
-   "category": "Voice"
+   "name": "VoiceWarioAhhEyeah1"
   },
   "780": {
-   "name": "VoiceWarioAhhEyeah2",
-   "category": "Voice"
+   "name": "VoiceWarioAhhEyeah2"
   },
   "781": {
-   "name": "VoiceWarioHa1",
-   "category": "Voice"
+   "name": "VoiceWarioHa1"
   },
   "782": {
-   "name": "VoiceWarioWaa1",
-   "category": "Voice"
+   "name": "VoiceWarioWaa1"
   },
   "783": {
-   "name": "VoiceWarioWaa2",
-   "category": "Voice"
+   "name": "VoiceWarioWaa2"
   },
   "784": {
-   "name": "VoiceWarioWao1",
-   "category": "Voice"
+   "name": "VoiceWarioWao1"
   },
   "785": {
-   "name": "VoiceWarioWao2",
-   "category": "Voice"
+   "name": "VoiceWarioWao2"
   },
   "786": {
-   "name": "VoiceWarioWinYoki",
-   "category": "Voice"
+   "name": "VoiceWarioWinYoki"
   },
   "800": {
-   "name": "MusicEndingHurryup",
-   "category": "Ending"
+   "name": "MusicEndingHurryup"
   },
   "801": {
-   "name": "MusicEndingCatWario",
-   "category": "Ending"
+   "name": "MusicEndingCatWario"
   },
   "802": {
-   "name": "MusicEndingPrincess",
-   "category": "Ending"
+   "name": "MusicEndingPrincess"
   },
   "803": {
-   "name": "MusicEndingStuff10Jp",
-   "category": "Ending"
+   "name": "MusicEndingStuff10Jp"
   },
   "804": {
-   "name": "MusicEndingStuff11Block",
-   "category": "Ending"
+   "name": "MusicEndingStuff11Block"
   },
   "805": {
-   "name": "MusicEndingStuff12Jungle",
-   "category": "Ending"
+   "name": "MusicEndingStuff12Jungle"
   },
   "806": {
-   "name": "MusicEndingStuff20Jp",
-   "category": "Ending"
+   "name": "MusicEndingStuff20Jp"
   },
   "807": {
-   "name": "MusicEndingStuff21Town",
-   "category": "Ending"
+   "name": "MusicEndingStuff21Town"
   },
   "808": {
-   "name": "MusicEndingStuff22Graffiti",
-   "category": "Ending"
+   "name": "MusicEndingStuff22Graffiti"
   },
   "809": {
-   "name": "MusicEndingStuff30Jp",
-   "category": "Ending"
+   "name": "MusicEndingStuff30Jp"
   },
   "810": {
-   "name": "MusicEndingStuff31Tutorial",
-   "category": "Ending"
+   "name": "MusicEndingStuff31Tutorial"
   },
   "811": {
-   "name": "MusicEndingStuff32Flower",
-   "category": "Ending"
+   "name": "MusicEndingStuff32Flower"
   },
   "812": {
-   "name": "MusicEndingStuff40Jp",
-   "category": "Ending"
+   "name": "MusicEndingStuff40Jp"
   },
   "813": {
-   "name": "MusicEndingStuff41Water",
-   "category": "Ending"
+   "name": "MusicEndingStuff41Water"
   },
   "814": {
-   "name": "MusicEndingStuff42Sugoroku",
-   "category": "Ending"
+   "name": "MusicEndingStuff42Sugoroku"
   },
   "815": {
-   "name": "MusicEndingStuff10Us",
-   "category": "Ending"
+   "name": "MusicEndingStuff10Us"
   },
   "816": {
-   "name": "MusicEndingStuff20Us",
-   "category": "Ending"
+   "name": "MusicEndingStuff20Us"
   },
   "817": {
-   "name": "MusicEndingStuff30Us",
-   "category": "Ending"
+   "name": "MusicEndingStuff30Us"
   },
   "818": {
-   "name": "MusicEndingStuff40Us",
-   "category": "Ending"
+   "name": "MusicEndingStuff40Us"
   }
  },
  "banks": {

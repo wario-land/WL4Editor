@@ -30,6 +30,7 @@
 #include <QTableWidgetItem>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <functional>
 
 extern WL4EditorWindow *singleton;
@@ -185,50 +186,33 @@ void SoundManagerDialog::PopulateTree()
         return nameItem;
     };
 
-    auto makeCategory = [this](const QString &title) -> QStandardItem *
-    {
-        auto *nameItem = new QStandardItem(title);
-        nameItem->setEditable(false);
-        QList<QStandardItem *> row;
-        row << nameItem
-            << new QStandardItem(QString())
-            << new QStandardItem(QString())
-            << new QStandardItem(QString());
-        for (int i = 1; i < row.size(); ++i)
-            row[i]->setEditable(false);
-        return nameItem;
-    };
-
-    // Songs
+    // Songs: a flat, id-ordered list. There is no category metadata in the ROM.
     QStandardItem *songsRoot = makeRoot(tr("Songs"));
-    QHash<int, QStandardItem *> songCategories;
+    QVector<const Sound::Song *> songs;
     for (const Sound::Song &song : soundData.songs)
     {
         if (song.state == Sound::SongState::Empty && !showEmpty)
             continue;
         if (showChanged && !song.changed)
             continue;
-
-        const int categoryId = static_cast<int>(song.category);
-        QStandardItem *category = songCategories.value(categoryId, nullptr);
-        if (!category)
-        {
-            category = makeCategory(Sound::SongCategoryName(song.category));
-            songCategories.insert(categoryId, category);
-            songsRoot->appendRow(category);
-        }
-
+        songs.append(&song);
+    }
+    std::sort(songs.begin(), songs.end(), [](const Sound::Song *a, const Sound::Song *b)
+    {
+        return a->id < b->id;
+    });
+    for (const Sound::Song *song : songs)
+    {
         QString stateText = QStringLiteral("Vanilla");
-        if (song.state == Sound::SongState::Empty)
+        if (song->state == Sound::SongState::Empty)
             stateText = QStringLiteral("Empty");
-        else if (song.state == Sound::SongState::Custom)
+        else if (song->state == Sound::SongState::Custom)
             stateText = QStringLiteral("Custom");
-        if (song.changed)
+        if (song->changed)
             stateText = QStringLiteral("Changed");
 
-        const QString displayName = song.name;
-        category->appendRow(CreateEntryRow(displayName, song.id, EntryType::Song,
-                                           tr("Song"), stateText));
+        songsRoot->appendRow(CreateEntryRow(song->name, song->id, EntryType::Song,
+                                            tr("Song"), stateText));
     }
 
     // Banks and Programs
@@ -537,7 +521,6 @@ void SoundManagerDialog::BuildSongDetail(const Sound::Song &song)
     else if (song.state == Sound::SongState::Custom)
         stateText = tr("Custom");
     AddReadOnlyRow(general, tr("State"), stateText);
-    AddReadOnlyRow(general, tr("Category"), Sound::SongCategoryName(song.category));
     AddReadOnlyRow(general, tr("ROM address"), hexAddress(song.romAddress));
 
     const Sound::Bank *bank = FindBank(song.bankId);
@@ -725,11 +708,6 @@ void SoundManagerDialog::BuildSampleDetail(const Sound::Sample &sample)
     AddReadOnlyRow(general, tr("Size"), QString::number(sample.size) + tr(" bytes"));
     AddReadOnlyRow(general, tr("SHA-1"), QString::fromLatin1(sample.sha1));
 
-    QGroupBox *preview = CreateGroup(tr("Waveform Preview"));
-    auto *label = new QLabel(tr("Static waveform preview is available in the editing phase."), preview);
-    label->setWordWrap(true);
-    if (auto *layout = qobject_cast<QFormLayout *>(preview->layout()))
-        layout->addRow(label);
 }
 
 void SoundManagerDialog::BuildPlayerDetail(const Sound::Player &player)

@@ -33,16 +33,6 @@ namespace Sound
         Unknown = 0xFF
     };
 
-    enum class SongCategory
-    {
-        Bgm,
-        Sfx,
-        Voice,
-        Fanfare,
-        Ending,
-        Other
-    };
-
     enum class BankRole
     {
         Music,
@@ -166,7 +156,6 @@ namespace Sound
         QVector<quint32> trackAddresses;   // ROM file offsets
         QString name;
         QString description;
-        SongCategory category = SongCategory::Other;
         bool changed = false;
 
         // Staged import state (Phase 2). The .s file is assembled at save time.
@@ -214,7 +203,6 @@ namespace Sound
     };
 
     QString VoiceTypeName(VoiceType type);
-    QString SongCategoryName(SongCategory category);
 } // namespace Sound
 
 #endif // SOUNDTYPES_H

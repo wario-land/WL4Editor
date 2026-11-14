@@ -175,7 +175,6 @@ namespace Sound
             QJsonObject object;
             object.insert(QStringLiteral("id"), song.id);
             object.insert(QStringLiteral("name"), song.name);
-            object.insert(QStringLiteral("category"), SongCategoryName(song.category));
             object.insert(QStringLiteral("state"), stateName(song.state));
             object.insert(QStringLiteral("romAddress"), hexValue(song.romAddress));
             object.insert(QStringLiteral("trackCount"), song.trackCount);

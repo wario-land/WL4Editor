@@ -22,19 +22,6 @@ namespace Sound
         }
     }
 
-    QString SongCategoryName(SongCategory category)
-    {
-        switch (category)
-        {
-        case SongCategory::Bgm: return QStringLiteral("BGM");
-        case SongCategory::Sfx: return QStringLiteral("SFX");
-        case SongCategory::Voice: return QStringLiteral("Voice");
-        case SongCategory::Fanfare: return QStringLiteral("Fanfare");
-        case SongCategory::Ending: return QStringLiteral("Ending");
-        default: return QStringLiteral("Other");
-        }
-    }
-
     int ParseResult::nonEmptySongCount() const
     {
         int count = 0;

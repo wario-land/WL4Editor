@@ -19,7 +19,6 @@ namespace Sound
         {
             QString name;
             QString description;
-            SongCategory category = SongCategory::Other;
         };
 
         static SoundDatabase &instance();
@@ -32,7 +31,6 @@ namespace Sound
 
         QString songName(int id, const QString &fallback) const;
         QString songDescription(int id) const;
-        SongCategory songCategory(int id) const;
 
         QString bankName(int id, const QString &fallback) const;
         QString programName(int bankId, int program, const QString &fallback) const;

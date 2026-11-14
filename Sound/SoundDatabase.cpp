@@ -11,21 +11,6 @@ namespace Sound
 {
     namespace
     {
-        SongCategory categoryFromString(const QString &text)
-        {
-            const QString value = text.trimmed().toLower();
-            if (value == QStringLiteral("bgm") || value == QStringLiteral("music"))
-                return SongCategory::Bgm;
-            if (value == QStringLiteral("sfx") || value == QStringLiteral("soundeffect"))
-                return SongCategory::Sfx;
-            if (value == QStringLiteral("voice"))
-                return SongCategory::Voice;
-            if (value == QStringLiteral("fanfare"))
-                return SongCategory::Fanfare;
-            if (value == QStringLiteral("ending"))
-                return SongCategory::Ending;
-            return SongCategory::Other;
-        }
     } // namespace
 
     SoundDatabase &SoundDatabase::instance()
@@ -83,7 +68,6 @@ namespace Sound
             SongInfo info;
             info.name = entry.value(QStringLiteral("name")).toString();
             info.description = entry.value(QStringLiteral("description")).toString();
-            info.category = categoryFromString(entry.value(QStringLiteral("category")).toString());
             if (info.name.isEmpty())
                 info.name = QStringLiteral("Song%1").arg(id, 4, 10, QLatin1Char('0'));
             songs.insert(id, info);
@@ -145,12 +129,6 @@ namespace Sound
     {
         const auto it = songs.constFind(id);
         return it != songs.constEnd() ? it->description : QString();
-    }
-
-    SongCategory SoundDatabase::songCategory(int id) const
-    {
-        const auto it = songs.constFind(id);
-        return it != songs.constEnd() ? it->category : SongCategory::Other;
     }
 
     QString SoundDatabase::bankName(int id, const QString &fallback) const

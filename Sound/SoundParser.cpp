@@ -210,11 +210,6 @@ namespace Sound
                 }
             }
 
-            SongCategory categoryForSong(int id) const
-            {
-                return SoundDatabase::instance().songCategory(id);
-            }
-
             bool isUnused(const quint8 *raw) const
             {
                 bool allZero = true;
@@ -259,7 +254,6 @@ namespace Sound
                     const QString fallbackName = QStringLiteral("Song%1").arg(id, 4, 10, QLatin1Char('0'));
                     song.name = SoundDatabase::instance().songName(id, fallbackName);
                     song.description = SoundDatabase::instance().songDescription(id);
-                    song.category = categoryForSong(id);
 
                     const quint32 header = pointerToOffset(readU32(entry));
                     song.romAddress = header;
