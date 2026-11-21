@@ -41,6 +41,18 @@ namespace Sound
             return nullptr;
         }
 
+        int sourceTrackCount(const QString &text)
+        {
+            const QRegularExpression expression(
+                        QStringLiteral("(?m)^\\s*\\.byte\\s+(\\d+)\\s*@\\s*NumTrks\\b"));
+            const QRegularExpressionMatch match = expression.match(text);
+            if (!match.hasMatch())
+                return -1;
+            bool ok = false;
+            const int count = match.captured(1).toInt(&ok);
+            return ok ? count : -1;
+        }
+
         bool voiceUsesSample(const Voice &voice, const QSet<int> &sampleIds)
         {
             if (voice.sampleId >= 0 && sampleIds.contains(voice.sampleId))
@@ -206,6 +218,16 @@ namespace Sound
             }
 
             const QString text = QString::fromUtf8(content);
+            const int sourceTracks = sourceTrackCount(text);
+            if (sourceTracks >= 0 && (sourceTracks < 1 || sourceTracks > 16))
+            {
+                result.warnings.append(QStringLiteral(
+                            "Song %1 was not staged: its .s declares %2 tracks; "
+                            "WL4 supports 1..16 tracks. Rejected instead of dropping tracks.")
+                        .arg(id).arg(sourceTracks));
+                continue;
+            }
+
             const int bankFromSource = metadataInt(text, QStringLiteral("wl4-bank"), -1);
             const int bankFromManifest = object.value(QStringLiteral("bankId")).toInt(-1);
             const int bankId = bankFromSource >= 0 ? bankFromSource : bankFromManifest;

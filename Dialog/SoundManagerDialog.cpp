@@ -30,6 +30,9 @@
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QSignalBlocker>
+#include <QSpinBox>
+#include <QCheckBox>
+#include <QOverload>
 #include <QStandardItemModel>
 #include <QTableWidget>
 #include <QTableWidgetItem>
@@ -527,6 +530,55 @@ void SoundManagerDialog::AddReadOnlyRow(QGroupBox *group, const QString &label, 
         layout->addRow(label, edit);
 }
 
+QSpinBox *SoundManagerDialog::AddSpinRow(QGroupBox *group, const QString &label,
+                                        int value, int minimum, int maximum)
+{
+    auto *spin = new QSpinBox(group);
+    spin->setRange(minimum, maximum);
+    spin->setValue(value);
+    spin->setKeyboardTracking(false);
+    if (auto *layout = qobject_cast<QFormLayout *>(group->layout()))
+        layout->addRow(label, spin);
+    return spin;
+}
+
+void SoundManagerDialog::MarkSelectedChanged()
+{
+    const QModelIndex current = ui->treeViewEntries->currentIndex();
+    if (!current.isValid() || !entryModel)
+        return;
+    if (QStandardItem *status = entryModel->itemFromIndex(current.siblingAtColumn(3)))
+        status->setText(tr("Changed"));
+}
+
+Sound::Bank *SoundManagerDialog::FindBankMutable(int bankId)
+{
+    for (Sound::Bank &bank : soundData.banks)
+    {
+        if (bank.id == bankId)
+            return &bank;
+    }
+    return nullptr;
+}
+
+Sound::Sample *SoundManagerDialog::FindSampleMutable(int sampleId)
+{
+    for (Sound::Sample &sample : soundData.samples)
+    {
+        if (sample.id == sampleId)
+            return &sample;
+    }
+    return nullptr;
+}
+
+Sound::Program *SoundManagerDialog::FindProgramMutable(int bankId, int programIndex)
+{
+    Sound::Bank *bank = FindBankMutable(bankId);
+    if (!bank || programIndex < 0 || programIndex >= bank->programs.size())
+        return nullptr;
+    return &bank->programs[programIndex];
+}
+
 void SoundManagerDialog::BuildSongDetail(const Sound::Song &song)
 {
     QGroupBox *general = CreateGroup(tr("General"));
@@ -647,6 +699,48 @@ void SoundManagerDialog::BuildProgramDetail(int bankId, int programIndex)
     if (voice.waveAddress)
         AddReadOnlyRow(general, tr("PSG wave"), hexAddress(voice.waveAddress));
 
+    QGroupBox *editable = CreateGroup(tr("Editable Parameters"));
+    QSpinBox *key = AddSpinRow(editable, tr("Key"), voice.key, 0, 127);
+    QSpinBox *pan = AddSpinRow(editable, tr("Pan"), voice.pan, 0, 127);
+    QSpinBox *attack = AddSpinRow(editable, tr("Attack"), voice.attack, 0, 255);
+    QSpinBox *decay = AddSpinRow(editable, tr("Decay"), voice.decay, 0, 255);
+    QSpinBox *sustain = AddSpinRow(editable, tr("Sustain"), voice.sustain, 0, 255);
+    QSpinBox *release = AddSpinRow(editable, tr("Release"), voice.release, 0, 255);
+    auto applyProgram = [this, bankId, programIndex, key, pan, attack, decay, sustain, release]
+    {
+        Sound::Program *editableProgram = FindProgramMutable(bankId, programIndex);
+        if (!editableProgram)
+            return;
+        Sound::Voice &editableVoice = editableProgram->voice;
+        editableVoice.key = static_cast<quint8>(key->value());
+        editableVoice.pan = static_cast<quint8>(pan->value());
+        editableVoice.attack = static_cast<quint8>(attack->value());
+        editableVoice.decay = static_cast<quint8>(decay->value());
+        editableVoice.sustain = static_cast<quint8>(sustain->value());
+        editableVoice.release = static_cast<quint8>(release->value());
+        editableVoice.raw[1] = editableVoice.key;
+        editableVoice.raw[3] = editableVoice.pan;
+        editableVoice.raw[8] = editableVoice.attack;
+        editableVoice.raw[9] = editableVoice.decay;
+        editableVoice.raw[10] = editableVoice.sustain;
+        editableVoice.raw[11] = editableVoice.release;
+        editableProgram->changed = true;
+        MarkSelectedChanged();
+        UpdateStatusLabel();
+    };
+    connect(key, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applyProgram](int) { applyProgram(); });
+    connect(pan, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applyProgram](int) { applyProgram(); });
+    connect(attack, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applyProgram](int) { applyProgram(); });
+    connect(decay, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applyProgram](int) { applyProgram(); });
+    connect(sustain, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applyProgram](int) { applyProgram(); });
+    connect(release, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applyProgram](int) { applyProgram(); });
+
     if (!voice.keyTable.isEmpty())
     {
         QGroupBox *keySplit = CreateGroup(tr("Key Split Table"));
@@ -726,6 +820,42 @@ void SoundManagerDialog::BuildSampleDetail(const Sound::Sample &sample)
     AddReadOnlyRow(general, tr("Size"), QString::number(sample.size) + tr(" bytes"));
     AddReadOnlyRow(general, tr("SHA-1"), QString::fromLatin1(sample.sha1));
 
+    QGroupBox *editable = CreateGroup(tr("Editable Parameters"));
+    auto *loop = new QCheckBox(tr("Loop sample"), editable);
+    loop->setChecked(sample.isLooped());
+    if (auto *layout = qobject_cast<QFormLayout *>(editable->layout()))
+        layout->addRow(tr("Loop"), loop);
+    QSpinBox *pitch = AddSpinRow(editable, tr("Pitch (raw 1/1024 Hz)"),
+                                 static_cast<int>(sample.pitch), 0, 0x7FFFFFFF);
+    QSpinBox *loopStart = AddSpinRow(editable, tr("Loop start (bytes)"),
+                                     static_cast<int>(sample.loopStart), 0, 0x7FFFFFFF);
+    auto applySample = [this, sampleId = sample.id, loop, pitch, loopStart]
+    {
+        Sound::Sample *editableSample = FindSampleMutable(sampleId);
+        if (!editableSample)
+            return;
+        if (loop->isChecked() && editableSample->size > 0 &&
+                static_cast<quint32>(loopStart->value()) >= editableSample->size)
+        {
+            QMessageBox::warning(this, tr("Invalid loop"),
+                                 tr("Loop start must be smaller than the sample size."));
+            loopStart->setValue(static_cast<int>(editableSample->loopStart));
+            return;
+        }
+        editableSample->flag = loop->isChecked()
+                ? static_cast<quint8>(editableSample->flag | 0x40)
+                : static_cast<quint8>(editableSample->flag & ~0x40);
+        editableSample->pitch = static_cast<quint32>(pitch->value());
+        editableSample->loopStart = static_cast<quint32>(loopStart->value());
+        editableSample->changed = true;
+        MarkSelectedChanged();
+        UpdateStatusLabel();
+    };
+    connect(loop, &QCheckBox::toggled, this, [applySample](bool) { applySample(); });
+    connect(pitch, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applySample](int) { applySample(); });
+    connect(loopStart, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applySample](int) { applySample(); });
 }
 
 void SoundManagerDialog::BuildPlayerDetail(const Sound::Player &player)
@@ -873,6 +1003,7 @@ void SoundManagerDialog::on_pushButtonExportAll_clicked()
     ui->progressBar->setRange(0, 100);
     ui->progressBar->setValue(0);
 
+    QStringList exportWarnings;
     const QString error = Sound::SoundExport::exportAll(
                 soundData,
                 ROMUtils::ROMFileMetadata->ROMDataPtr,
@@ -883,7 +1014,8 @@ void SoundManagerDialog::on_pushButtonExportAll_clicked()
                     ui->progressBar->setRange(0, qMax(1, total));
                     ui->progressBar->setValue(current);
                     QCoreApplication::processEvents();
-                });
+                },
+                &exportWarnings);
 
     QApplication::restoreOverrideCursor();
     ui->progressBar->setValue(0);
@@ -895,8 +1027,14 @@ void SoundManagerDialog::on_pushButtonExportAll_clicked()
     }
 
     UpdateStatusLabel();
-    QMessageBox::information(this, tr("Export sound project"),
-                             tr("Sound project exported to:\n%1").arg(folder));
+    QString message = tr("Sound project exported to:\n%1").arg(folder);
+    if (!exportWarnings.isEmpty())
+    {
+        message += tr("\n\nWarnings:\n") + exportWarnings.mid(0, 10).join(QLatin1Char('\n'));
+        if (exportWarnings.size() > 10)
+            message += tr("\n... and %1 more.").arg(exportWarnings.size() - 10);
+    }
+    QMessageBox::information(this, tr("Export sound project"), message);
 }
 
 void SoundManagerDialog::on_pushButtonImportAll_clicked()
@@ -1060,9 +1198,10 @@ void SoundManagerDialog::on_pushButtonExportSelected_clicked()
         return;
     }
 
+    QStringList exportWarnings;
     const QString exportError = Sound::SoundExport::exportAll(
                 soundData, ROMUtils::ROMFileMetadata->ROMDataPtr,
-                ROMUtils::ROMFileMetadata->Length, temp.path());
+                ROMUtils::ROMFileMetadata->Length, temp.path(), {}, &exportWarnings);
     QApplication::restoreOverrideCursor();
     if (!exportError.isEmpty())
     {
@@ -1129,8 +1268,10 @@ void SoundManagerDialog::on_pushButtonExportSelected_clicked()
         QMessageBox::critical(this, tr("Export selected"), error);
         return;
     }
-    QMessageBox::information(this, tr("Export selected"),
-                             tr("The selected item was exported to:\n%1").arg(folder));
+    QString message = tr("The selected item was exported to:\n%1").arg(folder);
+    if (!exportWarnings.isEmpty())
+        message += tr("\n\nWarnings:\n") + exportWarnings.mid(0, 10).join(QLatin1Char('\n'));
+    QMessageBox::information(this, tr("Export selected"), message);
 }
 
 

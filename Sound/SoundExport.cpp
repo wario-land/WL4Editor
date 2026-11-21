@@ -105,7 +105,8 @@ namespace Sound
 
     QString SoundExport::exportAll(const ParseResult &data, const unsigned char *rom,
                                    quint32 romSize, const QString &folder,
-                                   const std::function<void(int, int)> &progress)
+                                   const std::function<void(int, int)> &progress,
+                                   QStringList *warningsOut)
     {
         if (!rom || romSize < 0x800000)
             return QStringLiteral("Invalid ROM data.");
@@ -382,6 +383,8 @@ namespace Sound
             readme.close();
         }
 
+        if (warningsOut)
+            *warningsOut = warnings;
         if (progress)
             progress(total, total);
         return QString();

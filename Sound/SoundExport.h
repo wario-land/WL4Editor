@@ -4,6 +4,7 @@
 #include "SoundTypes.h"
 
 #include <QString>
+#include <QStringList>
 
 #include <functional>
 
@@ -25,7 +26,8 @@ namespace Sound
         static QString defaultFolder(const QString &romPath);
         static QString exportAll(const ParseResult &data, const unsigned char *rom,
                                  quint32 romSize, const QString &folder,
-                                 const std::function<void(int, int)> &progress = {});
+                                 const std::function<void(int, int)> &progress = {},
+                                 QStringList *warningsOut = nullptr);
     };
 } // namespace Sound
 

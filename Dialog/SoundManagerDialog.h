@@ -8,6 +8,7 @@
 #include "Sound/SoundTypes.h"
 
 class QGroupBox;
+class QSpinBox;
 class QStandardItem;
 class QStandardItemModel;
 
@@ -78,6 +79,8 @@ private:
     void ClearDetailPanel();
     QGroupBox *CreateGroup(const QString &title);
     void AddReadOnlyRow(QGroupBox *group, const QString &label, const QString &value);
+    QSpinBox *AddSpinRow(QGroupBox *group, const QString &label, int value, int minimum, int maximum);
+    void MarkSelectedChanged();
     void BuildSongDetail(const Sound::Song &song);
     void BuildBankDetail(const Sound::Bank &bank);
     void BuildProgramDetail(int bankId, int programIndex);
@@ -88,7 +91,10 @@ private:
                                           const QString &typeText, const QString &status,
                                           int parentId = -1) const;
     const Sound::Bank *FindBank(int bankId) const;
+    Sound::Bank *FindBankMutable(int bankId);
     const Sound::Song *FindSong(int songId) const;
+    Sound::Sample *FindSampleMutable(int sampleId);
+    Sound::Program *FindProgramMutable(int bankId, int programIndex);
 };
 
 #endif // SOUNDMANAGERDIALOG_H
