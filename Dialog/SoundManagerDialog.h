@@ -41,6 +41,8 @@ private slots:
     void on_checkBoxShowChanged_checkStateChanged(const Qt::CheckState &arg1);
     void on_pushButtonExportAll_clicked();
     void on_pushButtonImportAll_clicked();
+    void on_pushButtonExportSelected_clicked();
+    void on_pushButtonImportSelected_clicked();
 
     // Connected manually to QItemSelectionModel::currentChanged. QTreeView
     // does not have a currentChanged signal, so an on_* auto-connection cannot
@@ -62,11 +64,14 @@ private:
     QStandardItemModel *entryModel = nullptr;
     bool populatingTree = false;
     QString saveSummary;
+    int selectedEntryType = 0;
+    int selectedEntryId = -1;
 
     void ParseSoundData();
     void PopulateTree();
     void ApplyFilter();
     void UpdateStatusLabel();
+    void UpdateSelectedActions();
     bool HasStagedChanges() const;
     void ReloadModelFromROM();
 

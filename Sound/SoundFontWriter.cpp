@@ -346,7 +346,12 @@ namespace Sound
             appendU32(phdr, 0);
         }
         phdr.append(name20(QStringLiteral("EOP")));
-        phdr.append(QByteArray(18, '\0'));
+        appendU16(phdr, 0x00FF);
+        appendU16(phdr, 0x00FF);
+        appendU16(phdr, static_cast<quint16>(presets.size()));
+        appendU32(phdr, 0);
+        appendU32(phdr, 0);
+        appendU32(phdr, 0);
 
         QByteArray pbag;
         for (int i = 0; i < presets.size(); ++i)
@@ -354,7 +359,8 @@ namespace Sound
             appendU16(pbag, static_cast<quint16>(i));
             appendU16(pbag, 0);
         }
-        pbag.append(QByteArray(4, '\0'));
+        appendU16(pbag, static_cast<quint16>(presets.size()));
+        appendU16(pbag, 0);
 
         QByteArray pmod(10, '\0');
 
@@ -375,7 +381,7 @@ namespace Sound
             zoneOffset += instrument.zones.size();
         }
         inst.append(name20(QStringLiteral("EOI")));
-        inst.append(QByteArray(2, '\0'));
+        appendU16(inst, static_cast<quint16>(zoneOffset));
 
         QByteArray ibag;
         QByteArray igen;
@@ -409,7 +415,8 @@ namespace Sound
                 generatorOffset += 9;
             }
         }
-        ibag.append(QByteArray(4, '\0'));
+        appendU16(ibag, static_cast<quint16>(generatorOffset));
+        appendU16(ibag, 0);
         igen.append(QByteArray(4, '\0'));
         QByteArray imod(10, '\0');
 
@@ -428,7 +435,8 @@ namespace Sound
             appendU16(shdr, 1); // mono
         }
         shdr.append(name20(QStringLiteral("EOS")));
-        shdr.append(QByteArray(26, '\0'));
+        shdr.append(QByteArray(24, '\0'));
+        appendU16(shdr, 1); // sfSampleType: mono sample
 
         QByteArray pdtaContent;
         pdtaContent.append(makeChunk("phdr", phdr));

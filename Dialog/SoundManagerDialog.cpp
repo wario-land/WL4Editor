@@ -11,7 +11,12 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QTemporaryDir>
 #include <QCoreApplication>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -66,6 +71,10 @@ SoundManagerDialog::SoundManagerDialog(QWidget *parent)
     ui->pushButtonImportAll->setEnabled(true);
     ui->pushButtonExportAll->setToolTip(tr("Export all songs, banks and samples to the sound project folder."));
     ui->pushButtonImportAll->setToolTip(tr("Import edited .s files from the sound project folder."));
+    ui->pushButtonExportSelected->setEnabled(false);
+    ui->pushButtonImportSelected->setEnabled(false);
+    ui->pushButtonExportSelected->setToolTip(tr("Export the selected Song or Sample."));
+    ui->pushButtonImportSelected->setToolTip(tr("Import the selected Song or Sample from the project folder."));
 
     entryModel = new QStandardItemModel(this);
     entryModel->setHorizontalHeaderLabels({ tr("Name"), tr("ID"), tr("Type"), tr("Status") });
@@ -90,6 +99,7 @@ SoundManagerDialog::SoundManagerDialog(QWidget *parent)
     ParseSoundData();
     PopulateTree();
     UpdateStatusLabel();
+    UpdateSelectedActions();
 }
 
 SoundManagerDialog::~SoundManagerDialog()
@@ -340,6 +350,14 @@ void SoundManagerDialog::ApplyFilter()
 
     for (int row = 0; row < entryModel->rowCount(); ++row)
         filterItem(entryModel->item(row, 0));
+}
+
+void SoundManagerDialog::UpdateSelectedActions()
+{
+    const bool supported = selectedEntryType == static_cast<int>(EntryType::Song) ||
+            selectedEntryType == static_cast<int>(EntryType::Sample);
+    ui->pushButtonExportSelected->setEnabled(supported);
+    ui->pushButtonImportSelected->setEnabled(supported);
 }
 
 void SoundManagerDialog::UpdateStatusLabel()
@@ -738,9 +756,13 @@ void SoundManagerDialog::onEntryCurrentChanged(const QModelIndex &current, const
 {
     Q_UNUSED(previous);
 
+    selectedEntryType = 0;
+    selectedEntryId = -1;
+
     if (populatingTree || !current.isValid() || !entryModel)
     {
         ClearDetailPanel();
+        UpdateSelectedActions();
         return;
     }
 
@@ -748,6 +770,7 @@ void SoundManagerDialog::onEntryCurrentChanged(const QModelIndex &current, const
     if (!item)
     {
         ClearDetailPanel();
+        UpdateSelectedActions();
         return;
     }
 
@@ -755,11 +778,14 @@ void SoundManagerDialog::onEntryCurrentChanged(const QModelIndex &current, const
     if (typeValue <= 0)
     {
         ClearDetailPanel();
+        UpdateSelectedActions();
         return;
     }
 
     const int id = item->data(RoleEntryId).toInt();
     const int parentId = item->data(RoleParentId).toInt();
+    selectedEntryType = typeValue;
+    selectedEntryId = id;
     ClearDetailPanel();
 
     switch (static_cast<EntryType>(typeValue))
@@ -785,6 +811,7 @@ void SoundManagerDialog::onEntryCurrentChanged(const QModelIndex &current, const
         break;
     }
 
+    UpdateSelectedActions();
     ui->scrollArea->verticalScrollBar()->setValue(0);
 }
 
@@ -924,4 +951,313 @@ void SoundManagerDialog::on_pushButtonImportAll_clicked()
             message += tr("\n... and %1 more.").arg(result.warnings.size() - 10);
     }
     QMessageBox::information(this, tr("Import sound project"), message);
+}
+
+namespace
+{
+    bool readJsonObject(const QString &path, QJsonObject *object, QString *error)
+    {
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly))
+        {
+            if (error)
+                *error = QStringLiteral("Cannot open %1.").arg(path);
+            return false;
+        }
+        QJsonParseError parseError{};
+        const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &parseError);
+        if (parseError.error != QJsonParseError::NoError || !document.isObject())
+        {
+            if (error)
+                *error = QStringLiteral("Invalid JSON in %1: %2")
+                        .arg(path, parseError.errorString());
+            return false;
+        }
+        *object = document.object();
+        return true;
+    }
+
+    bool writeJsonObject(const QString &path, const QJsonObject &object, QString *error)
+    {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        {
+            if (error)
+                *error = QStringLiteral("Cannot write %1.").arg(path);
+            return false;
+        }
+        file.write(QJsonDocument(object).toJson(QJsonDocument::Indented));
+        return true;
+    }
+
+    int jsonEntryIndex(const QJsonArray &array, int id)
+    {
+        for (int i = 0; i < array.size(); ++i)
+        {
+            if (array.at(i).toObject().value(QStringLiteral("id")).toInt(-1) == id)
+                return i;
+        }
+        return -1;
+    }
+
+    bool copyRelativeFile(const QString &sourceFolder, const QString &targetFolder,
+                          const QString &relativePath, QString *error)
+    {
+        const QString source = QDir(sourceFolder).absoluteFilePath(relativePath);
+        const QString target = QDir(targetFolder).absoluteFilePath(relativePath);
+        if (!QFileInfo::exists(source))
+        {
+            if (error)
+                *error = QStringLiteral("Missing file: %1").arg(source);
+            return false;
+        }
+        if (!QDir().mkpath(QFileInfo(target).dir().path()))
+        {
+            if (error)
+                *error = QStringLiteral("Cannot create folder for %1.").arg(target);
+            return false;
+        }
+        QFile::remove(target);
+        if (!QFile::copy(source, target))
+        {
+            if (error)
+                *error = QStringLiteral("Cannot copy %1 to %2.").arg(source, target);
+            return false;
+        }
+        return true;
+    }
+}
+
+void SoundManagerDialog::on_pushButtonExportSelected_clicked()
+{
+    if (selectedEntryType != static_cast<int>(EntryType::Song) &&
+            selectedEntryType != static_cast<int>(EntryType::Sample))
+        return;
+
+    if (!soundData.error.isEmpty())
+    {
+        QMessageBox::warning(this, tr("Export selected"), soundData.error);
+        return;
+    }
+
+    const QString folder = Sound::SoundExport::defaultFolder(
+                ROMUtils::ROMFileMetadata->FilePath);
+    const QString projectManifestPath = folder + QStringLiteral("/soundmanifest.json");
+    if (!QFileInfo::exists(projectManifestPath))
+    {
+        QMessageBox::warning(this, tr("Export selected"),
+                             tr("The sound project folder is missing its manifest.\n"
+                                "Use Export All first."));
+        return;
+    }
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QTemporaryDir temp;
+    if (!temp.isValid())
+    {
+        QApplication::restoreOverrideCursor();
+        QMessageBox::critical(this, tr("Export selected"), tr("Cannot create a temporary folder."));
+        return;
+    }
+
+    const QString exportError = Sound::SoundExport::exportAll(
+                soundData, ROMUtils::ROMFileMetadata->ROMDataPtr,
+                ROMUtils::ROMFileMetadata->Length, temp.path());
+    QApplication::restoreOverrideCursor();
+    if (!exportError.isEmpty())
+    {
+        QMessageBox::critical(this, tr("Export selected"), exportError);
+        return;
+    }
+
+    QJsonObject projectRoot;
+    QJsonObject tempRoot;
+    QString error;
+    if (!readJsonObject(projectManifestPath, &projectRoot, &error) ||
+            !readJsonObject(temp.path() + QStringLiteral("/soundmanifest.json"), &tempRoot, &error))
+    {
+        QMessageBox::critical(this, tr("Export selected"), error);
+        return;
+    }
+
+    if (selectedEntryType == static_cast<int>(EntryType::Song))
+    {
+        QJsonArray projectSongs = projectRoot.value(QStringLiteral("songs")).toArray();
+        const QJsonArray tempSongs = tempRoot.value(QStringLiteral("songs")).toArray();
+        const int projectIndex = jsonEntryIndex(projectSongs, selectedEntryId);
+        const int tempIndex = jsonEntryIndex(tempSongs, selectedEntryId);
+        if (projectIndex < 0 || tempIndex < 0)
+        {
+            QMessageBox::warning(this, tr("Export selected"),
+                                 tr("The selected song is not in the project manifest."));
+            return;
+        }
+        const QJsonObject tempEntry = tempSongs.at(tempIndex).toObject();
+        if (!copyRelativeFile(temp.path(), folder, tempEntry.value(QStringLiteral("sFile")).toString(), &error) ||
+                !copyRelativeFile(temp.path(), folder, tempEntry.value(QStringLiteral("mFile")).toString(), &error))
+        {
+            QMessageBox::critical(this, tr("Export selected"), error);
+            return;
+        }
+        projectSongs.replace(projectIndex, tempEntry);
+        projectRoot.insert(QStringLiteral("songs"), projectSongs);
+    }
+    else
+    {
+        QJsonArray projectSamples = projectRoot.value(QStringLiteral("samples")).toArray();
+        const QJsonArray tempSamples = tempRoot.value(QStringLiteral("samples")).toArray();
+        const int projectIndex = jsonEntryIndex(projectSamples, selectedEntryId);
+        const int tempIndex = jsonEntryIndex(tempSamples, selectedEntryId);
+        if (projectIndex < 0 || tempIndex < 0)
+        {
+            QMessageBox::warning(this, tr("Export selected"),
+                                 tr("The selected sample is not in the project manifest."));
+            return;
+        }
+        const QJsonObject tempEntry = tempSamples.at(tempIndex).toObject();
+        if (!copyRelativeFile(temp.path(), folder, tempEntry.value(QStringLiteral("wavFile")).toString(), &error))
+        {
+            QMessageBox::critical(this, tr("Export selected"), error);
+            return;
+        }
+        projectSamples.replace(projectIndex, tempEntry);
+        projectRoot.insert(QStringLiteral("samples"), projectSamples);
+    }
+
+    if (!writeJsonObject(projectManifestPath, projectRoot, &error))
+    {
+        QMessageBox::critical(this, tr("Export selected"), error);
+        return;
+    }
+    QMessageBox::information(this, tr("Export selected"),
+                             tr("The selected item was exported to:\n%1").arg(folder));
+}
+
+
+void SoundManagerDialog::on_pushButtonImportSelected_clicked()
+{
+    if (selectedEntryType != static_cast<int>(EntryType::Song) &&
+            selectedEntryType != static_cast<int>(EntryType::Sample))
+        return;
+
+    if (!soundData.error.isEmpty())
+    {
+        QMessageBox::warning(this, tr("Import selected"), soundData.error);
+        return;
+    }
+
+    const QString folder = Sound::SoundExport::defaultFolder(
+                ROMUtils::ROMFileMetadata->FilePath);
+    const QString projectManifestPath = folder + QStringLiteral("/soundmanifest.json");
+    QJsonObject projectRoot;
+    QString error;
+    if (!readJsonObject(projectManifestPath, &projectRoot, &error))
+    {
+        QMessageBox::warning(this, tr("Import selected"),
+                             tr("The sound project folder has no valid manifest.\n%1").arg(error));
+        return;
+    }
+
+    QTemporaryDir temp;
+    if (!temp.isValid())
+    {
+        QMessageBox::critical(this, tr("Import selected"), tr("Cannot create a temporary folder."));
+        return;
+    }
+
+    QJsonObject tempRoot;
+    tempRoot.insert(QStringLiteral("format"), projectRoot.value(QStringLiteral("format")));
+    tempRoot.insert(QStringLiteral("version"), projectRoot.value(QStringLiteral("version")));
+    tempRoot.insert(QStringLiteral("rom"), projectRoot.value(QStringLiteral("rom")));
+
+    const QString songsKey = QStringLiteral("songs");
+    const QString samplesKey = QStringLiteral("samples");
+    QJsonArray tempSongs;
+    QJsonArray tempSamples;
+
+    if (selectedEntryType == static_cast<int>(EntryType::Song))
+    {
+        const QJsonArray songs = projectRoot.value(songsKey).toArray();
+        const int index = jsonEntryIndex(songs, selectedEntryId);
+        if (index < 0)
+        {
+            QMessageBox::warning(this, tr("Import selected"),
+                                 tr("The selected song is not in the project manifest."));
+            return;
+        }
+        const QJsonObject entry = songs.at(index).toObject();
+        tempSongs.append(entry);
+        if (!copyRelativeFile(folder, temp.path(), entry.value(QStringLiteral("sFile")).toString(), &error))
+        {
+            QMessageBox::critical(this, tr("Import selected"), error);
+            return;
+        }
+    }
+    else
+    {
+        const QJsonArray samples = projectRoot.value(samplesKey).toArray();
+        const int index = jsonEntryIndex(samples, selectedEntryId);
+        if (index < 0)
+        {
+            QMessageBox::warning(this, tr("Import selected"),
+                                 tr("The selected sample is not in the project manifest."));
+            return;
+        }
+        const QJsonObject entry = samples.at(index).toObject();
+        tempSamples.append(entry);
+        if (!copyRelativeFile(folder, temp.path(), entry.value(QStringLiteral("wavFile")).toString(), &error))
+        {
+            QMessageBox::critical(this, tr("Import selected"), error);
+            return;
+        }
+
+        // SoundImporter expects at least one song entry. Keep one unchanged
+        // song in the temporary manifest so the sample-only import is valid.
+        const QJsonArray songs = projectRoot.value(songsKey).toArray();
+        if (!songs.isEmpty())
+        {
+            const QJsonObject songEntry = songs.at(0).toObject();
+            tempSongs.append(songEntry);
+            copyRelativeFile(folder, temp.path(), songEntry.value(QStringLiteral("sFile")).toString(), nullptr);
+        }
+    }
+
+    tempRoot.insert(songsKey, tempSongs);
+    tempRoot.insert(samplesKey, tempSamples);
+    if (!writeJsonObject(temp.path() + QStringLiteral("/soundmanifest.json"), tempRoot, &error))
+    {
+        QMessageBox::critical(this, tr("Import selected"), error);
+        return;
+    }
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    const Sound::ImportResult result = Sound::SoundImporter::importAll(
+                temp.path(), soundData, ROMUtils::ROMFileMetadata->ROMDataPtr,
+                ROMUtils::ROMFileMetadata->Length);
+    QApplication::restoreOverrideCursor();
+
+    if (!result.error.isEmpty())
+    {
+        QMessageBox::critical(this, tr("Import selected"), result.error);
+        return;
+    }
+    if (result.changedSongIds.isEmpty() && result.changedSampleIds.isEmpty() &&
+            result.changedProgramCount == 0)
+    {
+        QMessageBox::information(this, tr("Import selected"),
+                                 tr("The selected item has no changes to import."));
+        return;
+    }
+
+    PopulateTree();
+    ClearDetailPanel();
+    UpdateStatusLabel();
+    QString message = tr("Selected item staged for import.\n"
+                         "Changed songs: %1, samples: %2, programs: %3.")
+            .arg(result.changedSongIds.size())
+            .arg(result.changedSampleIds.size())
+            .arg(result.changedProgramCount);
+    if (!result.warnings.isEmpty())
+        message += tr("\n\nWarnings:\n") + result.warnings.mid(0, 10).join(QLatin1Char('\n'));
+    QMessageBox::information(this, tr("Import selected"), message);
 }

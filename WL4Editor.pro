@@ -7,6 +7,7 @@
 QT += core gui
 QT += qml        # Need this to compile QJSEngine
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += multimedia
 
 TARGET = WL4Editor
 TEMPLATE = app

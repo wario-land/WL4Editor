@@ -78,17 +78,80 @@
      </property>
      <item>
       <widget class="QPushButton" name="pushButtonExportAll">
+       <property name="accessibleName">
+        <string>Export all sound project files</string>
+       </property>
        <property name="text">
         <string>Export All</string>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+E</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="pushButtonImportAll">
+       <property name="accessibleName">
+        <string>Import changed sound files</string>
+       </property>
        <property name="text">
         <string>Import All</string>
        </property>
+       <property name="shortcut">
+        <string>Ctrl+I</string>
+       </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonExportSelected">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="accessibleName">
+        <string>Export the selected sound item</string>
+       </property>
+       <property name="text">
+        <string>Export Selected</string>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+Shift+E</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonImportSelected">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="accessibleName">
+        <string>Import the selected sound item</string>
+       </property>
+       <property name="text">
+        <string>Import Selected</string>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+Shift+I</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>
