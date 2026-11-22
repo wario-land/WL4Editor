@@ -121,6 +121,20 @@ namespace Sound
         if (!QDir().mkpath(folder + QStringLiteral("/samples")))
             return QStringLiteral("Cannot create samples folder in %1").arg(folder);
 
+        // The generated .s files include this clean-room constant file. The
+        // compiler also has an embedded copy, but the project ships it so GBA
+        // developers can assemble the exported songs directly with EABI.
+        QFile compatSource(QStringLiteral(":/Sound/MPlayCompat.s"));
+        if (!compatSource.open(QIODevice::ReadOnly))
+            return QStringLiteral("Cannot load the built-in MPlay compatibility constants.");
+        QFile compatTarget(folder + QStringLiteral("/songs/MPlayCompat.s"));
+        if (!compatTarget.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return QStringLiteral("Cannot write songs/MPlayCompat.s: %1")
+                    .arg(compatTarget.errorString());
+        compatTarget.write(compatSource.readAll());
+        compatTarget.close();
+        compatSource.close();
+
         int songCount = 0;
         for (const Song &song : data.songs)
         {
@@ -150,10 +164,23 @@ namespace Sound
                     .arg(song.id, 4, 10, QLatin1Char('0'))
                     .arg(sanitizeFileName(song.name));
             const QString filePath = folder + QStringLiteral("/songs/") + fileName;
+            const QString freshPath = filePath + QStringLiteral(".exported.s");
+
+            // The .s file is the user's authoritative source. Never overwrite
+            // an existing one during a full export; keep the fresh disassembly
+            // beside it instead. This protects hand-edited or MIDI-converted
+            // sources even when the current disassembler still has raw fallback.
             const QString error = SoundSExporter::exportSong(data, song, rom, romSize,
-                                                             filePath, &warnings);
+                                                             freshPath, &warnings);
             if (!error.isEmpty())
                 return error;
+
+            if (!QFileInfo::exists(filePath))
+            {
+                if (!QFile::rename(freshPath, filePath))
+                    return QStringLiteral("Cannot move generated song source into place: %1")
+                            .arg(filePath);
+            }
 
             QFile sourceFile(filePath);
             QByteArray sourceHash;
@@ -370,6 +397,8 @@ namespace Sound
                     "WL4Editor Sound Project\r\n"
                     "======================\r\n\r\n"
                     "songs/*.s        Authoritative MPlay source. Edit loops/patterns/MEMACC here.\r\n"
+                    "songs/*.exported.s  Fresh disassembly written beside a preserved .s file.\r\n"
+                    "songs/MPlayCompat.s  Clean-room MPlay symbolic constants used by the sources.\r\n"
                     "songs/*.mid      Lossy MuseScore convenience export; .s is authoritative.\r\n"
                     "soundfont/*.sf2  SoundFont 2 bank for Polyphone. PSG Programs are omitted.\r\n"
                     "samples/*.wav    Editable sample PCM; import replaces existing sample slots.\r\n"

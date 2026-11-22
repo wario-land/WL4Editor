@@ -146,6 +146,205 @@ namespace Sound
             return track + QStringLiteral("_L_%1")
                     .arg(target - trackStart, 4, 16, QLatin1Char('0')).toUpper();
         }
+
+        QString hexByte(int value)
+        {
+            return QStringLiteral("0x%1").arg(value, 2, 16, QLatin1Char('0')).toUpper();
+        }
+
+        QString commandComment(const unsigned char *rom, quint32 romSize,
+                               quint32 pc, int length)
+        {
+            Q_UNUSED(length);
+            if (!rom || pc >= romSize)
+                return QString();
+            const unsigned char command = rom[pc];
+
+            if (command >= 0x80 && command <= 0xB0)
+            {
+                static const char *names[] = {
+                    "W00", "W01", "W02", "W03", "W04", "W05", "W06", "W07",
+                    "W08", "W09", "W10", "W11", "W12", "W13", "W14", "W15",
+                    "W16", "W17", "W18", "W19", "W20", "W21", "W22", "W23",
+                    "W24", "W28", "W30", "W32", "W36", "W40", "W42", "W44",
+                    "W48", "W52", "W54", "W56", "W60", "W64", "W66", "W68",
+                    "W72", "W76", "W78", "W80", "W84", "W88", "W90", "W92",
+                    "W96"
+                };
+                return QString::fromLatin1(names[command - 0x80]);
+            }
+            if (command >= 0xD0)
+            {
+                static const char *names[] = {
+                    "N01", "N02", "N03", "N04", "N05", "N06", "N07", "N08",
+                    "N09", "N10", "N11", "N12", "N13", "N14", "N15", "N16",
+                    "N17", "N18", "N19", "N20", "N21", "N22", "N23", "N24",
+                    "N28", "N30", "N32", "N36", "N40", "N42", "N44", "N48",
+                    "N52", "N54", "N56", "N60", "N64", "N66", "N68", "N72",
+                    "N76", "N78", "N80", "N84", "N88", "N90", "N92", "N96"
+                };
+                const int index = command - 0xD0;
+                if (index >= 0 && index < static_cast<int>(sizeof(names) / sizeof(names[0])))
+                    return QString::fromLatin1(names[index]);
+                return QStringLiteral("NOTE");
+            }
+
+            switch (command)
+            {
+            case 0xB1: return QStringLiteral("FINE");
+            case 0xB2: return QStringLiteral("GOTO");
+            case 0xB3: return QStringLiteral("PATT");
+            case 0xB4: return QStringLiteral("PEND");
+            case 0xB5: return QStringLiteral("REPT");
+            case 0xB9: return QStringLiteral("MEMACC");
+            case 0xBA: return QStringLiteral("PRIO");
+            case 0xBB: return QStringLiteral("TEMPO");
+            case 0xBC: return QStringLiteral("KEYSH");
+            case 0xBD: return QStringLiteral("VOICE");
+            case 0xBE: return QStringLiteral("VOL");
+            case 0xBF: return QStringLiteral("PAN");
+            case 0xC0: return QStringLiteral("BEND");
+            case 0xC1: return QStringLiteral("BENDR");
+            case 0xC2: return QStringLiteral("LFOS");
+            case 0xC3: return QStringLiteral("LFODL");
+            case 0xC4: return QStringLiteral("MOD");
+            case 0xC5: return QStringLiteral("MODT");
+            case 0xC8: return QStringLiteral("TUNE");
+            case 0xCD: return QStringLiteral("XCMD");
+            case 0xCE: return QStringLiteral("EOT");
+            case 0xCF: return QStringLiteral("TIE");
+            default: return QString();
+            }
+        }
+
+        int commandLength(const unsigned char *rom, quint32 romSize, quint32 pc)
+        {
+            if (!rom || pc >= romSize)
+                return 1;
+            const unsigned char command = rom[pc];
+            if (command == 0xB2 || command == 0xB3)
+                return 5;
+            if (command == 0xB5)
+                return 6;
+            if (command == 0xB9)
+                return 4;
+            if (command == 0xCD)
+                return 3;
+            if ((command >= 0xBA && command <= 0xC5) || command == 0xC8)
+                return 2;
+            if (command == 0xCE || command == 0xCF)
+            {
+                int length = 1;
+                while (length < 3 && pc + length < romSize && rom[pc + length] < 0x80)
+                    ++length;
+                return length;
+            }
+            if (command >= 0xD0)
+            {
+                int length = 1;
+                while (length < 4 && pc + length < romSize && rom[pc + length] < 0x80)
+                    ++length;
+                return length;
+            }
+            return 1;
+        }
+
+        QString rawByteComment(const unsigned char *rom, quint32 romSize,
+                               quint32 pc, int length)
+        {
+            QString raw;
+            for (int i = 0; i < length && pc + i < romSize; ++i)
+            {
+                if (!raw.isEmpty())
+                    raw += QStringLiteral(", ");
+                raw += hexByte(rom[pc + i]);
+            }
+            return raw;
+        }
+
+        QString memName(int value)
+        {
+            static const char *names[] = {
+                "mem_set", "mem_add", "mem_sub", "mem_mem_set", "mem_mem_add",
+                "mem_mem_sub", "mem_beq", "mem_bne", "mem_bhi", "mem_bhs",
+                "mem_bls", "mem_blo", "mem_mem_beq", "mem_mem_bne", "mem_mem_bhi",
+                "mem_mem_bhs", "mem_mem_bls", "mem_mem_blo"
+            };
+            if (value >= 0 && value < static_cast<int>(sizeof(names) / sizeof(names[0])))
+                return QString::fromLatin1(names[value]);
+            return QString::number(value);
+        }
+
+        QString modName(int value)
+        {
+            switch (value)
+            {
+            case 0: return QStringLiteral("mod_vib");
+            case 1: return QStringLiteral("mod_tre");
+            case 2: return QStringLiteral("mod_pan");
+            default: return QString::number(value);
+            }
+        }
+
+        QString instructionLine(const unsigned char *rom, quint32 romSize,
+                                quint32 pc, int length)
+        {
+            const unsigned char command = rom[pc];
+            const QString mnemonic = commandComment(rom, romSize, pc, length);
+            if (mnemonic.isEmpty())
+                return QString();
+
+            QStringList operands;
+            operands.append(mnemonic);
+            for (int i = 1; i < length && pc + i < romSize; ++i)
+                operands.append(QString::number(rom[pc + i]));
+
+            if (mnemonic.startsWith(QLatin1Char('W')))
+            {
+                operands = { mnemonic };
+            }
+            else if (mnemonic.startsWith(QLatin1Char('N')))
+            {
+                // N01, key, velocity. Keep the key/velocity numeric so the
+                // line does not depend on the note-name aliases.
+                operands = { mnemonic };
+                for (int i = 1; i < length && pc + i < romSize; ++i)
+                    operands.append(hexByte(rom[pc + i]));
+            }
+            else if (command == 0xB9 && length >= 4)
+            {
+                operands = { mnemonic, memName(rom[pc + 1]),
+                             hexByte(rom[pc + 2]), hexByte(rom[pc + 3]) };
+            }
+            else if (command == 0xCD && length >= 3)
+            {
+                QString sub;
+                if (rom[pc + 1] == 0x08)
+                    sub = QStringLiteral("xIECV");
+                else if (rom[pc + 1] == 0x09)
+                    sub = QStringLiteral("xIECL");
+                else
+                    sub = hexByte(rom[pc + 1]);
+                operands = { mnemonic, sub, hexByte(rom[pc + 2]) };
+            }
+            else if (command == 0xC5 && length >= 2)
+            {
+                operands = { mnemonic, modName(rom[pc + 1]) };
+            }
+            else if ((command == 0xBF || command == 0xC0 || command == 0xC8) &&
+                     length >= 2 && rom[pc + 1] == 0x40)
+            {
+                operands = { mnemonic, QStringLiteral("c_v") };
+            }
+            else if (length == 1)
+            {
+                operands = { mnemonic };
+            }
+
+            QString line = QStringLiteral(".byte ") + operands.join(QStringLiteral(", "));
+            line += QStringLiteral("   @ raw: ") + rawByteComment(rom, romSize, pc, length);
+            return line;
+        }
     } // namespace
 
     QString SoundSExporter::exportSong(const ParseResult &data, const Song &song,
@@ -206,7 +405,7 @@ namespace Sound
         out << "@ wl4-echo: " << static_cast<int>(song.echo) << "\n";
         out << "@ The bank pointer below is a placeholder. WL4Editor fills it\n";
         out << "@ from the model when the .s file is imported.\n\n";
-
+        out << ".include \"MPlayCompat.s\"\n\n";
         out << ".text\n";
         out << ".align 2\n\n";
         out << ".global Song" << QStringLiteral("%1").arg(song.id, 4, 10, QLatin1Char('0')) << "\n";
@@ -247,13 +446,16 @@ namespace Sound
                     else if (command == 0xB5)
                         commandName = QStringLiteral("REPT");
 
-                    out << ".byte 0x" << QStringLiteral("%1").arg(command, 2, 16, QLatin1Char('0')).toUpper()
-                        << "   @ " << commandName << "\n";
                     if (command == 0xB5)
                     {
-                        out << ".byte 0x"
-                            << QStringLiteral("%1").arg(rom[pc + 1], 2, 16, QLatin1Char('0')).toUpper()
-                            << "   @ REPT count\n";
+                        out << ".byte REPT, " << static_cast<int>(rom[pc + 1])
+                            << "   @ raw: " << hexByte(0xB5) << ", " << hexByte(rom[pc + 1])
+                            << "\n";
+                    }
+                    else
+                    {
+                        out << ".byte " << commandName
+                            << "   @ raw: " << hexByte(command) << "\n";
                     }
 
                     if (labels.contains(info.target))
@@ -276,6 +478,18 @@ namespace Sound
                     continue;
                 }
 
+                // Emit one readable command when the byte stream is known.
+                // Unknown commands and raw argument runs keep the byte-level
+                // fallback so no information is lost.
+                const int instructionLength = commandLength(rom, romSize, pc);
+                if (instructionLength > 0 && pc + instructionLength <= scan.end &&
+                        !commandComment(rom, romSize, pc, instructionLength).isEmpty())
+                {
+                    out << instructionLine(rom, romSize, pc, instructionLength) << "\n";
+                    pc += static_cast<quint32>(instructionLength);
+                    continue;
+                }
+
                 // Emit a run of ordinary bytes, stopping at a label or a
                 // pointer command.
                 const quint32 chunkStart = pc;
@@ -293,7 +507,8 @@ namespace Sound
                     ++pc;
                 }
                 out << ".byte " << bytes.join(QStringLiteral(", "))
-                    << "   @ 0x" << QStringLiteral("%1").arg(chunkStart, 5, 16, QLatin1Char('0')).toUpper()
+                    << "   @ raw fallback (unknown command or omitted/running-status form); offset 0x"
+                    << QStringLiteral("%1").arg(chunkStart, 5, 16, QLatin1Char('0')).toUpper()
                     << "\n";
             }
             out << "\n";

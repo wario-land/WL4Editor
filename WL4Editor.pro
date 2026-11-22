@@ -72,6 +72,7 @@ SOURCES += \
     Sound/SoundFontWriter.cpp \
     Sound/SoundImporter.cpp \
     Sound/SoundMidiExporter.cpp \
+    Sound/SoundMPlayCompiler.cpp \
     Sound/SoundParser.cpp \
     Sound/SoundPsgIO.cpp \
     Sound/SoundSAssembler.cpp \
@@ -146,6 +147,7 @@ HEADERS += \
     Sound/SoundFontWriter.h \
     Sound/SoundImporter.h \
     Sound/SoundMidiExporter.h \
+    Sound/SoundMPlayCompiler.h \
     Sound/SoundParser.h \
     Sound/SoundPsgIO.h \
     Sound/SoundSAssembler.h \

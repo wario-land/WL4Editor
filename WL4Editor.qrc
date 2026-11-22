@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>SoundData/WL4SoundDatabase.json</file>
+        <file>Sound/MPlayCompat.s</file>
     </qresource>
 </RCC>

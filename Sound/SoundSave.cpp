@@ -2,6 +2,7 @@
 
 #include "ROMUtils.h"
 #include "SoundPsgIO.h"
+#include "SoundMPlayCompiler.h"
 #include "SoundSAssembler.h"
 #include "WL4Constants.h"
 
@@ -567,7 +568,7 @@ namespace Sound
             QByteArray chunkData;
             if (job.kind == JobKind::Song)
             {
-                QString assembleError = SoundSAssembler::assemble(
+                QString assembleError = SoundMPlayCompiler::compileFile(
                             job.sFile, dataAddress, chunkData);
                 if (!assembleError.isEmpty())
                 {

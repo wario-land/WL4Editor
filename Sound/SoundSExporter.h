@@ -8,10 +8,12 @@
 
 namespace Sound
 {
-    // Byte-level MPlay disassembler. It does not decode music semantics; it
-    // walks the command stream to find GOTO/PATT/REPT pointers and emits a
-    // self-contained .s file that the external arm-none-eabi toolchain can
-    // assemble. All addresses are ROM file offsets.
+    // MPlay disassembler. It walks the command stream to find
+    // GOTO/PATT/REPT pointers and emits a self-contained .s file that the
+    // external arm-none-eabi toolchain can assemble. Known commands are
+    // emitted as readable .byte rows with mnemonic comments; unknown commands
+    // and running-status argument runs remain raw .byte data so no byte is
+    // lost. All addresses are ROM file offsets.
     class SoundSExporter
     {
     public:

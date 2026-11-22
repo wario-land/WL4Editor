@@ -8,9 +8,11 @@
 #include "WL4EditorWindow.h"
 #include "SettingsUtils.h"
 #include "ROMUtils.h"
+#include "Sound/SoundMPlayCompiler.h"
 
 #include <QApplication>
 #include <QFile>
+#include <QTextStream>
 
 /// <summary>
 /// Perform all static class initializations.
@@ -46,6 +48,47 @@ int main(int argc, char *argv[])
 
     QApplication application(argc, argv);
     SettingsUtils::InitProgramSetupPath(application);
+
+    if (argc >= 4 && QString::fromLocal8Bit(argv[1]) == QStringLiteral("--sound-compile"))
+    {
+        const QString sourcePath = QString::fromLocal8Bit(argv[2]);
+        const QString outputPath = QString::fromLocal8Bit(argv[3]);
+        quint32 dataAddress = 0;
+        if (argc >= 5)
+        {
+            bool ok = false;
+            dataAddress = QString::fromLocal8Bit(argv[4]).toUInt(&ok, 0);
+            if (!ok)
+            {
+                QTextStream(stderr) << "Invalid data address: " << argv[4] << '\n';
+                return 2;
+            }
+        }
+
+        QByteArray binary;
+        QString error;
+        QString normalized;
+        error = Sound::SoundMPlayCompiler::compileFile(sourcePath, dataAddress, binary, &normalized);
+        if (error.isEmpty())
+        {
+            QFile output(outputPath);
+            if (!output.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                error = QStringLiteral("Cannot write %1: %2").arg(outputPath, output.errorString());
+            else
+            {
+                output.write(binary);
+                output.close();
+            }
+        }
+        if (!error.isEmpty())
+        {
+            QTextStream(stderr) << error << '\n';
+            return 1;
+        }
+        QTextStream(stdout) << "Compiled " << sourcePath << " -> " << outputPath
+                            << " (" << binary.size() << " bytes)\n";
+        return 0;
+    }
 
     application.setWindowIcon(QIcon("./images/icon.ico"));
     WL4EditorWindow window;

@@ -984,8 +984,7 @@ void SoundManagerDialog::on_pushButtonExportAll_clicked()
     if (HasStagedChanges())
     {
         QMessageBox::warning(this, tr("Export sound project"),
-                             tr("There are staged .s imports. Save or cancel them before exporting, "
-                                "otherwise the export would overwrite the edited .s files."));
+                             tr("There are staged imports. Save or cancel them before exporting."));
         return;
     }
 
@@ -994,7 +993,9 @@ void SoundManagerDialog::on_pushButtonExportAll_clicked()
     if (QDir(folder).exists())
     {
         if (QMessageBox::question(this, tr("Export sound project"),
-                                  tr("The folder already exists:\n%1\n\nOverwrite its files?")
+                                  tr("The folder already exists:\n%1\n\n"
+                                     "Regenerate auxiliary files? Existing .s files are preserved; "
+                                     "fresh disassembly is written as .exported.s.")
                                   .arg(folder)) != QMessageBox::Yes)
             return;
     }
@@ -1183,9 +1184,18 @@ void SoundManagerDialog::on_pushButtonExportSelected_clicked()
     const QString projectManifestPath = folder + QStringLiteral("/soundmanifest.json");
     if (!QFileInfo::exists(projectManifestPath))
     {
-        QMessageBox::warning(this, tr("Export selected"),
-                             tr("The sound project folder is missing its manifest.\n"
-                                "Use Export All first."));
+        // Export Selected needs the project manifest to merge one entry into.
+        // Running Export All first is safe: it includes the selected item and
+        // establishes all hashes and auxiliary files.
+        QMessageBox::information(this, tr("Export selected"),
+                                 tr("No complete sound project exists yet.\n"
+                                    "Export All will run first; the selected item is included."));
+        on_pushButtonExportAll_clicked();
+        if (!QFileInfo::exists(projectManifestPath))
+            return;
+        QMessageBox::information(this, tr("Export selected"),
+                                 tr("A complete sound project was exported first.\n"
+                                    "The selected item is already included."));
         return;
     }
 
