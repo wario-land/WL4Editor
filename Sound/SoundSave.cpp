@@ -215,6 +215,12 @@ namespace Sound
                         source.close();
                         object.insert(QStringLiteral("sHash"),
                                       QString::fromLatin1(sourceHash));
+                        object.insert(QStringLiteral("name"), job.song->name);
+                        object.insert(QStringLiteral("bankId"), job.song->bankId);
+                        object.insert(QStringLiteral("ms"), job.song->ms);
+                        object.insert(QStringLiteral("me"), job.song->me);
+                        object.insert(QStringLiteral("priority"), job.song->priority);
+                        object.insert(QStringLiteral("echo"), job.song->echo);
                         songs[i] = object;
                     }
                     break;

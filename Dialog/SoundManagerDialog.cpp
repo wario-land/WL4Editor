@@ -170,6 +170,69 @@ const Sound::Song *SoundManagerDialog::FindSong(int songId) const
     return nullptr;
 }
 
+Sound::Song *SoundManagerDialog::FindSongMutable(int songId)
+{
+    for (Sound::Song &song : soundData.songs)
+    {
+        if (song.id == songId)
+            return &song;
+    }
+    return nullptr;
+}
+
+bool SoundManagerDialog::SongSourceExists(int songId, QString *sourcePath) const
+{
+    const QString folder = Sound::SoundExport::defaultFolder(
+                ROMUtils::ROMFileMetadata->FilePath);
+    QFile manifestFile(folder + QStringLiteral("/soundmanifest.json"));
+    if (!manifestFile.open(QIODevice::ReadOnly))
+        return false;
+    const QJsonDocument document = QJsonDocument::fromJson(manifestFile.readAll());
+    manifestFile.close();
+    if (!document.isObject())
+        return false;
+
+    const QJsonArray songs = document.object().value(QStringLiteral("songs")).toArray();
+    for (const QJsonValue &value : songs)
+    {
+        const QJsonObject object = value.toObject();
+        if (object.value(QStringLiteral("id")).toInt(-1) != songId)
+            continue;
+        const QString relativePath = object.value(QStringLiteral("sFile")).toString();
+        if (relativePath.isEmpty())
+            return false;
+        const QString absolutePath = QDir(folder).absoluteFilePath(relativePath);
+        if (!QFileInfo::exists(absolutePath))
+            return false;
+        if (sourcePath)
+            *sourcePath = absolutePath;
+        return true;
+    }
+    return false;
+}
+
+bool SoundManagerDialog::StageSongMetadataEdit(Sound::Song *song)
+{
+    if (!song)
+        return false;
+    QString sourcePath;
+    if (!SongSourceExists(song->id, &sourcePath))
+        return false;
+    song->importedSFile = sourcePath;
+    song->importFromS = true;
+    song->changed = true;
+    return true;
+}
+
+void SoundManagerDialog::UpdateSelectedSongName(const QString &name)
+{
+    const QModelIndex current = ui->treeViewEntries->currentIndex();
+    if (!current.isValid() || !entryModel)
+        return;
+    if (QStandardItem *item = entryModel->itemFromIndex(current.siblingAtColumn(0)))
+        item->setText(name);
+}
+
 void SoundManagerDialog::PopulateTree()
 {
     populatingTree = true;
@@ -521,24 +584,44 @@ QGroupBox *SoundManagerDialog::CreateGroup(const QString &title)
     return group;
 }
 
-void SoundManagerDialog::AddReadOnlyRow(QGroupBox *group, const QString &label, const QString &value)
+void SoundManagerDialog::AddReadOnlyRow(QGroupBox *group, const QString &label,
+                                        const QString &value, const QString &tooltip)
 {
     auto *edit = new QLineEdit(value, group);
     edit->setReadOnly(true);
     edit->setCursorPosition(0);
+    if (!tooltip.isEmpty())
+        edit->setToolTip(tooltip);
     if (auto *layout = qobject_cast<QFormLayout *>(group->layout()))
+    {
         layout->addRow(label, edit);
+        if (!tooltip.isEmpty())
+        {
+            if (QWidget *labelWidget = layout->labelForField(edit))
+                labelWidget->setToolTip(tooltip);
+        }
+    }
 }
 
 QSpinBox *SoundManagerDialog::AddSpinRow(QGroupBox *group, const QString &label,
-                                        int value, int minimum, int maximum)
+                                        int value, int minimum, int maximum,
+                                        const QString &tooltip)
 {
     auto *spin = new QSpinBox(group);
     spin->setRange(minimum, maximum);
     spin->setValue(value);
     spin->setKeyboardTracking(false);
+    if (!tooltip.isEmpty())
+        spin->setToolTip(tooltip);
     if (auto *layout = qobject_cast<QFormLayout *>(group->layout()))
+    {
         layout->addRow(label, spin);
+        if (!tooltip.isEmpty())
+        {
+            if (QWidget *labelWidget = layout->labelForField(spin))
+                labelWidget->setToolTip(tooltip);
+        }
+    }
     return spin;
 }
 
@@ -581,36 +664,151 @@ Sound::Program *SoundManagerDialog::FindProgramMutable(int bankId, int programIn
 
 void SoundManagerDialog::BuildSongDetail(const Sound::Song &song)
 {
+    const int songId = song.id;
+    QString sourcePath;
+    const bool metadataEditable = SongSourceExists(songId, &sourcePath);
     QGroupBox *general = CreateGroup(tr("General"));
-    AddReadOnlyRow(general, tr("ID"), QString::number(song.id));
-    AddReadOnlyRow(general, tr("Name"), song.name);
+    AddReadOnlyRow(general, tr("ID"), QString::number(song.id),
+                   tr("ROM song-table slot. The project manifest uses this id to choose the target song."));
+
+    auto *editState = new QLabel(metadataEditable
+                                 ? tr("Editable: project source found.")
+                                 : tr("Editing requires Export All."), general);
+    editState->setWordWrap(true);
+    editState->setToolTip(metadataEditable
+                          ? tr("Name, bank, ms and me can be edited and will be saved through the project source.")
+                          : tr("Run Export All to create the project manifest and .s source before editing this song's project metadata."));
+    if (auto *layout = qobject_cast<QFormLayout *>(general->layout()))
+        layout->addRow(tr("Editing"), editState);
+
+    auto *nameEdit = new QLineEdit(song.name, general);
+    nameEdit->setEnabled(metadataEditable);
+    nameEdit->setToolTip(tr("Project display name. It is stored in soundmanifest.json, not in the ROM."));
+    if (auto *layout = qobject_cast<QFormLayout *>(general->layout()))
+    {
+        auto *nameLabel = new QLabel(tr("Name"), general);
+        nameLabel->setToolTip(nameEdit->toolTip());
+        layout->addRow(nameLabel, nameEdit);
+    }
 
     QString stateText = tr("Vanilla");
     if (song.state == Sound::SongState::Empty)
         stateText = tr("Empty");
     else if (song.state == Sound::SongState::Custom)
         stateText = tr("Custom");
-    AddReadOnlyRow(general, tr("State"), stateText);
-    AddReadOnlyRow(general, tr("ROM address"), hexAddress(song.romAddress));
+    AddReadOnlyRow(general, tr("State"), stateText,
+                   tr("Vanilla uses the ROM's original song data; Custom has been replaced or edited; Empty has no playable song data."));
+    AddReadOnlyRow(general, tr("ROM address"), hexAddress(song.romAddress),
+                   tr("ROM file offset of the current song header."));
 
-    const Sound::Bank *bank = FindBank(song.bankId);
-    const QString bankText = bank
-            ? QStringLiteral("%1 (%2)").arg(bank->name).arg(bank->id)
-            : (song.bankId >= 0 ? QString::number(song.bankId) : tr("Unknown"));
-    AddReadOnlyRow(general, tr("Bank"), bankText);
-    AddReadOnlyRow(general, tr("Player (ms/me)"),
-                   QStringLiteral("%1 / %2").arg(song.ms).arg(song.me));
-    AddReadOnlyRow(general, tr("Priority"), QString::number(song.priority));
-    AddReadOnlyRow(general, tr("Echo"), QString::number(song.echo));
-    AddReadOnlyRow(general, tr("Tracks"), QString::number(song.trackCount));
+    QSpinBox *bankSpin = AddSpinRow(general, tr("Bank id"), song.bankId, 0, 10,
+                                    tr("Project bank selection. Save writes the selected bank pointer into the song header."));
+    QSpinBox *msSpin = AddSpinRow(general, tr("Track group ms"), song.ms, 0, 7,
+                                  tr("MusicInfo.Trackgroup1. Selects the MPlay player/track group used to play this song."));
+    QSpinBox *meSpin = AddSpinRow(general, tr("Track group me"), song.me, 0, 7,
+                                  tr("MusicInfo.Trackgroup2. Preserved in the Song Table; the vanilla engine does not read it, but custom uses may."));
+    bankSpin->setEnabled(metadataEditable);
+    msSpin->setEnabled(metadataEditable);
+    meSpin->setEnabled(metadataEditable);
+    AddReadOnlyRow(general, tr("Echo (header byte)"), QString::number(song.echo),
+                   tr("Song header sound-mode/reverb byte. Bit 7 enables the SoundMode call; low 7 bits are the level. Edit the header byte in the .s file."));
+    AddReadOnlyRow(general, tr("Tracks"), QString::number(song.trackCount),
+                   tr("Track count read from the song header. Adding or removing tracks requires updating the header and pointer list."));
     if (!song.description.isEmpty())
-        AddReadOnlyRow(general, tr("Description"), song.description);
+        AddReadOnlyRow(general, tr("Description"), song.description,
+                       tr("Optional project description for this song."));
+
+    auto applyName = [this, songId, nameEdit]
+    {
+        Sound::Song *editableSong = FindSongMutable(songId);
+        if (!editableSong)
+            return;
+        const QString name = nameEdit->text().trimmed();
+        if (name.isEmpty() || !StageSongMetadataEdit(editableSong))
+        {
+            QMessageBox::warning(this, tr("Edit song"),
+                                 tr("Cannot edit this song without a project .s source.\n"
+                                    "Run Export All first."));
+            QSignalBlocker blocker(nameEdit);
+            nameEdit->setText(editableSong->name);
+            return;
+        }
+        editableSong->name = name;
+        UpdateSelectedSongName(name);
+        MarkSelectedChanged();
+        UpdateStatusLabel();
+    };
+    connect(nameEdit, &QLineEdit::editingFinished, this, applyName);
+
+    auto applyBank = [this, songId, bankSpin]
+    {
+        Sound::Song *editableSong = FindSongMutable(songId);
+        if (!editableSong)
+            return;
+        const int bankId = bankSpin->value();
+        if (!FindBank(bankId) || !StageSongMetadataEdit(editableSong))
+        {
+            QMessageBox::warning(this, tr("Edit song"),
+                                 tr("Invalid bank or no project .s source was found."));
+            QSignalBlocker blocker(bankSpin);
+            bankSpin->setValue(editableSong->bankId);
+            return;
+        }
+        editableSong->bankId = bankId;
+        MarkSelectedChanged();
+        UpdateStatusLabel();
+    };
+    connect(bankSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applyBank](int) { applyBank(); });
+
+    auto applyMs = [this, songId, msSpin]
+    {
+        Sound::Song *editableSong = FindSongMutable(songId);
+        if (!editableSong)
+            return;
+        if (!StageSongMetadataEdit(editableSong))
+        {
+            QMessageBox::warning(this, tr("Edit song"),
+                                 tr("No project .s source was found.\nRun Export All first."));
+            QSignalBlocker blocker(msSpin);
+            msSpin->setValue(editableSong->ms);
+            return;
+        }
+        editableSong->ms = static_cast<quint16>(msSpin->value());
+        MarkSelectedChanged();
+        UpdateStatusLabel();
+    };
+    connect(msSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applyMs](int) { applyMs(); });
+
+    auto applyMe = [this, songId, meSpin]
+    {
+        Sound::Song *editableSong = FindSongMutable(songId);
+        if (!editableSong)
+            return;
+        if (!StageSongMetadataEdit(editableSong))
+        {
+            QMessageBox::warning(this, tr("Edit song"),
+                                 tr("No project .s source was found.\nRun Export All first."));
+            QSignalBlocker blocker(meSpin);
+            meSpin->setValue(editableSong->me);
+            return;
+        }
+        editableSong->me = static_cast<quint16>(meSpin->value());
+        MarkSelectedChanged();
+        UpdateStatusLabel();
+    };
+    connect(meSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [applyMe](int) { applyMe(); });
 
     if (!song.trackAddresses.isEmpty())
     {
         QGroupBox *tracks = CreateGroup(tr("Track Addresses"));
         auto *table = new QTableWidget(song.trackAddresses.size(), 2, tracks);
         table->setHorizontalHeaderLabels({ tr("Track"), tr("ROM address") });
+        table->setToolTip(tr("Track index and the ROM file offset of each track stream."));
+        table->horizontalHeaderItem(0)->setToolTip(tr("Track index inside this song."));
+        table->horizontalHeaderItem(1)->setToolTip(tr("ROM file offset of this track's byte stream."));
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
         table->horizontalHeader()->setStretchLastSection(true);
         for (int row = 0; row < song.trackAddresses.size(); ++row)
@@ -627,8 +825,10 @@ void SoundManagerDialog::BuildSongDetail(const Sound::Song &song)
 void SoundManagerDialog::BuildBankDetail(const Sound::Bank &bank)
 {
     QGroupBox *general = CreateGroup(tr("Bank"));
-    AddReadOnlyRow(general, tr("ID"), QString::number(bank.id));
-    AddReadOnlyRow(general, tr("Name"), bank.name);
+    AddReadOnlyRow(general, tr("ID"), QString::number(bank.id),
+                   tr("WL4 bank id. Songs select a bank through their header bank pointer."));
+    AddReadOnlyRow(general, tr("Name"), bank.name,
+                   tr("Project display name for this bank."));
     QString roleText;
     switch (bank.role)
     {
@@ -636,9 +836,12 @@ void SoundManagerDialog::BuildBankDetail(const Sound::Bank &bank)
     case Sound::BankRole::SubBank: roleText = tr("Sub-bank"); break;
     case Sound::BankRole::Custom: roleText = tr("Custom"); break;
     }
-    AddReadOnlyRow(general, tr("Role"), roleText);
-    AddReadOnlyRow(general, tr("Base"), hexAddress(bank.base));
-    AddReadOnlyRow(general, tr("State"), bank.isCustom ? tr("Custom") : tr("Vanilla"));
+    AddReadOnlyRow(general, tr("Role"), roleText,
+                   tr("Music, sub-bank, or custom role. This is a project/display classification."));
+    AddReadOnlyRow(general, tr("Base"), hexAddress(bank.base),
+                   tr("Vanilla bank table base address in the ROM."));
+    AddReadOnlyRow(general, tr("State"), bank.isCustom ? tr("Custom") : tr("Vanilla"),
+                   tr("Whether the bank data comes from a custom SoundBankChunk or from the vanilla ROM."));
 
     int used = 0;
     for (const Sound::Program &program : bank.programs)
@@ -646,11 +849,18 @@ void SoundManagerDialog::BuildBankDetail(const Sound::Bank &bank)
         if (program.used)
             ++used;
     }
-    AddReadOnlyRow(general, tr("Used programs"), QString::number(used));
+    AddReadOnlyRow(general, tr("Used programs"), QString::number(used),
+                   tr("Number of Programs in this bank that are marked as used."));
 
     QGroupBox *programs = CreateGroup(tr("Programs"));
+    programs->setToolTip(tr("The 128 Program slots. Used means the slot is referenced by the bank; Type/Sample come from the voice data."));
     auto *table = new QTableWidget(bank.programs.size(), 5, programs);
     table->setHorizontalHeaderLabels({ tr("Program"), tr("Used"), tr("Type"), tr("Name"), tr("Sample") });
+    table->horizontalHeaderItem(0)->setToolTip(tr("Program slot index 0..127."));
+    table->horizontalHeaderItem(1)->setToolTip(tr("Whether the Program slot is marked used."));
+    table->horizontalHeaderItem(2)->setToolTip(tr("Voice type of the Program."));
+    table->horizontalHeaderItem(3)->setToolTip(tr("Program display name."));
+    table->horizontalHeaderItem(4)->setToolTip(tr("Sample selected by the Program voice, if any."));
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->horizontalHeader()->setStretchLastSection(true);
     for (int row = 0; row < bank.programs.size(); ++row)
@@ -679,33 +889,51 @@ void SoundManagerDialog::BuildProgramDetail(int bankId, int programIndex)
     const Sound::Voice &voice = program.voice;
 
     QGroupBox *general = CreateGroup(tr("Program"));
-    AddReadOnlyRow(general, tr("Bank"), QStringLiteral("%1 (%2)").arg(bank->name).arg(bank->id));
-    AddReadOnlyRow(general, tr("Program"), QString::number(program.index));
-    AddReadOnlyRow(general, tr("Name"), program.name);
-    AddReadOnlyRow(general, tr("Used"), yesNo(program.used));
-    AddReadOnlyRow(general, tr("ROM address"), hexAddress(voice.romAddress));
-    AddReadOnlyRow(general, tr("Type"), Sound::VoiceTypeName(voice.type));
-    AddReadOnlyRow(general, tr("Key"), QString::number(voice.key));
-    AddReadOnlyRow(general, tr("Pan"), QString::number(voice.pan));
+    AddReadOnlyRow(general, tr("Bank"), QStringLiteral("%1 (%2)").arg(bank->name).arg(bank->id),
+                   tr("Bank containing this Program."));
+    AddReadOnlyRow(general, tr("Program"), QString::number(program.index),
+                   tr("Program slot index 0..127. Songs select it with the VOICE command."));
+    AddReadOnlyRow(general, tr("Name"), program.name,
+                   tr("Program display name from the project/bank database."));
+    AddReadOnlyRow(general, tr("Used"), yesNo(program.used),
+                   tr("Whether this Program slot is used by the bank."));
+    AddReadOnlyRow(general, tr("ROM address"), hexAddress(voice.romAddress),
+                   tr("ROM file offset of this Program's 12-byte voice record."));
+    AddReadOnlyRow(general, tr("Type"), Sound::VoiceTypeName(voice.type),
+                   tr("Voice type: sample, PSG, key split, or drum kit."));
+    AddReadOnlyRow(general, tr("Key"), QString::number(voice.key),
+                   tr("Base key/root key for the voice."));
+    AddReadOnlyRow(general, tr("Pan"), QString::number(voice.pan),
+                   tr("Voice pan value; 0x80 is the normal center flag, lower 7 bits are position."));
     AddReadOnlyRow(general, tr("ADSR"),
                    QStringLiteral("%1 / %2 / %3 / %4")
-                   .arg(voice.attack).arg(voice.decay).arg(voice.sustain).arg(voice.release));
+                   .arg(voice.attack).arg(voice.decay).arg(voice.sustain).arg(voice.release),
+                   tr("Attack / Decay / Sustain / Release voice envelope bytes."));
     if (voice.sampleId >= 0 && voice.sampleId < soundData.samples.size())
     {
         const Sound::Sample &sample = soundData.samples[voice.sampleId];
         AddReadOnlyRow(general, tr("Sample"),
-                       QStringLiteral("%1 (%2)").arg(sample.name, hexAddress(sample.romAddress)));
+                       QStringLiteral("%1 (%2)").arg(sample.name, hexAddress(sample.romAddress)),
+                       tr("Sample selected by this voice, shown with its ROM header offset."));
     }
     if (voice.waveAddress)
-        AddReadOnlyRow(general, tr("PSG wave"), hexAddress(voice.waveAddress));
+        AddReadOnlyRow(general, tr("PSG wave"), hexAddress(voice.waveAddress),
+                       tr("Wave RAM/pointer used by PSG wave voices."));
 
     QGroupBox *editable = CreateGroup(tr("Editable Parameters"));
-    QSpinBox *key = AddSpinRow(editable, tr("Key"), voice.key, 0, 127);
-    QSpinBox *pan = AddSpinRow(editable, tr("Pan"), voice.pan, 0, 127);
-    QSpinBox *attack = AddSpinRow(editable, tr("Attack"), voice.attack, 0, 255);
-    QSpinBox *decay = AddSpinRow(editable, tr("Decay"), voice.decay, 0, 255);
-    QSpinBox *sustain = AddSpinRow(editable, tr("Sustain"), voice.sustain, 0, 255);
-    QSpinBox *release = AddSpinRow(editable, tr("Release"), voice.release, 0, 255);
+    editable->setToolTip(tr("Edits update the staged Program voice. Save rebuilds the containing bank."));
+    QSpinBox *key = AddSpinRow(editable, tr("Key"), voice.key, 0, 127,
+                               tr("Base key/root key for this Program."));
+    QSpinBox *pan = AddSpinRow(editable, tr("Pan"), voice.pan, 0, 127,
+                               tr("Voice pan value; the game interprets the high bit as the center flag."));
+    QSpinBox *attack = AddSpinRow(editable, tr("Attack"), voice.attack, 0, 255,
+                                  tr("Envelope attack byte."));
+    QSpinBox *decay = AddSpinRow(editable, tr("Decay"), voice.decay, 0, 255,
+                                 tr("Envelope decay byte."));
+    QSpinBox *sustain = AddSpinRow(editable, tr("Sustain"), voice.sustain, 0, 255,
+                                   tr("Envelope sustain byte."));
+    QSpinBox *release = AddSpinRow(editable, tr("Release"), voice.release, 0, 255,
+                                   tr("Envelope release byte."));
     auto applyProgram = [this, bankId, programIndex, key, pan, attack, decay, sustain, release]
     {
         Sound::Program *editableProgram = FindProgramMutable(bankId, programIndex);
@@ -744,8 +972,13 @@ void SoundManagerDialog::BuildProgramDetail(int bankId, int programIndex)
     if (!voice.keyTable.isEmpty())
     {
         QGroupBox *keySplit = CreateGroup(tr("Key Split Table"));
+        keySplit->setToolTip(tr("Maps each MIDI key to one of the Program's sub-voices."));
         auto *table = new QTableWidget(voice.keyTable.size(), 4, keySplit);
         table->setHorizontalHeaderLabels({ tr("Key"), tr("Sub-voice"), tr("Type"), tr("Sample") });
+        table->horizontalHeaderItem(0)->setToolTip(tr("MIDI key mapped by this row."));
+        table->horizontalHeaderItem(1)->setToolTip(tr("Index into the Program's sub-voice list."));
+        table->horizontalHeaderItem(2)->setToolTip(tr("Voice type of the selected sub-voice."));
+        table->horizontalHeaderItem(3)->setToolTip(tr("Sample used by the selected sub-voice."));
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
         table->horizontalHeader()->setStretchLastSection(true);
         for (int key = 0; key < voice.keyTable.size(); ++key)
@@ -772,8 +1005,14 @@ void SoundManagerDialog::BuildProgramDetail(int bankId, int programIndex)
     else if (!voice.subVoices.isEmpty())
     {
         QGroupBox *drumKit = CreateGroup(tr("Drum Kit"));
+        drumKit->setToolTip(tr("Maps each MIDI drum key to a sub-voice with its own sample, pan and envelope."));
         auto *table = new QTableWidget(voice.subVoices.size(), 5, drumKit);
         table->setHorizontalHeaderLabels({ tr("Key"), tr("Type"), tr("Sample"), tr("Pan"), tr("ADSR") });
+        table->horizontalHeaderItem(0)->setToolTip(tr("MIDI drum key mapped by this row."));
+        table->horizontalHeaderItem(1)->setToolTip(tr("Voice type of the drum sub-voice."));
+        table->horizontalHeaderItem(2)->setToolTip(tr("Sample used by this drum key."));
+        table->horizontalHeaderItem(3)->setToolTip(tr("Pan value of this drum key."));
+        table->horizontalHeaderItem(4)->setToolTip(tr("Attack / Decay / Sustain / Release of this drum key."));
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
         table->horizontalHeader()->setStretchLastSection(true);
         for (int key = 0; key < voice.subVoices.size(); ++key)
@@ -803,32 +1042,50 @@ void SoundManagerDialog::BuildProgramDetail(int bankId, int programIndex)
             rawText += QLatin1Char(' ');
         rawText += QStringLiteral("%1").arg(voice.raw[i], 2, 16, QLatin1Char('0')).toUpper();
     }
-    AddReadOnlyRow(raw, tr("12 bytes"), rawText);
+    AddReadOnlyRow(raw, tr("12 bytes"), rawText,
+                   tr("Raw 12-byte Program voice record; useful for low-level comparison."));
 }
 
 void SoundManagerDialog::BuildSampleDetail(const Sound::Sample &sample)
 {
     QGroupBox *general = CreateGroup(tr("Sample"));
-    AddReadOnlyRow(general, tr("ID"), QString::number(sample.id));
-    AddReadOnlyRow(general, tr("Name"), sample.name);
-    AddReadOnlyRow(general, tr("ROM address"), hexAddress(sample.romAddress));
-    AddReadOnlyRow(general, tr("Flag"), QStringLiteral("0x%1").arg(sample.flag, 2, 16, QLatin1Char('0')).toUpper());
-    AddReadOnlyRow(general, tr("Looped"), yesNo(sample.isLooped()));
-    AddReadOnlyRow(general, tr("Pitch"), QStringLiteral("0x%1").arg(sample.pitch, 8, 16, QLatin1Char('0')).toUpper());
-    AddReadOnlyRow(general, tr("Sample rate"), QString::number(sample.sampleRate(), 'f', 2) + tr(" Hz"));
-    AddReadOnlyRow(general, tr("Loop start"), QString::number(sample.loopStart));
-    AddReadOnlyRow(general, tr("Size"), QString::number(sample.size) + tr(" bytes"));
+    AddReadOnlyRow(general, tr("ID"), QString::number(sample.id),
+                   tr("Stable sample slot id in the project/ROM."));
+    AddReadOnlyRow(general, tr("Name"), sample.name,
+                   tr("Sample display name used by the Sound Manager and manifest."));
+    AddReadOnlyRow(general, tr("ROM address"), hexAddress(sample.romAddress),
+                   tr("ROM file offset of the sample header and PCM data."));
+    AddReadOnlyRow(general, tr("Flag"), QStringLiteral("0x%1").arg(sample.flag, 2, 16, QLatin1Char('0')).toUpper(),
+                   tr("Sample header flag byte. Bit 0x40 means looped."));
+    AddReadOnlyRow(general, tr("Looped"), yesNo(sample.isLooped()),
+                   tr("Whether the sample's loop flag is set."));
+    AddReadOnlyRow(general, tr("Pitch"), QStringLiteral("0x%1").arg(sample.pitch, 8, 16, QLatin1Char('0')).toUpper(),
+                   tr("GBA pitch word; sample rate is pitch / 1024."));
+    AddReadOnlyRow(general, tr("Sample rate"), QString::number(sample.sampleRate(), 'f', 2) + tr(" Hz"),
+                   tr("Playback rate derived from the raw pitch word."));
+    AddReadOnlyRow(general, tr("Loop start"), QString::number(sample.loopStart),
+                   tr("Loop point in PCM bytes."));
+    AddReadOnlyRow(general, tr("Size"), QString::number(sample.size) + tr(" bytes"),
+                   tr("PCM data size in bytes."));
     AddReadOnlyRow(general, tr("SHA-1"), QString::fromLatin1(sample.sha1));
 
     QGroupBox *editable = CreateGroup(tr("Editable Parameters"));
+    editable->setToolTip(tr("Changes are staged; Save writes the sample header and PCM chunk."));
     auto *loop = new QCheckBox(tr("Loop sample"), editable);
     loop->setChecked(sample.isLooped());
+    loop->setToolTip(tr("Set or clear the 0x40 loop flag in the sample header."));
     if (auto *layout = qobject_cast<QFormLayout *>(editable->layout()))
-        layout->addRow(tr("Loop"), loop);
+    {
+        auto *loopLabel = new QLabel(tr("Loop"), editable);
+        loopLabel->setToolTip(loop->toolTip());
+        layout->addRow(loopLabel, loop);
+    }
     QSpinBox *pitch = AddSpinRow(editable, tr("Pitch (raw 1/1024 Hz)"),
-                                 static_cast<int>(sample.pitch), 0, 0x7FFFFFFF);
+                                 static_cast<int>(sample.pitch), 0, 0x7FFFFFFF,
+                                 tr("Raw GBA pitch word. Playback rate is pitch / 1024 Hz."));
     QSpinBox *loopStart = AddSpinRow(editable, tr("Loop start (bytes)"),
-                                     static_cast<int>(sample.loopStart), 0, 0x7FFFFFFF);
+                                     static_cast<int>(sample.loopStart), 0, 0x7FFFFFFF,
+                                     tr("Loop start offset in PCM bytes; must be smaller than Size when looping."));
     auto applySample = [this, sampleId = sample.id, loop, pitch, loopStart]
     {
         Sound::Sample *editableSample = FindSampleMutable(sampleId);
@@ -861,13 +1118,19 @@ void SoundManagerDialog::BuildSampleDetail(const Sound::Sample &sample)
 void SoundManagerDialog::BuildPlayerDetail(const Sound::Player &player)
 {
     QGroupBox *general = CreateGroup(tr("Player"));
-    AddReadOnlyRow(general, tr("ID"), QString::number(player.id));
-    AddReadOnlyRow(general, tr("Max tracks"), QString::number(player.maxTracks));
-    AddReadOnlyRow(general, tr("Flags"), QString::number(player.flags));
+    AddReadOnlyRow(general, tr("ID"), QString::number(player.id),
+                   tr("MPlay player/track group id."));
+    AddReadOnlyRow(general, tr("Max tracks"), QString::number(player.maxTracks),
+                   tr("Maximum number of tracks this player can run."));
+    AddReadOnlyRow(general, tr("Flags"), QString::number(player.flags),
+                   tr("Player configuration flags from the player definition."));
 
     QGroupBox *songs = CreateGroup(tr("Songs Using This Player"));
+    songs->setToolTip(tr("Songs whose ms Trackgroup1 selects this player/track group."));
     auto *table = new QTableWidget(player.songIds.size(), 2, songs);
     table->setHorizontalHeaderLabels({ tr("Song"), tr("Name") });
+    table->horizontalHeaderItem(0)->setToolTip(tr("Song id that selects this player/track group."));
+    table->horizontalHeaderItem(1)->setToolTip(tr("Song display name."));
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->horizontalHeader()->setStretchLastSection(true);
     for (int row = 0; row < player.songIds.size(); ++row)

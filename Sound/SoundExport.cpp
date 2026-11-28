@@ -160,9 +160,8 @@ namespace Sound
             if (song.state == SongState::Empty)
                 continue;
 
-            const QString fileName = QStringLiteral("%1_%2.s")
-                    .arg(song.id, 4, 10, QLatin1Char('0'))
-                    .arg(sanitizeFileName(song.name));
+            const QString fileName = QStringLiteral("%1.s")
+                    .arg(song.id, 4, 10, QLatin1Char('0'));
             const QString filePath = folder + QStringLiteral("/songs/") + fileName;
             const QString freshPath = filePath + QStringLiteral(".exported.s");
 
@@ -191,9 +190,8 @@ namespace Sound
                 sourceFile.close();
             }
 
-            const QString midiFileName = QStringLiteral("%1_%2.mid")
-                    .arg(song.id, 4, 10, QLatin1Char('0'))
-                    .arg(sanitizeFileName(song.name));
+            const QString midiFileName = QStringLiteral("%1.mid")
+                    .arg(song.id, 4, 10, QLatin1Char('0'));
             const QString midiPath = folder + QStringLiteral("/songs/") + midiFileName;
             const QString midiError = SoundMidiExporter::exportSong(data, song, rom, romSize,
                                                                    midiPath, &warnings);

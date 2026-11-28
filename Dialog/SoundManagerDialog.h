@@ -78,8 +78,11 @@ private:
 
     void ClearDetailPanel();
     QGroupBox *CreateGroup(const QString &title);
-    void AddReadOnlyRow(QGroupBox *group, const QString &label, const QString &value);
-    QSpinBox *AddSpinRow(QGroupBox *group, const QString &label, int value, int minimum, int maximum);
+    void AddReadOnlyRow(QGroupBox *group, const QString &label, const QString &value,
+                        const QString &tooltip = QString());
+    QSpinBox *AddSpinRow(QGroupBox *group, const QString &label, int value,
+                         int minimum, int maximum,
+                         const QString &tooltip = QString());
     void MarkSelectedChanged();
     void BuildSongDetail(const Sound::Song &song);
     void BuildBankDetail(const Sound::Bank &bank);
@@ -93,6 +96,10 @@ private:
     const Sound::Bank *FindBank(int bankId) const;
     Sound::Bank *FindBankMutable(int bankId);
     const Sound::Song *FindSong(int songId) const;
+    Sound::Song *FindSongMutable(int songId);
+    bool SongSourceExists(int songId, QString *sourcePath = nullptr) const;
+    bool StageSongMetadataEdit(Sound::Song *song);
+    void UpdateSelectedSongName(const QString &name);
     Sound::Sample *FindSampleMutable(int sampleId);
     Sound::Program *FindProgramMutable(int bankId, int programIndex);
 };

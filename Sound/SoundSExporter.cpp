@@ -395,14 +395,7 @@ namespace Sound
         QTextStream out(&output);
 
         out << "@ WL4Editor MPlay source\n";
-        out << "@ wl4-song: " << song.id << "\n";
-        out << "@ wl4-name: " << song.name << "\n";
-        out << "@ wl4-bank: " << song.bankId << "\n";
-        out << "@ wl4-player: " << static_cast<int>(song.ms) << "\n";
-        out << "@ wl4-ms: " << static_cast<int>(song.ms) << "\n";
-        out << "@ wl4-me: " << static_cast<int>(song.me) << "\n";
-        out << "@ wl4-priority: " << static_cast<int>(song.priority) << "\n";
-        out << "@ wl4-echo: " << static_cast<int>(song.echo) << "\n";
+        out << "@ Song metadata lives in soundmanifest.json and the Sound Manager.\n";
         out << "@ The bank pointer below is a placeholder. WL4Editor fills it\n";
         out << "@ from the model when the .s file is imported.\n\n";
         out << ".include \"MPlayCompat.s\"\n\n";
@@ -414,7 +407,8 @@ namespace Sound
         const quint8 unknown = (song.romAddress != 0xFFFFFFFFu && song.romAddress + 1 < romSize)
                 ? rom[song.romAddress + 1] : 0;
         out << ".byte " << song.trackCount << ", " << static_cast<int>(unknown)
-            << ", " << static_cast<int>(song.priority) << ", " << static_cast<int>(song.echo) << "\n";
+            << ", " << static_cast<int>(song.priority) << ", " << static_cast<int>(song.echo)
+            << "   @ NumTrks, unknown, priority, echo\n";
         out << ".byte 0, 0, 0, 0   @ Bank pointer placeholder\n";
 
         for (int i = 0; i < scans.size(); ++i)

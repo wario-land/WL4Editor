@@ -41,16 +41,28 @@ namespace Sound
             return nullptr;
         }
 
-        int sourceTrackCount(const QString &text)
+        struct SourceHeader
         {
+            int trackCount = -1;
+            int priority = -1;
+            int echo = -1;
+        };
+
+        SourceHeader parseSourceHeader(const QString &text)
+        {
+            SourceHeader header;
             const QRegularExpression expression(
-                        QStringLiteral("(?m)^\\s*\\.byte\\s+(\\d+)\\s*@\\s*NumTrks\\b"));
+                        QStringLiteral("(?m)^\\s*\\.byte\\s+(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)"));
             const QRegularExpressionMatch match = expression.match(text);
             if (!match.hasMatch())
-                return -1;
+                return header;
             bool ok = false;
-            const int count = match.captured(1).toInt(&ok);
-            return ok ? count : -1;
+            header.trackCount = match.captured(1).toInt(&ok);
+            if (!ok)
+                header.trackCount = -1;
+            header.priority = match.captured(3).toInt();
+            header.echo = match.captured(4).toInt();
+            return header;
         }
 
         bool voiceUsesSample(const Voice &voice, const QSet<int> &sampleIds)
@@ -73,21 +85,6 @@ namespace Sound
             return qBound(-500, (pan - 64) * 500 / 63, 500);
         }
 
-        int metadataInt(const QString &text, const QString &key, int fallback)
-        {
-            const QRegularExpression expression(
-                        QStringLiteral("@\\s*%1\\s*:\\s*(-?\\d+)").arg(QRegularExpression::escape(key)));
-            const QRegularExpressionMatch match = expression.match(text);
-            return match.hasMatch() ? match.captured(1).toInt() : fallback;
-        }
-
-        QString metadataString(const QString &text, const QString &key)
-        {
-            const QRegularExpression expression(
-                        QStringLiteral("@\\s*%1\\s*:\\s*(.*)").arg(QRegularExpression::escape(key)));
-            const QRegularExpressionMatch match = expression.match(text);
-            return match.hasMatch() ? match.captured(1).trimmed() : QString();
-        }
     } // namespace
 
     ImportResult SoundImporter::importAll(const QString &folder, ParseResult &data,
@@ -211,26 +208,33 @@ namespace Sound
 
             const QByteArray sourceHash = QCryptographicHash::hash(content, QCryptographicHash::Sha1).toHex();
             const QString manifestSourceHash = object.value(QStringLiteral("sHash")).toString();
-            if (!manifestSourceHash.isEmpty() &&
-                    manifestSourceHash.compare(QString::fromLatin1(sourceHash), Qt::CaseInsensitive) == 0)
+            const QString manifestName = object.value(QStringLiteral("name")).toString();
+            const int manifestBankId = object.value(QStringLiteral("bankId")).toInt(-1);
+            const int manifestMs = object.value(QStringLiteral("ms")).toInt(song->ms);
+            const int manifestMe = object.value(QStringLiteral("me")).toInt(song->ms);
+            const bool sourceUnchanged = !manifestSourceHash.isEmpty() &&
+                    manifestSourceHash.compare(QString::fromLatin1(sourceHash), Qt::CaseInsensitive) == 0;
+            const bool metadataChanged = (!manifestName.isEmpty() && manifestName != song->name) ||
+                    (manifestBankId >= 0 && manifestBankId != song->bankId) ||
+                    manifestMs != song->ms || manifestMe != song->me;
+            if (sourceUnchanged && !metadataChanged)
             {
-                continue; // not edited since export
+                continue; // neither the source nor its project metadata changed
             }
 
             const QString text = QString::fromUtf8(content);
-            const int sourceTracks = sourceTrackCount(text);
-            if (sourceTracks >= 0 && (sourceTracks < 1 || sourceTracks > 16))
+            const SourceHeader sourceHeader = parseSourceHeader(text);
+            if (sourceHeader.trackCount >= 0 &&
+                    (sourceHeader.trackCount < 1 || sourceHeader.trackCount > 16))
             {
                 result.warnings.append(QStringLiteral(
                             "Song %1 was not staged: its .s declares %2 tracks; "
                             "WL4 supports 1..16 tracks. Rejected instead of dropping tracks.")
-                        .arg(id).arg(sourceTracks));
+                        .arg(id).arg(sourceHeader.trackCount));
                 continue;
             }
 
-            const int bankFromSource = metadataInt(text, QStringLiteral("wl4-bank"), -1);
-            const int bankFromManifest = object.value(QStringLiteral("bankId")).toInt(-1);
-            const int bankId = bankFromSource >= 0 ? bankFromSource : bankFromManifest;
+            const int bankId = object.value(QStringLiteral("bankId")).toInt(-1);
             if (bankId < 0 || bankId >= WL4Constants::SoundBankCount ||
                     WL4Constants::SoundBankBase[bankId] == 0)
             {
@@ -239,21 +243,23 @@ namespace Sound
                 continue;
             }
 
-            const int player = metadataInt(text, QStringLiteral("wl4-player"),
-                                           object.value(QStringLiteral("ms")).toInt(song->ms));
-            const int ms = metadataInt(text, QStringLiteral("wl4-ms"), player);
-            const int me = metadataInt(text, QStringLiteral("wl4-me"), ms);
-            const int priority = metadataInt(text, QStringLiteral("wl4-priority"),
-                                             object.value(QStringLiteral("priority")).toInt(song->priority));
-            const int echo = metadataInt(text, QStringLiteral("wl4-echo"),
-                                         object.value(QStringLiteral("echo")).toInt(song->echo));
-            const QString name = metadataString(text, QStringLiteral("wl4-name"));
+            const int ms = object.value(QStringLiteral("ms")).toInt(song->ms);
+            const int me = object.value(QStringLiteral("me")).toInt(song->ms);
+            const int priority = sourceHeader.priority >= 0
+                    ? sourceHeader.priority
+                    : object.value(QStringLiteral("priority")).toInt(song->priority);
+            const int echo = sourceHeader.echo >= 0
+                    ? sourceHeader.echo
+                    : object.value(QStringLiteral("echo")).toInt(song->echo);
+            const QString name = object.value(QStringLiteral("name")).toString();
 
             song->bankId = bankId;
             song->ms = static_cast<quint16>(qBound(0, ms, 7));
             song->me = static_cast<quint16>(qBound(0, me, 7));
             song->priority = static_cast<quint8>(qBound(0, priority, 255));
             song->echo = static_cast<quint8>(qBound(0, echo, 255));
+            if (sourceHeader.trackCount > 0)
+                song->trackCount = sourceHeader.trackCount;
             if (!name.isEmpty())
                 song->name = name;
             song->importFromS = true;
